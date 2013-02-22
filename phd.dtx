@@ -226,7 +226,7 @@ and the derived files              phd.ins,
 %
 % \abstract{This is a helper package to compliment standard classes by
 % pre-loading a set of packages and providing some opiniated settings. Pretty
-% much work in progress, and currently supplements, the tufte-class well.}
+% much work in progress, and currently supplements, the standard classes well.}
 % 
 % ^^A Table of contents in two columns --- borrowed from the standard 
 % ^^A package of ``doc.dtx''
@@ -273,12 +273,11 @@ and the derived files              phd.ins,
 %  \usepackage{phd}
 % \end{teX}
 % it will be better for the longer projects to just fork the
-% package and adapt it to your needs.
-%
+% package and adapt it to your needs. In this respect, I have
+% uploaded the package to |github|.
+% 
 % Most of the documentation can be found in the implementation part.
 %
-% \newpage
-% \input{packages-table}
 % 
 % \section{Ordering of Packages}
 % 
@@ -392,7 +391,144 @@ and the derived files              phd.ins,
 [1994/12/01]% LaTeX date must be December 1994 or later
 \ProvidesPackage{phd}[2013/2/26 v1.0 less preamble (YL)]
 %    \end{macrocode}
+% 
+% \section{Package Management} 
+%  
+% In order to keep track of all the packages and keys we require a
+% number of macros will be defined first.
+% 
+% Each of the packages used by this document is loaded conditionally.
+% However, it might be nice to know if we have a complete set.  So we
+% define |\ifcomplete| which starts true, but gets set to false if any
+% package is missing. Some code is necessary in order to manage 
+% the complexity.
+% I am idebted to the source of |symbols.tex| for some of the macros.
+% There are a number of symbols (e.g., \cmd{\Square}) that are defined by      
+% multiple packages.  In order to typeset all the variants in this       
+% document, we have to give glyph a unique name.  To do that, we define  
+% \cmd{\savesymbol{XXX}}, which renames a symbol from \cmd{\XXX} to \cmd{\origXXX}, and    
+% \cmd{\restoresymbols{yyy}{XXX}}, which renames \cmd{\origXXX} back to \cmd{\XXX} and     
+% defines a new command, |\yyyXXX|, which corresponds to the most recently 
+% loaded version of |\XXX|.                                                
+%                                                                        
+% This implementation of \savesymbol and \restoresymbol was copied from  
+% the |savesym| package, which started with symbol.tex's old definitions   
+% of those macros and improved upon them.  However, \renamerobustsymbol  
+% and |\ifnotsavedsym| are new to this set.                                
+%                                                                        
+
+% Save a symbol that we know is going to get redefined.
+%
+% \begin{macro}{\savesymbol}
+%    \begin{macrocode}
+\newcommand*{\savesymbol}[1]{%
+  \expandafter\let\csname orig#1\expandafter\endcsname\csname#1\endcsname
+  \expandafter\let\csname #1\endcsname\relax
+}
+%    \end{macrocode}
+% \end{macro}
 %    
+% Restore a previously saved symbol, and rename the current one.
+%    \begin{macrocode}
+\newcommand*{\restoresymbol}[2]{%
+  \expandafter\global\expandafter\let\csname#1#2\expandafter\endcsname%
+    \csname#2\endcsname
+  \expandafter\global\expandafter\let\csname#2\expandafter\endcsname%
+    \csname orig#2\endcsname
+}
+%    \end{macrocode}   
+% Rename a robust command.
+%    \begin{macrocode}
+\newcommand*{\renamerobustsymbol}[2]{%
+  \expandafter\let\expandafter\origrealcommand
+    \csname #2\space\endcsname
+  \expandafter\global\expandafter\let\csname#1#2\endcsname=\origrealcommand
+}
+%    \end{macrocode}
+% Test if a symbol is not saved.
+%    \begin{macrocode}
+\def\ifnotsavedsym@helper#1#2!{\expandafter\ifx\csname orig#2\endcsname\relax}
+\newcommand*{\ifnotsavedsym}[1]{%
+  \expandafter\ifnotsavedsym@helper\string#1!%
+}
+%    \end{macrocode}
+% \begin{macro}{\ifcomplete}
+%    \begin{macrocode}
+\newif\ifcomplete
+%    \end{macrocode}
+% \end{macro}    
+%    
+% For debugging purposes we define a switch that enables us to toggle
+% on and off the loading of packages.
+% 
+%    \begin{macrocode}
+\newif\ifloadpackages
+\loadpackagestrue
+%    \end{macrocode}
+%    
+% |\IfStyFileExists*| is just like |\IfFileExists|, except that it appends
+% ".sty" to its first argument.  |\IfStyFileExists| is the same as
+% |\IfStyFileExists*|, but it additionally adds its first argument to a list
+% (|\missingpkgs|) and marks the document as incomplete (with
+% |\completefalse|) if the |.sty| file doesn't exist.
+% 
+% \begin{macro}{\missingpkgs}
+% \begin{macro}{\foundpkgs}
+%   \begin{macrocode}
+\newcommand{\missingpkgs}{}
+\newcommand{\foundpkgs}{}
+\newcommand{\if@sty@file@exists@star}[3]{%
+  \ifloadpackages
+    \IfFileExists{#1.sty}{#2}{#3}%
+  \else
+    #3%
+  \fi
+}
+\newcommand{\if@sty@file@exists}[3]{%
+  \ifloadpackages
+    \IfFileExists{#1.sty}%
+                 {#2\@cons\foundpkgs{{#1}}}%
+                 {#3\completefalse\@cons\missingpkgs{{#1}}}%
+  \else
+    #3\completefalse\@cons\missingpkgs{{#1}}%
+  \fi
+}
+\newcommand{\IfStyFileExists}{%
+  \@ifstar{\if@sty@file@exists@star}{\if@sty@file@exists}%
+}
+
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+
+
+
+% \subsection{Utility macros for displaying symbols and fonts}
+%
+% In the sections that follow, we use a number of utilities for
+% displaying fonts and utilities in tables and figures, we collect
+% them here and make them available to the user for document
+% use.
+%
+%    \begin{macrocode}
+% From stmarysrd symbols package
+% A very convenient command to typeset symbols.
+% Much preferable than tables. Slight modifications to
+% make it a bit more clear
+\def\symbols{\flushleft}
+\def\endsymbols{\endflushleft}
+\def\dosymbol#1{%
+   \leavevmode\hbox to .33\textwidth{%
+    \hbox to 1.2em%
+    {\hss$#1$\hfil}%
+   \footnotesize\texttt{\string#1}\hss}%
+   \penalty10}
+%    \end{macrocode}
+%
+% \symbols
+% \dosymbol{\Square} \dosymbol{\square} \dosymbol{\Diamond} \dosymbol{\diamond} \(\dosymbol{\symbol{60}}\)
+% \endsymbols
+%   
 % \section{Best practices} 
 % 
 % We load a few packages for fixes and errors and |nag| if outdated packages are used.
@@ -647,10 +783,16 @@ and the derived files              phd.ins,
 %  \end{center}}
 %  
 % \section{Landscape Pages}
+%
+% A common request from authors is to rotate text, tables and or
+% figures and to typeset the content using a landscape page.
+%
 % \begin{macro}{landscape}
 % \begin{macro}{lscape}
-% This package by Heiko Oberdiek Package pdflscape adds PDF support to the environment landscape % of  package |lscape| by setting the PDF page attribute /Rotate. It has to be loaded
-% after |lscape| which we let load itself.
+% This package by Heiko Oberdiek Package |pdflscape| adds PDF support 
+% to the environment landscape 
+% of  package |lscape| by setting the PDF page attribute /Rotate. 
+% It has to be loaded after |lscape|.
 %
 %    \begin{macrocode}
 \RequirePackage{pdflscape}
@@ -658,109 +800,7 @@ and the derived files              phd.ins,
 % \end{macro}
 % \end{macro}
 %  
-% \section{Package Management} 
-%    
-% Each of the packages used by this document is loaded conditionally.
-% However, it might be nice to know if we have a complete set.  So we
-% define |\ifcomplete| which starts true, but gets set to false if any
-% package is missing. Some code is necessary in order to manage the complexity.
-% I am idebted to the source of symbols.tex for some of the macros.
-% 
-% There are a number of symbols (e.g., \cmd{\Square}) that are defined by      
-% multiple packages.  In order to typeset all the variants in this       
-% document, we have to give glyph a unique name.  To do that, we define  
-% \cmd{\savesymbol{XXX}}, which renames a symbol from \cmd{\XXX} to \cmd{\origXXX}, and    
-% \cmd{\restoresymbols{yyy}{XXX}}, which renames \cmd{\origXXX} back to \cmd{\XXX} and     
-% defines a new command, |\yyyXXX|, which corresponds to the most recently 
-% loaded version of |\XXX|.                                                
-%                                                                        
-% This implementation of \savesymbol and \restoresymbol was copied from  
-% the savesym package, which started with symbol.tex's old definitions   
-% of those macros and improved upon them.  However, \renamerobustsymbol  
-% and |\ifnotsavedsym| are new to this set.                                
-%                                                                        
 
-% Save a symbol that we know is going to get redefined.
-%    \begin{macrocode}
-\newcommand*{\savesymbol}[1]{%
-  \expandafter\let\csname orig#1\expandafter\endcsname\csname#1\endcsname
-  \expandafter\let\csname #1\endcsname\relax
-}
-%    \end{macrocode}
-%    
-% Restore a previously saved symbol, and rename the current one.
-%    \begin{macrocode}
-\newcommand*{\restoresymbol}[2]{%
-  \expandafter\global\expandafter\let\csname#1#2\expandafter\endcsname%
-    \csname#2\endcsname
-  \expandafter\global\expandafter\let\csname#2\expandafter\endcsname%
-    \csname orig#2\endcsname
-}
-%    \end{macrocode}   
-% Rename a robust command.
-%    \begin{macrocode}
-\newcommand*{\renamerobustsymbol}[2]{%
-  \expandafter\let\expandafter\origrealcommand
-    \csname #2\space\endcsname
-  \expandafter\global\expandafter\let\csname#1#2\endcsname=\origrealcommand
-}
-%    \end{macrocode}
-% Test if a symbol is not saved.
-%    \begin{macrocode}
-\def\ifnotsavedsym@helper#1#2!{\expandafter\ifx\csname orig#2\endcsname\relax}
-\newcommand*{\ifnotsavedsym}[1]{%
-  \expandafter\ifnotsavedsym@helper\string#1!%
-}
-%    \end{macrocode}
-% \begin{macro}{\ifcomplete}
-%    \begin{macrocode}
-\newif\ifcomplete
-%    \end{macrocode}
-% \end{macro}    
-%    
-% For debugging purposes we define a switch that enables us to toggle
-% on and off the loading of packages.
-% 
-%    \begin{macrocode}
-\newif\ifloadpackages
-\loadpackagestrue
-%    \end{macrocode}
-%    
-% |\IfStyFileExists*| is just like |\IfFileExists|, except that it appends
-% ".sty" to its first argument.  |\IfStyFileExists| is the same as
-% |\IfStyFileExists*|, but it additionally adds its first argument to a list
-% (|\missingpkgs|) and marks the document as incomplete (with
-% |\completefalse|) if the |.sty| file doesn't exist.
-% 
-% \begin{macro}{\missingpkgs}
-% \begin{macro}{\foundpkgs}
-%   \begin{macrocode}
-\newcommand{\missingpkgs}{}
-\newcommand{\foundpkgs}{}
-\newcommand{\if@sty@file@exists@star}[3]{%
-  \ifloadpackages
-    \IfFileExists{#1.sty}{#2}{#3}%
-  \else
-    #3%
-  \fi
-}
-\newcommand{\if@sty@file@exists}[3]{%
-  \ifloadpackages
-    \IfFileExists{#1.sty}%
-                 {#2\@cons\foundpkgs{{#1}}}%
-                 {#3\completefalse\@cons\missingpkgs{{#1}}}%
-  \else
-    #3\completefalse\@cons\missingpkgs{{#1}}%
-  \fi
-}
-\newcommand{\IfStyFileExists}{%
-  \@ifstar{\if@sty@file@exists@star}{\if@sty@file@exists}%
-}
-%    \end{macrocode}
-% \end{macro}
-% \end{macro}
-
-%
 % \section{Maths}
 %
 % Although we cognisant that there are documents that do not use math
@@ -4221,7 +4261,9 @@ go back to the beginning of current section\;
 
 % \Finale
 % \PrintIndex
-
+% \newpage
+%
+% \input{packages-table}
 \endinput
 
 
