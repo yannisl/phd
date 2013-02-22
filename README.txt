@@ -9,10 +9,5 @@ This file provides a phd for defining a class.
 
 %%
 
-%%\bibitem{gcompanion}
-%%Michel Goossens, Sebastian Rahtz, and
-%%Frank Mittelbach:\\
-%%\textit{The LaTeX Graphics Companion}.\\
-%%Addison Wesley Longman, 1997.
 
 

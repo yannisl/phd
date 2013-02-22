@@ -18,10 +18,5 @@ or send me a message at  yannislaz at gmail.com
 
 %%
 
-%%\bibitem{gcompanion}
-%%Michel Goossens, Sebastian Rahtz, and
-%%Frank Mittelbach:\\
-%%\textit{The LaTeX Graphics Companion}.\\
-%%Addison Wesley Longman, 1997.
 
 
