@@ -1,0 +1,246 @@
+\title{Mathematik im Inline Modus}%%
+\author{Carole Siegfried und Herbert Voß}
+\address{Herbert}{Voß}{Wasgenstr. 21\\14129 Berlin\\\url{voss@perce.de}}
+\address{Carole}{Siegfried}{Josefstraße 32\\Ch-8005 Zürich\\\url{c.siegfried@gmx.ch}}
+\maketitle
+
+\begin{abstract}
+\TeX{} lebt bekanntermaßen mit dem Vorurteil, dass es primär für Veröffentlichungen im
+technisch-naturwissenschaftlichen Bereich entwickelt wurde. Dies ist heutzutage
+schon lange kein Argument mehr, wenn man uach eindeutig feststellen muss, dass es
+gerade der Mathematiksatz ist, der \TeX{} von anderen Programmen vorteilhaft unterscheidet.
+Der gesamte Bereich des Mathematiksatzes füllt ganze Bücher und Skripte (\cite{graetzer00,mathmode}),
+sodass hier aus Platzgründen nur der sogenannte Inline Modus behandelt werden soll. 
+\end{abstract}
+
+
+\section{Einführung}
+Der Inline-Modus, das Schreiben mathematischer Ausdrücke innerhalb einer Zeile, ist
+verständlicherweise in seinen Möglichkeiten gegenüber dem sogenannten abgesetzten
+Modus, stark eingeschränkt. Dies liegt vorrangig am Layout, denn dieses wird massiv
+beeinflusst, wenn die mathematischen Ausdrücke innerhalb der normalen Zeile
+erscheinen, wie dieses einfache Integral: $f(x)=\int_{a}^{b}\frac{\sin x}{x}\,dx$ 
+Prinzipiell gibt es keinerlei Einschränkungen
+hinsichtlich der Benutzung, es ist jedoch evident, dass diese mitten in der Zeile erscheinende Matrix
+$\underline{A}=\left[\begin{array}{ccc}
+a & b & c\\
+d & e & f\\
+g & h & i\end{array}\right]$ sicherlich optisch gesehen nicht "`das Gelde vom Ei ist"'.
+Wenn es sich absolut nicht vermeiden lässt, sollte man auf
+die \verb|\smallmatrix|-Umgebung des \Package{amsmath}-Pakets zurückgreifen:
+$\underline{A}=\left[\begin{smallmatrix}%
+a & b & c\cr
+d & e & f\cr
+g & h & i\end{smallmatrix}\right]$.
+
+Für den Inline-Modus existieren drei mehr oder weniger identische Makros, wovon die 
+\verb+$...$+-Umgebung sicherlich die am häufigsten angewendete ist.
+
+\begin{center}
+\(\sum_{i=1}^{n}i=\frac{1}{2}n\cdot(n+1)\) \quad
+%
+$\sum_{i=1}^{n}i=\frac{1}{2}n\cdot(n+1)$ \quad
+%
+\begin{math}
+  \sum_{i=1}^{n}i=\frac{1}{2}n\cdot(n+1)
+\end{math}
+\end{center}
+
+\medskip
+\begin{lstlisting}
+\(\sum_{i=1}^{n}i=\frac{1}{2}n\cdot(n+1)\) \quad
+$\sum_{i=1}^{n}i=\frac{1}{2}n\cdot(n+1)$ \quad
+\begin{math}
+  \sum_{i=1}^{n}i=\frac{1}{2}n\cdot(n+1)
+\end{math}
+\end{lstlisting}
+
+
+Die wichtigsten Merkmale und Definition in \Package{latex.ltx} sind im folgenden kurz zusammengestellt.
+\begin{enumerate}
+\item \CMD{( \ldots }\CMD{)}, nicht robust.
+\begin{verbatim}
+\def\({\relax\ifmmode\@badmath\else$\fi}
+\def\){\relax\ifmmode\ifinner$\else\@badmath\fi\else \@badmath\fi}
+\end{verbatim}
+
+\item \CMD{small \$ \ldots \$}, robuste Umgebung, für Überschriften und Fußnoten geeignet, wird
+  in Verbatim-Umgebungen jedoch nicht als Operator interpretiert.
+\item \CMD{begin\{math\}} ... \CMD{end\{math\}}, entspricht der ersten Kombination und kann in 
+\Environment{alltt}-Umgebungen angewendet werden.
+\begin{verbatim}
+\let\math=\(
+\let\endmath=\)
+\end{verbatim}
+
+\end{enumerate}
+
+
+Grundsätzlich ist \verb+$...$+ die beste Wahl, man kann jedoch ohne weiteres auf eine der anderen beiden
+zurückgreifen, wenn man aus welchen Gründen auch immer, diese bevorzugt.
+
+\subsection{Limits}
+Im Inline-Modus sind die Grenzen per Definition nur im Super-/Subscript Modus und Brüche immer im
+sogenannten mathematischen \verb+scriptstyle+-Stil, beispielsweise: $\int_{1}^{\infty}\frac{1}{x^2}\,dx=1$, was als 
+akzeptabel erscheint. Ndererseits sieht es einfach schöner aus, wenn die Grenzen in der üblichen
+Notation geschrieben werden. Dies ist mit dem Schalter \verb+\limits+ möglich, der allerdings einem
+Operator folgen muss, wie in dem folgenden Beispielen zu sehen ist $\int\limits_{1}^{\infty}\frac{1}{x^2}\,dx=1$.
+Auch hier hat man sofort wieder das Problem des Zeilenabstandes. Der Vollständigkeitshalber sei erwähnt, dass 
+das Gegenstück zu \verb+\limits+ \verb+\nolimits+ ist.
+
+\subsection{\CMD{fraction} Makro}
+
+Wie bereits erwähnt wurde, werden all e Brüche im "`scriptstyle"'-Stil erstellt, was weiterhin einen
+moderaten Zeilenabstand zur Folge hat $y=\frac{a}{b+1}$, aber dennoch problematisch ist, wenn die
+Formel etwas hervorheben soll, denn dann ist sie schlicht zu klein. Es gibt prinzipiell zwei
+verschiedene Möglichkeiten, um dies zu ändern.
+
+\begin{enumerate}
+\item es wird der abgesetzte mathematische Modus gewählt, was bei größeren Gleichungen
+   immer zu empfehlen ist;
+\item der Schriftstil  wird auf \verb+displaystyle+ gesetzt, welcher dafür sorgt, dass
+der Bruch $y={\displaystyle\frac{a}{b+1}}$ in der für den abgesetzten Modus standardmäßigen
+Größe gesetzt wird, was allerdings automatisch zu einem ungünstigen Zeilenabstand führt.
+
+\begin{tabular}{ll}
+$y=\frac{a}{b+1}={\displaystyle\frac{a}{b+1}}$ & \verb|$y=\frac{a}{b+1}={\displaystyle\frac{a}{b+1}}$|
+\end{tabular}
+\end{enumerate}
+
+
+\subsection{Mathematik Ausdrücke in Überschriften wie $f(x)=\prod_{i=1}^{n}\left(i-\frac{1}{2i}\right)$}
+
+Alle Makros die als Teil eines Titels erscheinen, müssen robust sein, dürfen
+also beim "`Wandern"' vom Titel in das Inhaltsverzeichnis (\texttt{*.toc}) nicht vorzeitig
+zerbrechen (expandieren). Solange kein Eintrag in die \verb+toc+-Datei erfolgt, kann
+jede der drei Varianten für den Inline Modus verwendet werden, andernfalls schreibe man
+wie üblich \verb+\protect\(+ und \verb+\protect\)+ oder benutzt gleich die \verb+$...$+-Kombination.
+Der gesamte mathematische Ausdruck erscheint allerdings nicht in der für Überschriften
+üblichen Fettschrift. In \cite{mathmode} findet man ein Beispiel, wie dies dennoch
+zu erreichen ist.
+
+Ein weiteres Problem mit mathematischen Textpassagen in Überschriften entsteht bei
+Verwendung des Paketes \verb+hyperref+ und entsprechender Anwendung von \verb+pdflatex+.
+Für das Erstellen der Bookmarks ist der mathematische Teil für \verb+hyperref+
+zu entfernen. Dafür stellt dieses Paket das Makro \CMD{texorpdfstring} mit folgender
+Syntax zur Verfügung:
+
+\begin{verbatim}
+\texorpdfstring{<TeX-Ausdruck>}{<hyperref-Ausdruck>}
+\end{verbatim}
+
+Das  folgende Beispiel in einer Überschrift verwendet führt dazu, dass anstelle
+des Integrals das zweite Argument für die Bookmarkerstellung benutzt wird.
+
+\begin{tabular}{ll}
+\texorpdfstring{$\int f(x)\,dx$}{Integral function} & \verb+\texorpdfstring{$\int f(x)\,dx$}{Integral function}+
+\end{tabular}
+
+
+\subsection{Boxen}
+Mit den allseits bekannten \verb|\fbox|, \verb+\colorbox+ und \verb+\fcolorbox+lässt faktisch jede Mathematik einrahmen:
+
+
+\begin{center}
+Text \fbox{$f(x)=\prod_{i=1}^{n}\left(i-\frac{1}{2i}\right)$} Text\\[10pt]
+Text \colorbox{yellow}{$f(x)=\prod_{i=1}^{n}\left(i-\frac{1}{2i}\right)$}  Text\\[10pt]
+Text \fcolorbox{red}{yellow}{$f(x)=\prod_{i=1}^{n}\left(i-\frac{1}{2i}\right)$}  Text
+\end{center}
+
+\begin{lstlisting}
+Text \fbox{$f(x)=\prod_{i=1}^{n}\left(i-\frac{1}{2i}\right)$} Text\\[10pt]
+Text \colorbox{yellow}{$f(x)=\prod_{i=1}^{n}\left(i-\frac{1}{2i}\right)$}  Text\\[10pt]
+Text \fcolorbox{red}{yellow}{$f(x)=\prod_{i=1}^{n}\left(i-\frac{1}{2i}\right)$}  Text
+\end{lstlisting}
+
+\medskip
+Parameter sind hier  \verb|\fboxsep| und \verb|\fboxrule|, mit ihren  in \verb|latex.ltx| 
+festgelegten Werten:
+\begin{verbatim}
+\fboxsep = 3pt
+\fboxrule = .4pt
+\end{verbatim}
+
+
+\subsection{Zeilenumbruch}
+
+\LaTeX{} umbricht innerhalb von mathematischen Ausdrücken Zeilen nur dann wenn ein Relationssymbol ($=, <, >, \ldots$) 
+oder ein Binäroperator ($+,-, \ldots$) erscheint und dieser zudem in der äußersten Ebene erscheint, also nicht
+durch Einklammerung gruppiert wird. \verb|$a+b+c$| kann somit umbrochen werden, \verb|${a+b+c}$| dagegen nicht.
+Eine weitere Hilfe kann die letzte Variante sein, indem man einfach den längereb mathematischen Ausdruck in
+mehrere Teilsequenzen \verb+$...$ $...$ $...$+ aufteilt.
+
+\begin{itemize}
+\item Ohne besondere Gruppierung: $f(x)=a_nx^n+a_{n-1}x^{n-1}+a_{n-2}x^{n-2}+\ldots
+	+a_ix^i	+a_2x^2	+a_1x^1	+a_0$
+%\verb|$f(x)=a_nx^n+a_{n-1}x^{n-1}+a_{n-2}x^{n-2}+\ldots+a_ix^i	+a_2x^2	+a_1x^1	+a_0$|	
+\item Innerhalb einer Gruppe \{...\}:
+${f(x)=a_nx^n+a_{n-1}x^{n-1}+a_{n-2}x^{n-2}+\ldots
+	+a_ix^i	+a_2x^2	+a_1x^1	+a_0}$
+%\verb|${f(x)=a_nx^n+a_{n-1}x^{n-1}+a_{n-2}x^{n-2}+\ldots+a_ix^i	+a_2x^2	+a_1x^1	+a_0}$|
+\item Ohne ein entsprechendes Symbol: \hspace{2.75cm}
+$f(x)=a_n\left(a_{n-1}\left(a_{n-2}\left(\ldots\right)\ldots\right)\ldots\right)$
+%\verb/$f(x)=a_n\left(a_{n-1}\left(a_{n-2}\left(\ldots\right)\ldots\right)\ldots\right)$/
+\item Mehrere Sequenzen: \hspace{4.5cm}
+$f(x)=a_n\left(a_{n-1}\left(a_{n-2}\left(\ldots\right)\right.\right.$ $\left.\left.\ldots\right)\ldots\right)$
+%\verb+$f(x)=a_n\left(a_{n-1}\left(a_{n-2}\left(\ldots\right)\right.\right.$ $\left.\left.\ldots\right)\ldots\right)$+
+\end{itemize}
+
+
+
+
+
+\subsection{Horizontaler Zwischenraum}
+\LaTeX{} definiert die Länge \verb|\mathsurround| mit einem Standardwert von \verb|0pt|. 
+Diese Länge wird vor und nacj jedem mathematischen Ausdruck im Inline Modus eingefügt.
+
+\begin{table}[htb]
+\centering
+\def\arraystretch{1.2}
+\begin{tabular}{c}
+foo \fbox{$ f(x)=\int_1^{\infty}\frac{1}{x^2}dx=1 $} bar \tabularnewline
+foo \rule{20pt}{\ht\strutbox}\fbox{$ f(x)=\int_1^{\infty}\frac{1}{x^2}dx=1 $}\rule{20pt}{\ht\strutbox} bar \tabularnewline
+\setlength{\mathsurround}{20pt}foo \fbox{$ f(x)=\int_1^{\infty}\frac{1}{x^2}dx=1 $} bar
+\end{tabular}%
+
+\medskip
+\begin{lstlisting}
+foo \fbox{$ f(x)=\int_1^{\infty}\frac{1}{x^2}dx=1 $} bar
+foo \rule{20pt}{\ht\strutbox}\fbox{$ f(x)=\int_1^{%
+    \infty}\frac{1}{x^2}dx=1 $}\rule{20pt}{\ht\strutbox} bar
+\setlength{\mathsurround}{20pt}
+foo \fbox{$ f(x)=\int_1^{\infty}\frac{1}{x^2}dx=1 $} bar
+\end{lstlisting}
+\abovecaptionskip=0pt
+\caption{Bedeutung von \CMD{mathsurround}}\label{tab:whitespace}
+\end{table}
+
+
+
+
+\section{Spezielle Makros}
+\subsection{Unterstreichen}
+Analog zu einzelnen Textpassagen kann man auch Teile eines mathematischen Ausdrucks
+unterstreichen, wobei das Makro \verb+underline+ im mathematischen Modus anzuwenden ist:
+$F(x)=\underline{\int f(x)\,dx}$\quad (\verb+$F(x)=\underline{\int f(x)\,dx}$+)
+
+\subsection{\CMD{everymath}}
+Möchte man den eingangs erwähnten Fall, dass beispielsweise Brüche grundsätzlich im
+mathematischen Stil \verb+displaystyle+ geschrieben werden, so kann dies mit dem
+Makro \verb+\everymath+ leicht erreicht werden. \verb+\everymath{\displaystyle}+ schreibt
+an den Anfang eines jeden mathematischen Ausdrucks \verb+\displaystyle+.
+
+\begingroup
+\everymath{\displaystyle}
+Der folgende Ausdruck $\frac{1}{\sqrt{2}}=\frac{\sqrt{2}}{2}$ (\verb+$\frac{1}{\sqrt{2}}=\frac{\sqrt{2}}{2}$+)
+erscheint nun ohne weiteres Zutun im \verb+displaystyle+.
+\endgroup
+
+
+
+{\nocite{*}
+\raggedright
+\bibliography{InlineMath}
+}
+
+
