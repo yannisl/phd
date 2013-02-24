@@ -67,6 +67,7 @@ See http://www.latex-project.org/lppl.txt
   \file{test-algorithms.tex}{\from{\jobname.dtx}{test-algorithms}}
   \file{test-hyphenation.tex}{\from{\jobname.dtx}{test-hyphenation}}
   \file{settings.tex}{\from{\jobname.dtx}{settings}}
+  \file{test-spacing.tex}{\from{\jobname.dtx}{test-spacing}}
  }
 %</install>
 %<install>\endbatchfile
@@ -840,12 +841,19 @@ See http://www.latex-project.org/lppl.txt
 \RequirePackage{amssymb}[2002/01/22]
 \RequirePackage{amsthm}[2002/01/22]
 \RequirePackage{amsopn}
+\RequirePackage{amscd}
+\RequirePackage{accents}
+\RequirePackage{dsfont}
 %    \end{macrocode}
 % The package |stmaryrd| can be used for additional symbols. 
 %    \begin{macrocode}
 %\RequirePackage{stmaryrd}
 %    \end{macrocode}
-%   
+% 
+% The \package{amscd} is probably not useful at all as people are
+% moving to graphical programs such as TikZ for their commutative
+% diagrams.
+%  
 % \begin{macro}{empheq} 
 %    \begin{macrocode}
 \RequirePackage{empheq}
@@ -988,21 +996,33 @@ See http://www.latex-project.org/lppl.txt
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{\tabitem} This is a utility command to typeset the
-% |textcomp| symbols.
+% An example to scale math using the exscale package. Perhaps for
+% using slides etc.
+%
+%\begin{minipage}[c]{1.0\textwidth}%
+%\centering\large\[
+%\int_{-1}^{+1}\frac{f(x)}{\sqrt{1-x^{2}}}\,\mathrm{d}x\approx\frac{\pi}{n}%
+%\sum_{i=1}^{n}f\left(\cos\left(\frac{2i-1}{2n}\right)\right)\]
+%\end{minipage}%
+%
+% \begin{macro}{\tabitem} The \package{textcomp} 
+% provides a nice helper macro for typesetting symbols in normal, bold
+% and italics. I must think of a more semantic name than |tabitem|.
+%
 %    \begin{macrocode}
 \newcommand{\tabitem}[2]{%
-  \texttt{\symbol{`\\}#1} & \@nameuse{#1} & \bfseries\@nameuse{#1}&
-  \itshape\@nameuse{#1}
-  \ifthenelse{\equal{#2}{}}
-  {}
-  {& \texttt{\symbol{`\\}#2} & \@nameuse{#2} & \bfseries\@nameuse{#2}
-    & \itshape\@nameuse{#2} \\}
+  \texttt{\symbol{`\\}#1} & \@nameuse{#1} 
+   & \bfseries\@nameuse{#1}& \itshape\@nameuse{#1}
+   \ifthenelse{\equal{#2}{}}
+    {}
+    {& \texttt{\symbol{`\\}#2} & \@nameuse{#2} 
+     & \bfseries\@nameuse{#2}
+     & \itshape\@nameuse{#2} \\}
 }
 %    \end{macrocode}
 % \end{macro}
 %
-%
+
 %\setlength{\LTleft}{0pt}%
 %\setlength{\LTright}{0pt}
 %\noindent
@@ -1013,7 +1033,7 @@ See http://www.latex-project.org/lppl.txt
 %  \midrule
 %\endhead
 %
-%%   \tabitem{textcapitalcompwordmark}{textascendercompwordmark}
+%%  \tabitem{textcapitalcompwordmark}{textascendercompwordmark}
 %  \tabitem{textquotestraightbase}{textquotestraightdblbase}
 %  \tabitem{texttwelveudash}{textthreequartersemdash}
 %  \tabitem{textleftarrow}{textrightarrow}
@@ -2144,6 +2164,7 @@ See http://www.latex-project.org/lppl.txt
 \RequirePackage{ifmtarg}
 \RequirePackage{fp}
 \RequirePackage{ifthen}
+\RequirePackage{xspace}
 \RequirePackage{xstring}
 % \RequirePackage{cool, coolstr} conflicts to be resolved.
 \RequirePackage{etoolbox}
@@ -2151,6 +2172,8 @@ See http://www.latex-project.org/lppl.txt
 % does not seem to matter actually...
 \RequirePackage{upquote}
 \RequirePackage{listings}
+\usepackage{remreset}
+\usepackage{calc}
 \RequirePackage{tikz}
 %    \end{macrocode}
 %    
@@ -2332,6 +2355,7 @@ ProvidesClass,IfFileExists,RequirePackage,ifthenelse,chapter,includegraphics, ne
 \RequirePackage{framed}
 \RequirePackage{mdframed}
 \RequirePackage{varioref}
+\RequirePackage{setspace}
 %    \end{macrocode}  
 %
 %This is a nice package for canceling anything in mathmode with a slash, 
@@ -2555,7 +2579,26 @@ ProvidesClass,IfFileExists,RequirePackage,ifthenelse,chapter,includegraphics, ne
 \long\def\topline{\par\medskip
 \noindent\rule{\linewidth}{0.4pt}\medskip}
 %    \end{macrocode}
-
+%
+% \section{Phonetic Symbols}
+%
+% Users that make extensive use of the Tipa symbols would
+% probably have no use for this package, however now and then
+% these symbols can be useful when definining words and their
+% pronunciation.
+%
+%
+%    \begin{macrocode} 
+\RequirePackage[tone,extra,safe]{tipa}
+%    \end{macrocode}
+% 
+% This is also quite useful for Wikipedia transcriptions. 
+% For example `phonetics' is pronounced as  \textipa{\sffamily f@"nEtIks} and typed as
+% |\textipa{\sffamily f@"nEtIks}|
+%
+% |texdoc tipaman| for the full manual if this is part of your field
+% of research.
+% 
 % \section{Referencing}
 %
 % \begin{macro}{\fref} 
@@ -4279,6 +4322,32 @@ go back to the beginning of current section\;
 %</test-algorithms>
 % \fi
 %
+%<*test-spacing>
+% Uses the package setspace to set the spacing of the
+% document.
+%    \begin{macrocode}
+\documentclass{article}
+\usepackage{setspace}
+\usepackage{lipsum}
+\onehalfspacing
+\begin{document}
+\title{merry setspace christmas test}
+\author{who cares?}
+\date{2011-12-19}
+\maketitle
+
+\section{dummy}
+\lipsum[1]
+\subsection{first offspring}
+\lipsum[2]
+\begin{tabular}{llr}
+  a & silly & story about latex \\
+  silly & a & story
+\end{tabular}
+\end{document}
+%    \end{macrocode}
+%</test-spacing>
+%
 % \iffalse
 %<*settings>
 % \fi
@@ -4323,7 +4392,6 @@ go back to the beginning of current section\;
 \endinput
 
 http://tex.stackexchange.com/questions/45651/how-do-i-determine-in-which-order-packages-have-been-loaded
-
 
 
 
