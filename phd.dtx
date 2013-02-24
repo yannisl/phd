@@ -85,16 +85,15 @@ and the derived files              phd.ins,
   \file{test-scrartcl.tex}{\from{\jobname.dtx}{test-scrartcl}}
   \file{test-algorithms.tex}{\from{\jobname.dtx}{test-algorithms}}
   \file{test-hyphenation.tex}{\from{\jobname.dtx}{test-hyphenation}}
+  \file{settings.tex}{\from{\jobname.dtx}{settings}}
  }
 %</install>
 %<install>\endbatchfile
 %<*internal>
 \usedir{tex/latex/phd}
-
 \generate{
   \file{\jobname.ins}{\from{\jobname.dtx}{install}}
 }
-
 \nopreamble\nopostamble
 \usedir{source/phd}
 \generate{
@@ -103,21 +102,17 @@ and the derived files              phd.ins,
 \generate{
   \file{README.md}{\from{\jobname.dtx}{readmemd}}
 }
-
 \generate{
   \file{TODO.tex}{\from{\jobname.dtx}{TODO}}
 }
-
 \generate{
   \file{MWE-01.tex}{\from{\jobname.dtx}{MWE-01}}
 }
-
 \ifx\fmtname\nameofplainTeX
   \expandafter\endbatchfile
 \else
   \expandafter\endgroup
 \fi
-
 %</internal>
 %<*driver>
 \listfiles
@@ -130,9 +125,11 @@ and the derived files              phd.ins,
 \usepackage[toc,lof,lot]{multitoc}
 %\usepackage{dateiliste}
 \usepackage{\jobname}
+
 \usepackage[listings,theorems]{tcolorbox}
 \tcbset{before={\par\medskip\pagebreak[0]\noindent},after={\par\medskip}}%
-\usepackage{multicol}
+%\usepackage{multicol}
+\def\AmSmath{AmSmath}
 \usepackage{hypdoc}
 \hypersetup{pdftex,
   bookmarks,
@@ -156,24 +153,8 @@ and the derived files              phd.ins,
 \newcommand*{\pkg}[1]{\texttt{#1}}
 %\usepackage[numbered]{hypdoc}
 \definecolor{lstbgcolor}{rgb}{0.9,0.9,0.9}
- 
- \usepackage{fancyvrb}
-\newcommand*{\Lpack}[1]{\textsf {#1}}           
-\newenvironment{example}
-  {\VerbatimEnvironment
-   \begin{VerbatimOut}[gobble=2]{example.out}}
-  {\end{VerbatimOut}
-   \begin{center}
-   \fbox{\begin{minipage}{.9\linewidth}
-     \lstset{breakatwhitespace=true,breaklines=true,language=TeX,basicstyle=\small}
-     \lstinputlisting[]{example.out}
-   \end{minipage}}
-
-   \fbox{\begin{minipage}{.9\linewidth}
-     \input{example.out}
-   \end{minipage}}
-\end{center}
-}
+\newcommand*{\Lpack}[1]{\textsf {#1}}  
+\let\package\Lpack         
 %%http://tex.stackexchange.com/questions/75055/print-filelist-to-pdf/75064#75064
 %\printFileList
 %
@@ -253,7 +234,6 @@ and the derived files              phd.ins,
 % headache to both new and seasoned users. What packages are available, when
 % to use them and in which order is a common theme for many questions on
 % lists and |TX.SE|.
-
 % It is quite common during the writing of a thesis or book
 % for the author to keep on adding macros and packages
 % at the preamble of the document. In most cases this can
@@ -272,9 +252,21 @@ and the derived files              phd.ins,
 % \begin{teX}
 %  \usepackage{phd}
 % \end{teX}
+%
 % it will be better for the longer projects to just fork the
 % package and adapt it to your needs. In this respect, I have
 % uploaded the package to |github|.
+%
+% My goal in selecting the packages and adding a number of 
+% commands for the authors was to be able to typeset a 
+% document for most common use cases, without the need of
+% additional packages. The packages I selected are biased
+% towards academic publications, although they can find use
+% in almost any fields. The package provides a mechanism via
+% PGF keys to provide a settings file. This in combination
+% with the Athena package when it is made available will
+% enable the creation of almost any publication, just by
+% the use of a simple configuration file.
 % 
 % Most of the documentation can be found in the implementation part.
 %
@@ -381,7 +373,8 @@ and the derived files              phd.ins,
 %Make sure you check gitimmersion.com.
 % 
 % \StopEventually{}
-
+%
+%
 %<*package>
 % \section{Implementation}
 %
@@ -392,6 +385,8 @@ and the derived files              phd.ins,
 \ProvidesPackage{phd}[2013/2/26 v1.0 less preamble (YL)]
 %    \end{macrocode}
 % 
+%
+%
 % \section{Package Management} 
 %  
 % In order to keep track of all the packages and keys we require a
@@ -416,7 +411,6 @@ and the derived files              phd.ins,
 % of those macros and improved upon them.  However, \renamerobustsymbol  
 % and |\ifnotsavedsym| are new to this set.                                
 %                                                                        
-
 % Save a symbol that we know is going to get redefined.
 %
 % \begin{macro}{\savesymbol}
@@ -500,9 +494,6 @@ and the derived files              phd.ins,
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
-
-
-
 % \subsection{Utility macros for displaying symbols and fonts}
 %
 % In the sections that follow, we use a number of utilities for
@@ -557,31 +548,30 @@ and the derived files              phd.ins,
 %    \end{macrocode}
 %
 % We load pgfkeys for key management.
-%
+% 
 %    \begin{macrocode}
 \RequirePackage{pgf,pgfkeys}               % before onlyasmath
 \newcommand\cxset{\pgfqkeys{/phd }} %Notice this is pgf q keys
 %
 %
+
 \cxset{nag keys/.store in =\nagkeys@cx,
        onlyamsmath keys/.store in=\onlyamsmathkeys@cx,
        xcolor keys/.store in=\xcolorkeys@cx}
 %        
 %
-\cxset{nag keys = {l2tabu,%
-                   orthodox,%
-                   %
-                  }}
+\input{settings} % experimental
+%\cxset{nag keys = {l2tabu,%
+%                   orthodox,%
+%                   %
+%                  }}
 %    \end{macrocode}
 %
 % For |xcolor| we try and load as many pre-defined colornames as
 % possible.
-
-
 %    \begin{macrocode}
 \cxset{xcolor keys={fixpdftex,xtable,usenames,dvipsnames,svgnames,x11names}}                     
 % Set amsmath keys
-\cxset{onlyamsmath keys = {all}}
 %
 %    \end{macrocode}
 %
@@ -590,7 +580,6 @@ and the derived files              phd.ins,
 \RequirePackage{nag}   
 %    \end{macrocode}
 %
-
 %
 % \begin{macro}{onlyasmath}
 % The package |onlyasmath| also provides errors for deprecated math
@@ -676,7 +665,7 @@ and the derived files              phd.ins,
 %both result in somewhat legible texts, which defeats the purpose of providing texts that the reader is not going to read. the extensions |lipsumx| aim at
 %providing a gap between the three packages. It provides extensions
 % for full document testing.
-
+%
 %    \begin{macrocode}
 \newif\ifLIPSUM
 \RequirePackage{lipsum}
@@ -693,7 +682,6 @@ and the derived files              phd.ins,
 % typographically correct, there is no such thing.} We don't need to set any keys for the
 % package.
 %
-
 %    \begin{macrocode}
 \RequirePackage{booktabs}
 \newcounter{step}
@@ -713,25 +701,19 @@ and the derived files              phd.ins,
 \RequirePackage{tabularx}
 %    \end{macrocode}
 % \end{macro}
-
+%
 % \begin{macro}{delarray}
 % The addition to array.sty added in delarray.sty is a system of implicit |\left|
 %|\right| pairs. If you want an array surrounded by parentheses, you can enter:
 %|\begin{array}({cc}) . .|
 % 
 %    \begin{macrocode}
-\RequirePackage{delarray}
+% \RequirePackage{delarray} gives problems
 \RequirePackage{array}
 %    \end{macrocode}
 % \end{macro}
-
-%\[
-%A=\begin{array}({cc})
-%	a & b\\
-%	c & d
-%\end{array}
-%\]
-
+%
+%
 % \begin{macro}{dcolumn}
 % The |dcolumn| package also by David Carlisle is loaded next. This package 
 % defines a system for defining columns of entries in an |array|
@@ -756,8 +738,7 @@ and the derived files              phd.ins,
 \RequirePackage{longtable}
 %    \end{macrocode}
 % \end{macro}   
-
-
+%
 % \begin{macro}{multirow}
 % 
 % The |multirow| by Piet van Oostrum and its two companion packages
@@ -816,7 +797,6 @@ and the derived files              phd.ins,
 % \end{macro}
 % \end{macro}
 %  
-
 % \section{Maths}
 %
 % Although we cognisant that there are documents that do not use math
@@ -877,7 +857,6 @@ and the derived files              phd.ins,
 %  \end{equation}
 % 
 % Test \mbox{{\Huge\WomanFace  \Checkedbox \Square}}
-
 %  $\Delta$ 
 %
 %    \begin{macrocode}
@@ -900,7 +879,7 @@ and the derived files              phd.ins,
 %of Morten H\o gholm (\href{http://www.ctan.org/tex-archive/macros/latex/contrib/mh/}{CTAN://macros/latex/contrib/mh/}).} 
 %supports different frames for math environments of the AmSmath
 %package. It doesn't support  all the environments from standard \LaTeX{} which 
-%are not modified by \AmSmath}.
+%are not modified by \AmSmath.
 %
 %With the optional argument of the empheq
 %the preferred box type
@@ -936,7 +915,8 @@ and the derived files              phd.ins,
   {}
 %    \end{macrocode}
 %      
-% For calligraphic fonts we load the package |eucal|. The package is not actually needed, if 
+% For calligraphic fonts we load the package |eucal|. The package 
+% is not actually needed, if 
 % amsfonts are loaded? Consider removing.
 %    \begin{macrocode}
 \newif\ifEU
@@ -950,7 +930,6 @@ and the derived files              phd.ins,
 
 %    \end{macrocode}
 %
-
 %
 % \begin{macro}{upgreek} This package by Walter Schmidt provides fonts
 % and commands for an upright Greek alphabet. It makes the upright
@@ -989,22 +968,17 @@ and the derived files              phd.ins,
 % a difficult exercise to make a selection. Another issue with symbols
 % is that there is a bit of overlap between the various fonts and commands
 % as to be expected.
-
 %\subsection{Symbols in textcomp}
 %, has numerous symbols \ldots
 % We use the \pkg{texcomp} package for special symbols, such as |\checkmark|
 %  \( \mho \Diamond \leadsto \rhd \diamond \Diamond \). The sort of the standard package
 % latexsym is not loaded as it duplicates functionality of the if one makes use of the packages |amsfonts| or |amssymb|.
 %
-
 % \begin{macro}{textcomp} 
 % \begin{macro}{mathcomp} The package |textcomp| is part of the \LaTeX2e
 % distribution. The description of the package
 % on ctan can give the erroneous idea that it is obsolotet, on the contracry % is part of the original distribution.textcomp is not obsolete, it's just not distributed as extra package any more since it's distributed with the basic LaTeX. The mathcomp package defines macros for using some of these text... symbols with math and the abbreviation tc...
-
-
 %
-
 %  The symbols are used by calling them by their name. E.g. \textleaf:
 %  \verb|\textleaf|.
 %  
@@ -1023,7 +997,7 @@ and the derived files              phd.ins,
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
-
+%
 % \begin{macro}{exscale}
 %This pack­age im­ple­ments scal­ing of the math ex­ten­sion font cmex. If this pack­age is used the site needs scaled ver­sions of the font cmex10 in the sizes 10.95pt, 12pt, 14.4pt, 17.28pt, 20.74pt, and 24.88pt (cor­re­spond­ing to stan­dard mag­steps us­ing |\mag­stephalf|, and |\mag­step1| through |\mag­step5|). Ad­di­tion­ally cmex vari­ants for the sizes 7pt to 9pt are nec­es­sary. Th­ese fonts are part of the AMS font pack­age.
 %This pack­age is part of Stan­dard LATEX.
@@ -1115,7 +1089,7 @@ and the derived files              phd.ins,
 %  \tabitem{textdiv}{}
 %
 %\end{longtable}
-
+%
 % \begin{macro}{wasysym} \url{http://tex.stackexchange.com/questions/80053/wasysym-symbols-render-to-something-different}
 %    \begin{macrocode}
 \newif\ifWASY
@@ -1188,7 +1162,7 @@ and the derived files              phd.ins,
 %\par}
 %
 %\end{table}
-
+%
 %    
 % \begin{macro}{marvosym}
 % marvosym underwent a major rewrite for the 2000/05/01 version, adding
@@ -1298,7 +1272,7 @@ and the derived files              phd.ins,
 %\sho{\Valve}
 %\\ \hline
 %\end{tabular}
-
+%
 %\subsection{Information}
 %
 %\begin{tabular}{|*{8}{c}|} \hline
@@ -1827,8 +1801,8 @@ and the derived files              phd.ins,
 \newcommand{\CSname}[1]{\texttt{\protect\bslash#1}}
 %    \end{macrocode}
 % \end{macro}
-
-
+%
+%
 % \begin{figure}[tbp] \small 
 % \begin{commandsInColumns}{2}
 %   \ScissorRight
@@ -2026,12 +2000,11 @@ and the derived files              phd.ins,
 % \end{commandsInColumns}
 % \caption{Double bend warning signs from the manfnt package.}
 % \end{figure}
-
+%
+%
 % I am not too sure if I should leave the package here for the long
 % term or remove it, perhaps make a "bundle" for LaTeX authors.
-
-
-
+%
 % \subsection{ifsym}
 % \begin{macro}{ifsym}
 %    \begin{macrocode}
@@ -2062,7 +2035,7 @@ and the derived files              phd.ins,
 % \end{macro}
 % The |ifsym| package can produce some fancy symbols such as \Cube{1},\Cube{6} etc. a cross \Cross
 % a \TriangleUp      {\color{red}\TriangleDown}. The documentation is in postscript?  \PulseHigh \showclock{0}{45}
-
+%
 % \subsection{Weather Symbols}
 % \begin{figure}[h] \small 
 % \begin{commandsInColumns}{3}
@@ -2193,6 +2166,7 @@ and the derived files              phd.ins,
 \RequirePackage{xstring}
 %% \RequirePackage{cool, coolstr} conflicts to be resolved.
 \RequirePackage{etoolbox}
+\RequirePackage{upquote}
 \RequirePackage{listings}
 \RequirePackage{tikz}
 %    \end{macrocode}
@@ -2400,12 +2374,12 @@ ProvidesClass,IfFileExists,RequirePackage,ifthenelse,chapter,includegraphics, ne
 %\verb+\hcancel+: $\hcancel{3}\qquad\hcancel[red]{1234567}$
 %
 %\bigskip
-%\begin{Verbatim}
+%\begin{verbatim}
 % $f(x)=\dfrac{\left(x^2+1\right)\cancel{(x-1)}}{\cancel{(x-1)}(x+1)}$\\[0.5cm]
 % $\bcancel{3}\qquad\bcancel{1234567}$\\[0.5cm]
 % $\xcancel{3}\qquad\xcancel{1234567}$\\[0.5cm]
 % $\hcancel{3}\qquad\hcancel[red]{1234567}$
-%\end{Verbatim}
+%\end{verbatim}
 
 
 % \section{Miscellaneous}
@@ -4321,6 +4295,20 @@ go back to the beginning of current section\;
 % \iffalse  
 %</test-algorithms>
 % \fi
+%
+% \iffalse
+%<*settings>
+% \fi
+%% Some settings
+%    \begin{macrocode}
+\cxset{nag keys = {l2tabu,%
+                   orthodox}}
+\cxset{onlyamsmath keys = {all}}
+%    \end{macrocode}
+% \iffalse
+%</settings>
+% \fi
+%
 % ^^A\addtocontents{toc}{\protect\end{multicols}}
 %\begin{thebibliography}{1}
 %\raggedright
