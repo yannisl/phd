@@ -1,0 +1,348 @@
+
+\documentclass[oneside,10pt]{scrbook}
+\let\footruleskip\undefined
+\usepackage{tikz,changepage,fancyhdr,amsmath}
+\usepgflibrary{arrows}
+\usepackage{lipsum}
+%	Keys for styling chapters
+% 	Define a family for chapter styling keys
+\makeatletter
+%	Define some convenience lengths
+\newlength\shiftx
+\newlength\shifty
+\newlength\tol
+\newlength\toly
+\newlength\innermargin
+%	The |@diagonal| swirch is used to let the user choose
+%	to draw the diagonal lines for classical layout checks
+%	we set it initially at false.
+\newif\if@diagonal
+\@diagonalfalse
+%
+%	We define its own family of keys.
+%	\pgfkeys{/xlayouts/.is family}       !TODO A CHECK HERE
+% \begin{macro}
+%	The macro |\cxset| is used to either define a new key or set an existing one.
+%    \begin{macrocode}
+\newcommand\cxset{\pgfqkeys{/xlayouts}} %Notice this is pgf q keys
+%    \end{macrocode}
+% \end{macro}
+%
+% This macro has been adapted from the layouts package, it sets the units to be printed
+% in the diagrams.
+\newcommand{\printinunitsof@cx}[1]{%
+  \def\l@yunitperpt{1.0}\def\l@yunits{pt}%
+  \def\l@yta{#1}\def\l@ytb{pt}%
+  \ifx \l@yta\l@ytb
+    \def\l@yunitperpt{1.0}\def\l@yunits{pt}%
+  \else
+    \def\l@ytb{pc}%
+    \ifx \l@yta\l@ytb
+      \def\l@yunitperpt{0.083333}\def\l@yunits{pc}%
+    \else
+      \def\l@ytb{in}%
+      \ifx \l@yta\l@ytb
+        \def\l@yunitperpt{0.013837}\def\l@yunits{in}%
+      \else
+        \def\l@ytb{mm}%
+        \ifx \l@yta\l@ytb
+          \def\l@yunitperpt{0.351459}\def\l@yunits{mm}%
+        \else
+          \def\l@ytb{cm}%
+          \ifx \l@yta\l@ytb
+            \def\l@yunitperpt{0.0351459}\def\l@yunits{cm}%
+          \else
+            \def\l@ytb{bp}%
+            \ifx \l@yta\l@ytb
+              \def\l@yunitperpt{0.996264}\def\l@yunits{bp}%
+            \else
+              \def\l@ytb{dd}%
+              \ifx \l@yta\l@ytb
+                \def\l@yunitperpt{0.9345718}\def\l@yunits{dd}%
+              \else
+                \def\l@ytb{cc}%
+                \ifx \l@yta\l@ytb
+                  \def\l@yunitperpt{0.0778809}\def\l@yunits{cc}%
+%                \else
+%                  \def\l@ytb{PT}%
+%                  \ifx \l@yta\l@ytb
+%                    \def\l@yunitperpt{1.0}\def\l@yunits{PT}% gives problems with pgfmathparse
+%                  \fi
+                \fi
+              \fi
+            \fi
+          \fi
+        \fi
+      \fi
+    \fi
+  \fi
+}
+
+% 	Define keys to set styling parameters and units
+\cxset{geometry units/.code=\printinunitsof@cx{#1},
+          geometry grid color/.store in=\geometrygridcolor@cx,
+          geometry lines color/.store in=\geometrylinescolor@cx,
+          geometry label color/.store in=\geometrylabelcolor@cx,
+          geometry diagonal/.is choice,
+          geometry diagonal/true/.code=\@diagonaltrue,
+          geometry diagonal/false/.code=\@diagonalfalse,
+          geometry diagonal/none/.code=\@diagonalfalse,
+          geometry diagonal color/.store in=\diagonalcolor@cx,
+          geometry dim arrow type/.store in=\geometryarrowtype@cx,
+          geometry grid xsteps/.store in=\xsteps@cx,
+          geometry grid ysteps/.store in=\ysteps@cx,
+}
+
+
+%	Set some defaults
+\cxset{geometry diagonal=true,
+          geometry diagonal color=blue!20,
+          geometry lines color=pink,
+          geometry label color=blue!15,
+          geometry grid color=blue!15,
+          geometry dim arrow type=stealth, %angle 45, %latex' , stealth works well with small dim lines
+          geometry units=pt,
+          geometry grid xsteps=9,
+          geometry grid ysteps=9}
+
+
+% rounding in 2 decimal place
+\newcommand\convert@cx[1]{%
+   \pgfmathparse{#1*\l@yunitperpt}
+   % use pgfmath for rounding to 2 decimals
+   \pgfmathprintnumber{\pgfmathresult}\thinspace\l@yunits
+}
+
+\newcommand\CS[1]{\footnotesize #1}
+
+\newcommand\labelit@cx[1]{\ttfamily\CS{\string#1} \convert@cx{#1}}
+
+\newcommand\agrid{%
+
+\tikzset{lines/.style={color=\geometrylinescolor@cx},
+            dim/.style={color=black!90,thick,>=\geometryarrowtype@cx}}
+\begin{tikzpicture}[remember picture, overlay]
+\checkoddpage%
+   \ifoddpage
+      \innermargin\oddsidemargin
+      \def\innermarginname{\CS{oddsidemargin}}%
+     \else
+        \innermargin\evensidemargin
+        \def\innermarginname{\CS{evensidemargin}}%
+  \fi
+\calcshift
+ \begin{scope}[xshift=-\shiftx, yshift=-\shifty]
+%  grid
+         \draw [line width=1pt,color=\geometrygridcolor@cx,xstep=\paperwidth/\xsteps@cx,ystep=\paperheight/\ysteps@cx]
+         (current page.south west) grid ++(\paperwidth,\paperheight);
+ \draw[lines] (1in+\innermargin,0) -- (1in+\innermargin,\paperheight);
+         \draw[dotted,black] (1in,0) -- (1in,\paperheight);
+         \draw[lines] (1in+\innermargin+\textwidth,0) -- (1in+\innermargin+\textwidth,\paperheight);
+
+\ifoddpage
+     \draw[lines]  (1in+\innermargin+\textwidth+\marginparsep,0) -- (1in+\innermargin+\marginparsep+\textwidth,\paperheight);
+ \draw[lines]  (1in+\innermargin+\textwidth+\marginparsep+\marginparwidth,0) -- (1in+\innermargin+\marginparsep+\marginparwidth+\textwidth,\paperheight);
+\else
+    \draw [lines] (1in+\innermargin-\marginparsep,0) -- ++(0,\paperheight);
+   \draw [lines] (1in+\innermargin-\marginparsep-\marginparwidth,0) -- ++(0,\paperheight);
+\fi
+% verticals
+         \draw [dotted,blue](0,\paperheight-1in)-- ++(\paperwidth,0);
+         \draw [lines](0,\paperheight-1in-\topmargin)-- ++(\paperwidth,0);
+         \draw [lines](0,\paperheight-1in-\topmargin-\headheight)-- ++(\paperwidth,0) node[black,above] at ++(-0.5\paperwidth,0){Page \thepage};
+         \draw [lines](0,\paperheight-1in-\topmargin-\headheight-\headsep)-- ++(\paperwidth,0);
+         \draw [lines](0,\paperheight-1in-\topmargin-\headheight-\headsep-\textheight)-- ++(\paperwidth,0);
+        \draw [lines](0,\paperheight-1in-\topmargin-\headheight-\headsep-\textheight-\footskip)-- ++(\paperwidth,0);
+       % draw two column
+\if@twocolumn
+\draw [lines](1in+\innermargin+\columnwidth,\paperheight-1in-\topmargin-\headheight-\headsep)-- ++(0,-\textheight);
+\draw [lines](1in+\innermargin+\columnwidth+\columnsep,\paperheight-1in-\topmargin-\headheight-\headsep)-- ++(0,-\textheight);\fi
+% dimensions
+
+\ifoddpage
+   \pgfmathsetlength\tol{1in+\innermargin+\textwidth+2\marginparsep}
+       \draw [dim, <->](\tol,\paperheight)-- ++(0,-1in-\topmargin);
+\else
+\pgfmathsetlength\tol{2\marginparsep}
+  \draw [dim, <->](\tol,\paperheight)-- ++(0,-1in-\topmargin);
+\fi
+%		draw 1in-\topmargin
+\pgfmathsetlength\@tempdima{1in-\topmargin}
+\ifoddpage
+      \draw [dim, <->](\tol,\paperheight-1in-\topmargin)-- ++(0,-\headheight)
+          node[left, fill=\geometrylabelcolor@cx] at
+           ++(-1ex,0.5in+0.5\topmargin+1.5em)
+             {\scriptsize$1\thinspace \text{in}+\texttt{\footnotesize  \textbackslash topmargin}\,
+              (\convert@cx{\topmargin})= \convert@cx{\@tempdima}$};
+\else
+      \draw [dim, <->](\tol,\paperheight-1in-\topmargin)-- ++(0,-\headheight) node[right, fill=\geometrylabelcolor@cx] at ++(1ex,1in-0.5\topmargin){\scriptsize$1\thinspace \text{in}+\texttt{\footnotesize \textbackslash topmargin}\, (\convert@cx{\topmargin})= \convert@cx{\@tempdima}$};
+\fi
+
+%           headheight
+\ifoddpage
+      \draw [dim,<->](\tol,\paperheight-1in-\topmargin)-- ++(0,-\headheight)node[above left,fill=\geometrylabelcolor@cx] at ++(-1ex,0){ \labelit@cx{\headheight}};
+%		draw headsep
+      \draw [dim,<->](\tol,\paperheight-1in-\topmargin-\headheight)-- ++(0,-\headsep) node[above left,fill=\geometrylabelcolor@cx] at ++(-1ex,0){\labelit@cx{\headsep}};
+\else
+ \draw [dim,<->](\tol,\paperheight-1in-\topmargin)-- ++(0,-\headheight)node[above right,fill=\geometrylabelcolor@cx] at ++(1ex,0){ \labelit@cx{\headheight}};
+%		draw headsep
+      \draw [dim,<->](\tol,\paperheight-1in-\topmargin-\headheight)-- ++(0,-\headsep) node[above right,fill=\geometrylabelcolor@cx] at ++(1ex,0){\labelit@cx{\headsep}};
+
+\fi
+%		draw dim textheight
+      \draw [dim, |<->](\tol,\paperheight-1in-\topmargin-\headheight-\headsep)
+               -- ++(0,-\textheight) node[right,text width=1.7cm,text centered,fill=\geometrylabelcolor@cx] at ++(1ex,0.5\textheight){\labelit@cx{\textheight}};
+
+ \ifoddpage
+
+    \draw [dim, |<->|](\tol,\paperheight-1in-\topmargin-\headheight-\headsep-\textheight)
+               -- ++(0,-\footskip)
+               node[left,fill=blue!15] at ++(-1ex,0.5\footskip){\labelit@cx{\footskip}};
+\else
+    \draw [dim, |<->|](\tol,\paperheight-1in-\topmargin-\headheight-\headsep-\textheight)
+               -- ++(0,-\footskip)
+               node[right,fill=\geometrylabelcolor@cx] at ++(1ex,0.5\footskip){\labelit@cx{\footskip}};
+\fi
+
+% Float parameters
+%	topfraction on left margin
+
+\iftopfloat{%
+\draw [dim,|<->|] (1in+\innermargin-0.3cm, \paperheight-1in-\topmargin-\headheight-\headsep)-- ++(0,-\topfraction\textheight) node[left,text width=1.7cm,text centered, fill=\geometrylabelcolor@cx] at ++ (0,0.4\textheight) {\textbackslash topfraction\\ \topfraction};
+}{}
+%	bottom fraction
+\ifbotfloat{%
+\draw [dim,|<->|] (1in+\innermargin-0.5cm, \paperheight-1in-\topmargin-\headheight-\headsep) ++(0,-\textheight) -- ++(0,\bottomfraction\textheight) node[left, text width=1.2cm, fill=\geometrylabelcolor@cx] at  ++(-1ex,-\bottomfraction*0.5\textheight){\textbackslash bottom\\fraction\\ \bottomfraction};
+}{}
+
+%	HORIZONTAL DIMENSIONS
+\setlength\toly{1.5cm}
+\draw[dim,<->](0,\toly)--++(1in,0)node [fill=\geometrylabelcolor@cx] at ++(-0.4in,-1.5em){driver marg. 1\thinspace in};
+
+% 	If innermargin 0pt we do not show the dimension line.
+% 	Tufte-book has innermargin=0pt
+\ifdim\innermargin=0pt
+   \draw[dim,](0+1in,\toly)--++(\innermargin,0) node [above, fill=\geometrylabelcolor@cx]
+        at  ++(-0.5\innermargin,0.5em) {\labelit@cx{\innermargin}};
+\else
+   \draw[dim,<->](0+1in,\toly)--++(\innermargin,0) node [above, fill=\geometrylabelcolor@cx]
+        at  ++(-0.5\innermargin,0.5em) {\labelit@cx{\innermargin}};
+\fi
+
+\draw[dim,<->](0+1in+\innermargin,\toly)--++(\textwidth,0) node[above, fill=\geometrylabelcolor@cx] at ++(-0.5\textwidth,0.5em) {\labelit@cx{\textwidth}};
+
+% marginpar dimensions
+\ifoddpage
+   \draw[dim,|<->|](0+1in+\innermargin+\textwidth, \toly+1.5cm)--++(\marginparsep,0)node [below, fill=\geometrylabelcolor@cx] at ++(\marginparsep,-0.5em){\labelit@cx{\marginparsep}};
+
+\draw[dim,<->](0+1in+\innermargin+\textwidth+\marginparsep, \toly)--++(\marginparwidth,0)node [above, fill=\geometrylabelcolor@cx] at ++(-0.5\marginparwidth,0.5em){\labelit@cx{\marginparwidth}};
+\else
+    \draw[dim,|<->|](0+1in+\innermargin, \toly+1.55cm)--++(-\marginparsep,0)node [right, fill=\geometrylabelcolor@cx] at ++(\marginparsep,0em){\labelit@cx{\marginparsep}};
+
+\ifdim\marginparwidth<3cm % try be a more intelligent for placement
+   \draw[dim,|<->|](0+1in+\innermargin-\marginparsep-\marginparwidth, \toly+.95cm)--++(\marginparwidth,0)node [right, fill=\geometrylabelcolor@cx] at ++(0,0em){\labelit@cx{\marginparwidth}};
+\else
+   \draw[dim,|<->|](0+1in+\innermargin-\marginparsep-\marginparwidth, \toly+.95cm)--++(\marginparwidth,0)node [above, fill=\geometrylabelcolor@cx] at ++(-0.5\marginparwidth,0em){\labelit@cx{\marginparwidth}};
+\fi
+
+\fi
+
+
+% diagonal
+\if@diagonal
+      \ifoddpage
+          \draw [\diagonalcolor@cx,thick] (\paperwidth,0)--(0,\paperheight);
+      \else
+          \draw [\diagonalcolor@cx,thick] (0,0)--(\paperwidth,\paperheight);
+      \fi
+\fi
+\end{scope}
+\end{tikzpicture}}
+
+\makeatletter
+\newcommand\calcshift{%
+   \pgfsys@getposition{\pgfpictureid}\@basepoint
+   \pgf@process{\pgfpointorigin\@basepoint}%
+   \setlength\shiftx\pgf@x
+   \setlength\shifty\pgf@y}
+
+\def\ps@grid{%
+    \let\@oddfoot\@empty\let\@evenfoot\@empty
+    \def\@evenhead{\agrid}%
+    \let\@oddhead\@evenhead
+    \let\@mkboth\@gobbletwo
+    \let\chaptermark\@gobble
+    \let\sectionmark\@gobble
+ }
+
+\def\figureparamsbot{%
+\begin{tikzpicture}[remember picture, overlay]
+      \pgfmathsetlength\@tempdima{-\textfloatsep}
+      \draw[>=stealth,|<->|] (0,0) --++(0,-\@tempdima)node [right,fill=\geometrylabelcolor@cx]
+           at ++ (1ex,-0.5\textfloatsep){\CS{textfloasep} \convert@cx{\textfloatsep}};
+\end{tikzpicture}%
+\par
+}
+\def\figureparamstop{%
+\par
+\begin{tikzpicture}%[remember picture, overlay]
+      \pgfmathsetlength\@tempdima{-\textfloatsep}
+      \draw[>=stealth,|<->|] (0,0) --++(0,\@tempdima)node [right,fill=\geometrylabelcolor@cx]
+           at ++ (1ex,0.5\textfloatsep){\CS{textfloasep} \convert@cx{\textfloatsep}\ifbotfloat{bot}{top}};
+\end{tikzpicture}%
+}
+\makeatother
+% Use Donald Arseneau's improved float parameters for the documentation and
+% to develop sensible values.
+\renewcommand{\topfraction}{.6}
+\renewcommand{\bottomfraction}{.8}
+\renewcommand{\textfraction}{.04}
+\renewcommand{\floatpagefraction}{.92} % have a high one don't encourage it
+\renewcommand{\dbltopfraction}{.5}
+\renewcommand{\dblfloatpagefraction}{.8}
+\setcounter{topnumber}{9}
+\setcounter{bottomnumber}{9}
+\setcounter{totalnumber}{2}
+\setcounter{dbltopnumber}{1}
+\pagestyle{grid}
+
+
+
+
+\begin{document}
+
+\chapter{Introduction}
+\thispagestyle{grid}
+\begin{figure}[b]
+\ifbotfloat{\figureparamsbot}{%
+ \iftopfloat{\figureparamstop}{}}
+
+\centering
+\includegraphics[height=0.9\columnwidth]{./images/hine04-x}
+\caption{Example image to demonstrate top fraction.}
+\end{figure}
+\lipsum[1]
+
+\lipsum[1]
+
+This has been drawn using TikZ\footnote{A kleine program.}\footnote{Another footnote.}.
+\lipsum[1-2]
+\begin{figure}[t]
+ \caption{Example image to demonstrate top.}
+\includegraphics[width=\columnwidth]{./images/hine02}%
+  \iftopfloat{\figureparamstop}{}
+\end{figure}
+\begin{figure}[tpb]
+\centering
+\includegraphics[height=\columnwidth]{./images/hine04-x}
+%\caption{Example image to demonstrate top fraction.}
+\end{figure}
+
+\begin{figure}[tpb]
+\centering
+\includegraphics[width=\columnwidth]{./images/hine04-xx}
+\caption{Example image to demonstrate top fraction.}
+\end{figure}
+\lipsum
+% --- just some other tikz picture
+\end{document} 

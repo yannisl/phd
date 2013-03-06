@@ -1,0 +1,249 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\cxset{steward,
+  chapter toc=true,
+  numbering=arabic,
+  custom=tikzspecial,
+  offsety=0cm,
+  image=hine03,
+  texti={When Lamport designed the original \LaTeX\ sectioning commands, limitations of computer power forced him to restrict the abstraction of complicated chapter layouts. With current tools available improvements are much easier to program.},
+  textii={In this chapter we discuss a method that allows the production of fancy chapter headings and formatting, based on a set of key values. Central  to this process is the separation of content from presentation.
+We also discuss the basic formatting tools that are available and how one can modify them to mould new book designs.},
+}
+\@specialtrue
+
+\cxset{chapter opening=left}
+\chapter{Special Designs}
+\section{Introduction}
+
+The strength of the package lies in having defined mechanisms to enable easier abstraction of special designs.
+We will first outline a simple mechanism for such definitions.
+
+To define any special chapter you need to either redefine a command or create a new one. Let us look at
+an example, which simply uses the tikZ package to draw a chapter header at the top of the page. Every time the \cs{chapter} command is called, this command will be indirectly activated at the appropriate point.
+What is available for you to use is all the chapter settings information. You can also add additional keys.
+
+\begin{tcolorbox}
+\begin{lstlisting}
+\renewcommand{\tikzspecial}[2][]{%
+\begin{tikzpicture}[remember picture,overlay]
+    \node[yshift=-3cm] at (current page.north west)
+      {\begin{tikzpicture}[remember picture, overlay]
+        \draw[fill=\fill@cx] (0,0) rectangle (\paperwidth,3cm);
+        \node[anchor=east,xshift=.9\paperwidth,rectangle,
+              rounded corners=10pt,inner sep=11pt,
+              fill=thegreen]{%
+        \titlefontcolor@cx
+        \titlefontsize@cx\bfseries
+        \titlefontfamily@cx
+        \thechapter\
+        \textsc{#2}};
+       \end{tikzpicture}
+      };
+\end{tikzpicture}
+\mbox{}
+\vspace*{60pt}\par
+}
+\end{lstlisting}
+\end{tcolorbox}
+
+%% new variables for the box
+\cxset{
+   chapter box color/.store in=\chapterboxcolor@cx,
+   chapter band color/.store in=\chapterbandcolor@cx,
+}
+
+The strength of the system lies in defining an adequate number of variables to abstract the design. We also need to decide which are the important parameters. Let us for demonstration purposes just add two new keys.
+One for the band color and another for the rounded colour.
+
+\begin{tcblisting}{}
+\cxset{
+   chapter box color/.store in=\chapterboxcolor@cx,
+   chapter band color/.store in=\chapterbandcolor@cx,
+}
+\end{tcblisting}
+
+Note that any design based on tikZ's  \texttt{remember picture, overlay} requires possibly two and sometimes three runs in order to stabilize.
+
+\cxset{custom/.code=\gdef\customdesign@cx{\csname#1\endcsname}\@specialtrue,
+       fill/.store in=\fill@cx,
+      }
+ \cxset{yshift/.store in=\yshift@cx}
+\cxset{stefan/.style={fill=purple, title font-color=\color{white},
+          custom=tikzspecials,
+          yshift=-3cm,
+          fill=purple!80,
+          }}
+
+\newcommand{\tikzspecials}[2][]{%
+\begin{tikzpicture}[remember picture,overlay]
+    \node[yshift=\yshift@cx] at (current page.north west)
+      {\begin{tikzpicture}[remember picture, overlay]
+        \draw[fill=\fill@cx, draw=none] (0,0) rectangle (\paperwidth,3cm);
+        \node[anchor=east,xshift=.9\paperwidth,rectangle,
+              rounded corners=10pt,inner sep=11pt,
+              fill=\fill@cx]{%
+        \titlefontcolor@cx
+        \titlefontsize@cx\bfseries
+        \titlefontfamily@cx
+        \thechapter\
+        \textsc{#2}};
+      \draw [fill=red] (0,10cm) -- (5cm,10cm);
+       \end{tikzpicture}
+      };
+\end{tikzpicture}
+\mbox{}
+\vspace*{60pt}\par
+}
+
+\section{Naming conventions}
+
+When you set the key custom it redefines the command \cs{customdesign@cx} to hold the name of your special macro.  So the only place where you need to add a definition is one macro. You can name your style anything you want, however I recommend that variants are named in two or more words, the second one simulating a theme. For example you can name your theme \option{stephan} and a sub-theme as  \option{stephan blue}.
+
+
+\section{Themes and styles}
+
+Once you have a design abstracted and its major components defined as keys, you can think of it as a template. A template then can be extended to different \textit{themes}. For example if we name our template as \textit{stefan}, we can have themes as \textit{stefan blue}, \textit{stefan green} or other similar and appropriate names. This is closer to what is currently used in CMS systems on the web.
+
+\begin{tcblisting}{}
+\cxset{stefan purple/.style={
+         fill=purple,
+         title font-color=\color{white},
+         custom=tikzspecials}}
+\end{tcblisting}
+
+
+
+\fancypagestyle{chapterstyle}{\fancyhf{}%
+  \fancyhead[RO,LE] {\thepage}%
+  \fancyhead[LO,RE] {}%
+  \fancyfoot [R] {\scriptsize\today}
+  \renewcommand\headrulewidth{1pt}
+}
+
+\pagestyle{chapterstyle}
+
+\fancypagestyle{plain}{\fancyhf{}%
+  \fancyhead[RO,LE] {\thepage}%
+  \fancyhead[LO,RE] {}%
+  \fancyfoot [R] {\scriptsize\today}
+\renewcommand\headrulewidth{0pt},
+\renewcommand\footrulewidth{0pt}
+}
+
+
+\cxset{chapter toc=false, chapter opening=any,
+          header style=samplepage}
+\pagestyle{chapterstyle}
+
+\@specialtrue
+\clearpage
+\cxset{stefan}
+\chapter{A Chapter Head Drawn with TikZ}
+
+\lipsum[1-3]
+
+\clearpage
+%\pagestyle{fancy}
+
+
+\cxset{header style=samplepage}
+
+\cxset{chapter opening=anywhere}
+\chapter{Introduction to TikZ Style Chapters}
+\chapter{Introduction to TikZ Style Chapters}
+The \lstinline{tikZ} package brings a lot of capabilities to the design of fancy style headings, including shading effects and the like. I expect this type of design to grow in the future. Since tikZ is part of the PGF family it is easy to integrate with the package.
+
+\section{Integrating the code}
+
+Code integration, especially with a document that might have different chapter headings presents a challenge. However, if we do touch the chapter command it might make things easier. We provide a key called special that instead of calling the \string\@make... calls a special
+routine to handle the tikz commands (as one would expect that all the code will then be here).
+
+\begin{lstlisting}
+\newcommand\chapter{\if@openright\cleardoublepage\else\clearpage\fi
+                    \thispagestyle{plain}%
+                    \global\@topnum\z@
+                    \@afterindentfalse
+                    \secdef\@chapter\@schapter}
+
+\@chapter[#1]#2{\ifnum \c@secnumdepth >\m@ne
+                    \if@mainmatter
+                      \refstepcounter{chapter}%
+                         \typeout{\@chapapp\space\thechapter.}%
+          %%
+              \if@toc
+                      \addcontentsline{toc}{chapter}%
+                                   {\protect\numberline{\thechapter}#1}\fi%
+                       \else
+                         \addcontentsline{toc}{chapter}{#1}%
+                       \fi
+                    \else
+                      \addcontentsline{toc}{chapter}{#1}%
+                    \fi
+                    \chaptermark{#1}%
+                    \addtocontents{lof}{\protect\addvspace{10\p@}}%
+                    \addtocontents{lot}{\protect\addvspace{10\p@}}%
+                    \if@twocolumn
+                      \@topnewpage[\@makechapterhead{#2}]%
+                    \else
+                      \@makechapterhead{#2}%
+                      \@afterheading
+                    \fi}
+\end{lstlisting}
+
+The best approach I could think of was to add some sort of switch in
+the @makechapterhead macro, which will then call the special.
+
+First we define a special key.
+
+
+\begin{lstlisting}
+\cxset{custom/.code=\gdef\customdesign@cx{#1}\@specialtrue,
+       fill/.store in=\fill@cx}
+\cxset{custom=tikzspecial,
+       title font-size=\Large,
+       title font-color=\color{white}}
+\end{lstlisting}
+
+We have assumed that the only value we want to pass is the Chapter title, as the rest can be handled quite easily, by means of key values.
+
+\section{Key management}
+
+When you develop a generic template all the standards keys are available to you. For example the chapter opening commands. However, if you positioning using fixed parameters, the anywhere key cannot work properly, by adding a yshift into the definition of the special and adjusting you can achieve it.
+
+\clearpage
+
+\cxset{chapter opening=anywhere,
+          yshift=-12cm,chapter toc=false}
+\chapter{A test}
+\cxset{chapter opening=anywhere,
+          fill=olive,
+          yshift=-18cm}
+\chapter{A test}
+
+\section{Conclusions}
+
+In this chapter we have seen how to design and code special templates for special openings. In most cases you will use TikZ to produce them, so familiarity with the graphics program is essential. In general I advice that before you embark on a special design to select the method you will used based on the following:
+
+\begin{enumerate}
+\item If the template requires positioning of pictures and text at exact positions, you can use the 
+        picture environment and the built-in commands provided in this package.
+\item If it requires any special graphics, coloured blocks and the like, use the TikZ package or pstricks.
+\item If you only manipulating textual information you don't need a special use the key value interface provided by the package (see for example the verso style).
+\end{enumerate}
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,135 @@
+
+
+
+%%%%%%%%%%%%%% FONTS CHAPTER %%%%%%%%%%%%%%%%%%%%%%%%%%%
+\@specialtrue
+\cxset{custom=tikzspecial,
+          steward, 
+          texti= The handling of fonts in LaTeX can become difficult and tedious. Here we describe a 
+                    method to set up the document fonts using a key-value interface. The package provides
+                    commands both for XeLaTeX using fontspec as well as pdfLaTeX.}
+
+
+\cxset{title font-family=\sffamily,
+          title font-size=\HUGE}
+\chapter{Setting up Fonts}
+
+\section{Introduction}
+
+Selecting the right fonts for a book is the job of the book designer. For people using pdfLaTeX this is rather limiting and I would highly recommend for any serious typesetting work to move onto XeLaTeX.
+
+One of the things we need to take care of, is to ensure that the document compiles irrespective of the \TeX\ engine used. I suggest code similar to that shown in the example below that enables loading of main fonts based on the \TeX\ engine.
+
+\begin{tcolorbox}
+\begin{lstlisting}
+\usepackage{ifxetex}
+\ifxetex
+  \usepackage{fontspec}
+  \defaultfontfeatures{Mapping=tex-text}
+  \setmainfont{Times New Roman}
+  \setsansfont{Myriad Pro}
+\else
+  \usepackage{lmodern}
+  \usepackage[T1]{fontenc}
+\fi
+\end{lstlisting}
+\end{tcolorbox}
+
+For free fonts there exist a few resources that can be used with \LaTeX.
+\url{http://tex.stackexchange.com/questions/53416/using-a-good-non-default-font}. Integrating them within a new document can be a nightmare but is the job of the class and book designer.
+
+\section{Terminology}
+
+The best source of information for XeTeX is the fontspec manual. It is not an easy read, but if you are going to be resetting a lot of fonts, it is advisable to do so.
+
+Most typesetting systems allow for setting document wide fonts. In LaTeX we get the following commands:
+
+
+\cs{sffamily}
+
+\cs{rmfamily}
+
+\cs{ttfamily}
+
+To be able to use \athena\ properly you will have to familiarize yourself with the terminology, if you are not.
+
+CSS uses a combination of font-family and fallback generic families to achieve this and it is instructive to review it as we will use such a system here.
+
+\begin{tcolorbox}
+\begin{lstlisting}
+p{font-family:"Times New Roman",Georgia,Serif;}
+\end{lstlisting}
+\end{tcolorbox}
+
+The font-family property specifies the font for an element.
+
+The font-family property can hold several font names as a "fallback" system. If the browser does not support the first font, it tries the next font.
+
+There are two types of font family names:
+
+family-name - The name of a font-family, like "times", "courier", "arial", etc.
+
+generic-family - The name of a generic-family, like "serif", "sans-serif", "cursive", "fantasy", "monospace".
+
+There is though a fundamental difference that one needs to keep in mind, \TeX\ exists in order to always typeset the same on any machine. CSS endeavours to run in any browser and any system, disregarding typography. Nevertheless I decided to provide the interface so at least as to enable document compilation at all times, well almost all times.
+
+
+\section{General font selection with fontspec}
+
+\begin{trivlist}
+\item [\cs{fontspec}\oarg{font features}\marg{font name}]
+\item [\cs{setmainfont}\oarg{font features}\marg{font name}]
+\item [\cs{setsansfont}\oarg{font features}\marg{font name}]
+\item [\cs{setmonofont}\oarg{font features}\marg{font name}]
+\item [\cs{newfontfamily}\marg{cmd}\oarg{font features}\marg{font name}]
+\end{trivlist}
+
+These are the main font-selecting commands of this package. The \cs{fontspec}
+command selects a font for one-time use; all others should be used to deﬁne the
+standard fonts used in a document. They will be described later in this section.
+The font features argument accepts comma separated \marg{font feature}=\marg{option}
+lists; these are described in later:
+
+\begin{texexample}{}{}
+\fontspec{Verdana}
+\raggedright
+\lorem
+\end{texexample}
+
+\subsection{Setting font features}
+
+The fontspec package enables the selection of font features during run-time; font features are items such as colors, proportional OldStyle numbers and other similar items. Some of the examples that follow have been extracted from the fontspec documentation.
+
+
+\begin{texexample}{}{}
+\fontspec[Numbers={Proportional,OldStyle}]
+{TeX Gyre Adventor}
+`In 1842, 999 people sailed 97 miles in
+13 boats. In 1923, 111 people sailed 54
+miles in 56 boats.' \bigskip
+
+\fontspec{TeX Gyre Adventor}
+`In 1842, 999 people sailed 97 miles in
+13 boats. In 1923, 111 people sailed 54
+miles in 56 boats.' \bigskip
+\end{texexample}
+
+\section{The \athena\ package interface.}
+
+By design feature options for XeTeX/XeLaTeX have currently bee restricted. The reason behind this decision is that I was concerned that I would have added a complicated interface with very little reason as to its use. I opted for a more semantic approach and expect the user to define custom macros to handle anything else.
+\medskip
+
+\keyval{mainfont}{\marg{font1,font2,font3}}{A comma separated list of one or more font-names. The main font will be set to the first font found.}
+\keyval{chapterfont}{\marg{font1,font2,font3}}{A comma separated list of one or more font-names. The main font will be set to the first font found.}
+\keyval{sectionfont}{\marg{font1,font2,font3}}{A comma separated list of one or more font-names. The main font will be set to the first font found.}
+\keyval{contentsfont}{\marg{font1,font2,font3}}{A comma separated list of one or more font-names. The main font will be set to the first font found.}
+\keyval{bibliographyfont}{\marg{font1,font2,font3}}{A comma separated list of one or more font-names. The main font will be set to the first font found.}
+
+Note that the package will first check if is running under XeTeX. If it does it will execute the commands and load the macros, otherwise it will fall back on pdfLaTeX commands.
+
+\section{Discussion}
+
+
+Unfortunately, even with the best will loading fonts will always be a difficult task in TeX. Hopefully the interface provided will result in better separation of presentation from content and offers consistency in the styling of documents. Nothing prevents you from adding normal macros to styles. Each style can be treated as a package in many respects.
+
+\@specialfalse
