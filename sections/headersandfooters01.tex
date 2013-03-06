@@ -1,0 +1,367 @@
+
+%% DESIGNING HEADERS AND FOOTERS  **************************
+
+\@specialtrue
+
+\cxset{chapter toc=true, custom=stewart,}
+\cxset{steward,
+  offsety=0.5cm,
+  image=hine02,
+  texti={A ball falls faster and faster as time
+        passes. Galileo discovered that the
+        distance fallen is proportional to the
+        square of the time it has been falling.
+        Calculus then enables us to calculate the
+        speed of the ball at any time.}, % do not forget the commas.
+  textii={The fundamental objects that we deal with in calculus are functions. We stress that a function can be
+represented in different ways: by an equation, in a table, by a graph, or in words. We look at the main
+types of functions that occur in calculus and describe the process of using these functions as mathematical
+models of real-world phenomena.
+In \textit{A Preview of Calculus} (page 1) we saw how the idea of a limit underlies the various branches of
+calculus. It is therefore appropriate to begin our study of calculus by investigating limits of functions and
+their properties}
+}
+
+\cxset{chapter opening=left,
+          header style=empty}
+
+\chapter{Setting headers and footers}
+
+\section{Setting Headers and Footers}
+One of the first tasks of any \LaTeXe\ class is to redefine the headers and footers. The format of the running headers or footers in \LaTeX\ terminology is called the \textit{page style}. Each different format is given names like \textit{empty} or \textit{plain} to make it easier to select and remember.
+
+
+\section{Traditional LaTeX page style commands}
+The LaTeX kernel\footnote{In File J \file{ltpage.dtx}, page 311.} defines two commands for selecting the running heads:
+
+\begin{lstlisting}
+\pagestyle{<style>} : sets the page style of the current and succeeding pages to style
+\thispagestyle{<style>} : sets the page style of the current page only to style.
+\end{lstlisting}
+
+\section{Traditional LaTeX page style definition}
+To define a page style \textit{style}, you must define the \lstinline{\ps@style} to set the page parameters.
+
+\subsection{How a page style makes running heads and feet}
+The \lstinline{\ps@}. . . command defines the macros \lstinline{\@oddhead}, \lstinline{\@oddfoot}, \lstinline{\@evenhead},
+and \lstinline{\@evenfoot} to define the running heads and feet. (See output routine.) As some headings contain information such as the chapter name or section number these
+headings are based on the sectioning commands, which define them. The page style defines the commands
+
+\verb!\chaptermark,\sectionmark!, etc., where
+
+\verb+\chaptermark{<text>}+ is called by \verb+\chapter+ to set a mark. The  ...mark commands and the ...head
+macros are defined with the help of the following macros.
+%(All the \ ...mark commands should be initialized to no-ops.)
+
+\subsection{marking conventions}
+
+LaTeX produces two kinds of marks a `left' and a `right' mark using the following commands.
+
+markboth
+
+markright
+
+
+
+\section{The low level page style interface}
+The basic mechanics of defining page styles is provided in the \LaTeXe\ kernel and it  involves defining or redefining four macros:
+
+\begin{marglist}
+\item [\cs{oddhead}] For two-sided printing, it generates the header for the odd-numbered
+pages; otherwise, it generates the header for all pages.
+
+\item [\cs{oddfoot}] For two-sided printing, it generates the footer for the odd-numbered pages; otherwise, it generates the footer for all pages.
+
+\item [\cs{evenhead}] For two-sided printing, it generates the header of the even-numbered
+pages; it is ignored in one-sided printing.
+
+\item [\cs{evenfoot}] For two-sided printing, it generates the footer of the even-numbered
+pages; it is ignored in one-sided printing.
+
+\end{marglist}
+A named page style, involves the redefinition of these commands stored in a macro \cs{ps@<style>}.
+The \cs{pagestyle}\marg{plain} is defined as:
+
+\begin{tcolorbox}
+\begin{lstlisting}
+\newcommand\ps@plain{%
+  \renewcommand\@oddhead{}%
+  \let\@evenhead\@oddhead
+  \renewcommand\@evenfoot{%
+  {\hfil\normalfont\textrm{\thepage}\hfil}}%
+  \let\@oddfoot\@evenfoot
+}
+\end{lstlisting}
+\end{tcolorbox}
+
+Since the \textit{plain} style treats both the odd and even pages the same way, the \cs{@evenfoot} and \cs{@evenhead} are let to the \cs{@oddhead} and \cs{@oddfoot} commands. The style only prints a page number at the center of the footer.
+
+
+\subsection{A longer example}
+\index{watermark}\index{water mark!sample page style}
+\thispagestyle{samplepage}
+Consider the case, where we need to print on a page the words \textsc{sample page}, as you might have noticed in some places of this document and at the margin of this page. Sometimes this type of mark is called a \textit{watermark.}
+
+We will call this type of page style \textit{samplepage} and we will activate it on a particular page by typing \cs{thispagestyle}\marg{samplepage}.
+
+\begin{tcolorbox}
+\begin{lstlisting}
+%% Some special styles
+\IfFileExists{rotating.sty}{\RequirePackage{rotating}}{}
+
+\def\even@samplepage{%
+ \begin{picture}(0,0)
+   \put(\Xeven,\Yeven){\turnbox{90}{\Huge \textcolor{\watermark@textcolor}{\watermark@text}}}
+\end{picture}
+}
+
+\def\odd@samplepage{%
+ \begin{picture}(0,0)
+   \put(\Xodd,\Yodd){\turnbox{90}{\Huge \textcolor{\watermark@textcolor}{\watermark@text}}}
+ \end{picture}
+}
+
+\def\watermarktext#1{\gdef\watermark@text{\fontfamily{phv}\selectfont#1}}
+\def\watermarktextcolor#1{\gdef\watermark@textcolor{#1}}
+\watermarktext{SAMPLE PAGE}
+\watermarktextcolor{purple}
+
+\def\ps@samplepage{\let\@mkboth\@gobbletwo
+ \let\@oddhead\odd@samplepage\def\@oddfoot{\reset@font\hfil\thepage}
+ \let\@evenhead\even@samplepage\def\@evenfoot{\reset@font\thepage\hfil}}
+
+\def\Xodd{500}
+\def\Xeven{-70}\def\Yeven{-810}
+\def\Yeven{-\expandafter\strip@pt\textheight}
+\let\Yodd\Yeven
+\end{lstlisting}
+\end{tcolorbox}
+
+If you study the code in the example, you will notice that we are using \LaTeXe's \env{picture} environment to
+place the text exactly where we need it.
+
+
+
+\subsection{The key value interface}
+
+The key value interface provides a number of mechanisms to tap into the page styles, enabling consistency in the user interface.
+
+\medskip
+
+\keyval{header style}{\marg{text}}{Triggers a page style for one page only.} The following values can be used.
+
+\begin{marglist}
+\item [empty] Standard class empty headers.
+\item [plain] Standard class plain headers.
+\item [headings] Standard class headings.
+\item [fancy] If you use the fancyhdr package any fancy header style.
+\item [sample page] Prints sample at the edge of the paper.
+\item [preprint] Prints preprint at the edge of the paper.
+\item [watermark] Prints a watermark at predefined places.
+\end{marglist}
+
+\keyval{watermark}{\marg{true|false}}{Prints a water on all pages, defaults to false.}
+\keyval{watermark text}{\marg{text}}{The watermark text.}
+\keyval{watermark text left}{\marg{text}}{The watermark text on left pages.}
+\keyval{watermark text right}{\marg{text}}{The watermark text on right pages.}
+\keyval{watermark angle}{\marg{number}}{The rotation angle of the water mark}
+
+\cxset{ watermark text/.store in=\watermark@text,
+           watermark text color/.store in=\watermark@textcolor,
+           watermark font-size/.store in=\watermarkfontsize@cx,
+           watermark odd x/.store in=\watermarkoddx@cx,
+           watermark even x/.store in=\watermarkevenx@cx,
+           watermark even y/.store in=\watermarkeveny@cx}
+
+\cxset{watermark text= PRE-PRINT,
+          watermark text color=theblue,
+          watermark font-size=\huge,
+          watermark odd x=470,
+          watermark even y=700,
+          watermark even x=60}
+
+\def\Xodd{\watermarkoddx@cx}
+\def\Xeven{-\watermarkevenx@cx}
+\def\Yeven{-\watermarkeveny@cx}
+%\def\Yeven{-\expandafter\strip@pt\textheight}
+\let\Yodd\Yeven
+
+\def\even@samplepage{%
+ \begin{picture}(0,0)
+   \put(\Xeven,\Yeven){\turnbox{60}{\watermarkfontsize@cx \textcolor{\watermark@textcolor}{\watermark@text}}}
+\end{picture}
+}
+
+\def\odd@samplepage{%
+ \begin{picture}(0,0)
+   \put(\Xodd,\Yodd){\turnbox{90}{\watermarkfontsize@cx\textcolor{\watermark@textcolor}{\watermark@text}}}
+ \end{picture}
+}
+
+\def\watermarktext#1{\gdef\watermark@text{\fontfamily{phv}\selectfont#1}}
+\def\watermarktextcolor#1{\gdef\watermark@textcolor{#1}}
+
+
+\def\ps@samplepage{\let\@mkboth\@gobbletwo
+    \let\@oddhead\odd@samplepage\def\@oddfoot{\reset@font\hfil\thepage}
+    \let\@evenhead\even@samplepage\def\@evenfoot{\reset@font\thepage\hfil}}
+
+
+
+
+\subsection{Example usage}
+
+We will now show an example using the key value interface to illustrate the concepts and the usage. We will change the watermark text, color and font on this page. If you notice at the right bottom of the page the word \textsc{PRE-PRINTED} has been printed in blue.
+
+\begin{tcolorbox}
+\begin{lstlisting}
+\cxset{
+     watermark text= PRE-PRINT,
+     watermark text color=theblue,
+     watermark font-size=\huge
+}
+\end{lstlisting}
+\end{tcolorbox}
+
+\thispagestyle{samplepage}
+
+\clearpage
+
+\section{Adding marks}
+
+Most books will have headers that include marks such as the chapter name and number and or other combinations together with section numbers.
+
+The standard book class include two styles one called \textit{headings} and another called \textit{myheadings} that style such headers.
+
+\subsection{Key value interface}
+\begin{tcolorbox}
+\cxset{
+   chaptermark name color/.store in=\chaptermarknamecolor@cx,
+   sectionmark name color/.store in=\sectionmarkcolor@cx,
+   sectionmark title font/.store in=\sectionmarktitlefont@cx,
+   section title color/.store in=\sectiontitlecolor@cx,
+}
+
+\cxset{chaptermark name color=thered,
+          sectionmark name color=thered}
+
+
+\end{tcolorbox}
+
+
+\begin{tcolorbox}
+\begin{lstlisting}
+%% STYLE 57 QUANTUM FRONTIER
+\cxset{headings style57/.style={
+          headings titlestyle,
+% Chaptermarks
+          chaptermark name={\bfseries EVOLUTION OF THE INSECTS},
+% Leftmarks
+          leftmark before=\thepage\quad, %even pages
+          leftmark after=\hfill\hfill,
+% Right marks influenced by chapter name?
+          rightmark before=\hfill\hfill, %odd pages
+          rightmark after=\thepage,
+% Section marks
+          sectionmark name custom=\chaptertitle@cx,
+          sectionmark after title=\quad,
+%  rules we remove or inherit
+          header top rule=false,
+          header bottom rule=false,
+          header offset even=0pt,
+          header offset odd=0pt,
+          }}
+\end{lstlisting}
+\end{tcolorbox}
+
+
+%\if@twoside
+%  \def\ps@headings{%
+%      \let\@oddfoot\@empty
+%      \def\@oddfoot{\rule{\textwidth}{0.4pt}}
+%      \let\@evenfoot\@empty
+%      \def\@evenhead{\parbox{\textwidth}{%
+%                                   \leavevmode
+%                                   \if@headertoprule\rule{\textwidth}{0.4pt}%
+%                                       \vskip2pt plus1pt minus1pt\fi
+%%typesetter
+%                                     \hskip\headeroffseteven@cx\hbox to \textwidth{%
+%                                           \leftmarkbefore@cx
+%                                           \leftmark
+%                                           \leftmarkafter@cx
+%                                     }%
+%                                     \if@headerbottomrule\vskip-7pt plus1pt minus1pt
+%                                    \rule{\textwidth}{0.4pt}\fi%
+%          }% end parbox
+%       }%
+%%% Defines the odd head
+%      \def\@oddhead{
+%         \parbox{\textwidth}{%
+%                                   \leavevmode
+%                                   \if@headertoprule\rule{\textwidth}{0.4pt}%
+%                                       \vskip2pt plus1pt minus1pt\fi
+%%typesetter
+%                                     \hskip\headeroffsetodd@cx\hbox to \textwidth{%
+%                                           \rightmarkbefore@cx
+%                                           \rightmark
+%                                           \rightmarkafter@cx
+%                                     }%
+%                                     \if@headerbottomrule\vskip-7pt plus1pt minus1pt
+%                                    \rule{\textwidth}{0.4pt}\fi%
+%          }% end parbox
+%      }%
+%      \let\@mkboth\markboth
+% % chaptermark called by chapter and also by table of contents etc. This is essentially a
+%%  leftmark
+%\def\chaptermark##1{%
+%     \gdef\chaptertitle@cx{##1}%
+%      \markboth {%
+%       \ifnum \c@secnumdepth >\m@ne
+%          \if@mainmatter%
+%              \color{\chaptermarknamecolor@cx}%
+%              \MakeUppercase{\chaptermarkname@cx\ }%
+%              \chaptermarknumber%
+%              \chaptermarkafternumber@cx%
+%          \fi
+%        \fi
+%        \color{\chaptermarktitlecolor@cx}%
+%       % \hfill%
+%        \MakeUppercase{\chaptermarktitlebefore@cx{##1}}}{}%
+%}%end chaptermark
+%% section
+%  \def\sectionmark##1{%
+%      \markright {%
+%        \ifnum \c@secnumdepth >\z@
+%           {\bfseries\textcolor{\sectionmarkcolor@cx}{\sectionmarkname@cx\sectionmarknumber@cx\sectionmarkafternumber@cx}%
+%        } %
+%  \fi
+%         \color{\sectionmarktitlecolor@cx}\MakeUppercase{\normalfont\sffamily \sectionmarkbeforetitle@cx{##1}\sectionmarkaftertitle@cx}}}}%
+%\else
+%  \def\ps@headings{%
+%    \let\@oddfoot\@empty
+%    \def\@oddhead{{\slshape\rightmark}\hfil\thepage}%
+%    \let\@mkboth\markboth
+%    \def\chaptermark##1{%
+%      \markright {%
+%        \ifnum \c@secnumdepth >\m@ne
+%          \if@mainmatter
+%            \@chapapp\ \thechapter... \ %
+%          \fi
+%        \fi
+%        ##1}}}
+%\fi
+%\def\ps@myheadings{%
+%    \let\@oddfoot\@empty\let\@evenfoot\@empty
+%    \def\@evenhead{\thepage\hfil\slshape\leftmark}%
+%    \def\@oddhead{{\slshape\rightmark}\hfil\thepage}%
+%    \let\@mkboth\@gobbletwo
+%    \let\chaptermark\@gobble
+%    \let\sectionmark\@gobble
+% }
+
+Note that the \cs{markboth} command takes two arguments the left mark and the right mark. It works reasonably well.
+
+
+%\cxset{headings boxedpagenumber}
+\cxset{headings style58}
+\pagestyle{headings}
