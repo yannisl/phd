@@ -98,7 +98,7 @@ See http://www.latex-project.org/lppl.txt
 %</internal>
 %<*driver>
 \listfiles
-\documentclass[reqno]{ltxdoc}
+\documentclass[reqno,oneside]{ltxdoc}
 \usepackage[T1]{fontenc}
 %\usepackage{libertine}
 %\renewcommand{\ttfamily}{\fontencoding{OT1}\fontfamily{cmtt}\selectfont}
@@ -132,7 +132,62 @@ See http://www.latex-project.org/lppl.txt
 %\usepackage[numbered]{hypdoc}
 \definecolor{lstbgcolor}{rgb}{0.9,0.9,0.9}
 \newcommand*{\Lpack}[1]{\textsf {#1}}  
-\let\package\Lpack         
+\let\package\Lpack  
+\def\thechapter{}
+
+\cxset{
+       subsection color= thered,
+       subsection beforeskip=10pt,
+       subsection afterskip=10pt,
+       subsection indent=0pt,
+       subsection font-family=\rmfamily,
+       subsection font-size=\large,
+       subsection font-weight=\bfseries,
+       subsection font-shape=,
+       subsection align=\RaggedRight,
+       subsection numbering prefix=\S\hairsp,%add . here if need be
+       subsection numbering= arabic,
+%
+       subsubsection color= thegrey,
+       subsubsection beforeskip=10pt,
+       subsubsection afterskip=10pt,
+       subsubsection indent=0pt,
+       subsubsection font-family=\rmfamily,
+       subsubsection font-size=\normalfont,
+       subsubsection font-weight=\bfseries,
+       subsubsection font-shape=,
+       subsubsection align=\RaggedRight,
+       subsubsection numbering prefix=\S\hairsp\thesection,%add . here if need be
+       subsubsection numbering=numeric,
+%
+       paragraph color= thegrey,
+       paragraph beforeskip=0pt,
+       paragraph afterskip=0pt,
+       paragraph indent=-50pt,
+       paragraph font-family=\rmfamily,
+       paragraph font-size= large,
+       paragraph font-weight=\bfseries,
+       paragraph font-shape=,
+       paragraph align=\bfseries,
+       %subsubsection numbering prefix=\S\hairsp\thesection,%add . here if need be
+       paragraph numbering=numeric,
+%
+       section color= thered,     
+       section beforeskip=5pt,
+       section afterskip=15pt,
+       section indent=0pt,
+       section font-family=\rmfamily,
+       section font-size=\LARGE,
+       section font-weight=\bfseries,
+       section font-shape=,
+       section align=,
+       section numbering prefix =,%use \thechapter. for books or add as option
+       section numbering= word,
+       section spaceout=none}       
+\renewsection
+\renewsubsection
+\renewsubsubsection
+\renewparagraph
 %%http://tex.stackexchange.com/questions/75055/print-filelist-to-pdf/75064#75064
 %\printFileList
 %
@@ -529,7 +584,16 @@ See http://www.latex-project.org/lppl.txt
 % 
 %    \begin{macrocode}
 \RequirePackage{pgf,pgfkeys}               % before onlyasmath
-\newcommand\cxset{\pgfqkeys{/phd }} %Notice this is pgf q keys
+\def\cx@optionlist{}
+\def\cxuselibrary#1{\cxset{library/.cd,#1}}
+%
+% The library is added by inputting the file and setting the path accordingly.
+\def\cx@add@library#1#2{%
+  \cxset{library/#1/.code={\@ifundefined{cxlibrary@#1@loaded}{\input #2}{}}}%
+  \DeclareOption{#1}{\edef\cx@optionlist{\cx@optionlist,#1}}%
+}
+\pgfkeys{/chapter/.is family}
+\newcommand\cxset{\pgfqkeys{/chapter }} %Notice this is pgf q keys
 %
 %
 
@@ -676,7 +740,11 @@ See http://www.latex-project.org/lppl.txt
 \RequirePackage{lipsum}
 %    \end{macrocode}
 %
-% \subsection{lorem}
+% \subsection{lorem Fusce adipiscing justo nec ante. Nullam in enim.
+% Pellentesque felis orci Fusce adipiscing justo nec ante. Nullam in enim.
+% Pellentesque felis orci}
+%
+% \subsubsection{Minilorem}
 % 
 % \begin{macro}{\lorem}
 %    \begin{macrocode}
@@ -686,6 +754,8 @@ See http://www.latex-project.org/lppl.txt
  sollicitudin justo sed quam et quadd. \par}
 %    \end{macrocode}
 % \end{macro}
+%
+% \paragraph{Test }  \lorem
 %
 % \section{Tables}
 % 
@@ -4241,6 +4311,732 @@ texexp/.style={%
 % will save countless hours for other people. If you use it in your
 % publication send me a copy of it. 
 % 	
+% \section{Athena Package interface}
+%
+% \begin{macro}{\HUGE}
+% \begin{macro}{\HHUGE}
+% The macros \cs{HUGE} and \cs{HHUGE} provide larger sizes than those
+% provided by \LaTeXe that are used in the production of titles and
+% chapter heads.
+% 
+%    \begin{macrocode}
+\def\HUGE{\@setfontsize\Huge{38}{47}}
+\def\HHUGE{\@setfontsize\HHUGE{58}{67}}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}{\@words@cx} Utility macro for translating a 
+% number from numbers to words.
+%
+%    \begin{macrocode}
+\def\@words@cx#1{%
+  \ifcase#1 zero\or one\or two\or three\or four\or five\or six\or seven\or eight\or nine\or ten\or
+   eleven\or twelve\or thirteen\or fourteen\or fifteen\or sixteen\or seventeen\or eighteen\or nineteen \or twenty\or twenty one\or twenty two\or twenty three\or twenty four\or twenty five\or twenty six\or twenty seven \or twenty eight \or twenty nine\or thirty\or thirty one\or thirty two\or thirty three\or thirty four\or thirty five\or thirty six\or thirty seven\or thirty eight\or thirty nine\or forty\or forty one\or forty two \or forty three\or forty four\or forty five \or forty six \or forty seven\or forty eight \or forty nine\or fifty\or fifty on\or fifty two\or fifty three\or fifty four\or fifty five\or fifty six\or fifty seven\or fifty eight\or fifty nine\or sixty \or sixty one \or sixty two
+\or sixty three \or sixty four \or \sixty five\else\@ctrerr\fi}
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \subsection{General Utility Environments}
+%
+%
+%    \begin{macrocode}
+\newenvironment{absquote}
+               {\list{}{\leftmargin2cm\rightmargin\leftmargin}%
+                \item\relax\footnotesize}
+               {\endlist}
+
+\newenvironment{summary}
+               {\list{}{\listparindent0pt %
+                        \itemindent\listparindent
+                        \leftmargin0pt
+                        \rightmargin\leftmargin
+                        \parsep\z@ \@plus\p@}%
+                \item\relax\itshape}
+               {\endlist}
+%
+%    \end{macrocode}
+%
+% \subsection{Setting up the key system}
+%
+% We are going to use a few conditionals and we start by defining 
+% them here:
+%
+%    \begin{macrocode}
+\newif\if@left
+\newif\if@right
+\newif\if@center
+\@leftfalse
+\@rightfalse
+\@centerfalse
+% newifs for number position
+\newif\if@lefttitle
+\newif\if@righttitle
+\newif\if@leftname
+\newif\if@rightname
+\newif\if@chapterspaceout\@chapterspaceoutfalse
+\newif\if@titlespaceout\@chapterspaceoutfalse
+\newif\if@sectionspaceout\@sectionspaceoutfalse
+\newif\if@openanywhere\@openanywherefalse
+%    \end{macrocode}
+%
+% The standard LaTeX2e settings does not allow for open left chapters.
+% However, quite a few designs do have this incorporated.
+%    \begin{macrocode}
+\newif\if@openleft\@openleftfalse
+\newif\if@openany\@openanyfalse
+%    \end{macrocode}
+%
+% Some publications allow chapters to be written by different authors
+% we provide a conditional for this.
+% 
+%    \begin{macrocode}
+\newif\if@special\@specialfalse
+\newif\if@authorblock
+%    \end{macrocode}
+%
+% We are going to allow the user to use a key to add a toc, also
+% wea re allowing to incorporate images in such table of contents.
+% We creating two conditionals to hold this information.
+%
+%    \begin{macrocode}
+\newif\if@toc  \@toctrue
+\newif\if@tocimage \@tocimagefalse
+%    \end{macrocode}
+%
+% \subsection{Defining Chapter Head Keys}
+%
+%
+%    \begin{macrocode}
+\cxset{%
+  document type/.is choice,
+  document type/book/.code = {},
+  document type/article/.code = {},
+  document type/report/.code = {},
+%
+  name/.code={\gdef\chaptername{#1}},
+  chapter name/.code={\gdef\chaptername{#1}},%alias
+  color/.store in=\color@cx,
+  color/.default=black,
+  chapter opening/.is choice,
+  chapter opening/right/.code={\@openrighttrue},
+  chapter opening/left/.code={\@openlefttrue},
+  chapter opening/any/.code={\@openanytrue},
+  chapter opening/none/.code={\@openanywheretrue\@openrightfalse
+\@openleftfalse\@openanyfalse},
+  chapter opening/anywhere/.code={\@openanywheretrue\@openrightfalse
+\@openleftfalse\@openanyfalse},
+  chapter opening/ifafter/.code={},
+  chapter font-family/.store in=\chapterfontfamily@cx,
+  chapter font-weight/.store in=\chapterfontweight@cx,
+  chapter font-size/.store in=\chapterfontsize@cx,
+  chapter color/.store in=\chaptercolor@cx,
+  chapter before/.store in=\chapterbefore@cx,
+  chapter after/.store in=\chapterafter@cx,
+  chapter spaceout/.is choice,
+  chapter spaceout/soul/.code={\@chapterspaceouttrue},
+  chapter spaceout/none/.code={\@chapterspaceoutfalse},
+  % title keys
+  title font-family/.store in=\titlefontfamily@cx,
+  title font-family/.default=\rmfamily,
+  title font-weight/.store in=\titlefontweight@cx,
+  title font-size/.store in=\titlefontsize@cx,
+  title font-color/.store in=\titlefontcolor@cx,
+  title font-shape/.store in= \titlefontshape@cx,
+  title spaceout/.is choice,
+  title spaceout/soul/.code={\@titlespaceouttrue},
+  title spaceout/none/.code={\@titlespaceoutfalse},
+  title font/.style={title font-family=#1},
+  title before/.store in=\titlebefore@cx,
+  title after/.store in=\titleafter@cx,
+  title beforeskip/.store in=\titlebeforeskip@cx,
+  title afterskip/.store in=\titleafterskip@cx,
+  position/.is choice,
+  position/left/.code={\@lefttrue},
+  position/right/.code={\@righttrue},
+  position/center/.code={\@centertrue},
+% numbering options that are required
+  chapter numbering/.is choice,
+  chapter numbering/roman/.code={\gdef\thechapter{\@roman\c@chapter}},
+  chapter numbering/Roman/.code={\gdef\thechapter{\@Roman\c@chapter}},
+  chapter numbering/arabic/.code={\gdef\thechapter{\@arabic\c@chapter}},
+  chapter numbering/alpha/.code={\gdef\thechapter{\alphalph\c@chapter}},
+  chapter numbering/Alpha/.code={\gdef\thechapter{\AlphAlph\c@chapter}},
+  chapter numbering/words/.code={\gdef\thechapter{\MakeTextLowercase{\expandafter\@words@cx{\expandafter\@arabic\c@chapter}}}},
+%% These proved a bit trouble some and ended up calling the fmtcount package routines
+  chapter numbering/WORDS/.code={\gdef\thechapter{\NUMBERstring{chapter}}},
+  chapter numbering/Words/.code={\gdef\thechapter{\NumToName{\expandafter\@arabic\c@chapter}}},
+%% These is for my own use for EJD type numbering, placed in an mbox as there is something funny
+% happening with spaces.
+  chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\decimal{chapter}}%
+  }},
+% alias
+  numbering/.is choice,
+  numbering/roman/.code={\gdef\thechapter{\@roman\c@chapter}},
+  numbering/Roman/.code={\gdef\thechapter{\@Roman\c@chapter}},
+  numbering/arabic/.code={\gdef\thechapter{\@arabic\c@chapter}},
+  numbering/alpha/.code={\gdef\thechapter{\alphalph\c@chapter}},
+  numbering/Alpha/.code={\gdef\thechapter{\AlphAlph\c@chapter}},
+  numbering/words/.code={\gdef\thechapter{\MakeTextLowercase{\expandafter\@words@cx{\expandafter\@arabic\c@chapter}}}},
+%% These proved a bit trouble some and ended up calling the fmtcount package routines
+  numbering/WORDS/.code={\gdef\thechapter{\NUMBERstring{chapter}}},
+  numbering/Words/.code={\gdef\thechapter{\NumToName{\expandafter\@arabic\c@chapter}}},
+%% These is for my own use for EJD type numbering, placed in an mbox as there is something funny
+% happening with spaces.
+  numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\decimal{chapter}}%
+  }},
+  numbering/none/.code={\gdef\thechapter{}}, % do not leave empty
+  number dot/.store in=\numberpunctuation@cx,
+  number position/.is choice,
+  number position/leftname/.code={\@leftnametrue\@rightnamefalse},
+  number position/rightname/.code={\@rightnametrue\@leftnamefalse},
+  number position/absolute/.code={},
+  number position/righttitle/.code={\@righttitletrue},
+  number position/lefttitle/.code={\@lefttitletrue},
+  number after/.store in=\numberafter@cx,
+  number before/.store in=\numberbefore@cx,
+  number color/.store in=\numbercolor@cx,
+  number font-size/.store in=\numberfontsize@cx,
+  number font-family/.store in=\numberfontfamily@cx,
+  number font-weight/.store in=\numberfontweight@cx,
+% authorblock
+  author block/.is choice,
+  author block/true/.code={\@authorblocktrue},
+  author block/false/.code={\@authorblockfalse},
+  author names/.store in=\authorblock@cx,  
+  author block format/.store in=\authorblockformat@cx,
+  chapter toc/.is choice,
+  chapter toc/true/.code=\@toctrue\cxset{numbering=arabic,name=Chapter},
+  chapter toc/false/.code=\@tocfalse,
+  chapter toc/none/.code=\@tocfalse,
+%    \end{macrocode}
+%
+% We now define keys in a similar fashion to the chapter section. All keys
+% are prefixed with `section' and font related commands are similar to 
+% those found in CSS.
+%
+% \begin{macro}{section font-size}
+%    \begin{macrocode}
+  section font-size/.store in=\sectionfontsize@cx,
+  section font-weight/.store in=\sectionfontweight@cx,
+  section font-family/.store in=\sectionfontfamily@cx,
+  section font-shape/.store in=\sectionfontshape@cx,
+  section color/.store in=\sectioncolor@cx,
+%    \end{macrocode}
+% \end{macro}
+%
+% Next we define keys for the section numbering system. We cater for 
+% |roman|, |Roman|, and within brackets |(roman)|, |arabic| or |numeric|. 
+% Since unlike the standard
+% classes we are aiming at a more generic template we need to care
+% for the document type. If we have a chapter we will allow prefixing 
+% of numbers. We use |sectionnumberingprefix@cx| as a key. 
+% 
+% \begin{macro}{section numbering}
+%    \begin{macrocode}
+  section numbering prefix/.store in=\sectionnumberingprefix@cx,
+  section numbering/.is choice,
+  section numbering/roman/.code={%
+       \gdef\thesection{\sectionnumberingprefix@cx\@roman\c@section}%
+          \renewsection},
+section numbering/Roman/.code={%
+       \gdef\thesection{\sectionnumberingprefix@cx\@Roman\c@section}%
+          \renewsection},
+  section numbering/(roman)/.code={%
+       \gdef\thesection{\sectionnumberingprefix@cx(\@roman\c@section)}%
+       \renewsection},
+  section numbering/(Roman)/.code={%
+       \gdef\thesection{\sectionnumberingprefix@cx(\@Roman\c@section)}%
+          \renewsection},
+  section numbering/arabic/.code={%
+       \gdef\thesection{\sectionnumberingprefix@cx\@arabic\c@section}%
+          \renewsection},
+  section numbering/numeric/.code={%
+       \gdef\thesection{\sectionnumberingprefix@cx\@arabic\c@section}%
+          \renewsection},
+  section numbering/none/.code={\gdef\thesection{}\renewsection},
+  section numbering/alpha/.code={\gdef\thesection{\alphalph\c@section}},
+  section numbering/Alpha/.code={\gdef\thesection{\AlphAlph\c@section}},
+  %section numbering/word/.code={\gdef\thesection{\NUMBERstring{chapter}}},
+  section numbering/word/.code={\gdef\thesection{\NumToName{\expandafter\@arabic\c@section}}},
+  section numbering custom/.code=\gdef\thesection{#1}\renewsection,
+%    \end{macrocode}
+% \end{macro}
+%
+%    \begin{macrocode}
+  section align/.store in=\sectionalign@cx,
+  section beforeskip/.store in=\sectionbeforeskip@cx,
+  section afterskip/.store in=\sectionafterskip@cx,
+  section indent/.store in=\sectionindent@cx,
+% does not work well at the moment
+  section spaceout/.is choice,
+  section spaceout/soul/.code={\@sectionspaceouttrue},
+  section spaceout/none/.code={\@sectionspaceoutfalse},
+%    \end{macrocode}
+%
+% \begin{macro}{subsection options}
+% 
+% Form now on almost everything is a repetition of whatever was previously
+% defined for higher order sectioning commands.
+%
+%    \begin{macrocode}
+% subsections
+  subsection font-size/.store in=\subsectionfontsize@cx,
+  subsection font-weight/.store in=\subsectionfontweight@cx,
+  subsection font-family/.store in=\subsectionfontfamily@cx,
+  subsection font-shape/.store in=\subsectionfontshape@cx,
+%
+  subsection color/.store in=\subsectioncolor@cx,
+  subsection numbering prefix/.store in = \subsectionnumberingprefix@cx,
+  subsection numbering/.is choice,
+  subsection numbering/arabic/.code={%
+    \gdef\thesubsection{\subsectionnumberingprefix@cx\@arabic\c@subsection}},
+  subsection numbering/custom/.store in=\thesubsection@cx,
+  subsection numbering/none/.code={\gdef\thesubsection{}},
+  subsection align/.store in=\subsectionalign@cx,
+  subsection beforeskip/.store in=\subsectionbeforeskip@cx,
+  subsection afterskip/.store in=\subsectionafterskip@cx,
+  subsection indent/.store in=\subsectionindent@cx,
+%    \end{macrocode}
+% \end{macro}
+%
+% \subsubsection{subsubsections}
+% 
+% we are now six levels down at the headings
+% Part, Chapter, section, subsection, subsubsection
+% 
+%    \begin{macrocode}
+% subsubsection
+  subsubsection font-size/.store in=\subsubsectionfontsize@cx,
+  subsubsection font-weight/.store in=\subsubsectionfontweight@cx,
+  subsubsection font-family/.store in=\subsubsectionfontfamily@cx,
+  subsubsection font-shape/.store in=\subsubsectionfontshape@cx,
+  subsubsection color/.store in=\subsubsectioncolor@cx,
+  subsubsection numbering prefix/.store in = \subsubsectionnumberingprefix@cx,
+  subsubsection numbering/.is choice,
+  subsection numbering/arabic/.code={%
+    \gdef\thesubsubsection{\subsubsectionnumberingprefix@cx\@arabic\c@subsubsection}},
+  subsubsection numbering/numeric/.code={\gdef\thesubsubsection{\thesubsection.\@arabic\c@subsubsection}},
+  subsubsection numbering/custom/.store in=\thesubsubsection@cx,
+  subsubsection numbering/none/.code={\gdef\thesubsubsection{}},
+  subsubsection align/.store in=\subsubsectionalign@cx,
+  subsubsection beforeskip/.store in=\subsubsectionbeforeskip@cx,
+  subsubsection afterskip/.store in=\subsubsectionafterskip@cx,
+  subsubsection indent/.store in=\subsubsectionindent@cx,
+%
+% paragraph
+%
+  paragraph font-size/.code = \gdef\paragraphfontsize@cx{\csname#1\endcsname},
+  paragraph font-weight/.store in=\paragraphfontweight@cx,
+  paragraph font-family/.store in=\paragraphfontfamily@cx,
+  paragraph font-shape/.store in=\paragraphfontshape@cx,
+  paragraph color/.store in=\paragraphcolor@cx,
+  paragraph numbering/.is choice,
+  paragraph numbering/numeric/.code={\gdef\theparagraph{\thesubsubsection.\@arabic\c@paragraph}},
+  paragraph numbering/custom/.store in=\theparagraph@cx,
+  paragraph numbering/none/.code={\gdef\theparagraph{...}},
+  paragraph align/.store in=\paragraphalign@cx,
+  paragraph beforeskip/.store in=\paragraphbeforeskip@cx,
+  paragraph afterskip/.store in=\paragraphafterskip@cx,
+  paragraph indent/.store in=\paragraphindent@cx,
+%% subparagraphs
+%
+  subparagraph font-size/.store in=\subparagraphfontsize@cx,
+  subparagraph font-weight/.store in=\subparagraphfontweight@cx,
+  subparagraph font-family/.store in=\subparagraphfontfamily@cx,
+  subparagraph font-shape/.store in=\subparagraphfontshape@cx,
+  subparagraph color/.store in=\subparagraphcolor@cx,
+  subparagraph numbering/.is choice,
+  subparagraph numbering/numeric/.code={\gdef\thesubparagraph{\theparagraph.\@arabic\c@subparagraph}},
+  subparagraph numbering/arabic/.code={\gdef\thesubparagraph{\theparagraph.\@arabic\c@subparagraph}},
+  subparagraph numbering/custom/.store in=\thesubparagraph@cx,
+  subparagraph numbering/none/.code={\gdef\thesubparagraph{}},
+  subparagraph align/.store in=\subparagraphalign@cx,
+  subparagraph beforeskip/.store in=\subparagraphbeforeskip@cx,
+  subparagraph afterskip/.store in=\subparagraphafterskip@cx,
+  subparagraph indent/.store in=\subparagraphindent@cx,
+  subparagraph number after/.estore in=\subparagraphnumberafter@cx,
+  subparagraph number after/.default=,
+  subparagraph number after/.initial=,
+%
+%% headers and footers
+  header style/.store in=\headerstyle@cx,
+% general draft rules
+  rule /.is choice,
+  rule on/.code={\gdef\rulewidth@cx{0.4pt}},
+  rule off/.code={\gdef\rulewidth@cx{0pt}},
+% headers and footers
+  lhead/.code ={\lhead{#1}},
+  rhead/.code={\rhead{#1}},
+  chead/.code={\chead{#1}},
+  lfoot/.code ={\lhead{#1}},
+  cfoot/.code={\chead{#1}},
+  rfoot/.code={\rhead{#1}},
+  headrulewidth/.code={\renewcommand\headrulewidth{#1}},
+  footrulewidth/.code={\renewcommand\footrulewidth{#1}},
+}
+%    \end{macrocode}
+%
+% \subsection{Renewsection commands}
+%
+% These have to be called explicitly after key definitions, it is just 
+% the way LaTeX works. One could add them in settings or explore a
+% bit more deeply.
+%
+%    \begin{macrocode}
+\def\renewsection{%
+\renewcommand\section{%
+\@startsection{section}%
+{1}%level
+{\sectionindent@cx}%indent
+{\sectionbeforeskip@cx}%
+{\sectionafterskip@cx}%
+{\sectionfontweight@cx\color{\sectioncolor@cx}\sectionfontfamily@cx
+\sectionfontsize@cx\sectionfontshape@cx\sectionalign@cx}%
+}%
+}
+
+\def\renewsubsection{%
+\renewcommand\subsection{%
+ \@startsection{subsection}%
+{2}%level
+{\subsectionindent@cx}%indent
+{\subsectionbeforeskip@cx}%
+{\subsectionafterskip@cx}%
+{\subsectionfontweight@cx\color{\subsectioncolor@cx}\subsectionfontfamily@cx\subsectionfontshape@cx%
+ \subsectionfontsize@cx\subsectionalign@cx}%
+}%
+}
+
+\def\renewsubsubsection{%
+\renewcommand\subsubsection{%
+ \@startsection{subsubsection}%
+{3}%level
+{\subsubsectionindent@cx}%indent
+{\subsubsectionbeforeskip@cx}%
+{\subsubsectionafterskip@cx}%
+{\subsubsectionfontweight@cx\color{\subsubsectioncolor@cx}\subsubsectionfontfamily@cx%
+\subsubsectionfontsize@cx\subsubsectionfontshape@cx\subsubsectionalign@cx}%
+}}
+
+\def\renewparagraph{%
+\renewcommand\paragraph{%
+ \@startsection{paragraph}%
+{4}%level
+{\paragraphindent@cx}%indent
+{\paragraphbeforeskip@cx}%
+{\paragraphafterskip@cx}%
+{\paragraphfontweight@cx\paragraphfontfamily@cx%
+\paragraphfontsize@cx\paragraphfontshape@cx\paragraphalign@cx}%
+}}
+
+\def\renewsubparagraph{%
+\renewcommand\subparagraph{%
+ \@startsection{subparagraph}%
+{5}%level
+{\subparagraphindent@cx}%indent
+{\subparagraphbeforeskip@cx}%
+{\subparagraphafterskip@cx}%
+{\subparagraphfontweight@cx\subparagraphfontfamily@cx%
+\subparagraphfontsize@cx\subparagraphfontshape@cx\subparagraphalign@cx}%
+}%
+\def\@seccntformat##1{\csname the##1\endcsname\subparagraphnumberafter@cx}%
+}
+%    \end{macrocode}
+%
+% \subsection{Setting up the Special Chapter head mechanism}
+%
+% \begin{macro}{custom} This key enables the user
+% to define special chapter head designs. It takes one parameter
+% which is a macro name specially written for the design.
+% 
+%    \begin{macrocode}
+\cxset{custom/.code=\gdef\customdesign@cx{%
+              \csname#1\endcsname}\@specialtrue,
+       fill/.store in=\fill@cx}
+%    \end{macrocode}
+% \end{macro}
+%
+% \subsection{Adding hooks to the chapter commands}
+%
+%    \begin{macrocode}
+\DeclareRobustCommand\@makechapterhead[2][]{%
+\if@special
+    \customdesign@cx{#2}
+   \else
+  \def\printnumber{%% macro for typesetting the chapter number
+    \numberbefore@cx
+      {%
+      \numberfontweight@cx
+      \numbercolor@cx
+      \numberfontsize@cx
+      \numberfontfamily@cx
+      \thechapter
+      \numberpunctuation@cx
+      }
+      \numberafter@cx
+  }%
+% macro for typesetting the chapter name
+  \def\printchaptername{%
+    {
+    \chapterfontfamily@cx
+    \chapterfontsize@cx
+    \chapterfontweight@cx
+    \color{\chaptercolor@cx}%
+% Check if the chapter name is spaced out and use the
+% soul package. TODO add values for soul parameters
+% as a style feature.
+    \if@chapterspaceout 
+     \expandafter\so\expandafter{\chaptername}
+    \else
+      \@chapapp\space
+    \fi
+    }%
+  }%
+
+  \def\printauthorblock{%
+      \authorblockformat@cx\authorblock@cx%
+  }%
+% set all keys
+    {%
+    \parindent0pt 
+    \normalfont%
+    \ifnum \c@secnumdepth>\m@ne%
+      \if@mainmatter%
+ % we start displaying  the names and any preambles such 
+ % as images
+ % print chapter name
+         \chapterbefore@cx%
+         \if@leftname
+            \printnumber
+         \fi%
+         \printchaptername
+         \if@rightname
+            \printnumber
+         \fi%
+         \chapterafter@cx  
+      \fi%
+    \fi%
+     %chapter title
+    \interlinepenalty\@M%
+% if the number is before the title
+% if the number prints together with the title they 
+% are considered as one indivisible part.
+     \titlebeforeskip@cx%
+     \if@lefttitle%
+       \beforenumber@cx%
+       \counterdisplay\c@chapter\afternumber@cx%
+     \fi
+% Display title
+       \titlefontweight@cx
+      \titlefontfamily@cx
+      \titlefontshape@cx
+      \titlefontsize@cx
+      \titlefontcolor@cx
+      \selectfont
+      \titlebefore@cx%
+      \if@titlespaceout
+         \so{#2}%
+      \else
+         \texorpdfstring{#2}%title
+      \fi%
+      \titleafter@cx
+    \if@righttitle%
+      \afternumber@cx
+      \counterdisplay\c@chapter\afternumber@cx%
+    \fi
+% If there is an author block format it and print it
+    \if@authorblock\printauthorblock\fi%
+    \par\nobreak%
+% skip after title
+    \titleafterskip@cx
+% headers
+   }\fi
+}
+%    \end{macrocode}
+%
+% \begin{macro}{\chapter} The \cmd{\chapter} is modified to
+% hooks for openings and headers. Also to effect header styles.
+% 
+% NEED TO HANDLE headerstyle here. Note that here we effectively
+% disabling the chapter* command. (If we want must revert back).
+%
+%    \begin{macrocode}
+%% It also defaults on a pagestyle which we also need to correct
+\DeclareRobustCommand\chapter{%
+  \if@openright\cleardoublepage\fi
+  \if@openleft\cleartoevenpage\fi
+  \if@openany\clearpage\fi
+%% we need to capture the running head keys
+%% \headerstyle@cx defaults to empty
+  \thispagestyle{\headerstyle@cx}%
+  \global\@topnum\z@
+  \@afterindentfalse
+  \secdef\@chapter\@schapter%must disable \@schapter
+}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\@chapter} This is modified to include
+% our hooks.
+%
+%    \begin{macrocode}
+\def\@chapter[#1]#2{%
+    \ifnum \c@secnumdepth >\m@ne
+           \if@mainmatter
+              \if@toc
+               \refstepcounter{chapter}%
+               \typeout{\@chapapp\space\thechapter.}%
+% check if main matter and if toc is set
+%             \addcontentsline{toc}{chapter}%
+%                                   {\protect\numberline{\thechapter}#1}%
+              \addcontentsline{toc}{chapter} {\protect\numberline{%
+                   \colorbox{\tocchapternumberfill@cx}{\color{\tocchapternumbercolor@cx}\string\parbox{1.5em}{\protect\tocnumberalign@cx\thechapter\stoptocnumberalign@cx}}%
+                   \Rule\kern-13cm\hspace{1em}\bfseries\sffamily   \MakeUppercase{#2}}}%
+           \fi%
+           \else
+                \addcontentsline{toc}{chapter}{#1}%for part???
+           \fi
+     \else
+             \addcontentsline{toc}{chapter}{#1}%????? for part
+      \fi
+             %\chaptermark{#1}%
+             \addtocontents{lof}{\protect\addvspace{10\p@}}%
+             \addtocontents{lot}{\protect\addvspace{10\p@}}%
+             \if@twocolumn
+                     \@topnewpage[\@makechapterhead{#2}]%
+                \else
+                     \@makechapterhead{#2}%
+               \@afterheading
+             \fi
+   }
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \subsection{Setting Header and Footers}
+%
+%
+%    \begin{macrocode}
+\newif\if@headertoprule
+\newif\if@headerbottomrule
+\cxset{
+   chaptermark name color/.store in=\chaptermarknamecolor@cx,
+   chaptermark title color/.store in=\chaptermarktitlecolor@cx,
+   chaptermark title before/.store in=\chaptermarktitlebefore@cx,
+   chaptermark after number/.store in=\chaptermarkafternumber@cx,
+   chaptermark name/.store in=\chaptermarkname@cx,
+   chaptermark numbering/.is choice,
+   leftmark before/.store in=\leftmarkbefore@cx,
+   leftmark after/.store in=\leftmarkafter@cx,
+   rightmark before/.store in=\rightmarkbefore@cx,
+   rightmark after/.store in=\rightmarkafter@cx,
+   chaptermark numbering/none/.code=\def\chaptermarknumber{},
+   sectionmark name/.is choice,
+   sectionmark name/none/.code=\def\sectionmarkname@cx{},
+   sectionmark name custom/.code=\def\sectionmarkname@cx{#1},
+   sectionmark number/.is choice,
+   sectionmark number/none/.code=\def\sectionmarknumber@cx{},
+   sectionmark after number/.store in=\sectionmarkafternumber@cx,
+   sectionmark name color/.store in=\sectionmarkcolor@cx,
+   sectionmark title font/.store in=\sectionmarktitlefont@cx,
+   sectionmark title color/.store in=\sectionmarktitlecolor@cx,
+   sectionmark before title/.store in=\sectionmarkbeforetitle@cx,
+   sectionmark after title/.store in=\sectionmarkaftertitle@cx,
+   header offset even/.store in=\headeroffseteven@cx,
+   header offset odd/.store in=\headeroffsetodd@cx,
+  %
+   header top rule/.is if=@headertoprule,
+   header bottom rule/.is if=@headerbottomrule,
+}
+%    \end{macrocode}
+%
+%
+%    \begin{macrocode}
+\cxset{ header offset even=0pt,
+          header offset odd=0pt,
+          rightmark before=,
+          rightmark after=,
+          chaptermark title before=,}
+%    \end{macrocode}
+%
+% Set the pagestyles to a default
+%
+%    \begin{macrocode}
+\cxset{pagestyle/.code=\pagestyle{#1}}
+
+\cxset{headings ruled-01/.style={pagestyle=headings,
+          header style=headings,
+          chaptermark name color=theblue,
+          chaptermark after number={\thinspace:\space },
+          chaptermark name=,%\@chapapp,
+          chaptermark title color=black!80,
+          leftmark before=\thepage\hfill, 
+          leftmark after=,
+          sectionmark name color=theblue,
+          sectionmark title color=black!80,
+          header offset even=0pt,
+          header offset odd=0pt,
+          header top rule=false,
+          header bottom rule=true}}
+
+\cxset{headings ruled-02/.style={pagestyle=headings,
+          header style=headings,
+          chaptermark name color=theblue,
+          chaptermark after number=,
+          chaptermark name=,%\@chapapp,
+          chaptermark numbering=none,
+          chaptermark title color=black!80,
+          sectionmark name=none,
+          sectionmark number=none,
+          leftmark before=,
+          leftmark after=\qquad\quad\thepage,
+          rightmark before=\thepage,
+          rightmark after=\hfill\hfill,
+          sectionmark name color=theblue,
+          sectionmark title color=black!80,
+          sectionmark after title=,
+          sectionmark after number=\qquad,
+          header top rule=false,
+          header bottom rule=true,
+          header offset even=1.5cm,
+          header offset odd=-1.5cm,
+          header bottom rule=false}}
+
+\cxset{%
+          header style=headings,
+          chaptermark name=,
+          chaptermark name color=black,
+          chaptermark after number={\thinspace:\space },
+          chaptermark title color=black!80,
+          sectionmark name color=black,
+          sectionmark title color=black!80,
+          sectionmark after title=,
+          sectionmark after number,
+          header top rule=false,
+          header bottom rule=true} 
+
+\def\ps@headings{%
+    \let\@oddfoot\@empty\let\@evenfoot\@empty
+    \def\@evenhead{\thepage\hfil\slshape\leftmark}%
+    \def\@oddhead{{\slshape\rightmark}\hfil\thepage}%
+    \let\@mkboth\@gobbletwo
+    \let\chaptermark\@gobble
+    \let\sectionmark\@gobble} 
+
+\def\ps@chapterstyle{%
+    \let\@oddfoot\@empty\let\@evenfoot\@empty
+    \def\@evenhead{\thepage\hfil\slshape\leftmark}%
+    \def\@oddhead{{\slshape\rightmark}\hfil\thepage}%
+    \let\@mkboth\@gobbletwo
+    \let\chaptermark\@gobble
+    \let\sectionmark\@gobble}
+
+
+%
+%    \end{macrocode}
+%
 %\iffalse
 %</package>
 %\fi

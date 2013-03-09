@@ -1,8 +1,6 @@
 \ProvidesPackage{chaptersx}[2012/04/07 v0.1 Typesetting chapters]
-
 \def\HUGE{\@setfontsize\Huge{38}{47}}
 \def\HHUGE{\@setfontsize\HHUGE{58}{67}}
-
 
 \def\@words@cx#1{%
   \ifcase#1 zero\or one\or two\or three\or four\or five\or six\or seven\or eight\or nine\or ten\or
@@ -25,13 +23,9 @@
                 \item\relax\itshape}
                {\endlist}
 
-
-% helper macros for rulers
+% helper macros
 \gdef\thinrule{\rule{\textwidth}{0.4pt}}
 \gdef\mediumrule{\rule{\textwidth}{0.8pt}}
-\def\thickrule{\leavevmode \leaders \hrule height 3pt \hfill \kern \z@}
-
-
 %% broad positions
 \newif\if@left
 \newif\if@right
@@ -52,16 +46,11 @@
 %% for some of the designs.
 \newif\if@openleft\@openleftfalse
 \newif\if@openany\@openanyfalse
-%
-% Switch to indicate if an item should be added to the toc or not.
+
 \newif\if@toc  \@toctrue
 \newif\if@tocimage \@tocimagefalse
+%\section{Libraries}
 
-% Boolean set to true if a chapter head includes an author block
-\newif\if@authorblock
-
-%
-%
 \def\cx@optionlist{}
 
 
@@ -75,22 +64,21 @@
   \DeclareOption{#1}{\edef\cx@optionlist{\cx@optionlist,#1}}%
 }
 
-% Process options need to add
+\def\thickrule{\leavevmode \leaders \hrule height 3pt \hfill \kern \z@}
 
 
-
-
-% Keys for styling chapters
+\newif\if@authorblock
 % Define a family for chapter styling keys
 \pgfkeys{/chapter/.is family}
 
 
-\def\cxset{\pgfqkeys{/chapter}} %Notice this is pgf q keys
 
+\def\cxset{\pgfqkeys{/chapter}} %Notice this is pgf q keys
+% spent half the evening to debug it;)Aarg!!!
+% We define keys for all major components
 
 \cxset{%
   name/.code={\gdef\chaptername{#1}},
-  chapter name/.code={\gdef\chaptername{#1}},
   color/.store in=\color@cx,
   color/.default=black,
   chapter opening/.is choice,
@@ -98,10 +86,10 @@
   chapter opening/left/.code={\@openlefttrue},
   chapter opening/any/.code={\@openanytrue},
   chapter opening/none/.code={\@openanywheretrue\@openrightfalse
-                                              \@openleftfalse\@openanyfalse},
+\@openleftfalse\@openanyfalse},
   chapter opening/anywhere/.code={\@openanywheretrue\@openrightfalse
 \@openleftfalse\@openanyfalse},
-  chapter opening/ifafter/.code={}, %still to come with pagesofar
+  chapter opening/ifafter/.code={},
   chapter font-family/.store in=\chapterfontfamily@cx,
   chapter font-weight/.store in=\chapterfontweight@cx,
   chapter font-size/.store in=\chapterfontsize@cx,
@@ -147,7 +135,7 @@
   numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\decimal{chapter}}%
   }%
  },
-  numbering/none/.code={\gdef\thechapter{}}, % do not leave empty gives other problems???
+  numbering/none/.code={\gdef\thechapter{}}, % do not leave empty
   number dot/.store in=\numberpunctuation@cx,
   number position/.is choice,
   number position/leftname/.code={\@leftnametrue\@rightnamefalse},
@@ -284,8 +272,7 @@
 {\sectionindent@cx}%indent
 {\sectionbeforeskip@cx}%
 {\sectionafterskip@cx}%
-{\sectionfontweight@cx\sectionfontfamily@cx%
-\sectionfontsize@cx\sectionfontshape@cx\sectionalign@cx}%
+{\sectionfontweight@cx\sectionfontfamily@cx\sectionfontsize@cx\sectionfontshape@cx\sectionalign@cx}%
 }%
 }
 
@@ -297,11 +284,9 @@
 {\subsectionbeforeskip@cx}%
 {\subsectionafterskip@cx}%
 {\subsectionfontweight@cx\subsectionfontfamily@cx\subsectionfontshape@cx%
- \subsectionfontsize@cx\color{\subsectioncolor@cx}\subsectionalign@cx}%
+ \subsectionfontsize@cx\subsectionalign@cx}%
 }%
 }
-
-
 
 \def\renewsubsubsection{%
 \renewcommand\subsubsection{%
@@ -338,7 +323,7 @@
 \def\@seccntformat##1{\csname the##1\endcsname\subparagraphnumberafter@cx}%
 }
 
-% set some defaults
+
 
 \cxset{%
   lhead=left head text,
@@ -390,8 +375,8 @@
   lfoot=left text,
   cfoot=center text,
   rfoot=right text,
-  name=CHAPTER,
-  title font-family=\rmfamily,
+name=CHAPTER,
+title font-family=\rmfamily,
 title font-weight=\bfseries,
 title font-size=\Huge,
 title font-color=\color{purple},
@@ -425,7 +410,6 @@ section font-size=\Large,
 section font-shape=\upshape,
 section align=\raggedright,
 title font-shape=\upshape,
-subsection color=teal,
 }
 }
 
@@ -487,8 +471,11 @@ subsection color=teal,
     fill=thegrey,
 }
 
-% Helper macro for use with the makechapterheadmacro
-\def\printnumber{%% macro for typesetting the chapter number
+\renewcommand\@makechapterhead[2][]{%
+\if@special
+    \customdesign@cx{#2}
+   \else
+  \def\printnumber{%% macro for typesetting the chapter number
     \numberbefore@cx
       {%
       \numberfontweight@cx
@@ -499,16 +486,7 @@ subsection color=teal,
       \numberpunctuation@cx
       }
       \numberafter@cx
-  }
-
-
-\renewcommand\@makechapterhead[2][]{%
-% The special switch triggers the special macro that format the head
-% this is used for TikZ designs etc.
-\if@special
-    \customdesign@cx{#2}
-   \else
-  %
+  }%
 % macro for typesetting the chapter name
   \def\printchaptername{%
     {
@@ -583,13 +561,11 @@ subsection color=teal,
 % skip after title
     \titleafterskip@cx
 % headers
-   }
-\fi
+   }\fi
 }
 
 
-%% Special Chapter command. This one just typesets a picture on top of a
-%% Chapter head
+%% Special Chapter command
 \newcommand\specialchapter@cx[2][]{%
 \refstepcounter{chapter}
 \cxset{image/.store in=\image@cx,
