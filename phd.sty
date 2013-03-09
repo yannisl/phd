@@ -717,27 +717,9 @@ ProvidesClass,IfFileExists,RequirePackage,ifthenelse,chapter,includegraphics, ne
 }
 \def\meta@font@select{\itshape}
 \@ifundefined{chapter}{
-  \newcounter{chapter}
-  \newcounter{texexp}[chapter]
-  \@addtoreset{c@texexp}{c@chapter}
 }{
-  \newcounter{texexp}[chapter]
-  \@addtoreset{c@texexp}{c@chapter}
 }
-\def\thetexexp{\thesection.\arabic{texexp}}
-\tcbset{
-texexp/.style={%
-   fonttitle=\small\sffamily\bfseries, fontupper=\small, fontlower=\small},
-  example/.code 2 args={\refstepcounter{texexp}\label{#2}}%
-  \pgfkeysalso{texexp,title={Example \thetexexp\ #1}},
-}
-
-\newenvironment{texexp}[1]{\tcblisting{texexp,#1}}{\endtcblisting}
-\newenvironment{example}[3][]{\tcblisting{example={#2}{#3},#1}}{\endtcblisting}
-%%rename to avoid clashes with other classes that use it
-
-\newenvironment{texexample}[3][]{\tcblisting{example={#2}{#3},#1}}{\endtcblisting}
-
+%%%rename to avoid clashes with other classes that use it
 \renewcommand{\topfraction}{.85}
 \renewcommand{\bottomfraction}{.7}
 \renewcommand{\textfraction}{.15}
@@ -2079,7 +2061,17 @@ texexp/.style={%
 \def\@words@cx#1{%
   \ifcase#1 zero\or one\or two\or three\or four\or five\or six\or seven\or eight\or nine\or ten\or
    eleven\or twelve\or thirteen\or fourteen\or fifteen\or sixteen\or seventeen\or eighteen\or nineteen \or twenty\or twenty one\or twenty two\or twenty three\or twenty four\or twenty five\or twenty six\or twenty seven \or twenty eight \or twenty nine\or thirty\or thirty one\or thirty two\or thirty three\or thirty four\or thirty five\or thirty six\or thirty seven\or thirty eight\or thirty nine\or forty\or forty one\or forty two \or forty three\or forty four\or forty five \or forty six \or forty seven\or forty eight \or forty nine\or fifty\or fifty on\or fifty two\or fifty three\or fifty four\or fifty five\or fifty six\or fifty seven\or fifty eight\or fifty nine\or sixty \or sixty one \or sixty two
-\or sixty three \or sixty four \or \sixty five\else\@ctrerr\fi}
+\or sixty three \or sixty four \or sixty five\else\@ctrerr\fi}
+
+\def\@Words@cx#1{%
+  \ifcase#1 Zero\or One\or Two\or Three\or Four\or Five\or Six\or Seven\or Eight\or Nine\or Ten\or
+   Eleven\or Twelve\or Thirteen\or Fourteen\or Fifteen\or Sixteen\or Seventeen\or Eighteen\or Nineteen \or Twenty\or Twenty One\or Twenty Two\or Twenty Three\or Twenty Four\or Twenty Five\or Twenty Six\or Twenty Seven \or Twenty Eight \or Twenty Nine\or Thirty\or Thirty One\or Thirty Two\or Thirty Three\or Thirty Four\or Thirty Five\or Thirty Six\or Thirty Seven\or Thirty Eight\or Thirty Nine\or Forty\or Forty One\or Forty Two \or Forty Three\or Forty Four\or Forty Five \or Forty Six \or Forty Seven\or Forty Eight \or Forty Nine\or Fifty\or Fifty One\or Fifty Two\or Fifty Three\or Fifty four\or Fifty Five\or Fifty Six\or Fifty Seven\or Fifty Eight\or Fifty Nine\or Sixty \or Sixty One \or Sixty Two
+\or Sixty Three \or Sixty Four \or Sixty Five\else\@ctrerr\fi}
+
+\def\@WORDS@cx#1{%
+  \ifcase#1 ZERO\or ONE\or TWO\or THREE\or FOUR\or FIVE\or SIX\or SEVEN\or EIGHT\or NINE\or TEN\or
+   ELEVEN\or TWELVE\or THIRTEEN\or FOURTEEN\or FIFTEEN\or SIXTEEN\or SEVENTEEN\or EIGHTEEN\or NINETEEN \or TWENTY\or TWENTY ONE\or TWENTY TWO\or TWENTY THREE\or TWENTY FOUR\or TWENTY FIVE\or TWENTY SIX\or TWENTY SEVEN \or TWENTY EIGHT \or TWENTY NINE\or THIRTY\or THIRTY ONE\or THIRTY TWO\or THIRTY THREE\or THIRTY FOUR\or THIRTY FIVE\or THIRTY SIX\or THIRTY SEVEN\or THIRTY EIGHT\or THIRTY NINE\or FORTY\or FORTY ONE\or FORTY TWO \or FORTY THREE\or FORTY FOUR\or FORTY FIVE\or FORTY SIX\or FORTY SEVEN\or FORTY EIGHT\or FORTY NINE\or FIFTY\or FIFTY ONE\or FIFTY TWO\or FIFTY THREE\or FIFTY FOUR\or FIFTY FIVE\or FIFTY SIX\or FIFTY SEVEN\or FIFTY EIGHT\or FIFTY NINE\or SIXTY\or SIXTY ONE\or SIXTY TWO\or SIXTY THREE \or SIXTY FOUR\or SIXTY FIVE\else\@ctrerr\fi}
+
 \newenvironment{absquote}
                {\list{}{\leftmargin2cm\rightmargin\leftmargin}%
                 \item\relax\footnotesize}
@@ -2233,11 +2225,14 @@ section numbering/Roman/.code={%
   section numbering/numeric/.code={%
        \gdef\thesection{\sectionnumberingprefix@cx\@arabic\c@section}%
           \renewsection},
-  section numbering/none/.code={\gdef\thesection{}\renewsection},
+  section numbering/none/.code={\gdef\thesection{\hspace*{-1em}}\renewsection},
   section numbering/alpha/.code={\gdef\thesection{\alphalph\c@section}},
   section numbering/Alpha/.code={\gdef\thesection{\AlphAlph\c@section}},
-  %section numbering/word/.code={\gdef\thesection{\NUMBERstring{chapter}}},
-  section numbering/word/.code={\gdef\thesection{\numberstring{\expandafter\the\expandafter\c@section}}},
+  section numbering/words/.code={\gdef\thesection{\sectionnumberingprefix@cx%
+                                                   \@words@cx{\@arabic\c@section}}},
+  section numbering/Words/.code={%
+ \gdef\thesection{\sectionnumberingprefix@cx\@Words@cx{\@arabic\c@section}}},
+   section numbering/WORDS/.code={\gdef\thesection{\sectionnumberingprefix@cx \@WORDS@cx{\@arabic\c@section}}},
   section numbering custom/.code=\gdef\thesection{#1}\renewsection,
   section align/.store in=\sectionalign@cx,
   section beforeskip/.store in=\sectionbeforeskip@cx,
@@ -2254,9 +2249,9 @@ section numbering/Roman/.code={%
   subsection numbering prefix/.store in = \subsectionnumberingprefix@cx,
   subsection numbering/.is choice,
   subsection numbering/arabic/.code={%
-    \gdef\thesubsection{\subsectionnumberingprefix@cx\@arabic\c@subsection}},
+    \gdef\thesubsection{\subsectionnumberingprefix@cx\@arabic\c@subsection}\renewsubsection},
   subsection numbering/custom/.store in=\thesubsection@cx,
-  subsection numbering/none/.code={\gdef\thesubsection{}},
+  subsection numbering/none/.code={\gdef\thesubsection{\hspace*{-1em}}\renewsubsection},
   subsection align/.store in=\subsectionalign@cx,
   subsection beforeskip/.store in=\subsectionbeforeskip@cx,
   subsection afterskip/.store in=\subsectionafterskip@cx,
@@ -2269,10 +2264,10 @@ section numbering/Roman/.code={%
   subsubsection numbering prefix/.store in = \subsubsectionnumberingprefix@cx,
   subsubsection numbering/.is choice,
   subsection numbering/arabic/.code={%
-    \gdef\thesubsubsection{\subsubsectionnumberingprefix@cx\@arabic\c@subsubsection}},
-  subsubsection numbering/numeric/.code={\gdef\thesubsubsection{\thesubsection.\@arabic\c@subsubsection}},
+    \gdef\thesubsubsection{\subsubsectionnumberingprefix@cx\@arabic\c@subsubsection}\renewsubsubsection},
+  subsubsection numbering/numeric/.code={\gdef\thesubsubsection{\thesubsection.\@arabic\c@subsubsection}\renewsubsubsection},
   subsubsection numbering/custom/.store in=\thesubsubsection@cx,
-  subsubsection numbering/none/.code={\gdef\thesubsubsection{}},
+  subsubsection numbering/none/.code={\gdef\thesubsubsection{\hspace*{-1em}}\renewsubsubsection},
   subsubsection align/.store in=\subsubsectionalign@cx,
   subsubsection beforeskip/.store in=\subsubsectionbeforeskip@cx,
   subsubsection afterskip/.store in=\subsubsectionafterskip@cx,
@@ -2329,7 +2324,7 @@ section numbering/Roman/.code={%
 {\sectionindent@cx}%indent
 {\sectionbeforeskip@cx}%
 {\sectionafterskip@cx}%
-{\sectionfontweight@cx\color{\sectioncolor@cx}\sectionfontfamily@cx
+{\sectionfontweight@cx\color{\sectioncolor@cx}\sectionfontfamily@cx%
 \sectionfontsize@cx\sectionfontshape@cx\sectionalign@cx}%
 }%
 }
@@ -2606,6 +2601,7 @@ section numbering/Roman/.code={%
     \let\@mkboth\@gobbletwo
     \let\chaptermark\@gobble
     \let\sectionmark\@gobble}
+
 
 \endinput
 %%
