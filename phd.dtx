@@ -139,7 +139,7 @@ See http://www.latex-project.org/lppl.txt
       \newcounter{chapter}
       \def\thechapter{}
 }{}
-\makeatother
+
 \cxset{plain sections/.style={
        section color= thered,     
        section beforeskip=15pt,
@@ -151,7 +151,7 @@ See http://www.latex-project.org/lppl.txt
        section font-shape=,
        section align=\centering,
        section numbering prefix =,%use \thechapter. for books or add as option
-       section numbering= none,
+       section numbering= arabic,
        section spaceout=none,
 %      
        subsection color= thered,
@@ -163,20 +163,21 @@ See http://www.latex-project.org/lppl.txt
        subsection font-weight=\bfseries,
        subsection font-shape=,
        subsection align=\RaggedRight,
-       subsection numbering prefix=,%\S\hairsp,%add . here if need be
-       subsection numbering=none,
+       subsection numbering prefix=\thesection.,%\S\hairsp,%add . here if need be
+       subsection numbering custom = \two@digits{\@arabic\c@subsection},
 %
        subsubsection color= thered,
-       subsubsection beforeskip=10pt,
-       subsubsection afterskip=10pt,
+       subsubsection beforeskip=5pt,
+       subsubsection afterskip=5pt,
        subsubsection indent=0pt,
        subsubsection font-family=\rmfamily,
        subsubsection font-size=\normalfont,
        subsubsection font-weight=\bfseries,
        subsubsection font-shape=,
        subsubsection align=\RaggedRight,
-       subsubsection numbering prefix=,%\S\hairsp\thesection,%add . here if need be
-       subsubsection numbering=none,
+       subsubsection numbering prefix = \thesubsection.,
+       subsubsection numbering custom = \two@digits{\@arabic\c@subsubsection},
+       %subsubsection numbering = none,
 %
        paragraph color= thegrey,
        paragraph beforeskip=0pt,
@@ -193,7 +194,7 @@ See http://www.latex-project.org/lppl.txt
 \cxset{plain sections}
 \renewsubsubsection
 \renewparagraph
-
+\makeatother
 %%http://tex.stackexchange.com/questions/75055/print-filelist-to-pdf/75064#75064
 %\printFileList
 %
@@ -534,6 +535,8 @@ See http://www.latex-project.org/lppl.txt
 % \end{macro}
 % \end{macro}
 % \subsection{Utility macros for displaying symbols and fonts}
+% \subsubsection{Other}
+% \subsubsection{More}
 %
 % In the sections that follow, we use a number of utilities for
 % displaying fonts and utilities in tables and figures, we collect
@@ -2585,6 +2588,24 @@ ProvidesClass,IfFileExists,RequirePackage,ifthenelse,chapter,includegraphics, ne
 \RequirePackage{caption} % check
 \RequirePackage{currfile}
 \RequirePackage{filemod}
+%    \end{macrocode}
+%
+% \begin{macro}{pdfpages}
+% If you need to insert an existing, possibly multi-page, PDF file into your 
+% LaTeX document, whether or not the included PDF was compiled with LaTeX or 
+% another tool, consider using the pdfpages package. In the preamble we include 
+% the package:
+% 
+%    \begin{macrocode}
+\RequirePackage[final]{pdfpages}
+%    \end{macrocode}
+% \end{macro}
+%
+% Include the pages you want using:
+%
+%    |\includepdf[pages=3-8]{sample.pdf}|
+%
+%    \begin{macrocode}
 \newif\ifCCLIC
 \newcommand\CCLIC{\pkgname{cclicenses}}
 \IfStyFileExists{cclicenses}
@@ -4573,10 +4594,15 @@ section numbering/Roman/.code={%
   section numbering/Words/.code={%
  \gdef\thesection{\sectionnumberingprefix@cx\@Words@cx{\@arabic\c@section}}},
    section numbering/WORDS/.code={\gdef\thesection{\sectionnumberingprefix@cx \@WORDS@cx{\@arabic\c@section}}},
-  section numbering custom/.code=\gdef\thesection{#1}\renewsection,
 %    \end{macrocode}
 % \end{macro}
 %
+% The |section numbering custom| is a catch-all key to define a special
+% definition for |thesection|. Just pass on the tokens you require.
+% 
+%    \begin{macrocode}
+  section numbering custom/.code=\gdef\thesection{#1}\renewsection,
+%    \end{macrocode}
 %    \begin{macrocode}
   section align/.store in=\sectionalign@cx,
   section beforeskip/.store in=\sectionbeforeskip@cx,
@@ -4590,7 +4616,7 @@ section numbering/Roman/.code={%
 %
 % \begin{macro}{subsection options}
 % 
-% Form now on almost everything is a repetition of whatever was previously
+% From now on almost everything is a repetition of whatever was previously
 % defined for higher order sectioning commands.
 %
 %    \begin{macrocode}
@@ -4611,6 +4637,8 @@ section numbering/Roman/.code={%
   subsection beforeskip/.store in=\subsectionbeforeskip@cx,
   subsection afterskip/.store in=\subsectionafterskip@cx,
   subsection indent/.store in=\subsectionindent@cx,
+  subsection numbering custom/.code=\gdef\thesubsection{%
+          \subsectionnumberingprefix@cx#1}\renewsubsection,
 %    \end{macrocode}
 % \end{macro}
 %
@@ -4631,8 +4659,10 @@ section numbering/Roman/.code={%
   subsection numbering/arabic/.code={%
     \gdef\thesubsubsection{\subsubsectionnumberingprefix@cx\@arabic\c@subsubsection}\renewsubsubsection},
   subsubsection numbering/numeric/.code={\gdef\thesubsubsection{\thesubsection.\@arabic\c@subsubsection}\renewsubsubsection},
-  subsubsection numbering/custom/.store in=\thesubsubsection@cx,
-  subsubsection numbering/none/.code={\gdef\thesubsubsection{\hspace*{-1em}}\renewsubsubsection},
+  subsubsection numbering custom/.code= \gdef\thesubsubsection{%
+       \subsubsectionnumberingprefix@cx#1}\renewsubsubsection,
+  subsubsection numbering/none/.code={\gdef\thesubsubsection{%
+       \hspace*{-1em}}\renewsubsubsection},
   subsubsection align/.store in=\subsubsectionalign@cx,
   subsubsection beforeskip/.store in=\subsubsectionbeforeskip@cx,
   subsubsection afterskip/.store in=\subsubsectionafterskip@cx,
@@ -5362,8 +5392,11 @@ http://tex.stackexchange.com/questions/45651/how-do-i-determine-in-which-order-p
 %
 % ^^A\end{thebibliography}
 %
-
-
+For custom section
+\makeatletter
+\renewcommand\thesubsection{\thesection.\two@digits{\value{subsection}}}
+\renewcommand\thesubsubsection{\thesubsection.\two@digits{\value{subsubsection}}}
+\makeatother
 
 
 
