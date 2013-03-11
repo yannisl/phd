@@ -382,10 +382,12 @@ ProvidesClass,IfFileExists,RequirePackage,ifthenelse,chapter,includegraphics, ne
 \lstloadlanguages{[LaTeX]TeX, [primitive]TeX, Verse}
 
 \lstset{language={[LaTeX]TeX},
-      escapeinside={{(*@}{@*)}},
-       numbers=left, gobble=0,
+       escapeinside={{(*@}{@*)}},
+       numbers=left,
+       gobble=0,
        stepnumber=1,numbersep=5pt,
-       numberstyle={\footnotesize\color{gray}},firstnumber=last,
+       numberstyle={\footnotesize\color{gray}},
+       firstnumber=last,
        breaklines=true,
        framesep=5pt,
        basicstyle=\small\ttfamily,
@@ -2106,26 +2108,33 @@ ProvidesClass,IfFileExists,RequirePackage,ifthenelse,chapter,includegraphics, ne
 \newif\if@authorblock
 \newif\if@toc  \@toctrue
 \newif\if@tocimage \@tocimagefalse
-\cxset{%
-  document type/.is choice,
-  document type/book/.code = {},
-  document type/article/.code = {},
-  document type/report/.code = {},
-  name/.code={\gdef\chaptername{#1}},
-  chapter name/.code={\gdef\chaptername{#1}},%alias
+\newif\if@book
+\newif\if@report
+\newif\if@article
+\cxset{document type/.is choice,
+  document type/book/.code = {\@booktrue},
+  document type/article/.code = {\@reporttrue},
+  document type/report/.code = {\@articletrue},
+}
+\@ifundefined{@openright}{%
+  }{}
+\cxset{
+  name/.store in=\chaptername,
+  chapter name/.store in=\chaptername,
   color/.store in=\color@cx,
   color/.default=black,
+  chaptername/.code = \gdef\chaptername@cx{#1},
   chapter opening/.is choice,
   chapter opening/right/.code={\@openrighttrue},
   chapter opening/left/.code={\@openlefttrue},
   chapter opening/any/.code={\@openanytrue},
   chapter opening/none/.code={\@openanywheretrue\@openrightfalse
-\@openleftfalse\@openanyfalse},
+     \@openleftfalse\@openanyfalse},
   chapter opening/anywhere/.code={\@openanywheretrue\@openrightfalse
-\@openleftfalse\@openanyfalse},
+     \@openleftfalse\@openanyfalse},
   chapter opening/ifafter/.code={},
   chapter font-family/.store in=\chapterfontfamily@cx,
-  chapter font-weight/.store in=\chapterfontweight@cx,
+  chapter font-weight/.store in = \chapterfontweight@cx,
   chapter font-size/.store in=\chapterfontsize@cx,
   chapter color/.store in=\chaptercolor@cx,
   chapter before/.store in=\chapterbefore@cx,
@@ -2159,10 +2168,8 @@ ProvidesClass,IfFileExists,RequirePackage,ifthenelse,chapter,includegraphics, ne
   chapter numbering/alpha/.code={\gdef\thechapter{\alphalph\c@chapter}},
   chapter numbering/Alpha/.code={\gdef\thechapter{\AlphAlph\c@chapter}},
   chapter numbering/words/.code={\gdef\thechapter{\MakeTextLowercase{\expandafter\@words@cx{\expandafter\@arabic\c@chapter}}}},
-%% These proved a bit trouble some and ended up calling the fmtcount package routines
   chapter numbering/WORDS/.code={\gdef\thechapter{\NUMBERstring{chapter}}},
   chapter numbering/Words/.code={\gdef\thechapter{\NumToName{\expandafter\@arabic\c@chapter}}},
-%% These is for my own use for EJD type numbering, placed in an mbox as there is something funny
   chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\decimal{chapter}}%
   }},
   numbering/.is choice,
@@ -2175,7 +2182,6 @@ ProvidesClass,IfFileExists,RequirePackage,ifthenelse,chapter,includegraphics, ne
 %% These proved a bit trouble some and ended up calling the fmtcount package routines
   numbering/WORDS/.code={\gdef\thechapter{\NUMBERstring{chapter}}},
   numbering/Words/.code={\gdef\thechapter{\NumToName{\expandafter\@arabic\c@chapter}}},
-%% These is for my own use for EJD type numbering, placed in an mbox as there is something funny
   numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\decimal{chapter}}%
   }},
   numbering/none/.code={\gdef\thechapter{}}, % do not leave empty
@@ -2198,7 +2204,7 @@ ProvidesClass,IfFileExists,RequirePackage,ifthenelse,chapter,includegraphics, ne
   author names/.store in=\authorblock@cx,
   author block format/.store in=\authorblockformat@cx,
   chapter toc/.is choice,
-  chapter toc/true/.code=\@toctrue\cxset{numbering=arabic,name=Chapter},
+  chapter toc/true/.code=\@toctrue,
   chapter toc/false/.code=\@tocfalse,
   chapter toc/none/.code=\@tocfalse,
   section font-size/.store in=\sectionfontsize@cx,
@@ -2383,115 +2389,112 @@ section numbering/Roman/.code={%
 \cxset{custom/.code=\gdef\customdesign@cx{%
               \csname#1\endcsname}\@specialtrue,
        fill/.store in=\fill@cx}
-\DeclareRobustCommand\@makechapterhead[2][]{%
-\if@special
-    \customdesign@cx{#2}
-   \else
-  \def\printnumber{%% macro for typesetting the chapter number
-    \numberbefore@cx
-      {%
-      \numberfontweight@cx
-      \numbercolor@cx
-      \numberfontsize@cx
-      \numberfontfamily@cx
-      \thechapter
-      \numberpunctuation@cx
-      }
-      \numberafter@cx
-  }%
-  \def\printchaptername{%
-    {
-    \chapterfontfamily@cx
-    \chapterfontsize@cx
-    \chapterfontweight@cx
-    \color{\chaptercolor@cx}%
-    \if@chapterspaceout
-     \expandafter\so\expandafter{\chaptername}
-    \else
-      \@chapapp\space
-    \fi
-    }%
-  }%
+      \def\printchaptername{%
+        {%
+         \chapterfontfamily@cx
+         \chapterfontsize@cx
+         \chapterfontweight@cx
+         \color{\chaptercolor@cx}%
+         \if@chapterspaceout
+            \expandafter\so\expandafter{\chaptername}%
+          \else
+            \@chapapp\space
+         \fi%
+       }%
+      }%
 
-  \def\printauthorblock{%
-      \authorblockformat@cx\authorblock@cx%
-  }%
-    {%
-    \parindent0pt
-    \normalfont%
-    \ifnum \c@secnumdepth>\m@ne%
-      \if@mainmatter%
- % we start displaying  the names and any preambles such
- % as images
- % print chapter name
-         \chapterbefore@cx%
-         \if@leftname
-            \printnumber
-         \fi%
-         \printchaptername
-         \if@rightname
-            \printnumber
-         \fi%
-         \chapterafter@cx
-      \fi%
-    \fi%
-     %chapter title
+      \def\printauthorblock{%
+         \authorblockformat@cx\authorblock@cx}%
+
+\def\printnumber{%
+        \numberbefore@cx
+         \bgroup
+          \numberfontweight@cx
+          \numberfontsize@cx
+          \numberfontfamily@cx
+          \color{\numbercolor@cx}
+          \thechapter
+          \numberpunctuation@cx
+         \egroup
+        \numberafter@cx}%
+
+\DeclareRobustCommand\@makechapterhead[2][]{%
+  \if@special
+    \customdesign@cx{#2}
+  \else
+  \bgroup
+      \parindent0pt
+      \normalfont%
+      \ifnum \c@secnumdepth>\m@ne%
+        \if@mainmatter%
+           \chapterbefore@cx%
+           \if@leftname
+              \printnumber
+           \fi%
+           \printchaptername
+           \if@rightname
+              \printnumber
+           \fi%
+          \chapterafter@cx
+        \fi% mainmatter
+     \fi%secnum
     \interlinepenalty\@M%
-     \titlebeforeskip@cx%
+    \titlebeforeskip@cx%
      \if@lefttitle%
        \beforenumber@cx%
        \counterdisplay\c@chapter\afternumber@cx%
      \fi
-       \titlefontweight@cx
+      \titlefontweight@cx
       \titlefontfamily@cx
       \titlefontshape@cx
       \titlefontsize@cx
-      \titlefontcolor@cx
-      \selectfont
-      \titlebefore@cx%
+       \selectfont
+      \titlebefore@cx\color{purple}%
       \if@titlespaceout
          \so{#2}%
       \else
          \texorpdfstring{#2}%title
       \fi%
       \titleafter@cx
-    \if@righttitle%
-      \afternumber@cx
-      \counterdisplay\c@chapter\afternumber@cx%
-    \fi
-    \if@authorblock\printauthorblock\fi%
+      \if@righttitle%
+         \afternumber@cx
+         \counterdisplay\c@chapter\afternumber@cx%
+      \fi%
+    \if@authorblock
+       \printauthorblock
+    \fi%
     \par\nobreak%
     \titleafterskip@cx
-   }\fi
-}
-%% It also defaults on a pagestyle which we also need to correct
+  \egroup%
+\fi% We close the main conditional
+}%
 \DeclareRobustCommand\chapter{%
   \if@openright\cleardoublepage\fi
   \if@openleft\cleartoevenpage\fi
   \if@openany\clearpage\fi
-%% we need to capture the running head keys
-%% \headerstyle@cx defaults to empty
   \thispagestyle{\headerstyle@cx}%
   \global\@topnum\z@
   \@afterindentfalse
-  \secdef\@chapter\@schapter%must disable \@schapter
+  \secdef\@chapter\@schapter%must disable \@schapter if is not needed.
 }
+\@tocfalse
 \def\@chapter[#1]#2{%
     \ifnum \c@secnumdepth >\m@ne
-           \if@mainmatter
-              \if@toc
-               \refstepcounter{chapter}%
-               \typeout{\@chapapp\space\thechapter.}%
-              \addcontentsline{toc}{chapter} {\protect\numberline{%
-                   \colorbox{\tocchapternumberfill@cx}{\color{\tocchapternumbercolor@cx}\string\parbox{1.5em}{\protect\tocnumberalign@cx\thechapter\stoptocnumberalign@cx}}%
-                   \Rule\kern-13cm\hspace{1em}\bfseries\sffamily   \MakeUppercase{#2}}}%
-           \fi%
-           \else
-                \addcontentsline{toc}{chapter}{#1}%for part???
-           \fi
+        \if@mainmatter
+            \if@toc
+                \refstepcounter{chapter}%
+                \typeout{\@chapapp\space\thechapter.}%
+                \addcontentsline{toc}{chapter} {\protect\numberline{%
+                    \colorbox{\tocchapternumberfill@cx}%
+                    {\color{\tocchapternumbercolor@cx}\string\parbox{1.5em} {\protect\tocnumberalign@cx\thechapter\stoptocnumberalign@cx}}%
+                   \Rule\kern-13cm\hspace{1em}\bfseries\sffamily#2}}%
+            \fi%
+        \else
+            \addcontentsline{toc}{chapter}{#1}%for part???
+     \fi
      \else
              \addcontentsline{toc}{chapter}{#1}%????? for part
-      \fi
+   \fi
              %\chaptermark{#1}%
              \addtocontents{lof}{\protect\addvspace{10\p@}}%
              \addtocontents{lot}{\protect\addvspace{10\p@}}%
@@ -2606,7 +2609,6 @@ section numbering/Roman/.code={%
     \let\@mkboth\@gobbletwo
     \let\chaptermark\@gobble
     \let\sectionmark\@gobble}
-
 
 \endinput
 %%

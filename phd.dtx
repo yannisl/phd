@@ -2310,10 +2310,12 @@ ProvidesClass,IfFileExists,RequirePackage,ifthenelse,chapter,includegraphics, ne
 \lstloadlanguages{[LaTeX]TeX, [primitive]TeX, Verse}
 
 \lstset{language={[LaTeX]TeX},
-      escapeinside={{(*@}{@*)}}, 
-       numbers=left, gobble=0,
+       escapeinside={{(*@}{@*)}}, 
+       numbers=left, 
+       gobble=0,
        stepnumber=1,numbersep=5pt, 
-       numberstyle={\footnotesize\color{gray}},firstnumber=last,
+       numberstyle={\footnotesize\color{gray}},
+       firstnumber=last,
        breaklines=true,
        framesep=5pt,
        basicstyle=\small\ttfamily,
@@ -2819,11 +2821,6 @@ ProvidesClass,IfFileExists,RequirePackage,ifthenelse,chapter,includegraphics, ne
 % 
 % \section{Referencing}
 %
-% \begin{macro}{\fref} 
-% \begin{macro}{\tref}
-% \begin{macro}{\eref}
-% \begin{macro}{\sref}
-% \begin{macro}{aref}
 % Most authors that use LaTeX2e develop shorthands for common tasks such as, typing
 % |See figure~\ref{fig:myplot}|. The advantage of a macro is that one can be consistent
 % with capitalization or abbreviations.
@@ -2859,15 +2856,11 @@ ProvidesClass,IfFileExists,RequirePackage,ifthenelse,chapter,includegraphics, ne
 \newcommand{\aref}[1]{\refappendixname@cx~\ref{#1}}
 \newcommand{\pref}[1]{\refparagraphname@cx\ref{#1}}
 %    \end{macrocode}
-% \end{macro}
-% \end{macro}
-% \end{macro}
-% \end{macro}
-% \end{macro}
 %
 % \paragraph{Example}\label{example} See |\sref{meta}|, will typeset \sref{meta} and see \pref{example}.
 %
 %\subsection{meta}\label{meta}
+%
 % This has been lifted from |doc|
 % \begin{macro}{\meta}
 % \changes{v1.4t}{1989/04/24}{Macro added.}
@@ -4436,31 +4429,47 @@ ProvidesClass,IfFileExists,RequirePackage,ifthenelse,chapter,includegraphics, ne
 \newif\if@tocimage \@tocimagefalse
 %    \end{macrocode}
 %
-% \subsection{Defining Chapter Head Keys}
+% \subsection{Defining Document Keys}
 %
+% As we aim to make the package generic to be used with any base class
+% we define some conditionals and keys.
 %
 %    \begin{macrocode}
-\cxset{%
-  document type/.is choice,
-  document type/book/.code = {},
-  document type/article/.code = {},
-  document type/report/.code = {},
+\newif\if@book
+\newif\if@report
+\newif\if@article
+\cxset{document type/.is choice,
+  document type/book/.code = {\@booktrue},
+  document type/article/.code = {\@reporttrue},
+  document type/report/.code = {\@articletrue}, 
+}
+%    \end{macrocode}
 %
-  name/.code={\gdef\chaptername{#1}},
-  chapter name/.code={\gdef\chaptername{#1}},%alias
+% \subsection{Defining Chapter Head Keys}
+%
+%    \begin{macrocode}
+\@ifundefined{@openright}{%
+  }{}
+%    \end{macrocode}
+%
+%    \begin{macrocode}
+\cxset{
+  name/.store in=\chaptername,
+  chapter name/.store in=\chaptername,
   color/.store in=\color@cx,
   color/.default=black,
+  chaptername/.code = \gdef\chaptername@cx{#1},
   chapter opening/.is choice,
   chapter opening/right/.code={\@openrighttrue},
   chapter opening/left/.code={\@openlefttrue},
   chapter opening/any/.code={\@openanytrue},
   chapter opening/none/.code={\@openanywheretrue\@openrightfalse
-\@openleftfalse\@openanyfalse},
+     \@openleftfalse\@openanyfalse},
   chapter opening/anywhere/.code={\@openanywheretrue\@openrightfalse
-\@openleftfalse\@openanyfalse},
+     \@openleftfalse\@openanyfalse},
   chapter opening/ifafter/.code={},
   chapter font-family/.store in=\chapterfontfamily@cx,
-  chapter font-weight/.store in=\chapterfontweight@cx,
+  chapter font-weight/.store in = \chapterfontweight@cx,
   chapter font-size/.store in=\chapterfontsize@cx,
   chapter color/.store in=\chaptercolor@cx,
   chapter before/.store in=\chapterbefore@cx,
@@ -4487,7 +4496,6 @@ ProvidesClass,IfFileExists,RequirePackage,ifthenelse,chapter,includegraphics, ne
   position/left/.code={\@lefttrue},
   position/right/.code={\@righttrue},
   position/center/.code={\@centertrue},
-% numbering options that are required
   chapter numbering/.is choice,
   chapter numbering/roman/.code={\gdef\thechapter{\@roman\c@chapter}},
   chapter numbering/Roman/.code={\gdef\thechapter{\@Roman\c@chapter}},
@@ -4495,14 +4503,10 @@ ProvidesClass,IfFileExists,RequirePackage,ifthenelse,chapter,includegraphics, ne
   chapter numbering/alpha/.code={\gdef\thechapter{\alphalph\c@chapter}},
   chapter numbering/Alpha/.code={\gdef\thechapter{\AlphAlph\c@chapter}},
   chapter numbering/words/.code={\gdef\thechapter{\MakeTextLowercase{\expandafter\@words@cx{\expandafter\@arabic\c@chapter}}}},
-%% These proved a bit trouble some and ended up calling the fmtcount package routines
   chapter numbering/WORDS/.code={\gdef\thechapter{\NUMBERstring{chapter}}},
   chapter numbering/Words/.code={\gdef\thechapter{\NumToName{\expandafter\@arabic\c@chapter}}},
-%% These is for my own use for EJD type numbering, placed in an mbox as there is something funny
-% happening with spaces.
   chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\decimal{chapter}}%
   }},
-% alias
   numbering/.is choice,
   numbering/roman/.code={\gdef\thechapter{\@roman\c@chapter}},
   numbering/Roman/.code={\gdef\thechapter{\@Roman\c@chapter}},
@@ -4513,8 +4517,6 @@ ProvidesClass,IfFileExists,RequirePackage,ifthenelse,chapter,includegraphics, ne
 %% These proved a bit trouble some and ended up calling the fmtcount package routines
   numbering/WORDS/.code={\gdef\thechapter{\NUMBERstring{chapter}}},
   numbering/Words/.code={\gdef\thechapter{\NumToName{\expandafter\@arabic\c@chapter}}},
-%% These is for my own use for EJD type numbering, placed in an mbox as there is something funny
-% happening with spaces.
   numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\decimal{chapter}}%
   }},
   numbering/none/.code={\gdef\thechapter{}}, % do not leave empty
@@ -4538,7 +4540,7 @@ ProvidesClass,IfFileExists,RequirePackage,ifthenelse,chapter,includegraphics, ne
   author names/.store in=\authorblock@cx,  
   author block format/.store in=\authorblockformat@cx,
   chapter toc/.is choice,
-  chapter toc/true/.code=\@toctrue\cxset{numbering=arabic,name=Chapter},
+  chapter toc/true/.code=\@toctrue,
   chapter toc/false/.code=\@tocfalse,
   chapter toc/none/.code=\@tocfalse,
 %    \end{macrocode}
@@ -4790,9 +4792,12 @@ section numbering/Roman/.code={%
 %
 % \subsection{Setting up the Special Chapter head mechanism}
 %
+% We now set the mechanism and the keys for defining keys for
+% chapter head designs. Ours strategy is to provide maximum flexibility.
+% 
 % \begin{macro}{custom} This key enables the user
 % to define special chapter head designs. It takes one parameter
-% which is a macro name specially written for the design.
+% which is a macro name specially written for the design and executes it.
 % 
 %    \begin{macrocode}
 \cxset{custom/.code=\gdef\customdesign@cx{%
@@ -4803,101 +4808,132 @@ section numbering/Roman/.code={%
 %
 % \subsection{Adding hooks to the chapter commands}
 %
+% \begin{macro}{\printchaptername}
+% macro for typesetting the chapter name. 
+% 
 %    \begin{macrocode}
-\DeclareRobustCommand\@makechapterhead[2][]{%
-\if@special
-    \customdesign@cx{#2}
-   \else
-  \def\printnumber{%% macro for typesetting the chapter number
-    \numberbefore@cx
-      {%
-      \numberfontweight@cx
-      \numbercolor@cx
-      \numberfontsize@cx
-      \numberfontfamily@cx
-      \thechapter
-      \numberpunctuation@cx
-      }
-      \numberafter@cx
-  }%
-% macro for typesetting the chapter name
-  \def\printchaptername{%
-    {
-    \chapterfontfamily@cx
-    \chapterfontsize@cx
-    \chapterfontweight@cx
-    \color{\chaptercolor@cx}%
-% Check if the chapter name is spaced out and use the
-% soul package. TODO add values for soul parameters
-% as a style feature.
-    \if@chapterspaceout 
-     \expandafter\so\expandafter{\chaptername}
-    \else
-      \@chapapp\space
-    \fi
-    }%
-  }%
+      \def\printchaptername{%
+        {%
+         \chapterfontfamily@cx
+         \chapterfontsize@cx
+         \chapterfontweight@cx
+         \color{\chaptercolor@cx}%
+         \if@chapterspaceout 
+            \expandafter\so\expandafter{\chaptername}%
+          \else
+            \@chapapp\space
+         \fi%
+       }%
+      }%
+%    \end{macrocode}
+% \end{macro}
 
-  \def\printauthorblock{%
-      \authorblockformat@cx\authorblock@cx%
-  }%
-% set all keys
-    {%
-    \parindent0pt 
-    \normalfont%
-    \ifnum \c@secnumdepth>\m@ne%
-      \if@mainmatter%
- % we start displaying  the names and any preambles such 
- % as images
- % print chapter name
-         \chapterbefore@cx%
-         \if@leftname
-            \printnumber
-         \fi%
-         \printchaptername
-         \if@rightname
-            \printnumber
-         \fi%
-         \chapterafter@cx  
-      \fi%
-    \fi%
-     %chapter title
+% \begin{macro}{printauthorblock} The author block is only printed for some
+% chapter designs.
+%
+%    \begin{macrocode}
+      \def\printauthorblock{%
+         \authorblockformat@cx\authorblock@cx}%
+%    \end{macrocode}
+% \end{macro}
+
+%  We modify the basic command used by LaTeX to 
+% typeset chapter heads. We |DeclareRobustCommand| to avoid redeclaration errors 
+% if used in with article class, perhaps not the best of methods.
+%
+%    \begin{macrocode}
+\def\printnumber{%
+        \numberbefore@cx
+         \bgroup
+          \numberfontweight@cx
+          \numberfontsize@cx
+          \numberfontfamily@cx
+          \color{\numbercolor@cx}
+          \thechapter
+          \numberpunctuation@cx
+         \egroup
+        \numberafter@cx}% 
+
+\DeclareRobustCommand\@makechapterhead[2][]{%
+  \if@special
+    \customdesign@cx{#2}
+  \else
+%    \end{macrocode}
+% 
+%
+%
+% We now ready to typeset the header, we run everything within a group and
+% activate the chapter only if the |thesecumdepth>-1| and if only we are 
+% within mainmatter. 
+%
+%    \begin{macrocode}
+  \bgroup
+      \parindent0pt 
+      \normalfont%
+      \ifnum \c@secnumdepth>\m@ne%
+        \if@mainmatter%
+%    \end{macrocode}
+%
+% We first check if we need to print anything before the chapter head, as for
+% example an image or a graphic, we then check if the number is to the left of
+% the right of the image and typeset it. We follow it by printing any chapter
+% postable, such as a ruler.
+% 
+%    \begin{macrocode}
+           \chapterbefore@cx%
+           \if@leftname
+              \printnumber
+           \fi%
+           \printchaptername
+           \if@rightname
+              \printnumber
+           \fi%
+          \chapterafter@cx  
+        \fi% mainmatter
+     \fi%secnum
+%    \end{macrocode}
+%
+% We then in a similar fashion typeset the title block.
+%
+%    \begin{macrocode}
     \interlinepenalty\@M%
-% if the number is before the title
-% if the number prints together with the title they 
-% are considered as one indivisible part.
-     \titlebeforeskip@cx%
+    \titlebeforeskip@cx%
      \if@lefttitle%
        \beforenumber@cx%
        \counterdisplay\c@chapter\afternumber@cx%
      \fi
 % Display title
-       \titlefontweight@cx
+      \titlefontweight@cx
       \titlefontfamily@cx
       \titlefontshape@cx
       \titlefontsize@cx
-      \titlefontcolor@cx
-      \selectfont
-      \titlebefore@cx%
+       \selectfont
+      \titlebefore@cx\color{purple}%
       \if@titlespaceout
          \so{#2}%
       \else
          \texorpdfstring{#2}%title
       \fi%
       \titleafter@cx
-    \if@righttitle%
-      \afternumber@cx
-      \counterdisplay\c@chapter\afternumber@cx%
-    \fi
-% If there is an author block format it and print it
-    \if@authorblock\printauthorblock\fi%
-    \par\nobreak%
-% skip after title
-    \titleafterskip@cx
-% headers
-   }\fi
-}
+      \if@righttitle%
+         \afternumber@cx
+         \counterdisplay\c@chapter\afternumber@cx%
+      \fi%
 %    \end{macrocode}
+%
+% Check if we have to typeset an author block and print it.
+%
+%    \begin{macrocode}
+    \if@authorblock
+       \printauthorblock
+    \fi%
+    \par\nobreak%
+    \titleafterskip@cx
+  \egroup%
+\fi% We close the main conditional
+}%
+%    \end{macrocode}
+%
 %
 % \begin{macro}{\chapter} The \cmd{\chapter} is modified to
 % hooks for openings and headers. Also to effect header styles.
@@ -4906,44 +4942,58 @@ section numbering/Roman/.code={%
 % disabling the chapter* command. (If we want must revert back).
 %
 %    \begin{macrocode}
-%% It also defaults on a pagestyle which we also need to correct
+% It also defaults on a pagestyle which we also need to correct
 \DeclareRobustCommand\chapter{%
   \if@openright\cleardoublepage\fi
   \if@openleft\cleartoevenpage\fi
   \if@openany\clearpage\fi
-%% we need to capture the running head keys
-%% \headerstyle@cx defaults to empty
+% we need to capture the running head keys
+% \headerstyle@cx defaults to empty
   \thispagestyle{\headerstyle@cx}%
   \global\@topnum\z@
   \@afterindentfalse
-  \secdef\@chapter\@schapter%must disable \@schapter
-}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{\@chapter} This is modified to include
-% our hooks.
+% Everything is now ready to call |secdef|, which is defined in the
+% kernel. This command takes two arguments and calls the auxiliary
+% macros for starred and starred commands. 
 %
 %    \begin{macrocode}
+  \secdef\@chapter\@schapter%must disable \@schapter if is not needed.
+}
+%    \end{macrocode}
+%
+% We first define the unstarred version of the command.
+% This is modified to include
+% our hooks.
+%
+% \begin{macro}{\@chapter} The Chapter Head organizer, checks conditional
+% adds details to the \texttt{toc} and calls |\@makechapterhead| to do
+% the typesetting.
+% 
+%    \begin{macrocode}
+\@tocfalse
 \def\@chapter[#1]#2{%
     \ifnum \c@secnumdepth >\m@ne
-           \if@mainmatter
-              \if@toc
-               \refstepcounter{chapter}%
-               \typeout{\@chapapp\space\thechapter.}%
+        \if@mainmatter
+            \if@toc
+                \refstepcounter{chapter}%
+                \typeout{\@chapapp\space\thechapter.}%
 % check if main matter and if toc is set
 %             \addcontentsline{toc}{chapter}%
 %                                   {\protect\numberline{\thechapter}#1}%
-              \addcontentsline{toc}{chapter} {\protect\numberline{%
-                   \colorbox{\tocchapternumberfill@cx}{\color{\tocchapternumbercolor@cx}\string\parbox{1.5em}{\protect\tocnumberalign@cx\thechapter\stoptocnumberalign@cx}}%
-                   \Rule\kern-13cm\hspace{1em}\bfseries\sffamily   \MakeUppercase{#2}}}%
-           \fi%
-           \else
-                \addcontentsline{toc}{chapter}{#1}%for part???
-           \fi
+                \addcontentsline{toc}{chapter} {\protect\numberline{%
+                    \colorbox{\tocchapternumberfill@cx}%
+                    {\color{\tocchapternumbercolor@cx}\string\parbox{1.5em} {\protect\tocnumberalign@cx\thechapter\stoptocnumberalign@cx}}%
+                   \Rule\kern-13cm\hspace{1em}\bfseries\sffamily#2}}%
+            \fi%
+        \else
+            \addcontentsline{toc}{chapter}{#1}%for part???
+     \fi
      \else
              \addcontentsline{toc}{chapter}{#1}%????? for part
-      \fi
+   \fi
              %\chaptermark{#1}%
              \addtocontents{lof}{\protect\addvspace{10\p@}}%
              \addtocontents{lot}{\protect\addvspace{10\p@}}%
@@ -5075,8 +5125,6 @@ section numbering/Roman/.code={%
     \let\@mkboth\@gobbletwo
     \let\chaptermark\@gobble
     \let\sectionmark\@gobble}
-
-
 %
 %    \end{macrocode}
 %
