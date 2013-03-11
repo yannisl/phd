@@ -2116,6 +2116,16 @@ ProvidesClass,IfFileExists,RequirePackage,ifthenelse,chapter,includegraphics, ne
   document type/article/.code = {\@reporttrue},
   document type/report/.code = {\@articletrue},
 }
+\global\def\setfontparam@cx#1;{%
+  \ifdefmacro{#1}{#1}{\csname#1\endcsname}%
+}
+\def\setfont@cx#1#2#3#4{%
+  \expandafter\setfontparam@cx#1;%
+  \expandafter\setfontparam@cx#2;%
+  \expandafter\setfontparam@cx#3;%
+  \expandafter\setfontparam@cx#4;%
+}
+\let\bold\bfseries
 \@ifundefined{@openright}{%
   }{}
 \cxset{
@@ -2140,8 +2150,8 @@ ProvidesClass,IfFileExists,RequirePackage,ifthenelse,chapter,includegraphics, ne
   chapter before/.store in=\chapterbefore@cx,
   chapter after/.store in=\chapterafter@cx,
   chapter spaceout/.is choice,
-  chapter spaceout/soul/.code={\@chapterspaceouttrue},
-  chapter spaceout/none/.code={\@chapterspaceoutfalse},
+  chapter spaceout/soul/.code=\@chapterspaceouttrue,
+  chapter spaceout/none/.code=\@chapterspaceoutfalse,
   % title keys
   title font-family/.store in=\titlefontfamily@cx,
   title font-family/.default=\rmfamily,
@@ -2150,8 +2160,8 @@ ProvidesClass,IfFileExists,RequirePackage,ifthenelse,chapter,includegraphics, ne
   title font-color/.store in=\titlefontcolor@cx,
   title font-shape/.store in= \titlefontshape@cx,
   title spaceout/.is choice,
-  title spaceout/soul/.code={\@titlespaceouttrue},
-  title spaceout/none/.code={\@titlespaceoutfalse},
+  title spaceout/soul/.code=\@titlespaceouttrue,
+  title spaceout/none/.code=\@titlespaceoutfalse,
   title font/.style={title font-family=#1},
   title before/.store in=\titlebefore@cx,
   title after/.store in=\titleafter@cx,
@@ -2241,7 +2251,13 @@ section numbering/Roman/.code={%
  \gdef\thesection{\sectionnumberingprefix@cx\@Words@cx{\@arabic\c@section}}},
    section numbering/WORDS/.code={\gdef\thesection{\sectionnumberingprefix@cx \@WORDS@cx{\@arabic\c@section}}},
   section numbering custom/.code=\gdef\thesection{#1}\renewsection,
-  section align/.store in=\sectionalign@cx,
+  section align/.is choice,
+  section align/right/.code = \gdef\sectionalign@cx{flushright},
+  section align/center/.code = \gdef\sectionalign@cx{\centering},
+  section align/centering/.code = \gdef\sectionalign@cx{\centering},
+  section align/left/.code = \gdef\sectionalign@cx{flushleft},
+  section align/right/.code=\gdef\sectionalign@cx{flushright},
+  section align/RaggedRight/.code=\gdef\sectionalign@cx{RaggedRight},
   section beforeskip/.store in=\sectionbeforeskip@cx,
   section afterskip/.store in=\sectionafterskip@cx,
   section indent/.store in=\sectionindent@cx,
@@ -2335,8 +2351,12 @@ section numbering/Roman/.code={%
 {\sectionindent@cx}%indent
 {\sectionbeforeskip@cx}%
 {\sectionafterskip@cx}%
-{\sectionfontweight@cx\color{\sectioncolor@cx}\sectionfontfamily@cx%
-\sectionfontsize@cx\sectionfontshape@cx\sectionalign@cx}%
+{%
+ \setfont@cx{\sectionfontweight@cx}%
+    {\sectionfontfamily@cx}{\sectionfontsize@cx}{\sectionfontshape@cx}%
+   \expandafter\setfontparam@cx\sectionalign@cx;%
+  \color{\sectioncolor@cx}%
+}%
 }%
 }
 
@@ -2391,9 +2411,9 @@ section numbering/Roman/.code={%
        fill/.store in=\fill@cx}
       \def\printchaptername{%
         {%
-         \chapterfontfamily@cx
-         \chapterfontsize@cx
-         \chapterfontweight@cx
+         \expandafter\setfontparam@cx\chapterfontfamily@cx;
+         \expandafter\setfontparam@cx\chapterfontsize@cx;
+         \expandafter\setfontparam@cx\chapterfontweight@cx;
          \color{\chaptercolor@cx}%
          \if@chapterspaceout
             \expandafter\so\expandafter{\chaptername}%
@@ -2409,18 +2429,19 @@ section numbering/Roman/.code={%
 \def\printnumber{%
         \numberbefore@cx
          \bgroup
-          \numberfontweight@cx
-          \numberfontsize@cx
-          \numberfontfamily@cx
-          \color{\numbercolor@cx}
-          \thechapter
+           \expandafter\setfontparam@cx\numberfontsize@cx;
+           \expandafter\setfontparam@cx\numberfontfamily@cx;
+           \expandafter\setfontparam@cx\numberfontweight@cx;
+          \color{\numbercolor@cx}%
+           \thechapter
           \numberpunctuation@cx
          \egroup
-        \numberafter@cx}%
+        \numberafter@cx
+}%
 
 \DeclareRobustCommand\@makechapterhead[2][]{%
   \if@special
-    \customdesign@cx{#2}
+     \customdesign@cx{#2}
   \else
   \bgroup
       \parindent0pt
@@ -2444,16 +2465,17 @@ section numbering/Roman/.code={%
        \beforenumber@cx%
        \counterdisplay\c@chapter\afternumber@cx%
      \fi
-      \titlefontweight@cx
-      \titlefontfamily@cx
-      \titlefontshape@cx
-      \titlefontsize@cx
-       \selectfont
-      \titlebefore@cx\color{purple}%
+      \expandafter\setfontparam@cx\titlefontweight@cx;
+      \expandafter\setfontparam@cx\titlefontfamily@cx;
+      \expandafter\setfontparam@cx\titlefontshape@cx;
+      \expandafter\setfontparam@cx\titlefontsize@cx;
+      % \selectfont
+      \titlebefore@cx
       \if@titlespaceout
-         \so{#2}%
+        {\color{\titlefontcolor@cx}\so{#2}}%
       \else
-         \texorpdfstring{#2}%title
+         {\color{\titlefontcolor@cx}
+         #2}%title \textorpdfstring here?
       \fi%
       \titleafter@cx
       \if@righttitle%
