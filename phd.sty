@@ -2264,6 +2264,7 @@ section numbering/Roman/.code={%
   section spaceout/.is choice,
   section spaceout/soul/.code={\@sectionspaceouttrue},
   section spaceout/none/.code={\@sectionspaceoutfalse},
+  section number after/.store in=\sectionnumberafter@cx,
   subsection font-size/.store in=\subsectionfontsize@cx,
   subsection font-weight/.store in=\subsectionfontweight@cx,
   subsection font-family/.store in=\subsectionfontfamily@cx,
@@ -2289,7 +2290,8 @@ section numbering/Roman/.code={%
   subsubsection numbering prefix/.store in = \subsubsectionnumberingprefix@cx,
   subsubsection numbering/.is choice,
   subsection numbering/arabic/.code={%
-    \gdef\thesubsubsection{\subsubsectionnumberingprefix@cx\@arabic\c@subsubsection}\renewsubsubsection},
+    \gdef\thesubsubsection{\subsubsectionnumberingprefix@cx\@arabic\c@subsubsection}%
+         \renewsubsubsection},
   subsubsection numbering/numeric/.code={\gdef\thesubsubsection{\thesubsection.\@arabic\c@subsubsection}\renewsubsubsection},
   subsubsection numbering custom/.code= \gdef\thesubsubsection{%
        \subsubsectionnumberingprefix@cx#1}\renewsubsubsection,
@@ -2299,7 +2301,8 @@ section numbering/Roman/.code={%
   subsubsection beforeskip/.store in=\subsubsectionbeforeskip@cx,
   subsubsection afterskip/.store in=\subsubsectionafterskip@cx,
   subsubsection indent/.store in=\subsubsectionindent@cx,
-  paragraph font-size/.code = \gdef\paragraphfontsize@cx{\csname#1\endcsname},
+  subsubsection number after/.store in=\subsubsectionnumberafter@cx,
+  paragraph font-size/.store in = \paragraphfontsize@cx,
   paragraph font-weight/.store in=\paragraphfontweight@cx,
   paragraph font-family/.store in=\paragraphfontfamily@cx,
   paragraph font-shape/.store in=\paragraphfontshape@cx,
@@ -2312,6 +2315,7 @@ section numbering/Roman/.code={%
   paragraph beforeskip/.store in=\paragraphbeforeskip@cx,
   paragraph afterskip/.store in=\paragraphafterskip@cx,
   paragraph indent/.store in=\paragraphindent@cx,
+  paragraph number after/.estore in=\paragraphnumberafter@cx\renewparagraph,
 %% subparagraphs
   subparagraph font-size/.store in=\subparagraphfontsize@cx,
   subparagraph font-weight/.store in=\subparagraphfontweight@cx,
@@ -2327,7 +2331,7 @@ section numbering/Roman/.code={%
   subparagraph beforeskip/.store in=\subparagraphbeforeskip@cx,
   subparagraph afterskip/.store in=\subparagraphafterskip@cx,
   subparagraph indent/.store in=\subparagraphindent@cx,
-  subparagraph number after/.estore in=\subparagraphnumberafter@cx,
+  subparagraph number after/.store in=\subparagraphnumberafter@cx,
   subparagraph number after/.default=,
   subparagraph number after/.initial=,
 %% headers and footers
@@ -2356,8 +2360,7 @@ section numbering/Roman/.code={%
     {\sectionfontfamily@cx}{\sectionfontsize@cx}{\sectionfontshape@cx}%
    \expandafter\setfontparam@cx\sectionalign@cx;%
   \color{\sectioncolor@cx}%
-}%
-}%
+}}%
 }
 
 \def\renewsubsection{%
@@ -2367,8 +2370,11 @@ section numbering/Roman/.code={%
 {\subsectionindent@cx}%indent
 {\subsectionbeforeskip@cx}%
 {\subsectionafterskip@cx}%
-{\subsectionfontweight@cx\color{\subsectioncolor@cx}\subsectionfontfamily@cx\subsectionfontshape@cx%
- \subsectionfontsize@cx\subsectionalign@cx}%
+{\setfont@cx{\subsectionfontweight@cx}%
+    {\subsectionfontfamily@cx}{\subsectionfontsize@cx}{\subsectionfontshape@cx}%
+   \expandafter\setfontparam@cx\subsectionalign@cx;%
+  \color{\subsectioncolor@cx}%
+}%
 }%
 }
 
@@ -2379,9 +2385,14 @@ section numbering/Roman/.code={%
 {\subsubsectionindent@cx}%indent
 {\subsubsectionbeforeskip@cx}%
 {\subsubsectionafterskip@cx}%
-{\subsubsectionfontweight@cx\color{\subsubsectioncolor@cx}\subsubsectionfontfamily@cx%
-\subsubsectionfontsize@cx\subsubsectionfontshape@cx\subsubsectionalign@cx}%
-}}
+{\setfont@cx{\subsubsectionfontweight@cx}%
+    {\subsubsectionfontfamily@cx}{\subsubsectionfontsize@cx}{\subsubsectionfontshape@cx}%
+   \expandafter\setfontparam@cx\subsubsectionalign@cx;%
+  \color{\subsubsectioncolor@cx}%
+}%
+}
+\def\@seccntformat##1{\csname the##1\endcsname\subsubsectionnumberafter@cx\hskip.5em}%
+}
 
 \def\renewparagraph{%
 \renewcommand\paragraph{%
@@ -2390,9 +2401,14 @@ section numbering/Roman/.code={%
 {\paragraphindent@cx}%indent
 {\paragraphbeforeskip@cx}%
 {\paragraphafterskip@cx}%
-{\paragraphfontweight@cx\paragraphfontfamily@cx%
-\paragraphfontsize@cx\paragraphfontshape@cx\paragraphalign@cx}%
-}}
+{\setfont@cx{\paragraphfontweight@cx}%
+    {\paragraphfontfamily@cx}{\paragraphfontsize@cx}{\paragraphfontshape@cx}%
+   \expandafter\setfontparam@cx\paragraphalign@cx;%
+   \color{\paragraphcolor@cx}%
+}%
+}
+\def\@seccntformat##1{\csname the##1\endcsname\paragraphnumberafter@cx\hskip.5em}%
+}
 
 \def\renewsubparagraph{%
 \renewcommand\subparagraph{%
@@ -2401,10 +2417,12 @@ section numbering/Roman/.code={%
 {\subparagraphindent@cx}%indent
 {\subparagraphbeforeskip@cx}%
 {\subparagraphafterskip@cx}%
-{\subparagraphfontweight@cx\subparagraphfontfamily@cx%
-\subparagraphfontsize@cx\subparagraphfontshape@cx\subparagraphalign@cx}%
-}%
-\def\@seccntformat##1{\csname the##1\endcsname\subparagraphnumberafter@cx}%
+{\setfont@cx{\subparagraphfontweight@cx}%
+    {\subparagraphfontfamily@cx}{\subparagraphfontsize@cx}{\subparagraphfontshape@cx}%
+   \expandafter\setfontparam@cx\subparagraphalign@cx;%
+   \color{\subparagraphcolor@cx}%
+ }%
+}%This command formats the section number including the space following it.
 }
 \cxset{custom/.code=\gdef\customdesign@cx{%
               \csname#1\endcsname}\@specialtrue,
@@ -2416,7 +2434,7 @@ section numbering/Roman/.code={%
          \expandafter\setfontparam@cx\chapterfontweight@cx;
          \color{\chaptercolor@cx}%
          \if@chapterspaceout
-            \expandafter\so\expandafter{\chaptername}%
+            \expandafter\so\expandafter{\chaptername}\space%
           \else
             \@chapapp\space
          \fi%
@@ -2425,8 +2443,7 @@ section numbering/Roman/.code={%
 
       \def\printauthorblock{%
          \authorblockformat@cx\authorblock@cx}%
-
-\def\printnumber{%
+\def\printnumber@cx{%
         \numberbefore@cx
          \bgroup
            \expandafter\setfontparam@cx\numberfontsize@cx;
@@ -2436,26 +2453,25 @@ section numbering/Roman/.code={%
            \thechapter
           \numberpunctuation@cx
          \egroup
-        \numberafter@cx
-}%
-
+        \numberafter@cx}%
 \DeclareRobustCommand\@makechapterhead[2][]{%
   \if@special
      \customdesign@cx{#2}
   \else
   \bgroup
       \parindent0pt
-      \normalfont%
-      \ifnum \c@secnumdepth>\m@ne%
+      \raggedright%use RaggedRight when available
+      \normalfont
+      \ifnum \c@secnumdepth>\m@ne
         \if@mainmatter%
-           \chapterbefore@cx%
+           \chapterbefore@cx
            \if@leftname
-              \printnumber
-           \fi%
+              \printnumber@cx
+           \fi
            \printchaptername
            \if@rightname
-              \printnumber
-           \fi%
+              \printnumber@cx
+           \fi
           \chapterafter@cx
         \fi% mainmatter
      \fi%secnum
@@ -2490,42 +2506,40 @@ section numbering/Roman/.code={%
   \egroup%
 \fi% We close the main conditional
 }%
-\DeclareRobustCommand\chapter{%
+\providecommand\chapter{%
   \if@openright\cleardoublepage\fi
   \if@openleft\cleartoevenpage\fi
   \if@openany\clearpage\fi
   \thispagestyle{\headerstyle@cx}%
   \global\@topnum\z@
   \@afterindentfalse
-  \secdef\@chapter\@schapter%must disable \@schapter if is not needed.
-}
+  \secdef\@chapter\@schapter}
+\newif\if@tocspecial
 \@tocfalse
 \def\@chapter[#1]#2{%
     \ifnum \c@secnumdepth >\m@ne
         \if@mainmatter
-            \if@toc
+            %\if@toc % added extra if
                 \refstepcounter{chapter}%
                 \typeout{\@chapapp\space\thechapter.}%
-                \addcontentsline{toc}{chapter} {\protect\numberline{%
-                    \colorbox{\tocchapternumberfill@cx}%
-                    {\color{\tocchapternumbercolor@cx}\string\parbox{1.5em} {\protect\tocnumberalign@cx\thechapter\stoptocnumberalign@cx}}%
-                   \Rule\kern-13cm\hspace{1em}\bfseries\sffamily#2}}%
-            \fi%
+              \addcontentsline{toc}{chapter}%
+                                   {\protect\numberline{\thechapter}#1}%
+            %\fi%
         \else
             \addcontentsline{toc}{chapter}{#1}%for part???
-     \fi
-     \else
-             \addcontentsline{toc}{chapter}{#1}%????? for part
+      \fi
+   \else
+       \addcontentsline{toc}{chapter}{#1}%????? for part
    \fi
-             %\chaptermark{#1}%
-             \addtocontents{lof}{\protect\addvspace{10\p@}}%
-             \addtocontents{lot}{\protect\addvspace{10\p@}}%
-             \if@twocolumn
-                     \@topnewpage[\@makechapterhead{#2}]%
-                \else
-                     \@makechapterhead{#2}%
-               \@afterheading
-             \fi
+\chaptermark{#1}%
+              \addtocontents{lof}{\protect\addvspace{10\p@}}%
+              \addtocontents{lot}{\protect\addvspace{10\p@}}%
+              \if@twocolumn
+                \@topnewpage[\@makechapterhead{#2}]%
+              \else
+                \@makechapterhead{#2}%
+                \@afterheading
+              \fi
    }
 \newif\if@headertoprule
 \newif\if@headerbottomrule
@@ -2558,11 +2572,11 @@ section numbering/Roman/.code={%
    header top rule/.is if=@headertoprule,
    header bottom rule/.is if=@headerbottomrule,
 }
-\cxset{ header offset even=0pt,
-          header offset odd=0pt,
-          rightmark before=,
-          rightmark after=,
-          chaptermark title before=,}
+\cxset{header offset even=0pt,
+       header offset odd=0pt,
+       rightmark before=,
+       rightmark after=,
+       chaptermark title before=,}
 \cxset{pagestyle/.code=\pagestyle{#1}}
 
 \cxset{headings ruled-01/.style={pagestyle=headings,
