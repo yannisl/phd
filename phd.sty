@@ -380,11 +380,10 @@ ProvidesClass,IfFileExists,RequirePackage,ifthenelse,chapter,includegraphics, ne
 }}
 
 \lstloadlanguages{[LaTeX]TeX, [primitive]TeX, Verse}
-
 \lstset{language={[LaTeX]TeX},
        escapeinside={{(*@}{@*)}},
        numbers=left,
-       gobble=0,
+       gobble=1,
        stepnumber=1,numbersep=5pt,
        numberstyle={\footnotesize\color{gray}},
        firstnumber=last,
@@ -678,6 +677,65 @@ ProvidesClass,IfFileExists,RequirePackage,ifthenelse,chapter,includegraphics, ne
 
 \long\def\topline{\par\medskip
 \noindent\rule{\linewidth}{0.4pt}\medskip}
+\newlength\temp@cx
+\long\def\keyval#1#2#3{%
+\begingroup
+\settowidth\temp@cx{#1}%
+\parindent-30pt%\dimexpr\temp@cx+10pt\relax%
+\par\leavevmode%
+{\color{theblue}\bfseries #1}\thinspace=\thinspace#2 #3%
+\par\addvspace{1.5pt}
+\endgroup
+}
+\def\file#1{\protect\texttt{\textbackslash #1}}
+\def\file#1{\protect\texttt{\textbackslash #1}}
+
+\setlength{\parindent}{0pt}
+
+\newenvironment{bibsample}
+  {\trivlist\samepage
+   \setlength{\itemsep}{0pt}}
+  {\endtrivlist}
+
+%% doccommands
+\newcommand*{\marglistfont}{\itshape}
+\newcommand*{\margnotefont}{}
+\newcommand*{\optionlistfont}{\bfseries}
+\newcommand*{\ltxsyntaxfont}{\ttfamily}
+\newcommand*{\ltxsyntaxlabelfont}{\bfseries}
+\newcommand*{\changelogfont}{\normalfont}
+\newcommand*{\changeloglabelfont}{\bfseries}
+\newcommand*{\verbatimfont}{\ttfamily}
+\newcommand*{\displayverbfont}{\ttfamily}
+\renewcommand*{\verbatim@font}{\verbatimfont}
+\renewrobustcmd*{\cmd}[1]{\mbox{\verbatimfont\bfseries\textbackslash#1}}
+\newrobustcmd*{\env}[1]{\mbox{\verbatimfont\bfseries\textcolor{thegreen}{#1}}}
+\newrobustcmd*{\len}[1]{\mbox{\verbatimfont\textbackslash#1}}
+\newrobustcmd*{\cnt}[1]{\mbox{\verbatimfont#1}}
+\newlength{\marglistsep}
+\newlength{\marglistwidth}
+\setlength{\marglistwidth}{(\oddsidemargin+1in)*85/100}%
+\deflength{\marglistsep}{10pt}
+%% This needs thorough checking as to restore previous definitions
+%% of parsep we want parsep to be a bit higher than standard enumerated lists.
+\global\newlength\oldparsep
+\newenvironment*{marglist}
+  {\setlength\oldparsep{\parsep}\list{}{%
+     \parsep 3.5\p@ \@plus0\p@ \@minus\p@
+     \setlength{\labelwidth}{\marglistwidth}%
+     \setlength{\labelsep}{\marglistsep}%
+     \setlength{\leftmargin}{0pt}%
+     \renewcommand*{\makelabel}[1]{\hss\marglistfont##1}}}
+  {\endlist\setlength\parsep{\oldparsep}}
+
+\newenvironment*{keymarglist}
+  {\marglist
+   \setlength{\itemsep}{0pt}%
+   \raggedright}
+  {\endmarglist}
+\def\colDef#1{\textcolor{themacro}{#1}}
+\def\colOpt#1{\textcolor{theblue}{#1}}
+\newcommand{\option}[1]{\colOpt{#1}}
 \RequirePackage[tone,extra,safe]{tipa}
 \cxset{ref sectionname/.store in =\refsectionname@cx,
        ref chaptername/.store in =\refchaptername@cx,
@@ -719,10 +777,17 @@ ProvidesClass,IfFileExists,RequirePackage,ifthenelse,chapter,includegraphics, ne
      }\ensuremath\rangle
 }
 \def\meta@font@select{\itshape}
-\@ifundefined{chapter}{
-}{
+  \newcounter{texexp}[chapter]
+  \@addtoreset{c@texexp}{c@chapter}
+\def\thetexexp{\thesection.\arabic{texexp}}
+\tcbset{texexp/.style={%
+   fonttitle=\small\sffamily\bfseries, fontupper=\small, fontlower=\small},
+  example/.code 2 args={\refstepcounter{texexp}\label{#2}}%
+  \pgfkeysalso{texexp,title={Example \thetexexp\ #1}},
 }
-%%%rename to avoid clashes with other classes that use it
+\newenvironment{texexp}[1]{\tcblisting{texexp,#1}}{\endtcblisting}
+\newenvironment{example}[3][]{\tcblisting{example={#2}{#3},#1}}{\endtcblisting}
+\newenvironment{texexample}[3][]{\tcblisting{example={#2}{#3},#1}}{\endtcblisting}
 \renewcommand{\topfraction}{.85}
 \renewcommand{\bottomfraction}{.7}
 \renewcommand{\textfraction}{.15}
@@ -2168,10 +2233,11 @@ ProvidesClass,IfFileExists,RequirePackage,ifthenelse,chapter,includegraphics, ne
   title beforeskip/.store in=\titlebeforeskip@cx,
   title afterskip/.store in=\titleafterskip@cx,
   position/.is choice,
-  position/left/.code={\@lefttrue},
-  position/right/.code={\@righttrue},
-  position/center/.code={\@centertrue},
+    position/left/.code={\@lefttrue},
+    position/right/.code={\@righttrue},
+    position/center/.code={\@centertrue},
   chapter numbering/.is choice,
+  chapter numbering/none/.code={\gdef\thechapter{}},
   chapter numbering/roman/.code={\gdef\thechapter{\@roman\c@chapter}},
   chapter numbering/Roman/.code={\gdef\thechapter{\@Roman\c@chapter}},
   chapter numbering/arabic/.code={\gdef\thechapter{\@arabic\c@chapter}},
@@ -2180,8 +2246,7 @@ ProvidesClass,IfFileExists,RequirePackage,ifthenelse,chapter,includegraphics, ne
   chapter numbering/words/.code={\gdef\thechapter{\MakeTextLowercase{\expandafter\@words@cx{\expandafter\@arabic\c@chapter}}}},
   chapter numbering/WORDS/.code={\gdef\thechapter{\NUMBERstring{chapter}}},
   chapter numbering/Words/.code={\gdef\thechapter{\NumToName{\expandafter\@arabic\c@chapter}}},
-  chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\decimal{chapter}}%
-  }},
+chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\decimal{chapter}}}},%
   numbering/.is choice,
   numbering/roman/.code={\gdef\thechapter{\@roman\c@chapter}},
   numbering/Roman/.code={\gdef\thechapter{\@Roman\c@chapter}},
@@ -2192,7 +2257,7 @@ ProvidesClass,IfFileExists,RequirePackage,ifthenelse,chapter,includegraphics, ne
 %% These proved a bit trouble some and ended up calling the fmtcount package routines
   numbering/WORDS/.code={\gdef\thechapter{\NUMBERstring{chapter}}},
   numbering/Words/.code={\gdef\thechapter{\NumToName{\expandafter\@arabic\c@chapter}}},
-  numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\decimal{chapter}}%
+  numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\decimal{chapter}}
   }},
   numbering/none/.code={\gdef\thechapter{}}, % do not leave empty
   number dot/.store in=\numberpunctuation@cx,
@@ -2258,6 +2323,7 @@ section numbering/Roman/.code={%
   section align/left/.code = \gdef\sectionalign@cx{flushleft},
   section align/right/.code=\gdef\sectionalign@cx{flushright},
   section align/RaggedRight/.code=\gdef\sectionalign@cx{RaggedRight},
+  section align/raggedright/.code=\gdef\sectionalign@cx{RaggedRight},
   section beforeskip/.store in=\sectionbeforeskip@cx,
   section afterskip/.store in=\sectionafterskip@cx,
   section indent/.store in=\sectionindent@cx,
@@ -2348,6 +2414,23 @@ section numbering/Roman/.code={%
   headrulewidth/.code={\renewcommand\headrulewidth{#1}},
   footrulewidth/.code={\renewcommand\footrulewidth{#1}},
 }
+\def\@startsection#1#2#3#4#5#6{%
+\if@noskipsec \leavevmode \fi
+\par
+\@tempskipa #4\relax
+\@afterindentfalse
+\ifdim \@tempskipa <\z@
+\@tempskipa -\@tempskipa \@afterindentfalse
+\fi
+\if@nobreak
+\everypar{}%
+\else
+\addpenalty\@secpenalty\addvspace\@tempskipa
+\fi
+\@ifstar
+ {\@ssect{#3}{#4}{#5}{#6}}%
+{\@dblarg{\@sect{#1}{#2}{#3}{#4}{#5}{#6}}}}
+
 \def\renewsection{%
 \renewcommand\section{%
 \@startsection{section}%
@@ -2541,6 +2624,135 @@ section numbering/Roman/.code={%
                 \@afterheading
               \fi
    }
+\gdef\setdefaults{%
+\cxset{%
+  lhead=left head text,
+  chead=center text,
+  rhead=right text,
+  lfoot=left text,
+  cfoot=center text,
+  rfoot=right text,
+chapter name=CHAPTER,
+title font-family=\rmfamily,
+title font-weight=\bfseries,
+title font-size=\Huge,
+title font-color=purple,
+numbering=arabic,
+number dot=,
+number before=,
+number after=,
+chapter font-family=\sffamily,
+chapter font-weight=\bfseries,
+chapter font-size=\large,
+chapter spaceout=soul,
+chapter color=gray,
+chapter before={},%need to correct for 0pt
+chapter after=,
+number position=rightname,
+number color=gray,
+number after=\hspace{20pt},
+number before=\space,
+number font-size=large,
+number font-family=sffamily,
+number font-weight= bfseries,
+title before=,
+title after=,
+title afterskip={\vskip24pt},
+title beforeskip={\vskip10pt},
+title font=rmfamily,
+header style=plain,
+section font-weight=bfseries,
+section font-family=rmfamily,
+section font-size=Large,
+section font-shape=upshape,
+section align= left,
+title font-shape=upshape,
+}
+}
+\cxset{rule color/.store in={\rulecolor@cx},
+          block color/.store in={\blockcolor@cx}}
+\cxset{rule color=blue, block color=teal}
+\cxset{steward/.style={
+  offsety/.store in=\soffsety,
+  image/.store in=\image@cx,
+  texti/.store in=\texti@cx,
+  textii/.store in=\textii@cx,
+}}
+\newcommand\stewart[2][]{%
+\fancypagestyle{fancy}{%
+\lhead{}\rhead{}
+\chead{}
+\cfoot{}
+\lfoot{}
+\rfoot{\thepage}
+\def\footrule#1{{\color{blue}%
+  \hrule width\paperwidth}\vskip3pt
+}
+
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0.4pt}}
+
+\clearpage
+
+\begin{tikzpicture}[remember picture,overlay]
+\node [xshift=5cm,yshift=-\paperheight] at (current page.north west)
+[text width=0.98\textwidth,text height=\paperheight, fill=thecream!30,rounded corners,above right]
+{};
+\node [xshift=6.5cm,yshift=-1.5cm-\soffsety] at (current page.north west)
+[text width=0.9\textwidth,below right]{\sffamily \bfseries \huge #2};
+
+\node [xshift=3cm,yshift=-1.5cm] at (current page.north west)
+[text width=3cm,align=center,minimum height=2.5cm, fill=blue,below right]
+{\[\text{\HHUGE\bfseries\sffamily\color{white}\thechapter}\]
+\par\vspace*{3pt}
+};
+
+\node [xshift=-0.2cm,yshift=-21.5cm] at (current page.north west)
+[text width=3cm,above right]%
+{\includegraphics[width=1.0\paperwidth]{./chapters/\image@cx}};
+\node [xshift=3cm,yshift=-19.5cm] at (current page.north west)
+[text width=9cm,minimum height=2.5cm,inner sep=0.5em, fill=blue,below right]
+{\color{white}
+  \bfseries\sffamily \texti@cx
+};
+\node [xshift=6.5cm,yshift=-26cm] at (current page.north west)
+[text width=12cm,above right]
+{\textii@cx
+};
+\end{tikzpicture}
+\par
+\clearpage
+}
+
+
+\cxset{
+  epigraph width/.code={\setlength\epigraphwidth{#1}},
+  epigraph font-size/.code={\renewcommand{\epigraphsize}{#1}},
+  epigraph beforeskip/.code={\setlength\beforeepigraphskip{#1}},
+  epigraph afterskip/.code={\setlength\afterepigraphskip{#1}},
+  epigraph align/.is choice,
+  epigraph align/center/.code={\renewcommand{\epigraphflush}{center}},
+  epigraph align/left/.code={\renewcommand{\epigraphflush}{flushleft}},
+  epigraph align/right/.code={\renewcommand{\epigraphflush}{flushright}},
+  epigraph source align/.is choice,
+  epigraph source align/left/.code={\renewcommand{\sourceflush}{flushleft}},
+  epigraph source align/right/.code={\renewcommand{\sourceflush}{flushright}},
+  epigraph source align/center/.code={\renewcommand{\sourceflush}{center}},
+  epigraph text align/.is choice,
+  epigraph text align/left/.code={\renewcommand{\textflush}{flushleft}},
+  epigraph text align/right/.code={\renewcommand{\textflush}{flushright}},
+  epigraph text align/center/.code={\renewcommand{\textflush}{center}},
+  epigraph rule width/.code={\setlength\epigraphrule{#1}},
+  epigraph rule/.code={\renewcommand{\@epirule}{\color{orange}\rule[.5ex]{\epigraphwidth}{\epigraphrule}}},
+}
+
+\cxset{epigraph width=0.5\linewidth,
+       epigraph font-size=\small,
+       epigraph rule width=0.4pt,
+       epigraph align=right,
+       epigraph source align=right,
+       epigraph text align=right,
+       epigraph rule}
 \newif\if@headertoprule
 \newif\if@headerbottomrule
 \cxset{
@@ -2645,6 +2857,41 @@ section numbering/Roman/.code={%
     \let\@mkboth\@gobbletwo
     \let\chaptermark\@gobble
     \let\sectionmark\@gobble}
+\newcommand\coverpage[3]{%
+\vbox{%
+   \vspace*{-1\baselineskip}
+  \hskip-4cm\includegraphics[width=\paperwidth]{#1}\par
+  \vspace*{3\baselineskip}
+   \hbox to \hsize{\Huge \hfill\hfill{\MakeUppercase{\bfseries \textsf{ A NEW LOOK AT  }}}}
+   \vspace*{0.3cm}
+   \hbox to \hsize{\Huge \hfill\hfill{\MakeUppercase{\bfseries \textsf{LATEX  book design}}}}
+  \vspace*{2\baselineskip}
+   \hbox to \hsize{\huge \hfill\hfill\textsf{\hbox{#2}}}
+    \vspace*{1.35cm}
+   \hbox to \hsize{\huge \hfill\hfill\textsf{\hbox{#3}}}
+}
+}
+
+\newcommand\secondpage{\clearpage\null\vfill\vfill
+\begin{minipage}[b]{0.9\textwidth}
+\includegraphics[width=3cm]{hine02}\par
+\raggedright
+\textit{Cover image: }
+The cover image shows Jo Bodeon, a back-roper in the mule room at Chace Cotton Mill. Burlington, Vermont. This and other similar images in this book were taken by Lewis W. Hine, in the period between 1908-1912. These images as well as social campaigns by many including Hine, helped to formulate America's anti-child labour laws.
+\end{minipage}\par
+\vspace*{\baselineskip}
+\begin{minipage}[b]{0.9\textwidth}
+\raggedright
+\setlength{\parskip}{0.5\baselineskip}
+Copyright \copyright 2012  Dr Yiannis Lazarides\par
+Permission is granted to copy, distribute and\slash or modify this document under the terms of the GNU Free Documentation License, version 1.2, with no invariant sections, no front-cover texts, and no back-cover texts.\par
+A copy of the license is included in the appendix.\par
+This document is distributed in the hope that it will be useful, but without any warranty; without even the implied warranty of merchantability or fitness for a particular purpose.
+\end{minipage}
+\vspace*{2\baselineskip}
+\clearpage
+}
+
 
 \endinput
 %%
