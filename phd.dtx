@@ -134,8 +134,8 @@ See http://www.latex-project.org/lppl.txt
   allcolors=theblue, 
   %anchorcolor= blue,
   %filecolor=blue,
-  urlcolor=theblue,
-  linkcolor= theblue,
+  urlcolor= teal,
+  linkcolor= teal,
   pdftitle={My Title},
  }
 % add pdfinfo  
@@ -178,7 +178,7 @@ See http://www.latex-project.org/lppl.txt
  title before={\hfill\hfill\raggedleft},
  title after={\par\thinrule},
  title font-family=\sffamily,
- title font-color= thered,
+ title font-color= teal,
  title font-weight=\bfseries,
  title font-family=\sffamily,
  title font-size= Large,
@@ -281,23 +281,29 @@ See http://www.latex-project.org/lppl.txt
  title before={\hfill\hfill\raggedleft},
  title after=\par\thinrule,
  title font-family=\sffamily,
- title font-color= thered,
+ title font-color= teal,
  title font-weight=\bfseries,
  title font-size=\huge,
  section indent=-1em,
- section align= right,
+ section align= left,
  section numbering=arabic,
  section indent=0pt,
  section beforeskip=0pt,
  section afterskip= 10pt,
- subsection align=\raggedright,
+ section color=teal,
+ subsection align= ,
  subsection font-family=\sffamily,
  subsection font-weight=\bfseries,
+ subsection color = teal,
  subsection font-size=\large,
  subsection font-shape=\itshape,
  subparagraph number after=\space,
+ subsubsection align=,
 }
 }
+
+\def\oarg#1{%
+  \colOpt{{\ttfamily[}\meta{#1}{\ttfamily]}}}
 
 \cxset{style13}
 \makeatletter
@@ -363,9 +369,10 @@ See http://www.latex-project.org/lppl.txt
 % \coverpage{hine02}{Yiannis Lazarides}{Published by Camel Press}
 % \secondpage
 % \pagestyle{empty}
+%
 % \begin{summary}
 %
-% This is a helper package to compliment standard classes by
+% This is a helper package to \cs{test}\oarg{text}\marg{other} compliment standard classes by
 % pre-loading a set of packages and providing some opiniated settings. Pretty
 % much work in progress, and currently supplements, the standard classes well.
 % 
@@ -394,6 +401,8 @@ See http://www.latex-project.org/lppl.txt
 % \input{./sections/chapterdesign}
 % \input{./sections/epigraphschapter}
 % \input{./sections/lists}
+% \input{./sections/captionsandothers}
+% \input{./sections/versochapter}
 % \input{./styles/style01.tex}
 % \input{./styles/style02.tex}
 % \input{./styles/style03.tex}
@@ -593,16 +602,31 @@ See http://www.latex-project.org/lppl.txt
 %
 %
 %<*package>
-% \section{Implementation}
 %
-%    Standard file identification. We first announce the package and require that it be used with LaTeX2e. 
+% \cxset{style13}
+% \cxset{section align=left,
+%        section color=teal,
+%         section font-weight=bold,
+%         title font-family=sfamily,
+%         title font-shape=upshape,
+%         subsection indent=0pt,
+%          subsection font-shape=upshape}
+% \renewsubsection
+%
+% \thispagestyle{headings}
+%
+% \chapter{Implementation}
+%
+% \section{Preliminaries}
+%
+%    Standard file identification. We first announce the package and require that 
+%    it be used with LaTeX2e. 
 %    \begin{macrocode}
-\NeedsTeXFormat{LaTeX2e}% LaTeX 2.09 can't be used (nor non-LaTeX)
-[1994/12/01]% LaTeX date must be December 1994 or later
-\ProvidesPackage{phd}[2013/2/26 v1.0 less preamble (YL)]
+\NeedsTeXFormat{LaTeX2e}
+[1994/12/01]%
+\ProvidesPackage{phd}[2013/2/26 v1.0 less preamble (YL)]%
 %    \end{macrocode}
 % 
-%
 %
 % \section{Package Management} 
 %  
@@ -768,6 +792,7 @@ See http://www.latex-project.org/lppl.txt
 % We load pgfkeys for key management.
 % 
 %    \begin{macrocode}
+\RequirePackage{etex}
 \RequirePackage{pgf,pgfkeys}               % before onlyasmath
 \def\cx@optionlist{}
 \def\cxuselibrary#1{\cxset{library/.cd,#1}}
@@ -794,13 +819,16 @@ See http://www.latex-project.org/lppl.txt
 %                  }}
 %    \end{macrocode}
 %
-% For |xcolor| we try and load as many pre-defined colornames as
-% possible.
+% \begin{macro}{xcolor}
+% 	For |xcolor| we try and load as many pre-defined colornames as
+% 	possible.
 %    \begin{macrocode}
-\cxset{xcolor keys={fixpdftex,xtable,usenames,dvipsnames,svgnames,x11names}}                     
+\cxset{xcolor keys={fixpdftex,xtable,usenames,dvipsnames,
+                    svgnames,x11names}}                     
 % Set amsmath keys
 %
 %    \end{macrocode}
+% \end{macro}
 %
 %    \begin{macrocode}
 \PassOptionsToPackage{\nagkeys@cx}{nag}
@@ -857,7 +885,7 @@ See http://www.latex-project.org/lppl.txt
 % 
 % \section{Color Management}
 %
-% Most classes load the |xcolor| package, including
+% Most classes load the |xcolor| package. Including
 % it here, should either be able to check if it was 
 % loaded by the class or to pass the options before
 % the class itself. This package is a common source
@@ -869,19 +897,23 @@ See http://www.latex-project.org/lppl.txt
 \@ifpackageloaded{xcolor}{}%
  {\PassOptionsToPackage{\xcolorkeys@cx}{xcolor}
   \RequirePackage{xcolor}}
+%    \end{macrocode}
 %
+%	We adopt the convention that colour names used in code should be
+%	prefixed by a |the|. For simplicity we also adopt the convention
+%    that all colours defined in colour schemes should be in lowercase
+%	(less keystrokes and matches the styles of |pgf| keys). 
+%
+%    \begin{macrocode}
 \definecolor{theblue} {rgb}{0.02,0.04,0.48}
 \definecolor{thered}  {rgb}{0.65,0.04,0.07}
 \definecolor{thegreen}{rgb}{0.06,0.44,0.08}
 \definecolor{thelightgreen}{rgb}{0.06,0.44,0.06}
 \definecolor{thegrey} {gray}{0.5}
 \definecolor{thegray} {gray}{0.5}
-
 \definecolor{thedarkgray} {gray}{0.95}
-
 \definecolor{lightgray}{gray}{0.6}
 \definecolor{thelightgray}{gray}{0.6}
-
 \definecolor{theshade}{gray}{0.94}
 \definecolor{theframe}{gray}{0.75}
 \definecolor{thecream}{rgb}{1,0.95,0.4}
@@ -905,52 +937,64 @@ See http://www.latex-project.org/lppl.txt
 %    \end{macrocode}
 %
 % \section{Rules}
+%
+% \begin{macro}{\thickrule}
+% \begin{macro}{\thinrule}
+% \begin{macro}{\mediumrule}
+%	We will use later on different styles of rules to decorate chapter headings.
+%	We define a few here to simplify code later on.
+% \end{macro}
+% \end{macro}
+% \end{macro}
+%
 %    \begin{macrocode}
 \DeclareRobustCommand\thickrule{\leavevmode \leaders \hrule height 3pt \hfill \kern \z@}
 \DeclareRobustCommand\thinrule{\rule{\textwidth}{0.4pt}}
 \DeclareRobustCommand\mediumrule{\rule{\textwidth}{0.8pt}}
-%% Adjusted to get toc parameters in
+%    Adjusted to get toc parameters in
 \DeclareRobustCommand\Rule{{\color{\tocchapternumberfill@cx}\rule[-4.1pt]{13cm}{0.4pt}}}
 %    \end{macrocode}
 %
-% \section{Lipsum}
+% \section{Filler Text}
 %
-% In publishing and graphic design, lorem ipsum is placeholder text (filler text) commonly used to demonstrate the graphics elements of a document or visual presentation, such as font, typography, and layout, by removing the distraction of meaningful content. The lorem ipsum text is typically a section of a Latin text by Cicero with words altered, added and removed that make it nonsensical in meaning and not proper Latin. Other packages exist such as |kantlipsum| and |blindtext|, however,
-%both result in somewhat legible texts, which defeats the purpose of providing texts that the reader is not going to read. the extensions |lipsumx| aim at
-%providing a gap between the three packages. It provides extensions
-% for full document testing.
 %
+% \begin{macro}{lipsum}
+% 	publishing and graphic design, lorem ipsum is placeholder text (filler text) 
+% 	commonly used to demonstrate the graphics elements of a document or visual 
+% 	presentation, such as font, typography, and layout, by removing the distraction 
+% 	of meaningful content. The lorem ipsum text is typically a section of a Latin text 
+% 	by Cicero with words altered, added and removed that make it nonsensical in meaning 
+% 	and not proper Latin. Other packages exist such as |kantlipsum| and |blindtext|, 
+% 	however, both result in somewhat legible texts, which defeats the purpose of 
+% 	providing texts that the reader is not going to read. the extensions |lipsumx| 
+% 	aim at providing a gap between the three packages. It provides extensions
+% 	for full document testing.
 %    \begin{macrocode}
 \newif\ifLIPSUM
 \RequirePackage{lipsum}
 %    \end{macrocode}
+% \end{macro}
 %
-% \subsection{lorem Fusce adipiscing justo nec ante. Nullam in enim.
-% Pellentesque felis orci Fusce adipiscing justo nec ante. Nullam in enim.
-% Pellentesque felis orci}
-%
-% \subsubsection{Minilorem}
 % 
-% \begin{macro}{\lorem}
+% \begin{macro}{\lorem} 
+%	We declare a short macro \cs{lorem} to be used for testing, as well as 
+%	testing captions and the like.
 %    \begin{macrocode}
-\newcommand\lorem{Fusce adipiscing justo nec ante. Nullam in enim.
+\DeclareRobustCommand\lorem{Fusce adipiscing justo nec ante. Nullam in enim.
  Pellentesque felis orci, sagittis ac, malesuada et, facilisis in,
  ligula. Nunc non magna sit amet mi aliquam dictum. In mi. Curabitur
  sollicitudin justo sed quam et quadd. \par}
 %    \end{macrocode}
 % \end{macro}
 %
-% \paragraph{Test}  This is a test. 
-%
-% \subparagraph{test} This is a test.
 %
 % \section{Tables}
 % 
+% \begin{macro}{\booktabs}
 % \begin{macro}{\inc}
 % \begin{macro}{\resetinc}
-%
-% It is highly unlikely that a publication, would not have a table
-% somewhere, to make life easier we load Simon Fear's |booktabs|. The manual is a must
+% 	It is unlikely that a publication, would not have a table
+% 	somewhere, to make life easier we load Simon Fear's |booktabs|. The manual is a must
 % read if you want to typeset typographically attractive tables.\footnote{Notice I haven't said
 % typographically correct, there is no such thing.} We don't need to set any keys for the
 % package.
@@ -963,9 +1007,12 @@ See http://www.latex-project.org/lppl.txt
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
+% \end{macro}
+%
 %
 % \begin{macro}{tabularx}
-% David Carlisle's package enables the typesetting of fixed width tables and can stretch
+% This package by David Carlisle's enables the typesetting of fixed width 
+% tables and can stretch
 % specific columns. The package loads the |array| package, but we save it from some
 % trouble by pre-loading it first, so we can capture its loading. The package has two keys
 % |infoshow| and |debugshow| which we don't bother at this stage to load.
@@ -975,6 +1022,7 @@ See http://www.latex-project.org/lppl.txt
 %    \end{macrocode}
 % \end{macro}
 %
+% \begin{macro}{array}
 % \begin{macro}{delarray}
 % The addition to array.sty added in delarray.sty is a system of implicit |\left|
 %|\right| pairs. If you want an array surrounded by parentheses, you can enter:
@@ -985,7 +1033,7 @@ See http://www.latex-project.org/lppl.txt
 \RequirePackage{array}
 %    \end{macrocode}
 % \end{macro}
-%
+% \end{macro}
 %
 % \begin{macro}{dcolumn}
 % The |dcolumn| package also by David Carlisle is loaded next. This package 
@@ -1023,7 +1071,6 @@ See http://www.latex-project.org/lppl.txt
 %    \begin{macrocode}
 \RequirePackage{colortbl}
 \RequirePackage{multirow}
-
 %    \end{macrocode}
 % \end{macro}
 % 
@@ -1057,12 +1104,12 @@ See http://www.latex-project.org/lppl.txt
 % A common request from authors is to rotate text, tables and or
 % figures and to typeset the content using a landscape page.
 %
-% \begin{macro}{landscape}
+% \begin{macro}{pdflscape}
 % \begin{macro}{lscape}
 % This package by Heiko Oberdiek Package |pdflscape| adds PDF support 
 % to the environment landscape 
 % of  package |lscape| by setting the PDF page attribute /Rotate. 
-% It has to be loaded after |lscape|.
+% It has to be loaded after |lscape| so we let it load it itself.
 %
 %    \begin{macrocode}
 \RequirePackage{pdflscape}
@@ -1072,17 +1119,19 @@ See http://www.latex-project.org/lppl.txt
 %  
 % \section{Maths}
 %
-% Although we cognisant that there are documents that do not use math
-% and perhaps others that our selection of packages is inadequate, we
-% offer a bundle of what we think will cover most of the cases. One
-% issue with maths is that we are limited with TeX's built-in math
-% alphabet limitations.
+% 	Although we cognisant that there are documents that do not use math
+% 	and perhaps others that our selection of packages is inadequate, we
+% 	offer a bundle of what we think will cover most of the cases. One
+% 	issue with maths is that we are limited with TeX's built-in math
+% 	alphabet limitations.
 % 
-% \begin{macro}{mathtools} We start with |mathtools|\ctan{mathtools}, as it loads the
-% |amsmath| package and can also pass options to it. The package was developed 
-% by LarsMadsen and is maintained by Will Robertson and Joseph Wright. It
-% appears to be very popular with a lot of scholars in the sciences and
-% mathematical fields and hence I decided to  include it here.
+% \begin{macro}{empheq}
+% \begin{macro}{mathtools} 
+%	We start with |mathtools|\ctan{mathtools}, as it loads the
+% 	|amsmath| package and can also pass options to it. The package was developed 
+% 	by LarsMadsen and is maintained by Will Robertson and Joseph Wright. It
+% 	appears to be very popular with a lot of scholars in the sciences and
+% 	mathematical fields and hence I decided to  include it here.
 % 
 %    \begin{macrocode}
 \RequirePackage[allowspaces]{empheq} %defines harpoon macros
@@ -1090,6 +1139,7 @@ See http://www.latex-project.org/lppl.txt
 \RequirePackage{mathtools}
 \RequirePackage{nicefrac}
 %    \end{macrocode}
+% \end{macro}
 % \end{macro}
 %
 % Many of the tools shown in this manual can be turned on and off by 
@@ -2963,6 +3013,7 @@ ProvidesClass,IfFileExists,RequirePackage,ifthenelse,chapter,includegraphics, ne
   {}
 \fi %end archaic   
 %    \end{macrocode}
+%
 % \section{Commonly used macros}     
 
 %    \begin{macrocode}
@@ -2980,20 +3031,44 @@ ProvidesClass,IfFileExists,RequirePackage,ifthenelse,chapter,includegraphics, ne
  %% Special commands for display
  \long\def\bottomline{\medskip
  \noindent\rule{\linewidth}{0.4pt}\medskip}
-
 \long\def\topline{\par\medskip
 \noindent\rule{\linewidth}{0.4pt}\medskip}
-% documentation macro
+%    \end{macrocode}
+%
+% \begin{macro}{\keyval}
+%	The macro \cs{keyval} typesets, key value lists and their options.
+%	\medskip
+%
+%    \keyval{test}{\marg{option1|option2|option2|option4}}{ As per this example.}
+%    \keyval{test}{\marg{option1|option2|option2|option4}}{ As per this example.}
+%
+%	We first measure the width of the option and not use it (want to make it a bit
+%	flexible at a later stage. We also ensure that the catcode of \verb+|+ is set properly
+%	in case anyone is using short verbatim commands, as we do in this document.
+%
+%    \begin{macrocode}
 \newlength\temp@cx
-\long\def\keyval#1#2#3{%
-\begingroup
-\settowidth\temp@cx{#1}%
-\parindent-30pt%\dimexpr\temp@cx+10pt\relax%
-\par\leavevmode%
-{\color{theblue}\bfseries #1}\thinspace=\thinspace#2 #3%
-\par\addvspace{1.5pt}
-\endgroup
+
+\def\keyval{%
+  \bgroup
+  \catcode`|=11
+  \@keyval}
+
+\def\@keyval#1#2#3{%
+  \settowidth\temp@cx{#1}%
+  \parindent-30pt
+  \hangindent30pt
+  \par\leavevmode%
+{\color{teal}\bfseries #1}\thinspace=\thinspace#2% 
+\hspace*{.5em}#3%
+\par\addvspace{1.5pt}%
+\egroup
 }
+
+%    \end{macrocode}
+% \end{macro}
+%
+%    \begin{macrocode}
 \def\file#1{\protect\texttt{\textbackslash #1}}
 \def\file#1{\protect\texttt{\textbackslash #1}}
 
@@ -5978,7 +6053,17 @@ go back to the beginning of current section\;
 
 % \newpage
 %
+% \section{List of Packages and Usage Statistics}
+%
+% Table~\ref{tbl:listofpaks} provides a list of the packages loaded as default by |phd|.
+% The column describing usage statistics
+% is from \url{http://arxmliv.kwarc.info/package_usage.php}. It is by no means an
+% indication of overall popularity, but I have used these statistics as an
+% guide in selecting what packages to include here in order to at least cover
+% the scientific side well.
+%
 % \input{packages-table}
+% \label{tbl:listofpaks}
 \endinput
 
 http://tex.stackexchange.com/questions/45651/how-do-i-determine-in-which-order-packages-have-been-loaded

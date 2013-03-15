@@ -1,0 +1,113 @@
+% Note with new geometry paper has to be defined in preamble
+% I do not feel very confident of this
+% Don't understand it fully how is working
+
+\cxset{geometry oxford/.code={
+\newgeometry{a4paper,left=74.8mm,top=27.4mm,headsep=2\baselineskip,%
+marginparsep=8.2mm,marginparwidth=49.4mm,textheight=49\baselineskip,headheight=\baselineskip}
+\@twosidefalse \@mparswitchfalse % one side option
+\reversemarginpar
+}}
+
+\cxset{geometry textwidth/.store in=\textwidth@cx,
+          geometry textheight/.store in=\textheight@cx,
+          geometry tufte/.code={
+             \newgeometry{a4paper,left=24.8mm,top=27.4mm,headsep=2\baselineskip,%
+             textwidth=107mm,marginparsep=8.2mm,marginparwidth=49.4mm,%
+             textheight=\textheight@cx\baselineskip,headheight=\baselineskip}
+            \@twosidefalse \@mparswitchfalse % one side option
+           %\reversemarginpar
+    }
+}
+
+\cxset{marginpar push/.store in=\marginparpush@cx,
+          marginpar font/.store in=\marginparfont@cx,
+          marginpar justification/.is choice,
+          marginpar justification/justifying/.code=\gdef\marginparjustification@cx{\justifying},
+          marginpar justification/raggedright/.code=\gdef\marginparjustification@cx{\raggedright},
+          marginpar justification/RaggedRight/.code=\gdef\marginparjustification@cx{\RaggedRight},
+          marginpar justification/RaggedLeft/.code=\gdef\marginparjustification@cx{\RaggedLeft},
+ }
+\cxset{marginpar push=10pt,
+          marginpar font=\normalfont\footnotesize\sffamily,
+          marginpar justification=RaggedLeft}
+
+\cxset{style13, geometry textheight=49,
+          geometry oxford,
+          watermark text=SAMPLE TUFTE VARIANT,
+          watermark text color=thered,
+          header style=samplepage}
+
+% This is a sidenote without the footnote mark
+\newcommand\marginnote[2][0pt]{%
+ % \let\cite\@tufte@infootnote@cite%   use the in-sidenote \cite command
+  %\gdef\@tufte@citations{}%           clear out any old citations
+  \@tufte@margin@par%                 use parindent and parskip settings for marginal text
+  \marginpar{\hbox{}\vspace*{#1}\marginparfont@cx\marginparjustification@cx\vspace*{-1\baselineskip}\noindent #2}%
+  \@tufte@reset@par%                  use parindent and parskip settings for body text
+  %\@tufte@print@citations%            print any citations
+  %\let\cite\@tufte@normal@cite%       go back to using normal in-text \cite command
+}
+
+\chapter{Geometry and Page Dimensions}
+
+\lipsum[1-4]\marginnote[1pt]{\lorem
+    \lorem}
+
+\lipsum[1-2]
+
+%% Stick the caption in the head might as well place the first picture also
+\def\asidecaption{\parbox{4.2cm}{{\bfseries Image \thefigure}\par\lorem}%
+  % \addtocontents{lof}{This is image 8}
+}
+\def\ps@caption{%
+     \let\@oddfoot\@empty\let\@evenfoot\@empty%
+    \def\@evenhead{%
+        \begin{picture}(0,0)%
+           \put(-150,-80){\asidecaption\par}%
+            \stepcounter{figure}
+           \put(-150,-370){\asidecaption}%
+        \end{picture}%
+      }%
+    \let\@oddhead\@evenhead%
+    \let\@mkboth\@gobbletwo%
+    \let\chaptermark\@gobble%
+    \let\sectionmark\@gobble%
+ }
+
+\def\ps@bigpicture{%
+    \setlength\headheight{19cm}%
+    \let\@oddfoot\@empty\let\@evenfoot\@empty%
+    \def\@evenhead{%
+         \begin{picture}(0,0)%
+          \put(-149,0){\includegraphics[width=\dimexpr(\textwidth+150pt)]{stuartpearson}}%
+         \end{picture}%
+      }%
+    \let\@oddhead\@evenhead%
+    \let\@mkboth\@gobbletwo%
+    \let\chaptermark\@gobble%
+    \let\sectionmark\@gobble%
+ }
+
+
+\def\doubletakeimage{%
+  \renewcommand{\topfraction}{.95}  % ensure seecond image will not float away
+  \begin{figure}[t]
+    \thispagestyle{caption}
+    \includegraphics[width=\textwidth]{matron}%
+  \end{figure}
+
+  \begin{figure}[tp]
+   \hspace*{-\marginparwidth}\includegraphics[height=0.9\textheight]{stuartpearson}
+ \end{figure}
+}
+
+
+\doubletakeimage
+\lipsum[1-4]
+
+\restoregeometry
+%% RESET EVERYTHING AT END OF CHAPTER
+\addtocounter{chapter}{-2}
+\@toctrue\@specialtrue
+
