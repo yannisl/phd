@@ -328,7 +328,7 @@ See http://www.latex-project.org/lppl.txt
 %</driver>
 % \fi
 %
-%  \CheckSum{2863}
+%  \CheckSum{3162}
 %  \CharacterTable
 %  {Upper-case    \A\B\C\D\E\F\G\H\I\J\K\L\M\N\O\P\Q\R\S\T\U\V\W\X\Y\Z
 %   Lower-case    \a\b\c\d\e\f\g\h\i\j\k\l\m\n\o\p\q\r\s\t\u\v\w\x\y\z
@@ -3013,8 +3013,179 @@ ProvidesClass,IfFileExists,RequirePackage,ifthenelse,chapter,includegraphics, ne
 \IfStyFileExists{ugarite}
   {\UGARtrue\RequirePackage{ugarite}}
   {}
-\fi %end archaic   
+%end archaic   
 %    \end{macrocode}
+%
+% \section{Titles, authors, abstracts and the like}
+% 	We want to have the option to make titles both as normally used in the |book| class
+%	but also as used in articles i.e., not to emit a new page after it is invoked.
+%	The definition is straight from the article class.
+% \begin{macro}{\@maketitle}
+%    This macro takes care of formatting the title information when we
+%    have no separate title page.
+%
+%    We always start a new page, leave some white space and center the
+%    information. The title is set in a |\LARGE| font, the author
+%    names and the date in a |\large| font.
+%    \begin{macrocode}
+\def\@maketitle{%
+  %\newpage
+  \null
+  \vskip 2em%
+  \begin{center}%
+  \let \footnote \thanks
+    {\LARGE \@title \par}%
+    \vskip 1.5em%
+    {\large
+      \lineskip .5em%
+      \begin{tabular}[t]{c}%
+        \@author
+      \end{tabular}\par}%
+    \vskip 1em%
+    {\large \@date}%
+  \end{center}%
+  \par
+  \vskip 1.5em}
+\fi
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\maketitle}
+%    The macro to generate titles is easily altered in order that it
+%    can be used more than once (an article with many titles)\footnote{Definition is straight 	out of the |doc| package and I only added minor tweaks to only start a new page 
+%	on demand.}.  In the
+%    original, diverse macros were concealed after use with
+%    |\relax|. We must cancel anything that may have been put
+%    into |\@thanks|, etc., otherwise {\em all\/} titles will
+%    carry forward any earlier such setting!
+%                 \cs{@makefnmark} and \cs{@makefntext}.
+%    \begin{macrocode}
+\def\nonewpage{}
+\def\maketitle{\par
+      \begingroup \def \thefootnote {\fnsymbol {footnote}}%
+      \setcounter {footnote}\z@
+      \def\@makefnmark{\hbox to\z@{$\m@th^{\@thefnmark}$\hss}}%
+      \long\def\@makefntext##1{\parindent 1em\noindent
+            \hbox to1.8em{\hss$\m@th^{\@thefnmark}$}##1}%
+      \if@twocolumn \twocolumn [\@maketitle ]%
+      \else \nonewpage \global \@topnum \z@ \@maketitle \fi
+%    \end{macrocode}
+% \changes{v1.5k}{1989/09/04}{Added \cs{ps@titlepage}}
+%    For special formatting requirements (such as in TUGboat), we use
+%    pagestyle |titlepage| for this; this is later defined to be
+%    |plain|, unless already defined, as, for example, by
+%    |ltugboat.sty|.
+%    \begin{macrocode}
+       \thispagestyle{titlepage}\@thanks \endgroup
+%    \end{macrocode}
+%    If the driver file documents many files, we don't want parts of a
+%    title of one to propagate to the next, so we have to cancel
+%    these:
+%    \begin{macrocode}
+      \setcounter {footnote}\z@
+      \gdef\@date{\today}\gdef\@thanks{}%
+      \gdef\@author{}\gdef\@title{}}
+%    \end{macrocode}
+% \end{macro}
+%
+%	As you can see from below, it can now work anywhere. 
+% \maketitle
+%
+% \begin{macro}{\ps@titlepage}
+%	 When a number of articles are concatenated into a
+%    journal, for example, it is not usual for the title pages of such
+%    documents to be formatted differently.  Therefore, a class
+%    such as \textsf{ltugboat} can define this macro in advance.
+%    However, if no such definition exists, we use pagestyle
+%    \texttt{plain} for title pages.Again the definition is 
+%	from the doc package.
+%    \begin{macrocode}
+\@ifundefined{ps@titlepage}
+    {\let\ps@titlepage=\ps@plain}{}
+%    \end{macrocode}
+% \end{macro}
+%
+% \section{Defining Abstracts, summaries, precis, keywords etc}
+%
+% \subsection{Abstract}
+%
+% \begin{environment}{abstract}
+%	This is an interesting environment provided in the standard
+%	classes only for articles. However too many publications 
+%	require such abstracts in other sections as well so we redefine
+%	it here to make it more extensive.
+%	
+%    When we are producing a separate titlepage we also put the
+%    abstract on a page of its own. It will be centred vertically on
+%    the page.
+%
+%    Note that this environment is not defined for books.
+% \changes{v1.3e}{1995/06/19}{Added setting of \cs{@endparpenalty}
+%         to avoid page break after abstract heading.}
+%    \begin{macrocode}
+% \changes{v1.3m}{1995/10/23}{Added setting of \cs{beginparpenalty} to
+%    discourage page break before abstract heading.}
+\def\abstractname{Abstract}
+\if@titlepage
+  \newenvironment{abstract}{%
+      \titlepage
+      \null\vfil
+      \@beginparpenalty\@lowpenalty
+      \begin{center}%
+        \bfseries \abstractname
+        \@endparpenalty\@M
+      \end{center}}%
+     {\par\vfil\null\endtitlepage}
+%    \end{macrocode}
+%    When we are not making a separate titlepage --the default for the
+%    article document class-- we have to check if we are in twocolumn
+%    mode. In that case the abstract is as a |\section*|, otherwise
+%    the quotation environment is used to typeset the abstract.
+%    \begin{macrocode}
+\else
+  \newenvironment{abstract}{%
+      \if@twocolumn
+        \section*{\abstractname}%
+      \else
+        \small
+        \begin{center}%
+          {\bfseries \abstractname\vspace{-.5em}\vspace{\z@}}%
+        \end{center}%
+        \quotation
+      \fi}
+      {\if@twocolumn\else\endquotation\fi}
+\fi
+%    \end{macrocode}
+% \end{environment}
+%
+% \begin{environment}{chapterabstract} This is an identical environment to that
+%	provided for abstract and can be used anywhere in the document. 
+%    \begin{macrocode}
+\def\chapterabstractname{Summary}
+
+\newenvironment{chapterabstract}{%
+   \center
+     {\bfseries \chapterabstractname\vspace{-.5em}\vspace{\z@}}
+   \endcenter\quotation
+}{\endquotation}
+%    \end{macrocode}
+% \end{environment}
+%
+% \begin{chapterabstract}
+%   \lorem
+% \end{chapterabstract}
+%
+% \begin{macro}{chapter abstractname} Gotcah macrococode gives no error!
+%
+%    \begin{macrocode} 
+\cxset{chapter abstractname/.store in = \chapterabstractname}
+\cxset{chapter abstractname= SUMMARY}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{chapterabstract}
+%   \lorem
+% \end{chapterabstract}
 %
 % \section{Commonly used macros}     
 % \subsection{Paragraph setting commands}
@@ -3261,13 +3432,260 @@ ProvidesClass,IfFileExists,RequirePackage,ifthenelse,chapter,includegraphics, ne
 % \end{macro}
 %
 %
-% \begin{macro}{\meta@font@select}
-% \changes{v2.0k}{2000/05/26}{Macro added (pr/3170)}
-%    Maske font used inside |\meta| customizable.
+% \begin{macro}{\meta@font@select} 
+%  	We default the definition to upshape.
 %    \begin{macrocode}
-\def\meta@font@select{\itshape}
+\def\meta@font@select{\upshape}
 %    \end{macrocode}
 % \end{macro}
+%
+% \begin{macro}{\macro} 
+%	The \cs{macro} environment is straight out of the
+%	\pkg{doc} also. We redefine it here to allow usage in documents that have not 
+%	preloaded the package.
+%
+%    \begin{macrocode}
+\def\macro{\begingroup
+   \catcode`\\12
+   \MakePrivateLetters \m@cro@ \iftrue}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\environment}
+%    The ``environment'' envrironment will be implemented just like the
+%    ``macro'' environment flagging any differences in the code by
+%    passing |\iffalse| or |\iftrue| to the |\m@cro@| environment
+%    doing the actual work.
+%    \begin{macrocode}
+\def\environment{\begingroup
+   \catcode`\\12
+   \MakePrivateLetters \m@cro@ \iffalse}
+%    \end{macrocode}
+% \end{macro}
+%
+%    After scanning the argument we close the group to get the normal
+%    |\catcode|$\,$s back. Then we assign a special value to
+%    |\topsep| and start a \textsf{trivlist} environment.
+%
+%    \begin{macrocode}
+\long\def\m@cro@#1#2{\endgroup \topsep\MacroTopsep \trivlist
+%    \end{macrocode}
+% We also save the name being described in |\saved@macroname| for
+% 
+%    \begin{macrocode}
+   \edef\saved@macroname{\string#2}%
+%    \end{macrocode}
+%    Now there follows a variation of |\makelabel| which is used
+%    should the environment not be nested, or should it lie between
+%    two successive |\begin{macro}| instructions or explanatory
+%    text.  One can recognize this with the switch |\if@inlabel|
+%    which will be |true| in the case of successive |\item|
+%    commands.
+%    \begin{macrocode}
+  \def\makelabel##1{\llap{##1}}%
+%    \end{macrocode}
+%    If |@inlabel| is |true| and if $\verb=\macro@cnt= > 0$
+%    then the above definition needs to be changed, because in this
+%    case \LaTeX{} would otherwise put the labels all on the same line
+%    and this would lead to them being overprinted on top of each
+%    other.  Because of this |\makelabel| needs to be redefined
+%    in this case.
+%    \begin{macrocode}
+  \if@inlabel
+%    \end{macrocode}
+%    If |\macro@cnt| has the value $1$, then we redefine
+%    |\makelabel| so that the label will be positioned in the
+%    second line of the margin.  As a result of this, two macro names
+%    appear correctly, one under the other.  It's important whilst
+%    doing this that the generated label box is not allowed to have
+%    more depth than a normal line since otherwise the distance
+%    between the first two text lines of \TeX{} will be incorrectly
+%    calculated. The definition should then look like:
+%\begin{verbatim}
+%     \def\makelabel##1{\llap{\vtop to \baselineskip
+%          {\hbox{\strut}\hbox{##1}\vss}}}
+%\end{verbatim}
+%    Completely analogous to this is the case where labels need to be
+%    placed one under the other.  The lines above are only an example
+%    typeset with the \textsf{verbatim} environment. To produce the real
+%    definition we save the value of |\macro@cnt| in
+%    |\count@| and empty the temp macro |\@tempa| for later
+%    use.
+%    \begin{macrocode}
+    \let\@tempa\@empty \count@\macro@cnt
+%    \end{macrocode}
+%    In the following loop we append for every already typeset label
+%    an |\hbox{\strut}| to the definition of |\@tempa|.
+%    \begin{macrocode}
+    \loop \ifnum\count@>\z@
+      \edef\@tempa{\@tempa\hbox{\strut}}\advance\count@\m@ne \repeat
+%    \end{macrocode}
+%    Now be put the definition of |\makelabel| together.
+%
+%    \begin{macrocode}
+    \edef\makelabel##1{\llap{\vtop to\baselineskip
+                               {\@tempa\hbox{##1}\vss}}}%
+%    \end{macrocode}
+%    Next we increment the value of the nesting depth counter.  This
+%    value inside the \textsf{macro} environment is always at least one
+%    after this point, but its toplevel definition is zero. Provided
+%    this environment has been used correctly, $|\macro@cnt|=0$
+%    should not occur when |@inlabel|=\textsf{true}.  It is
+%    however possible if this environment is used within other list
+%    environments (but this would have little point).
+%    \begin{macrocode}
+    \advance \macro@cnt \@ne
+%    \end{macrocode}
+%    If |@inlabel| is false we reset |\macro@cnt| assuming
+%    that there is enough room to print the macro name without
+%    shifting.
+%    \begin{macrocode}
+  \else  \macro@cnt\@ne  \fi
+%    \end{macrocode}
+%    Now the label will be produced using |\item|. The following
+%    line is only a hack saving the day until a better solution is
+%    implemented.  We have to face two problems: the argument might be
+%    a |\par| which is forbidden in the argument of other macros
+%    if they are not defined as |\long|, or it is something like
+%    |\iffalse| or |\else|, i.e.\ something which will be
+%    misinterpreted when \TeX{} is skipping conditional text. In both
+%    cases |\item| will bomb, so we protect the argument by using
+%    |\string|.
+%    \begin{macrocode}
+  \edef\@tempa{\noexpand\item[%
+%    \end{macrocode}
+%    Depending on whether we are inside a ``macro'' or ``environment''
+%    environment we use |\PrintMacroName| or |\PrintEnvName| to
+%    display the name.
+%    \begin{macrocode}
+     #1%
+       \noexpand\PrintMacroName
+     \else
+       \noexpand\PrintEnvName
+     \fi
+     {\string#2}]}%
+  \@tempa
+%    \end{macrocode}
+%    At this point we also produce an index entry.  Because it is not
+%    known which index sorting program will be used, we do not use the
+%    command |\index|, but rather a command
+%    |\SpecialMainIndex| after advancing the counter for indexing
+%    by line number.  This may be redefined by the user in
+%    order to generate an index entry which will be understood by the
+%    index program in use (note the definition of
+%    |\SpecialMainIndex| for our installation).
+%
+%    We advance the current codeline number and after producing an
+%    index entry revert to the original value
+%    \begin{macrocode}
+  \global\advance\c@CodelineNo\@ne
+%    \end{macrocode}
+%    Again the macro to call depends on the environment we are
+%    actually in.
+%    \begin{macrocode}
+   #1%
+      \SpecialMainIndex{#2}\nobreak
+      \DoNotIndex{#2}%
+   \else
+      \SpecialMainEnvIndex{#2}\nobreak
+   \fi
+  \global\advance\c@CodelineNo\m@ne
+%    \end{macrocode}
+%    The |\nobreak| is needed to prevent a page break after the
+%    |\write| produced by the |\SpecialMainIndex| macro.  We
+%    exclude the new macro in the cross-referencing feature, to
+%    prevent spurious non-main entry references.  Regarding possibly
+%    problematic arguments, the implementation takes
+%    care of |\par| and the conditionals are uncritical.
+%
+%    Because the space symbol should be ignored between the
+%    |\begin{macro}{...}| and the following text we must take
+%    care of this with |\ignorespaces|.
+%    \begin{macrocode}
+  \ignorespaces}
+%    \end{macrocode}
+% 
+%	We now ready to define the code for the end of the environments.	
+%	
+% \begin{macro}{\endmacro}
+% \begin{macro}{\endenvironment}
+%     Older releases of this environment omit the |\endgroup| token,
+%     when being nested. This was done to avoid unnessary stack usage.
+%     However it does not work if \textsf{macro} and
+%     \textsf{environment} environments are mixed, therefore we now
+%     use a simpler approach.
+%
+%    \begin{macrocode}
+\let\endmacro \endtrivlist
+\let\endenvironment\endmacro
+%    \end{macrocode}
+%  \end{macro}
+%  \end{macro}
+%
+% \begin{macro}{\MacroTopsep}
+%    Here is the default value for the |\MacroTopsep| parameter
+%    used above.
+%    \begin{macrocode}
+\newskip\MacroTopsep     \MacroTopsep = 7pt plus 2pt minus 2pt
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \subsection{Formatting the margin}
+%
+% The following three macros should be user definable.
+% Therefore we define those macros only if they have not already
+% been defined.
+%
+% \begin{macro}{\PrintMacroName}
+% \begin{macro}{\PrintEnvName}
+% \begin{macro}{\PrintDescribeMacro}
+% \begin{macro}{\PrintDescribeEnv}
+%    The formatting of the macro name in the left margin is done by
+%    these macros. We first set a |\strut| to get the height and
+%    depth of the normal lines. Then we change to the
+%    |\MacroFont| using |\string| to |\catcode| the
+%    argument to other (assuming that it is a macro name). Finally we
+%    print a space.  The font change remains local since this macro
+%    will be called inside an |\hbox|. NEED TO FIX
+%    \begin{macrocode}
+\@ifundefined{PrintMacroName}
+   {\def\PrintMacroName#1{\strut \MarginMacroFonts \string #1\ }}{\def\PrintMacroName#1{\strut \MarginMacroFonts \string #1\ }}
+%    \end{macrocode}
+%    We use the same formatting conventions when describing a macro.
+%    \begin{macrocode}
+\@ifundefined{PrintDescribeMacro}
+   {\def\PrintDescribeMacro#1{\strut \MacroFonts \string #1\ }}{\def\PrintDescribeMacro#1{\strut \MarginMacroFonts \string #1\ }}
+%    \end{macrocode}
+%    To format the name of a new environment there is no need to use
+%    |\string|.
+%    \begin{macrocode}
+\@ifundefined{PrintDescribeEnv}
+   {\def\PrintDescribeEnv#1{\strut \MacroFonts #1\ }}{\def\PrintDescribeEnv#1{\strut \MarginMacroFonts #1\ }}
+\@ifundefined{PrintEnvName}
+   {\def\PrintEnvName#1{\strut \MarginMacroFonts #1\ }}{\def\PrintEnvName#1{\strut \MarginMacroFonts #1\ }}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}{\MarginMacroFont} As we dont care for older versions of LaTeX we simplify the
+%	code provide by \pkg{doc}. We also add a hook for color.
+%	as we do not expect that the package will be used in places with no colour support.
+%	The command used in the original \pkg{doc} is the same as the one used to
+% 	typeset the code for |macrocode|, however we wish to have the option to color
+%	the margin macros separately.
+%	
+%    \begin{macrocode}
+\def\MarginMacroFonts{\fontencoding\encodingdefault
+                   \fontfamily\ttdefault
+                   \fontseries\mddefault
+                   \fontshape\updefault
+                   \color{teal}\small}%
+%    \end{macrocode}
+% \end{macro}
+%
 % \section{Floats settings}                    
 % Use Donald Arseneau's improved float parameters. I am not too sure when this was first referenced
 % once I find it, will provide a citation and or a link.

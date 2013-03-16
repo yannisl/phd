@@ -655,7 +655,73 @@ ProvidesClass,IfFileExists,RequirePackage,ifthenelse,chapter,includegraphics, ne
 \IfStyFileExists{ugarite}
   {\UGARtrue\RequirePackage{ugarite}}
   {}
-\fi %end archaic
+\def\@maketitle{%
+  %\newpage
+  \null
+  \vskip 2em%
+  \begin{center}%
+  \let \footnote \thanks
+    {\LARGE \@title \par}%
+    \vskip 1.5em%
+    {\large
+      \lineskip .5em%
+      \begin{tabular}[t]{c}%
+        \@author
+      \end{tabular}\par}%
+    \vskip 1em%
+    {\large \@date}%
+  \end{center}%
+  \par
+  \vskip 1.5em}
+\fi
+\def\nonewpage{}
+\def\maketitle{\par
+      \begingroup \def \thefootnote {\fnsymbol {footnote}}%
+      \setcounter {footnote}\z@
+      \def\@makefnmark{\hbox to\z@{$\m@th^{\@thefnmark}$\hss}}%
+      \long\def\@makefntext##1{\parindent 1em\noindent
+            \hbox to1.8em{\hss$\m@th^{\@thefnmark}$}##1}%
+      \if@twocolumn \twocolumn [\@maketitle ]%
+      \else \nonewpage \global \@topnum \z@ \@maketitle \fi
+       \thispagestyle{titlepage}\@thanks \endgroup
+      \setcounter {footnote}\z@
+      \gdef\@date{\today}\gdef\@thanks{}%
+      \gdef\@author{}\gdef\@title{}}
+\@ifundefined{ps@titlepage}
+    {\let\ps@titlepage=\ps@plain}{}
+\def\abstractname{Abstract}
+\if@titlepage
+  \newenvironment{abstract}{%
+      \titlepage
+      \null\vfil
+      \@beginparpenalty\@lowpenalty
+      \begin{center}%
+        \bfseries \abstractname
+        \@endparpenalty\@M
+      \end{center}}%
+     {\par\vfil\null\endtitlepage}
+\else
+  \newenvironment{abstract}{%
+      \if@twocolumn
+        \section*{\abstractname}%
+      \else
+        \small
+        \begin{center}%
+          {\bfseries \abstractname\vspace{-.5em}\vspace{\z@}}%
+        \end{center}%
+        \quotation
+      \fi}
+      {\if@twocolumn\else\endquotation\fi}
+\fi
+\def\chapterabstractname{Summary}
+
+\newenvironment{chapterabstract}{%
+   \center
+     {\bfseries \chapterabstractname\vspace{-.5em}\vspace{\z@}}
+   \endcenter\quotation
+}{\endquotation}
+\cxset{chapter abstractname/.store in = \chapterabstractname}
+\cxset{chapter abstractname= SUMMARY}
 \providecommand*{\linenottooshort}[1][4em]{%
   \@tempdima=\hsize
  \advance\@tempdima-#1
@@ -792,7 +858,57 @@ ProvidesClass,IfFileExists,RequirePackage,ifthenelse,chapter,includegraphics, ne
       \meta@hyphen@restore
      }\ensuremath\rangle
 }
-\def\meta@font@select{\itshape}
+\def\meta@font@select{\upshape}
+\def\macro{\begingroup
+   \catcode`\\12
+   \MakePrivateLetters \m@cro@ \iftrue}
+\def\environment{\begingroup
+   \catcode`\\12
+   \MakePrivateLetters \m@cro@ \iffalse}
+\long\def\m@cro@#1#2{\endgroup \topsep\MacroTopsep \trivlist
+   \edef\saved@macroname{\string#2}%
+  \def\makelabel##1{\llap{##1}}%
+  \if@inlabel
+    \let\@tempa\@empty \count@\macro@cnt
+    \loop \ifnum\count@>\z@
+      \edef\@tempa{\@tempa\hbox{\strut}}\advance\count@\m@ne \repeat
+    \edef\makelabel##1{\llap{\vtop to\baselineskip
+                               {\@tempa\hbox{##1}\vss}}}%
+    \advance \macro@cnt \@ne
+  \else  \macro@cnt\@ne  \fi
+  \edef\@tempa{\noexpand\item[%
+     #1%
+       \noexpand\PrintMacroName
+     \else
+       \noexpand\PrintEnvName
+     \fi
+     {\string#2}]}%
+  \@tempa
+  \global\advance\c@CodelineNo\@ne
+   #1%
+      \SpecialMainIndex{#2}\nobreak
+      \DoNotIndex{#2}%
+   \else
+      \SpecialMainEnvIndex{#2}\nobreak
+   \fi
+  \global\advance\c@CodelineNo\m@ne
+  \ignorespaces}
+\let\endmacro \endtrivlist
+\let\endenvironment\endmacro
+\newskip\MacroTopsep     \MacroTopsep = 7pt plus 2pt minus 2pt
+\@ifundefined{PrintMacroName}
+   {\def\PrintMacroName#1{\strut \MarginMacroFonts \string #1\ }}{\def\PrintMacroName#1{\strut \MarginMacroFonts \string #1\ }}
+\@ifundefined{PrintDescribeMacro}
+   {\def\PrintDescribeMacro#1{\strut \MacroFonts \string #1\ }}{\def\PrintDescribeMacro#1{\strut \MarginMacroFonts \string #1\ }}
+\@ifundefined{PrintDescribeEnv}
+   {\def\PrintDescribeEnv#1{\strut \MacroFonts #1\ }}{\def\PrintDescribeEnv#1{\strut \MarginMacroFonts #1\ }}
+\@ifundefined{PrintEnvName}
+   {\def\PrintEnvName#1{\strut \MarginMacroFonts #1\ }}{\def\PrintEnvName#1{\strut \MarginMacroFonts #1\ }}
+\def\MarginMacroFonts{\fontencoding\encodingdefault
+                   \fontfamily\ttdefault
+                   \fontseries\mddefault
+                   \fontshape\updefault
+                   \color{teal}\small}%
   \newcounter{texexp}[chapter]
   \@addtoreset{c@texexp}{c@chapter}
 \def\thetexexp{\thesection.\arabic{texexp}}
