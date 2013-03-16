@@ -8,6 +8,7 @@
 We also discuss the basic formatting tools that are available and how one can modify them to blend them with the rest of the design.
  }
 }
+\cxset{section numbering prefix=\thechapter.}
 \chapter{Typesetting Captions}
 \section{Introduction}
 
@@ -19,7 +20,8 @@ after the label and can be centered hanged or left justified.
 Numbering can also vary; the counters can be reset at every chapter or section or can be continuous. So
 there are quite a few options to define in a template.
 
-The formatting commands for the captions key value interface follow the same style of the rest of the package. We use the \pkg{caption} package to provide the interface to the key value settings.
+The formatting commands for the captions key value interface follow the same style of the rest of the package. We use the \pkg{caption} package to provide the interface to the key value settings. To format the captions you just include the appropriate keys in one of the style
+files.
 
 
 \section{Conventions}
@@ -29,18 +31,31 @@ All caption keys start with the word |caption|. The float type follows, so |capt
 As users will probably only have to set these keys once, my recommendation is to use the longer version that can give you finer control. Also your template will be easier to modify in the future.
 \medskip
 
+{
 \keyval{caption format}{\marg{plain|hang}}{This affects all captions such as tables and figures and will produce either a hang caption or with plain will wrap arund the figure number like a normal paragraph.}
 
 \keyval{caption figure format}{\marg{plain | hang}}{Affects ONLY figure captions such as tables and figures and will produce either a hang caption or with plain will wrap around the figure number like a normal paragraph.}
 
 \keyval{caption figure numbering style}{\marg{auto|continuous|reset on sections|custom}}{}
-\keyval{caption figure numbering}{arabic,alph,Alph,roman,Roman,custom}{}
-\keyval{caption separator}{colon,semicolon,none,custom}{Sets the separator, such as \textbf{:} or a colon or none.}
-\keyval{caption label name}{}{}
-\keyval{caption before}{}{}
-\keyval{caption after}{}{}
+\keyval{caption figure numbering}{\marg{arabic|alph|Alph|roman|Roman|custom}}{Sets the style of numbering.}
+\keyval{caption separator}{\marg{colonsemicolon|none|custom}}{Sets the separator, such as \textbf{:} or a colon or none.}
+\keyval{caption label name}{\marg{text}}{Sets the label name such as figure.}
+\keyval{caption aboveskip}{\marg{dim}}{Sets the \cs{belowcaptionskip}.}
+\keyval{caption belowskip}{\marg{dim}}{Sets the \cs{abovecaptionskip}. You use as simply \texttt{10pt} ot similar. In LaTeX this value is normally set as \texttt{0pt}. Note that below a float normally an additional skip is introduced.}
 
-\cxset{caption format/.code=\captionsetup[figure]{format=#1}}
+\keyval{caption font}{\marg{bf|tt|it}}{Sets the font commands. }
+\keyval{caption figure name}{}{}
+\keyval{caption defaults}{\marg{true|false}}{Sets all styling back to default styles.}
+}
+
+Although it looks a simple piece of text, as you notice there are about
+a dozen of variables that one could set. Color can be determined both
+from the caption labl colour as well as from hyperlinking if necessary.
+More complicated styles can be build in a simila fashion to chapter
+heads, by diverting to a custom command \cs{captionspecial}. This
+will be provided at the next release of the package.
+
+\cxset{caption format/.code=\captionsetup[figure]{format=#1}} 
 
 
 \begin{texexample}{}{}
@@ -125,6 +140,8 @@ where we need to hook if we want finer grain of control.
 
 \cxset{label punctuation/.code = \gdef\labelpunctuation@cx{#1}}
 \cxset{label space/.code = \gdef\labelhspace@cx{\hskip#1}}
+\cxset{caption above skip/.store in= \abovecaptionskip@cx}
+\cxset{caption above skip=10pt}
 
 \captionof{figure}{This is a very long command to see how all
 these can wrap in a hang format, if the text is longer than
@@ -136,6 +153,8 @@ a paragraph.}
 \cxset{caption font={tt}}
 \cxset{label punctuation=?}
 \cxset{label space =1.5em}
+
+
 
 \captionof{figure}{This is a very long command to see how all
 these can wrap in a hang format, if the text is longer than
@@ -153,7 +172,7 @@ a paragraph.}
 \cxset{label space =.5em}
 \def\figurename{\textbf{Figure}}
 
-\setlength\abovecaptionskip{10\p@}
+\setlength\abovecaptionskip{\abovecaptionskip@cx}
 \setlength\belowcaptionskip{0\p@}
 
 \long\def\@makecaption#1#2{%
