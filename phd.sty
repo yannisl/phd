@@ -12,6 +12,7 @@
 %% See http://www.latex-project.org/lppl.txt
 %% ----------------------------------------------------------------
 %% 
+
 \NeedsTeXFormat{LaTeX2e}
 [1994/12/01]%
 \ProvidesPackage{phd}[2013/2/26 v1.0 less preamble (YL)]%
@@ -729,6 +730,73 @@ ProvidesClass,IfFileExists,RequirePackage,ifthenelse,chapter,includegraphics, ne
 }{\endquotation}
 \cxset{chapter abstractname/.store in = \chapterabstractname}
 \cxset{chapter abstractname= SUMMARY}
+\cxset{
+  quotation above/.store in=\quotationabove@cx,
+  quotation left margin/.store in=\quotationleftmargin@cx,
+  quotation right margin/.store in=\quotationrightmargin@cx,
+  quotation parsep/.store in=\quotationparsep@cx,
+  quotation font-size/.store in=\quotationfontsize@cx,
+  quotation parindent/.store in=\quotationparindent@cx,
+ }
+\let\oquotation\quotation
+\def\setquotation#1{%
+\cxset{#1}
+\renewenvironment{quotation}
+               {\par\addvspace{\quotationabove@cx}
+                \list{}{\listparindent\quotationparindent@cx%
+                        \leftmargin=\quotationleftmargin@cx%
+                        \itemindent    \listparindent
+                        \rightmargin \quotationrightmargin@cx
+                        \parsep=\quotationparsep@cx%
+                        \quotationfontsize@cx}%
+                \item\relax\hskip-\listparindent}
+               {\endlist}
+}
+\setquotation{%
+  quotation above=36pt,
+  quotation left margin=50pt,
+  quotation right margin=0pt,
+  quotation parsep=0pt,
+  quotation font-size=\small,
+  quotation parindent=12pt,
+}
+\cxset{
+  quote above/.store in=\quoteabove@cx,
+  quote left margin/.store in=\quoteleftmargin@cx,
+  quote right margin/.store in=\quoterightmargin@cx,
+  quote parsep/.store in=\quoteparsep@cx,
+  quote font-size/.store in=\quotefontsize@cx,
+  quote parindent/.store in=\quoteparindent@cx,
+}
+
+\def\setquote#1{%
+\cxset{#1}
+\renewenvironment{quote}
+               {\par\addvspace{\quoteabove@cx}
+                \list{}{\listparindent\quoteparindent@cx%
+                        \leftmargin=\quoteleftmargin@cx%
+                        \itemindent    \listparindent
+                        \rightmargin\leftmargin
+                        \parsep=\quoteparsep@cx%
+                        \quotefontsize@cx}%
+                \item\relax\hskip-\listparindent}
+               {\endlist}
+}
+
+\setquotation{%
+  quotation above=36pt,
+  quotation left margin=50pt,
+  quotation parsep=0pt,
+  quotation font-size=\small,
+  quotation parindent=12pt,
+}
+\setquote{%
+  quote above=0pt,
+  quote left margin=20pt,
+  quote parsep=0pt,
+  quote font-size=\small,
+  quote parindent=12pt,
+}
 \providecommand*{\linenottooshort}[1][4em]{%
   \@tempdima=\hsize
  \advance\@tempdima-#1
@@ -3053,6 +3121,169 @@ title font-shape=upshape,
   \vspace*{2\baselineskip}
   \clearpage
 }
+
+\newcommand{\quit@cx}{}
+\newif\if@haschapter@cx
+\newif\if@koma@cx  \@koma@cxfalse
+\@ifclassloaded{scrartcl}{\@koma@cxtrue}{}
+\@ifclassloaded{scrreprt}{\@koma@cxtrue}{}
+\@ifclassloaded{scrbook}{\@koma@cxtrue}{}
+\newif\if@memoir@cx  \@memoir@cxfalse
+\@ifclassloaded{memoir}{\@memoir@cxtrue}{}
+\@ifundefined{chapter}{%
+  \@haschapter@cxfalse
+  \@ifundefined{section}{%
+    \PackageWarning{phd}%
+      {I don't recognize any sectional divisions so I'll do nothing}
+    \renewcommand{\quit@cx}{\endinput}
+    }{\PackageInfo{tocloft}{The document has section divisions}}
+  }{\@haschapter@cxtrue
+    \PackageInfo{phd}{The document has chapter divisions}}
+\quit@cx
+\newcommand{\settocpagestyle}[1]{%
+  \def\tocpagestyle@cx{\thispagestyle{#1}}}
+  \thispagestyle{plain}
+\newlength{\tocparskip@cx}
+\setlength{\tocparskip@cx}{0pt}
+\def\tocstart@cx{}
+\def\tocfinish@cx{}
+   \renewcommand{\tableofcontents}{%
+    \tocstart@cx
+    \par
+    \begingroup
+      \parindent\z@ \parskip\tocparskip@cx
+      \maketoctitle@cx
+      \@starttoc{toc}%
+    \endgroup
+    \tocfinish@cx
+}
+\cxset{toc name/.code = \def\contentsname{#1},
+       toc name before/.store in = \contentsnamebefore@cx,
+       toc name after/.store in = \contentsnameafter@cx,
+       toc name font-size/.store in = \contentsnamefontsize@cx,
+       toc name font-weight/.store in = \contentsnamefontweight@cx,
+       toc name font-family/.store in = \contentsnamefontfamily@cx,
+       toc name font-shape/.store in = \contentsnamefontshape@cx,
+       toc name color/.store in = \tocnamecolor@cx,
+       toc name afterskip/.store in=\tocnameafterskip@cx
+}
+
+\cxset{toc name= CONTENTS,
+       toc name before = ,
+       toc name after =,
+       toc name color = teal,
+       toc name font-weight=bold,
+       toc name font-family=sffamily,
+       toc name font-shape=upshape,
+       toc name font-size=LARGE,
+       toc name afterskip=10pt, %set as 40pt in LaTeX
+       toc name after=\par,
+}
+
+\newcommand{\maketoctitle@cx}{%
+  \addpenalty\@secpenalty
+  \if@haschapter@cx
+    \vspace*{10pt}
+  \else
+    \vspace{10pt}
+  \fi
+  %\@cftpagestyle
+  {\interlinepenalty\@M
+  {\contentsnamebefore@cx
+     \setfont@cx{\contentsnamefontweight@cx}%
+    {\contentsnamefontfamily@cx}{\contentsnamefontsize@cx}%
+    {\contentsnamefontshape@cx}%
+     \color{\tocnamecolor@cx}
+      \center\contentsname\endcenter}{\contentsnameafter@cx}
+
+  \par\nobreak
+  \vskip\tocnameafterskip@cx\relax
+  \@afterheading}
+}
+\newcommand{\setpnumwidth@cx}[1]{\renewcommand{\@pnumwidth}{#1}}
+\newcommand{\settocmarg@cx}[1]{\renewcommand{\@tocrmarg}{#1}}
+\setpnumwidth@cx{25pt}
+\settocmarg@cx{20pt}
+\newcommand{\dot@cx}{.}
+\newcommand{\dotfill@cx}[1]{%
+  \leaders\hbox{$\m@th\mkern #1 mu\hbox{\dot@cx}\mkern #1 mu$}\hfill}
+\def\nodotfill@cx{}
+\cxset{toc dotfill/.is choice,
+       toc dotfill/none/.code = \nodotfill@cx,
+       toc dotfill symbol/.code= \renewcommand{\dot@cx}{#1},
+       toc dotfill sep/.store in=\dotfillsep@cx,
+}
+\cxset{toc dotfill symbol=.,
+       toc dotfill sep=4.5}
+\newcommand{\cftparfillskip}{\parfillskip=0pt plus1fil}
+\renewcommand{\numberline}[1]{%
+  \hb@xt@\@tempdima{\@cftbsnum #1\@cftasnum\hfil}\@cftasnumb}
+\newcommand{\@cftbsnum}{}
+\newcommand{\@cftasnum}{}
+\newcommand{\@cftasnumb}{}
+
+
+\if@haschapter@cx
+  \newlength{\beforetocchapterskip@cx}
+    \setlength{\beforetocchapterskip@cx}{1.0em \@plus\p@}
+  \newlength{\cftchapindent}
+    \setlength{\cftchapindent}{0em}
+  \newlength{\cftchapnumwidth}
+    \setlength{\cftchapnumwidth}{1.5em}
+  \newcommand{\cftchapfont}{\bfseries}
+  \newcommand{\cftchappresnum}{}
+  \newcommand{\cftchapaftersnum}{}
+  \newcommand{\cftchapaftersnumb}{}
+  \newcommand{\cftchapleader}{\bfseries\dotfill@cx{\cftchapdotsep}}
+
+  \newcommand{\cftchapdotsep}{\chapterdotsep@cx}
+  \newcommand{\cftchappagefont}{[\sffamily\bfseries\color{red}}
+  \newcommand{\cftchapafterpnum}{]}
+  \newcommand{\cftchapfillnum}[1]{%
+    {\cftchapleader}\nobreak
+    \hb@xt@\@pnumwidth{\hfil\cftchappagefont #1}\cftchapafterpnum\par}
+%%    \begin{macrocode}
+\fi
+
+
+\renewcommand{\numberline}[1]{%
+  \hb@xt@\@tempdima{[#1]\hfil}}
+
+\cxset{toc chapter beforeskip/.store in=\beforetocchapterskip@cx,
+       toc chapter indent/.store in = \tocchapterindent@cx,
+       toc chapter dotsep/.store in = \chapterdotsep@cx,
+       toc chapter no dots/.code=\def\chapterdotsep@cx{10000},
+       toc chapter numberwidth/.store in = \tocchapternumberwidth@cx,
+       toc chapter font/.store in=\tocchapterfont@cx}
+
+\cxset{toc chapter beforeskip =40pt,
+       toc chapter indent= 0pt,
+       toc chapter dotsep=4.5,
+       toc chapter no dots,
+       toc chapter numberwidth=15pt,
+       toc chapter font= \bfseries\sffamily\large}
+
+\if@haschapter@cx
+\renewcommand*{\l@chapter}[2]{%
+  \ifnum \c@tocdepth >\m@ne
+    \addpenalty{-\@highpenalty}%
+    \vskip \beforetocchapterskip@cx\relax
+    {\leftskip\tocchapterindent@cx\relax
+     \rightskip \@tocrmarg
+     \parfillskip -\rightskip
+     \parindent \tocchapterindent@cx\relax\@afterindenttrue
+     \interlinepenalty\@M
+     \leavevmode
+     \@tempdima \tocchapternumberwidth@cx\relax
+     \let\@cftbsnum \cftchappresnum
+     \let\@cftasnum \cftchapaftersnum
+     \let\@cftasnumb \cftchapaftersnumb
+     \advance\leftskip \@tempdima \null\nobreak\hskip -\leftskip
+     {\tocchapterfont@cx #1}\nobreak
+     \cftchapfillnum{#2}}%
+  \fi}%
+\fi
+
 
 \endinput
 %%
