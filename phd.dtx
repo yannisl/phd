@@ -404,6 +404,62 @@ See http://www.latex-project.org/lppl.txt
 %
 % \input{./sections/tableofcontents}
 % \input{./sections/introduction}
+%^^A \input{./sections/chapterdesign}
+% \input{./sections/epigraphschapter}
+% \input{./sections/lists}
+% \input{./sections/quotations}
+% \input{./sections/captionsandothers}
+% \input{./sections/generalsettings}
+% \input{./sections/docmacros}
+% \input{./sections/versochapter}
+^^A \input{./sections/cardinal}
+% \input{./styles/style01.tex}
+% \input{./styles/style02.tex}
+% \input{./styles/style03.tex}
+% \input{./styles/style04.tex}
+% \input{./styles/style05.tex}
+% \input{./styles/style06.tex}
+% \input{./styles/style07.tex}
+% \input{./styles/style08.tex}
+% \input{./styles/style09.tex}
+% \input{./styles/style10.tex}
+% \input{./styles/style11.tex}
+% \input{./styles/style12.tex}
+% \input{./styles/style14.tex}
+% \input{./styles/style15.tex}
+% \input{./styles/style16.tex}
+% \input{./styles/style17.tex}
+% \input{./styles/style18.tex}
+% \input{./styles/style20.tex}
+% \input{./styles/style20a.tex}
+% \input{./styles/style21.tex}
+% \input{./styles/style22.tex}
+% \input{./styles/style23.tex}
+% \input{./styles/style24.tex}
+% \input{./styles/style25.tex}
+% \input{./styles/style26.tex}
+% \input{./styles/style27.tex}
+% \input{./styles/style28.tex}
+% \input{./styles/style29.tex}
+% \input{./styles/style30.tex}
+% \input{./styles/style31.tex}
+% \input{./styles/style32.tex}
+% \input{./styles/style33.tex}
+% \input{./styles/style34.tex}
+% \input{./styles/style35.tex}
+% \input{./styles/style36.tex}
+% \input{./styles/style37.tex}
+% \input{./styles/style38.tex}
+% \input{./styles/style39.tex}
+% \input{./styles/style40.tex}
+% \input{./styles/style40.tex}
+% \input{./styles/style42.tex}
+% \input{./styles/style43.tex}
+% \input{./styles/style50.tex}
+% \input{./styles/style51.tex}
+% \input{./styles/style53.tex}
+%
+
 
 % \section{Introduction}
 % 
@@ -549,6 +605,7 @@ See http://www.latex-project.org/lppl.txt
 %
 % \thispagestyle{headings}
 %
+% \part{IMPLEMENTATION}
 % \chapter{Implementation}
 %
 % \section{Preliminaries}
@@ -6463,6 +6520,8 @@ title font-shape=upshape,
 % \end{macro}
 %
 %    \begin{macrocode}
+\newif\if@lowercase
+\@lowercasetrue
 \cxset{toc name/.code = \def\contentsname{#1},
        toc name before/.store in = \contentsnamebefore@cx,
        toc name after/.store in = \contentsnameafter@cx,
@@ -6471,10 +6530,19 @@ title font-shape=upshape,
        toc name font-family/.store in = \contentsnamefontfamily@cx,
        toc name font-shape/.store in = \contentsnamefontshape@cx,
        toc name color/.store in = \tocnamecolor@cx,
-       toc name afterskip/.store in=\tocnameafterskip@cx
-}
-
-
+       toc name afterskip/.store in=\tocnameafterskip@cx,
+       toc name align/.is choice,
+       toc name align/center/.code=\def\startalign@cx{\center}\def\endalign@cx{\endcenter},
+       toc name align/right/.code=\def\startalign@cx{\flushright}\def\endalign@cx{\endflushright},
+       toc name align/left/.code=\def\startalign@cx{\@empty}\def\endalign@cx{\@empty},
+       toc name align/none/.code=\def\startalign@cx{\@empty}\def\endalign@cx{\@empty},
+       toc name case/.is choice,
+       toc name case/lower/.code=\def\tocnamecase@cx{\@lowercasetrue
+                             \if@lowercase\expandafter\MakeTextLowercase\fi},
+       toc name case/upper/.code=\def\tocnamecase@cx{\@lowercasefalse
+                             \if@lowercase\else\expandafter\MakeTextUppercase \fi},
+      toc name case/none/.code=\def\tocnamecase@cx{\@empty},
+    }
 
 \cxset{toc name= CONTENTS,
        toc name before = ,
@@ -6486,8 +6554,16 @@ title font-shape=upshape,
        toc name font-size=LARGE,
        toc name afterskip=10pt, %set as 40pt in LaTeX
        toc name after=\par,
+       toc name align = left,
+       toc name case= none,
 }
+%    \end{macrocode}
 
+% \begin{macro}{\maketitle@cx}
+%	\cs{maketitle@cx} is the typesetter for the heading that goes on top of the |ToC| page.
+%	We cater for a few hooks, so the code is rather longish. At this point we can also 
+%    divert to any custom design.
+%    \begin{macrocode}
 \newcommand{\maketoctitle@cx}{%
   \addpenalty\@secpenalty
   \if@haschapter@cx
@@ -6502,13 +6578,15 @@ title font-shape=upshape,
     {\contentsnamefontfamily@cx}{\contentsnamefontsize@cx}%
     {\contentsnamefontshape@cx}%
      \color{\tocnamecolor@cx}
-      \center\contentsname\endcenter}{\contentsnameafter@cx}
+     \startalign@cx \tocnamecase@cx
+         \contentsname\endalign@cx}{\contentsnameafter@cx}
     
   \par\nobreak
   \vskip\tocnameafterskip@cx\relax
   \@afterheading}
-}
+ }
 %    \end{macrocode}
+% \end{macro}
 %
 % \begin{macro}{\cftsetpnumwidth}
 % \begin{macro}{\cftsetrmarg}
@@ -6599,6 +6677,143 @@ title font-shape=upshape,
 % \end{macro}
 % \end{macro}
 % \end{macro}
+% \section{Styling the Toc Part}
+% \begin{macro}{\l@part}
+% \begin{macro}{\if@cftdopart}
+% \changes{v1.1}{2000/02/11}{Added \cs{@cftbsnum} and \cs{cftXpresnum} to
+%                            all \cs{\l@X} commands}
+% \changes{v1.1}{2000/02/11}{Added \cs{cftXpresnum} commands}
+%  |\l@part{|\meta{title}|}{|\meta{page}|}| typesets the ToC entry for
+% a |part| heading. It is a parameterised copy of the default |\l@part|
+% (see \file{classes.dtx} for the original definition and the code
+%  below for |\l@subsection| for an explanation of most of this
+%  code). By default, Parts
+% (and Chapters) do not have dotted leaders. This package provides
+% for all entries to have dotted leaders.
+% \changes{v0.2a}{1999/01/24}{In article class, Part level is 0 not -1}
+% \changes{v2.0}{2001/03/03}{Checked directly for \cs{part} definition}
+% \changes{v2.3a}{2002/10/03}{Added \cs{cftpartpresnum} to \cs{l@part}}
+% 
+%    \begin{macrocode}
+\setcounter{tocdepth}{6}
+\def\partname{Part}
+\newif\if@dopart@cx
+\newif\if@haspart@cx
+\@ifundefined{part}{\@haspart@cxfalse}{\@haspart@cxtrue}
+\if@haspart@cx
+\renewcommand*{\l@part}[2]{%
+  \@dopart@cxfalse
+  \ifnum \c@tocdepth >-2\relax
+    \if@haschapter@cx
+      \@dopart@cxtrue
+    \fi
+    \ifnum \c@tocdepth >\m@ne
+      \if@haschapter@cx\else
+        \@dopart@cxtrue
+      \fi
+    \fi
+  \fi
+  \if@dopart@cx
+    \if@haschapter@cx
+      \addpenalty{-\@highpenalty}%
+    \else
+      \addpenalty\@secpenalty
+    \fi
+    \addvspace{\cftbeforepartskip}%
+    \begingroup
+      {\leftskip \cftpartindent\relax
+       \rightskip \@tocrmarg
+       \parfillskip -\rightskip
+       \parindent \cftpartindent\relax\@afterindenttrue
+       \interlinepenalty\@M
+       \leavevmode    
+       \@tempdima \cftpartnumwidth\relax
+       \let\@cftbsnum \cftpartpresnum
+       \let\@cftasnum \cftpartaftersnum
+       \let\@cftasnumb \cftpartaftersnumb
+       \advance\leftskip \@tempdima \null\nobreak\hskip -\leftskip
+       {\cftpartfont \cftpartpresnum #1}%
+       \cftpartfillnum{#2}}
+      \nobreak
+      \if@haschapter@cx
+        \global\@nobreaktrue
+        \everypar{\global\@nobreakfalse\everypar{}}%
+      \else
+        \if@compatibility
+          \global\@nobreaktrue
+          \everypar{\global\@nobreakfalse\everypar{}}%
+        \fi
+      \fi
+    \endgroup
+  \fi}
+\fi
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}{\cftbeforepartskip}
+% \begin{macro}{\cftpartnumwidth}
+% \begin{macro}{\cftpartfont}
+% \begin{macro}{\cftpartpresnum}
+% \begin{macro}{\cftpartaftersnum}
+% \begin{macro}{\cftpartaftersnumb}
+% \begin{macro}{\cftpartleader}
+% \begin{macro}{\cftpartdotsep}
+% \begin{macro}{\cftpartpagefont}
+% \begin{macro}{\cftpartafterpnum}
+% \begin{macro}{\cftpartindent}
+% \begin{macro}{\cftpartfillnum}
+%  These are the user commands to control the typesetting of Part entries.
+%  They are initialised to give the standard appearance.
+% \changes{v2.3a}{2002/10/03}{Deleted \cs{cftpartaftersnum} and \cs{cftpartaftersnumb}}
+% \changes{v2.3b}{2003/01/20}{Reinstated \cs{cftpartaftersnum} and \cs{cftpartaftersnumb}}
+%    \begin{macrocode}
+\if@haspart@cx
+  \newlength{\cftbeforepartskip}
+    \setlength{\cftbeforepartskip}{2.25em \@plus\p@}
+  \newlength{\cftpartnumwidth}
+    \setlength{\cftpartnumwidth}{0em}
+  \newcommand{\cftpartfont}{\large\bfseries}
+  \newcommand{\cftpartpresnum}{}
+  \newcommand{\cftpartaftersnum}{}
+  \newcommand{\cftpartaftersnumb}{}
+  \newcommand{\cftpartleader}{\large\bfseries\cftdotfill{\cftpartdotsep}}
+  \newcommand{\cftpartdotsep}{\cftnodots}
+  \newcommand{\cftpartpagefont}{\large\bfseries}
+  \newcommand{\cftpartafterpnum}{}
+  \newlength{\cftpartindent}
+    \setlength{\cftpartindent}{0em}
+  \newcommand{\cftpartfillnum}[1]{%
+    {\cftpartleader}%
+    {\hb@xt@\@pnumwidth{\hss {\cftpartpagefont #1}}}\cftpartafterpnum\par}
+%    \end{macrocode}
+% \Lpack{koma} classes use some different settings.
+% \changes{v2.3}{2002/06/15}{koma has different part settings}
+%    \begin{macrocode}
+  \if@koma@cx
+    \setlength{\cftpartnumwidth}{2em}
+    \renewcommand{\cftpartfont}{\sectfont\large}
+    \renewcommand{\cftpartpagefont}{\sectfont\large}
+  \fi
+\fi
+
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+%
+
+
+
 
 % \begin{macro}{\beforetocchapterskip@cx}
 % \begin{macro}{\cftchapindent}

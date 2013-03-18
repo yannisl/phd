@@ -12,6 +12,7 @@
 %% See http://www.latex-project.org/lppl.txt
 %% ----------------------------------------------------------------
 %% 
+^^A \input{./sections/cardinal}
 
 \NeedsTeXFormat{LaTeX2e}
 [1994/12/01]%
@@ -3157,6 +3158,8 @@ title font-shape=upshape,
     \endgroup
     \tocfinish@cx
 }
+\newif\if@lowercase
+\@lowercasetrue
 \cxset{toc name/.code = \def\contentsname{#1},
        toc name before/.store in = \contentsnamebefore@cx,
        toc name after/.store in = \contentsnameafter@cx,
@@ -3165,8 +3168,19 @@ title font-shape=upshape,
        toc name font-family/.store in = \contentsnamefontfamily@cx,
        toc name font-shape/.store in = \contentsnamefontshape@cx,
        toc name color/.store in = \tocnamecolor@cx,
-       toc name afterskip/.store in=\tocnameafterskip@cx
-}
+       toc name afterskip/.store in=\tocnameafterskip@cx,
+       toc name align/.is choice,
+       toc name align/center/.code=\def\startalign@cx{\center}\def\endalign@cx{\endcenter},
+       toc name align/right/.code=\def\startalign@cx{\flushright}\def\endalign@cx{\endflushright},
+       toc name align/left/.code=\def\startalign@cx{\@empty}\def\endalign@cx{\@empty},
+       toc name align/none/.code=\def\startalign@cx{\@empty}\def\endalign@cx{\@empty},
+       toc name case/.is choice,
+       toc name case/lower/.code=\def\tocnamecase@cx{\@lowercasetrue
+                             \if@lowercase\expandafter\MakeTextLowercase\fi},
+       toc name case/upper/.code=\def\tocnamecase@cx{\@lowercasefalse
+                             \if@lowercase\else\expandafter\MakeTextUppercase \fi},
+      toc name case/none/.code=\def\tocnamecase@cx{\@empty},
+    }
 
 \cxset{toc name= CONTENTS,
        toc name before = ,
@@ -3178,6 +3192,8 @@ title font-shape=upshape,
        toc name font-size=LARGE,
        toc name afterskip=10pt, %set as 40pt in LaTeX
        toc name after=\par,
+       toc name align = left,
+       toc name case= none,
 }
 
 \newcommand{\maketoctitle@cx}{%
@@ -3194,12 +3210,13 @@ title font-shape=upshape,
     {\contentsnamefontfamily@cx}{\contentsnamefontsize@cx}%
     {\contentsnamefontshape@cx}%
      \color{\tocnamecolor@cx}
-      \center\contentsname\endcenter}{\contentsnameafter@cx}
+     \startalign@cx \tocnamecase@cx
+         \contentsname\endalign@cx}{\contentsnameafter@cx}
 
   \par\nobreak
   \vskip\tocnameafterskip@cx\relax
   \@afterheading}
-}
+ }
 \newcommand{\setpnumwidth@cx}[1]{\renewcommand{\@pnumwidth}{#1}}
 \newcommand{\settocmarg@cx}[1]{\renewcommand{\@tocrmarg}{#1}}
 \setpnumwidth@cx{25pt}
@@ -3221,6 +3238,83 @@ title font-shape=upshape,
 \newcommand{\@cftbsnum}{}
 \newcommand{\@cftasnum}{}
 \newcommand{\@cftasnumb}{}
+\setcounter{tocdepth}{6}
+\def\partname{Part}
+\newif\if@dopart@cx
+\newif\if@haspart@cx
+\@ifundefined{part}{\@haspart@cxfalse}{\@haspart@cxtrue}
+\if@haspart@cx
+\renewcommand*{\l@part}[2]{%
+  \@dopart@cxfalse
+  \ifnum \c@tocdepth >-2\relax
+    \if@haschapter@cx
+      \@dopart@cxtrue
+    \fi
+    \ifnum \c@tocdepth >\m@ne
+      \if@haschapter@cx\else
+        \@dopart@cxtrue
+      \fi
+    \fi
+  \fi
+  \if@dopart@cx
+    \if@haschapter@cx
+      \addpenalty{-\@highpenalty}%
+    \else
+      \addpenalty\@secpenalty
+    \fi
+    \addvspace{\cftbeforepartskip}%
+    \begingroup
+      {\leftskip \cftpartindent\relax
+       \rightskip \@tocrmarg
+       \parfillskip -\rightskip
+       \parindent \cftpartindent\relax\@afterindenttrue
+       \interlinepenalty\@M
+       \leavevmode
+       \@tempdima \cftpartnumwidth\relax
+       \let\@cftbsnum \cftpartpresnum
+       \let\@cftasnum \cftpartaftersnum
+       \let\@cftasnumb \cftpartaftersnumb
+       \advance\leftskip \@tempdima \null\nobreak\hskip -\leftskip
+       {\cftpartfont \cftpartpresnum #1}%
+       \cftpartfillnum{#2}}
+      \nobreak
+      \if@haschapter@cx
+        \global\@nobreaktrue
+        \everypar{\global\@nobreakfalse\everypar{}}%
+      \else
+        \if@compatibility
+          \global\@nobreaktrue
+          \everypar{\global\@nobreakfalse\everypar{}}%
+        \fi
+      \fi
+    \endgroup
+  \fi}
+\fi
+\if@haspart@cx
+  \newlength{\cftbeforepartskip}
+    \setlength{\cftbeforepartskip}{2.25em \@plus\p@}
+  \newlength{\cftpartnumwidth}
+    \setlength{\cftpartnumwidth}{0em}
+  \newcommand{\cftpartfont}{\large\bfseries}
+  \newcommand{\cftpartpresnum}{}
+  \newcommand{\cftpartaftersnum}{}
+  \newcommand{\cftpartaftersnumb}{}
+  \newcommand{\cftpartleader}{\large\bfseries\cftdotfill{\cftpartdotsep}}
+  \newcommand{\cftpartdotsep}{\cftnodots}
+  \newcommand{\cftpartpagefont}{\large\bfseries}
+  \newcommand{\cftpartafterpnum}{}
+  \newlength{\cftpartindent}
+    \setlength{\cftpartindent}{0em}
+  \newcommand{\cftpartfillnum}[1]{%
+    {\cftpartleader}%
+    {\hb@xt@\@pnumwidth{\hss {\cftpartpagefont #1}}}\cftpartafterpnum\par}
+  \if@koma@cx
+    \setlength{\cftpartnumwidth}{2em}
+    \renewcommand{\cftpartfont}{\sectfont\large}
+    \renewcommand{\cftpartpagefont}{\sectfont\large}
+  \fi
+\fi
+
 
 
 \if@haschapter@cx
