@@ -140,6 +140,7 @@ See http://www.latex-project.org/lppl.txt
   hyperindex,
   colorlinks,
   allcolors=theblue, 
+  linktocpage,
   %anchorcolor= blue,
   %filecolor=blue,
   urlcolor= teal,
@@ -150,6 +151,7 @@ See http://www.latex-project.org/lppl.txt
   pdfkeywords={LaTeX package management, document design}
  }
 
+%\usepackage{cleveref}
 
 % add pdfinfo  
 % 
@@ -232,7 +234,7 @@ See http://www.latex-project.org/lppl.txt
        subsection font-shape=,
        subsection align= centering,
        subsection numbering prefix=\thesection.,%\S\hairsp,%add . 
-       subsection numbering custom = \two@digits{\@arabic\c@subsection},%
+       subsection numbering custom =\@arabic\c@subsection,% \two@digits{\@arabic\c@subsection},%
        subsubsection color= thered,
        subsubsection beforeskip=5pt plus3pt minus 2pt,
        subsubsection afterskip=5pt,
@@ -243,7 +245,7 @@ See http://www.latex-project.org/lppl.txt
        subsubsection font-shape= itshape,
        subsubsection align= centering,
        subsubsection numbering prefix = \thesubsection.,
-       subsubsection numbering custom = \two@digits{\@arabic\c@subsubsection},
+       subsubsection numbering custom =, %\two@digits{\@arabic\c@subsubsection},
        subsubsection number after =, 
 %
        paragraph color= thegrey,
@@ -3475,7 +3477,7 @@ ProvidesClass,IfFileExists,RequirePackage,ifthenelse,chapter,includegraphics, ne
 \newcommand{\fref}[1]{\reffigurename@cx~\ref{#1}}
 \newcommand{\tref}[1]{\tablename~\ref{#1}}
 \newcommand{\eref}[1]{equation~\ref{#1}}
-\newcommand{\cref}[1]{chapter~\ref{#1}}
+\@ifundefined{cref}{\newcommand{\cref}[1]{chapter~\ref{#1}}}{}
 \newcommand{\sref}[1]{\refsectionname@cx\ref{#1}}
 \newcommand{\aref}[1]{\refappendixname@cx~\ref{#1}}
 \newcommand{\pref}[1]{\refparagraphname@cx\ref{#1}}
@@ -6568,6 +6570,7 @@ title font-shape=upshape,
   \addpenalty\@secpenalty
   \if@haschapter@cx
     \vspace*{10pt}
+    \pdfbookmark[0]{\contentsname}{toc}%EXPERIMENTAL
   \else
     \vspace{10pt}
   \fi
@@ -6661,7 +6664,6 @@ title font-shape=upshape,
 % \begin{macro}{\@cftasnum}
 % \begin{macro}{\@cftasnumb}
 % \changes{v0.2b}{1999/03/07}{Added empty definitions for @cftasnum and @cftasnumb commands}
-% \changes{v1.1}{2000/02/11}{Added empty definition of \cs{@cftbsnum}}
 % Originally these were not defined but were |\let| to appropriate commands
 % in the |\l@...| commands, but they
 % have to be defined in case something unexpected calls |\numberline|,
@@ -6670,19 +6672,19 @@ title font-shape=upshape,
 % \Lpack{algorithm} packages together.}
 %
 %    \begin{macrocode}
-\newcommand{\@cftbsnum}{}
+\newcommand{\@cftbsnum}{.}
 \newcommand{\@cftasnum}{}
 \newcommand{\@cftasnumb}{}
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
 % \end{macro}
+%
+%
 % \section{Styling the Toc Part}
+
 % \begin{macro}{\l@part}
 % \begin{macro}{\if@cftdopart}
-% \changes{v1.1}{2000/02/11}{Added \cs{@cftbsnum} and \cs{cftXpresnum} to
-%                            all \cs{\l@X} commands}
-% \changes{v1.1}{2000/02/11}{Added \cs{cftXpresnum} commands}
 %  |\l@part{|\meta{title}|}{|\meta{page}|}| typesets the ToC entry for
 % a |part| heading. It is a parameterised copy of the default |\l@part|
 % (see \file{classes.dtx} for the original definition and the code
@@ -6690,17 +6692,37 @@ title font-shape=upshape,
 %  code). By default, Parts
 % (and Chapters) do not have dotted leaders. This package provides
 % for all entries to have dotted leaders.
-% \changes{v0.2a}{1999/01/24}{In article class, Part level is 0 not -1}
-% \changes{v2.0}{2001/03/03}{Checked directly for \cs{part} definition}
-% \changes{v2.3a}{2002/10/03}{Added \cs{cftpartpresnum} to \cs{l@part}}
-% 
+% In article class, Part level is 0 not -1 and hence the conditional below.
+%	
+%	We start by defining a number of keys and macros to store parameters.
+%	An entry to the ToC consists always of a section number, the title and 
+%	a page number. For each part there are different styling keys.
+%
+%	\begin{macro}{\tocpartindent@cx}	 
 %    \begin{macrocode}
-\setcounter{tocdepth}{6}
-\def\partname{Part}
+\cxset{toc part indent/.store in = \tocpartindent@cx,
+       toc part numwidth/.store in = \tocpartnumwidth@cx,
+       toc part font-size/.store in =\tocpartfontsize@cx,
+       toc part before number/.store in = \tocpartbeforenumber@cx,
+       toc part beforeskip/.store in = \tocpartbeforeskip@cx,
+       toc part page font-size/.store in=\tocpartpagefontsize@cx,
+       }
+\cxset{toc part beforeskip = 2.25em \@plus\p@,
+       toc part indent=0pt,
+       toc part numwidth=0em,
+       toc part font-size=\large\bfseries\sffamily,
+       toc part before number=\kern1.5pt,
+       toc part page font-size=\bfseries}
+%    \end{macrocode}
+% \end{macro}
+%
+%    \begin{macrocode}
 \newif\if@dopart@cx
 \newif\if@haspart@cx
 \@ifundefined{part}{\@haspart@cxfalse}{\@haspart@cxtrue}
 \if@haspart@cx
+
+
 \renewcommand*{\l@part}[2]{%
   \@dopart@cxfalse
   \ifnum \c@tocdepth >-2\relax
@@ -6719,30 +6741,35 @@ title font-shape=upshape,
     \else
       \addpenalty\@secpenalty
     \fi
-    \addvspace{\cftbeforepartskip}%
+%    \end{macrocode}
+%
+%	We add vertical spacing before the section if
+%	required.
+%    \begin{macrocode}
+    \addvspace{\tocpartbeforeskip@cx}%
     \begingroup
-      {\leftskip \cftpartindent\relax
-       \rightskip \@tocrmarg
+      {\leftskip \tocpartindent@cx\relax
+       \rightskip \@tocrmarg % need to check this for conflics\@tocrmarg
        \parfillskip -\rightskip
-       \parindent \cftpartindent\relax\@afterindenttrue
+       \parindent \tocpartindent@cx\relax
+       \@afterindenttrue
        \interlinepenalty\@M
        \leavevmode    
-       \@tempdima \cftpartnumwidth\relax
-       \let\@cftbsnum \cftpartpresnum
-       \let\@cftasnum \cftpartaftersnum
-       \let\@cftasnumb \cftpartaftersnumb
+       \@tempdima \tocpartnumwidth@cx\relax
+%       \let\@cftbsnum \cftpartpresnum
+%       \let\@cftasnum \cftpartaftersnum
+%       \let\@cftasnumb \cftpartaftersnumb
        \advance\leftskip \@tempdima \null\nobreak\hskip -\leftskip
-       {\cftpartfont \cftpartpresnum #1}%
-       \cftpartfillnum{#2}}
+       %
+       {\tocpartfontsize@cx 
+       \tocpartbeforenumber@cx #1}%
+       \cftpartfillnum{#2}}%
       \nobreak
       \if@haschapter@cx
         \global\@nobreaktrue
         \everypar{\global\@nobreakfalse\everypar{}}%
       \else
-        \if@compatibility
-          \global\@nobreaktrue
-          \everypar{\global\@nobreakfalse\everypar{}}%
-        \fi
+	  % removed compatibility stuff here don't care for earlier versions     
       \fi
     \endgroup
   \fi}
@@ -6769,29 +6796,32 @@ title font-shape=upshape,
 % \changes{v2.3b}{2003/01/20}{Reinstated \cs{cftpartaftersnum} and \cs{cftpartaftersnumb}}
 %    \begin{macrocode}
 \if@haspart@cx
-  \newlength{\cftbeforepartskip}
-    \setlength{\cftbeforepartskip}{2.25em \@plus\p@}
-  \newlength{\cftpartnumwidth}
-    \setlength{\cftpartnumwidth}{0em}
-  \newcommand{\cftpartfont}{\large\bfseries}
+%  \newlength{\cftbeforepartskip}
+%    \setlength{\cftbeforepartskip}{2.25em \@plus\p@}
+%  \newlength{\cftpartnumwidth}
+%    \setlength{\cftpartnumwidth}{0em}
+%  \newcommand{\cftpartfont}{\large\bfseries}
   \newcommand{\cftpartpresnum}{}
   \newcommand{\cftpartaftersnum}{}
   \newcommand{\cftpartaftersnumb}{}
-  \newcommand{\cftpartleader}{\large\bfseries\cftdotfill{\cftpartdotsep}}
+%
+% 
+  \newcommand{\cftpartleader}{\large\bfseries\dotfill@cx{\cftpartdotsep}}
+  \def\cftnodots{10000}
   \newcommand{\cftpartdotsep}{\cftnodots}
   \newcommand{\cftpartpagefont}{\large\bfseries}
   \newcommand{\cftpartafterpnum}{}
-  \newlength{\cftpartindent}
-    \setlength{\cftpartindent}{0em}
+%  \newlength{\cftpartindent}
+%    \setlength{\cftpartindent}{0em}
   \newcommand{\cftpartfillnum}[1]{%
     {\cftpartleader}%
-    {\hb@xt@\@pnumwidth{\hss {\cftpartpagefont #1}}}\cftpartafterpnum\par}
+    {\hb@xt@\@pnumwidth{\hss {%
+       \tocpartpagefontsize@cx #1}}}\cftpartafterpnum\par}%
 %    \end{macrocode}
 % \Lpack{koma} classes use some different settings.
-% \changes{v2.3}{2002/06/15}{koma has different part settings}
-%    \begin{macrocode}
+%   \begin{macrocode}
   \if@koma@cx
-    \setlength{\cftpartnumwidth}{2em}
+    \setlength{\partnumwidth@cx}{2em}
     \renewcommand{\cftpartfont}{\sectfont\large}
     \renewcommand{\cftpartpagefont}{\sectfont\large}
   \fi
@@ -6848,15 +6878,16 @@ title font-shape=upshape,
 %	The following code determines the spacing of he dots.
 %    \begin{macrocode}
   \newcommand{\cftchapdotsep}{\chapterdotsep@cx} 
-  \newcommand{\cftchappagefont}{[\sffamily\bfseries\color{red}}
-  \newcommand{\cftchapafterpnum}{]}
+  \newcommand{\cftchappagefont}{\sffamily\bfseries\color{teal}}
+  \newcommand{\cftchapafterpnum}{}
+%
   \newcommand{\cftchapfillnum}[1]{%
     {\cftchapleader}\nobreak
     \hb@xt@\@pnumwidth{\hfil\cftchappagefont #1}\cftchapafterpnum\par}
 %    \end{macrocode}
+%    \begin{macrocode}
 % \Lpack{koma} classes have different chapter settings.
-% \changes{v2.3}{2002/06/15}{koma has different chapter settings}
-%%    \begin{macrocode}
+%    \begin{macrocode}
 %  \if@cftkoma
 %    \renewcommand{\cftchapfont}{\sectfont}
 %  \fi
@@ -6883,7 +6914,7 @@ title font-shape=upshape,
 %    \begin{macrocode}
 
 \renewcommand{\numberline}[1]{% 
-  \hb@xt@\@tempdima{[#1]\hfil}}
+  \hb@xt@\@tempdima{#1\hfil}}
 
 
 \cxset{toc chapter beforeskip/.store in=\beforetocchapterskip@cx,
@@ -6894,12 +6925,12 @@ title font-shape=upshape,
        toc chapter font/.store in=\tocchapterfont@cx}
 
 
-\cxset{toc chapter beforeskip =40pt,
+\cxset{toc chapter beforeskip =10pt,
        toc chapter indent= 0pt,
        toc chapter dotsep=4.5,
        toc chapter no dots,
-       toc chapter numberwidth=15pt,
-       toc chapter font= \bfseries\sffamily\large}
+       toc chapter numberwidth=25pt,
+       toc chapter font= \bfseries\sffamily\large\color{teal}}
 
 \if@haschapter@cx
 \renewcommand*{\l@chapter}[2]{%
@@ -6924,7 +6955,252 @@ title font-shape=upshape,
 %    \end{macrocode}
 % \end{macro}
 %
+% \section{ToC section hooks}
+% \begin{macro}{\l@section}
+%  |\l@section{|\meta{title}|}{|\meta{page}|}| typesets the ToC entry for
+% a |section| heading. It is a parameterised copy of the default |\l@section|
+% (see \file{classes.dtx} for the original definition). 
+% 	We start by defining all our parameters and variables.
+%
+%    \begin{macrocode}
+\cxset{toc section beforeskip/.store in=\tocsectionbeforeskip@cx,
+       toc section indent/.store in=\tocsectionindent@cx,
+%      fonts for title &num
+       toc section font-size/.store in=\tocsectionfontsize@cx, 
+       toc section font-family/.store in=\tocsectionfontfamily@cx, 
+       toc section font-shape/.store in=\tocsectionfontshape@cx, 
+       toc section font-weight/.store in=\tocsectionfontweight@cx, 
+       toc section color/.store in=\tocsectioncolor@cx,
+       toc section numwidth/.store in=\tocsectionnumwidth@cx,
+%	  fonts etc for page number
+       toc section page font-size/.store in=\tocsectionpagefontsize@cx,
+       toc section page font-family/.store in=\tocsectionpagefontfamily@cx,
+       toc section page font-shape/.store in=\tocsectionpagefontshape@cx,
+       toc section page font-weight/.store in=\tocsectionpagefonteight@cx,
+       toc section page color/.store in=\tocsectionpagecolor@cx,
+%      leaders
+	   toc section dotsep/.store in = \tocsecdotsep@cx,
+%      before and after page number
+       toc section page before/.store in=\tocsectionpagebefore@cx,
+       toc section page after/.store in=\tocsectionpageafter@cx,
+}
 
+\cxset{toc section beforeskip=\z@ \@plus.2\p@,
+       toc section indent=0em,
+       toc section font-family= sffamily,
+       toc section font-weight = mdseries,
+       toc section font-shape = upshape,
+       toc section color= teal,
+       toc section font-size=,
+       toc section numwidth = 2.8em,
+       toc section page font-size=,
+       toc section page font-shape= upshape,  
+       toc section page font-weight=, 
+       toc section page font-family= sffamily,
+       toc section page color = teal, 
+       toc section page before =,% \{,
+       toc section page after =,% \},
+       toc section dotsep = 2.7,
+}
+%    \end{macrocode}
+%
+%    For convenience we define font setting commands for
+%    the page number. We use \cs{setfont@cx}, which we have
+%	defined earlier.
+%    
+%    \begin{macrocode}
+\newcommand\tocsectionpagefont@cx{%
+	\setfont@cx{\tocsectionpagefonteight@cx}%
+       {\tocsectionpagefontfamily@cx}{\tocsectionpagefontsize@cx}%
+       {\tocsectionpagefontshape@cx}\color{\tocsectionpagecolor@cx}
+}%
+        
+
+\renewcommand*{\l@section}[2]{%
+  \ifnum \c@tocdepth >\z@
+    \if@haschapter@cx
+      \vskip \tocsectionbeforeskip@cx
+    \else
+      \addpenalty \@secpenalty
+      \addvspace{\tocsectionbeforeskip@cx}%
+    \fi
+    {\leftskip \tocsectionindent@cx\relax
+     \rightskip \@tocrmarg
+     \parfillskip -\rightskip
+     \parindent \tocsectionindent@cx\relax\@afterindenttrue
+     \interlinepenalty\@M
+     \leavevmode
+     \@tempdima \tocsectionnumwidth@cx\relax
+     \let\@cftbsnum \cftsecpresnum
+     \let\@cftasnum \cftsecaftersnum
+     \let\@cftasnumb \cftsecaftersnumb
+     \advance\leftskip \@tempdima \null\nobreak\hskip -\leftskip
+%    \end{macrocode}
+%
+%	We are now ready to print out the toc section title,
+%	we set the font information then typeset the title.
+%	The dot leaders are typeset by calling the macro \cs{sectionfillnum}
+%
+%    \begin{macrocode}
+     {%
+      \setfont@cx{\tocsectionfontweight@cx}%
+        {\tocsectionfontfamily@cx}{\tocsectionfontsize@cx}%
+        {\tocsectionfontshape@cx}%
+        \color{\tocsectioncolor@cx}%
+      #1}\nobreak
+%    \end{macrocode}
+%	We are now ready to typeset the leaders and the page number. 
+%    We then pass \#2 to the \cs{tocsectionfillnum} which 
+%	does the typesetting.
+%    \begin{macrocode}
+      \tocsectionfillnum{#2}}%
+  \fi}
+%    \end{macrocode}
+% \end{macro}
+%
+%    These are the user commands to control the typesetting of Section entries.
+%    They are initialised to give the standard appearance.
+%    \begin{macrocode}
+% hooks to |\numberline|
+\newcommand{\cftsecpresnum}{.}
+\newcommand{\cftsecaftersnum}{..}
+\newcommand{\cftsecaftersnumb}{...}
+\newcommand{\tocsectionleader}{\normalfont\dotfill@cx{\tocsecdotsep@cx}}
+%\newcommand{\cftsecdotsep}{\cftdotsep}
+%    \end{macrocode}
+%    We can now define the command \cmd{\tocsectionfillnum}. It will print the 
+%	leaders if any and the page number \#1. TODO IS par necessary??
+%    \begin{macrocode}
+\newcommand{\tocsectionfillnum}[1]{%
+  {\tocsectionleader}\nobreak
+  \hb@xt@\@pnumwidth{\hfil\tocsectionpagefont@cx
+   \tocsectionpagebefore@cx #1}%
+   \tocsectionpageafter@cx\par}%
+%    \end{macrocode}
+%
+%
+% \section{Toc subsection styling}
+% \begin{macro}{\l@subsection}
+%  |\l@subsection{|\meta{title}|}{|\meta{page}|}| typesets the ToC entry for
+% a |section| heading. It is a parameterised copy of the default |\l@section|
+% (see \file{classes.dtx} for the original definition). 
+% 	We start by defining all our parameters and variables.
+%
+%    \begin{macrocode}
+\cxset{toc subsection beforeskip/.store in=\tocsectionbeforeskip@cx,
+       toc subsection indent/.store in=\tocsectionindent@cx,
+%      fonts for title &num
+       toc subsection font-size/.store in=\tocsectionfontsize@cx, 
+       toc subsection font-family/.store in=\tocsectionfontfamily@cx, 
+       toc subsection font-shape/.store in=\tocsectionfontshape@cx, 
+       toc subsection font-weight/.store in=\tocsectionfontweight@cx, 
+       toc subsection color/.store in=\tocsectioncolor@cx,
+       toc subsection numwidth/.store in=\tocsectionnumwidth@cx,
+%	  fonts etc for page number
+       toc subsection page font-size/.store in=\tocsectionpagefontsize@cx,
+       toc subsection page font-family/.store in=\tocsectionpagefontfamily@cx,
+       toc subsection page font-shape/.store in=\tocsectionpagefontshape@cx,
+       toc subsection page font-weight/.store in=\tocsectionpagefonteight@cx,
+       toc subsection page color/.store in=\tocsectionpagecolor@cx,
+%      leaders
+	   toc subsection dotsep/.store in = \tocsecdotsep@cx,
+%      before and after page number
+       toc subsection page before/.store in=\tocsectionpagebefore@cx,
+       toc subsection page after/.store in=\tocsectionpageafter@cx,
+}
+
+\cxset{toc subsection beforeskip=\z@ \@plus.2\p@,
+       toc subsection indent=0em,
+       toc subsection font-family= sffamily,
+       toc subsection font-weight = mdseries,
+       toc subsection font-shape = upshape,
+       toc subsection color= teal,
+       toc subsection font-size=,
+       toc subsection numwidth = 2.8em,
+       toc subsection page font-size=,
+       toc subsection page font-shape= upshape,  
+       toc subsection page font-weight=, 
+       toc subsection page font-family= sffamily,
+       toc subsection page color = teal, 
+       toc subsection page before =,% \{,
+       toc subsection page after =,% \},
+       toc subsection dotsep = 2.7,
+}
+%    \end{macrocode}
+%
+%    For convenience we define font setting commands for
+%    the page number. We use \cs{setfont@cx}, which we have
+%	defined earlier.
+%    
+%    \begin{macrocode}
+\newcommand\tocsectionpagefont@cx{%
+	\setfont@cx{\tocsectionpagefonteight@cx}%
+       {\tocsectionpagefontfamily@cx}{\tocsectionpagefontsize@cx}%
+       {\tocsectionpagefontshape@cx}\color{\tocsectionpagecolor@cx}
+}%
+        
+
+\renewcommand*{\l@subsection}[2]{%
+  \ifnum \c@tocdepth >\z@
+    \if@haschapter@cx
+      \vskip \tocsectionbeforeskip@cx
+    \else
+      \addpenalty \@secpenalty
+      \addvspace{\tocsectionbeforeskip@cx}%
+    \fi
+    {\leftskip \tocsectionindent@cx\relax
+     \rightskip \@tocrmarg
+     \parfillskip -\rightskip
+     \parindent \tocsectionindent@cx\relax\@afterindenttrue
+     \interlinepenalty\@M
+     \leavevmode
+     \@tempdima \tocsectionnumwidth@cx\relax
+     \let\@cftbsnum \cftsecpresnum
+     \let\@cftasnum \cftsecaftersnum
+     \let\@cftasnumb \cftsecaftersnumb
+     \advance\leftskip \@tempdima \null\nobreak\hskip -\leftskip
+%    \end{macrocode}
+%
+%	We are now ready to print out the toc subsection title,
+%	we set the font information then typeset the title.
+%	The dot leaders are typeset by calling the macro \cs{sectionfillnum}
+%
+%    \begin{macrocode}
+     {%
+      \setfont@cx{\tocsectionfontweight@cx}%
+        {\tocsectionfontfamily@cx}{\tocsectionfontsize@cx}%
+        {\tocsectionfontshape@cx}%
+        \color{\tocsectioncolor@cx}%
+      #1}\nobreak
+%    \end{macrocode}
+%	We are now ready to typeset the leaders and the page number. 
+%    We then pass \#2 to the \cs{tocsectionfillnum} which 
+%	does the typesetting.
+%    \begin{macrocode}
+      \tocsectionfillnum{#2}}%
+  \fi}
+%    \end{macrocode}
+% \end{macro}
+%
+%    These are the user commands to control the typesetting of Section entries.
+%    They are initialised to give the standard appearance.
+%    \begin{macrocode}
+% hooks to |\numberline|
+\newcommand{\cftsecpresnum}{.}
+\newcommand{\cftsecaftersnum}{..}
+\newcommand{\cftsecaftersnumb}{...}
+\newcommand{\tocsectionleader}{\normalfont\dotfill@cx{\tocsecdotsep@cx}}
+%\newcommand{\cftsecdotsep}{\cftdotsep}
+%    \end{macrocode}
+%    We can now define the command \cmd{\tocsectionfillnum}. It will print the 
+%	leaders if any and the page number \#1. TODO IS par necessary??
+%    \begin{macrocode}
+\newcommand{\tocsectionfillnum}[1]{%
+  {\tocsectionleader}\nobreak
+  \hb@xt@\@pnumwidth{\hfil\tocsectionpagefont@cx
+   \tocsectionpagebefore@cx #1}%
+   \tocsectionpageafter@cx\par}%
+%    \end{macrocode}
 %
 %\iffalse
 %</package>

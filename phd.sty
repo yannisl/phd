@@ -925,7 +925,7 @@ ProvidesClass,IfFileExists,RequirePackage,ifthenelse,chapter,includegraphics, ne
 \newcommand{\fref}[1]{\reffigurename@cx~\ref{#1}}
 \newcommand{\tref}[1]{\tablename~\ref{#1}}
 \newcommand{\eref}[1]{equation~\ref{#1}}
-\newcommand{\cref}[1]{chapter~\ref{#1}}
+\@ifundefined{cref}{\newcommand{\cref}[1]{chapter~\ref{#1}}}{}
 \newcommand{\sref}[1]{\refsectionname@cx\ref{#1}}
 \newcommand{\aref}[1]{\refappendixname@cx~\ref{#1}}
 \newcommand{\pref}[1]{\refparagraphname@cx\ref{#1}}
@@ -3200,6 +3200,7 @@ title font-shape=upshape,
   \addpenalty\@secpenalty
   \if@haschapter@cx
     \vspace*{10pt}
+    \pdfbookmark[0]{\contentsname}{toc}%EXPERIMENTAL
   \else
     \vspace{10pt}
   \fi
@@ -3235,15 +3236,28 @@ title font-shape=upshape,
 \newcommand{\cftparfillskip}{\parfillskip=0pt plus1fil}
 \renewcommand{\numberline}[1]{%
   \hb@xt@\@tempdima{\@cftbsnum #1\@cftasnum\hfil}\@cftasnumb}
-\newcommand{\@cftbsnum}{}
+\newcommand{\@cftbsnum}{.}
 \newcommand{\@cftasnum}{}
 \newcommand{\@cftasnumb}{}
-\setcounter{tocdepth}{6}
-\def\partname{Part}
+
+\cxset{toc part indent/.store in = \tocpartindent@cx,
+       toc part numwidth/.store in = \tocpartnumwidth@cx,
+       toc part font-size/.store in =\tocpartfontsize@cx,
+       toc part before number/.store in = \tocpartbeforenumber@cx,
+       toc part beforeskip/.store in = \tocpartbeforeskip@cx,
+       toc part page font-size/.store in=\tocpartpagefontsize@cx,
+       }
+\cxset{toc part beforeskip = 2.25em \@plus\p@,
+       toc part indent=0pt,
+       toc part numwidth=0em,
+       toc part font-size=\large\bfseries\sffamily,
+       toc part before number=\kern1.5pt,
+       toc part page font-size=\bfseries}
 \newif\if@dopart@cx
 \newif\if@haspart@cx
 \@ifundefined{part}{\@haspart@cxfalse}{\@haspart@cxtrue}
 \if@haspart@cx
+
 \renewcommand*{\l@part}[2]{%
   \@dopart@cxfalse
   \ifnum \c@tocdepth >-2\relax
@@ -3262,54 +3276,46 @@ title font-shape=upshape,
     \else
       \addpenalty\@secpenalty
     \fi
-    \addvspace{\cftbeforepartskip}%
+    \addvspace{\tocpartbeforeskip@cx}%
     \begingroup
-      {\leftskip \cftpartindent\relax
-       \rightskip \@tocrmarg
+      {\leftskip \tocpartindent@cx\relax
+       \rightskip \@tocrmarg % need to check this for conflics\@tocrmarg
        \parfillskip -\rightskip
-       \parindent \cftpartindent\relax\@afterindenttrue
+       \parindent \tocpartindent@cx\relax
+       \@afterindenttrue
        \interlinepenalty\@M
        \leavevmode
-       \@tempdima \cftpartnumwidth\relax
-       \let\@cftbsnum \cftpartpresnum
-       \let\@cftasnum \cftpartaftersnum
-       \let\@cftasnumb \cftpartaftersnumb
+       \@tempdima \tocpartnumwidth@cx\relax
        \advance\leftskip \@tempdima \null\nobreak\hskip -\leftskip
-       {\cftpartfont \cftpartpresnum #1}%
-       \cftpartfillnum{#2}}
+       %
+       {\tocpartfontsize@cx
+       \tocpartbeforenumber@cx #1}%
+       \cftpartfillnum{#2}}%
       \nobreak
       \if@haschapter@cx
         \global\@nobreaktrue
         \everypar{\global\@nobreakfalse\everypar{}}%
       \else
-        \if@compatibility
-          \global\@nobreaktrue
-          \everypar{\global\@nobreakfalse\everypar{}}%
-        \fi
+  % removed compatibility stuff here don't care for earlier versions
       \fi
     \endgroup
   \fi}
 \fi
 \if@haspart@cx
-  \newlength{\cftbeforepartskip}
-    \setlength{\cftbeforepartskip}{2.25em \@plus\p@}
-  \newlength{\cftpartnumwidth}
-    \setlength{\cftpartnumwidth}{0em}
-  \newcommand{\cftpartfont}{\large\bfseries}
   \newcommand{\cftpartpresnum}{}
   \newcommand{\cftpartaftersnum}{}
   \newcommand{\cftpartaftersnumb}{}
-  \newcommand{\cftpartleader}{\large\bfseries\cftdotfill{\cftpartdotsep}}
+  \newcommand{\cftpartleader}{\large\bfseries\dotfill@cx{\cftpartdotsep}}
+  \def\cftnodots{10000}
   \newcommand{\cftpartdotsep}{\cftnodots}
   \newcommand{\cftpartpagefont}{\large\bfseries}
   \newcommand{\cftpartafterpnum}{}
-  \newlength{\cftpartindent}
-    \setlength{\cftpartindent}{0em}
   \newcommand{\cftpartfillnum}[1]{%
     {\cftpartleader}%
-    {\hb@xt@\@pnumwidth{\hss {\cftpartpagefont #1}}}\cftpartafterpnum\par}
+    {\hb@xt@\@pnumwidth{\hss {%
+       \tocpartpagefontsize@cx #1}}}\cftpartafterpnum\par}%
   \if@koma@cx
-    \setlength{\cftpartnumwidth}{2em}
+    \setlength{\partnumwidth@cx}{2em}
     \renewcommand{\cftpartfont}{\sectfont\large}
     \renewcommand{\cftpartpagefont}{\sectfont\large}
   \fi
@@ -3331,17 +3337,16 @@ title font-shape=upshape,
   \newcommand{\cftchapleader}{\bfseries\dotfill@cx{\cftchapdotsep}}
 
   \newcommand{\cftchapdotsep}{\chapterdotsep@cx}
-  \newcommand{\cftchappagefont}{[\sffamily\bfseries\color{red}}
-  \newcommand{\cftchapafterpnum}{]}
+  \newcommand{\cftchappagefont}{\sffamily\bfseries\color{teal}}
+  \newcommand{\cftchapafterpnum}{}
   \newcommand{\cftchapfillnum}[1]{%
     {\cftchapleader}\nobreak
     \hb@xt@\@pnumwidth{\hfil\cftchappagefont #1}\cftchapafterpnum\par}
-%%    \begin{macrocode}
 \fi
 
 
 \renewcommand{\numberline}[1]{%
-  \hb@xt@\@tempdima{[#1]\hfil}}
+  \hb@xt@\@tempdima{#1\hfil}}
 
 \cxset{toc chapter beforeskip/.store in=\beforetocchapterskip@cx,
        toc chapter indent/.store in = \tocchapterindent@cx,
@@ -3350,12 +3355,12 @@ title font-shape=upshape,
        toc chapter numberwidth/.store in = \tocchapternumberwidth@cx,
        toc chapter font/.store in=\tocchapterfont@cx}
 
-\cxset{toc chapter beforeskip =40pt,
+\cxset{toc chapter beforeskip =10pt,
        toc chapter indent= 0pt,
        toc chapter dotsep=4.5,
        toc chapter no dots,
-       toc chapter numberwidth=15pt,
-       toc chapter font= \bfseries\sffamily\large}
+       toc chapter numberwidth=25pt,
+       toc chapter font= \bfseries\sffamily\large\color{teal}}
 
 \if@haschapter@cx
 \renewcommand*{\l@chapter}[2]{%
@@ -3377,7 +3382,160 @@ title font-shape=upshape,
      \cftchapfillnum{#2}}%
   \fi}%
 \fi
+\cxset{toc section beforeskip/.store in=\tocsectionbeforeskip@cx,
+       toc section indent/.store in=\tocsectionindent@cx,
+       toc section font-size/.store in=\tocsectionfontsize@cx,
+       toc section font-family/.store in=\tocsectionfontfamily@cx,
+       toc section font-shape/.store in=\tocsectionfontshape@cx,
+       toc section font-weight/.store in=\tocsectionfontweight@cx,
+       toc section color/.store in=\tocsectioncolor@cx,
+       toc section numwidth/.store in=\tocsectionnumwidth@cx,
+       toc section page font-size/.store in=\tocsectionpagefontsize@cx,
+       toc section page font-family/.store in=\tocsectionpagefontfamily@cx,
+       toc section page font-shape/.store in=\tocsectionpagefontshape@cx,
+       toc section page font-weight/.store in=\tocsectionpagefonteight@cx,
+       toc section page color/.store in=\tocsectionpagecolor@cx,
+   toc section dotsep/.store in = \tocsecdotsep@cx,
+       toc section page before/.store in=\tocsectionpagebefore@cx,
+       toc section page after/.store in=\tocsectionpageafter@cx,
+}
 
+\cxset{toc section beforeskip=\z@ \@plus.2\p@,
+       toc section indent=0em,
+       toc section font-family= sffamily,
+       toc section font-weight = mdseries,
+       toc section font-shape = upshape,
+       toc section color= teal,
+       toc section font-size=,
+       toc section numwidth = 2.8em,
+       toc section page font-size=,
+       toc section page font-shape= upshape,
+       toc section page font-weight=,
+       toc section page font-family= sffamily,
+       toc section page color = teal,
+       toc section page before =,% \{,
+       toc section page after =,% \},
+       toc section dotsep = 2.7,
+}
+\newcommand\tocsectionpagefont@cx{%
+\setfont@cx{\tocsectionpagefonteight@cx}%
+       {\tocsectionpagefontfamily@cx}{\tocsectionpagefontsize@cx}%
+       {\tocsectionpagefontshape@cx}\color{\tocsectionpagecolor@cx}
+}%
+
+\renewcommand*{\l@section}[2]{%
+  \ifnum \c@tocdepth >\z@
+    \if@haschapter@cx
+      \vskip \tocsectionbeforeskip@cx
+    \else
+      \addpenalty \@secpenalty
+      \addvspace{\tocsectionbeforeskip@cx}%
+    \fi
+    {\leftskip \tocsectionindent@cx\relax
+     \rightskip \@tocrmarg
+     \parfillskip -\rightskip
+     \parindent \tocsectionindent@cx\relax\@afterindenttrue
+     \interlinepenalty\@M
+     \leavevmode
+     \@tempdima \tocsectionnumwidth@cx\relax
+     \let\@cftbsnum \cftsecpresnum
+     \let\@cftasnum \cftsecaftersnum
+     \let\@cftasnumb \cftsecaftersnumb
+     \advance\leftskip \@tempdima \null\nobreak\hskip -\leftskip
+     {%
+      \setfont@cx{\tocsectionfontweight@cx}%
+        {\tocsectionfontfamily@cx}{\tocsectionfontsize@cx}%
+        {\tocsectionfontshape@cx}%
+        \color{\tocsectioncolor@cx}%
+      #1}\nobreak
+      \tocsectionfillnum{#2}}%
+  \fi}
+\newcommand{\cftsecpresnum}{.}
+\newcommand{\cftsecaftersnum}{..}
+\newcommand{\cftsecaftersnumb}{...}
+\newcommand{\tocsectionleader}{\normalfont\dotfill@cx{\tocsecdotsep@cx}}
+\newcommand{\tocsectionfillnum}[1]{%
+  {\tocsectionleader}\nobreak
+  \hb@xt@\@pnumwidth{\hfil\tocsectionpagefont@cx
+   \tocsectionpagebefore@cx #1}%
+   \tocsectionpageafter@cx\par}%
+\cxset{toc subsection beforeskip/.store in=\tocsectionbeforeskip@cx,
+       toc subsection indent/.store in=\tocsectionindent@cx,
+       toc subsection font-size/.store in=\tocsectionfontsize@cx,
+       toc subsection font-family/.store in=\tocsectionfontfamily@cx,
+       toc subsection font-shape/.store in=\tocsectionfontshape@cx,
+       toc subsection font-weight/.store in=\tocsectionfontweight@cx,
+       toc subsection color/.store in=\tocsectioncolor@cx,
+       toc subsection numwidth/.store in=\tocsectionnumwidth@cx,
+       toc subsection page font-size/.store in=\tocsectionpagefontsize@cx,
+       toc subsection page font-family/.store in=\tocsectionpagefontfamily@cx,
+       toc subsection page font-shape/.store in=\tocsectionpagefontshape@cx,
+       toc subsection page font-weight/.store in=\tocsectionpagefonteight@cx,
+       toc subsection page color/.store in=\tocsectionpagecolor@cx,
+   toc subsection dotsep/.store in = \tocsecdotsep@cx,
+       toc subsection page before/.store in=\tocsectionpagebefore@cx,
+       toc subsection page after/.store in=\tocsectionpageafter@cx,
+}
+
+\cxset{toc subsection beforeskip=\z@ \@plus.2\p@,
+       toc subsection indent=0em,
+       toc subsection font-family= sffamily,
+       toc subsection font-weight = mdseries,
+       toc subsection font-shape = upshape,
+       toc subsection color= teal,
+       toc subsection font-size=,
+       toc subsection numwidth = 2.8em,
+       toc subsection page font-size=,
+       toc subsection page font-shape= upshape,
+       toc subsection page font-weight=,
+       toc subsection page font-family= sffamily,
+       toc subsection page color = teal,
+       toc subsection page before =,% \{,
+       toc subsection page after =,% \},
+       toc subsection dotsep = 2.7,
+}
+\newcommand\tocsectionpagefont@cx{%
+\setfont@cx{\tocsectionpagefonteight@cx}%
+       {\tocsectionpagefontfamily@cx}{\tocsectionpagefontsize@cx}%
+       {\tocsectionpagefontshape@cx}\color{\tocsectionpagecolor@cx}
+}%
+
+\renewcommand*{\l@subsection}[2]{%
+  \ifnum \c@tocdepth >\z@
+    \if@haschapter@cx
+      \vskip \tocsectionbeforeskip@cx
+    \else
+      \addpenalty \@secpenalty
+      \addvspace{\tocsectionbeforeskip@cx}%
+    \fi
+    {\leftskip \tocsectionindent@cx\relax
+     \rightskip \@tocrmarg
+     \parfillskip -\rightskip
+     \parindent \tocsectionindent@cx\relax\@afterindenttrue
+     \interlinepenalty\@M
+     \leavevmode
+     \@tempdima \tocsectionnumwidth@cx\relax
+     \let\@cftbsnum \cftsecpresnum
+     \let\@cftasnum \cftsecaftersnum
+     \let\@cftasnumb \cftsecaftersnumb
+     \advance\leftskip \@tempdima \null\nobreak\hskip -\leftskip
+     {%
+      \setfont@cx{\tocsectionfontweight@cx}%
+        {\tocsectionfontfamily@cx}{\tocsectionfontsize@cx}%
+        {\tocsectionfontshape@cx}%
+        \color{\tocsectioncolor@cx}%
+      #1}\nobreak
+      \tocsectionfillnum{#2}}%
+  \fi}
+\newcommand{\cftsecpresnum}{.}
+\newcommand{\cftsecaftersnum}{..}
+\newcommand{\cftsecaftersnumb}{...}
+\newcommand{\tocsectionleader}{\normalfont\dotfill@cx{\tocsecdotsep@cx}}
+\newcommand{\tocsectionfillnum}[1]{%
+  {\tocsectionleader}\nobreak
+  \hb@xt@\@pnumwidth{\hfil\tocsectionpagefont@cx
+   \tocsectionpagebefore@cx #1}%
+   \tocsectionpageafter@cx\par}%
 
 \endinput
 %%
