@@ -111,6 +111,9 @@ See http://www.latex-project.org/lppl.txt
     marginparsep=5mm,marginparwidth=10mm,
     %headheight=0mm,headsep=0cm,
     footskip=1.5cm,includeheadfoot}
+
+\savegeometry{std}
+
 \setcounter{secnumdepth}{6}
 \usepackage[T1]{fontenc}
 %\usepackage{libertine}
@@ -233,8 +236,8 @@ See http://www.latex-project.org/lppl.txt
        subsection font-weight= bold,
        subsection font-shape=,
        subsection align= centering,
-       subsection numbering prefix=\thesection.,%\S\hairsp,%add . 
-       subsection numbering custom =\@arabic\c@subsection,% \two@digits{\@arabic\c@subsection},%
+       subsection numbering prefix=,%\thesection.,%\S\hairsp,%add . 
+       subsection numbering custom =,%\@arabic\c@subsection,% \two@digits{\@arabic\c@subsection},%
        subsubsection color= thered,
        subsubsection beforeskip=5pt plus3pt minus 2pt,
        subsubsection afterskip=5pt,
@@ -244,12 +247,12 @@ See http://www.latex-project.org/lppl.txt
        subsubsection font-weight= bold,
        subsubsection font-shape= itshape,
        subsubsection align= centering,
-       subsubsection numbering prefix = \thesubsection.,
+       subsubsection numbering prefix =, %\thesection.
        subsubsection numbering custom =, %\two@digits{\@arabic\c@subsubsection},
        subsubsection number after =, 
 %
        paragraph color= thegrey,
-       paragraph beforeskip=0pt,
+       paragraph beforeskip=,
        paragraph afterskip=-0.5em,
        paragraph indent=0pt,
        paragraph font-family= rmfamily,
@@ -257,7 +260,7 @@ See http://www.latex-project.org/lppl.txt
        paragraph font-weight= bfseries,
        paragraph font-shape=,
        paragraph align= centering,
-       paragraph number after =,
+       paragraph number after = 0pt,
        paragraph numbering=numeric,
        subparagraph color= thered,
        subparagraph beforeskip=0pt,
@@ -342,7 +345,7 @@ See http://www.latex-project.org/lppl.txt
 %</driver>
 % \fi
 %
-%  \CheckSum{3167}
+%  \CheckSum{4223}
 %  \CharacterTable
 %  {Upper-case    \A\B\C\D\E\F\G\H\I\J\K\L\M\N\O\P\Q\R\S\T\U\V\W\X\Y\Z
 %   Lower-case    \a\b\c\d\e\f\g\h\i\j\k\l\m\n\o\p\q\r\s\t\u\v\w\x\y\z
@@ -361,7 +364,7 @@ See http://www.latex-project.org/lppl.txt
 %
 %
 % \changes{1.0}{2013/01/26}{Converted to DTX file}
-% \changes{1.01}{2013/01/27}{Added multicol}
+%
 % \DoNotIndex{\newcommand,\newenvironment}
 % \GetFileInfo{phd.dtx}
 % \providecommand*{\url}{\texttt}
@@ -406,7 +409,7 @@ See http://www.latex-project.org/lppl.txt
 %
 % \input{./sections/tableofcontents}
 % \input{./sections/introduction}
-%^^A \input{./sections/chapterdesign}
+% \input{./sections/chapterdesign}
 % \input{./sections/epigraphschapter}
 % \input{./sections/lists}
 % \input{./sections/quotations}
@@ -414,7 +417,7 @@ See http://www.latex-project.org/lppl.txt
 % \input{./sections/generalsettings}
 % \input{./sections/docmacros}
 % \input{./sections/versochapter}
-^^A \input{./sections/cardinal}
+% \input{./sections/cardinal}
 % \input{./styles/style01.tex}
 % \input{./styles/style02.tex}
 % \input{./styles/style03.tex}
@@ -2705,8 +2708,11 @@ ProvidesClass,IfFileExists,RequirePackage,ifthenelse,chapter,includegraphics, ne
 % \end{macro}
 % \subsection{Highlighting}
 %    \begin{macrocode}
+\RequirePackage{color}% check where we captured it.
+
 \RequirePackage{soul}
-\RequirePackage{ulem}
+\sethlcolor{blue}
+%\RequirePackage{ulem} % redefines emphasis need to capture it
 \RequirePackage{cancel}
 \RequirePackage{framed}
 \RequirePackage{mdframed}
@@ -3124,7 +3130,7 @@ ProvidesClass,IfFileExists,RequirePackage,ifthenelse,chapter,includegraphics, ne
 % \changes{v1.3m}{1995/10/23}{Added setting of \cs{beginparpenalty} to
 %    discourage page break before abstract heading.}
 \def\abstractname{Abstract}
-\if@titlepage
+\@ifundefined{abstract}{%
   \newenvironment{abstract}{%
       \titlepage
       \null\vfil
@@ -3133,26 +3139,14 @@ ProvidesClass,IfFileExists,RequirePackage,ifthenelse,chapter,includegraphics, ne
         \bfseries \abstractname
         \@endparpenalty\@M
       \end{center}}%
-     {\par\vfil\null\endtitlepage}
+     {\par\vfil\null}
 %    \end{macrocode}
 %    When we are not making a separate titlepage --the default for the
 %    article document class-- we have to check if we are in twocolumn
 %    mode. In that case the abstract is as a |\section*|, otherwise
 %    the quotation environment is used to typeset the abstract.
 %    \begin{macrocode}
-\else
-  \newenvironment{abstract}{%
-      \if@twocolumn
-        \section*{\abstractname}%
-      \else
-        \small
-        \begin{center}%
-          {\bfseries \abstractname\vspace{-.5em}\vspace{\z@}}%
-        \end{center}%
-        \quotation
-      \fi}
-      {\if@twocolumn\else\endquotation\fi}
-\fi
+}{}
 %    \end{macrocode}
 % \end{environment}
 %
@@ -3287,7 +3281,37 @@ ProvidesClass,IfFileExists,RequirePackage,ifthenelse,chapter,includegraphics, ne
 }
 %    \end{macrocode}
 % \end{macro}
-% \section{Commonly used macros}     
+% \section{Commonly used macros}  
+%
+% \subsection{Margin notes and margin emphasis}
+% 
+% \parindent1em 
+% 
+%   \marge{Margin boxes} Marginal notes are commonly found in
+% 	many publications, Tufte goes to the extreme and requires
+%	all footnotes and citations to be as `sidenotes'. We provide
+%	a number of commands, if nothing else to illustrate 
+%	techniques for defining them.
+%
+% \marge[ProprietesEllipsoideCentral]{(\textit{a}) à l'ellipsoïde\\central d'inertie}
+%La considération du centre de gravité d'un système en mouvement
+%est assez familière en Dynamique pour que nous n'ayons pas à la rappeler
+%ici; mais nous pousserons plus loin l'analogie dans la même voie,
+%et nous considérerons ce que nous appellerons \emph{plans principaux, moments}\ldots
+%
+% \begin{macro}{\MarginBox}
+%    \begin{macrocode}
+\newcommand{\marginbox@cx}[2][]{%
+  \mbox{}\marginpar{\centering\scriptsize \color{teal}#2}%
+  \ifthenelse{\not\equal{#1}{}}{\phantomsection\label{#1}}{}%
+}
+\newcommand{\marge}[2][]{%
+  \bigskip\par\marginbox@cx[#1]{#2}%
+}
+%    \end{macrocode}
+% \end{macro}
+
+% 
 % \subsection{Paragraph setting commands}
 %
 %    \begin{macrocode}
@@ -5615,12 +5639,12 @@ section numbering/Roman/.code={%
   paragraph numbering/.is choice,
   paragraph numbering/numeric/.code={\gdef\theparagraph{\thesubsubsection.\@arabic\c@paragraph}},
   paragraph numbering/custom/.store in=\theparagraph@cx,
-  paragraph numbering/none/.code={\gdef\theparagraph{...}},
+  paragraph numbering/none/.code={\gdef\theparagraph{}},
   paragraph align/.store in=\paragraphalign@cx,
   paragraph beforeskip/.store in=\paragraphbeforeskip@cx,
   paragraph afterskip/.store in=\paragraphafterskip@cx,
   paragraph indent/.store in=\paragraphindent@cx,
-  paragraph number after/.estore in=\paragraphnumberafter@cx\renewparagraph,
+  paragraph number after/.store in=\paragraphnumberafter@cx,
 %% subparagraphs
 %
   subparagraph font-size/.store in=\subparagraphfontsize@cx,
@@ -6672,7 +6696,7 @@ title font-shape=upshape,
 % \Lpack{algorithm} packages together.}
 %
 %    \begin{macrocode}
-\newcommand{\@cftbsnum}{.}
+\newcommand{\@cftbsnum}{}
 \newcommand{\@cftasnum}{}
 \newcommand{\@cftasnumb}{}
 %    \end{macrocode}
@@ -7062,9 +7086,9 @@ title font-shape=upshape,
 %    They are initialised to give the standard appearance.
 %    \begin{macrocode}
 % hooks to |\numberline|
-\newcommand{\cftsecpresnum}{.}
-\newcommand{\cftsecaftersnum}{..}
-\newcommand{\cftsecaftersnumb}{...}
+\newcommand{\cftsecpresnum}{}
+\newcommand{\cftsecaftersnum}{}
+\newcommand{\cftsecaftersnumb}{}
 \newcommand{\tocsectionleader}{\normalfont\dotfill@cx{\tocsecdotsep@cx}}
 %\newcommand{\cftsecdotsep}{\cftdotsep}
 %    \end{macrocode}
@@ -7087,6 +7111,7 @@ title font-shape=upshape,
 % 	We start by defining all our parameters and variables.
 %
 %    \begin{macrocode}
+\newif\if@lowercasesubsection
 \cxset{toc subsection beforeskip/.store in=\tocsubsectionbeforeskip@cx,
        toc subsection indent/.store in=\tocsubsectionindent@cx,
 %      fonts for title &num
@@ -7095,6 +7120,12 @@ title font-shape=upshape,
        toc subsection font-shape/.store in=\tocsubsectionfontshape@cx, 
        toc subsection font-weight/.store in=\tocsubsectionfontweight@cx, 
        toc subsection color/.store in=\tocsubsectioncolor@cx,
+toc subsection case/.is choice,
+       toc subsection case/lower/.code=\def\tocsubsectioncase@cx{\@lowercasesubsectiontrue
+                             \if@lowercasesubsection\expandafter\MakeTextLowercase\fi},
+       toc subsection case/upper/.code=\def\tocsubsectioncase@cx{\@lowercasesubsectionfalse
+                    \if@lowercasesubsection\else\expandafter\MakeTextUppercase \fi},
+       toc subsection case/none/.code=\def\tocsubsectioncase@cx{\@empty},
        toc subsection numwidth/.store in=\tocsubsectionnumwidth@cx,
 %	  fonts etc for page number
        toc subsection page font-size/.store in=\tocsubsectionpagefontsize@cx,
@@ -7116,6 +7147,7 @@ title font-shape=upshape,
        toc subsection font-shape = upshape,
        toc subsection color= teal,
        toc subsection font-size=,
+       toc subsection case = none,
        toc subsection numwidth = 2.8em,
        toc subsection page font-size=,
        toc subsection page font-shape= upshape,  
@@ -7171,7 +7203,7 @@ title font-shape=upshape,
         {\tocsubsectionfontfamily@cx}{\tocsubsectionfontsize@cx}%
         {\tocsubsectionfontshape@cx}%
         \color{\tocsubsectioncolor@cx}%
-      \MakeTextUppercase#1}\nobreak
+      \tocsubsectioncase@cx#1}\nobreak
 %    \end{macrocode}
 %	We are now ready to typeset the leaders and the page number. 
 %    We then pass \#2 to the \cs{tocsectionfillnum} which 
@@ -7186,9 +7218,9 @@ title font-shape=upshape,
 %    They are initialised to give the standard appearance.
 %    \begin{macrocode}
 % hooks to |\numberline|
-\newcommand{\cftsecpresnum}{.}
-\newcommand{\cftsecaftersnum}{..}
-\newcommand{\cftsecaftersnumb}{...}
+\renewcommand{\cftsecpresnum}{.}
+\renewcommand{\cftsecaftersnum}{..}
+\renewcommand{\cftsecaftersnumb}{...}
 \newcommand{\tocsubsectionleader}{\normalfont\dotfill@cx{\tocsubsecdotsep@cx}}
 %\newcommand{\cftsecdotsep}{\cftdotsep}
 %    \end{macrocode}
@@ -7202,6 +7234,508 @@ title font-shape=upshape,
    \tocsubsectionpageafter@cx\par}%
 %    \end{macrocode}
 %
+% \section{Toc subsubsection styling}
+% \begin{macro}{\l@subsubsection}
+%  |\l@subsubsection{|\meta{title}|}{|\meta{page}|}| typesets the ToC entry for
+% a |subsubsection| heading. It is a parameterised copy of the default |\l@subsubsection|
+%	We start by defining all our parameters and variables.
+%
+%    \begin{macrocode}
+\newif\if@lowercasesubsubsection
+\cxset{toc subsubsection beforeskip/.store in=\tocsubsubsectionbeforeskip@cx,
+       toc subsubsection indent/.store in=\tocsubsubsectionindent@cx,
+%      fonts for title &num
+       toc subsubsection font-size/.store in=\tocsubsubsectionfontsize@cx, 
+       toc subsubsection font-family/.store in=\tocsubsubsectionfontfamily@cx, 
+       toc subsubsection font-shape/.store in=\tocsubsubsectionfontshape@cx, 
+       toc subsubsection font-weight/.store in=\tocsubsubsectionfontweight@cx, 
+       toc subsubsection color/.store in=\tocsubsubsectioncolor@cx,
+toc subsubsection case/.is choice,
+       toc subsubsection case/lower/.code=\def\tocsubsubsectioncase@cx{\@lowercasesubsubsectiontrue
+                             \if@lowercasesubsubsection\expandafter\MakeTextLowercase\fi},
+       toc subsubsection case/upper/.code=\def\tocsubsubsectioncase@cx{\@lowercasesubsubsectionfalse
+                    \if@lowercasesubsubsection\else\expandafter\MakeTextUppercase \fi},
+       toc subsubsection case/none/.code=\def\tocsubsubsectioncase@cx{\@empty},
+       toc subsubsection numwidth/.store in=\tocsubsubsectionnumwidth@cx,
+%	  fonts etc for page number
+       toc subsubsection page font-size/.store in=\tocsubsubsectionpagefontsize@cx,
+       toc subsubsection page font-family/.store in=\tocsubsubsectionpagefontfamily@cx,
+       toc subsubsection page font-shape/.store in=\tocsubsubsectionpagefontshape@cx,
+       toc subsubsection page font-weight/.store in=\tocsubsubsectionpagefonteight@cx,
+       toc subsubsection page color/.store in=\tocsubsubsectionpagecolor@cx,
+%      leaders
+	   toc subsubsection dotsep/.store in = \tocsubsubsecdotsep@cx,
+%      before and after page number
+       toc subsubsection page before/.store in=\tocsubsubsectionpagebefore@cx,
+       toc subsubsection page after/.store in=\tocsubsubsectionpageafter@cx,
+}
+
+\cxset{toc subsubsection beforeskip=\z@ \@plus.2\p@,
+       toc subsubsection indent=0em,
+       toc subsubsection font-family= sffamily,
+       toc subsubsection font-weight = mdseries,
+       toc subsubsection font-shape = upshape,
+       toc subsubsection color= teal,
+       toc subsubsection font-size=,
+       toc subsubsection case = none,
+       toc subsubsection numwidth = 2.8em,
+       toc subsubsection page font-size=,
+       toc subsubsection page font-shape= upshape,  
+       toc subsubsection page font-weight=, 
+       toc subsubsection page font-family= sffamily,
+       toc subsubsection page color = teal, 
+       toc subsubsection page before =,% \{,
+       toc subsubsection page after =,% \},
+       toc subsubsection dotsep = 2.7,
+}
+%    \end{macrocode}
+%
+%    For convenience we define font setting commands for
+%    the page number. We use \cs{setfont@cx}, which we have
+%	defined earlier.
+%    
+%    \begin{macrocode}
+\newcommand\tocsubsubsectionpagefont@cx{%
+	\setfont@cx{\tocsubsubsectionpagefonteight@cx}%
+       {\tocsubsubsectionpagefontfamily@cx}{\tocsubsubsectionpagefontsize@cx}%
+       {\tocsubsubsectionpagefontshape@cx}\color{\tocsubsubsectionpagecolor@cx}
+}%
+        
+
+\renewcommand*{\l@subsubsection}[2]{%
+  \ifnum \c@tocdepth >\z@
+    \if@haschapter@cx
+      \vskip \tocsubsubsectionbeforeskip@cx
+    \else
+      \addpenalty \@secpenalty
+      \addvspace{\tocsubsubsectionbeforeskip@cx}%
+    \fi
+    {\leftskip \tocsubsubsectionindent@cx\relax
+     \rightskip \@tocrmarg
+     \parfillskip -\rightskip
+     \parindent \tocsubsubsectionindent@cx\relax\@afterindenttrue
+     \interlinepenalty\@M
+     \leavevmode
+     \@tempdima \tocsubsubsectionnumwidth@cx\relax
+     \let\@cftbsnum \cftsecpresnum
+     \let\@cftasnum \cftsecaftersnum
+     \let\@cftasnumb \cftsecaftersnumb
+     \advance\leftskip \@tempdima \null\nobreak\hskip -\leftskip
+%    \end{macrocode}
+%
+%	We are now ready to print out the toc subsection title,
+%	we set the font information then typeset the title.
+%	The dot leaders are typeset by calling the macro \cs{sectionfillnum}
+%
+%    \begin{macrocode}
+     {%
+      \setfont@cx{\tocsubsubsectionfontweight@cx}%
+        {\tocsubsubsectionfontfamily@cx}{\tocsubsubsectionfontsize@cx}%
+        {\tocsubsubsectionfontshape@cx}%
+        \color{\tocsubsubsectioncolor@cx}%
+      \tocsubsubsectioncase@cx#1}\nobreak
+%    \end{macrocode}
+%	We are now ready to typeset the leaders and the page number. 
+%    We then pass \#2 to the \cs{tocsectionfillnum} which 
+%	does the typesetting.
+%    \begin{macrocode}
+      \tocsubsubsectionfillnum{#2}}%
+  \fi}
+%    \end{macrocode}
+% \end{macro}
+%
+%    These are the user commands to control the typesetting of Section entries.
+%    They are initialised to give the standard appearance.
+%    \begin{macrocode}
+% hooks to |\numberline|
+\renewcommand{\cftsecpresnum}{.}
+\renewcommand{\cftsecaftersnum}{..}
+\renewcommand{\cftsecaftersnumb}{...}
+\newcommand{\tocsubsubsectionleader}{\normalfont\dotfill@cx{\tocsubsubsecdotsep@cx}}
+%\newcommand{\cftsecdotsep}{\cftdotsep}
+%    \end{macrocode}
+%    We can now define the command \cmd{\tocsectionfillnum}. It will print the 
+%	leaders if any and the page number \#1. TODO IS par necessary??
+%    \begin{macrocode}
+\newcommand{\tocsubsubsectionfillnum}[1]{%
+  {\tocsubsubsectionleader}\nobreak
+  \hb@xt@\@pnumwidth{\hfil\tocsubsubsectionpagefont@cx
+   \tocsubsubsectionpagebefore@cx #1}%
+   \tocsubsubsectionpageafter@cx\par}%
+%    \end{macrocode}
+%
+% \section{Toc paragraph styling}
+% \begin{macro}{\l@paragraph}
+%  |\l@subsubsection{|\meta{title}|}{|\meta{page}|}| typesets the ToC entry for
+% a |subsubsection| heading. It is a parameterised copy of the default |\l@subsubsection|
+%	We start by defining all our parameters and variables.
+%
+%    \begin{macrocode}
+\newif\if@lowercaseparagraph
+\cxset{toc paragraph beforeskip/.store in=\tocparagraphbeforeskip@cx,
+       toc paragraph indent/.store in=\tocparagraphindent@cx,
+%      fonts for title &num
+       toc paragraph font-size/.store in=\tocparagraphfontsize@cx, 
+       toc paragraph font-family/.store in=\tocparagraphfontfamily@cx, 
+       toc paragraph font-shape/.store in=\tocparagraphfontshape@cx, 
+       toc paragraph font-weight/.store in=\tocparagraphfontweight@cx, 
+       toc paragraph color/.store in=\tocparagraphcolor@cx,
+toc paragraph case/.is choice,
+       toc paragraph case/lower/.code=\def\tocparagraphcase@cx{\@lowercaseparagraphtrue
+                             \if@lowercaseparagraph\expandafter\MakeTextLowercase\fi},
+       toc paragraph case/upper/.code=\def\tocparagraphcase@cx{\@lowercaseparagraphfalse
+                    \if@lowercaseparagraph\else\expandafter\MakeTextUppercase \fi},
+       toc paragraph case/none/.code=\def\tocparagraphcase@cx{\@empty},
+       toc paragraph numwidth/.store in=\tocparagraphnumwidth@cx,
+%	  fonts etc for page number
+       toc paragraph page font-size/.store in=\tocparagraphpagefontsize@cx,
+       toc paragraph page font-family/.store in=\tocparagraphpagefontfamily@cx,
+       toc paragraph page font-shape/.store in=\tocparagraphpagefontshape@cx,
+       toc paragraph page font-weight/.store in=\tocparagraphpagefonteight@cx,
+       toc paragraph page color/.store in=\tocparagraphpagecolor@cx,
+%      leaders
+	   toc paragraph dotsep/.store in = \tocparagraphdotsep@cx,
+%      before and after page number
+       toc paragraph page before/.store in=\tocparagraphpagebefore@cx,
+       toc paragraph page after/.store in=\tocparagraphpageafter@cx,
+}
+
+\cxset{toc paragraph beforeskip=\z@ \@plus.2\p@,
+       toc paragraph indent=0em,
+       toc paragraph font-family= sffamily,
+       toc paragraph font-weight = mdseries,
+       toc paragraph font-shape = upshape,
+       toc paragraph color= teal,
+       toc paragraph font-size=,
+       toc paragraph case = none,
+       toc paragraph numwidth = 2.8em,
+       toc paragraph page font-size=,
+       toc paragraph page font-shape= upshape,  
+       toc paragraph page font-weight=, 
+       toc paragraph page font-family= sffamily,
+       toc paragraph page color = teal, 
+       toc paragraph page before =,% \{,
+       toc paragraph page after =,% \},
+       toc paragraph dotsep = 2.7,
+}
+%    \end{macrocode}
+%
+% \cxset{subsubsection numbering=none,
+%        subsubsection numbering prefix=,
+%        subsubsection indent =0pt,
+%        paragraph numbering=none,
+%        paragraph indent=0pt,
+%        paragraph beforeskip= 0pt,
+%        subparagraph beforeskip=0pt,
+%        subparagraph numbering=none}
+%   \renewsubsection
+%   \renewparagraph
+%   \renewsubparagraph
+%   \renewsubsubsection
+%	\subsection{Default paragraph style}
+%   \subsubsection{With a subsubsection}
+%
+%
+%	\paragraph{Test paragraph} This is a test.
+%
+%    For convenience we define font setting commands for
+%    the page number. We use \cs{setfont@cx}, which we have
+%	defined earlier.
+%    
+%    \begin{macrocode}
+\newcommand\tocparagraphpagefont@cx{%
+	\setfont@cx{\tocparagraphpagefonteight@cx}%
+       {\tocparagraphpagefontfamily@cx}{\tocparagraphpagefontsize@cx}%
+       {\tocparagraphpagefontshape@cx}\color{\tocparagraphpagecolor@cx}
+}%
+        
+
+\renewcommand*{\l@paragraph}[2]{%
+  \ifnum \c@tocdepth >\z@
+    \if@haschapter@cx
+      \vskip \tocparagraphbeforeskip@cx
+    \else
+      \addpenalty \@secpenalty
+      \addvspace{\tocparagraphbeforeskip@cx}%
+    \fi
+    {\leftskip \tocparagraphindent@cx\relax
+     \rightskip \@tocrmarg
+     \parfillskip -\rightskip
+     \parindent \tocparagraphindent@cx\relax\@afterindenttrue
+     \interlinepenalty\@M
+     \leavevmode
+     \@tempdima \tocparagraphnumwidth@cx\relax
+     \let\@cftbsnum \cftsecpresnum
+     \let\@cftasnum \cftsecaftersnum
+     \let\@cftasnumb \cftsecaftersnumb
+     \advance\leftskip \@tempdima \null\nobreak\hskip -\leftskip
+%    \end{macrocode}
+%
+%	We are now ready to print out the toc subsection title,
+%	we set the font information then typeset the title.
+%	The dot leaders are typeset by calling the macro \cs{sectionfillnum}
+%
+%    \begin{macrocode}
+     {%
+      \setfont@cx{\tocparagraphfontweight@cx}%
+        {\tocparagraphfontfamily@cx}{\tocparagraphfontsize@cx}%
+        {\tocparagraphfontshape@cx}%
+        \color{\tocparagraphcolor@cx}%
+      \tocparagraphcase@cx#1}\nobreak
+%    \end{macrocode}
+%	We are now ready to typeset the leaders and the page number. 
+%    We then pass \#2 to the \cs{tocsectionfillnum} which 
+%	does the typesetting.
+%    \begin{macrocode}
+      \tocparagraphfillnum{#2}}%
+  \fi}
+%    \end{macrocode}
+% \end{macro}
+%
+%    These are the user commands to control the typesetting of Section entries.
+%    They are initialised to give the standard appearance.
+%    \begin{macrocode}
+% hooks to |\numberline|
+\renewcommand{\cftsecpresnum}{.}
+\renewcommand{\cftsecaftersnum}{..}
+\renewcommand{\cftsecaftersnumb}{...}
+\newcommand{\tocparagraphleader}{\normalfont\dotfill@cx{\tocparagraphdotsep@cx}}
+%\newcommand{\cftsecdotsep}{\cftdotsep}
+%    \end{macrocode}
+%    We can now define the command \cmd{\tocsectionfillnum}. It will print the 
+%	leaders if any and the page number \#1. TODO IS par necessary??
+%    \begin{macrocode}
+\newcommand{\tocparagraphfillnum}[1]{%
+  {\tocparagraphleader}\nobreak
+  \hb@xt@\@pnumwidth{\hfil\tocparagraphpagefont@cx
+   \tocparagraphpagebefore@cx #1}%
+   \tocparagraphpageafter@cx\par}%
+%    \end{macrocode}
+%
+% \chapter{Handling Images}
+% \precis{Commands for laying out complex pages composed primarily of images.}
+% \section{creating Image Page Styles}
+
+%    \begin{macrocode}
+\global\newlength{\miniwidthi}
+\global\newlength{\miniwidthii}
+\global\newlength{\sepmainhorizontal}
+
+\newenvironment{leftcolumn}{}{}
+\newenvironment{rightcolumn}{}{}
+
+\newlength\offsetfromright
+\setlength\offsetfromright{1em}
+
+%% Define the oneline caption
+\newcommand\onelinecaption[2][]{%
+    \setlength\offsetfromright{0em}%
+    \bgroup%
+        \vskip0pt plus1pt minus1pt %
+        \reset@font
+        \sffamily
+        \bfseries%
+        \footnotesize%
+        \hfill\hfill#2\hbox to \offsetfromright{}%
+     \egroup%
+}
+%% one line heading
+\long\def\onelineheader#1{%
+ \vspace{1.5\baselineskip}%
+ {\sffamily{\bgroup\LARGE\bf \mbox{#1}\egroup}%
+ \vspace{0.5\baselineskip}}%
+}
+
+ \newcommand\MainHeader[1]{{\leavevmode\par\centering \textrm{\fontsize{50pt}{65pt}\selectfont #1}\par\vspace{1cm}}}
+ \newcommand\MainHeadera[1]{{\leavevmode\par\centering \textrm{\fontsize{30pt}{42pt}\selectfont #1}\par\vspace{1cm}}}
+%\newlength{\miniwidthii}{0pt}
+\def\starttemplate#1{%
+   \gdef\Geometry{%
+   \newgeometry{top=10mm,inner=1cm,outer=1cm,bottom=10mm,marginparsep=0pt,marginparwidth=0pt}}
+   \ifthenelse{\equal{kroll01}{kroll01}}{%
+      \Geometry
+%% we now calculate some of the parameters
+%% required
+    \setlength\miniwidthi{0.3\textwidth}%
+    \setlength\miniwidthii{0.67\textwidth}%
+    \setlength\sepmainhorizontal{0.03\textwidth}%
+    \def\aheader##1{\footnotesize \textbf{SELF-PORTRAIT}##1}%
+   %
+%% Create environments for convenience
+    \renewenvironment{leftcolumn}[1]{%
+        \begin{minipage}[b]{\miniwidthi} ##1}{\end{minipage} \hspace{\sepmainhorizontal}}%
+    \renewenvironment{rightcolumn}[1]{%
+        \begin{minipage}[b]{\miniwidthii} ##1}{\end{minipage}}%
+%% Create right column environment
+ }{}%end ifthenelse
+\def\stoptemplate{\restoregeometry}
+}
+%% Defining kroll style
+  %% We need to find a way to define the templates
+%% We will assume that images have been saved in a database
+%% image@file
+%% image@caption
+%% this is a must to avoid long typing and keep the environments
+%% short
+\fboxsep=0pt
+\fboxrule=1pt
+
+\define@key{img}{width}[1cm]{\def\img@width{#1}}
+\define@key{img}{height}{\def\img@height{#1}}
+\define@key{img}{offsetx}{\def\img@offsetx{#1}}
+\define@key{img}{offsety}{\def\img@offsety{#1}}
+\define@key{img}{border}{\def\img@border{#1}}
+\define@key{img}{padding}{\def\img@padding{#1}}
+\define@key{img}{style}{\def\img@style{#1}}
+\define@key{img}{bottommargin}{\def\img@bottommargin{#1}}
+\define@key{img}{keepaspectratio}{\def\img@keepaspectratio{keepaspectratio}}
+\define@key{imgpg}{pagestyle}{\def\imgpg@pagestyle{#1}}
+%% Set defaults for all keys
+\setkeys{img}{offsetx=1sp, offsety=0pt,width=3cm, keepaspectratio=keepaspectratio,
+                      border=0pt, padding=0pt,bottommargin=0pt}
+%% Create the command graphic
+\newlength\tempa
+
+%% We create a new command to place images 
+\newcommand\putimage[2][0pt]{%
+%% Set the keys
+\setkeys{img}{#1}%
+\setlength\fboxrule\img@border%
+\setlength\fboxsep\img@padding%
+\ifdim\img@offsety=0pt% 
+\else%
+\vspace*{\img@offsety}%
+\fi%
+\hskip\img@offsetx%
+\setlength{\tempa}{\img@width}
+\fboxsep=1pt
+\def\setcaption{\captionof{figure}{This is the caption for the figure\lorem}}%
+\begin{minipage}{\textwidth}%
+\fbox{\includegraphics[width=\textwidth]{#2}}%
+\end{minipage}
+}%\vspace*{\img@bottommargin}}%
+
+\newcommand\byline[2][]{\small{\bfseries#1}#2}
+\def\tinyskip{\vskip2pt}
+%    \end{macrocode}
+%
+% \newgeometry{top=0cm,left=0cm,right=0cm,bottom=2cm}
+% \newpage
+%
+%\starttemplate{kroll}
+%    \begin{minipage}[b]{.3\textwidth}
+%       \MainHeader{Leon\\[15pt] Kroll}
+%       \putimage[width=0.5\linewidth]{krollportrait}\par
+%       \aheader{shows Kroll at 59. Says he. ``Painting is fascinating'' even when motif my own mug.}
+%   \end{minipage}\hspace*{0.3cm}
+%   \begin{minipage}[b]{0.67\textwidth}
+%       \putimage[width=\linewidth]{nudeback}
+%       \onelinecaption{{\resizebox{\linewidth}{5.5pt}{\bfseries \hfill NUDE \hfill BACK \hfill SHOWS \hfill  A \hfill DANCER \hfill WHOSE \hfill BACK \hfill SAYS \hfill KROLL, \hfill HAS \hfill BEAUTIFUL \hfill PLANES }}\par}
+%       \onelineheader{THE DEAN OF U.S. NUDE-PAINTERS}
+%      \begin{multicols}{2}
+%      \small
+%      \lettrine{A}{t the} age of 63 when businessmen are thinking of retiring leon Kroll according to Life Magazine was having the busiest time of his life, just doing what comes naturally.  \lorem\lorem
+%      \end{multicols}
+%   \end{minipage}
+%\stoptemplate
+%
+% \newpage
+%
+%\starttemplate{kroll}
+%    \begin{minipage}[b]{0.3\textwidth}
+%       \MainHeadera{Sandro Botticelli}
+%       \includegraphics[width=1.0\linewidth]{botticelli-34}\par
+%       \byline[BOTTICELLI ]{ painted hundreds of portraits. He is famous for his `Young Woman' series. Even in his larger compositions, he took extreme care of the details of women's faces.}
+%   \end{minipage}\hspace*{0.2cm}
+%   \begin{minipage}[b]{0.67\textwidth}
+%       \putimage[width=\linewidth]{youngwoman}\par
+%       \tinyskip
+%       \onelinecaption{YOUNG WOMAN}\par
+%       \onelineheader{SADRO BOTTICELLI'S PORTRAITS}
+%      \begin{multicols}{2}
+%      \small
+%      \lettrine{A}{t the} age of 63 when businessmen are thinking of retiring leon Kroll according to Life Magazine was having the busiest time of his life, just doing what comes naturally.  \lorem\lorem
+%      \end{multicols}
+%    \end{minipage}
+%\stoptemplate
+%%
+%
+\newgeometry{top=1cm,left=1cm,right=1cm,bottom=1cm}
+
+\clearpage
+
+
+
+%\def\HUGE{\@setfontsize\HUGE{65}{90}}
+%\raggedbottom
+%\begin{minipage}{0.8\textwidth}
+%\sffamily
+%\centering
+%\HUGE{\bf SYMPOSIUM}\\
+%
+%\LARGE{\textbf{\so{CAROLINA DYNAMICS GROUP}}}\\
+%
+%\Large{\textbf{\so{CLEMSON UNIVERSITY}}}\\
+%%\large{\textbf{APRIL 5, 2012}}
+%
+%\bigskip
+%
+%\begin{minipage}[b]{0.6\textwidth}
+%\normalsize
+%\includegraphics[width=\linewidth]{lorenzattractor01}
+%
+%\textbf{PRESENTED BY THE CAROLINA DYNAMICAL \\ SYSTEMS GROUP}. Some more text here to fill the space. You need to get the reader to stop and read a bit more. Some more text here to fill the space. \par 
+%\rule{0pt}{32pt}
+%\end{minipage}\hspace{5pt}
+%\begin{minipage}[b]{0.37\textwidth}
+%\textbf{\large INVITED SPEAKERS}\par
+%
+%{\leavevmode \raggedright
+%Dr Liang Foo\\
+%Dr Berry Ling\\
+%Dr Zezsko Petrovick \\
+%Dr A Berchowitz\\
+%\par{}
+%}
+%
+%\medskip
+%
+%\large{\textbf{VENUE}}
+%
+%The symposium will take place at Clemson University.
+%
+%\medskip
+%
+%{\large\raggedright
+%{\textbf{DYNAMICAL SYSTEMS}}
+%\par
+%}
+%\normalsize
+%\smallskip
+%
+%\lorem\lorem\lorem
+%
+%\medskip
+%\textbf{\large ORGANIZERS}\par
+%Martin Schmoll, Clemson University\\
+%Predrag Punosevac, Augusta State \\
+%University
+%\medskip
+%
+%\textbf{\large CONTACT }\par
+%
+%Predrag Punosevac, Augusta State\\
+%University
+%\textcolor{blue}{email@mail.com}
+%
+%\rule{0pt}{78pt}
+%\end{minipage}\par
+% ^^A\vspace*{-0pt}
+%
+%\hbox{\HUGE{\bfseries\rmfamily APRIL 5 $\cdot$  2012}}
+%\end{minipage}
+%
+% \restoregeometry
 %\iffalse
 %</package>
 %\fi

@@ -12,7 +12,6 @@
 %% See http://www.latex-project.org/lppl.txt
 %% ----------------------------------------------------------------
 %% 
-^^A \input{./sections/cardinal}
 
 \NeedsTeXFormat{LaTeX2e}
 [1994/12/01]%
@@ -487,8 +486,10 @@ ProvidesClass,IfFileExists,RequirePackage,ifthenelse,chapter,includegraphics, ne
 \newif\ifFOOTMISC
 \PassOptionsToPackage{ragged2e}{footnotes,raggedrightboxes}
 \RequirePackage{ragged2e}
+\RequirePackage{color}% check where we captured it.
+
 \RequirePackage{soul}
-\RequirePackage{ulem}
+\sethlcolor{blue}
 \RequirePackage{cancel}
 \RequirePackage{framed}
 \RequirePackage{mdframed}
@@ -699,7 +700,7 @@ ProvidesClass,IfFileExists,RequirePackage,ifthenelse,chapter,includegraphics, ne
 \@ifundefined{ps@titlepage}
     {\let\ps@titlepage=\ps@plain}{}
 \def\abstractname{Abstract}
-\if@titlepage
+\@ifundefined{abstract}{%
   \newenvironment{abstract}{%
       \titlepage
       \null\vfil
@@ -708,20 +709,8 @@ ProvidesClass,IfFileExists,RequirePackage,ifthenelse,chapter,includegraphics, ne
         \bfseries \abstractname
         \@endparpenalty\@M
       \end{center}}%
-     {\par\vfil\null\endtitlepage}
-\else
-  \newenvironment{abstract}{%
-      \if@twocolumn
-        \section*{\abstractname}%
-      \else
-        \small
-        \begin{center}%
-          {\bfseries \abstractname\vspace{-.5em}\vspace{\z@}}%
-        \end{center}%
-        \quotation
-      \fi}
-      {\if@twocolumn\else\endquotation\fi}
-\fi
+     {\par\vfil\null}
+}{}
 \def\chapterabstractname{Summary}
 
 \newenvironment{chapterabstract}{%
@@ -798,6 +787,14 @@ ProvidesClass,IfFileExists,RequirePackage,ifthenelse,chapter,includegraphics, ne
   quote font-size=\small,
   quote parindent=12pt,
 }
+\newcommand{\marginbox@cx}[2][]{%
+  \mbox{}\marginpar{\centering\scriptsize \color{teal}#2}%
+  \ifthenelse{\not\equal{#1}{}}{\phantomsection\label{#1}}{}%
+}
+\newcommand{\marge}[2][]{%
+  \bigskip\par\marginbox@cx[#1]{#2}%
+}
+
 \providecommand*{\linenottooshort}[1][4em]{%
   \@tempdima=\hsize
  \advance\@tempdima-#1
@@ -2598,12 +2595,12 @@ section numbering/Roman/.code={%
   paragraph numbering/.is choice,
   paragraph numbering/numeric/.code={\gdef\theparagraph{\thesubsubsection.\@arabic\c@paragraph}},
   paragraph numbering/custom/.store in=\theparagraph@cx,
-  paragraph numbering/none/.code={\gdef\theparagraph{...}},
+  paragraph numbering/none/.code={\gdef\theparagraph{}},
   paragraph align/.store in=\paragraphalign@cx,
   paragraph beforeskip/.store in=\paragraphbeforeskip@cx,
   paragraph afterskip/.store in=\paragraphafterskip@cx,
   paragraph indent/.store in=\paragraphindent@cx,
-  paragraph number after/.estore in=\paragraphnumberafter@cx\renewparagraph,
+  paragraph number after/.store in=\paragraphnumberafter@cx,
 %% subparagraphs
   subparagraph font-size/.store in=\subparagraphfontsize@cx,
   subparagraph font-weight/.store in=\subparagraphfontweight@cx,
@@ -3236,7 +3233,7 @@ title font-shape=upshape,
 \newcommand{\cftparfillskip}{\parfillskip=0pt plus1fil}
 \renewcommand{\numberline}[1]{%
   \hb@xt@\@tempdima{\@cftbsnum #1\@cftasnum\hfil}\@cftasnumb}
-\newcommand{\@cftbsnum}{.}
+\newcommand{\@cftbsnum}{}
 \newcommand{\@cftasnum}{}
 \newcommand{\@cftasnumb}{}
 
@@ -3450,15 +3447,16 @@ title font-shape=upshape,
       #1}\nobreak
       \tocsectionfillnum{#2}}%
   \fi}
-\newcommand{\cftsecpresnum}{.}
-\newcommand{\cftsecaftersnum}{..}
-\newcommand{\cftsecaftersnumb}{...}
+\newcommand{\cftsecpresnum}{}
+\newcommand{\cftsecaftersnum}{}
+\newcommand{\cftsecaftersnumb}{}
 \newcommand{\tocsectionleader}{\normalfont\dotfill@cx{\tocsecdotsep@cx}}
 \newcommand{\tocsectionfillnum}[1]{%
   {\tocsectionleader}\nobreak
   \hb@xt@\@pnumwidth{\hfil\tocsectionpagefont@cx
    \tocsectionpagebefore@cx #1}%
    \tocsectionpageafter@cx\par}%
+\newif\if@lowercasesubsection
 \cxset{toc subsection beforeskip/.store in=\tocsubsectionbeforeskip@cx,
        toc subsection indent/.store in=\tocsubsectionindent@cx,
        toc subsection font-size/.store in=\tocsubsectionfontsize@cx,
@@ -3466,6 +3464,12 @@ title font-shape=upshape,
        toc subsection font-shape/.store in=\tocsubsectionfontshape@cx,
        toc subsection font-weight/.store in=\tocsubsectionfontweight@cx,
        toc subsection color/.store in=\tocsubsectioncolor@cx,
+toc subsection case/.is choice,
+       toc subsection case/lower/.code=\def\tocsubsectioncase@cx{\@lowercasesubsectiontrue
+                             \if@lowercasesubsection\expandafter\MakeTextLowercase\fi},
+       toc subsection case/upper/.code=\def\tocsubsectioncase@cx{\@lowercasesubsectionfalse
+                    \if@lowercasesubsection\else\expandafter\MakeTextUppercase \fi},
+       toc subsection case/none/.code=\def\tocsubsectioncase@cx{\@empty},
        toc subsection numwidth/.store in=\tocsubsectionnumwidth@cx,
        toc subsection page font-size/.store in=\tocsubsectionpagefontsize@cx,
        toc subsection page font-family/.store in=\tocsubsectionpagefontfamily@cx,
@@ -3484,6 +3488,7 @@ title font-shape=upshape,
        toc subsection font-shape = upshape,
        toc subsection color= teal,
        toc subsection font-size=,
+       toc subsection case = none,
        toc subsection numwidth = 2.8em,
        toc subsection page font-size=,
        toc subsection page font-shape= upshape,
@@ -3524,18 +3529,294 @@ title font-shape=upshape,
         {\tocsubsectionfontfamily@cx}{\tocsubsectionfontsize@cx}%
         {\tocsubsectionfontshape@cx}%
         \color{\tocsubsectioncolor@cx}%
-      \MakeTextUppercase#1}\nobreak
+      \tocsubsectioncase@cx#1}\nobreak
       \tocsubsectionfillnum{#2}}%
   \fi}
-\newcommand{\cftsecpresnum}{.}
-\newcommand{\cftsecaftersnum}{..}
-\newcommand{\cftsecaftersnumb}{...}
+\renewcommand{\cftsecpresnum}{.}
+\renewcommand{\cftsecaftersnum}{..}
+\renewcommand{\cftsecaftersnumb}{...}
 \newcommand{\tocsubsectionleader}{\normalfont\dotfill@cx{\tocsubsecdotsep@cx}}
 \newcommand{\tocsubsectionfillnum}[1]{%
   {\tocsubsectionleader}\nobreak
   \hb@xt@\@pnumwidth{\hfil\tocsubsectionpagefont@cx
    \tocsubsectionpagebefore@cx #1}%
    \tocsubsectionpageafter@cx\par}%
+\newif\if@lowercasesubsubsection
+\cxset{toc subsubsection beforeskip/.store in=\tocsubsubsectionbeforeskip@cx,
+       toc subsubsection indent/.store in=\tocsubsubsectionindent@cx,
+       toc subsubsection font-size/.store in=\tocsubsubsectionfontsize@cx,
+       toc subsubsection font-family/.store in=\tocsubsubsectionfontfamily@cx,
+       toc subsubsection font-shape/.store in=\tocsubsubsectionfontshape@cx,
+       toc subsubsection font-weight/.store in=\tocsubsubsectionfontweight@cx,
+       toc subsubsection color/.store in=\tocsubsubsectioncolor@cx,
+toc subsubsection case/.is choice,
+       toc subsubsection case/lower/.code=\def\tocsubsubsectioncase@cx{\@lowercasesubsubsectiontrue
+                             \if@lowercasesubsubsection\expandafter\MakeTextLowercase\fi},
+       toc subsubsection case/upper/.code=\def\tocsubsubsectioncase@cx{\@lowercasesubsubsectionfalse
+                    \if@lowercasesubsubsection\else\expandafter\MakeTextUppercase \fi},
+       toc subsubsection case/none/.code=\def\tocsubsubsectioncase@cx{\@empty},
+       toc subsubsection numwidth/.store in=\tocsubsubsectionnumwidth@cx,
+       toc subsubsection page font-size/.store in=\tocsubsubsectionpagefontsize@cx,
+       toc subsubsection page font-family/.store in=\tocsubsubsectionpagefontfamily@cx,
+       toc subsubsection page font-shape/.store in=\tocsubsubsectionpagefontshape@cx,
+       toc subsubsection page font-weight/.store in=\tocsubsubsectionpagefonteight@cx,
+       toc subsubsection page color/.store in=\tocsubsubsectionpagecolor@cx,
+   toc subsubsection dotsep/.store in = \tocsubsubsecdotsep@cx,
+       toc subsubsection page before/.store in=\tocsubsubsectionpagebefore@cx,
+       toc subsubsection page after/.store in=\tocsubsubsectionpageafter@cx,
+}
+
+\cxset{toc subsubsection beforeskip=\z@ \@plus.2\p@,
+       toc subsubsection indent=0em,
+       toc subsubsection font-family= sffamily,
+       toc subsubsection font-weight = mdseries,
+       toc subsubsection font-shape = upshape,
+       toc subsubsection color= teal,
+       toc subsubsection font-size=,
+       toc subsubsection case = none,
+       toc subsubsection numwidth = 2.8em,
+       toc subsubsection page font-size=,
+       toc subsubsection page font-shape= upshape,
+       toc subsubsection page font-weight=,
+       toc subsubsection page font-family= sffamily,
+       toc subsubsection page color = teal,
+       toc subsubsection page before =,% \{,
+       toc subsubsection page after =,% \},
+       toc subsubsection dotsep = 2.7,
+}
+\newcommand\tocsubsubsectionpagefont@cx{%
+\setfont@cx{\tocsubsubsectionpagefonteight@cx}%
+       {\tocsubsubsectionpagefontfamily@cx}{\tocsubsubsectionpagefontsize@cx}%
+       {\tocsubsubsectionpagefontshape@cx}\color{\tocsubsubsectionpagecolor@cx}
+}%
+
+\renewcommand*{\l@subsubsection}[2]{%
+  \ifnum \c@tocdepth >\z@
+    \if@haschapter@cx
+      \vskip \tocsubsubsectionbeforeskip@cx
+    \else
+      \addpenalty \@secpenalty
+      \addvspace{\tocsubsubsectionbeforeskip@cx}%
+    \fi
+    {\leftskip \tocsubsubsectionindent@cx\relax
+     \rightskip \@tocrmarg
+     \parfillskip -\rightskip
+     \parindent \tocsubsubsectionindent@cx\relax\@afterindenttrue
+     \interlinepenalty\@M
+     \leavevmode
+     \@tempdima \tocsubsubsectionnumwidth@cx\relax
+     \let\@cftbsnum \cftsecpresnum
+     \let\@cftasnum \cftsecaftersnum
+     \let\@cftasnumb \cftsecaftersnumb
+     \advance\leftskip \@tempdima \null\nobreak\hskip -\leftskip
+     {%
+      \setfont@cx{\tocsubsubsectionfontweight@cx}%
+        {\tocsubsubsectionfontfamily@cx}{\tocsubsubsectionfontsize@cx}%
+        {\tocsubsubsectionfontshape@cx}%
+        \color{\tocsubsubsectioncolor@cx}%
+      \tocsubsubsectioncase@cx#1}\nobreak
+      \tocsubsubsectionfillnum{#2}}%
+  \fi}
+\renewcommand{\cftsecpresnum}{.}
+\renewcommand{\cftsecaftersnum}{..}
+\renewcommand{\cftsecaftersnumb}{...}
+\newcommand{\tocsubsubsectionleader}{\normalfont\dotfill@cx{\tocsubsubsecdotsep@cx}}
+\newcommand{\tocsubsubsectionfillnum}[1]{%
+  {\tocsubsubsectionleader}\nobreak
+  \hb@xt@\@pnumwidth{\hfil\tocsubsubsectionpagefont@cx
+   \tocsubsubsectionpagebefore@cx #1}%
+   \tocsubsubsectionpageafter@cx\par}%
+\newif\if@lowercaseparagraph
+\cxset{toc paragraph beforeskip/.store in=\tocparagraphbeforeskip@cx,
+       toc paragraph indent/.store in=\tocparagraphindent@cx,
+       toc paragraph font-size/.store in=\tocparagraphfontsize@cx,
+       toc paragraph font-family/.store in=\tocparagraphfontfamily@cx,
+       toc paragraph font-shape/.store in=\tocparagraphfontshape@cx,
+       toc paragraph font-weight/.store in=\tocparagraphfontweight@cx,
+       toc paragraph color/.store in=\tocparagraphcolor@cx,
+toc paragraph case/.is choice,
+       toc paragraph case/lower/.code=\def\tocparagraphcase@cx{\@lowercaseparagraphtrue
+                             \if@lowercaseparagraph\expandafter\MakeTextLowercase\fi},
+       toc paragraph case/upper/.code=\def\tocparagraphcase@cx{\@lowercaseparagraphfalse
+                    \if@lowercaseparagraph\else\expandafter\MakeTextUppercase \fi},
+       toc paragraph case/none/.code=\def\tocparagraphcase@cx{\@empty},
+       toc paragraph numwidth/.store in=\tocparagraphnumwidth@cx,
+       toc paragraph page font-size/.store in=\tocparagraphpagefontsize@cx,
+       toc paragraph page font-family/.store in=\tocparagraphpagefontfamily@cx,
+       toc paragraph page font-shape/.store in=\tocparagraphpagefontshape@cx,
+       toc paragraph page font-weight/.store in=\tocparagraphpagefonteight@cx,
+       toc paragraph page color/.store in=\tocparagraphpagecolor@cx,
+   toc paragraph dotsep/.store in = \tocparagraphdotsep@cx,
+       toc paragraph page before/.store in=\tocparagraphpagebefore@cx,
+       toc paragraph page after/.store in=\tocparagraphpageafter@cx,
+}
+
+\cxset{toc paragraph beforeskip=\z@ \@plus.2\p@,
+       toc paragraph indent=0em,
+       toc paragraph font-family= sffamily,
+       toc paragraph font-weight = mdseries,
+       toc paragraph font-shape = upshape,
+       toc paragraph color= teal,
+       toc paragraph font-size=,
+       toc paragraph case = none,
+       toc paragraph numwidth = 2.8em,
+       toc paragraph page font-size=,
+       toc paragraph page font-shape= upshape,
+       toc paragraph page font-weight=,
+       toc paragraph page font-family= sffamily,
+       toc paragraph page color = teal,
+       toc paragraph page before =,% \{,
+       toc paragraph page after =,% \},
+       toc paragraph dotsep = 2.7,
+}
+\newcommand\tocparagraphpagefont@cx{%
+\setfont@cx{\tocparagraphpagefonteight@cx}%
+       {\tocparagraphpagefontfamily@cx}{\tocparagraphpagefontsize@cx}%
+       {\tocparagraphpagefontshape@cx}\color{\tocparagraphpagecolor@cx}
+}%
+
+\renewcommand*{\l@paragraph}[2]{%
+  \ifnum \c@tocdepth >\z@
+    \if@haschapter@cx
+      \vskip \tocparagraphbeforeskip@cx
+    \else
+      \addpenalty \@secpenalty
+      \addvspace{\tocparagraphbeforeskip@cx}%
+    \fi
+    {\leftskip \tocparagraphindent@cx\relax
+     \rightskip \@tocrmarg
+     \parfillskip -\rightskip
+     \parindent \tocparagraphindent@cx\relax\@afterindenttrue
+     \interlinepenalty\@M
+     \leavevmode
+     \@tempdima \tocparagraphnumwidth@cx\relax
+     \let\@cftbsnum \cftsecpresnum
+     \let\@cftasnum \cftsecaftersnum
+     \let\@cftasnumb \cftsecaftersnumb
+     \advance\leftskip \@tempdima \null\nobreak\hskip -\leftskip
+     {%
+      \setfont@cx{\tocparagraphfontweight@cx}%
+        {\tocparagraphfontfamily@cx}{\tocparagraphfontsize@cx}%
+        {\tocparagraphfontshape@cx}%
+        \color{\tocparagraphcolor@cx}%
+      \tocparagraphcase@cx#1}\nobreak
+      \tocparagraphfillnum{#2}}%
+  \fi}
+\renewcommand{\cftsecpresnum}{.}
+\renewcommand{\cftsecaftersnum}{..}
+\renewcommand{\cftsecaftersnumb}{...}
+\newcommand{\tocparagraphleader}{\normalfont\dotfill@cx{\tocparagraphdotsep@cx}}
+\newcommand{\tocparagraphfillnum}[1]{%
+  {\tocparagraphleader}\nobreak
+  \hb@xt@\@pnumwidth{\hfil\tocparagraphpagefont@cx
+   \tocparagraphpagebefore@cx #1}%
+   \tocparagraphpageafter@cx\par}%
+
+\global\newlength{\miniwidthi}
+\global\newlength{\miniwidthii}
+\global\newlength{\sepmainhorizontal}
+
+\newenvironment{leftcolumn}{}{}
+\newenvironment{rightcolumn}{}{}
+
+\newlength\offsetfromright
+\setlength\offsetfromright{1em}
+
+%% Define the oneline caption
+\newcommand\onelinecaption[2][]{%
+    \setlength\offsetfromright{0em}%
+    \bgroup%
+        \vskip0pt plus1pt minus1pt %
+        \reset@font
+        \sffamily
+        \bfseries%
+        \footnotesize%
+        \hfill\hfill#2\hbox to \offsetfromright{}%
+     \egroup%
+}
+%% one line heading
+\long\def\onelineheader#1{%
+ \vspace{1.5\baselineskip}%
+ {\sffamily{\bgroup\LARGE\bf \mbox{#1}\egroup}%
+ \vspace{0.5\baselineskip}}%
+}
+
+ \newcommand\MainHeader[1]{{\leavevmode\par\centering \textrm{\fontsize{50pt}{65pt}\selectfont #1}\par\vspace{1cm}}}
+ \newcommand\MainHeadera[1]{{\leavevmode\par\centering \textrm{\fontsize{30pt}{42pt}\selectfont #1}\par\vspace{1cm}}}
+\def\starttemplate#1{%
+   \gdef\Geometry{%
+   \newgeometry{top=10mm,inner=1cm,outer=1cm,bottom=10mm,marginparsep=0pt,marginparwidth=0pt}}
+   \ifthenelse{\equal{kroll01}{kroll01}}{%
+      \Geometry
+%% we now calculate some of the parameters
+%% required
+    \setlength\miniwidthi{0.3\textwidth}%
+    \setlength\miniwidthii{0.67\textwidth}%
+    \setlength\sepmainhorizontal{0.03\textwidth}%
+    \def\aheader##1{\footnotesize \textbf{SELF-PORTRAIT}##1}%
+   %
+%% Create environments for convenience
+    \renewenvironment{leftcolumn}[1]{%
+        \begin{minipage}[b]{\miniwidthi} ##1}{\end{minipage} \hspace{\sepmainhorizontal}}%
+    \renewenvironment{rightcolumn}[1]{%
+        \begin{minipage}[b]{\miniwidthii} ##1}{\end{minipage}}%
+%% Create right column environment
+ }{}%end ifthenelse
+\def\stoptemplate{\restoregeometry}
+}
+%% Defining kroll style
+  %% We need to find a way to define the templates
+%% We will assume that images have been saved in a database
+%% image@file
+%% image@caption
+%% this is a must to avoid long typing and keep the environments
+%% short
+\fboxsep=0pt
+\fboxrule=1pt
+
+\define@key{img}{width}[1cm]{\def\img@width{#1}}
+\define@key{img}{height}{\def\img@height{#1}}
+\define@key{img}{offsetx}{\def\img@offsetx{#1}}
+\define@key{img}{offsety}{\def\img@offsety{#1}}
+\define@key{img}{border}{\def\img@border{#1}}
+\define@key{img}{padding}{\def\img@padding{#1}}
+\define@key{img}{style}{\def\img@style{#1}}
+\define@key{img}{bottommargin}{\def\img@bottommargin{#1}}
+\define@key{img}{keepaspectratio}{\def\img@keepaspectratio{keepaspectratio}}
+\define@key{imgpg}{pagestyle}{\def\imgpg@pagestyle{#1}}
+%% Set defaults for all keys
+\setkeys{img}{offsetx=1sp, offsety=0pt,width=3cm, keepaspectratio=keepaspectratio,
+                      border=0pt, padding=0pt,bottommargin=0pt}
+%% Create the command graphic
+\newlength\tempa
+
+%% We create a new command to place images
+\newcommand\putimage[2][0pt]{%
+%% Set the keys
+\setkeys{img}{#1}%
+\setlength\fboxrule\img@border%
+\setlength\fboxsep\img@padding%
+\ifdim\img@offsety=0pt%
+\else%
+\vspace*{\img@offsety}%
+\fi%
+\hskip\img@offsetx%
+\setlength{\tempa}{\img@width}
+\fboxsep=1pt
+\def\setcaption{\captionof{figure}{This is the caption for the figure\lorem}}%
+\begin{minipage}{\textwidth}%
+\fbox{\includegraphics[width=\textwidth]{#2}}%
+\end{minipage}
+}%\vspace*{\img@bottommargin}}%
+
+\newcommand\byline[2][]{\small{\bfseries#1}#2}
+\def\tinyskip{\vskip2pt}
+%%
+\newgeometry{top=1cm,left=1cm,right=1cm,bottom=1cm}
+
+\clearpage
+
+%%\large{\textbf{APRIL 5, 2012}}
 
 \endinput
 %%

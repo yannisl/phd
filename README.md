@@ -20,6 +20,5 @@ http://tex.stackexchange.com and post a new question or
 add a comment at http://tex.stackexchange.com/a/45023/963.
 or send me a message at  yannislaz at gmail.com
 
-^^A \input{./sections/cardinal}
 
 
