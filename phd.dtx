@@ -608,6 +608,7 @@ See http://www.latex-project.org/lppl.txt
 %
 %<*package>
 %
+%  \newgeometry{top=2cm, bottom=3cm, left=3.5cm, right=3.5cm}
 % \cxset{style13}
 % \cxset{section align=left,
 %        section color=teal,
@@ -621,7 +622,26 @@ See http://www.latex-project.org/lppl.txt
 % \thispagestyle{headings}
 %
 % \part{IMPLEMENTATION}
-% \chapter{Implementation}
+% \chapter{Implementation Strategy}
+%
+% The implementation is divided into large parts, rather than dotting
+% 	the interface with a number of smaller packages, which we
+%	avoid. Largely speaking into consists of the:
+%
+% \begin{enumerate}
+%   \item[\textbf{The Package Manager}] This section is responsible for pre-loading a 
+%		number of packages, resolving conflicts and providing a number
+%		of interface commands.
+%  \item[\textbf{The Layouts Manager}] This section manages the design of chapter heads and
+%		lower sectioning commands.
+%  \item [\textbf{The Image Manager}] This section manages the design of pages that consist
+%		primarily of images and other intense image operations.
+%  \item[\textbf{Commonly Used Macros}] We provide a number of predefined commands
+%		for macros that us and other people found useful.
+%  \item[\textbf{MWE}] The package generates a large number
+%		of Minimum Working Examples that we use for testing. Most of them can also used 
+%		as examples for training or self-study.
+% \end{enumerate}
 %
 % \section{Preliminaries}
 %
@@ -634,7 +654,7 @@ See http://www.latex-project.org/lppl.txt
 %    \end{macrocode}
 % 
 %
-% \section{Package Management} 
+% \chapter{Package Management} 
 %  
 % In order to keep track of all the packages and keys we require a
 % number of macros will be defined first.
@@ -862,18 +882,79 @@ See http://www.latex-project.org/lppl.txt
 % 
 % 
 % \subsection{Graphics}
-% 
+%  This package  developed by David Carlisle Sebastian Rahtz is part of the 
+%  Standard LaTeX `Graphics Bundle'.  It provides extensions to the original
+% \pkg{graphics}, which it loads. The \pkg{graphics} in its turn loads
+% the package \pkg{trig} which helps with trigonometrical
+% calculations.
+%
 % We load the package |graphicx| with no options. We let |graphicx|, to 
-% handle any draft options via the class itself. We load the package |caption|
-% for any captions outside floats. (Needs checking where to place).
+% handle any draft options via the class itself. 
 % \href{http://tex.stackexchange.com/questions/3131/graphicspath-for-miktex}{graphicspath for MikTeX} check
 % adds figures etc to paths. We add some common paths. If you call your image
 % folders |image| or |graphics| you don't need to do anything else.
 % 
+%
 %    \begin{macrocode}
-\RequirePackage{graphicx}
+\RequirePackage{graphicx}[1999/02/16]
 \setkeys{Gin}{width=\linewidth,totalheight=\textheight,keepaspectratio}
 \graphicspath{{graphics/}{graphics//}{images//}{./graphics/}{../graphics/}{./pic/}{../pic}}
+%    \end{macrocode}
+%
+% Various `keys' or named arguments are supported.
+% \begin{description}
+% \item[bb] Set the bounding box. The argument should be four
+% dimensions, separated by spaces. 
+% \item[bbllx,bblly,bburx,bbury] Set the bounding box. Mainly for
+% compatibility with older packages. |bbllx=a,bblly=b,bburx=c,bbury=d|
+% is equivalent to |bb = a b c d|.
+% \item[natwidth,natheight] Again an alternative to |bb|. 
+% |natheight=h,natwidth=w| is equivalent to |bb = 0 0 h w|.
+% \item[viewport] Modify the bounding box specified in the file.
+% The four values specify a bounding box \emph{relative} to the
+% |llx|,|lly| coordinate of the original box.
+% \item[trim] Modify the bounding box specified in the file.
+% The four values specify the amounts to remove from
+% the left, bottom, right and top of the original box.
+% \item[hiresbb] Boolean valued key. Defaults to |true|. 
+% Causes \TeX\ to look for |%%HiResBoundingBox| comments rather than
+% the standard |%%BoundingBox|. May be set to |false| to override
+% a default setting of true specified by the |hiresbb| package option.
+% \item[angle] Rotation angle.
+% \item[origin] Rotation origin (see |\rotatebox|, below).
+% \item[width] Required width, a dimension (default units |bp|). The
+% graphic will be scaled to make the width the specified dimension.
+% \item[height] Required height. a dimension (default units |bp|).
+% \item[totalheight] Required totalheight (ie height $+$ depth). a
+% dimension (default units |bp|). Most useful after a rotation (when the
+% height might be zero).
+% \item[keepaspectratio] Boolean valued key (like |clip|). If it is set
+%  to true, modify the meaning of the |width| and |height| (and
+% |totalheight|) keys such that if both are specified then rather than
+% distort the figure the figure is scaled such that neither dimension
+% \emph{exceeds} the stated dimensions.
+% \item[scale] Scale factor.
+% \item[clip] Either `true' or `false' (or no value, which is equivalent
+% to `true'). Clip the graphic to the bounding box (or viewport if one
+% is specified).
+% \item[draft] a boolean valued key, like `clip'. locally switches to
+% draft mode, ie.\ do not include the graphic, but leave the
+% correct space, and print the filename.
+% \item[type] Specify the file type. (Normally determined from the file
+% extension.) 
+% \item[ext] Specify the file extension.
+%        \emph{Only} for use with |type|.
+% \item[read] Specify the `read file' which is used for determining the
+% size of the graphic. \emph{Only} for use with |type|.
+% \item[command] Specify the file command.
+%         \emph{Only} for use with |type|.
+% \end{description}
+%
+% The arguments are interpreted left to right. |clip|, |draft|, |bb|,,
+% and |bbllx| etc.\ have the same effect wherever they appear. but the
+% scaling and rotation keys interact.
+%
+%    \begin{macrocode}
 \RequirePackage{wrapfig}
 %    \end{macrocode} 
 %

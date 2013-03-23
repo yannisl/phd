@@ -1,0 +1,2526 @@
+\documentclass[a4paper,11pt,openany, twoside,fleqn]{book}
+%\IfFileExists{cmap.sty}{%
+%  \usepackage[resetfonts]{cmap}
+%}{} % makes pdfs searchable and copyable
+\usepackage{geometry}
+\usepackage{phd}
+
+%\usepackage[utf8]{inputenc}
+% Redefine the LaTeX commands that are replaced by textcomp.
+% This was swiped right out of ltoutenc.dtx, but with "\text..."
+% changed to "\ltext...".
+\DeclareTextCommandDefault{\ltextcopyright}{\textcircled{c}}
+\DeclareTextCommandDefault{\ltextregistered}{\textcircled{\scshape r}}
+\DeclareTextCommandDefault{\ltexttrademark}{\textsuperscript{TM}}
+\DeclareTextCommandDefault{\ltextordfeminine}{\textsuperscript{a}}
+\DeclareTextCommandDefault{\ltextordmasculine}{\textsuperscript{o}}
+\usepackage{latexsym}						% additional latex symbols
+
+%------------------------------------- FONT UTILITIES --------------------------------------
+\usepackage{scalefnt}						% utility for scaling fonts
+\usepackage{fonttable}						% utility for font tables
+%% Save a symbol that we know is going to get redefined.
+%% code is from the Comprehensive Latex symbol list
+%\newcommand*{\savesymbol}[1]{%
+%  \expandafter\let\csname orig#1\expandafter\endcsname\csname#1\endcsname
+%  \expandafter\let\csname #1\endcsname\relax
+%}
+%%
+% Restore a previously saved symbol, and rename the current one.
+%\newcommand*{\restoresymbol}[2]{%
+%  \expandafter\global\expandafter\let\csname#1#2\expandafter\endcsname%
+%    \csname#2\endcsname
+%  \expandafter\global\expandafter\let\csname#2\expandafter\endcsname%
+%    \csname orig#2\endcsname}
+
+% Rename a robust command.
+%\newcommand*{\renamerobustsymbol}[2]{%
+%  \expandafter\let\expandafter\origrealcommand
+%    \csname #2\space\endcsname
+%  \expandafter\global\expandafter\let\csname#1#2\endcsname=\origrealcommand
+%}
+
+%% Test if a symbol is not saved.
+%\makeatletter
+%\def\ifnotsavedsym@helper#1#2!{\expandafter\ifx\csname orig#2\endcsname\relax}
+%\newcommand*{\ifnotsavedsym}[1]{%
+%  \expandafter\ifnotsavedsym@helper\string#1!%
+%}
+%\makeatother
+
+
+%% VARIOUS TYPESETTING MACROS AND BABEL
+\usepackage[top=1.5cm, left=2cm,bottom=2.5cm,right=1.5cm,showframe=false]{geometry}[2002/07/08] % showframe is off
+
+\usepackage[ngerman,german,polutonikogreek,greek,latin,english]{babel}
+%\usepackage{teubner}
+\usepackage{pdftexcmds} % For \pdf@strcmp
+
+%% ----------------  --  POSITIONING AND LAYOUT/BOXES/RULES ---------------
+%\usepackage{chngpage}                                             % provides adjustwidth gives errors
+
+
+\usepackage[absolute,overlay]{textpos}
+\usepackage{boxedminipage}					% used for fancy boxes
+\usepackage{shapepar}                                              % for shaping paragraphs
+%\let\cutout\undefined
+%\let\endcutout\undefined						% to use with cutwin easier
+%\usepackage{cutwin}
+\usepackage{addlines}                                               % enlargethis page
+\usepackage{framed}                                                % For frames
+
+%% Tables
+%%  TABLES
+
+
+
+
+%% --------------------------- TYPOGRAPHY -------------------------------------------
+%\usepackage{microtype}					% for better spacing and less hyphens
+
+%\IfFileExists{mathpazo.sty}{\RequirePackage[osf,sc]{mathpazo}}{}
+%\IfFileExists{helvet.sty}{\RequirePackage[scaled=0.90]{helvet}}{}
+%\IfFileExists{beramono.sty}{\RequirePackage[scaled=0.85]{beramono}}{}
+
+%\usepackage{pacioli}
+
+
+\IfFileExists{yfonts.sty}
+{\usepackage{yfonts}[2003/01/08]} 				% fraktur font (titlepage only, in examples)
+{\providecommand{\textgoth}[1]{\textbf{##1}}}		% fallback if no yfonts
+
+
+
+%-------------------------- MATHS -------------------------------------------------
+% MATHEMATICS
+
+
+\let\equation\gather                           %% See tabu and hyperref docs
+\let\endequation\endgather
+
+
+
+
+\usepackage{multienum} 					% used in maths chapter
+
+
+%\usepackage{teubner}					% for additional greek fonts and commands
+%\usepackage{teubner-subset}				% try to minimize conflicts
+%% ------------------------  GRAPHICS PACKAGES -----------------------------------
+%\usepackage{graphicx}					% for including graphics
+%\usepackage{wrapfig}				% wrapped figures and subfigures
+%\usepackage[grid=false,subgridcolor=green!20,	% grid used only in draft mode
+%                   gridcolor=gray!80, texcoord=true, 
+%                   gridunit=cm]{eso-pic}
+%\usepackage{rotating}					% for rotated figures and text
+%\usepackage{tikz} 
+%
+%\usepackage[figurename=Figure.,]{caption}
+
+%---------------------------------------- FOR MACRO UTILITIES ---------------------
+%
+\usepackage{changepage}    % checks if page is odd or not
+\strictpagecheck
+\usepackage{keyval}
+\RequirePackage{ifmtarg}
+\RequirePackage{fp}
+\RequirePackage{ifthen}
+\RequirePackage{xstring}
+
+%
+%%------------------------ Specific to this project --------------------------------------
+%%%
+%%  internal package for cover pages
+%% Verbatims
+% The fancyvrb package lets us customize the formatting of verbatim
+% environments.  We use a slightly smaller font.
+
+
+
+%\usepackage{morelogos}						% define logos to work with
+%										% lower case saves keystrokes
+\makeatletter
+\long\def\imghangleft#1#2{%
+     \figure
+     \leftskip-1.6cm\includegraphics[scale=1.1]{./graphics/copper-sheath}\par
+     \centerline{\textsc{Copper Sheath}}
+    \endfigure
+}
+%	Graphics
+%	Graphics are handled at many levels. Firstly when an item is added to the database
+% 	an image is added. This can be retrieved with |\getstampfield{#1}{#2}{image}|.
+%	
+%
+%% The graphic command simply sets up the correct paths and includes the
+%% image, this might need to be left in a box for later usage
+%% I will come back and change it later.
+%% KEY DEFINITIONS
+\usepackage{xkeyval}
+\define@key{img}{width}[1cm]{\def\img@width{#1}}
+\define@key{img}{height}{\def\img@height{#1}}
+\define@key{img}{offsetx}{\def\img@offsetx{#1}}
+\define@key{img}{offsety}{\def\img@offsety{#1}}
+\define@key{img}{border}{\def\img@border{#1}}
+\define@key{img}{padding}{\def\img@padding{#1}}
+\define@key{img}{style}{\def\img@style{#1}}
+\define@key{img}{bottommargin}{\def\img@bottommargin{#1}}
+\define@key{img}{keepaspectratio}{\def\img@keepaspectratio{keepaspectratio}}
+\define@key{imgpg}{pagestyle}{\def\imgpg@pagestyle{#1}}
+%% Set defaults for all keys
+\setkeys{img}{offsetx=0pt, offsety=0pt,width=3cm, keepaspectratio=keepaspectratio,
+                      border=0pt, padding=0pt,bottommargin=0pt}
+%% Create the command graphic
+
+%%% We create a new command to place images 
+%\newcommand\putimage[2][0pt]{%
+%%% Set the keys
+%%\setkeys{img}{#1}%
+%%\setlength\fboxrule\img@border%
+%%\setlength\fboxsep\img@padding%
+%%\ifdim\img@offsety=0pt% 
+%%\else%
+%%\vspace*{\img@offsety}%
+%%\fi%
+%%%\hskip\img@offsetx%
+%%\setlength{\tempa}{\img@width}
+%\fboxsep=0pt
+%\fboxrule=0pt
+%\protect\def\setcaption{\captionof{figure}{This is the caption for the figure\lorem}}%
+%\begin{minipage}{\linewidth}%
+%\includegraphics[width=\linewidth]{./graphics/#2}%
+%\end{minipage}
+%}%\vspace*{\img@bottommargin}}%
+
+%
+
+\DeclareRobustCommand{\putcaption}[1]{\setcaption}
+
+
+%%
+% An environment for paragraph-style section
+% borrowed from the Tufte-LaTeX class
+\providecommand\newthought[1]{%
+   \addvspace{1.0\baselineskip plus 0.5ex minus 0.2ex}%
+   \noindent\textsc{#1}%
+}
+
+\let\allcaps\textsc
+\let\sidenotesize\small
+\def\isempty{}
+\makeatother
+
+
+\newcounter{wrapwidth}
+\newcount \Zw
+\newcount \Zh
+% text flowed image - file name, width, height pixels, vertical offset (normally -24, -12 for top of page)
+\newcommand\pngright[4]{
+\Zw=#2 \divide \Zw by 10
+\Zh=#3 \divide \Zh by 120  \advance\Zh by 1
+\setcounter{wrapwidth}{\Zw}
+\begin{wrapfigure}[\Zh]{r}{\value{wrapwidth}pt}
+\begin{center}
+\vspace{#4pt}
+\includegraphics*[width=\Zw pt]{images/#1}
+\end{center}
+\end{wrapfigure}}
+
+% text flowed image scaling * #4 / #5 (never occurs at top of page)
+\newcommand\pngrightsc[5]{
+\Zw=#2 \multiply \Zw by #4 \divide \Zw by #5
+\Zh=#3 \multiply \Zh by #4 \divide \Zh by #5
+\pngright{#1}{\Zw}{\Zh}{-24}}
+
+% centred image - file name, width, height pixels (height is comment only, easier for developer to change to & from flowed)
+\newcommand\pngcent[3]{
+\Zw=#2 \divide \Zw by 10
+\begin{center}
+\includegraphics*[width=\Zw pt]{images/#1}
+\end{center}}
+
+
+% italic text in maths with spacing
+\newcommand\opit[1]{\operatorname{\textit{#1}}}
+
+% small text in maths
+\newcommand\smallinmath[1]{{\scriptstyle #1}}
+%\newcommand\decimals[1]{,{\!}{\scriptstyle #1}}
+%
+%% Header with conditional page skip
+\newcommand\condpagelarge[1]{
+\vspace{\baselineskip}
+\Needspace*{4\baselineskip}\begin{center}{\large #1}\end{center}}
+
+%% Proposition with page
+\newcommand\forcepageprop[1]{
+\newpage
+\begin{center}{\large #1}\end{center}}
+%
+%% Proposition without page
+\newcommand\propnopage[1]{
+\begin{center}{\large #1}\end{center}}
+%
+%
+%% Section with page
+\newcommand\sectpage[1]{
+\vspace{\baselineskip}\hrule\newpage\hrule\vspace{\baselineskip}
+\begin{center}{\LARGE \gesperrt{SECT}{6}.\hspace{12pt}#1}\end{center}}
+%
+%% Section without page
+\newcommand\sectnopage[1]{
+\begin{center}{\LARGE \gesperrt{SECT}{6}.\hspace{12pt}#1}\end{center}}
+%
+%
+%%\ggesperrt#1 }
+%
+\usepackage{layout}
+%
+%
+%%% Some lengths used in calculations rather use temlength
+%\global\newlength\imagewidth
+%
+\makeatletter
+%Returns a single digit hexadecimal number (0{9, A{F) from
+%given hnumber i, which must either be a numeric register or
+%a number ending with a space! from the kernel
+% we add the space, works only up to 16
+%\newcounter{cnt}
+%\setcounter{cnt}{0}
+%\loop
+% \ifnum\thecnt<20
+%   \stepcounter{cnt}
+%   \thecnt\  \tohex{\thecnt}\\
+%\repeat
+%\def\tohex#1{\hexnumber@{#1 }}
+%\makeatother
+
+% Hyphenate some awkward words
+\hyphenation{Figure Table %to avoid it hyphenating and hyperref crossing page boundary
+Hero-do-tus equi-noxes dig-its-first-block}
+
+\def\hlred{ }
+\def\image#1#2#3#4\par{%
+    %\leavevmode\par
+    \parindent10pt
+    \setlength{\intextsep}{0pt} % top and bottom sizing
+    \setlength{\columnsep}{10pt}
+   \begin{wrapfigure}{#1}[0pt]{#2} % specify width only
+    %\fbox{%
+   \if#1l \def\leftjustified{} 
+       \else 
+    \def\leftjustified{\hfill\hfill}
+    \fi
+   \begin{minipage}[t]{#2}
+      \leftjustified\includegraphics[width=#2]{./graphics/book.jpg}
+     \caption[figure]{#3}
+   \end{minipage}%}
+   \end{wrapfigure}
+#4\par}
+%
+%
+%% shortcut for wrapped images
+\def\wrappedimage#1#2#3#4\par{%
+%\leavevmode\par
+\parindent10pt
+\setlength{\intextsep}{0pt} % top and bottom sizing
+\setlength{\columnsep}{10pt}% separators at side
+\begin{wrapfigure}{#1}[0pt]{#2} % specify width only
+%\fbox{%
+\if#1l \def\leftjustified{} 
+    \else 
+    \def\leftjustified{\hfill\hfill}
+ \fi
+\begin{minipage}[t]{#2}
+  \leftjustified\includegraphics[width=#2]{./graphics/book.jpg}
+  \caption[figure]{#3}
+\end{minipage}%}
+\end{wrapfigure}
+#4\par}
+%
+%% Presentation command in Foreward styling.
+\newcommand{\AtRight}[2][\parindent]{%
+  \leavevmode\par
+  \hbox to\linewidth{\hss\textbf{#2}\hskip#1}
+}
+
+
+%\usepackage[bookmarks=true]{hyperref}
+%\hypersetup{%
+%    bookmarks=false,    % show bookmarks bar?
+%    pdftitle={TeX and friends hackers manual},    % title
+%    pdfauthor={Yiannis Lazarides},                     % author
+%    pdfsubject={TeX and LaTeX},                        % subject of the document
+%    pdfkeywords={TeX, LaTeX, graphics, images}, % list of keywords
+%    colorlinks=true,       % false: boxed links; true: colored links
+%    linkcolor=blue,       % color of internal links
+%    citecolor=black,       % color of links to bibliography
+%    filecolor=black,        % color of file links
+%    urlcolor=purple,        % color of external links
+%    linktoc=page            % only page is linked
+%}
+%\usepackage{subfig}
+%%%%%%%%%%%%%%%  Doccommands %%%%%%%%%%
+
+\def\person#1{#1}
+
+\let\sidenote\footnote
+\let\marginnote\footnote
+%%% GOOD QUESTION
+%%% enables <#1> to be inserted automatically
+\newfont\yltt{ectt1000}
+
+\newenvironment{docs}{%
+}{}
+%%\catcode`\<=\active
+%%\gdef<##1>{\ensuremath{\langle\mbox{\textsl{##1}}\rangle}}
+
+
+\makeatletter
+%\usepackage{doccommands}
+%\usepackage{setlistings}
+
+
+% Set up the epigraph to be a bit wider
+\setlength{\epigraphwidth}{0.4\textwidth} 
+\setlength{\epigraphrule}{0pt}
+
+\newenvironment{marginfigure}{}{}
+\newenvironment{fullwidth}{}{}
+\makeindex
+
+\makeatletter
+
+\newenvironment{adjustmargins}[2]{%
+  \begin{list}{}{%
+    \topsep\z@%
+    \listparindent\parindent%
+    \parsep\parskip%
+   \@ifmtarg{#1}{\setlength{\leftmargin}{\z@}}%
+   {\setlength{\leftmargin}{#1}}%
+   \@ifmtarg{#2}{\setlength{\rightmargin}{\z@}}%
+   {\setlength{\rightmargin}{#2}}%
+}
+\item[]}{\end{list}}
+
+ \newenvironment{adjustmargins*}[2]{%
+ \begin{list}{}{%
+ \topsep\z@%
+ \listparindent\parindent%
+ \parsep\parskip%
+ \checkoddpage
+ \ifoddpage % odd numbered page
+ \@ifmtarg{#1}{\setlength{\leftmargin}{\z@}}%
+ {\setlength{\leftmargin}{#1}}%
+ \@ifmtarg{#2}{\setlength{\rightmargin}{\z@}}%
+ {\setlength{\rightmargin}{#2}}%
+ \else % even numbered page
+ \@ifmtarg{#2}{\setlength{\leftmargin}{\z@}}%
+ {\setlength{\leftmargin}{#2}}%
+ \@ifmtarg{#1}{\setlength{\rightmargin}{\z@}}%
+ {\setlength{\rightmargin}{#1}}%
+\fi
+}
+\item[]}{\end{list}}
+
+%  The case study environment
+
+%     define a placeholder for the label. This enables babel to translate it.
+%     #1 short label for case study 
+\makeatletter
+\gdef\thecasestudylabel{Case Study}
+\newenvironment{casestudy}[2][]{%
+    \addcontentsline{toc}{section}{\thecasestudylabel:  #1}
+    %phantomsection
+   \clearpage % clears a page if necessary
+    \topline
+   {\noindent\large CASE STUDY\par}\vspace{3.5pt}
+   \noindent\textsc{\large#1}\par
+   \bigskip
+   {#2}
+   \medskip
+   \topline
+}{%
+\vfill\bottomline}
+
+
+\makeatother
+ %Use Donald Arseneau's improved float parameters.
+%% FLOAT SET-UP
+%% 
+
+\makeatletter
+  \def\K@opt@arg[#1]#2{\incsyms\indexcommand[#1]{#2}#1 &\ttfamily\string#2}
+  \def\K@no@opt@arg#1{\incsyms\indexcommand[#1]{#1}#1 &\ttfamily\string#1}
+  \def\K{\@ifnextchar[{\K@opt@arg}{\K@no@opt@arg}}
+\makeatother
+
+
+\def\smallcaps#1s{}
+\def\allcaps#1{}
+\def\people#1{}
+\usepackage{wasysym}
+% Ancient languages
+%\usepackage{rotunda}
+%\usepackage{huncial}
+%\usepackage{uncial}
+%\usepackage{runic}
+%\usepackage{pifont}
+%\usepackage{phoenician}
+%\usepackage{cypriot}
+%\usepackage{hieroglf}
+% Syllabaries
+\newcommand{\UC}{A B C D E F G H I J K L M N O P Q R S T U V W X Y Z}
+\newcommand{\LC}{a b c d e f g h i j k l m n o p q r s t u v w x y z}
+\newcommand{\SY}{+ ? / |}
+\newcommand{\ST}{\Hms\ \Hibp\ \Hibw\ \Hibs\ \Hibl\ \Hsv\ 
+                 \Hman\ \Htongue\ \Hscribe\ \Hplural\ \Hdual}
+\newcommand{\SN}{\Hone\ \Hten\ \Hhundred\ \Hthousand\ \HXthousand
+                 \HCthousand\ \Hmillion}
+\newcommand{\Caesar}{\pmvglyph{\Hk:\Hy:\HS:\Hl:\HS}}
+% This is for chess 
+\usepackage[LSBC1,LSBC2,LSBC4,TS1,OT1,T1]{fontenc}		%this needs checking out
+\usepackage{textcomp, mathcomp}
+\usepackage[skaknew]{chessboard,skak}
+\usepackage{latexsym}
+\usepackage{textcomp, mathcomp}
+\font\logo=logo10
+\font\sknf=SkakNew-Figurine
+\font\sknfbx=SkakNew-FigurineBold
+\font\skndia=SkakNew-DiagramT
+%
+%
+%%% The arabtex package screws up with footnote!!!!
+%\usepackage{arabtex}
+%%
+%% We want to use the package ecclesiatic, this appears to give us problems with catcodes for :
+%%% Gives problem with @for took out, does not safely in combination with other packages, play
+%%% nice
+%%\usepackage{ecclesiastic}
+\usepackage{ellipsis} % better ldots, must be loaded last
+
+%% properties ala lisp
+\def\csn#1{\csname#1\endcsname}%
+\long\def\ece#1#2{\expandafter#1\csname#2\endcsname}%
+% ATOM PROPERTY VALUE  FROM EPLAIN
+\long\def\setproperty#1#2#3{\ece\edef{#1@p#2}{#3}}%
+\long\def\setpropertyglobal#1#2#3{\ece\xdef{#1@p#2}{#3}}%
+
+\long\def\getproperty#1#2{%
+  \expandafter\ifx\csname#1@p#2\endcsname\relax
+  % then \end{multicols}{2}pty
+  \else \csname#1@p#2\endcsname
+  \fi
+}%
+%% Command factory for example
+%% not needed in package
+\gdef\commandfactory#1#2{%
+   \global\expandafter\def\csname#1\endcsname{#1}
+   \global\expandafter\def\csname#1caption\endcsname{#2}
+}
+
+%% Knuths smile box from 
+%\centerline{\bf Stable Husbands}
+%\bigskip
+%\centerline{\sl Donald E. Knuth, Rajeev Motwani, and Boris Pittel}
+%\centerline{\sl  Computer Science Department, Stanford University}
+\def\pfbox % new experimental version (DEK, November 88)
+{{\ooalign{\hfil\lower.06ex % a smiley face
+ \hbox{$\scriptscriptstyle\frown$}\hfil\crcr
+ \hfil\lower.7ex\hbox{\"{}}\hfil\crcr
+ \mathhexbox20D}}}
+
+\def\hangleft{}
+
+%\usepackage{fp}
+% \section{Guidelines for images}
+%  You need to crop your images carefully so there is no white space around the frame. MAny an hour
+% can get lost thinking that an image is too large, whereas the offset is just white border on the image.
+%% Define full page environments for starting pages etc....
+%% Note that both \newgeometry and \restoregeometry insert \clearpage where they are called
+%\newlength{\miniwidth}{0pt}
+
+
+%% Headings and captions
+%% The oneline caption is a caption that is below the image
+%% at a tight space. If it is almost the length of the width of the image
+%% it is stretched to fit the whole line
+
+ 
+%
+%
+%%% Define the oneline caption
+%\newcommand\onelinecaption[2][]{%
+%    \par\tinyskip
+%    \setlength\offsetfromright{0em}%
+%    \bgroup%
+%        %\vskip0pt plus1pt minus1pt %
+%        \reset@font
+%        \sffamily
+%        \bfseries%
+%        \footnotesize%
+%        \hfill\hfill#2\hbox to \offsetfromright{}%
+%     \egroup%
+%}
+
+%% Define the oneline centered caption. This has to become a key 
+%% command if possible, first one to use pgf/key system?
+%% #1 offset from top
+%% add to table of contents etc
+%\newcommand\onelinecaptioncentered[2][]{%
+%   \vskip0pt\vspace*{#1}
+%    \setlength\offsetfromright{0em}%
+%    \bgroup%
+%        %\vskip0pt plus1pt minus1pt %
+%        \reset@font
+%        \sffamily
+%        \bfseries%
+%        \footnotesize%
+%        \hfill#2\hbox to \offsetfromright{}\hfill%
+%     \egroup%
+%}
+
+
+
+
+
+\begin{filecontents}{kroll.sty}
+%% 
+%% 
+%% We define some more skips 
+%% tinyskip is 4pt skip to have the captions tights below images
+\def\tinyskip{\vskip 4pt plus 1pt minus 1pt}
+%
+%% By-line command
+\newcommand\byline[2][]{\footnotesize \textbf{#1}#2}%
+
+%% \onelineheader is a header that must fit on line
+%    We define a new if to check if the header must be centered
+%    this is set true by default
+\newif\if@centeredheader
+\@centeredheadertrue
+%
+%   Provide an author command to set the
+%   font for the header
+\gdef\setonelineheaderfont#1{%
+  \gdef\onelineheaderfont{#1}%
+}
+%   Set default font
+\setonelineheaderfont{\sffamily\LARGE\bf}
+%    onelineheader
+%% #1 c,l,r provides for the heading justification
+%% set default as centered
+\newcommand\onelineheader[2][c]{%
+\leavevmode\par
+ \if#1c\@centeredheadertrue
+  \else\@centeredheaderfalse
+\fi
+ \vspace{1.5\baselineskip}%
+   \if@centeredheader 
+      \bgroup\onelineheaderfont\centering\mbox{#2}\par\egroup 
+   \else
+      \if#1r% flushright
+         \bgroup\hfill\hfill\onelineheaderfont\mbox{#2}\par\egroup 
+       \else
+          \bgroup\onelineheaderfont\mbox{#2}\par\egroup 
+      \fi
+   \fi%
+   \vspace{0.5\baselineskip}%
+}
+
+%\renewcommand\LARGE{\@setfontsize\LARGE\@xviipt{12}}
+\newcommand\HeadFont{\@setfontsize\HeadFont{30}{35}}
+
+ \newcommand\MainHeader[1]{{\leavevmode\par \begin{center}\HeadFont #1 \end{center}
+\vspace{1cm}}}
+
+\newcommand\MainHeadera[1]{{\leavevmode\par\centering \HeadFont #1\par\vspace{1cm}}}
+
+%\newlength{\miniwidthii}{0pt}
+\def\starttemplate#1{%
+    \overfullrule0pt
+   \fboxsep=0pt
+   \fboxrule=0pt
+    \thispagestyle{plain}
+   \gdef\Geometry{%
+   \newgeometry{top=10mm,inner=1cm,outer=1cm,bottom=20mm,marginparsep=0pt,marginparwidth=0pt}}
+   \ifthenelse{\equal{kroll01}{kroll01}}{%
+      \Geometry
+%% we now calculate some of the parameters
+%% required
+    \setlength\miniwidthi{0.3\textwidth}%
+    \setlength\miniwidthii{0.67\textwidth}%
+    \setlength\sepmainhorizontal{0.03\textwidth}%
+    % The caption text at the bottom image
+    % not happy with this name, need to change it.
+   % \newcommand\byline[2][]{\footnotesize \textbf{##1}##2}%
+   %
+%% Create environments for convenience
+    \renewenvironment{leftcolumn}[1]{%
+        \begin{minipage}[b]{\miniwidthi} ##1}{\end{minipage}\hspace{1.5em}}%
+    \renewenvironment{rightcolumn}[1]{%
+        \begin{minipage}[b]{\miniwidthii} ##1}{\end{minipage}}%
+%% Create right column environment
+ }{}%end ifthenelse
+\def\stoptemplate{\restoregeometry}
+}
+%  to be removed in file version
+%  only for compatibility with some older
+%  examples
+\let\aheader\byline
+\end{filecontents}
+\usepackage{kroll}
+
+\def\Paragraph#1{\par\noindent \textbf{#1}\hspace{1em}}
+
+%\newcommand\end{multicols}{2}phasis[2][red]{\lstset{emph={write,void,writeln,#2},
+%   emphstyle={\ttfamily\textcolor{#1}}}}%
+
+
+\usepackage{fancyvrb}
+\fvset{fontsize=\normalsize}
+\DefineShortVerb{\|}
+\usepackage{lipsum,xcolor, listings, multicol,etoolbox}
+
+\usepackage{bibentry}
+\usepackage{setlistings}
+
+
+\RequirePackage[scaled=0.85]{berasans}
+\RequirePackage[scaled=0.85]{beramono}
+
+
+%\renewcommand{\ttdefault}{ectt1000}			% prefer old tt font
+
+
+%%
+\usepackage{pgfplots}
+\usepackage{pgfpl
+stable}
+\pgfplotsset{compat=newest}
+\usepackage{datetime}
+\usepackage{datenumber}
+\usepackage{pgfmanual}
+\usepackage[listings,theorems]{tcolorbox}
+\begin{document}
+
+%
+%\Alphabet
+%
+%\frogking
+%
+%\dogs
+%
+%\fox
+%
+%\onepar
+
+
+
+
+
+
+\listoftables
+
+
+\overfullrule0pt
+
+\restoregeometry
+
+\frontmatter
+\setlength\columnsep{2.03em}
+
+
+% This is the cover page
+\thispagestyle{empty}
+\coverpage{./graphics/cockfight}{Y. Lazarides}{Published by Camel Press}
+\secondpage
+\tableofcontents
+%\listoffigures  still giving problems
+
+%%%% MAIN TEXT
+\pagestyle{headings}
+\mainmatter
+
+
+\clearpage
+
+\clearpage
+\newgeometry{left=0in,right=0in}
+\includegraphics{./graphics/piero}
+
+
+\includegraphics{./graphics/vision}
+
+
+
+\restoregeometry
+
+
+\newgeometry{left=1in,right=1in}
+{\LARGE{\textbf{AN UNUSUAL OPENING}}}
+
+\topline
+\begin{multicols}{2}
+\captionof{figure}{Bill Bryson's book  \textit{The lost continent: travels in small-town America} has an unusual first paragraph opening it has the equivalent of long equal sign, followed by the first three words in small caps, but without the capital letter being higher than the rest of the letters. }
+
+\includegraphics[width=0.32\textwidth]{./graphics/droveon}
+
+\columnbreak
+\fbox{\includegraphics[width=\linewidth]{./graphics/billbryson02}}
+\end{multicols}
+\bottomline
+
+
+\newcommand{\lettrinerule}[1]{%
+  \settoheight{\dimen0}{\scshape #1}%
+  \noindent
+  \vbox to \dimen0{\hrule width 5em height1.5pt\vfill\hrule height1.5pt}\kern.5em
+  \textsc{#1}}
+
+%@book{bryson1989lost,
+%  title={The lost continent: travels in small-town America},
+%  author={Bryson, B.},
+%  isbn={9780060161583},
+%  lccn={89045027},
+%  url={http://books.google.com.qa/books?id=2Uk-UnvvUEcC},
+%  year={1989},
+%  publisher={Harper \& Row}
+%}
+
+\lettrine{A}{n unusual opening} for a first paragraph can be found in Bill Bryson's best seller  \textit{The lost continent: travels in small-town America}. This is not very difficult to reproduce using 
+
+\begin{quote}
+\large
+
+\lettrinerule I DROVE ON, without the radio or much in the way of thoughts, to Mount Pleasant, where I stopped for coffee. I had the Sunday \textit{New York Times} with me---one of the greatest improvements in life since I had been away was that you could now buy the \textit{New York Times} out of machines on the day of publication
+\end{quote}
+
+\restoregeometry
+
+\let\citep\cite
+\let\citet\cite
+\let\citeauthor\cite
+\let\docpkg\cmd
+\let\doccmd\cmd
+\let\sourceatright\relax
+\let\graybox\relax
+\let\setmalay\relax
+\let\ArabTeX\relax
+\let\bibtex\relax
+\def\ctan{ctan.org}
+\input{preamble}  % the preamble
+
+\restoregeometry
+\part{MATHEMATICS}
+\input{./sections/maths}
+
+left to curl \left\{\begin{matrix}
+first \\
+second \\ 
+42
+\end{matrix}\right.
+
+\end{document}
+
+\input{./manual/graphics}
+\input{./manual/introduction}  % the preamble
+\input{./manual/paragraphs}
+\input{./manual/fonts}
+\input{./manual/languages}
+\input{./manual/boxesandglue}
+\input{./manual/grouping}
+\input{./manual/verse}
+
+\input{./manual/charting01}
+\input{./manual/docjavascript}
+\input{./manual/captions}
+
+
+\newgeometry{left=2cm,right=2cm}
+\part{PROGRAMMING}
+\input{./manual/macros}
+\input{./manual/iteration}
+\input{./manual/futurelet}
+\input{./manual/expandafter}
+\input{./manual/usefulmacros}
+
+\input{./manual/datastructures}
+%\input{./manual/numbers}
+\input{./manual/classes}
+
+
+\part{TABULAR MATERIAL}
+\input{./manual/tables}
+
+\part{MATHEMATICS}
+\input{./sections/maths}
+\end{document}
+\part{TYPESETTING CODE}
+\input{./manual/typesettingcode}
+
+\part{TYPESETTING THE INDEX}
+\input{./manual/indices}
+\part{LATEX KERNEL}
+\input{./manual/latexkernel}
+\input{./manual/OTR}
+\input{./manual/book.cls.tex}
+
+
+
+\clearpage
+
+
+
+\input{./manual/packages}
+
+
+
+
+
+\input{./manual/characters}
+\input{./manual/diacritics}
+
+\input{./manual/bibliographies}
+
+
+
+
+%%\input{./manual/paragraphs}
+%\input{./manual/book.cls.tex}
+
+\clearpage
+
+
+
+
+\input{./manual/numbers}
+
+\input{./manual/docjavascript}
+
+
+\input{./manual/counters}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\clearpage
+{\centering
+\fboxrule=0.2pt
+\fbox{\includegraphics[width=0.8\textwidth]{ostracods}\par}
+\captionof{figure}{Page from \textit{Microfossils} by Armstrongs and Brazier, published by Blackwell Publications , where multiple images were combined into one figure. The figures were labeled on the images themselves. This is normally not such a good idea, but in this case, it is visually pleasing not to have numbering below the images.}}
+%@book{armstrong2005microfossils,
+%  title={Microfossils},
+%  author={Armstrong, H. and Brasier, M.D.},
+%  isbn={9780632052790},
+%  lccn={2004003936},
+%  url={http://books.google.com.qa/books?id=s5Pn3E5WtAUC},
+%  year={2005},
+%  publisher={Blackwell Pub.}
+%}\medskip
+\onelineheader{3.1 Arrangement of multiple figures}
+
+\lipsum[1]
+The function \(g\) is simply the derivative of \(f\), so
+\begin{align*}
+    g(t) &= \frac{f(t)}{t}\\
+         &= \frac{t_c}{t^2}\exp{-t_c/t_{23}}\rlap{,}
+\end{align*}
+so \(g(t)\) will be smaller than \(f(t)\) for large \(t\).
+\begin{multicols}{2}
+\lipsum[1]
+\bigskip\par
+\bigskip
+\noindent{\Large\textsf{3.1.3\quad Odd and even pages}}\\[-6.5pt]
+\rule{\columnwidth}{1pt}\par
+\bigskip
+\lipsum[1-2]
+\end{multicols}
+\clearpage
+{\centering
+\fboxrule=0.2pt
+\fbox{\includegraphics[width=0.8\textwidth]{plate-2}\par}
+\captionof{figure}{Page from \textit{The Cambridge ancient history: Plates to volumes I and II},
+here the publisher, probably for economical reasons placed all figures in plates in a separate volume. I do not particular like the arrangement and I think one could do better. However the book was published in 1977, when computer typesetting was limited as well as cameras and software for image manipulation.}
+%  author={Edwards, I.E.S. and Gadd, C.J. and Hammond, N.G.L.} by Armstrongs and Brazier, published by Blackwell Publications , where multiple images were combined into one figure. The figures were labeled on the images themselves. This is normally not such a good idea, but in this case, it is visually pleasing not to have numbering below the images.}}
+%@book{edwards1977cambridge,
+%  title={The Cambridge ancient history: Plates to volumes I and II},
+%  author={Edwards, I.E.S. and Gadd, C.J. and Hammond, N.G.L.},
+%  number={v. 1},
+%  isbn={9780521205719},
+%  lccn={lc75085719},
+%  series={The Cambridge Ancient History Plates},
+%  url={http://books.google.com.qa/books?id=QNlTWXruk2EC},
+%  year={1977},
+%  publisher={Cambridge University Press}
+%}
+\clearpage
+{\centering
+\fboxrule=0.2pt
+\fbox{\includegraphics[width=0.78\textwidth]{conservation}\par}
+\captionof{figure}{Page from \textit{The Cambridge ancient history: Plates to volumes I and II},
+here the publisher, probably for economical reasons placed all figures in plates in a separate volume. I do not particular like the arrangement and I think one could do better. However the book was published in 1977, when computer typesetting was limited as well as cameras and software for image manipulation.}\par
+\medskip
+\includegraphics[width=\textwidth]{multiple-images}\par
+\captionof{figure}{A series of pages from the same book, illustrating how the theme carries around on all the pages. Notice the use of only one caption to describe all the images. }\par
+%@book{stubbs2011architectural,
+%  title={Architectural Conservation in Europe and the Americas},
+%  author={Stubbs, J.H. and Maka{\v{s}}, E.G. and Bouchenaki, M.},
+%  isbn={9780470900994},
+%  lccn={2010045252},
+%  url={http://books.google.com.qa/books?id=goCJx26btm0C},
+%  year={2011},
+%  publisher={John Wiley \& Sons}
+%}
+
+
+
+
+
+
+
+
+
+
+
+\newgeometry{left=15mm,right=15mm,top=25mm,bottom=25mm}
+\input{./manual/boxesandglue}
+
+
+\chapter{THE KROLL STYLE}
+The Kroll Style has the following characteristics.
+
+The article starts with a page that has the following characteristics:
+\begin{enumerate}[1.]
+\item It is an uneven three column layout.
+\item It has two images, one at the left and a larger one at the two column side.
+\item It has two headers. The headers differ in their font styling.
+\item Both images have captions with different formatting.
+\item The story has
+ a thwo colum layout.
+\end{enumerate}
+
+
+
+%\input{./manual/fonts}
+
+
+%% Defining kroll style
+  %% We need to find a way to define the templates
+%% We will assume that images have been saved in a database
+%% image@file
+%% image@caption
+%% this is a must to avoid long typing and keep the environments
+%% short
+\fboxsep=0pt
+\fboxrule=0pt
+%% Example template kroll01
+\starttemplate{kroll}
+    \begin{leftcolumn}
+       \MainHeader{Leon\\[15pt] Kroll}
+       \putimage[width=1.0\linewidth]{krollportrait}\par
+       \aheader{shows Kroll at 59. Says he. ``Painting is fascinating'' even when motif my own mug.}
+   \end{leftcolumn}
+    % dadad's happy 88 happy 88 squares http://www.spraygraphic.com/ViewProject/18240/normal.html
+   \begin{rightcolumn}
+       \putimage[width=\linewidth]{squares} %nudeback
+       \onelinecaption{{\resizebox{\linewidth}{5.5pt}{\bfseries \hfill NUDE \hfill BACK \hfill SHOWS \hfill  A \hfill DANCER \hfill WHOSE \hfill BACK \hfill SAYS \hfill KROLL, \hfill HAS \hfill BEAUTIFUL \hfill PLANES }}\par}
+       \onelineheader{THE DEAN OF U.S. NUDE-PAINTERS}
+      \begin{multicols}{2}
+      \small
+      \lettrine{A}{t the} age of 63 when businessmen are thinking of retiring leon Kroll according to Life Magazine was having the busiest time of his life, just doing what comes naturally.  \lorem\lorem
+      \end{multicols}
+   \end{rightcolumn}
+\stoptemplate
+
+\newcommand\sideepigraph[3][1]{%
+  \leavevmode% start a paragraph if necessary
+  \textit{#2}\par
+  \smallskip\par
+  \hfill  \mbox{---  #3}
+}
+
+%% Example template for boxes and glue
+\starttemplate{kroll}
+\begin{leftcolumn}
+\MainHeader{Boxes\vskip0pt and \vskip0pt Glue}
+\sideepigraph{Once you understand TEX's concept of glue, you may well decide that
+it was misnamed; real glue doesn't stretch or shrink in such ways, nor does it
+contribute much space between boxes that it welds together. Another word like
+ would be much closer to the essential idea, since springs have a natural
+width, and since different springs compress and expand at different rates
+under tension. But whenever the author has suggested changing TEX's terminology,
+numerous people have said that they like the word in spite of its
+inappropriateness; so the original name has stuck. }{Donald E. Knuth}
+\medskip 
+\putimage[width=1.0\linewidth]{knuth-drofina}
+\byline[DONALD KNUTH ]{watercolor painting by Dolphina, shows Knuth standing in his house.}
+\end{leftcolumn}
+    % dadad's happy 88 happy 88 squares http://www.spraygraphic.com/ViewProject/18240/normal.html
+\begin{rightcolumn}
+\putimage[width=\linewidth]{squares}\par 
+\onelinecaption{Dadad's happy 88 squares.}
+\onelineheader{THE \TeX\ BOX AND GLUE MODEL}
+\begin{multicols}{2}
+ \lettrine{A}{t the} age of 63 when businessmen are thinking of retiring leon Kroll according to Life Magazine was having the busiest time of his life, just doing what comes naturally.  \lorem\lorem\lorem\lorem\lorem
+\end{multicols}
+\end{rightcolumn}
+\stoptemplate
+
+
+\input{./manual/botticelli-01}
+
+
+%% Example template kroll01
+\starttemplate{kroll}
+    \begin{leftcolumn}
+       \MainHeadera{Joseph Karl  Stieler}
+       \putimage[width=1.0\linewidth]{beethoven}\par
+       \aheader{shows Kroll at 59. Says he. ``Painting is fascinating'' even when motif my own mug.}
+   \end{leftcolumn}
+   \begin{rightcolumn}
+       \putimage[width=\linewidth]{karl01}
+       \onelinecaption{YOUNG WOMAN}
+
+       \onelineheader{JOSEPH KARL STIELER}
+      \begin{multicols}{2}
+      \small
+      \lettrine{A}{t the} age of 63 when businessmen are thinking of retiring leon Kroll according to Life Magazine was having the busiest time of his life, just doing what comes naturally.  \lorem\lorem\lorem\lorem
+      \end{multicols}
+    \end{rightcolumn}
+\stoptemplate
+
+%% Example template kroll01
+\starttemplate{kroll}
+    \begin{leftcolumn}
+       \MainHeadera{Nikolai \\ Kalmakov}
+       \putimage[width=1.0\linewidth]{kalmakov01}\par
+       \aheader{Self Portrait as John the Baptist.}
+   \end{leftcolumn}
+   \begin{rightcolumn}
+       \putimage[width=\linewidth]{kalmakov03}
+       \onelinecaption{YOUNG WOMAN}
+
+       \onelineheader{NIKOLAI KALMAKOV}
+      \begin{multicols}{2}
+      \small
+      \lettrine{A}{t the} age of 63 when businessmen are thinking of retiring leon Kroll according to Life Magazine was having the busiest time of his life, just doing what comes naturally.  \lorem\lorem
+      \end{multicols}
+    \end{rightcolumn}
+\stoptemplate
+
+
+{
+\par.
+
+\centering
+
+ \includegraphics[width=\textwidth,height=\textheight,keepaspectratio]{leda}
+\par
+}
+
+
+
+
+
+\starttemplate{kroll}
+   \includegraphics[width=\textwidth]{kroll02a}
+\stoptemplate
+
+
+\newgeometry{top=5mm,bottom=0pt,left=0pt,right=0pt}
+\hspace*{-0.05\textwidth}\includegraphics[width=1.0\textwidth]{American-3up}
+
+
+
+\restoregeometry
+\includegraphics[width=\textwidth]{kroll02a}\par
+
+\index{Leon croll}
+\begin{minipage}{\textwidth}
+\putimage[width=\textwidth]{leoncroll}\par
+
+\bigskip
+\centerline{\Huge LEON KROLL's NUDES}
+\bigskip
+\begin{minipage}{\textwidth}
+\begin{multicols}{3}
+\lettrine{L}{eon} Kroll was a painter, lithographer, art critic and teacher who was born in 1884 in New York City. Living his professional life in New York City and Chicago, he summer in Rockport, MA and became one of the most popular and famous of its painters by 1920.
+Kroll studied at the Art Students League in New York City and with John H. Twachtman in 1901, the National Academy of Design in 1903 and the Academie Julian in Paris from 1908-1909 with Jean Paul Laurens. He was an Associate (1920) and full Academician (1927) of the National Academy of Design; a member of the
+New Society of Artists; Philadelphia Art club; American Society of Painters and Sculptors (president, 1931-1935); Boston Art Club; National Institute of Arts and Letters (vice-president, 1943); American Academy of Arts and Letters (1950, director and chairman of the art committee); Woodstock Art Association; and the National Art Club (life member). 
+
+His first solo exhibition was given in 1910 at the National Academy of Design and many followed.   
+Kroll’s accomplishments in art are vast and he won prestigious awards at the
+Pennsylvania Academy of Fine Art (1927, 1930); Salmagundi Club (1912); Pan-Pacific Exposition (1915); Art Institute of Chicago (1919, 1924, where he showed his work in a two-man show with George Bellows); Wilmington SFA (1921); National Academy of Design (1921, 1922, 1932, 1935, 1943, 1965); the Carnegie
+Institute (1926, 1936); Newport AA (1929, 1939); National Arts Club (1930); Boston Art Club (1932); International Exposition, Paris (1937); Philadelphia Art Alliance (1941); and the Chevalier, Legion of Honor, France (1950).
+\end{multicols}
+\end{minipage}
+\end{minipage}
+\clearpage
+
+Kroll is represented in the permanent collections at the Corcoran Gallery of Art; PAFA; Metropolitan Museum of Art; Museum of Modern Art; Art Institute of Chicago; Carnegie Institute; Los Angeles County Museum of Art; Dayton Art Institute; Detroit Institute of Art; Denver Art Museum; San Diego Fine Art Society; Norton Gallery; St. Louis Museum of Art; John Herron Art Institute and hundreds more. He was commissioned to do murals for the U.S. Military Cemetery, Omaha Beach, France and the John Hopkins University Auditorium. He was a teacher at the National Academy, the Maryland Institute of Art, the PAFA and the Arts Student League and painted in Gloucester by 1912. He became a close friend of Chagall and R. Delaunay in France and in 1917 he went to Santa Fe to join Robert Henri and George Bellows on painting excursions. By 1920, he was one of the most famous realists in America and in 1937 he was given a retrospective exhibition at the Worcester Museum in 1937. He died in Gloucester
+ in 1974.
+
+\includegraphics[width=\textwidth]{kroll01}\par
+\includegraphics[width=\textwidth]{kroll03}\par
+
+
+
+
+
+
+
+
+%% One page (full to side edge with murals
+
+\newgeometry{left=1in,right=1in,top=1in,bottom=1in}
+\begin{casestudy}[Measuring positions on a page.]{%
+How can I obtain a measurement from the baseline of any line of text in a document to top of the body of text on a page?
+}
+
+\begin{teXXX}
+\documentclass{article}
+\usepackage[showframe]{geometry}% http://ctan.org/pkg/geometry
+
+\usepackage[savepos]{zref}% http://ctan.org/pkg/zref
+\newcounter{parcnt} \newcommand{\nl}{\stepcounter{parcnt}\theparcnt}
+\begin{document}
+\zsavepos{top}\nl\ \the\pagetotal \par
+\nl\ \the\pagetotal \par \bigskip \bigskip
+\nl\ \the\pagetotal \par
+\nl\ \the\pagetotal \par \medskip
+\nl\ \the\pagetotal \par
+\nl\ \the\pagetotal \par \smallskip \smallskip \smallskip
+\nl\ \the\pagetotal \par
+\nl\ \the\pagetotal \par \vspace{2cm}
+\zsavepos{bottom}\nl\ \the\pagetotal\ \the\dimexpr\zposy{top}sp-\zposy{bottom}sp\relax \quad%
+  \smash{\rule{1pt}{\dimexpr\pagetotal+\the\fontdimen6\font\relax}}
+\end{document}
+\bottomline
+\end{teXXX}
+ 
+The length |\pagetotal| is a measure of the accumulated distance from the baseline of the first line of the page. Alternatively, the \pkg{zref} package also allows node placement and coordinate extraction via its |savepos| module. 
+\end{casestudy}
+
+
+%% CHAPTER FONTS
+\starttemplate{kroll}
+    \begin{leftcolumn}
+       %\MainHeader{Leon\\[15pt] Kroll}
+      {{\leavevmode\centering \huge  THE ART OF \\
+       TYPESETTING\\
+       TEXT }}
+      \medskip
+       {\justifying \small Perhaps some day a typesetting language will become standardized to the 
+point where papers can be submitted to the American Mathematical Society 
+from computer to computer via telephone lines. Galley proofs will not be 
+necessary, but referees  and / or copy editors could send suggested changes to 
+the author, and he could insert these into the manuscript, again via telephone.\par
+\hfill \textit{Donald Knuth}}
+       \putimage[width=1.0\linewidth]{cocacola}\par
+       \aheader{shows Kroll at 59. Says he. ``Painting is fascinating'' even when motif my own mug.}
+   \end{leftcolumn}
+   \begin{rightcolumn}
+       \putimage[width=\linewidth]{scout}
+       \onelinecaption{{\resizebox{\linewidth}{5.5pt}{\bfseries The Mathematician (1918) an oil painting by the Mexican artist Diego Rivera. }}\par}
+       \onelineheader{USING FONTS}
+      \begin{multicols}{2}
+      \small
+      \lettrine{M}{ost people} discover, \alltex when they are faced with the production of a thesis or paper that includes lots of
+mathematical text. It is the rais\`on detrait for \tex. In this chapter we will discuss the typesetting of mathematics, common pitfalls and solutions. We will also review some typographical questions.
+\parindent1em
+
+You can start writing mathematical text, without any additional loading of packages, either in plain \tex or \latex. The reality is that most institutions have developed their own styles and common packages used by AMS have found widespread use. We will discussing these extensively, but first let us look at how to enter mathematical text. 
+
+To enter mathematical text in plain \tex you just use the |$|\ldots|$| for inline math and |$$|\ldots|$$| for displayed math. We now illustrate, the usage with and example.
+      \end{multicols}
+   \end{rightcolumn}
+\stoptemplate
+
+%
+
+
+
+
+
+
+%\input{./manual/pages}  Gives problems
+\input{murals}
+\section{Enlarging pages}
+
+\textbf{CASE STUDY :} Even with your best endeavours and the correct settings for penalties, sometimes you may want to add a line or two\footnote{Adding more than two lines, i.e. two times baselineskip, will certainly write over the page numbering with the standard \latex classes. } on the page in order not to create orphans.
+
+\topline
+We are interested to add two or three lines at the bottom of a page. There are a number of ways. In this case study, we will use the package \pkg{addlines}. The reason being is that it checks properly for odd and even pages.
+
+\begin{teX}
+\documentclass{book}
+\usepackage{addlines,lipsum,soul,xcolor}
+\makeatletter
+\def\aline{Adding lines at bottom of page.\par}
+\newcounter{cnt}
+\begin{document}
+\loop
+   \stepcounter{cnt}
+   \ifnum\thecnt<93
+   \ifnum\thecnt>48\addlines[2]\fi
+   \thecnt\space  \aline
+\repeat
+\end{document}
+\end{teX}
+
+In the normal book class, with the default font-size, we can get 46 lines on a page. We create a short loop and we test if the line numbers exceed 48 lines. If they do we add another two lines.
+
+\clearpage
+
+\chapter{CUSTOMIZING CHAPTERS}
+These type of chapters are quite common and one of the layouts provided by the class.
+Before we examine 
+
+\vskip\abovedisplayskip
+{\centering \includegraphics[width=0.4\textwidth]{page-turkish-women}
+\includegraphics[width=0.4\textwidth]{page-turkish-women}\par}
+\vskip\belowdisplayskip
+
+The typography, of such pages:
+
+\begin{enumerate}[1.]
+\item The image is placed at the top part of the page and always should start as the same line as any text. 
+\item The image takes the full width or a maximum of 0.6 of |\textheight|.
+\item Image caption can be present or absent.
+\item Add to table of contents
+\item ifpdf maybe to pdf contents
+\item Text is two column. Text has font. is two column, separated by columnsep, First paragraph starts with a dropcap, 
+\item Spacing etc..
+\item no chapter number 
+\item must start on even or odd pages
+\item No header
+\item parskip set at less than that of full pages 1em 
+        (full width pages set at 1.5em by LaTeX in .clo files).
+\end{enumerate}
+
+\makeatletter
+\parindent1.5em
+\newenvironment{template}[1][harem01]{%
+%% we set parindent locally to zero
+\parindent0pt
+   \def\@tempa{#1}
+   \def\harem{harem01}
+   \ifx\@tempa\harem
+%% Start the template commands
+      \clearpage
+      \thispagestyle{plain}
+      \setlength\columnsep{1em}
+%% Using the harem template
+%% Define special commands locally
+       \def\addtitle##1{\onelineheader[c]{##1}
+            \vskip\belowdisplayskip
+       }%
+    %% Add image command
+      \newcommand{\addimage}[2][width=1.0\textwidth,height=0.7\textheight,keepaspectratio]{%
+       \bgroup\centering%
+       \noindent\includegraphics[##1]{##2}\par\egroup%
+       \vspace*{-15pt} % needs checking
+      }%
+   \else
+  \fi
+ \begin{minipage}{\textwidth}}
+ {\end{minipage}}
+\makeatother
+
+%%%%%%%%%%  HAREM EXAMPLES *************************
+\begin{template}[harem01]%
+   \addimage{harem}\par
+   \addtitle{``TURKISH WOMEN AT THE BATH''}
+\end{template}
+
+\begin{multicols}{2}
+\lettrine{T}his generously detailed view of a Turkish harem is by a master French classicist of the last century. He was Jean Auguste Dominique Ingress, who at 82 capped a long career of painting cool nacreous nudes by doing this clutter of sultry houris for Prince Napoleon. \lipsum[1-3]
+\end{multicols}
+
+%% --------------------------- SECOND EXAMPLE -----------------------------------------
+\begin{template}[harem01]
+    \addimage[width=\textwidth]{guyrose02}
+
+    \onelinecaption{Beautiful Woman by Guy Orlando Rose}
+    \addtitle{GUY ORLANDO ROSE}
+\end{template}
+\begin{multicols}{2}
+\lipsum[1-3]
+\end{multicols}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% --------------------------- THIRD EXAMPLE -----------------------------------------
+\begin{template}[harem01]
+    \addimage{sexy01}
+
+   % \onelinecaption{Beautiful Woman by Guy Orlando Rose} needs to be measured
+
+    \addtitle{GUY ORLANDO ROSE}
+\end{template}
+\begin{multicols}{2}
+\lipsum[1-3]
+\end{multicols}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+
+
+
+
+
+\chapter{Simple Shaping}
+
+\begin{multicols}{2}
+\tex provides a simple command to produce hanging indentation \cmd{hangindent} and \cmd{hangafter}. A number of packages will allow you to shape a paragraph as well. This was discussed earlier.
+
+The \pkg{cutwin} package, can be used to cut a window in one paragraph. Originally developed by \person{Peter Wilson} and \person{Alan Hoenig}. The code provided by the cutwin package is meant to help in creating windows,
+or cutouts, in a text-only paragraph. It is based on code originally published by
+Alan Hoenig.
+\end{multicols}
+\topline
+\bigskip
+
+
+
+\opencutleft
+\captionsetup{singlelinecheck=no}
+\newtheorem{exam}{Example}
+
+\renewcommand\windowpagestuff{%
+  \vspace*{-2ex}\includegraphics[width=4.7cm]{botticelli}
+  \captionof{figure}{A test figure.}
+}
+
+\begin{exam}
+  \begin{cutout}{3}{0pt}{0.69\linewidth}{18}
+    \lipsum*[1-2]\lorem
+  \end{cutout}
+\end{exam}
+\lorem
+%\renewcommand{\putstuffinpic}{\includegraphics[width=5cm]{amato}}
+%\picinwindow
+%
+%XXXXXXXXXXXXXXXXXXXXX
+%\begin{picture}(0,0)
+%AAAAAAAAAAAAA
+%\end{picture}
+
+\section{Using hangindent and hangafter}
+\hangindent120pt \hangafter3
+\begin{picture}(0,0)
+\put(0,-50){\Large MODIGLIANI}
+\put(0,-68){\Large MODIGLIANI}
+\end{picture}\lipsum[1-2]
+
+
+\section{Positioning the picture anywhere}
+
+
+\indent The combination of "\string\cutout" with fixed scale allows an
+entirely different application: producing cutouts for graphics.  First,
+produce a rough \oarg{shape spec} for the image to delineate its left and
+right borders (you can ignore all internal detail) or use an appropriate
+pre-defined shape.  Then use "\string\includegraphics" as the text of the
+shaped paragraph.  There is a difficulty though: we want the image <filename>
+to take the place of the entire paragraph, not to stand up on the
+top line.  There are a number of methods for lowering the graphic
+appropriately (and some methods that will not work with "\string\shapepar");
+three that work are:
+
+\begin{verbatim}
+\begin{flushleft}
+\hfill\makebox[0pt][c]{\raisebox{1ex-\height} % requires calc.sty  
+\qquad{\includegraphics{file}}}
+or \\
+\hfill\\
+\begin{minipage}[t]{0pt}
+ \vspace {-1ex} % \vspace works here only
+  \centerline{ \includegraphics{file} }
+\end{minipage}
+\hfill
+and, most general,\\
+\begin{picture}(0,0)
+\put(x,y){\includegraphics{<file>}}
+\end{picture}
+\end{flushleft}
+\end{verbatim}
+The first two adjust the height automatically, but assume the
+top line of the shape is horizontally centered.  The picture
+environment handles positioning more flexibly, but requires
+you to provide parameters $x,y$. Just try approximate values,
+make a test run, measure the offset, and correct. This should
+only require one trial, not an endless cycle. Because the 
+reference point for the shaped paragraph is based on the  
+it contains, and not just the specified shape, some adjustment
+will usually be needed to position a shaped paragraph precisely.
+(From shapepar)
+
+
+\clearpage
+\input{imagedb}
+
+
+\input{./manual/wrapfig-02} % main chapter on wrapfig
+%\input{./manual/wrapfig-01} % Cyprus dance example
+
+
+%\input{./manual/captions}
+
+
+\input{./manual/subfigure}   % use of subfigures  brekas read hyperef
+
+
+
+\input{photography}
+
+ 
+\input{funinamerica}
+\input{blackandwhite}
+\input{germans}
+\input{prudential}
+\input{elgreco.tex}
+\input{barmaid}
+\input{anneinwhite}
+\input{dragnew}
+\input{twowomen.tex}
+\input{twowomenreverse}
+\input{threepicture.tex}
+\input{britney}
+\input{elfrida}
+\input{mexican}
+
+\input{overflowmargins.tex}
+\input{singlepage}
+%\input{./manual/sideways}
+
+
+
+\newgeometry{top=1cm,bottom=1cm,left=1cm,right=1cm}
+\par
+\makeatletter
+\def\XX{\strip@pt\textwidth}
+\def\Xi{4.5}
+\gdef\temp{}
+\def\xii{11}
+\def\YY{2}
+\makeatother
+\textbf{\LARGE ABSOLUTE POSITIONING}
+
+\begin{textblock}{\Xi}(1,\YY)
+\textbf{Block A}
+
+\putimage[width=\linewidth]{plate}
+
+We position the text using the \texttt{textblock} package.
+Blocks van be inserted at any order but the x,y
+point are defined from the top left point of the
+page,
+
+\includegraphics[width=\linewidth]{plate}
+
+\lorem
+
+\includegraphics[width=\linewidth]{plate}
+
+lrentia platipus and some more text to find out what we need to do
+\end{textblock}
+\begin{textblock}{\Xi}(6.0,\YY)
+Block B
+\lorem\lorem
+\end{textblock}
+\begin{textblock}{\Xi}(11.0,\YY)
+Block C
+Using absolute co-ordinates\par
+%\includegraphics[width=\linewidth]{plate01}
+\lorem\lorem
+\end{textblock}
+\begin{textblock}{8.5}(6.5,6)
+\textbf{Block D}
+Using absolute co-ordinates\par
+\includegraphics[width=\linewidth]{plate01}
+\lorem
+\end{textblock}
+
+
+\par\par
+
+\clearpage
+
+\includegraphics[width=\textwidth]{minoan}
+
+\includegraphics[width=\textwidth]{artjournal}
+
+\includegraphics[width=\textwidth]{artjournal01}
+
+
+
+\clearpage
+\begin{minipage}{\textwidth}
+\centerline{\includegraphics[width=0.95\linewidth]{guyrose03}}
+\begin{multicols}{2}
+\footnotesize \textbf{Guy Orlando Rose} \lorem
+\end{multicols}
+\centerline{\includegraphics[height=0.5\linewidth]{guyrose01}\hspace{1em}
+\includegraphics[height=0.5\linewidth]{guyrose04}}
+\centering
+\begin{minipage}{0.8\textwidth}
+\begin{multicols}{2}
+\footnotesize\lorem
+\end{multicols}
+
+\end{minipage}
+
+\end{minipage}
+
+
+
+{
+\begin{center}
+\centerline{\includegraphics[height=0.95\textheight]{guyrose05}}
+\bigskip
+\nobreak
+\parbox{0.7\textwidth}{\footnotesize\rm Dressed up like a grand lady and feeling very serious, little Jean Bellows
+posed for this portrait by her father in 1924. }
+\end{center}
+}
+
+What we need is to define the following algorithm
+
+\begin{verbatim}
+\pageenviroment
+     if stack is empty {stack}  
+        if multicol exceeds limit split into two 
+             parts 
+        part b move onto stack
+      typeset
+    else
+       check and split
+    \fi
+    pagebreak
+\endpageenvironment
+\end{verbatim}
+
+
+
+\clearpage
+
+{\centering
+\includegraphics[height=0.8\textheight, width=\textwidth, keepaspectratio]{A_Girl_with_a_Watering_Can}\par\smallskip
+
+{\Large A Girl with a Watering Can}\par\smallskip
+
+\parbox{0.6\textwidth}{\footnotesize\rm Dressed up like a grand lady and feeling very serious, little Jean Bellows
+posed for this portrait by her father in 1924. great leader of America's realistic painters known as the ``As-can-School'', the late George Bellows depicted prize fights, river fronts, revival meetings, political sessions. But this simple portrait, with its color scheme appropriately based on the red, yellow and blue of a child's paintbox, is a bellows masterpiece. It is currently at the Yale Gallery.}}
+
+{\begin{center}
+\includegraphics[height=\textheight, width=\textwidth, keepaspectratio]{heatwave01}\par\smallskip
+{\centering \Large South Wind}\par\smallskip
+\parbox{0.6\textwidth}{\footnotesize\rm Paul Clemens did \textit{South Wind} during a Milwauke heat wave, which he says accounts for the languid pose of the model. Clemens creates a beautiful harmony between the sun-tanned complexion and the basket of tawny fruit.}
+\end{center}
+}
+
+
+%%%%%%%%%%%%%% Modigliani %%%%%%%%%%%%%%%%%%%%%%%
+
+{\centering
+\includegraphics[width=\textwidth, keepaspectratio]{modigliani}\par\smallskip
+
+{\Large \textsc{Madame H\'ebuterne}}\par\smallskip
+
+\parbox{0.6\textwidth}{\footnotesize\rm .}}
+
+{\centering
+\includegraphics[height=0.9\textheight,width=\textwidth, keepaspectratio]{modigliani01}\par\smallskip
+
+{\Large \textsc{In 1918, Modigliani painted a wistfhead of Jeanne, framed by a cascade of hair.}}\par\smallskip
+
+\parbox{0.6\textwidth}{\footnotesize\rm .}}
+
+
+\newgeometry{left=10mm,right=10mm,top=5mm,bottom=1cm}
+\thispagestyle{empty}
+\clearpage
+
+%%%%%%%%%%%%%% Botticelli %%%%%%%%%%%%%%%%%%%%%%%
+
+{\centering
+
+\includegraphics[width=0.84\textwidth]{botticelli}\par\vspace*{1.5\baselineskip}
+{\LARGE {FLORENTINE SCHOOL: \quad A Botticelli Portrait}}\par
+\vspace*{1.5\baselineskip}
+}
+\begin{minipage}{\textwidth}
+\begin{multicols}{2}
+\flushleft
+\lettrine{B}otticelli \lipsum[1]
+\end{multicols}
+\end{minipage}
+
+%% BOTTICELLI01 ALTAR PIECE *********************
+\includegraphics[height=\textheight]{botticelli01}
+\par
+\clearpage
+
+\includegraphics[width=\textwidth]{botticelli02}\par
+\begin{minipage}{\textwidth}
+\begin{multicols}{2}
+\flushleft
+\lettrine{T}he \textit{Madonna and Child with Six Saints}, also known as Sant'Ambrogio Altarpiece, is a painting by the Italian Renaissance master Sandro Botticelli, finished around 1470. It is housed in the Galleria degli Uffizi, in Florence. It portrays the Virgin enthroned with the saints Mary Magdalene, John the Baptist, Francis, Catherine of Alexandria and, kneeling, Cosmas and Damian (patrons of the House of Medici). It is in fact most likely that the latter are portraits of Medici members. Lorenzo il Magnifico and his brother Giuliano have been considered.
+\end{multicols}
+\end{minipage}
+%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%% vermeer
+{\centering
+
+\includegraphics[width=\textwidth]{vermeer01}\par\vspace*{1.5\baselineskip}
+{\LARGE {FLORENTINE SCHOOL: \quad A Botticelli Portrait}}\par
+\vspace*{1.5\baselineskip}
+}
+\begin{minipage}{\textwidth}
+\begin{multicols}{2}
+\flushleft
+\lettrine{B}otticelli \lipsum[1]
+\end{multicols}
+\end{minipage}
+
+
+%%%%% vermeer
+{\centering
+
+\includegraphics[width=\textwidth]{youngwoman}\par\vspace*{1.5\baselineskip}
+{\LARGE {FLORENTINE SCHOOL: \quad A Botticelli Portrait\\ Portrait of a a Young Woman}}\par
+\vspace*{1.5\baselineskip}
+}
+\begin{minipage}{\textwidth}
+\begin{multicols}{2}
+\flushleft
+\lettrine{B}otticelli \lipsum[1]
+\end{multicols}
+\end{minipage}
+
+
+%%%%% 
+{\centering
+
+\includegraphics[width=\textwidth]{simonetta}\par\vspace*{1.5\baselineskip}
+{\LARGE {FLORENTINE SCHOOL: \quad A Botticelli Portrait\\ Portrait of a a Young Woman}}\par
+\vspace*{1.5\baselineskip}
+}
+
+\clearpage
+
+%%%%% 
+{\centering
+\includegraphics[width=\textwidth]{anngutkins}\par\vspace*{1.5\baselineskip}
+%{\LARGE {FLORENTINE SCHOOL: \quad A Botticelli Portrait\\ Portrait of a a Young Woman}}\par
+%\vspace*{1.5\baselineskip}
+%}
+\clearpage
+
+%%%%% 
+{\centering
+\includegraphics[width=\textwidth]{brackman}\par\vspace*{1.5\baselineskip}
+%{\LARGE {FLORENTINE SCHOOL: \quad A Botticelli Portrait\\ Portrait of a a Young Woman}}\par
+%\vspace*{1.5\baselineskip}
+%}
+
+
+
+
+
+
+\includegraphics[width=\textwidth]{cotton-merchants}
+\clearpage
+
+\newgeometry{left=0pt,right=0pt,top=5mm}
+\includegraphics[width=\paperwidth]{war-artists}
+
+%% NEW STYLE
+%%%%%%%%%%%%%%%%%%%%% HOMER %%%%%%%%%%%%%%%%%%%
+
+\restoregeometry
+\chapter{DEVELOPING TEMPLATE STYLES}
+\flushleft
+
+Before developing styles, spent some time to sketch or try out manually what you need to do. We will use
+the images shown on Pages 5-8 as examples of developing styles. We will also split the styling between
+layouts, page typography and images. 
+\smallskip
+\begin{figure}[h]
+\centering
+\fboxrule0pt\fboxsep5pt
+\fbox{%
+\includegraphics[width=0.5\textwidth]{homer}\par\vspace*{1.5\baselineskip}
+}
+\end{figure}
+
+The image, placement and sizing should present no problem. The captions are in two columns, the name of the artist at left and the description at right. Not all images are done the same way and it will be better to split the code into a caption, title  caption text and caption layout.
+ \makeatletter
+\def\caption@text#1{%
+      \fboxrule1pt\relax
+       \par
+     \newlength\dimen@a
+     \settowidth\dimen@a{(1826-1900)}    
+    \begin{minipage}{\dimen@a}
+     \par \centering
+      HOMER  (1826-1900)
+    \end{minipage}
+     \begin{minipage}{0.5\textwidth}
+       \lipsum[1]
+    \end{minipage}
+ }
+
+
+\caption@text{testing something}
+
+\makeatother
+\vfill\vfill
+\pagebreak
+
+
+\newgeometry{left=10mm,right=10mm,top=1.0cm,bottom=1cm}
+%%%%% 
+{\centering
+\includegraphics[width=\textwidth]{americanart}\par\vspace*{1.5\baselineskip}
+%{\LARGE {FLORENTINE SCHOOL: \quad A Botticelli Portrait\\ Portrait of a a Young Woman}}\par
+%\vspace*{1.5\baselineskip}
+%}
+\clearpage
+
+
+\newgeometry{left=10mm,right=10mm,top=2.0cm,bottom=1cm}
+%%%%% 
+{\centering
+\includegraphics[width=1.0\textwidth]{americanart02}\par\vspace*{1.5\baselineskip}
+%{\LARGE {FLORENTINE SCHOOL: \quad A Botticelli Portrait\\ Portrait of a a Young Woman}}\par
+%\vspace*{1.5\baselineskip}
+%}
+\clearpage
+
+\newgeometry{left=10mm,right=10mm,top=1.0cm,bottom=1cm}
+%%%%% 
+{\centering
+\includegraphics[width=1.0\textwidth]{americanart03}\par\vspace*{1.5\baselineskip}
+%{\LARGE {FLORENTINE SCHOOL: \quad A Botticelli Portrait\\ Portrait of a a Young Woman}}\par
+%\vspace*{1.5\baselineskip}
+%}
+\clearpage
+
+\newgeometry{left=10mm,right=10mm,top=1.0cm,bottom=1cm}
+%%%%% 
+{\centering
+\includegraphics[width=1.0\textwidth]{americanart01}\par\vspace*{1.5\baselineskip}
+%{\LARGE {FLORENTINE SCHOOL: \quad A Botticelli Portrait\\ Portrait of a a Young Woman}}\par
+%\vspace*{1.5\baselineskip}
+%}
+\clearpage
+
+%%%%%%%%%%%%%%%%%%%%% HOMER %%%%%%%%%%%%%%%%%%%
+%\newgeometry{left=10mm,right=10mm,top=1.0cm,bottom=1cm}
+%%%%% 
+{\centering
+\includegraphics[width=0.9\textwidth]{homer}\par\vspace*{1.5\baselineskip}
+%{\LARGE {FLORENTINE SCHOOL: \quad A Botticelli Portrait\\ Portrait of a a Young Woman}}\par
+%\vspace*{1.5\baselineskip}
+%}
+\newpage
+
+%%%%%%%%%%%%%%%%%%%%% HOMER %%%%%%%%%%%%%%%%%%%
+%\newgeometry{left=10mm,right=10mm,top=10mm,bottom=1cm}
+%%%%% 
+{\centering
+\includegraphics[width=0.95\textwidth]{sargent}\par\vspace*{1.5\baselineskip}
+%{\LARGE {FLORENTINE SCHOOL: \quad A Botticelli Portrait\\ Portrait of a a Young Woman}}\par
+%\vspace*{1.5\baselineskip}
+%}
+
+\clearpage
+
+%%%%%%%%%%%%%%%%%%%%% HOMER %%%%%%%%%%%%%%%%%%%
+\newgeometry{left=10mm,right=10mm,top=1.0cm,bottom=1cm}
+%%%%% 
+{\centering%
+\includegraphics[width=\textwidth]{homer01}\par\vspace*{1.5\baselineskip}\par%
+\rule{0pt}{0.2\textwidth}\par
+\includegraphics[width=\textwidth]{eakins}\par\vspace*{1.5\baselineskip}\par
+%
+%{\LARGE {FLORENTINE SCHOOL: \quad A Botticelli Portrait\\ Portrait of a a Young Woman}}\par
+%\vspace*{1.5\baselineskip}
+%}
+\clearpage
+
+%%%%%%%%%%%%%%%%%%%%% HOMER %%%%%%%%%%%%%%%%%%%
+\newgeometry{left=10mm,right=10mm,top=1.0cm,bottom=1cm}
+%%%%% 
+\begin{minipage}{\textwidth}
+\includegraphics[width=\textwidth]{china-05}\par\vspace*{0.2\baselineskip}\par%
+\begin{multicols}{2}
+\footnotesize Soldiers from the Chinese People's Liberation Army (PLA) ground force march in formation past Tiananmen Square during a massive parade to mark the 60th anniversary of the founding of the People's Republic of China in Beijing October 1, 2009. (REUTERS/Jason Lee).
+
+PLA soldiers stand on military vehicles during a military parade marking China's 60th anniversary near the Tiananmen Square in Beijing, China, Thursday, Oct. 1, 2009. (AP Photo/Vincent Thian
+\end{multicols}
+\hspace*{3cm}\includegraphics[width=\textwidth]{china-06}\par
+%
+%{\LARGE {FLORENTINE SCHOOL: \quad A Botticelli Portrait\\ Portrait of a a Young Woman}}\par
+%\vspace*{1.5\baselineskip}
+
+\end{minipage}
+\clearpage
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%% HOMER %%%%%%%%%%%%%%%%%%%
+\newgeometry{left=10mm,right=10mm,top=1.0cm,bottom=1cm}
+%%%%% 
+{\centering
+\includegraphics[width=\textwidth]{west}\par\vspace*{1.5\baselineskip}
+%{\LARGE {FLORENTINE SCHOOL: \quad A Botticelli Portrait\\ Portrait of a a Young Woman}}\par
+%\vspace*{1.5\baselineskip}
+%}
+\clearpage
+
+%%%%%%%%%%%%%%%%%%%%% HOMER %%%%%%%%%%%%%%%%%%%
+\newgeometry{left=10mm,right=10mm,top=1.0cm,bottom=1cm}
+%%%%% 
+{\centering
+\includegraphics[width=\textwidth]{johnson}\par\vspace*{1.5\baselineskip}
+%{\LARGE {FLORENTINE SCHOOL: \quad A Botticelli Portrait\\ Portrait of a a Young Woman}}\par
+%\vspace*{1.5\baselineskip}
+%}
+\clearpage
+
+%%%%%%%%%%%%%%%%%% END TEMPLATE %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%%%%%%%%%%%%%%%%  Vermeer %%%%%%%%%%%%%%%%%%%%%%%
+{\centering
+\includegraphics[height=0.9\textheight,width=\textwidth, keepaspectratio]{modigliani01}\par\smallskip
+
+{\LARGE \textsc{In 1918, Modigliani painted a wistfhead of Jeanne, framed by a cascade of hair.}}\par\smallskip
+
+\parbox{0.6\textwidth}{\footnotesize\rm .}}
+
+
+
+
+\newgeometry{left=10mm,right=0mm,top=1.0cm,bottom=1cm}
+\clearpage
+
+
+
+
+
+
+%%%%%%%%%%%  RENOIR NARROW
+\def\ballatbougival{ballatbougival}
+\def\ballatbougivalcaption{\lorem\lorem}
+\def\ballatbougivaltitle{{\large\bf Ball at Bougival}}
+\checkoddpage
+\begin{minipage}[c]{\textwidth}%
+\fboxrule0pt%
+\fboxsep0pt%
+\fbox{%
+\ifoddpage\relax\else%
+\begin{minipage}[b]{110pt}%
+%% odd caption is placed at bottom
+   \ballatbougivaltitle\par%
+   \ballatbougivalcaption%
+   \the\textwidth\rule{0pt}{180pt}
+\end{minipage}%
+\fi%
+\begin{minipage}[b]{\the\dimexpr(\textwidth-150pt)}%
+\includegraphics[width=\textwidth]{\ballatbougival}
+\end{minipage}\hspace*{10pt}%
+\ifoddpage%
+\begin{minipage}[b]{110pt}%
+%% odd caption is placed at bottom
+   \ballatbougivaltitle\par%
+   \ballatbougivalcaption%
+   \the\textwidth\rule{0pt}{180pt}
+\end{minipage}%
+\fi
+}
+\end{minipage}
+\clearpage
+
+\restoregeometry
+
+\newpage
+
+\newgeometry{left=10mm,right=10mm,top=1.0cm,bottom=1cm}
+
+
+%%%%%%%%%%%  RENOIR NARROW
+\def\ballatbougival{ballatbougival}
+\def\ballatbougivalcaption{\lorem\lorem}
+\def\ballatbougivaltitle{{\large\bf Ball at Bougival}}
+\checkoddpage
+\begin{minipage}[c]{\textwidth}%
+\fboxrule0pt%
+\fboxsep0pt%
+\fbox{%
+\ifoddpage\relax\else
+\begin{minipage}[b]{110pt}%
+%% odd caption is placed at bottom
+   \ballatbougivaltitle\par%
+   \ballatbougivalcaption%
+   \the\textwidth\rule{0pt}{180pt}
+\end{minipage}%
+\hspace*{10pt}%
+\fi%
+\begin{minipage}[b]{\the\dimexpr(\textwidth-130pt)}%
+\includegraphics[height=\textheight, width=\textwidth, keepaspectratio]{Pierre-Auguste_Renoir_019}%
+\end{minipage}%
+\ifoddpage%
+\hspace*{10pt}%
+\begin{minipage}[b]{110pt}%
+%% odd caption is placed at bottom
+   \ballatbougivaltitle\par%
+   \ballatbougivalcaption%
+   \the\textwidth\rule{0pt}{180pt}
+\end{minipage}%
+\fi
+}
+\end{minipage}
+
+
+%% INTRODUCE TEMPLATES
+
+
+\newgeometry{left=10mm,right=0cm,top=1.5cm,bottom=1cm}
+
+\clearpage
+
+%%%%%%%%%%%  RENOIR NARROW
+\def\ballatbougival{ballatbougival}
+\def\ballatbougivalcaption{Dance in the City, 1882--1883, Mus\'e d'Orsay, Paris, France}
+\def\ballatbougivaltitle{{\large\bf Dance in the City}}
+\fboxrule0pt%
+\fboxsep0pt%
+\centering
+\fbox{%
+\begin{minipage}[b]{13cm}%
+\centering
+\includegraphics[height=0.9\textheight, width=\textwidth, keepaspectratio]{Pierre-Auguste_Renoir_019}
+\end{minipage}}
+
+\ballatbougivaltitle\par
+\ballatbougivalcaption
+
+\restoregeometry
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%  ABSOLUTE POSITIONING
+%%
+\makeatletter
+
+%% Command to position the paintings counter block [] signals empty not omitted
+%% this is a gotcha
+
+\newcommand\ablock[1][]{%
+\setlength{\TPHorizModule}{1mm}%
+\setlength{\TPVertModule}{1mm}%
+
+%% We initialize all x,y coordinates at empty
+
+%% We check if the user has provided a default value we use
+%% ifmarg from the changepackage \@ifmtarg{hargi}{hCode for arg emptyi}
+% {<Code for arg not empty>}
+\let\coordinates\@empty
+\let\oddcoodinates\@empty
+\let\evencoordinates\@empty
+
+
+%% we check for odd and even numbers with the changepage package.
+%% we first check if the page is odd.
+\checkoddpage
+ \ifoddpage% we start on the right
+ \textblock{20}(170,240)
+  \bgroup%
+    \par\centering%
+    \shortrule\par%
+    \large\bfseries\thepage\par%
+     \noindent\shortrule\par
+  \egroup%
+  \endtextblock%
+ \else% we start on the left we need another default
+  \textblock{20}(15,240)%
+    \bgroup%
+       \par\centering%
+       \shortrule\par%
+       \large\bfseries\thepage\par%
+       \noindent\shortrule\par
+    \egroup%
+  \endtextblock%
+\fi
+%% test for empty and set to default values
+\gdef\oXX{15}
+\gdef\oYY{240}
+\gdef\eXX{170}
+\gdef\eYY{240}
+
+%\@ifmtarg{#1}{\gdef\oXX{15}\gdef\oYY{240}\gdef\eXX{170}\gdef\eYY{240}}%
+%{\gdef\oXX{15}\gdef\oYY{240}\gdef\eXX{170}\gdef\eYY{240}}
+
+}
+
+\makeatother
+
+\chapter{ABSOLUTE POSITIONING OF TEXT BLOCKS}
+
+When we work, page by page, even if we automate this, it becomes necessary now and then
+to position text blocks in an absolute position. This can be achieved by using the \cmd{textpos}, package. This package developed by Norman Gray, uses the picture environment and the \cmd{everyshi}
+package to position text blocks at absolute or relative positions on the page.
+
+The package provides an environment, \cmd{textblock}, that is used to position text at an absolute
+position on the \textit{current} page. 
+
+\begin{verbatim}
+\newcommand\ablock[1][170,240]{%
+\setlength{\TPHorizModule}{1mm}%
+\setlength{\TPVertModule}{1mm}%
+\begin{textblock}{20}(#1)%
+  \bgroup%
+    \par\centering%
+    \shortrule\par%
+    \large\bfseries13\par%
+     \noindent\shortrule\par
+  \egroup%
+\end{textblock}%
+}
+\usepackage{changepage}
+\strictpagecheck
+   
+\checkoddpage
+\ifoddpage
+  Page is odd \thepage
+\else
+  Page is even \thepage
+\fi
+\end{verbatim}
+
+\ablock
+
+
+
+The package uses the picture environment to position the text. For this class, we default it to the absolute position option, as it is easier to work, by a constant reference.
+
+\def\nomarginsodd{%
+   \newgeometry{left=5mm,right=10mm,top=10mm,bottom=0pt}
+}
+\nomarginsodd
+\clearpage
+\includegraphics[height=\textheight, width=\textwidth, keepaspectratio]{gerome01}\par\smallskip
+\ablock%
+
+\bgroup
+\centering
+
+{{\Large The Slave Market in Rome}\par\smallskip
+
+\centering
+
+\parbox{0.6\textwidth}{\footnotesize\rm Dressed up like a grand lady and feeling very serious, little Jean Bellows
+posed for this portrait by her father in 1924. great leader of America's realistic painters known as the ``As-can-School'', the late George Bellows depicted prize fights, river fronts, revival meetings, political sessions. But this simple portrait, with its color scheme appropriately based on the red, yellow and blue of a child's paintbox, is a bellows masterpiece. It is currently at the Yale Gallery.}}
+
+\egroup
+
+\def\nomarginseven{%
+   \newgeometry{left=10mm,right=5mm,top=10mm,bottom=0pt}
+}
+\nomarginseven
+\clearpage
+\includegraphics[height=0.8\textheight, width=\textwidth, keepaspectratio]{oriental01}\par\smallskip
+
+{\Large The Slave Market in Rome}\par\smallskip
+
+\parbox{0.6\textwidth}{\footnotesize\rm Dressed up like a grand lady and feeling very serious, little Jean Bellows \ablock
+posed for this portrait by her father in 1924. great leader of America's realistic painters known as the ``As-can-School'', the late George Bellows depicted prize fights, river fronts, revival meetings, political sessions. But this simple portrait, with its color scheme appropriately based on the red, yellow and blue of a child's paintbox, is a bellows masterpiece. It is currently at the Yale Gallery.}
+
+\restoregeometry
+
+%%% Final image oriental
+\def\nomarginseven{%
+   \newgeometry{left=10mm,right=5mm,top=10mm,bottom=0pt}
+}
+\nomarginseven
+\clearpage
+\includegraphics[height=0.8\textheight, width=\textwidth, keepaspectratio]{oriental02}\par\smallskip
+
+\ablock
+
+
+{\centering{%
+
+{\Large \vspace{3.5pt}The Slave Market in Rome}\vspace{3.5pt}\par\smallskip
+
+\parbox{0.6\textwidth}{\footnotesize\rm Dressed up like a grand lady and feeling very serious, little Jean Bellows
+posed for this portrait by her father in 1924. great leader of America's realistic painters known as the ``As-can-School'', the late George Bellows depicted prize fights, river fronts, revival meetings, political sessions. But this simple portrait, with its color scheme appropriately based on the red, yellow and blue of a child's paintbox, is a bellows masterpiece. It is currently at the Yale Gallery.}}\par}
+
+%% The white slave\
+%%% Final image oriental
+\def\nomarginseven{%
+   \newgeometry{left=11mm,right=0mm,top=10mm,bottom=0pt}
+}
+\nomarginseven
+\clearpage
+\includegraphics[height=0.98\textheight, width=\textwidth, keepaspectratio]{whiteslave}\par\smallskip
+
+\ablock[195,130]
+
+{\centering{%
+
+{\Large \vspace{3.5pt}The Slave Market in Rome}\vspace{3.5pt}\par\smallskip
+
+\parbox{0.6\textwidth}{\footnotesize\rm The White Slave, an orientalist nude by Ernest Normand.}}\par}
+
+\clearpage
+
+\def\titlepagei{%
+   \newgeometry{left=10mm,right=10mm,top=10mm,bottom=10mm}
+}
+\titlepagei
+
+\putimage[width=\textwidth]{huntselfportrait}
+
+%% Street scene in Cairo  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%  includes write up for Hunt
+  
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+{\centering
+
+\includegraphics[width=0.60\textwidth]{hunt}\par
+\vspace{3\baselineskip}
+{\centering \Huge \textsf{William Holman Hunt}}
+
+}
+
+\begin{multicols}{3}
+\parindent1em
+\lettrine{W}{illiam} Holman Hunt changed his middle name from ``Hobman'' to Holman when he discovered that a clerk had misspelled the name after his baptism at the church of Saint Mary the Virgin, Ewell. \footnote{Bronkhurst, Judith, William Holman Hunt: A Catalogue Raisonn\'e, Yale University Press, 2006, pp.134-6} After eventually entering the Royal Academy art schools, having initially been rejected, Hunt rebelled against the influence of its founder Sir Joshua Reynolds. He formed the Pre-Raphaelite movement in 1848, after meeting the poet and artist Dante Gabriel Rossetti. Along with John Everett Millais they sought to revitalise art by emphasising the detailed observation of the natural world in a spirit of quasi-religious devotion to truth. This religious approach was influenced by the spiritual qualities of medieval art, in opposition to the alleged rationalism of the Renaissance embodied by Raphael. He had many pupils including Robert Braithwaite Martineau.  Hunt married twice. 
+
+After a failed engagement to his model Annie Miller, he married Fanny Waugh, who later modelled for the figure of Isabella. When she died in childbirth in Italy he sculpted her tomb at Fiesole, having it brought down to the English Cemetery, beside the tomb of Elizabeth Barrett Browning. His second wife, Edith, was Fanny's sister. At this time it was illegal in Britain to marry one's deceased wife's sister, so Hunt was forced to travel abroad to marry her. This led to a serious breach with other family members, notably his former Pre-Raphaelite colleague Thomas Woolner, who had once been in love with Fanny and had married Alice, the third sister of Fanny and Edith.
+
+Hunt's works were not initially successful, and were widely attacked in the art press for their alleged clumsiness and ugliness. He achieved some early note for his intensely naturalistic scenes of modern rural and urban life, such as The Hireling Shepherd and The Awakening Conscience. However, it was with his religious paintings that he became famous, initially The Light of the World (1851-1853, now in the chapel at Keble College, Oxford; a later version (1900) toured the world and now has its home in St Paul's Cathedral.
+
+In the mid 1850s Hunt travelled to the Holy Land in search of accurate topographical and ethnographical material for further religious works, and to ``use my powers to make more tangible Jesus Christ’s history and teaching''[2]; there he painted The Scapegoat, The Finding of the Saviour in the Temple and The Shadow of Death, along with many landscapes of the region. Hunt also painted many works based on poems, such as Isabella and The Lady of Shalott. He eventually built his own house in Jerusalem[3].
+
+\section{Artistic style}
+
+His paintings were notable for their great attention to detail, vivid colour and elaborate symbolism. These features were influenced by the writings of John Ruskin and Thomas Carlyle, according to whom the world itself should be read as a system of visual signs. For Hunt it was the duty of the artist to reveal the correspondence between sign and fact. Out of all the members of the Pre-Raphaelite Brotherhood Hunt remained most true to their ideals throughout his career. He was always keen to maximise the popular appeal and public visibility of his works.[4]
+He eventually had to give up painting because failing eyesight meant that he could not get the level of quality that he wanted. His last major work, The Lady of Shalott, was completed with the help of an assistant (Edward Robert Hughes).
+
+\end{multicols}
+
+\includegraphics[width=\textwidth]{convertedfamily}\par
+\textbf{A Converted British Family Sheltering a Christian Missionary from the Persecution of the Druids}\par
+\vspace*{-0.8\baselineskip}
+\begin{multicols}{3}
+This painting by William Holman Hunt was exhibited at the Royal Academy in 1850. It was a companion to John Everett Millais's Christ in the House of His Parents. Both artists sought to depict similar episodes from very early Christian history, portraying families helping an injured individual. Both stressed the primitivism of the scene.\footnote{This is a test.}
+\end{multicols}
+\ablock[170,265]
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\nomarginseven
+\clearpage
+\centering
+
+\includegraphics[height=0.85\textheight, width=\textwidth, keepaspectratio]{streetscenecairo}\par\smallskip
+
+\ablock[190,125]
+
+{\centering{%
+
+{\Large \vspace{3.5pt}Street Scene in Cairo}\vspace{3.5pt}\par\smallskip
+
+\parbox{0.6\textwidth}{\footnotesize\rm William Holman Hunt, A Street Scene in Cairo; The Lantern-Maker's Courtship, 1854-61}}\par}
+
+
+\restoregeometry
+
+%\input{cobacabana}
+%\input{fourpicturelayouts}
+%\input{fourstandard}
+
+\input{boxedminipage}
+
+
+
+\restoregeometry
+
+
+
+\makeatletter
+\newcounter{noimages}
+%% The environment image page, encloses its contents within a
+%% minipage and acts as a real minipage, it scales everything based
+%% on textwidth
+%% #1  Scaling required
+%%
+ \setcounter{noimages}{0}
+
+%% We define the keys we are allowing in the environment
+%% We define scale=0-1  a multiplier for linewidth
+%%       pagestyle=string (one, two, three, four, five, six)
+%%       align=center
+
+\define@key{imgpg}{pagestyle}{\def\imgpg@pagestyle{#1}}
+\define@key{imgpg}{scale}{\def\imgpg@scale{#1}}
+\define@key{imgpg}{align}{\def\imgpg@align{#1}}
+\define@key{imgpg}{top}{\def\imgpg@top{#1}}
+\define@key{imgpg}{right}{\def\imgpg@right{#1}}
+\define@key{imgpg}{bottom}{\def\imgpg@bottom{#1}}
+\define@key{imgpg}{left}{\def\imgpg@left{#1}}
+\define@key{imgpg}{geometry}{\def\imgpg@geometry{#1}}
+%% We will probably need more keys but we will handle this later
+%% Set defaults for all keys
+\setkeys{imgpg}{pagestyle=one, scale=1, align=\centering, top=1in, right=1in, bottom=1in, left=1in}
+
+%% We define the imagespage environment
+%% Use as
+%% \begin{imagespage}[scale = 0.9, pagestyle = 2pic1]
+%%     \addimagefromDB{}
+%%     \addimagesfromDB{}
+%%     \addcaptionfromDB{}
+%% \end{imagespage}
+\newenvironment{imagespage}[1][scale=1,pagestyle=one]{%
+%%     we set the keys to their value
+    \setkeys{imgpg}{#1}%
+%%  adjust geometry
+    \newgeometry{top=\imgpg@top,
+                          right=\imgpg@right,
+                          left=\imgpg@left,
+                          bottom=\imgpg@bottom}
+%% adjust scale
+    \minipage{\imgpg@scale\textwidth}
+%% We decide if the images are to be centered
+    \imgpg@align  
+%% the image picks up and fits snuggly at the scale of the minipage  
+%% as a default 
+    \newcommand{\addimage}[2][width=\textwidth]{%
+        \stepcounter{noimages}%
+        \ifnum\thenoimages=1
+             \putimage[##1]{##2}\par%
+        \else
+             \putimage[##1]{##2}\par%
+        \fi
+       }%
+    }
+%% at the end of the environment we restore the geometry for the
+%% next page and issue a clear page
+   {\endminipage%
+    \newpage%
+     Number of images printed so far \thenoimages
+    \setcounter{noimages}{0}
+    \restoregeometry}
+\makeatother
+
+\begin{imagespage}[scale=0.9]
+   \addimage{nudeattable}
+   %\captionof{figure}{This is tested using an environment. \lorem}\par
+   \addimage{thesource}
+  % \captionof{figure}{This is tested using an environment. \lorem}\par
+\end{imagespage}
+
+\begin{imagespage}[scale=0.9]
+     \addimage{bythesea}
+     \addimage{girlsandbananas}
+     %\captionof{figure}{This is tested using an environment. \lorem}\par
+\end{imagespage}
+
+\commandfactory{boys}{tops a favorite game of Mexican children, absorbs Ram\'on and Pablito sons of Don\b{a} Luisa Pineda de melissio Sanchez in whose adobe house Aerist Doris Rosenthal lived in the town of Cher\'an in southwestern Mexico. For posing\cite{knuth98}, Doris paid Ram\'on and Pablito in Chickle and, when not in school or learning their catechism in church, they carried her painting materials for her wherever she went sketching. This picture was bought by Museum of Modern Art in 1941.}
+
+\commandfactory{boers}{Looking more like their ancestors than themselves, six old boers gather to comapre whiskers.}
+\commandfactory{boersbeards}{Looking for something}
+
+\commandfactory{africacorps}{medics in afric aworls}
+
+
+\begin{imagespage}[pagestyle=one, top=3cm,left=0pt, right=1cm, scale=0.65, align='']
+    \addimage{\boers}
+   % \captionof{figure}{\boerscaption}
+    \addimage[width=17.5cm]{\boersbeards}
+   % \captionof{figure}{\boerscaption}
+\end{imagespage}
+\ClearShipoutPictureBG
+\begin{imagespage}[pagestyle=one, top=1cm, right=1cm, scale=1.3, align=\centering]
+    \addimage{\boys}
+    \captionof{figure}{\boyscaption}
+\end{imagespage}
+
+\makeatletter
+\long\def\example#1#2{%
+  \ifnum\pdf@strcmp{\unexpanded{#1}}{#2}=\z@ 
+   \expandafter\@firstoftwo
+  \else
+    \expandafter\@secondoftwo
+\fi
+}
+\example{center}{center}{true}{false}
+
+\makeatother
+
+
+\begin{thebibliography}{16}
+
+ \bibitem{knuth98} Knuth,~D. 1998. {Digital Typography}. CSLI 
+ Publications, Stanford.
+
+ \bibitem{rosarivo61} Rosarivo,~R. 1961. {Divina proportio typographica}. 
+ Scherpe, Krefeld.
+
+ \bibitem{taylor98} Taylor,~P. 1998. {Book design for \TeX\ users, Part 1: 
+ Theory.} TUGBoat, 19:65--74.
+
+ \bibitem{taylor99} Taylor,~P. 1999.{Book design for \TeX\ users, Part 2:
+ Practice.} TUGBoat, 20:378--389.
+
+ \bibitem{town} Town,~L. {Bookbinding by hand.} Faber \& Faber, London.
+
+ \bibitem{tschichold87} Tschichold,~ J. 1987. "{a}hlte Aufs\"{a}tze
+ \"{u}ber Fragen der Gestalt des Buches und der Typographie. Birkh\"{a}user
+ Verlag, Basel.
+
+ \bibitem{williamson66} Williamson,~H. 1966. 
+{Methods of book design.} Oxford 
+ University Press, Oxford.
+
+% \bibitem{wilson01} Wilson,~P. 2001. \end{multicols}{2}ph{The Memoir class for configurable
+% typesetting.}  \CTAN.url{macros\\latex\\contrib\\memoir} 
+
+ \end{thebibliography}
+
+\newpage
+.
+
+\newpage
+
+ \includegraphics[height=0.95\textheight]{africamedics}
+
+\hspace*{-\textwidth} \includegraphics[height=0.95\textheight]{africamedics}
+   
+ \includegraphics[height=0.95\textheight]{africamedics}
+
+\hspace*{-\textwidth} \includegraphics[height=0.95\textheight]{africamedics}
+
+\restoregeometry
+
+\begin{multicols}{2}
+\chapter{Centerfold}
+Many photographs or pictures, might lose their appeal if printed at a small scale. many books spread these pictures over two pages, think of centerfolds.
+\smallskip
+
+\includegraphics[width=0.9\linewidth]{spreadexample}
+
+\smallskip
+
+Although there is a package to do this, there is an easy way to achieve it and it needs two lines of code and perhaps a quad of calculation.
+
+
+We include the same image on both pages and we set its height at the \verb!\textheight! or a slightly scaled dimension. We do the same for the second page except this time we shift it by textwidth. Assuming the picture is large enough placement can be achieved without any adjustments first time round..
+
+
+\begin{verbatim}
+\includegraphics[height=\textheight]{img}
+\hspace*{\textwidth}
+\includegraphics[height=\textheight]{img}
+\end{verbatim}
+
+
+Minor scaling is inevitable to correct minor imperfections and this can be done on the second page.
+Use the geometry package to adjust dimension.
+
+We can include the images commands in minipages, if we need more control and easy scaling for both commands. We can also add a textblock to the second page. The textblock will need to be placed manually, but this is not difficult, if you use a minipage to enclose both the image as well as the textblock.
+More involved macros can be obtained to automate the calculations, but to be honest it takes two or three runs to do this buy hand. If all the spreads are the same dimensions, you cann then have a reference to the x-shift, the y-shift might still need a bit of manipulation. For this we have provided an environment that automates the calculations.
+\begin{verbatim}
+\begin{twopagespread}[top=,left=,bottom=right=]
+\putimage[keys]{img}
+\puttextblock[keys]{text...}
+\end{twopagespread}
+\end{verbatim}
+
+
+
+\end{multicols}
+
+\newpage
+\newgeometry{top=2cm,left=1cm,bottom=2cm}
+
+\minipage{\textwidth}
+\includegraphics[height=\textheight]{deathofb2}
+\endminipage
+
+\hspace*{-1.07\textwidth}\minipage{\textwidth}\includegraphics[height=\textheight]{deathofb2}
+\endminipage
+
+\minipage{\textwidth}
+\includegraphics[height=\textheight]{firesidecomfort}
+\endminipage
+
+\hspace*{-1.12\textwidth}\minipage[t]{\textwidth}\includegraphics[height=\textheight]{firesidecomfort}
+\endminipage
+
+\vspace{-10cm}
+\hspace*{11cm}\begin{minipage}[t]{4.5cm}
+\lorem
+\end{minipage}
+
+
+
+
+
+
+
+\newgeometry{textwidth=10cm,%
+marginparsep=2pc,marginparwidth=12pc,textheight=44\baselineskip,headheight=\baselineskip}
+
+\raggedright
+\printindex
+
+
+\end{document} 
+To add for   ogonek
+
+http://tex.stackexchange.com/questions/38765/using-txfonts-with-polish-characters-breaks-tables
+
+Frank in stackexchange chat 19/12/2011
+
+@YiannisLazarides that is a very long time ago so not sure my memory about that isn't a bit foggy, but yes, I think that is about right. But remember that I had Don's code to start from in the TeX book and only had to fix it for the inital version and adjust it to run on top of LaTeX 2.09
+
+
+
+
+
+
+
+
+
+
+
+
