@@ -2940,14 +2940,22 @@ ProvidesClass,IfFileExists,RequirePackage,ifthenelse,chapter,includegraphics, ne
    \addvspace{1.0\baselineskip plus 0.5ex minus 0.2ex}%
    \noindent\textsc{#1}%
 }
-\let\equation\gather                           %% See tabu and hyperref docs
-\let\endequation\endgather
+%\let\equation\gather                           %% See tabu and hyperref docs
+%\let\endequation\endgather
 \let\tex\TeX
 \let\latex\LaTeX
 \let\alltex\LaTeX
 \let\doccmd\cmd
+%
 \def\texbook{TeXbook}
-
+\def\alltex{(All\kern-.075em)\kern-.075em\TeX\xspace}
+\def\ams{American Mathematical Society\xspace}
+\def\AmS{$\mathcal{A}$\kern-.1667em\lower.5ex\hbox
+    {$\mathcal{M}$}\kern-.125em$\mathcal{S}$\xspace}
+\def\amsmath{\AmS{}math\xspace}
+\def\amslatex{\AmS-\LaTeX\xspace}
+\def\amstex{\AmS-\TeX\xspace}
+%
 \def\docpkg#1{\texttt{#1}}
 \RequirePackage{scalefnt}						
 \RequirePackage{fonttable}	
@@ -7658,20 +7666,34 @@ toc paragraph case/.is choice,
 %
 % \chapter{Handling Images}
 % \precis{Commands for laying out complex pages composed primarily of images.}
-% \section{creating Image Page Styles}
 
+% \section{creating Image Page Styles}
+%
+% We now develop a method to produce variable environments
+% that can include images in a page. We start using designs
+% that incorporate two columns.
+%
+% \begin{macro}{\miniwidthi}
+% \begin{macro}{\miniwidthii}
+% \begin{macro}{\sepmainhorizontal}
 %    \begin{macrocode}
 \global\newlength{\miniwidthi}
 \global\newlength{\miniwidthii}
 \global\newlength{\sepmainhorizontal}
-
+\def\tinyskip{\vskip2pt}
+%    \end{macrocode}
+%    \begin{macrocode}
 \newenvironment{leftcolumn}{}{}
 \newenvironment{rightcolumn}{}{}
 
 \newlength\offsetfromright
-\setlength\offsetfromright{1em}
-
-%% Define the oneline caption
+\setlength\offsetfromright{0em}
+%    \end{macrocode}
+%
+% \begin{macro}{\onelinecaption} The oneline caption
+% is the description that goes underneath images that
+% unlike figures, they are not descibed in the text.
+%    \begin{macrocode}
 \newcommand\onelinecaption[2][]{%
     \setlength\offsetfromright{0em}%
     \bgroup%
@@ -7683,16 +7705,26 @@ toc paragraph case/.is choice,
         \hfill\hfill#2\hbox to \offsetfromright{}%
      \egroup%
 }
-%% one line heading
+%    \end{macrocode}
+% \end{macro}
+% 
+% \begin{macro}{\onelineheader} This macro takes one parameter
+%   and styles the main header.
+%    \begin{macrocode}
 \long\def\onelineheader#1{%
  \vspace{1.5\baselineskip}%
  {\sffamily{\bgroup\LARGE\bf \mbox{#1}\egroup}%
  \vspace{0.5\baselineskip}}%
 }
-
+%    \end{macrocode}
+% \end{macro}
+%    \begin{macrocode}
+\newcommand\byline[2][]{\small{\bfseries#1}#2}
  \newcommand\MainHeader[1]{{\leavevmode\par\centering \textrm{\fontsize{50pt}{65pt}\selectfont #1}\par\vspace{1cm}}}
  \newcommand\MainHeadera[1]{{\leavevmode\par\centering \textrm{\fontsize{30pt}{42pt}\selectfont #1}\par\vspace{1cm}}}
-%\newlength{\miniwidthii}{0pt}
+%    \end{macrocode}
+%
+%    \begin{macrocode}
 \def\starttemplate#1{%
    \gdef\Geometry{%
    \newgeometry{top=10mm,inner=1cm,outer=1cm,bottom=10mm,marginparsep=0pt,marginparwidth=0pt}}
@@ -7711,7 +7743,7 @@ toc paragraph case/.is choice,
     \renewenvironment{rightcolumn}[1]{%
         \begin{minipage}[b]{\miniwidthii} ##1}{\end{minipage}}%
 %% Create right column environment
- }{}%end ifthenelse
+ }{}
 \def\stoptemplate{\restoregeometry}
 }
 %% Defining kroll style
@@ -7759,11 +7791,10 @@ toc paragraph case/.is choice,
 \end{minipage}
 }%\vspace*{\img@bottommargin}}%
 
-\newcommand\byline[2][]{\small{\bfseries#1}#2}
-\def\tinyskip{\vskip2pt}
+
 %    \end{macrocode}
 %
-% \newgeometry{top=0cm,left=0cm,right=0cm,bottom=2cm}
+% 
 % \newpage
 %
 %\starttemplate{kroll}
@@ -7802,14 +7833,14 @@ toc paragraph case/.is choice,
 %      \end{multicols}
 %    \end{minipage}
 %\stoptemplate
-%%
 %
-\newgeometry{top=1cm,left=1cm,right=1cm,bottom=1cm}
-
-\clearpage
-
-
-
+%
+%\newgeometry{top=1cm,left=1cm,right=1cm,bottom=1cm}
+%
+%\clearpage
+%
+% \chapter{Posters}
+%
 %\def\HUGE{\@setfontsize\HUGE{65}{90}}
 %\raggedbottom
 %\begin{minipage}{0.8\textwidth}
@@ -7876,7 +7907,7 @@ toc paragraph case/.is choice,
 %\end{minipage}\par
 % ^^A\vspace*{-0pt}
 %
-%\hbox{\HUGE{\bfseries\rmfamily APRIL 5 $\cdot$  2012}}
+%\hbox to \textwidth{\HUGE{\bfseries\rmfamily APRIL 5 $\cdot$  2012}}
 %\end{minipage}
 %
 % \restoregeometry
