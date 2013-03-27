@@ -1,0 +1,453 @@
+\makeatletter \cxset{toc image = \@empty}
+\chapter{GROUPING AND SCOPING RULES}
+\index{Grouping}
+\label{ch:grouping}
+
+Like most computer languages \tex\ has a grouping mechanism that is able to confine most changes to a particular locality. This chapter explains what sort of actions can be local, and how groups are formed.
+\medskip
+
+\DescribeMacro{\bgroup}
+       Implicit beginning of group character.
+
+\DescribeMacro{\egroup} Implicit end of group character.
+
+\DescribeMacro{\begingroup} Open a group that must be closed with |\endgroup|.
+
+\DescribeMacro{\endgroup} Close a group that was opened with |\begingroup|.
+
+\DescribeMacro{\aftergroup} Save the next token for insertion after the current group ends.
+
+\DescribeMacro{global} Make assignments, macro definitions, and arithmetic global.
+
+\DescribeMacro{globaldefs} Parameter for overriding |\global| prefixes. IniTEX default: 0.
+
+
+
+The grouping mechanism can be thought of a bit like scope in other programming languages, with the
+exception that in \tex the mechanism is much more Pascal-like. Most assignments made inside a group are local to that group
+unless explicitly indicated otherwise, and outside the group old values are restored (pretty much like in Pascal). If we type the following  example:
+
+\begin{texexample}{}{}
+\def\i{42}
+{
+   \def\i{43}
+   \def\b{2}
+}
+The value of the \textbackslash i is now \i
+
+\def\x{a}
+\let\y\x
+\bgroup
+  \def\x{b}
+  Within group \x\par
+\egroup
+  Outside group \x
+\end{texexample}
+
+we get   \texttt{The value of the \textbackslash i is now 42}. Due to the way \tex scoping rules work, the old program state
+will be restored \textit{completely} after returning from the local group. Neither the change to |\i| nor the definition of |\b| will survive. This is also true for register changes or other assignments.
+
+The listing above defines |\i| enters a local scope (a \tex group) and changes |\i|
+
+The |\end| command is allowed to occur inside a group, but TEX will give a diagnostic
+message about this.
+
+The \cs{aftergroup} control sequence saves a token for insertion after the current group. Several
+tokens can be set aside by this command, and they are inserted in the left-to-right order in which
+they were stated.
+
+\begin{texexample}{}{}
+\def\x#1;{#1}
+\def\y{15}
+{\globaldefs1
+\bgroup
+   \def\y{0}
+   \aftergroup\x\aftergroup\y\aftergroup;
+   \aftergroup}
+\egroup
+\y
+
+
+\globaldefs0
+
+\def\z{1}
+{\def\z{0}
+\z
+}
+
+\z
+
+\end{texexample}
+
+\begin{texexample}{}{}
+{ \def\z{1}
+  {\def\z{0}\globaldefs1
+     \z
+    {
+	\z
+    }
+   \z
+  }
+ \z
+}
+
+
+
+
+
+\end{texexample}
+
+
+
+\section{Local and global assignments}
+
+An assignment or macro definition is usually made global by prefixing it with \cs{global}, but nonzero
+values of the integer parameter |globaldefs| override |doccmd{global}|
+is positive every assignment is implicitly prefixed with \doccmd{global}, and if |\globaldefs| is negative,
+|\global| is ignored. Ordinarily this parameter is zero. It has very
+limited use and even in the \latex\ kernel we can only find 3-4 uses when defining math fonts.
+
+
+Some assignment are always global: the \marg{global} assignments are:
+
+font assignment assignments involving \cs{fontdimen}, \cs{hyphenchar}, and \cs{skewchar}.
+
+hyphenation assignmenti \cs{hyphenation} and \cs{patterns} commands.
+
+hbox size assignmenti altering box dimensions with \cs{ht}, \cs{dp}, and \cs{wd} 
+
+hinteraction mode assignmenti run modes for a \tex job (see Chapter 32).
+
+hintimate assignmenti assignments to a hspecial integeri or hspecial dimeni;
+
+
+\section{Braces}
+
+The most common way to group is to use braces. They are used for two purposes:
+
+\begin{enumerate}
+\item to indicate the start and end of a group. For example |{\small here is some text}|.
+
+\item to indicate that a string of tokens should be treated as one unit. For example in |\def\abc{...}| the braces are used
+to delimit the argument.
+\end{enumerate}
+
+It is important to note that the characters \{, \} are not hardwired in \tex. Any tokens with catcodes 1 and 2 can be used.
+The plain format starts [343] by saying:
+
+\begin{teX}
+
+\catcode`\{ =1
+\catcode `} = 2
+\end{teX}
+
+Tokens with catcodes 1 and 2 are called \emph{explicit braces}. An \emph{implicit} brace is a control sequence whose replacement text is an explicit brace. Thus the two |plain| control sequences 
+|\bgroup| and |\egroup| are implicit braces. They are defined in [353] by:
+
+There is also a low-level \tex operator pair for creating groups. It works
+just as the braces. A group is started with \cs{begingroup} and ended with
+\cs{endgroup}. These operators may be freely mixed with braces but pairs
+should be properly matched. So €˜|{ \begingroup \endgroup }|€™ is allowed
+but €˜|{ \begingroup } \endgroup|€™ is not.
+
+\begin{teX}
+\let\bgroup={
+let\egroup=}
+\end{teX}
+
+They can be used where unbalanced braces are needed.
+
+Salomon gives an example to typeset a number of paragraphs with a negative indentation\footnote{This style can sometimes be found in old books.}:
+
+\begin{teX}
+\def\negIndent{\brgoup\parindent=-20pt}
+\def\endIndent{\par\egroup}
+
+\negIndent
+  \small\lipsum[1]
+\endIndent
+\end{teX}
+
+This will typeset:
+
+\def\beginindent{\bgroup\parindent=-20pt}
+\def\endindent{\par\egroup}
+
+\beginindent
+  \small\lipsum[1-3]
+\endindent
+
+
+The other two primitives \cs{begingroup} and \cs{endgroup} can also be used to define a group. However a group that starts with a |begingroup| must end with an |\endgroup|. This provides a mechanism for error checking, which \tex's parsing routines can easily catch.
+
+Note that |\begingroup| and |\endgroup| can only be used to define a group, not to delimit a string. You can say:
+
+\begin{teX}
+\begingroup
+  \it abc
+\endgroup
+\end{teX}
+
+but the following will get \tex to complain about missing braces
+
+\begin{teX}
+\hbox\begingroup\it abc\endgroup
+\end{teX}
+
+
+
+\section*{Examples}
+From the TexBook Exercise 7.4
+
+Suppose that the commands
+\begin{texexample}{}{}
+{\catcode`\<=1 \catcode`\>=2
+ \bfseries test
+>
+ test
+\end{texexample}
+
+appear near the beginning of a group that begins with |{| these specifications instruct
+TEX to treat |<| and |>| as group delimiters. According to \tex's rules of locality, the
+characters |<| and |>| will revert to their previous categories when the group ends. But
+should the group end with |}| or with |>| ?
+
+It ends with either |>| or |}| or any character of category 2; then the effects of all
+\cs{catcode} definitions within the group are wiped out, except those that were global.
+\tex  doesn't have any built-in knowledge about how to pair up particular kinds of
+grouping characters. New category codes take effect as soon as a |\catcode| assignment
+has been digested. For example,
+
+\begin{teX}
+{\catcode`\>=2 >
+\end{teX}
+
+is a complete group. But without the space after |2|  it would not be complete, since TEX
+would have read the |>|  and converted it to a token before knowing what category code
+was being specified; \tex always reads the token following a constant before evaluating
+that constant.
+
+\topline
+
+\textbf{Example}: \textsc{Adjusting the spacing of a font} An interesting example that illustrates some of the concepts that were discussed so far is to try and change the \textit{inter word spacing} of text using the \cs{fontdimen2} parameter. The interesting aspect of this example is that
+we want to change the spacing, but since the font changes are global, we want to revert back to the original font at the end of the group. Although there are many other ways of achieving this we will use the \cs{aftergroup}.
+
+\begin{teX}
+\font \roman=cmr10
+\font\specroman=cmr10
+%% Next, the special registers
+\newdimen\savedvalue
+\savedvalue=\fontdimen2\roman
+\newdimen\specialvalue
+\specialvalue=13.0pt
+%% Finally, definitions.
+\def \rm{%
+  \fontdimen2\roman=\savedvalue }
+\def\specrm{%
+  \aftergroup\restoredimen
+  \fontdimen2\specroman=\specialvalue
+  \specroman  }
+\def\restoredimen{%
+\fontdimen2\roman=\savedvalue }
+\end{teX}
+{
+%% First, fonts.
+\font \roman=cmr10
+\font\specroman=cmr10
+%% Next, the special registers
+\newdimen\savedvalue
+\savedvalue=\fontdimen2\roman
+\newdimen\specialvalue
+\specialvalue=13.0pt
+%% Finally, definitions.
+\def \rm{%
+  \fontdimen2\roman=\savedvalue }
+\def\specrm{%
+  \aftergroup\restoredimen
+  \fontdimen2\specroman=\specialvalue
+  \specroman  }
+\def\restoredimen{%
+\fontdimen2\roman=\savedvalue }
+
+
+{\bf Spaced Out Text} 
+\medskip
+{\specrm \lorem} dimension2 the interword   value \the\fontdimen2\font
+
+
+{\bf  Back to Normal}
+\medskip
+
+\rm
+\lorem
+
+}
+
+This is a test \\{item}
+\section{Summary}
+\relax\bgroup\relax\egroup\relax 
+
+
+\section*{Scoping Rules for boxes}
+
+The scoping rules for boxes work similarly to those for other command sequences, since they are just macros defined by \latex or |plain|. In the example below, we define a box |\mybox| and we save a sentence both in global scope as well as local scope.
+
+\begin{teX}
+\documentclass{article}
+\begin{document}
+  \newsavebox{\mybox}
+  \savebox{\mybox}{Outside scope}
+  \usebox\mybox
+  \begin{minipage}{5cm}
+    \sbox{\mybox}{from first minipage}(*@ \label{global} @*)
+    \usebox\mybox
+  \end{minipage}
+  \usebox{\mybox}
+\end{document}
+\end{teX}
+
+
+This will typeset:
+\medskip
+
+\newsavebox{\myboxi}
+\savebox{\myboxi}{\tt > Outside scope}
+
+\noindent\usebox\myboxi
+
+\noindent\begin{minipage}{5cm}
+\sbox{\myboxi}{\tt > from first minipage}
+\noindent\usebox\myboxi
+\end{minipage}
+
+\noindent\usebox{\myboxi}
+
+
+\medskip 
+Changing line [\ref{global}] to |\global\sbox| will make the definition of |\mybox| within the minipage environment global and would change the output to:
+\medskip
+
+
+
+To save memory space, box registers become empty by using them: \tex assumes
+that after you have inserted a box by calling |\boxnn| in some mode, you do not need the contents of that register any more and empties it. In case you do need the contents of a box register more
+than once, you can |\copy| it. Calling |\copynn| is equivalent to |\boxnn| in all respects except that the register is not cleared.
+
+
+There are 256 box registers, numbered 0â€“255. Either a box register is empty (â€˜voidâ€™), or it contains
+a horizontal or vertical box. This section discusses specifically box registers; the sizes of boxes,
+and the way material is arranged inside them, is treated below.
+
+
+
+
+\newbox\MyBox
+
+\setbox\MyBox=\hbox{\hfil Test\hfill}
+
+\unhbox\MyBox
+
+
+\noindent\unhbox\MyBox
+
+\noindent{\hfill Test \hfill}
+
+
+
+\framebox{\parbox{\linewidth}{\color{black}
+\textbf{\textcolor{purple}{\textsf{CAUTION}}}
+\begin{enumerate}
+\itemsep-5pt
+\item \latex will not empty a box as it uses the copy command in the definition of the newsavebox.
+\item It is better to use \LaTeX\ commands rather than \tex primitives, when defining boxes, as \latex tests for duplication of names - which is very important if a user uses a lot of different packages.
+\item Give always preferences to local definitions rather than global. Globals always create maintenance problems in programming.
+\end{enumerate}
+}}
+
+
+\section{Implicit Grouping}
+
+There are  instances where grouping is \textit{implicit}. What this means is that \text starts and ends a group automatically and without any action by the user. There are two major cases where this happens:
+
+\begin{enumerate}
+\item The text inside a box such as |\hbox|, |\vbox|, |\vtop|, |\vcenter| etc. is automatically treated by \tex as a group.  For example |\hbox{\bf My Heading}|, will print  \hbox{\bf My Heading}  and it will not continue with the bold font once outside the group. All these commands have curly brackets and these curly brackets form implicit groups.
+\item In five cases \tex forms implicit groups. In some of these cases not even curly braces are involved.
+\end{enumerate}
+
+\begin{enumerate}
+\item The text inside math mode is treated as a group. This is true both for inline math as well as display math.
+\item Matching |\left| and |\right| primitives treat the formula in between them as a group.
+\item Fractions are treated as a group.
+\item The execution of an ouput routine is implicitly enclosed in a group.
+\item Columsn in |\halign| based tables are local.
+\end{enumerate} 
+
+\subsection{\texttt{afterssignment and grouping}}
+
+The primitive |\afterasignment| does not follow grouping in that it does not save the definition of a token when |\afterassignment| is executed. Consider the following example:
+
+Define the two macros |\xx| and |\yy|.
+
+\def\xx{\string\xx\ executed\par }
+
+\def\yy{\string\yy\ executed\par }
+
+\afterassignment\xx
+
+We start a group, where we have two definitions of |\xx| and |\yy|
+
+{
+  \def\xx{\string\xx executed inside a group\par}
+
+  \def\yy{\string\yy executed inside a group\par}
+
+The second afterassignment is execute
+
+  \afterassignment\yy
+
+The group is ended
+
+}
+
+
+Note afterassignment saves the token following afterassignment without expanding it. Nothing happens until after the next assignment; immediately after the next assignment the saved token is expanded. This is a bit of a tricky part and you can go over it to make sure you understand it well.
+
+
+
+Assign a value or define a macro.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,1556 @@
+
+
+\chapter{Boxes and glue in TeX}
+
+\setlength{\columnsep}{2em}
+{\it Once you understand TEX's concept of glue, you may well decide that
+it was misnamed; real glue doesn't stretch or shrink in such ways, nor does it
+contribute much space between boxes that it welds together. Another word like
+\emph{spring} would be much closer to the essential idea, since springs have a natural
+width, and since different springs compress and expand at different rates
+under tension. But whenever the author has suggested changing \tex's terminology,
+numerous people have said that they like the word \emph{glue} in spite of its
+inappropriateness; so the original name has stuck. }
+\smallskip
+
+{\hfill  ---  Donald E. Knuth}
+
+\medskip   %smallskip 
+
+
+%\begin{marginfigure}%
+%  \includegraphics[width=\linewidth]{./graphics/boxesandglue}
+%  \caption{Boxes in \protect\TeX}
+%  \label{fig:boxes}
+%\end{marginfigure}
+
+
+\parindent1em
+
+
+
+
+
+
+
+\newthought{Traditional typesetting} was a task that depended on assembling the types and inserting them one by one on holding frames. In a way it was an assembly of boxes.
+The \tex typesetting system uses a similar model of boxes to typeset content but in addition it also uses the concept of glue to stretch or shrink the text so that it will look better typographically. Boxes contain
+typeset objects, such as text, mathematical displays, and pictures, and glue
+is flexible space that can stretch and/or shrink by amounts that are under
+user control.
+
+\topline
+
+Some example is placed her\\
+and
+
+\bottomline
+
+\section*{Boxes}
+
+Boxes in \tex have  a rectangular shape but have
+three associated measurements called \emph{height}, \emph{width}, and \emph{depth}.
+Figure \ref{fig:boxes} shows a 
+picture of a typical box, showing its so-called \emph{reference point} and \emph{baseline}
+
+The reason that they have three dimensions is that a character of text has normally three dimensions as shown in figure \ref{fig:boxes}. As characters need to be lined on a baseline, the depth provides a datum point on which they can be aligned and the depth provides a measure of the portion of the character that is below the baseline.
+
+
+Boxes and glue are the main tools of \tex. The box can hold text and other items. Glue is simply spacing. It can be horizontal or veritcal spacing, and it can be made as rigid or as flexible as desired.
+
+\bigskip
+\noindent\framebox{
+\begin{minipage}{\linewidth}
+\textbf{One important feature of \tex is that it has no knowledge of the shape of the characters it typesets, just the dimensions of each character box.}
+\end{minipage}}
+\medskip
+
+When \tex is typesetting, it is normally in horizontal mode, such as while
+it is working on this paragraph. Otherwise, \tex can be in vertical mode, or
+in math mode, or three others described in Chapter 13 of The \texbook.
+Two low-level TEX commands for boxes are \cmd{hbox}, for a horizontal box,
+and \cmd{vbox} for a box in vertical mode. In the latter, \tex is normally still
+collecting material for display from right to left: it is not building up a
+column of text, as in classical Chinese writing.
+
+In both kinds of boxes, the result is an unbreakable object that acts
+much like a single character. \tex reads input as a string of characters,
+then breaks that string up in words, each of which forms a box. 
+\emph{Word boxes}\index{word boxes}
+are then collected into lines, lines into paragraphs, and paragraphs into a
+page galley. The space between the words can be normal \emph{interword space},
+or \emph{sentence-ending} space, which is somewhat larger in English-language
+typesetting, and the space is normally glue, rather than of fixed size.
+
+\tex has a sophisticated mathematical algorithm for figuring out the
+best way to stretch or shrink interbox glue to optimize the appearance of
+lines and paragraphs. Every so often, \tex checks to see whether it has
+enough material saved on the growing page galley to fill a complete output
+page, and it asynchronously (and effectively, unpredictably) calls the
+output routine whose job it is to figure out where the page break should
+happen, ship out a completed page to the |DVI|  file, and replace the galley by
+whatever is left over.
+
+In traditional \tex you  can force a line break with the carriage-return command \cmd{cr},
+and a page break with the command \cmd{eject}, but \tex is an expert system,
+and normally handles line and page breaking on its own. \latex provides its own commands such as \cmd{clearpage} and \cmd{newpage} and so do all other \tex based systems.
+
+\latex does not modify any of \tex's algorithms but simply it is a set of implemenation
+macros.
+
+\section{Units of measurement in TEX}
+
+\tex allows you to specify sizes of typographical objects in any of nine different
+units:
+
+
+\begin{table}[htbp]
+\begin{center}
+\begin{tabular}{llp{5cm}}
+\toprule
+bp &big point &1 inch is exactly 72 bp; the PostScript pagedescription language uses these units, but just calls them points\\
+cc &cicero: &1 cc is exactly 12 didot points, and is thus the European  analogue of the pica\\
+cm &centimeter: &1 in is exactly 2.54 cm\\
+dd &didot point: &1 dd is (1238/1157) pt, and is a typographical unit common in some parts of Europe\\
+in &inch: &an archaic unit, roughly the width of a man's thumb; it has been discarded by most countries, but still used in the USA and its sattelites.\\
+mm &millimeter: &1 in is exactly 25.4 mm\\
+pc &pica: &1 pc is exactly 12 pt\\
+pt &printer's point: &1 in is exactly 72.27 pt\\ 
+sp &scaled point: &1 pt is exactly $2^{16}$ = 65536 sp.\\
+\bottomrule
+%\caption{TeX units of measure}
+\end{tabular}
+\end{center}
+\end{table}
+
+
+
+The units can be separated from their numeric value with optional space, so
+\texttt{3pc} and \verb*+3 pc+ are equivalent. The little half box in the latter is a convenient
+way to indicate explicit spaces in typewriter text. It can be printed by typing \cmd{char32}.
+
+Internally, \tex\ stores dimensions as integral numbers of scaled points:
+1 sp is tiny ---  smaller than the wavelength of visible light.\sidenote{The visible light has wavelengths from 380--450 nm for violet up to 620-750 nm for red (sp = 280 nm} It is sometimes
+useful to create objects that small so that they differ from empty objects,
+but are nevertheless invisible. It also ensures that TeX will look the same irrespective on which computer you actually compiled your document.
+
+\tex deals only with 32-bit integer words, and does not take advantage
+of extra precision available on historical machines with larger words. The
+lower 16 bits of a dimension can be viewed as a fractional number of points,
+and the uppermost bit is needed for a sign (0 for plus, 1 for minus). That
+leaves 15 bits to hold an integral number of points, but TEX only expects 14
+to be used, so that addition of two dimensions does not overflow. Thus, the
+largest dimension in TEX is exactly 214 + (1 26) points, or about 5.758  \sidenote{TODO}
+meters or 18.89 feet.
+
+\tex has several kinds of special storage locations, called registers, numbered
+from 0 to 255. For example, \doccmd{dimen0} can hold a fixed dimension,
+which can be specified in any of the nine units of measurement that are
+recognized by \tex.
+
+Here is how you can assign a dimension to a register, and then have \tex
+display it back for you:
+
+\begin{teX}
+\dimen1 = 25.4mm (*@\protect\sidenote{You shouldn't assign dimenensions to primitive registers, but rather use one of the allocation schemes provided by LaTeX to do so.}  @*)
+\the\dimen1
+\end{teX}
+
+This will result in
+\dimen1 = 25.4mm
+
+\printf{\the\dimen1}
+
+
+Notice that \tex’s output is always in points, showing that it converts different
+input units to a common system of measurement.
+
+You can convert a dimension to the much-smaller units of scaled points
+by assigning it to another kind of \tex register designed to hold signed integers,
+the \doccmd{count0} through \doccmd{count255} registers:
+
+\begin{teX}
+\dimen4 = 1pt
+\count4 = \dimen4
+\the\count4
+\end{teX}
+
+{\noindent This time we get the size as \texttt{sp} }
+
+
+\dimen4 = 1pt
+\count4 = \dimen4
+\the\count4
+
+
+
+
+You might have noticed that the conversion from inches to points was not
+quite what we claimed in the summary of \tex units. Here is how to see the
+differences:
+
+\verb+\dimen1 = 1in+
+
+
+\section{Skip registers}
+\index{registers!skip}
+\tex glue is specified as a fixed dimension, and optionally, with a plus and/
+or minus dimension. Along with \cmd{dimen} registers, TEX has glue registers,
+called \cmd{skip0} through \cmd{skip255}. Here is how you can save glue settings in
+ registers, and ask \tex to display the contents of one of them:
+
+\begin{teX}
+\skip1 = 10pt
+\skip2 = 10pt plus 3pt
+\skip3 = 10pt minus 2pt
+\skip4 = 10dd plus 3dd minus 2dd
+\showthe \skip4
+> 10.70007pt plus 3.21002pt minus 2.14001pt.
+\end{teX}
+
+
+The four sample glue settings store, respectively, \textit{fixed glue}, \textit{stretchable
+glue}, \textit{shrinkable glue}, and \textit{flexible glue} that can both stretch and shrink,
+but only up to a specified amount. Interword and intersentence spaces are
+generally defined with glue like this, so that if more stretch or shrink of
+\index{glue}\index{glue!flexibe}\index{glue!stretchable}\index{glue!shrinkable}
+
+\begin{teX}
+\dimen2 = 72.27pt
+\count1 = \dimen1
+\count2 = \dimen2
+\showthe \count1
+> 4736286.
+\showthe \count2
+> 4736287.
+\end{teX}
+
+The two values differ by the tiny value 1 \textit{sp}, so we can in practice ignore
+that difference. If we use higher-precision arithmetic, we find the exact
+decimal equivalents of the fractions as
+
+\begin{teX}
+4 736 286=65 536 = 72.269 989 013 671 875;
+4 736 287=65 536 = 72.270 004 272 460 937 5;
+4 736 286.72=65 536 = 72.27
+\end{teX}
+
+
+Actually \tex uses that last relation as the definition of the conversion of
+inches to scaled points, so that our assignment of 1 in to \verb+\dimen1+ has to
+be rounded to the nearest integral number of scaled points. That is why
+in the round-trip conversion from decimal to binary and back to decimal,
+1 in became 72.26999 pt. \tex guarantees that its output decimal numbers
+are always converted on input back to the original binary numbers from
+whence they came. For more on the story of \tex’s I/O conversions, see [3].
+
+
+Both \tex and \latex define a number of predefined dimensions and these are discussed in the relevant Chapters discussing the \latex kernel. For example you might have come across the \cmd{jot}, which is defined by \latex as:
+
+\begin{teXX}
+\newdimen\jot
+This is some sample text with a one |\jot| left indentation. Which is really too small to see in a paragraph.
+\jot=3pt
+\end{teXX}
+
+Defining |\parindent=jot| we can see that the indentation almost disappeared. This is obvious since |\jot| is used normally for maths.
+
+
+ 
+
+
+\section{Limits of TEX arithmetic}
+
+While \tex detects overflow on assignment and multiplication, it does not
+do so on addition or subtraction, on the grounds that such overflows should
+be nonexistent, or at least rare, in the typesetting of practical documents.
+Here are experiments to show what happens:
+
+\small
+\begin{teX}
+\dimen1 = \maxdimen % assign the largest possible dimension
+\showthe \dimen1
+16383.99998pt.
+\count1 = \dimen1 % convert to scaled points
+\showthe \count1
+1073741823.
+\dimen2 = 1073741823sp % assign the largest possible dimension
+\dimen3 = 1073741824sp % assign 1 + largest possible dimension
+! Dimension too large.
+\showthe \dimen3 % TeX replaces it by \maxdimen
+> 16383.99998pt.
+\dimen4 = \dimen2
+\advance \dimen4 by \dimen4 % form (largest + largest)
+\showthe \dimen4 % it works!
+32767.99997pt.
+\dimen5 = \dimen4 % try to assign the overlarge value
+! Dimension too large.
+\showthe \dimen5 % TeX replaces it by \maxdimen
+16383.99998pt.
+\advance \dimen5 by 16383pt % form (16383.99998pt + 16383pt)
+\showthe \dimen5 % it works: value is almost 2 * \maxdimen
+32766.99998pt.
+\advance \dimen5 by 16383pt % form (16383.99998pt + 16383pt + 16383pt)
+\showthe \dimen5 % ERROR: uncaught overflow gave negative!
+16386.00002pt.
+\dimen6 = 2\dimen2 % form 2 * (largest possible dimension)
+! Dimension too large.
+\showthe \dimen6 % TeX replaces it by \maxdimen
+16383.99998pt.
+A similar experiment carried out the 36-bit PDP-10 shows the same behavior
+up to the assignment to \dimen6, but since there are actually four
+more bits available for the integer part, we get this instead:
+*\showthe \dimen5
+> 81915.99998pt.
+We then repeat the addition 31 more times, and finally we have a problem:
+\advance \dimen5 by 16383pt \showthe \dimen5 % try 30
+524256.99998pt.
+\advance \dimen5 by 16383pt \showthe \dimen5 % try 31
+?
+? Integer overflow at user PC 1,,646437
+[Type CONTINUE to proceed if possible,
+REENTER to close all files and exit.]
+@continue
+507936.00002pt.
+\end{teX}
+\normalsize
+
+
+
+\section{Glue}
+
+\tex joins the boxes it creates with some special mortar as Knuth writes, called glue. To understand how glue works we will
+borrow a figure from the \tex Book.
+
+\begin{figure}
+ \includegraphics[width=0.9\linewidth]{./graphics/glue}
+  \caption{Glue in \TeX}
+  \label{fig:glue}
+\end{figure}
+
+
+\section{How to specify glue}
+
+The usual way to specify \textit{glue} to \tex is
+$<dimen>< plus~dimen><minus~dimen>$
+
+where the plus and minus are optional and assumed to be zero if not
+present; plus\index{glue!plus} introduces the amount of stretchability\index{glue!stretchability}, minus introduces the amount of shrinkability \index{glue!shrinkability}. 
+
+For example, Appendix B of the TexBook defines \cmd{medskip} to be an abbreviation for
+|\vskip6pt plus2pt minus2p|. The normal-space component of glue must always be
+given as an explicit dimen, even when it is zero. The ability of \TeX to stretch and shrink this glue has given it its beautiful looks. Strangely enough, although the algorithm is public it has not been used widely in other software.
+
+
+
+\subsection*{hfil and hfill}
+
+{\obeylines
+{This text will be flush left.\hfil}
+{\hfil This text will be flush right.}
+{\hfil This text will be centered.\hfil}
+{Some text flush left\hfil and some flush right.}
+{Alpha\hfil centered between Alpha and Omega\hfil Omega}
+{Five\hfil words\hfil equally\hfil spaced\hfil out.}
+}
+
+Consider the following definitions:
+
+\begin{verbatim}
+\def\centerlinea#1{\hfil#1\hfill}
+\def\centerlineb#1{\hfill#1\hfill}
+\def\centerlinec#1{\hss#1\hss}
+We define quickly a \cmd{lineX}\sidenote{Strange but my \LaTeX\ distribution has not got on. (This definition is from \texttt{plain.sty}}
+
+\def\lineX{\hbox to\hsize}
+\def\lineX{\hbox to\hsize}
+\def\centerlinea#1{\hfil#1\hfil}
+\def\centerlineb#1{\hfill#1\hfill}
+\def\centerlinec#1{\hss#1\hss}
+
+\lineX{\centerlinea{\test}}
+\lineX{\centerlineb{\test}}
+\lineX{\centerlinec{\test}}
+\centerline{\test}
+\begin{center}\test\end{center}
+
+\end{verbatim}
+
+
+\section{Specifying glue amounts}
+
+\tex glue is specified as a fixed dimension, and optionally, with a plus and
+or minus dimension. Along with \cmd{dimen} registers, TEX has glue registers,
+called \cmd{skip0} through \cmd{skip255}. Here is how you can save glue settings in
+\tex registers, and ask \tex to display the contents of one of them:
+
+\begin{teX}
+\skip1 = 10pt
+\skip2 = 10pt plus 3pt
+\skip3 = 10pt minus 2pt
+\skip4 = 10dd plus 3dd minus 2dd
+\the \skip4
+\end{teX}
+
+
+\texttt{> 10.70007pt plus 3.21002pt minus 2.14001pt}
+
+The four sample glue settings store, respectively, {\em fixed glue}, {\em  stretchable
+glue}, {\em shrinkable glue}, and {\em flexible glue}  that can both stretch and shrink,
+but only up to a specified amount. Interword and intersentence spaces are
+generally defined with glue like this, so that if more stretch or shrink of  a
+re underfull (too little text to fill the line), or overfull (too much text in the
+line).
+
+
+\section{Overfull lines}
+
+Although overfull lines are reported in the \tex log file, they can be hard
+to find in the typeset document if they only stick out a little. To make
+them highly visible while you are fine tuning your final document, assign
+the variable \cmd{overfullrule} a nonzero dimension, such as 2 cm. \tex then
+displays a solid black box, called a \emph{rule}, of that width in the right margin
+on each line that is overfull. Using the \docpkg{microtype} package one can adjust the parameters to minimize this.
+
+To make the rules disappear, simply remove it,
+or comment out, the assignment, or reset its value to 0 pt. 
+
+Just as you can assign dimension registers to count registers to convert
+from points to scaled points, you can assign skip registers to dimension and
+count registers to discard the flexible parts:
+
+
+\begin{teX}
+\skip1 = 10pt plus 3pt minus 2pt
+\the\skip1
+ \dimen1 = \skip1
+\the \dimen1
+\count1 = \skip1
+\the \count1
+\end{teX}
+
+
+
+
+\section{More on glue in boxes}
+
+Besides normal glue with fixed amounts of stretch and shrink, \tex also has
+two kinds of glue that are \emph{infinitely} stretchable and shrinkable: \cmd{hfil} and
+\cmd{hfill} in horizontal mode, and \cmd{vfil} and \cmd{vfill} in vertical mode. Notice that there two versions
+of the commands, the one ends with one ell and the second one with two. The
+two-ell forms are more flexible than the one-ell forms.
+
+The boxes and glue model is powerful, and \tex's author, Donald Knuth,
+has written that he views it as the key idea that he discovered when he
+first sat down in 1977--1978 to design a computer program for typesetting.
+For example, to set something flush left, put infinitely-stretchable glue on
+its right. To set it flush right, put the glue on the left. For centered material,
+put the glue on both sides. Here are four examples, with vertical
+bars marking the ends of the horizontal box (boxes have no visible frames,
+although it is possible to write \tex commands to give them such outlines,
+and we use that feature shortly):
+
+\begin{teX}
+|\hbox to 40pt{word}| |word |
+|\hbox to 40pt{word \hfil}| |word |
+|\hbox to 40pt{\hfil word}| | word|
+|\hbox to 40pt{\hfil word\hfil}| | word |
+\end{teX}
+
+{\obeylines
+|\hbox to 40pt{word}| |word |
+|\hbox to 40pt{word \hfil}| |word |
+|\hbox to 40pt{\hfil word}| | word|
+|\hbox to 40pt{\hfil word\hfil}| | word |
+}
+
+\clearpage
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\noindent{\Large HORIZONTAL AND VERTICAL BOXES}
+
+\medskip
+
+{\tt \protect\textbackslash hbox \protect\textbackslash vbox and \protect\textbackslash vtop}
+
+\begin{multicols}{2}
+\noindent \lettrine{L}{ike} their dimensions \TeX's boxes are not what one thinks when thinking of boxes. TeX's boxes come in basically two flavours, horizonatl boxes and vertical boxes. An \cmd{hbox} is created by the command |\hbox{material}|. It has the following properties:
+
+\begin{enumerate}[1.]
+\item The material is placed from left to right and it becomes a \textit{horizontal list}.\index{horizontal list}
+\item The box \textbf{cannot be broken across lines}; it is an indivisible unit.
+\end{enumerate}
+
+An |hbox| can contain, characters, horizontal glue, horizontal leaders or other boxes. While in many cases these other boxes can be other |\hbox|es, |vbox| can be used.
+
+Boxes can be moved up or down using |\raise| or |\lower|. Each of these primitives is followed by a dimension indicating how far the box can be lowered or raised.
+
+Other material that can go in an hbox, is \textbf{vertical rules}. 
+
+\subsection{The null macro}
+
+The |\null| macro is defined both in Plain as well as LaTeX and generates an empty box. Its definition is:
+
+\begin{teXXX}
+\def\null{\hbox{}}
+\end{teXXX}
+
+
+\fbox{\hbox{This is a test}}
+
+{
+\fbox{\hsize=5cm
+A test of a box at the end of a 2.0 inch line\par}
+
+\fbox{\hsize=5.0cm in A test of a box at the end of a \hbox to 2cm{2.0 cm} line\par}
+
+}
+
+What happens when we have more than two boxes on a line? TeX will stuck them one under another.
+
+\hbox to 1cm {A} \hbox to 1cm {B}
+
+If we however, put them together in another |\hbox|, we get:
+
+\hbox{\hbox to 1cm {A} \hbox to 1cm{B}}
+
+
+
+\end{multicols}
+
+\bigskip
+\clearpage
+
+
+\noindent{\LARGE\bf{} KERNING}
+
+\begin{multicols}{2}
+Using the command \cmd{kern}, we can move boxes either left or right. Kerning is extensively used to build internal commands and we discuss it in more detail under the chapter for fonts.
+
+Consider two horizontal boxes, holding the letters A and V:
+As you can observe, the letters AB are a bit afar, from what would be a visually pleasant arrangement, we can kern them as follows:
+\medskip
+\begin{teXXX}
+\hbox{\Huge AV A\kern-5ptV}
+\end{teXXX}
+\medskip
+Note that hbox, does not produce a frame. I~have used a frame |\fbox|, which will cover a bit later as well as scaled the image by 2, in order to see the effects more clearly.
+\columnbreak
+
+\centerline{\scalebox{2}{\hbox{\hbox{\huge A}\hbox{\huge V}}} \scalebox{2}{\hbox{\hbox{\huge A}\kern-5pt\hbox{\huge V}}}}
+\end{multicols}
+
+
+
+
+\noindent\begin{tabular}{ll}
+|\hbox{\kern4pt A\kern8pt B\kern8pt C\kern4pt}| & \fbox{\hbox{\kern4pt A\kern8pt B\kern8pt C\kern4pt}} \\
+~ &\\
+\midrule
+|\hbox{\kern4pt\raise1pt\hbox{A}|  & \fbox{\hbox{\kern4pt\raise1pt\hbox{A} \kern8pt BC\kern8pt\lower6pt\hbox{D} \kern4pt} \kern8pt BC\kern8pt\lower6pt\hbox{D}\kern4pt} \\
+|\kern8pt BC|                      &\\
+|\kern8pt\lower6pt\hbox{D}|        &\\
+|\kern4pt}|                        &\\ 
+|\kern8pt BC|                      &\\ 
+|\kern8pt\lower6pt\hbox{D}|        &\\
+|\kern4pt}| &\\
+\midrule
+\end{tabular}
+
+
+\vbox{
+\noindent\rule{\linewidth}{0.4pt}
+\begin{minipage}{4.5cm}
+ \begin{teXX}
+\fbox{\hbox{\kern4pt A\kern8pt 
+      B\kern8pt C\kern4pt}}
+\end{teXX}
+\end{minipage}
+\hfill\hfill
+\begin{minipage}{3cm}
+\hfill\hfill\fbox{\hbox{\kern4pt A\kern8pt 
+      B\kern8pt C\kern4pt}}
+\end{minipage}
+
+\medskip
+\noindent\rule{\linewidth}{0.4pt}
+}
+
+Notice that an |\hbox| is constructed by setting its components side by side so that their \textit{baselines} are aligned. When \cmd{raise}, \cmd{lower} are used the baselines are no longer aligned. In such a case the baseline of the box is defined as the baseline shared by the components before any vertical movements. In the example above the box now has a depth, as a result of lowering |D|.
+
+
+\vbox{
+\noindent\rule{\linewidth}{0.4pt}
+\begin{minipage}{4.5cm}
+\begin{teXXX}
+\hbox{\kern4pt\raise1pt\hbox{A} 
+  \kern8pt BC\kern8pt
+  \lower6pt\hbox{D} 
+  \kern4pt} 
+\end{teXXX}
+\end{minipage}
+\hfill
+\begin{minipage}{3cm}
+\fbox{\hbox{\kern4pt\raise1pt\hbox{A} 
+\kern8pt BC\kern8pt\lower6pt\hbox{D} \kern4pt}}
+\end{minipage}
+
+\medskip
+\noindent\rule{\linewidth}{0.4pt}
+}
+
+\clearpage
+
+\begin{multicols}{2}
+\noindent\textbf{Vertical boxes.}\quad A vertical box is build in a similar manner to that of a horizontal list, except it is composed of material in the \textit{vertical list}.
+When horizontal boxes are added in the list, they are stuck on top of each other as shown in the example below. 
+\medskip
+\begin{teXXX}
+\vbox{\hsize=0.8cm\hbox{A} \hbox{AB}} 
+\end{teXXX}
+\columnbreak
+
+\parindent0pt
+\fbox{\vbox{\hsize=3cm\fbox{\hbox{ABCDEFGH}} \fbox{\hbox{AB}}}}
+\end{multicols}
+
+\begin{multicols}{2}
+It is important to remember the two main differences between hboxes and vboxes. An hbox will expand to hold its material. If it need be it will overfill the line and produce an overful warning. A vbox will expand to hold its material. It is perfectly normal for a vbox to hold paragraphs, as shown. This is not possible with an hbox.
+
+\columnbreak
+
+\noindent\fbox{\vbox{\lorem\par\lorem\par}}
+\end{multicols}
+
+\pagestyle{headings}
+
+\topline
+\begin{multicols}{2}
+\noindent\textbf{Controlling the size of a vbox.}\quad What controls the size, is the containing environment. This in TeX, is specified using |\hsize|. In LaTeX this is controlled by an enclosing environment, maybe a minipage (which is build this way) or one of the page width parameters.
+\end{multicols}
+
+
+
+\begingroup
+\parindent0pt
+\fboxsep5pt
+\hsize=3.8cm\footnotesize
+\hfil\fbox{\vbox{\lorem\par}} 
+\hfil\fbox{\vbox{\lorem\par}}
+\hfil\fbox{\vbox{\lorem\par}}\hfill
+\endgroup
+\captionof{figure}{Output to demonstrate the use of vboxes.}
+
+
+\begin{multicols}{2}
+The code to typest the boxes shown above follows:
+\medskip
+\emphasis{hsize}
+\begin{teXXX}
+\bgroup
+\parindent0pt
+\hsize=3.3cm\footnotesize
+\hfil\fbox{\vbox{\lorem\par}} 
+\hfil\fbox{\vbox{\lorem\par}}
+\hfil\fbox{\vbox{\lorem\par}}
+\hfill
+\egroup
+\end{teXXX}
+\columnbreak
+
+Note, the use of hsize. We define the font size as |\footnotesize|. We have done this in order not to have overfull boxes--Latin words don't have a full set of hyphenation patterns in \latex. The macro |\lorem|, we have defined internally for this document. We place the code in a group in order not to affect the rest of the document.
+\end{multicols}
+
+
+\clearpage
+
+\noindent\textbf{Vertical centering}\quad can be achieved by applying vertical infinite glue \cmd{vfill}. In the example that follows, first we place two letters in individual |\hboxes| and we enclose them in a vbox. We apply |\vfill| both on top and at bottom.
+
+\emphasis{\vfill}
+\startLineAt{10}
+\vbox{
+\noindent\rule{\linewidth}{0.4pt}
+\begin{minipage}{5cm}
+\begin{teX}
+\fbox{\vbox to 0.9cm{\vfil\hbox{M}\nointerlineskip\hbox{i}\vfil}} 
+\end{teX}
+\end{minipage}
+\hfill
+\begin{minipage}{3cm}
+\hfill\fbox{\vbox to 0.9cm{\vfil\hbox{M}\nointerlineskip\hbox{i}\vfil}}\hfill\hfill 
+\end{minipage}
+
+\medskip
+\noindent\rule{\linewidth}{0.4pt}
+}
+
+A |\vbox| can be combined with text and may appear anywhere within a paragraph. The baseline of the box will be aligned with the baseline of the current line.
+
+\startLineAt{10}
+\vbox{
+\noindent\rule{\linewidth}{0.4pt}
+\begin{minipage}{5cm}
+\begin{teX}
+A vbox can be placed within a paragraph \fbox{\vbox to 0.6cm{\vfil\hbox{M}\nointerlineskip\hbox{i}\vfil}} as shown here.
+\end{teX}
+\end{minipage}
+\hfill
+\begin{minipage}{4cm}
+A vbox can be placed within a paragraph \fbox{\vbox to 0.6cm{\vfil\hbox{M}\nointerlineskip\hbox{i}\vfil}} as shown here.
+\end{minipage}
+
+\medskip
+\noindent\rule{\linewidth}{0.4pt}
+}
+
+
+
+
+
+\noindent\textbf{Top alignment.}\quad\cmd{vtop} is similar to a |\vbox|. The depth of this box is zero, since both A and B are capital letters. The width of this box is |\hsize|, since it contains text. 
+
+\medskip
+\startLineAt{10}
+\vbox{
+\noindent\rule{\linewidth}{0.4pt}
+\begin{minipage}{5cm}
+\begin{teX}
+\vtop{\hbox{A} \hbox{B}}
+\end{teX}
+\end{minipage}
+\hfill
+\begin{minipage}{4cm}
+\fbox{\vtop{\hbox{A} \hbox{B}}}
+\end{minipage}
+
+\medskip
+\noindent\rule{\linewidth}{0.4pt}
+}
+\medskip
+
+
+Centering a picture in a box, both vertically and horizontally can be achieved using the methods we described so far.
+
+\medskip
+\
+\vbox{
+\noindent\rule{\linewidth}{0.4pt}
+\begin{minipage}{4.9cm}
+\begin{teX}
+\vbox{\fbox{\vtop{\bigskip \hfill\hfill\hbox{\includegraphics[width=1.5cm]{ amato}\bigskip}\hfill\hfill \bigskip}\bigskip}\bigskip}
+\end{teX}
+\end{minipage}
+\hspace{0.3cm}
+\begin{minipage}{4.5cm}
+\vbox{\fbox{\vtop{\bigskip \hfill\hfill\hbox{\includegraphics[width=1.5cm]{ amato}\bigskip}\hfill\hfill \bigskip}\bigskip}\bigskip}
+\end{minipage}
+
+\medskip
+\noindent\rule{\linewidth}{0.4pt}
+}
+\medskip
+
+
+And now for a bit more complicated graphics.
+
+
+\medskip
+\startLineAt{10}
+\vbox{
+\noindent\rule{\linewidth}{0.4pt}
+\begin{minipage}{4.9cm}
+\begin{teX}
+\vbox{\fbox{\vtop{\bigskip \hfill\hfill\hbox{\includegraphics[width=1.5cm]{ amato}\bigskip}\hfill\hfill \bigskip}\bigskip}\bigskip}
+\end{teX}
+\end{minipage}
+\hspace{0.3cm}
+\begin{minipage}{4.5cm}
+\newcommand*{\vimage}[1]{\vcenter{\hbox{\includegraphics[width=1.5cm]{#1}}}}
+\newcommand*{\vpointer}{\vcenter{\hbox{\scalebox{2}{\Huge\pointer}}}}
+$\vimage{amato}
+\vimage{amato}
+\vimage{amato}$
+\end{minipage}
+
+\medskip
+\noindent\rule{\linewidth}{0.4pt}
+}
+\medskip
+
+
+
+
+
+
+
+Kern again. This is from the book TeX for The Impatient page 157. You can use kern in math mode, but you cannot use the \texttt{mu} units. If you want to use \texttt{mu} units use \cmd{mkern} instead.
+
+\medskip
+\startLineAt{10}
+\vbox{
+\noindent\rule{\linewidth}{0.4pt}
+\begin{minipage}{4.9cm}
+\begin{teX}
+\centerline{$\Downarrow$}\kern 3pt%
+\centerline{$\Longrightarrow$\kern 6pt% horizontal kern
+  \textit{A note about kern}\kern 6pt
+    $\Longleftarrow$}
+\kern 3pt
+\centerline{$\Uparrow$}  
+\end{teX}
+\end{minipage}
+\hspace{0.3cm}
+\begin{minipage}{4.5cm}
+\centerline{$\Downarrow$}\kern 3pt%
+\centerline{$\Longrightarrow$\kern 6pt% horizontal kern
+  \textit{A note about kern}\kern 6pt
+    $\Longleftarrow$}
+\kern 3pt
+\centerline{$\Uparrow$}
+\end{minipage}
+
+\medskip
+\noindent\rule{\linewidth}{0.4pt}
+}
+\medskip
+
+To make a point again, |\vbox| lines boxes at their bottom while, |\vtop| lines them at their top.
+
+\medskip
+\startLineAt{10}
+\vbox{
+\noindent\rule{\linewidth}{0.4pt}
+\begin{minipage}{4.9cm}
+\begin{teX}
+ \hbox{\hsize=2cm \raggedright
+\vbox to 0.5in{\hrule This box is .5in deep. \vfil\hrule}
+\qquad
+\vbox to 0.75in{\hrule This box is .75in deep. \vfil\hrule}
+\qquad
+\end{teX}
+\end{minipage}
+\hspace{0.3cm}
+\begin{minipage}{4.5cm}
+\hbox{\hsize=2cm \raggedright
+\vbox to 0.5in{\hrule This box is .5in deep. \vfil\hrule}
+\qquad
+\vbox to 0.75in{\hrule This box is .75in deep. \vfil\hrule}
+\qquad}
+\end{minipage}
+
+\medskip
+\noindent\rule{\linewidth}{0.4pt}
+}
+
+\medskip
+
+
+Trying the same with vtop
+
+\medskip
+\startLineAt{10}
+\vbox{
+\noindent\rule{\linewidth}{0.4pt}
+\begin{minipage}{4.9cm}
+\begin{teX}
+ \hbox{\hsize=2cm \raggedright
+\vbox to 0.5in{\hrule This box is .5in deep. \vfil\hrule}
+\qquad
+\vbox to 0.75in{\hrule This box is .75in deep. \vfil\hrule}
+\qquad
+\end{teX}
+\end{minipage}
+\hspace{0.3cm}
+\begin{minipage}{4.5cm}
+\hbox{\hsize=2cm \raggedright
+\vtop to 0.5in{\hrule \smallskip This box is .5in deep. \vfil\hrule}
+\qquad
+\vtop to 0.75in{\hrule \smallskip This box is .75in deep. \vfil\hrule}
+\qquad}
+
+\hbox{\hsize=2cm \raggedright
+\vbox to 0.5in{\hrule \smallskip This box is .5in deep. \vfil\hrule}
+\qquad
+\vbox to 0.75in{\hrule \smallskip This box is .75in deep. \vfil\hrule}
+\qquad}
+\end{minipage}
+
+\medskip
+\noindent\rule{\linewidth}{0.4pt}
+}
+
+\medskip
+
+There are some other special macros defined by Plain TeX that we will only touch briefly here. One of them is \cmd{underbar}{\index{Plain!\textbackslash underbar}.
+The macro puts its argument into an hbox and underlines it.
+
+\medskip
+\startLineAt{10}
+\vbox{
+\noindent\rule{\linewidth}{0.4pt}
+\begin{minipage}{4.9cm}
+\begin{teX}
+ \underbar{1,000,788.22}
+\end{teX}
+\end{minipage}
+\hspace{0.4cm}
+\begin{minipage}{4.0cm}
+\medskip
+\hfill\hfill{}\hspace*{1em}a1,000,700.22 \hfill
+
+\smallskip
+
+\hfill\underbar{1,000,788.22}\hfill
+\end{minipage}
+
+\medskip
+\noindent\rule{\linewidth}{0.4pt}
+}
+
+\medskip
+
+
+The \cmd{everyvbox} command inserts a series of tokens at the beginning of every |\vbox|.
+
+
+\medskip
+\startLineAt{10}
+\vbox{
+\noindent\rule{\linewidth}{0.4pt}
+\begin{minipage}{4.9cm}
+\begin{teX}
+ \everyvbox{$\bullet$}...
+\end{teX}
+\end{minipage}
+\hspace{0.4cm}
+\begin{minipage}{4.0cm}
+\begingroup% Without this group, there are tons of problems!
+   \everyvbox{$\bullet$}
+   \global\setbox1=\vbox{This is a paragraph without an initial indent. It is   \the\hsize\ long lines.}
+   \global\setbox2=\vtop{\copy1}
+\endgroup
+ \hbox{\box1} 
+
+ \hbox{\box2}
+\end{minipage}
+
+\medskip
+\noindent\rule{\linewidth}{0.4pt}
+}
+
+\medskip
+Knuth in the TexBook Chapter 24, has some short description of the every commands. The `everyhbox` inserts a token list just before as its name implies a horizontal box.
+
+Here is a short example. We define a `oneLineBox`, which is simply an hbox with some text and we add spread to spread the line. Using |\everybox| we add the letter \textbf{a} in each horizontal box. 
+
+
+\tex considers the box overfull if the excess width of the box is larger than \cmd{hfuzz} or \cmd{hbadness} is less than 100. If I change  the badness to hbadness, I get 1000.
+
+\medskip
+\startLineAt{10}
+\vbox{
+\noindent\rule{\linewidth}{0.4pt}
+\begin{minipage}{10.0cm}
+\begin{teX}
+ \begingroup
+     \everyhbox{a}
+     \def\oneLineBox#1#2%
+     {%
+          \hfuzz=0pt
+          \overfullrule=0.25pt
+          \setbox0=\hbox spread#2{#1}%
+          \setbox1=\hbox{\the\badness}% 
+          \setbox2=\hbox to 4.5cm{\box0\hfil\box1}%
+          \box2
+     }
+     \oneLineBox{Badness of line }{-1em}
+     \oneLineBox{Badness of line }{-0.54em}
+     \oneLineBox{Badness of line }{-0.4em}
+     \oneLineBox{Badness of line }{0em}
+     \oneLineBox{Badness of line }{1em}
+     \oneLineBox{Badness of line }{2em}
+     \oneLineBox{Badness of line }{3em}
+ \endgroup
+\end{teX}
+\end{minipage}
+
+
+\begin{minipage}{10.0cm}
+\begingroup
+     \everyhbox{a}
+     \def\oneLineBox#1#2%
+     {%
+          \hfuzz=0pt
+          \overfullrule=0.25pt
+          \setbox0=\hbox spread#2{#1}%
+          \setbox1=\hbox{\the\badness}% 
+          \setbox2=\hbox to 4.5cm{\box0\hfil\box1}%
+          \box2
+     }
+     \oneLineBox{Badness of line }{-1em}
+     \oneLineBox{Badness of line }{-0.54em}
+     \oneLineBox{Badness of line }{-0.4em}
+     \oneLineBox{Badness of line }{0em}
+     \oneLineBox{Badness of line }{1em}
+     \oneLineBox{Badness of line }{2em}
+     \oneLineBox{Badness of line }{3em}
+ \endgroup
+\end{minipage}
+
+\medskip
+\noindent\rule{\linewidth}{0.4pt}
+}
+
+\medskip
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\section{More features of horizontal boxes}
+
+Characters in the Latin alphabet have different shapes, and in most typefaces,
+different widths. The letters \texttt{d f h k l t} have ascenders, making them
+higher than the vowels \texttt{a e o u}, while the letters \texttt{f g j p q y} have descenders,
+giving them added depth below the vowels. Similarly, an \texttt{m} is wider than
+an \texttt{i}. 
+
+When \tex makes a normal horizontal box, the box width is the sum
+of the widths of the characters, and the fixed parts of any glue, contained
+in it. Shrink and stretch components of glue are discarded for the width
+calculation. The box also has both a height above the baseline, the invisible
+line on which the characters rest, and a depth below the baseline. The
+depth is zero if there are no objects with descenders. The height and depth
+are chosen from the largest vertical extents of the contained objects.
+
+If you look carefully at typeset material, you will observe that, in most
+typefaces, parentheses, brackets, and braces have both descenders and ascenders,
+and the typeface designer usually makes their extents the maximum
+among all of the characters in the design. This sample text shows
+document: ( h g ) [ k j ] { l p }.
+
+You can force TEX to choose a larger height and depth than normal when
+you write a command for a horizontal box by ensuring that it has suitable
+contents, such as an invisible vertical rule of zero width. The command
+
+\verb+\hbox to 50pt {\vrule height 20pt depth 10pt width 0pt \it stuff}+
+
+produces a box whose (invisible) outline looks like this: 
+
+\hbox to 50pt {\vrule height 20pt depth 10pt width 0pt \it Great}
+
+\noindent\fbox{\vrule height 20pt depth 10pt width 0pt \it Great}
+
+
+
+
+The
+three extents of the vertical rule can appear in any order, and any convenient
+units.
+
+\section{LaTeX Boxes}
+In order to see the otherwise-invisible box edges in that example, we
+used the \latex  built-in command \cmd{fbox} to create a frame, and we eliminated
+the default margin inside the frame by setting \cmd{fboxsep = 0pt}. Plain TEX
+does not have the \cmd{fbox} command, but The TEXbook shows how to make
+something like it on pp. 223 and 321.
+
+One particular zero-width vertical rule is convenient for ensuring that
+separate boxes all get the same height and depth. It has the height and
+depth of parentheses in the normal prose font, and is given the macro name
+\doccmd{strut}. Its definition in the plain.tex file of macro definitions is roughly
+equivalent to this:
+
+\begin{comment}
+\begin{figure}[tbp]%
+   \includegraphics[width=\linewidth]{./graphics/ascender}
+   \caption{Boxes in \protect\TeX}
+   \label{fig:ascender}
+\end{figure}
+\end{comment}
+
+ \def \strut {\vrule height 8.5pt depth 3.5pt width 0pt}
+\begin{teX}
+  \def \strut {\vrule height 8.5pt depth 3.5pt width 0pt}
+\end{teX}
+
+Compare these two experiments with outlined boxes, first without struts,
+and then with struts:
+
+\begin{teXX}
+\def \Fbox #1{\fbox{\strut #1}}
+\fbox{aeou} \fbox{dhkl} \fbox{gpq}\\ 
+\Fbox{aeou} \Fbox{dhkl} \Fbox{gpq}\\ 
+\end{teXX}
+
+
+Notice the different vertical extents of the boxes in the first case, and how
+they have identical extents in the second case.
+
+\section{Horizontal alignment of boxes in TEX}
+
+When horizontal boxes are set together, they are treated as separate words,
+and therefore spaced accordingly. The input
+
+\verb+ \fbox{one} \fbox{two} \fbox{three}\fbox{four}+  
+
+produces  \fbox{one} \fbox{two} \fbox{three}\fbox{four}. As the example shows, we can put spaces
+between them, or run them together so that they fit tightly.
+
+
+\section{Vertical boxes in TEX}
+
+\begin{marginfigure}
+\begin{minipage}{2.0in}
+\begin{verbatim}
+\noindent
+\fbox{%
+  \it
+  \hbox to 80pt{%
+     \parindent = 0pt
+     \vbox to 30pt {%
+         left text
+         \vfil
+         more left text%
+     }%
+  }%
+}%
+\end{verbatim}
+\end{minipage}
+\end{marginfigure}
+
+%\noindent
+\fbox{%
+  \it
+  \hbox to 80pt{%
+     \parindent = 0pt
+     \vbox to 30pt {%
+         \hlred{left text}
+         \vfil
+         \hlred{more left text}%
+     }%
+  }%
+}%
+
+Firstly we use a noindent to ensure that the box is not indented. If you comment the \doccmd{fbox} out, you can see that the right amount of space has been left in the paragraph above.
+
+\mbox{}
+ 
+\noindent
+\fbox{%
+\it
+\hbox to 80pt{%
+\parindent = 0pt
+\hsize = 80pt
+\vbox to 30pt {\hfill right text
+\vfil
+\hfill more right text}
+}%
+}%
+
+
+\begin{marginfigure}
+\noindent
+\fbox{%
+\it
+\hbox to 80pt{%
+\parindent = 0pt
+\hsize = 80pt
+\vbox to 30pt {\hfil center text
+\vfil
+ more center text \hfil}
+}%
+}%
+\end{marginfigure}
+We can aslo center the text for both lines, by modifying the code slightly.
+\begin{teX}
+\noindent
+\fbox{%
+\it \hbox to 80pt{
+   \parindent = 0pt
+   \hsize = 80pt
+   \vbox to 30pt {
+   center text \hfill
+    \vfil
+    \hfil more center text}
+   }%
+}%
+\end{teX}
+
+\begin{marginfigure}
+\noindent
+\fbox{%
+\it
+\hbox to 80pt{%
+\parindent = 0pt
+\hsize = 80pt
+\vbox to 30pt {\hfil center text
+\vfil
+\hfil more center text}
+}%
+}%
+\end{marginfigure}
+
+
+\section{Horizontal boxes with \protect\LaTeXe}
+
+\latex's analog of an unqualified \cmd{hbox} is called \cmd{mbox}. They are 
+much the
+same thing, but \cmd{mbox} is defined to be more widely usable. We have already
+used \latex's framed companion to \cmd{mbox}, \cmd{fbox}.
+
+A horizontal box of specified width is provided in \latex with the command
+\doccmd{makebox[width][position]\{contents\}}. Bracketed command arguments
+in \latex are always optional. 
+
+Here, the width is a TEX dimension,
+and defaults to the natural width of the contents if not given. The position
+is one of the letters \textbf{l} (flush left) or \textbf{r} (flush right); if it is omitted, the text
+is centered in the box. If the specified width is smaller than needed, the
+contents protrude from the box, and may overlap surrounding material. If
+the specified width is zero, then we have equivalents of the TEX \cmd{rlap} and
+\cmd{llap} commands.
+
+
+Here are several examples of these three LATEX box commands:
+
+{\obeylines
+\mbox{stuff}
+
+\fbox{stuff} 
+
+|\makebox{stuff}|
+
+|\makebox[40pt][l]{stuff}|
+
+|\makebox[40pt][r]{stuff}|
+
+|\makebox[0pt]{stuff}|
+
+|\makebox[0pt][l]{stuff}|
+
+|\makebox[0pt][r]{stuff}|
+}
+
+
+The \cmd{makebox} command has a framed companion, \cmd{framebox}, with identical
+arguments. Like \cmd{fbox}, \cmd{framebox} creates a margin of width \cmd{fboxsep}
+between the outline and the contents, but we continue with a zero value for
+that separation:
+
+
+
+\framebox{stuff} 
+
+\framebox[40pt][l]{stuff} 
+
+\framebox[40pt][r]{stuff}
+
+\framebox[0pt]{stuff} 
+
+\framebox[0pt][l]{stuff} 
+
+\framebox[0pt][r]{stuff}
+
+The last three examples show that the frame shrinks to a vertical bar when
+the box width is zero.
+
+To help in positioning boxes within other objects, \latex provides the command
+\cmd{raisebox} to raise and lower boxes:
+
+\begin{teX}
+\raisebox{raiselength}[height][depth]{contents}
+\end{teX}
+
+A negative first argument lowers the box. Here are some examples:
+
+
+A \raisebox{10pt}{\fbox{upper}} A
+upper
+A \raisebox{10pt}{\
+fbox{lower}} A
+lower
+A \fbox{\raisebox{10pt}[25pt]{\fbox{upper}}} A
+upper
+A \fbox{\raisebox{10pt}[
+25pt]{\fbox{lower}}} A
+lower
+A \fbox{\raisebox{10pt}[25pt][15pt]{\fbox{upper}}} A
+upper
+A \fbox{\raisebox{10pt}[
+25pt][15pt]{\fbox{lower}}} A
+lower
+
+\section*{Paragraph Boxes}
+For longer strings of text, \latex provides the paragraph box \cmd{parbox}, which is
+defined like this: {\verb parbox[position]{width}{contents}}. The optional position
+is a letter b for alignment of the bottomline with the current baseline,
+or t for alignment of the top line with the surrounding baseline. Without
+
+The box can be used as if it were a letter or a word, so we can put it in
+the middle of a sentence. The input
+
+This is text \parbox{30pt}{\it and this is boxed text} and
+this is more text.
+
+This is text \fbox{\parbox{30pt}{\it and this is boxed text}}
+and this is more text.
+produces
+
+
+Flush-right typesetting generally looks bad in narrow columns, so we
+can insert a \cmd{raggedright} command inside the last argument of the paragraph
+box to get output like this:
+
+
+\section*{The minipage environment}
+Another kind of paragraph box can be obtained in a more general, and
+more powerful, way with the minipage environment:
+
+\begin{teX}
+\begin{minipage}[position]{width}
+   contents
+\end{minipage}
+\end{teX}
+
+
+The positioning works just like that for \verb+ \parbox+, with alignment letters b
+and t, and if they are omitted, a default of vertical centering.
+In particular, verbatim text produced with the verb command is illegal
+in macro arguments, so it cannot be used with \cmd{fbox}, \cmd{framebox}, \cmd{makebox},
+\cmd{mbox}, or\cmd{ parbox}, but it can be used inside a minipage. The input
+
+
+\begin{teX}
+\begin{minipage}{170pt}
+This is inline verbatim \verb=\verb|\%{}|=, and this
+is a verbatim display:
+%
+#include <stdio.h>
+#include <stdlib.h>
+int main(void)
+{
+printf("Hello, world\n");
+exit (EXIT_SUCCESS);
+}
+
+\end{minipage}
+\end{teX}
+
+
+A minipage can go everywhere and can hold virtually any content.
+
+\begin{marginfigure}
+\begin{minipage}{130pt}
+This is inline verbatim \verb=\verb|\%{}|=, and this
+is a verbatim display:
+\begin{teX}
+%
+#include <stdio.h>
+#include <stdlib.h>
+int main(void)
+{
+printf("Hello, world\n");
+exit (EXIT_SUCCESS);
+}
+\end{teX}
+\end{minipage}
+
+\end{marginfigure}
+
+\vbox{\hbox{Two lines}\hbox{of type.}}
+
+\section{saving a box in an internal register}
+\tex provides a method to save a box in an internal register box0\ldots box255
+
+\begin{teX}
+\setbox0=\hbox{T\kern-.1667em\lower.5ex\hbox{E}\kern-.125em X}
+\box0
+\end{teX}
+
+\setbox0=\hbox{T\kern-.1667em\lower.5ex\hbox{E}\kern-.125em X}
+With the above we can just type \cmd{box0} to get the \box0 !
+
+
+example, one of the boxes displayed earlier in this chapter was generated by
+
+\medskip
+\verb+ \hbox spread 5pt\{``Oh, oh!'' ... laughed.\}+
+\medskip
+
+\section*{Scaling and resizing boxes}
+
+The command \cmd{resizebox}{width}{height}{object} can be used with tabular to specify the height and width of a table. The following example shows how to resize a table to 8cm width while maintaining the original width/height ratio.
+
+\begin{teX}
+\resizebox{8cm}{!} {
+  \begin{tabular}...
+  \end{tabular}
+}
+\end{teX}
+
+Alternatively you can use \cmd{scalebox}{ratio}{object} in the same way but with ratios rather than fixed sizes:
+
+\begin{teX}
+\scalebox{0.7}{
+  \begin{tabular}...
+  \end{tabular}
+}
+\end{teX}
+
+Both |\resizebox| and |\scalebox| require the \docpkg{graphicx} package.
+To tweak the space between columns (LaTeX will by default chose very tight columns), one can alter the column separation: |\setlength{\tabcolsep}{5pt}|. The default value is |6pt|.
+
+The scalebox is great if you want to magnify a letter so that you can observe the design closer.
+
+\bigskip
+\noindent\begin{tabular}{|c|c|c|c|c|c|}\hline
+Kp-Fonts & Kp-\textit{light} & CM & Palatino & Utopia & Times\\\hline\hline
+\scalebox{2}{ag713} &
+\scalebox{2}{\fontfamily{jkpl}\selectfont 7} &
+\scalebox{2}{\fontfamily{lmr}\selectfont 713}  &
+\scalebox{2}{\fontfamily{ppl}\selectfont 713}  &
+\scalebox{2}{\fontfamily{put}\selectfont 7} &
+\scalebox{2}{\fontfamily{ptm}\selectfont \oldstylenums{7}} \\\hline
+\end{tabular}
+
+
+\begin{teX}
+\hspace{-6mm}\begin{tabular}{|c|c|c|c|c|c|}\hline
+Kp-Fonts & Kp-\textit{light} & CM & Palatino & Utopia & Times\\
+\hline\hline
+  \scalebox{10}{a} &
+  \scalebox{10}{\fontfamily{jkpl}\selectfont a} &
+  \scalebox{10}{\fontfamily{lmr}\selectfont a}  &
+  \scalebox{10}{\fontfamily{ppl}\selectfont 7}  &
+  \scalebox{9.2}{\rule{0pt}{1.25ex}\fontfamily{put}\selectfont a} &
+  \scalebox{10}{\fontfamily{ptm}\selectfont a}\\\hline
+\end{tabular}
+\end{teX}
+\bigskip
+
+This are some old style numerals \oldstylenums{0123456789} but unfortunately the number 713 always looks ugly. 
+
+\section{More control over glue}
+
+Anyone involved with real world pagination of \TeX\
+and \LaTeX\ files is aware of the frustration that \tex's
+`glue' can generate. TEXies have long learned to ac-
+cept this limitation, and developed tricks to work
+effciently. However, some apparently simple tasks
+are still mysteriously complex to the non-TEXie. For
+example, in \ref{fig:grid1}, suppose that two lines have to
+move from thefirst to the second column. Logic
+would imply that two lines from the second column
+would have to move to the next page. But in \TeX\
+this rarely happens; for instance, the glue around
+the displayed equation might shrink or stretch in-
+stead.
+\begin{marginfigure}%
+  \includegraphics[width=\linewidth]{./graphics/grid1}
+  \captionof{figure}{In \protect\TeX documents, taking two lines over from
+the first column does not necessarily result in two lines
+from the second column moving over.  }
+  \label{fig:grid1}
+\end{marginfigure}
+
+\section{Grid setting}
+
+One of the most frequent complaints about \tex
+when setting double column text is that, normally,
+the lines of text are not set on a grid. In other words,
+the baselines of one column do not align with those
+of the other. This is another consequence of the
+inherent stretchability of \tex's glue mechanism.
+
+\section{Precise control over positioning}
+of graphics
+This is another related problem. Suppose we want
+to move a 
+floating graphic slightly higher or lower,
+without affecting pagination. For example we might
+want the top of a graphic appearing at the beginning
+of a column to be moved up a fraction in order to
+align with the top of the text in the next column.
+With the usual \latex commands this is not easy. It
+turns out that our macros for controlling glue allow
+us to control the exact positioning of graphics too.
+
+\section{How TEX makes up pages}
+
+Figure \ref{fig:glueboxes} shows TEX's normal mechanism for setting
+a page. First of all the boxes are arranged in the
+vertical list, spaced out by the natural height of the
+glues assigned. Then, TEX stretches or shrinks the
+glues so as to t the boxes and make the last baseline
+align with the bottom of the page. As is evident, it
+is diffcult to control the positions of the baselines
+using this method.
+
+
+\section{Glue at the top of each column}
+
+When TEX starts typesetting a page, it inserts a glue
+called \cmd{topskip} at the top of the column. The value
+of this glue is derived from a complex formula involving 
+the elements in the first line. We set \doccmd{topskip} to
+the value of \cmd{baselineskip} which simplifed matters considerably and did not produce any problems.
+
+\section{topskip}
+
+TEX inserts glue at the top of each page in order to ensure that the
+baseline of the first box on the page always is the same distance d from
+the top of the page. \doccmd{topskip} determines the amount of that glue, called
+the \cmd{topskip} glue \index{topskip glue}, by specifying what should be (provided that the
+first box on the page isn't too tall). d is given by the natural size of the
+\doccmd{topskip glue}. If the height of the first box on the page exceeds d, so
+that the glue would be negative, TEX simply inserts no \doccmd{topskip} glue at
+all on that page.
+
+
+To understand better the effect of these rules, assume that \doccmd{topskip}
+has no stretch or shrink and that the first item on the page is indeed a box.
+Then if the height of that box is no greater than \doccmd{topskip}, its baseline
+will be \doccmd{topskip} from the top of the page independently of its height.
+On the other hand, if the height of the box is e greater than \doccmd{topskip},
+its baseline will be \cmd{topskip+e} from the top of the page. See pages 113--114 of The TEXbook for the remaining details of how \doccmd{topskip} works.
+Plain \tex sets \doccmd{topskip} to 10pt.
+
+\verb+\topskip=10pt+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
