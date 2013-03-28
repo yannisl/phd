@@ -1,0 +1,108 @@
+\section{xparse}
+
+The LaTeX3 Team provided the package \pkg{xparse} which provides document level 
+authors withs some powerful commands that extend those such as \cs{newcommand}
+of LaTeX2e, they have been stable and the interface is not expected to change. My
+understanding is that the package and the code is very stable and is targetting
+package authors.\footnote{http://tex.stackexchange.com/questions/98152/always-use-newdocumentcommand-instead-of-newcommand}
+
+
+\DescribeMacro{\DeclareDocumentCommand}
+
+This family of commands are used to create a document-level \textit{function}. The argument
+specification for the function is given by \textit{arg spec}, and expanding to be replaced by the
+\textit{code}. Unlike \latex's definition commands, all xparse commands take two arguments.
+The first one is the \textit{argument specifier}, and the second is the \textit{code.} It is best to 
+start with an example to illustrate its use.
+
+\emphasis{s,m,o,m,v}
+\begin{texexample}{DeclareDocumentCommand}{l3:1}
+\DeclareDocumentCommand \foo { m o m } {% 
+    arg 1 = #1 , arg 2 =  #2 arg3 = #3 }
+
+\foo{mandatory}[optional]{mandatory}
+
+\DeclareDocumentCommand \foobar { m m m } { 
+    arg 1 = #1 , arg 2 =  #2 arg3 = #3 }
+
+\foobar{A}{B}{C}
+
+\foobar ABC
+
+\DeclareDocumentCommand \chapter { s o m }
+{
+\IfBooleanTF {#1}
+  { \typesetnormalchapter {#2} {#3} }
+  { \typesetstarchapter {#3} }
+}
+\DeclareDocumentCommand\test{ s m }{
+\IfBooleanTF{#1}
+  {\MakeTextUppercase{#2}}
+  {\MakeTextLowercase{#2}}
+}
+\test{This is some text}
+\test*{This is SOME test}
+
+\DeclareDocumentCommand\test{ s +m +v }{
+\IfBooleanTF{#1}
+  {\MakeTextUppercase{#3}}
+  {\MakeTextLowercase{#2}}
+ \par \leavevmode
+  #3
+}
+\RaggedRight
+
+\test*{This is SOME test\par}{\text
+                                      \othercommands
+                                      \or \a \full \macro}
+\end{texexample}
+
+\DeclareDocumentCommand\test{ s +m +v }{
+\IfBooleanTF{#1}
+  {\MakeTextUppercase{#3}}
+  {\MakeTextLowercase{#2}}
+ \par \leavevmode
+  #3
+}
+
+
+\begin{flushleft}
+\test*{This is SOME test\par}{|\text
+                                      \othercommands
+                                      \or \a \full \macro|}\par
+\end{flushleft}
+As you can observe from the example, the \cs{DeclareDocumentCommand} requires
+that you provide an argument specifier, that is we need to tell it what type of
+input to expect. By adding this abstraction when creating a new command or
+\textit{function} as the LaTeX3 Team like to call it, it eliminates a lot of the
+code that the package writer has to write. 
+
+
+
+\begin{argumentlist}{m}
+\item [m] Mandatory
+\item [o] Optional argument in  []. Returns NoValue if not present.
+\item [O] 
+\item [s] Starred version
+\item [v] Verbatim
+\item [l]
+\item [u]
+\item [d]
+\item [D] 
+\item [t]  An optional htokeni, which will result in a value \cs{BooleanTrue} if htokeni is 
+            present and \cs{BooleanFalse} otherwise. Given as thtokeni.
+\item [g] An optional argument given inside a pair of TEX group tokens (in standard LATEX,
+              { . . . }), which returns \cs{NoValue} if not present.
+\item [G] G As for g but returns \marg{default} if no value is given: G\marg{defaulti}.
+\end{argumentlist}
+
+
+
+
+
+
+
+
+
+
+
