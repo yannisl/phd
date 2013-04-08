@@ -466,36 +466,24 @@ bars marking the ends of the horizontal box (boxes have no visible frames,
 although it is possible to write \tex commands to give them such outlines,
 and we use that feature shortly):
 
-\begin{teX}
-|\hbox to 40pt{word}| |word |
-|\hbox to 40pt{word \hfil}| |word |
-|\hbox to 40pt{\hfil word}| | word|
-|\hbox to 40pt{\hfil word\hfil}| | word |
-\end{teX}
 
-{\obeylines
-|\hbox to 40pt{word}| |word |
-|\hbox to 40pt{word \hfil}| |word |
-|\hbox to 40pt{\hfil word}| | word|
-|\hbox to 40pt{\hfil word\hfil}| | word |
-}
+
 
 
 \noindent{\Large HORIZONTAL AND VERTICAL BOXES}
 
 \medskip
 
-{\tt \protect\textbackslash hbox \protect\textbackslash vbox and \protect\textbackslash vtop}
 
-\begin{multicols}{2}
-\noindent \lettrine{L}{ike} their dimensions \TeX's boxes are not what one thinks when thinking of boxes. TeX's boxes come in basically two flavours, horizonatl boxes and vertical boxes. An \cs{hbox} is created by the command |\hbox{material}|. It has the following properties:
+
+\noindent \lettrine{L}{ike} their dimensions \TeX's boxes are not what one thinks when thinking of boxes. TeX's boxes come in basically two flavours, horizontal boxes and vertical boxes. An \cs{hbox} is created by the command |\hbox{material}|. It has the following properties:
 
 \begin{enumerate}
 \item The material is placed from left to right and it becomes a \textit{horizontal list}.\index{horizontal list}
 \item The box \textbf{cannot be broken across lines}; it is an indivisible unit.
 \end{enumerate}
 
-An |hbox| can contain, characters, horizontal glue, horizontal leaders or other boxes. While in many cases these other boxes can be other |\hbox|es, |vbox| can be used.
+An |hbox| can contain, characters, horizontal glue, horizontal leaders or other boxes. While in many cases these other boxes can be other |\hbox|es, |\vbox| can be used.
 
 Boxes can be moved up or down using |\raise| or |\lower|. Each of these primitives is followed by a dimension indicating how far the box can be lowered or raised.
 
@@ -520,20 +508,39 @@ A test of a box at the end of a 2.0 inch line\par}
 
 }
 
-What happens when we have more than two boxes on a line? TeX will stuck them one under another.
+What happens when we have more than two boxes on a line? TeX will stuck them one under another. If they are enclosed within another hbox they will be inlined.
 
+
+
+\begin{texexample}{}{}
 \hbox to 1cm {A} \hbox to 1cm {B}
 
 If we however, put them together in another |\hbox|, we get:
 
 \hbox{\hbox to 1cm {A} \hbox to 1cm{B}}
+\end{texexample}
 
 
 
-\end{multicols}
 
-\bigskip
-\clearpage
+An |\hbox| does not imply horizontal mode, so an attempt to start a paragraph with a box, for
+instance
+|\hbox to 0cm{\hss$\bullet$\hskip1em}Text ...|
+
+will make the text following the box wind up one line below the box. It is necessary to switch
+to horizontal mode explicitly, using for instance |\noindent| or |\leavevmode|. The latter is defined
+using |\unhbox|, which is a horizontal command.
+
+
+\begin{texexample}{}{}
+\hbox to 0cm{\hss$\bullet$\hskip1em} Text ...
+
+
+\leavevmode\hbox to 0cm{\hss$\bullet$\hskip1em} Text ...
+
+\end{texexample}
+
+
 
 
 \noindent{\LARGE\bf{} KERNING}
@@ -782,6 +789,7 @@ Study the example a bit more carefully, as we have said earlier on that \cs{hbox
 So if we had only three images in hboxes we will get:
 
 \begin{texexample}{}{}
+\leavevmode
 \parindent30pt
 \hbox{\includegraphics[width=1.5cm]{amato}}%
 \hbox{\includegraphics[width=1.5cm]{amato}}%
@@ -1240,9 +1248,10 @@ We can aslo center the text for both lines, by modifying the code slightly.
 
 
 
-\section{Boxes with \protect\LaTeXe}
+\chapter{Boxes with \protect\LaTeXe}
 
-A  box of specified width is provided in \latex with the command
+A  box of specified width is provided in \latex with the command:
+
 \cs{makebox}\oarg{width}\oarg{position}\marg{contents}. 
 
 The source2e manual states. If the width is missing, then position is also missing and obj  is put in an \cs{hbox} of its natural width. This is true as far as the looks are concerned, but not the behaviour, as you can see
@@ -1355,9 +1364,16 @@ A \fbox{\raisebox{10pt}[
 25pt][15pt]{\fbox{lower}}} A
 lower
 
-\section*{Paragraph Boxes}
+\section{Paragraph Boxes}
+
 For longer strings of text, \latex provides the paragraph box \cs{parbox}, which is
-defined like this: {\verb parbox[position]{width}{contents}}. The optional position
+defined like this: 
+
+\medskip
+\cs{parbox}\oarg{position}\oarg{height}\oarg{innerpos}\marg{width}\marg{contents} 
+\medskip
+
+The optional position
 is a letter b for alignment of the bottomline with the current baseline,
 or t for alignment of the top line with the surrounding baseline. Without
 
@@ -1376,8 +1392,19 @@ Flush-right typesetting generally looks bad in narrow columns, so we
 can insert a \cs{raggedright} command inside the last argument of the paragraph
 box to get output like this:
 
+\begin{texexample}{}{}
+
+\parbox[b][120pt][t]{100pt}{\lorem}\hspace{1cm}\parbox[b][120pt][t]{100pt}{Only some short line of text here.}
+
+
+
+\parbox[b][100pt][t]{100pt}{\lorem}\hspace{1cm}\parbox[b][100pt][c]{100pt}{Only some short line of text here.}
+
+\end{texexample}
+
 
 \section*{The minipage environment}
+
 Another kind of paragraph box can be obtained in a more general, and
 more powerful, way with the minipage environment:
 
@@ -1395,66 +1422,34 @@ in macro arguments, so it cannot be used with \cs{fbox}, \cs{framebox}, \cs{make
 \cs{mbox}, or\cs{ parbox}, but it can be used inside a minipage. The input
 
 
-\begin{teX}
+\begin{texexample}{}{}
 \begin{minipage}{170pt}
 This is inline verbatim \verb=\verb|\%{}|=, and this
 is a verbatim display:
-%
+
+\begin{verbatim}
 #include <stdio.h>
 #include <stdlib.h>
 int main(void)
 {
-printf("Hello, world\n");
-exit (EXIT_SUCCESS);
+  printf("Hello, world\n");
+  exit (EXIT_SUCCESS);
 }
-
+\end{verbatim}
 \end{minipage}
-\end{teX}
+
+\end{texexample}
 
 
 A minipage can go everywhere and can hold virtually any content.
 
 
-\begin{minipage}{130pt}
-This is inline verbatim \verb=\verb|\%{}|=, and this
-is a verbatim display:
-\begin{teX}
-%
-#include <stdio.h>
-#include <stdlib.h>
-int main(void)
-{
-printf("Hello, world\n");
-exit (EXIT_SUCCESS);
-}
-\end{teX}
-\end{minipage}
 
 
 
-\vbox{\hbox{Two lines}\hbox{of type.}}
+\section{Scaling and resizing boxes}
 
-\section{saving a box in an internal register}
-\tex provides a method to save a box in an internal register box0\ldots box255
-
-\begin{teX}
-\setbox0=\hbox{T\kern-.1667em\lower.5ex\hbox{E}\kern-.125em X}
-\box0
-\end{teX}
-
-\setbox0=\hbox{T\kern-.1667em\lower.5ex\hbox{E}\kern-.125em X}
-With the above we can just type \cs{box0} to get the \box0 !
-
-
-example, one of the boxes displayed earlier in this chapter was generated by
-
-\medskip
-\verb+ \hbox spread 5pt\{``Oh, oh!'' ... laughed.\}+
-\medskip
-
-\section*{Scaling and resizing boxes}
-
-The command \cs{resizebox}{width}{height}{object} can be used with tabular to specify the height and width of a table. The following example shows how to resize a table to 8cm width while maintaining the original width/height ratio.
+The command \cs{resizebox}\marg{width}\marg{height}\marg{object} can be used with tabular to specify the height and width of a table. The following example shows how to resize a table to 8cm width while maintaining the original width/height ratio.
 
 \begin{teX}
 \resizebox{8cm}{!} {
@@ -1502,147 +1497,6 @@ Kp-Fonts & Kp-\textit{light} & CM & Palatino & Utopia & Times\\
 \end{tabular}
 \end{teX}
 \bigskip
-
-This are some old style numerals \oldstylenums{0123456789} but unfortunately the number 713 always looks ugly. 
-
-\section{More control over glue}
-
-Anyone involved with real world pagination of \TeX\
-and \LaTeX\ files is aware of the frustration that \tex's
-`glue' can generate. TEXies have long learned to ac-
-cept this limitation, and developed tricks to work
-effciently. However, some apparently simple tasks
-are still mysteriously complex to the non-TEXie. For
-example, in \ref{fig:grid1}, suppose that two lines have to
-move from thefirst to the second column. Logic
-would imply that two lines from the second column
-would have to move to the next page. But in \TeX\
-this rarely happens; for instance, the glue around
-the displayed equation might shrink or stretch in-
-stead.
-
-
-\section{Grid setting}
-
-One of the most frequent complaints about \tex
-when setting double column text is that, normally,
-the lines of text are not set on a grid. In other words,
-the baselines of one column do not align with those
-of the other. This is another consequence of the
-inherent stretchability of \tex's glue mechanism.
-
-\section{Precise control over positioning}
-of graphics
-This is another related problem. Suppose we want
-to move a 
-floating graphic slightly higher or lower,
-without affecting pagination. For example we might
-want the top of a graphic appearing at the beginning
-of a column to be moved up a fraction in order to
-align with the top of the text in the next column.
-With the usual \latex commands this is not easy. It
-turns out that our macros for controlling glue allow
-us to control the exact positioning of graphics too.
-
-\section{How TEX makes up pages}
-
-Figure \ref{fig:glueboxes} shows TEX's normal mechanism for setting
-a page. First of all the boxes are arranged in the
-vertical list, spaced out by the natural height of the
-glues assigned. Then, TEX stretches or shrinks the
-glues so as to t the boxes and make the last baseline
-align with the bottom of the page. As is evident, it
-is diffcult to control the positions of the baselines
-using this method.
-
-
-\section{Glue at the top of each column}
-
-When TEX starts typesetting a page, it inserts a glue
-called \cs{topskip} at the top of the column. The value
-of this glue is derived from a complex formula involving 
-the elements in the first line. We set\cs{topskip} to
-the value of \cs{baselineskip} which simplifed matters considerably and did not produce any problems.
-
-\section{topskip}
-
-TEX inserts glue at the top of each page in order to ensure that the
-baseline of the first box on the page always is the same distance d from
-the top of the page.\cs{topskip} determines the amount of that glue, called
-the \cs{topskip} glue \index{topskip glue}, by specifying what should be (provided that the
-first box on the page isn't too tall). d is given by the natural size of the
-\doccmd{topskip glue}. If the height of the first box on the page exceeds d, so
-that the glue would be negative, TEX simply inserts no\cs{topskip} glue at
-all on that page.
-
-
-To understand better the effect of these rules, assume that\cs{topskip}
-has no stretch or shrink and that the first item on the page is indeed a box.
-Then if the height of that box is no greater than\cs{topskip}, its baseline
-will be\cs{topskip} from the top of the page independently of its height.
-On the other hand, if the height of the box is e greater than\cs{topskip},
-its baseline will be \cs{topskip+e} from the top of the page. See pages 113--114 of The TEXbook for the remaining details of how\cs{topskip} works.
-Plain \tex sets\cs{topskip} to 10pt.
-
-\verb+\topskip=10pt+
-
-\section{Limits of TEX arithmetic}
-
-While \tex detects overflow on assignment and multiplication, it does not
-do so on addition or subtraction, on the grounds that such overflows should
-be nonexistent, or at least rare, in the typesetting of practical documents.
-Here are experiments to show what happens:
-
-\small
-\begin{teX}
-\dimen1 = \maxdimen % assign the largest possible dimension
-\showthe \dimen1
-16383.99998pt.
-\count1 = \dimen1 % convert to scaled points
-\showthe \count1
-1073741823.
-\dimen2 = 1073741823sp % assign the largest possible dimension
-\dimen3 = 1073741824sp % assign 1 + largest possible dimension
-! Dimension too large.
-\showthe \dimen3 % TeX replaces it by \maxdimen
-> 16383.99998pt.
-\dimen4 = \dimen2
-\advance \dimen4 by \dimen4 % form (largest + largest)
-\showthe \dimen4 % it works!
-32767.99997pt.
-\dimen5 = \dimen4 % try to assign the overlarge value
-! Dimension too large.
-\showthe \dimen5 % TeX replaces it by \maxdimen
-16383.99998pt.
-\advance \dimen5 by 16383pt % form (16383.99998pt + 16383pt)
-\showthe \dimen5 % it works: value is almost 2 * \maxdimen
-32766.99998pt.
-\advance \dimen5 by 16383pt % form (16383.99998pt + 16383pt + 16383pt)
-\showthe \dimen5 % ERROR: uncaught overflow gave negative!
-16386.00002pt.
-\dimen6 = 2\dimen2 % form 2 * (largest possible dimension)
-! Dimension too large.
-\showthe \dimen6 % TeX replaces it by \maxdimen
-16383.99998pt.
-A similar experiment carried out the 36-bit PDP-10 shows the same behavior
-up to the assignment to \dimen6, but since there are actually four
-more bits available for the integer part, we get this instead:
-*\showthe \dimen5
-> 81915.99998pt.
-We then repeat the addition 31 more times, and finally we have a problem:
-\advance \dimen5 by 16383pt \showthe \dimen5 % try 30
-524256.99998pt.
-\advance \dimen5 by 16383pt \showthe \dimen5 % try 31
-?
-? Integer overflow at user PC 1,,646437
-[Type CONTINUE to proceed if possible,
-REENTER to close all files and exit.]
-@continue
-507936.00002pt.
-\end{teX}
-
-
-
 
 
 

@@ -12,6 +12,7 @@
 %% See http://www.latex-project.org/lppl.txt
 %% ----------------------------------------------------------------
 %% 
+
 \NeedsTeXFormat{LaTeX2e}
 [1994/12/01]%
 \ProvidesPackage{phd}[2013/2/26 v1.0 less preamble (YL)]%
@@ -114,7 +115,7 @@
 \definecolor{spot}{rgb}{0,0.2,0.6}
 \definecolor{boxframe}{gray}{0.8}
 \definecolor{boxfill}{rgb}{0.95,0.95,0.99}
-\definecolor{theoption}{rgb}{0.118,0.546,0.222}
+\definecolor{theoption}{gray}{0.6}
 \definecolor{themacro}{rgb}{0.784,0.06,0.176}
 \definecolor{ExampleFrame}{rgb}{0.628,0.705,0.942}
 \definecolor{ExampleBack}{rgb}{0.963,0.971,0.994}
@@ -1032,7 +1033,7 @@
       fontupper=\small,
       fontlower=\small},
       example/.code 2 args={\refstepcounter{texexp}\label{#2}}%
-     \pgfkeysalso{texexp, title={Example \thetexexp\ #1}},
+     \pgfkeysalso{texexp, enhanced, breakable, title={Example \thetexexp\ #1}},
 }
 \newenvironment{texexp}[1]{\tcblisting{texexp,#1}}{\endtcblisting}
 \newenvironment{example}[3][]{\tcblisting{example={#2}{#3},#1}}{\endtcblisting}
@@ -3108,6 +3109,45 @@ section numbering/Roman/.code={%
     \let\@mkboth\@gobbletwo
     \let\chaptermark\@gobble
     \let\sectionmark\@gobble}
+
+\IfFileExists{changepage.sty}{\RequirePackage{changepage}}{}
+\IfFileExists{rotating.sty}{\RequirePackage{rotating}}{}
+\def\even@samplepage{%
+ \begin{picture}(0,0)
+   \put(\Xeven,\Yeven){\turnbox{90}{\Huge \textcolor{\watermark@textcolor}{\watermark@text}}}
+\end{picture}
+}
+%% Define a macro to print SAMPLE PAGE IN THE MARGIN
+\def\odd@samplepage{%
+ \begin{picture}(0,0)
+   \put(\Xodd,\Yodd){\turnbox{90}{\Huge \textcolor{\watermark@textcolor}{\watermark@text}}}
+ \end{picture}
+}
+\def\watermarktext#1{\gdef\watermark@text{\fontfamily{phv}\selectfont#1}}
+\def\watermarktextcolor#1{\gdef\watermark@textcolor{#1}}
+\watermarktext{SAMPLE PAGE}
+\watermarktextcolor{black!50}
+\def\ps@samplepage{\let\@mkboth\@gobbletwo
+ \let\@oddhead\odd@samplepage\def\@oddfoot{\reset@font\hfil\thepage}
+ \let\@evenhead\even@samplepage\def\@evenfoot{\reset@font\thepage\hfil}}
+\def\Xodd{490}
+\def\Xeven{-70}\def\Yeven{-810}
+\def\Yeven{-\expandafter\strip@pt\textheight}
+\let\Yodd\Yeven
+
+\cxset{blank page text/.store in=\blankpagetext@cx{#1}}
+
+\def\cleardoublepage{\clearpage\if@twoside\ifodd\c@page\else
+  \hbox{}
+  \vspace*{\fill}
+  \begin{center}
+     \blankpagetext@cx
+  \end{center}
+  \vspace{\fill}
+  \thispagestyle{empty}
+  \newpage
+  \if@twocolumn\hbox{}\newpage\fi\fi\fi}
+
 \@ifundefined{coverpage}{%
   \newcommand\coverpage[3]{%
   \vbox{%
