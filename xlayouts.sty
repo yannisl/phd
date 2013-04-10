@@ -1,0 +1,1097 @@
+%%
+%% This is file `xlayouts.sty',
+%% generated with the docstrip utility.
+%%
+%% The original source files were:
+%%
+%% xlayouts.dtx  (with options: `package')
+%% ----------------------------------------------------------------
+%% template --- short description.
+%% E-mail: yannislaz@gmail.com
+%% Released under the LaTeX Project Public License v1.3c or later
+%% See http://www.latex-project.org/lppl.txt
+%% ----------------------------------------------------------------
+%% 
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{xlayouts}[2012/26/03 v1.0 Overlays page geometry in a document]
+
+
+\IfFileExists{color.sty}{%
+    \RequirePackage{color}%
+    \let\needscolor@cx\@empty
+}{}
+\RequirePackage{fp}
+    \RequirePackage{xcolor}
+
+\RequirePackage{changepage}
+\RequirePackage{pgf}
+\RequirePackage{pgfpages}
+\RequirePackage{tikz}
+\RequirePackage{amsmath}
+\RequirePackage{fancyhdr}
+
+
+\@ifpackageloaded{babel}{%
+\IfFileExists{translator.sty}
+      {\RequirePackage{translator}\typeout{Translator package loaded.}}{}
+}%
+{\RequirePackage[french,dutch,german,italian,english]{babel}
+\IfFileExists{translator.sty}
+      {\RequirePackage{translator}\typeout{Translator package loaded.}}{}}
+
+\usedictionary{pages}
+\DeclareOption{german}{\uselanguage{german}}
+\DeclareOption{english}{\select@language{english}\uselanguage{english}}
+\DeclareOption{italian}{\select@language{italian}\uselanguage{italian}}
+\DeclareOption{dutch}{\select@language{dutch}\uselanguage{dutch}}
+\DeclareOption{french}{\select@language{french}\uselanguage{french}}
+\ProcessOptions*
+\newlength\shiftx@cx
+\newlength\shifty@cx
+\newlength\tol
+\newlength\toly
+\newlength\innermargin
+\newlength\PH
+\setlength\PH{\paperheight}
+\newlength\PW
+\setlength\PW{\paperwidth}
+\newlength\INNER
+\newlength\TOP
+\newlength\alphlength
+\definecolor{theblue} {rgb}{0.02,0.04,0.48}
+\definecolor{thered}  {rgb}{0.65,0.04,0.07}
+\definecolor{thegreen}{rgb}{0.06,0.44,0.08}
+\definecolor{thelightgreen}{rgb}{0.06,0.44,0.06}
+\definecolor{thegrey} {gray}{0.5}
+\definecolor{thegray} {gray}{0.5}
+\definecolor{thedarkgray} {gray}{0.95}
+\definecolor{theshade}{gray}{0.94}
+\definecolor{theframe}{gray}{0.75}
+\definecolor{thecream}{rgb}{1,0.95,0.4}
+\definecolor{spot}{rgb}{0,0.2,0.6}
+\definecolor{boxframe}{gray}{0.8}
+\definecolor{boxfill}{rgb}{0.95,0.95,0.99}
+\definecolor{theoption}{rgb}{0.118,0.546,0.222}
+\definecolor{themacro}{rgb}{0.784,0.06,0.176}
+\definecolor{ExampleFrame}{rgb}{0.628,0.705,0.942}
+\definecolor{ExampleBack}{rgb}{0.963,0.971,0.994}
+\definecolor{Hyperlink}{rgb}{0.281,0.275,0.485}
+\colorlet{thehyperlink}{theblue}
+
+\newif\if@diagonal
+\@diagonalfalse
+
+\newif\ifdrawmarginpars
+\drawmarginparstrue
+
+\newcommand{\printinunitsof@cx}[1]{%
+  \def\l@yunitperpt{1.0}\def\l@yunits{pt}%
+  \def\l@yta{#1}\def\l@ytb{pt}%
+  \ifx \l@yta\l@ytb
+    \def\l@yunitperpt{1.0}\def\l@yunits{pt}%
+  \else
+    \def\l@ytb{pc}%
+    \ifx \l@yta\l@ytb
+      \def\l@yunitperpt{0.083333}\def\l@yunits{pc}%
+    \else
+      \def\l@ytb{in}%
+      \ifx \l@yta\l@ytb
+        \def\l@yunitperpt{0.013837}\def\l@yunits{in}%
+      \else
+        \def\l@ytb{mm}%
+        \ifx \l@yta\l@ytb
+          \def\l@yunitperpt{0.351459}\def\l@yunits{mm}%
+        \else
+          \def\l@ytb{cm}%
+          \ifx \l@yta\l@ytb
+            \def\l@yunitperpt{0.0351459}\def\l@yunits{cm}%
+          \else
+            \def\l@ytb{bp}%
+            \ifx \l@yta\l@ytb
+              \def\l@yunitperpt{0.996264}\def\l@yunits{bp}%
+            \else
+              \def\l@ytb{dd}%
+              \ifx \l@yta\l@ytb
+                \def\l@yunitperpt{0.9345718}\def\l@yunits{dd}%
+              \else
+                \def\l@ytb{cc}%
+                \ifx \l@yta\l@ytb
+                  \def\l@yunitperpt{0.0778809}\def\l@yunits{cc}%
+                \fi
+              \fi
+            \fi
+          \fi
+        \fi
+      \fi
+    \fi
+  \fi
+}
+\newcommand\convert@cx[1]{%
+   \pgfmathparse{#1*\l@yunitperpt}
+   \pgfmathprintnumber{\pgfmathresult}\thinspace\l@yunits
+}
+\newcommand\calcshift@cx{%
+   \pgfsys@getposition{\pgfpictureid}\@basepoint
+   \pgf@process{\pgfpointorigin\@basepoint}%
+   \setlength\shiftx@cx\pgf@x
+   \setlength\shifty@cx\pgf@y}
+\newcommand\CS[1]{\footnotesize #1}
+\newcommand\labelit@cx[1]{\ttfamily\CS{\string#1} \convert@cx{#1}}
+
+\newcommand\cxset{\pgfqkeys{/xlayouts}} %Notice this is pgf q keys
+\cxset{geometry units/.code=\printinunitsof@cx{#1},
+          geometry grid color/.store in=\geometrygridcolor@cx,
+          geometry lines color/.store in=\geometrylinescolor@cx,
+          geometry label color/.store in=\geometrylabelcolor@cx,
+          geometry diagonal/.is choice,
+          geometry diagonal/true/.code=\@diagonaltrue,
+          geometry diagonal/false/.code=\@diagonalfalse,
+          geometry diagonal/none/.code=\@diagonalfalse,
+          geometry diagonal color/.store in=\diagonalcolor@cx,
+          geometry dim arrow type/.store in=\geometryarrowtype@cx,
+          geometry grid xsteps/.store in=\xsteps@cx,
+          geometry grid ysteps/.store in=\ysteps@cx,
+          geometry grid line width/.store in=\geometrygridlinewidth@cx,
+          geometry driver lines/.store in=\geometrydriverlines@cx,
+          geometry driver lines color/.store in=\geometrydriverlinescolor@cx,
+}
+\cxset{geometry diagonal=true,
+          geometry diagonal color=blue!20,
+          geometry lines color=pink,
+          geometry label color=blue!15,
+          geometry grid color=blue!15,
+          geometry grid line width=0.8pt,
+          geometry dim arrow type=latex,
+          geometry units=pt,
+          geometry grid xsteps=9,
+          geometry grid ysteps=9,
+          geometry driver lines=dashed,
+          geometry driver lines color=blue!15}
+
+\newcommand\agrid{%
+\tikzset{lines/.style={color=\geometrylinescolor@cx},
+          dim/.style={color=black!25,thick,>=\geometryarrowtype@cx},
+          dim label/.style={color=black,fill=\geometrylabelcolor@cx},
+          grid/.style={line width=\geometrygridlinewidth@cx,
+                         color=\geometrygridcolor@cx},
+          driver/.style={\geometrydriverlines@cx,
+                         \geometrydriverlinescolor@cx}}
+
+\begin{tikzpicture}[remember picture, overlay]
+\pgfmathsetlength{\TOP}{\PH-1in-\voffset-\topmargin-\headheight-\headsep}
+\checkoddpage%
+\if@twoside\else\oddpagetrue\fi
+  \ifoddpage
+      \innermargin\oddsidemargin
+      \pgfmathsetlength{\INNER}{1in+\innermargin+\hoffset}
+      \gdef\innermarginname{\CS{oddsidemargin}}%
+   \else
+       \innermargin\evensidemargin
+       \pgfmathsetlength{\INNER}{1in+\innermargin+\hoffset}
+       \gdef\innermarginname{\CS{evensidemargin}}%
+  \fi
+ \calcshift@cx
+ \begin{scope}[xshift=-\shiftx@cx, yshift=-\shifty@cx]
+  \draw [grid, xstep=\PW/\xsteps@cx,ystep=\PH/\ysteps@cx]
+            (current page.south west) grid ++(\PW,\PH);
+
+ \draw [driver] (1in,0) -- (1in,\PH);
+ \draw [driver] (0,\PH-1in)-- ++(\PW,0);
+
+ \draw [lines] (\INNER,0) -- (\INNER,\PH);
+ \draw [lines] (\INNER+\textwidth,0) -- ++(0,\PH);
+ \ifoddpage
+   \draw[lines] (\INNER+\textwidth+\marginparsep,0)
+     -- (\INNER+\marginparsep+\textwidth,\PH);
+   \draw[lines] (\INNER+\textwidth+\marginparsep+\marginparwidth,0)
+      -- (\INNER+\marginparsep+\marginparwidth+\textwidth,\PH);
+ \else
+   \draw [lines] (\INNER-\marginparsep,0) -- ++(0,\PH);
+   \draw [lines] (\INNER-\marginparsep-\marginparwidth,0) -- ++(0,\PH);
+ \fi
+ \draw [lines](0,\PH-1in-\topmargin)-- ++(\PW,0);
+ \draw [lines](0,\PH-1in-\topmargin-\headheight)-- ++(\PW,0)
+   node[black,above] at ++(-0.5\PW,0){Page \thepage};
+ \draw [lines](0,\TOP) -- ++(\PW,0);
+ \draw [lines](0,\TOP-\textheight) -- ++(\PW,0);
+ \draw [lines](0,\TOP-\textheight-\footskip) -- ++(\PW,0);
+ \if@twocolumn
+   \draw [lines](\INNER+\columnwidth,\TOP)-- ++(0,-\textheight);
+   \draw [lines](1in+\innermargin+\columnwidth+\columnsep,\TOP)
+         -- ++(0,-\textheight);
+   \draw [dim,<->](\INNER, \TOP-\textheight-1.8em)
+     -- ++(\columnwidth,0) node[above, dim label]
+     at ++(-0.5\columnwidth,3pt) {\labelit@cx{\columnwidth}};
+   \draw [dim,<->](\INNER+\columnwidth, \TOP-\textheight-1.8em)
+     -- ++(\columnsep,0) node[above, dim label] at
+     ++(-0.5\columnsep,3pt) {\labelit@cx{\columnsep}};
+   \draw [dim,<->](\INNER+\columnwidth+\columnsep,
+     \PH-1in-\topmargin-\headheight-\headsep-\textheight-1.8em)
+     -- ++(\columnwidth,0) node[above, dim label] at
+     ++(-0.5\columnwidth,3pt) {\labelit@cx{\columnwidth}};
+\fi
+\ifoddpage
+   \pgfmathsetlength\tol{1in+\innermargin+\textwidth+2\marginparsep}
+   \draw [dim, <->](\tol,\PH)-- ++(0,-1in-\topmargin);
+\else
+   \pgfmathsetlength\tol{2\marginparsep}
+   \draw [dim, <->](\tol,\PH)-- ++(0,-1in-\topmargin);
+\fi
+\pgfmathsetlength\@tempdima{1in-\topmargin}
+\ifoddpage
+  \draw [dim](\tol,\PH-1in-\topmargin)-- ++(0,-\headheight)
+     node[left, dim label] at
+     ++(-1ex,0.5in+0.5\topmargin+1.5em)
+    {\scriptsize$1\thinspace \text{in}+\texttt{\footnotesize\textbackslash topmargin}\,
+    (\convert@cx{\topmargin})= \convert@cx{\@tempdima}$};
+\else
+  \draw [dim, <->](\tol,\PH-1in-\topmargin)-- ++(0,-\headheight)
+    node[right, dim label] at ++(1ex,1in-0.5\topmargin)
+    {\scriptsize$1\thinspace  \text{in}+\texttt{\footnotesize\textbackslash topmargin}
+    \, (\convert@cx{\topmargin})= \convert@cx{\@tempdima}$};
+\fi
+\ifoddpage
+  \draw [dim,<->](\tol,\PH-1in-\topmargin)-- ++(0,-\headheight)
+     node[above left, dim label] at ++(-1ex,0){ \labelit@cx{\headheight}};
+  \draw [dim,<->](\tol,\PH-1in-\topmargin-\headheight)-- ++(0,-\headsep)
+     node[above left,dim label] at ++(-1ex,0){\labelit@cx{\headsep}};
+\else
+  \draw [dim,<->](\tol,\PH-1in-\topmargin)-- ++(0,-\headheight)
+     node[above right,dim label] at ++(1ex,0){ \labelit@cx{\headheight}};
+  \draw [dim,<->](\tol,\PH-1in-\topmargin-\headheight)-- ++(0,-\headsep)
+     node[above right, dim label] at ++(1ex,0){\labelit@cx{\headsep}};
+\fi
+\draw [dim, |<->](\tol,\TOP)
+   -- ++(0,-\textheight) node[right,text width=1.7cm,text centered, dim label]
+   at  ++(1ex,0.5\textheight){\labelit@cx{\textheight}};
+\ifoddpage
+  \draw [dim, |<->|](\tol,\TOP-\textheight)
+     -- ++(0,-\footskip)
+     node[left, dim label] at ++(-1ex,0.5\footskip){\labelit@cx{\footskip}};
+\else
+  \draw [dim, |<->|](\tol,\TOP-\textheight)
+    -- ++(0,-\footskip)
+    node[right, dim label] at ++(1ex,0.5\footskip){\labelit@cx{\footskip}};
+\fi
+
+
+\iftopfloat{%
+\draw [dim,|<->|] (\INNER-0.3cm, \TOP)-- ++(0,-\topfraction\textheight)
+       node[left,text width=1.7cm,text centered, dim label]
+       at ++ (0,0.4\textheight) {\textbackslash topfraction\\ \topfraction};
+}{}
+\ifbotfloat{%
+\draw [dim,|<->|] (\INNER, \TOP) ++(0,-\textheight)
+  -- ++(0,\bottomfraction\textheight)
+  node[left, text width=1.2cm, dim label] at
+  ++(-1ex,-\bottomfraction*0.5\textheight){\textbackslash bottom\\fraction\\
+  \bottomfraction};
+}{}
+\setlength\toly{1.5cm}
+\draw[dim,<->](0,\toly)--++(1in,0)node [dim label] at ++(-0.4in,-1.5em)
+{\translate{drivermarginname} 1\thinspace in};
+
+
+\ifdim\innermargin=0pt
+   \draw[dim,](0+1in,\toly)--++(\innermargin,0) node [above, dim label]
+        at  ++(-0.5\innermargin,0.5em)
+        {\innermarginname\convert@cx{\innermargin}};
+\else
+   \draw[dim,<->](0+1in,\toly)--++(\innermargin,0) node [above, dim label]
+        at  ++(-0.5\innermargin,0.5em)
+        {\innermarginname\ \convert@cx{\innermargin}};
+\fi
+
+\draw[dim,<->](0+1in+\innermargin,\toly)--++(\textwidth,0)
+  node[above, dim label] at ++(-0.5\textwidth,0.5em)
+  {\labelit@cx{\textwidth}};
+\ifoddpage
+  \draw[dim,|<->|](\INNER+\textwidth, \toly+1.5cm)--++(\marginparsep,0)
+     node [below, dim label] at ++(\marginparsep,-0.5em)
+     {\labelit@cx{\marginparsep}};
+ \draw[dim,<->](\INNER+\textwidth+\marginparsep, \toly)
+     --++(\marginparwidth,0)
+     node [above, dim label] at ++(-0.5\marginparwidth,0.5em)
+     {\labelit@cx{\marginparwidth}};
+\else
+    \draw[dim,|<->|](\INNER, \toly+1.55cm)--++(-\marginparsep,0)
+       node [right, dim label] at ++(\marginparsep,0em)
+       {\labelit@cx{\marginparsep}};
+\ifdim\marginparwidth<3cm % try be a more intelligent for placement
+   \draw[dim,|<->|](0+1in+\innermargin-\marginparsep-\marginparwidth,
+   \toly+.95cm)--++(\marginparwidth,0)node [right, dim label]
+    at ++(0,0em)
+   {\labelit@cx{\marginparwidth}};
+\else
+   \draw[dim,|<->|](\INNER-\marginparsep-\marginparwidth, \toly+.95cm)
+   --++(\marginparwidth,0)node [above, dim label] at
+   ++(-0.5\marginparwidth,0em){\labelit@cx{\marginparwidth}};
+\fi
+\fi
+\if@diagonal
+  \ifoddpage
+    \draw [\diagonalcolor@cx,thick] (\PW,0)--(0,\PH);
+   \else
+     \draw [\diagonalcolor@cx,thick] (0,0)--(\PW,\PH);
+   \fi
+\fi
+\end{scope}
+\end{tikzpicture}}
+\def\ps@grid{%
+    \let\@oddfoot\@empty\let\@evenfoot\@empty
+    \def\@evenhead{\agrid}%
+    \let\@oddhead\@evenhead
+    \let\@mkboth\@gobbletwo
+    \let\chaptermark\@gobble
+    \let\sectionmark\@gobble
+ }
+\def\figureparamsbot{%
+  \begin{tikzpicture}[remember picture, overlay]
+      \pgfmathsetlength\@tempdima{-\textfloatsep}
+      \draw[>=latex,|<->|] (0,0) --++(0,-\@tempdima)
+       node [right]
+       at ++ (1ex,-0.5\textfloatsep)
+      {\CS{textfloasep} \convert@cx{\textfloatsep}};
+  \end{tikzpicture}%
+\par
+}
+\def\figureparamstop{%
+  \par
+  \begin{tikzpicture}%[remember picture, overlay]
+    \pgfmathsetlength\@tempdima{-\textfloatsep}
+    \draw[>=latex,|<->|] (0,0) --++(0,\@tempdima)
+    node [right,fill=\geometrylabelcolor@cx]
+    at ++ (1ex,0.5\textfloatsep)
+    {\CS{textfloasep} \convert@cx{\textfloatsep}};
+  \end{tikzpicture}%
+}
+\newlength\paperwidth@cx
+\newlength\paperheight@cx
+\newlength\lefttrim
+\newlength\bottomtrim
+\newlength\bindingcorrection
+\setlength\paperwidth@cx{12in}
+\setlength\paperheight@cx{18in}
+\setlength\bindingcorrection{0.5in}
+
+\cxset{spread xsteps/.store in=\spreadxsteps@cx,
+       spread scale/.store in=\spreadscale@cx,
+       spread width/.store in=\spreadwidth@cx}
+\cxset{spread xsteps=9,
+       spread scale=0.25,
+       spread width=0.5\textwidth}% does not work
+
+\tikzset{typearea/.style={color=black!85,fill=black!80,
+         font={\sffamily\bfseries}}}
+\def\drawcanons{%
+  \begin{tikzpicture}[scale=\spreadscale@cx]
+   % draw the two pages
+  \draw[xstep=(\paperwidth@cx)/\spreadxsteps@cx,
+        ystep=(\paperheight@cx)/\spreadxsteps@cx,color=gray]  (0,0)
+    grid (\paperwidth@cx,   \paperheight@cx);
+  \draw (0,0) rectangle (\paperwidth@cx,\paperheight@cx);
+
+  \begin{scope}[xshift=\paperwidth@cx+\bindingcorrection]
+    \draw[xstep=(\paperwidth@cx)/9,
+          ystep=(\paperheight@cx)/9,color=thegray] ++(0,0)
+          grid (\paperwidth@cx, \paperheight@cx);
+    \draw[color=black] (0,0) rectangle (\paperwidth@cx,\paperheight@cx);
+  \end{scope}
+\draw[typearea, draw] (\paperwidth@cx,0)
+      rectangle ++(\bindingcorrection, \paperheight@cx);
+\draw[typearea] (2\paperwidth@cx/\spreadxsteps@cx,
+                     2\paperheight@cx/\spreadxsteps@cx)
+      rectangle  ++(6/9*\paperwidth@cx,6*\paperheight@cx/\spreadxsteps@cx);
+
+\draw[typearea] (\paperwidth@cx+\paperwidth@cx/9+\bindingcorrection,
+     2\paperheight@cx/9) rectangle ++(6\paperwidth@cx/9,6\paperheight@cx/9);
+
+\ifdim\bindingcorrection>0pt
+\begin{scope}[typearea,color=white]
+\draw node at
+      (\paperwidth@cx+0.5\bindingcorrection,
+       0.5\paperheight@cx)[rotate=90,inner sep=0pt,outer sep=0pt]
+       {\translate{bindingcorrectionname}};
+\fi
+\node  at
+       (0.5\paperwidth@cx,0.5\paperheight@cx){\translate{leftpagename}};
+\node  at
+      (1.5\paperwidth@cx+\bindingcorrection,
+       0.5\paperheight@cx){\translate{rightpagename}};
+\end{scope}
+\begin{scope}[color=orange, line width=1pt]
+  \draw (0,0)-- (\paperwidth@cx,\paperheight@cx);
+  \draw (2\paperwidth@cx+\bindingcorrection,0)--
+    ++(-\paperwidth@cx,\paperheight@cx);
+\draw (0.5\paperwidth@cx,5\paperheight@cx/9)
+       circle (0.5\paperwidth@cx);
+\draw [xshift=\paperwidth@cx+\bindingcorrection]
+      (0.5\paperwidth@cx,5\paperheight@cx/9)
+       circle (0.5\paperwidth@cx);
+\end{scope}
+\end{tikzpicture}
+}
+\def\alphabet{%
+  \normalfont\selectfont\raggedleft%
+   abcdefghijklmnopqrstuvwxyz}
+\newcommand\charactersperline{%
+  \settowidth{\@tempdima}{\alphabet}
+  \pgfmathparse{\textwidth/\@tempdima*26}
+  \pgfmathprintnumber{\pgfmathresult}
+}
+\newcommand\alphabetsperline{%
+  \settowidth{\@tempdima}{\alphabet}
+  \pgfmathparse{\textwidth/\@tempdima}
+  \pgfmathresult
+}
+
+\newcommand\alphabetlength{%
+  \settowidth{\alphlength}{\alphabet}
+  \pgfmathparse{\alphlength}
+  \pgfmathprintnumber{\pgfmathresult}pt
+}
+\newcommand\textarearatio{%
+    \FPmul{\result}{\strip@pt\textwidth}{\strip@pt\textheight}
+    \FPmul{\resulti}{\strip@pt\paperwidth}{\strip@pt\paperheight}
+    \FPdiv{\resultii}{\result}{\resulti}
+    \pgfmathprintnumber{\resultii}
+}
+
+\newcommand\textheightratio{%
+    \FPdiv{\result}{\strip@pt\textheight}{\strip@pt\paperheight}
+    \FPround{\result}{\result}{2}
+    \result
+}
+
+
+\newcommand\textheighttopaperwidth{%
+    \pgfmathparse{\textheight/\paperwidth}
+    \pgfkeys{/pgf/number format/.cd,fixed,precision=2}
+    \pgfmathprintnumber{\pgfmathresult}
+}
+\newcommand\numbertextlines{%
+   \pgfmathparse{(\textheight-\topskip)/(12)-1}\pgfmathresult
+}
+\def\printreadability{%
+\begin{tabular}{lr}
+  Characters per line &\charactersperline\\
+  Alphabets per line &\alphabetsperline\\
+  Alphabet length &\alphabetlength\\
+  Baselineskip & \the\baselineskip\\
+  Number of text lines &\numbertextlines\\
+\end{tabular}}
+\newlength\trypaperwidth@cx
+\newlength\trypaperheight@cx
+\newlength\trytextheight@cx
+\newlength\tryheadheight@cx
+\newlength\tryheadsep@cx
+\newlength\tryfootskip@cx
+\newlength\trymargintop@cx
+\newlength\trymarginbottom@cx
+\newlength\trytopmargin@cx
+\newlength\trimtop@cx
+\setlength\trimtop@cx{0pt}
+\newlength\trytextwidth@cx
+\newlength\trymarginparwidth@cx
+\newlength\trymarginparsep@cx
+\newlength\tryleftmargin@cx
+\newlength\tryinner@cx
+
+\@ifundefined{stockheight}{\global\newlength\stockheight}{}
+\@ifundefined{stockwidth}{\global\newlength\stockwidth}{}
+
+\ifdim\stockheight=0pt\addtolength\stockheight{\paperheight}\fi
+   \addtolength\stockheight{0mm}
+\ifdim\stockwidth=0pt\addtolength\stockwidth{\paperwidth}\fi
+   \addtolength\stockwidth{0mm}
+
+\newlength\trystockheight@cx
+\newlength\trystockwidth@cx
+\cxset{try stockwidth/.code=\setlength\trystockwidth@cx{#1},
+          try stockheight/.code=\setlength\trystockheight@cx{#1},
+          try stock/.code=} % a4paper etc to be developed toninght
+\cxset{try stockwidth=\paperwidth}
+\cxset{try stockheight=\paperheight}
+\newlength\trimtop
+\newlength\trimedge
+\setlength\lefttrim{5mm}
+\setlength\bottomtrim{10pt}
+\setlength\trimtop{0pt}
+\setlength\trimedge{0pt}
+\setlength\trymargintop@cx{0pt}
+\setlength\trymarginparsep@cx{\marginparsep}
+\setlength\trymarginparwidth@cx{\marginparwidth}
+\setlength\trytextwidth@cx{0pt}
+\newlength\trytrimedge@cx
+\setlength\trytrimedge@cx{10pt}
+
+\newlength\tryoddsidemargin@cx
+\setlength\tryoddsidemargin@cx{\oddsidemargin}
+\newlength\tryevensidemargin@cx
+\setlength\tryevensidemargin@cx{\evensidemargin}
+\newlength\tryinnermargin@cx
+\newlength\tryINNER
+\newlength\tryTOP
+
+\newlength\margintop
+
+\newcommand\thetop{%
+   \pgfmathparse{1in+\topmargin+\headheight+\headsep}
+   \pgfmathsetlength{\margintop}{\pgfmathresult}
+}
+
+\thetop
+
+\newlength\marginbottom
+\newcommand\thebottom{%
+   \pgfmathparse{\stockheight-(1in+\topmargin+\headheight+\headsep+\textheight)}
+    \pgfmathsetlength{\marginbottom}{\pgfmathresult}
+  }
+
+\thebottom
+\cxset{try textheight/.code=\global\setlength\trytextheight@cx{#1},
+       try textheight/.default=\textheight,
+       try headheight/.code=\global\setlength\tryheadheight@cx{#1},
+       try headheight/.default=\headheight, % TO CHECK
+       try headsep/.code=\global\setlength\tryheadsep@cx{#1},
+       try headsep/.default=\headsep, %TODO CHECK
+       try footskip/.code=\global\setlength\tryfootskip@cx{#1},
+       try footskip/.default=\footskip,
+       try topmargin/.code=\global\setlength\trytopmargin@cx{#1},
+       try topmargin/.default=\topmargin,
+}
+
+\cxset{try trimtop/.code=\global\setlength\trimtop@cx{#1},
+       try trimtop/.default=\global\setlength\trimtop{0pt},}
+
+
+\cxset{try textheight,
+       try headheight,
+       try headsep,
+       try footskip,
+       try topmargin=0pt, % compensate for trim
+       try trimtop=10pt}
+
+\setlength\trytopmargin@cx{\topmargin}
+
+\cxset{try textwidth/.code=\global\setlength{\trytextwidth@cx}{#1},
+       try trimedge/.code=\global\setlength{\trytrimedge@cx}{#1},
+}
+
+\cxset{try textwidth=\textwidth,
+       try trimedge=10pt}
+\newif\if@trydiagonal
+\@trydiagonalfalse
+
+\cxset{try diagonal/.is choice,
+       try diagonal/true/.code=\@trydiagonaltrue,
+       try diagonal/false/.code=\@trydiagonalfalse,
+       try diagonal/none/.code=\trydiagonalfalse}
+
+\cxset{try diagonal=false}
+\newif\iftrygrid
+\trygridfalse
+
+\cxset{try grid/.is choice,
+       try grid/true/.code=\trygridtrue,
+       try grid/false/.code=\trygridfalse,
+       try grid/none/.code=\trygridfalse}
+
+\cxset{try grid=true}
+\addtolength\trypaperwidth@cx{\trystockwidth@cx}
+\addtolength\trypaperwidth@cx{-\trytrimedge@cx}
+\addtolength\trypaperheight@cx{\trystockheight@cx}
+\addtolength\trypaperheight@cx{-\trimtop@cx}
+\addtolength\trypaperheight@cx{-\bottomtrim}
+\setlength\trytextheight@cx{\textheight}
+\setlength\trymarginbottom@cx{%
+   \dimexpr(\trystockheight@cx-1in-\trimtop@cx-\trytopmargin@cx
+     -\tryheadheight@cx-\tryheadsep@cx-\trytextheight@cx)\relax}
+
+\newlength\stepx
+\tikzset{dim/.style = {color=black,>=latex}}
+\def\drawtriallayout{%
+\checkoddpage%
+\if@twoside\else\oddpagetrue\fi
+\ifoddpage
+  \global\setlength\tryinnermargin@cx{\tryoddsidemargin@cx}
+  \setlength\tryINNER{\dimexpr(1in+\tryinnermargin@cx+\hoffset)}
+ \else
+   \global\setlength\tryinnermargin@cx{\tryevensidemargin@cx}
+   \setlength\tryINNER{\dimexpr(1in+\tryinnermargin@cx+\hoffset)}
+\fi
+
+   \hspace*{-2cm}\begin{tikzpicture}[scale=0.42,font={\scriptsize\rmfamily},line width=.8pt,
+       every node={color=black},
+       book trim/.style={color=theblue,fill=white},
+       dim text/.style={color=black},
+       textblock/.style={fill=gray,opacity=0.3}]
+
+\edef\tol{-2.5\baselineskip}
+\def\drawpaperwidthdim{%
+    \coordinate (A) at (0,\tol);
+    \coordinate (B) at (\trystockwidth@cx -\trytrimedge@cx,\tol);
+    \coordinate (C) at (0.5\trystockwidth@cx,\tol);
+    \draw [dim, |<->|] (A) -- (B);
+    \node at (C) [yshift=0.5\baselineskip)]
+    {paper width = \convert@cx{\trypaperwidth@cx} $(W_p)$};}
+
+\def\drawpaperwidthevendim{%
+    \coordinate (A) at (0+\trytrimedge@cx,\tol);
+    \coordinate (B) at (\trystockwidth@cx,\tol);
+    \coordinate (C) at (0.5\trystockwidth@cx,\tol);
+    \draw[dim, |<->|] (A) -- (B);
+    \node at (C) [yshift=0.5\baselineskip)]
+    {paper width = \convert@cx{\trypaperwidth@cx} $(W_p)$};
+}
+\draw [color=thegray] (0,0) rectangle
+           ++(\trystockwidth@cx,\trystockheight@cx);
+
+\ifoddpage
+  \draw [book trim]  (0+\lefttrim,\trystockheight@cx-\trimtop@cx)
+        rectangle ++(\trystockwidth@cx-\lefttrim-\trytrimedge@cx,
+        -\trystockheight@cx+\trimtop@cx+\bottomtrim);
+        \drawpaperwidthdim
+ \else
+  \draw [book trim]  (0+\lefttrim+\trytrimedge@cx,\trystockheight@cx-\trimtop@cx)
+        rectangle ++(\trystockwidth@cx-\lefttrim-\trytrimedge@cx,
+        -\trystockheight@cx+\trimtop@cx+\bottomtrim);
+       \drawpaperwidthevendim
+\fi
+
+\pgfmathsetmacro{\gridx}{10}
+\iftrygrid
+  \ifoddpage
+    \draw[xstep=(\trypaperwidth@cx-\lefttrim)/\gridx,
+        ystep=\trypaperheight@cx/\gridx,color=thegreen!50,
+        line  width=0.4pt,yshift=\bottomtrim,xshift=\lefttrim]
+       (0,0) grid (\trypaperwidth@cx-\lefttrim,\trypaperheight@cx);
+  \else
+    \draw[xstep=(\trypaperwidth@cx)/\gridx,
+        ystep=\trypaperheight@cx/\gridx,color=thegreen,
+        line width=0.4pt,yshift=\bottomtrim,xshift=\trytrimedge@cx]
+        (0,0) grid ++(\trypaperwidth@cx,\trypaperheight@cx);
+  \fi
+\fi
+\ifoddpage
+ \draw (0, \trystockheight@cx + 3mm) -- ++ (0,1cm)
+        ++ (\lefttrim,-1cm) -- ++(0,1cm) ++(-1cm-\lefttrim,-0.5cm)[->,>=latex]
+        -- ++(0.5cm+\lefttrim,0);
+ \draw (0, \trystockheight@cx + 3mm)
+        ++ (0,0.5cm) -- ++ (\lefttrim,0)
+        ++(1cm,0cm)[|->,>=latex]-- ++(-1cm,0cm)
+        node[right] at ++(1cm,0)
+        {\translate{bindingcorrectionname}\ \convert@cx{\lefttrim} $(\delta_b)$ };
+\fi
+
+\edef\tol{-5\baselineskip}
+\coordinate (BD) at (0,\tol);
+\coordinate (BD2) at (\stockwidth,-5\baselineskip);
+\draw[dim, |<->|] (BD) -- (BD2);
+\draw (BD) ++ (0.5\stockwidth,0)
+   node [yshift=0.5\baselineskip]
+   {stockwidth=\convert@cx{\stockwidth} $(W_s)$} ;
+
+\coordinate (H1) at (-5mm,\trystockheight@cx-\trimtop@cx);
+\coordinate (H2) at (-5mm,
+    \trystockheight@cx-1in-\trimtop@cx-\trytopmargin@cx-
+    \tryheadheight@cx-\tryheadsep@cx);
+\draw [dim,|<->|] (H1) -- (H2);
+\node[left,text width=1.0cm, text centered,dim text] at
+   (-5mm,\trystockheight@cx-0.5*\margintop)
+   {top\\ \convert@cx{\the\margintop}\\$(h_{t})$};
+
+\coordinate (H3) at (-5mm,0+\bottomtrim);
+\coordinate (H4) at (-5mm,\trymarginbottom@cx);
+\draw [dim,|<->|] (H3) -- (H4);
+\node[left,text width=1.5cm,text ragged left]
+   at (-5mm,0.5*\trymarginbottom@cx)
+   {bottom\\ \convert@cx{ \the\trymarginbottom@cx}\\
+    $(h_{b})$};
+
+\draw[dim,<->]  (-5mm, \trymarginbottom@cx)
+   -- ++ (0,\trytextheight@cx);
+\node[left,text width=1.6cm,text centered,dim text]
+   at (-5mm,\trymarginbottom@cx+0.5\trytextheight@cx)
+   {\CS{textheight} \convert@cx{\trytextheight@cx}\\
+   $(h_x)$ };
+
+
+
+\draw [dim,|<->|] (-4.7cm,\bottomtrim) --
+  (-4.7cm,0.5\trystockheight@cx-0.5\trimtop@cx)
+  node[left,text width=1.2cm,text centered,dim text]
+  {\translate{bookheightname}\\ \convert@cx{\trypaperheight@cx}} --
+  (-4.7cm,\trystockheight@cx-0.5\trimtop@cx) ;
+
+\ifdim\trytrimedge@cx>0pt
+ \ifoddpage
+   \coordinate (D) at (\trystockwidth@cx-4\trytrimedge@cx,
+                       0.10\trytextheight@cx);
+   \coordinate (E) at (\trystockwidth@cx,0.10\trytextheight@cx);
+   \draw [dim,->|] (D) -- ++(3\trytrimedge@cx,0);
+   \draw [dim,|<-|] (E) -- ++(3\trytrimedge@cx,0)
+     node at ++(0,0) [right,text width=2cm,dim text]
+     {\translate{trimedgename}\
+     \convert@cx{\the\trytrimedge@cx}
+     $(\Delta_e)$};
+ \else
+  \coordinate (D1) at (0, \trystockheight@cx+ 5mm);
+  \coordinate (E1) at ++ (\trytrimedge@cx,\stockheight+\trimtop@cx);
+  \draw (D1) -- ++ (0, 10mm)  ++(\trytrimedge@cx,0) -- ++(0,-10mm) ;
+ \fi
+\fi
+
+  \coordinate (F) at (0.9\trystockwidth@cx,\trystockheight@cx-\trimtop@cx-8mm);
+  \coordinate (G) at (0.9\trystockwidth@cx,\trystockheight@cx-\trimtop@cx);
+  \coordinate (H) at (0.9\trystockwidth@cx,\trystockheight@cx);
+  \draw (F)[dim,->|,>=latex] -- (G);
+  \draw (H) -- ++ (0,8mm) -- ++ (5mm,0)[|<-|,>=latex]
+          node [text width=2cm, right] at ++ (0,3pt) {\translate{trimtopname}\
+          \\ \convert@cx{\the\trimtop@cx} $(\Delta_t)$};
+   \draw[fill=olive] (1in,\trystockheight@cx-1in) circle (1.5mm);
+   \draw[dashed,color=olive] (1in,0) -- (1in,\trystockheight@cx);
+   \draw[dashed,color=olive] (0in,\trystockheight@cx-1in)-- ++ (\trystockwidth@cx,0);
+   \draw [dim,|<->|](0,0.3cm)-- (1in,0.3cm) node at (0.5in,0.6)[dim text] {\translate{oneinchname}};
+
+\setlength\tryleftmargin@cx{\dimexpr(1in+\innermargin)}
+\draw [dim,|<->|] (0in,1.9cm) -- (1in+\innermargin,1.9cm)
+node at (0.6in,3.2cm)[text width=1in,dim text,text centered]
+{$(w_i)$\\ \convert@cx{\tryleftmargin@cx}\\inner margin};
+
+ \draw (1in,1.2cm)[|<->|] -- ++(\innermargin,0) node[right,dim text]
+ {\innermarginname\   \convert@cx{\the\innermargin} $(\Delta_i)$};
+
+
+\setlength{\@tempdimc}{\dimexpr(1in-\trimtop@cx+\trytopmargin@cx)\relax}
+\coordinate (S1) at (\trystockwidth@cx+3ex,\trystockheight@cx-\trimtop@cx);
+\draw [dim,|<->|] (S1)
+      -- ++ (0,-\@tempdimc-\trimtop@cx)
+      node [right, dim text, text width=3.5cm] at
+      ++(2ex,0.5\@tempdimc) {\convert@cx{\@tempdimc} $(\delta_t)$
+\\ \textbackslash topmargin \convert@cx{\trytopmargin@cx}};
+\pgfmathsetlength{\@tempdimb}{\trystockheight@cx-
+                    \trimtop@cx-1in-\trytopmargin@cx}
+
+ \draw[textblock] (\tryINNER, \@tempdimb)
+         rectangle ++ (\trytextwidth@cx,-\tryheadheight@cx);
+
+\draw [dim,-|,>=stealth] (\trystockwidth@cx+3ex, \@tempdimb)
+        -- ++(0,-\tryheadheight@cx) node [right,dim text] at
+        ++(2ex,0.3\tryheadheight@cx)
+        {\CS{headheight} \convert@cx{\the\tryheadheight@cx} $(h_{h,h})$};
+%%   add headsep dimension
+\draw [dim,|-,] (\trystockwidth@cx+3ex,
+      \@tempdimb-\tryheadheight@cx-\tryheadsep@cx)
+       -- ++(0,\tryheadsep@cx) node [right, dim text] at
+       ++(2ex,-0.8\tryheadsep@cx){\CS{headsep}
+       \convert@cx{\the\tryheadsep@cx} $(h_{h,s})$};
+
+\coordinate (J) at (\tryINNER,
+     \@tempdimb-\tryheadsep@cx-\tryheadheight@cx);
+\draw[textblock] (J) rectangle ++ (\trytextwidth@cx,-\trytextheight@cx);
+\draw[dim,<->|,dim text] (\tryINNER,0.75\trytextheight@cx)
+  -- ++(\trytextwidth@cx, 0)
+  node at ++(-0.5\trytextwidth@cx,0.8\baselineskip){\labelit@cx{\textwidth}};
+
+\draw [dim,<->] (\trystockwidth@cx+3ex,
+       \@tempdimb-\tryheadsep@cx-\tryheadheight@cx) --
+       ++(0,-\trytextheight@cx) node [right, dim text, text width=2.5cm]
+       at ++(2ex,0.5\trytextheight@cx)
+       {\CS{textheight}\\ \convert@cx{\the\trytextheight@cx}$(h_x)$};
+\coordinate (I) at (\tryINNER,
+          \@tempdimb-\tryheadsep@cx-
+          \tryheadheight@cx-\trytextheight@cx-\tryfootskip@cx);
+\draw[textblock] (I) rectangle ++ (\trytextwidth@cx,\tryheadheight@cx);
+\draw [dim,|<->|,>=stealth] (\trystockwidth@cx+3ex,\@tempdimb-\tryheadsep@cx-
+    \tryheadheight@cx-\trytextheight@cx) --
+    ++(0,-\tryfootskip@cx) node [right, dim text] at
+    ++(2ex,0.5\tryfootskip@cx){%
+    \labelit@cx{\tryfootskip@cx}$(h_f)$};
+\def\leftmarginpar{%
+   \draw [textblock] (\tryINNER+\trytextwidth@cx+\trymarginparsep@cx,
+         \@tempdimb-\tryheadsep@cx-\tryheadheight@cx) rectangle ++(\trymarginparwidth@cx,-\trytextheight@cx);
+ \draw [dim,|<->|] (\tryINNER+\trytextwidth@cx+\trymarginparsep@cx
+   +\trymarginparwidth@cx,0.75\trytextheight@cx)
+   -- ++ (-\trymarginparwidth@cx,0) node at
+   ++(0.5\trymarginparwidth@cx,0.7\baselineskip)
+   {marginparwidth} node at ++(0.5\trymarginparwidth@cx,-\baselineskip)
+   {\convert@cx{\the\trymarginparwidth@cx} $(w_{m,w})$};
+
+ \draw [dim,|-|] (\tryINNER+\trytextwidth@cx,0.85\trytextheight@cx)
+          -- ++ (\trymarginparsep@cx,0)
+         node[right,dim text,text width=2cm,text centered] at
+         ++(-3ex,12pt) {marginparsep\\ \convert@cx{\trymarginparsep@cx} $(w_{m,s})$ };
+}
+\def\rightmarginpar{%
+ \draw [textblock] (\tryINNER-\trymarginparsep@cx,
+   \@tempdimb-\tryheadsep@cx-\tryheadheight@cx)
+   rectangle ++(-\trymarginparwidth@cx,-\trytextheight@cx);
+ \draw [dim,|<->|] (\tryINNER-\trymarginparsep@cx-\trymarginparwidth@cx,
+     0.75\trytextheight@cx) -- ++ (\trymarginparwidth@cx,0) node at
+     ++(-0.5\trymarginparwidth@cx,0.5\baselineskip) {marginparwidth.} node at
+     ++(-0.5\marginparwidth,-\baselineskip){\convert@cx{\the\marginparwidth}};
+ }
+\drawmarginparstrue
+\ifdrawmarginpars
+  \ifoddpage
+    \leftmarginpar
+   \else
+     \rightmarginpar
+  \fi
+\fi
+\if@trydiagonal
+  \ifoddpage
+     \draw [color=blue!30](\trystockwidth@cx-\trytrimedge@cx,\bottomtrim)
+       -- (\lefttrim, \trystockheight@cx-\trimtop@cx);
+  \else
+    \draw [color=blue!30] (\trytrimedge@cx,0)
+    -- (\paperwidth,\paperheight-\trimtop@cx);
+  \fi
+\fi
+\end{tikzpicture}
+}
+
+
+\newlength\tempa@cx
+\newlength\tempb@cx
+\newlength\tempc@cx
+\newlength\listdiagramheight
+\newlength\listdiagramwidth
+
+\def\drawlistdiagram{%
+  \begin{tikzpicture}[scale=0.5,dim/.style={font={\footnotesize}},
+                                           block/.style={color=thegreen}]
+  \pgfmathsetmacro{\yscale}{8}
+  \pgfmathsetlength{\tempa@cx}{\yscale*(\topsep+\parskip+\partopsep)}
+  \pgfmathsetlength{\tempb@cx}{\yscale*(\itemsep+\parsep)}
+  \pgfmathsetlength{\tempc@cx}{\yscale*(\parsep)}
+  \pgfmathsetlength{\listdiagramheight}{13cm+2*\tempa@cx+\tempb@cx+\tempc@cx}
+  \pgfmathsetlength{\listdiagramwidth}{\textwidth+10cm}
+\draw[color=thegray!60] (0,0) rectangle (\listdiagramwidth,\listdiagramheight);
+\draw[color=thegray!60] (0,0) rectangle (\listdiagramwidth, 2cm);
+\draw (0,\listdiagramheight) rectangle (\listdiagramwidth,\listdiagramheight-2cm)
+         node at ++ (-0.5\listdiagramwidth,1cm){\translate{precedingtextname}};
+\node at (0.5\listdiagramwidth,1cm) {\translate{followingtextname}};
+\def\putlistblock@cx##1##2{%
+  \coordinate (A) at (##1,##2);
+  \coordinate (B) at (##1-40pt,##2-20pt);
+  \draw[block]   (A) -- ++ (\textwidth,0pt)
+                     -- ++ (0, 3cm)
+                     -- ++ (-\textwidth+ 30pt,0)
+                     -- ++ (0, -24pt)
+                     -- ++ (-30pt,0)
+                     -- ++ (0,-3cm+24pt);
+ % dra wthe label rectangle
+  \draw[block,color=black]  (B) ++ (-2cm, 3cm) rectangle ++ (4cm, 22pt )
+      node[dim] at ++(-2cm,-11pt) {\translate{labelname}};
+  % draw dimension lines
+  \draw  (B) ++ (0, 3cm+26pt) -- ++ (0,0.8cm) ++ (2cm,-0.8cm)--++(0,0.8cm) ++ (10pt,-0.8cm)
+          --++ (0,0.8cm); %labelsep
+  \settowidth\@tempdima{labelwidth}
+  \draw[dim] [<->,>=latex] (B) ++ (-2cm, 3cm+26pt)++(0,0.4cm)-- ++(4cm,0)
+    node[dim] at ++ (- 2cm-\@tempdima-50pt,8pt)
+    {\labelit@cx{\labelwidth}};
+
+  \draw[dim] (B)  ++ (0, 3cm+26pt+0.4cm) -- ++ (2cm+10pt,0)
+                   ++ (0.5cm,0)--++(-0.5cm,0)[|->,>=latex]
+                   node[right] at ++(0.45cm,0) {\labelit@cx{\labelsep}};
+
+  \draw[<->,>=latex] (A)++(0,1.5cm) -- ++(30pt,0) ;
+  \draw (A)++(30pt,1.20cm )--++ (0pt,1.8cm-27pt) node at ++(0,0)[below right]
+  {\labelit@cx{\itemindent}}; % draw dimline
+    \node[dim] (A) at (##1,##2)[above right] {\textsc{Item}};
+
+
+\draw[<->,>=latex] (A) ++ (-24pt,0pt) -- ++(-5cm,0pt)
+         node at ++(0,0)[above right] {\labelit@cx{\leftmargin}};
+\draw[<->,>=latex] (A) ++ (-24pt+\textwidth,0pt) -- ++(5cm,0pt)
+        node at ++(0,0)[above left] {\labelit@cx{\rightmargin}};
+}
+\def\putlistparblock@cx##1##2{%
+  \coordinate (A) at (##1,##2);
+  \coordinate (B) at (##1-40pt,##2-20pt);
+  \draw[block]   (A) -- ++ (\textwidth,0pt)
+                     -- ++ (0, 3cm)
+                     -- ++ (-\textwidth+ 20pt,0)
+                     -- ++ (0, -24pt)
+                     -- ++ (-20pt,0)
+                     -- ++ (0,-3cm+24pt);
+
+  \draw[<->,>=latex] (A)++(0,1.5cm) -- ++(20pt,0) ;
+  \draw (A)++(20pt,1.20cm )--++ (0pt,1.8cm-27pt) node at ++(0,0)[below right]
+        {\labelit@cx{\listparindent}};
+
+   \draw[<->,>=latex] (A) ++ (-0pt,8pt) -- ++(-5cm,0pt)
+         node at ++(0,0)[above right] {\labelit@cx{\leftmargin}};
+   \draw[<->,>=latex] (A) ++ (0pt+\textwidth,8pt) -- ++(5cm,0pt)
+        node at ++(0,0)[above left] { \labelit@cx{\rightmargin}};
+
+   \node[dim] (A) at (##1,##2)[above right] {\textsc{Item Paragraph}};
+}
+
+\putlistblock@cx{5cm}{2cm+\tempa@cx} % 8cm
+\draw [<-,>=latex] (0.5\paperwidth, 2cm)-
+            -++(0,\tempa@cx) node at ++(0,-0.5\tempa@cx) [right]
+            {\labelit@cx{\topsep}+\labelit@cx{\parskip} +\labelit@cx{\partopsep}};
+
+\putlistparblock@cx{5cm}{2cm+\tempa@cx+3cm+\tempb@cx}
+\draw [->,>=latex] (0.5\paperwidth, 2cm+\tempa@cx+3cm+\tempb@cx)--++(0,-\tempb@cx)
+      node at ++(0,0.5\tempb@cx) [right]
+      {\labelit@cx{\itemsep}+\labelit@cx{\parsep}=
+          \pgfmathparse{\itemsep+\parsep}\convert@cx{\pgfmathresult}};
+
+%% third block
+\putlistblock@cx{5cm}{2cm+\tempa@cx+6cm+\tempb@cx +\tempc@cx}
+\draw [->,>=latex] (0.5\paperwidth,2cm+\tempa@cx+6cm+\tempb@cx +\tempc@cx )
+      --++(0,-\tempc@cx)
+      node at ++(0,0.5\tempc@cx) [right] {\labelit@cx{\parsep}};
+
+\draw [->,>=latex] (0.5\listdiagramwidth, \listdiagramheight-2cm)--++(0,-\tempa@cx)
+     node at ++(0,0.5\tempa@cx) [right]
+{\labelit@cx{\topsep}+\labelit@cx{\parskip}+\labelit@cx{\partopsep}=
+     \pgfmathparse{\topsep+\parskip+\partopsep}\convert@cx{\pgfmathresult}};
+
+
+\end{tikzpicture}
+}
+
+\def\printlistvalues{%
+  \begin{tabular}{lr}
+    \toprule
+    Parameter    & Value\\
+    \midrule
+    leftmargin   & \convert@cx{\the\leftmargin}\\
+    rightmargin  & \convert@cx{\the\rightmargin}\\
+    itemindent   & \convert@cx{\itemindent}\\
+    labelwidth   & \convert@cx{\labelwidth}\\
+    labelsep     & \convert@cx{\labelsep}\\
+    listparindent& \convert@cx{\listparindent}\\
+    topsep       & \convert@cx{\topsep}\\
+    partopsep    & \convert@cx{\partopsep}\\
+    parsep       & \convert@cx{\parsep}\\
+    itemsep      & \convert@cx{\itemsep}\\
+    \bottomrule
+    \end{tabular}
+}
+\newcommand{\printfontparams}{%
+  \begin{tabular}{lc}
+     \toprule
+     Parameter     & Value\\
+     \midrule
+     Font encoding & \f@encoding\\
+     font family   & \f@family\\
+     font series   & \f@series\\
+     font shape    & \f@shape\\
+     font size     & \f@size\\
+     baselineskp   & \f@baselineskip\\
+     \bottomrule
+     \end{tabular}
+ }
+\newcommand{\printfontdimensions}{%
+  \begin{tabular}{lc}
+  \toprule
+  Parameter     & Value\\
+  \midrule
+    fontdimen1 (slant per point)  is & \the\fontdimen1\font\\
+    fontdimen2 (interword space)     & \the\fontdimen2\font\\
+    fontdimen3 (interword stretch)          & \the\fontdimen3\font\\
+    fontdimen4 (interword shrink)          & \the\fontdimen4\font\\
+    fontdimen5 (x-height)  & \the\fontdimen5\font\\
+    fontdimen6 (quad width)& \the\fontdimen6\font\\
+    fontdimen7 (extra space) & \the\fontdimen7\font\\
+  \bottomrule
+  \end{tabular}
+ }
+\newlength\xheight@cx
+\newlength\xwidth@cx
+\newlength\xdepth@cx
+\newlength\xtotal@cx
+\newsavebox{\fontbox}
+\cxset{fontbox font/.store in=\fontboxfont@cx,
+       fontbox line color/.store in=\fontboxlinecolor@cx,
+       fontbox label font/.store in=\fontboxlabelfont@cx}
+
+\cxset{fontbox font={\itshape\Huge},
+       fontbox line color=thered,
+       fontbox label font={\upshape\footnotesize}}
+\newcommand\drawfontframe[1]{%
+  \tikz[baseline=(X.base), font=\fontboxlabelfont@cx]{%
+    \node[rectangle,draw,inner sep=0pt,outer sep=0pt,
+          color=\fontboxlinecolor@cx] (X)[black]{#1};
+    \draw[\fontboxlinecolor@cx, line width=0.4pt] (X.text)
+      circle(0.4pt)[fill=red] -- (X.base east);}
+}
+\def\drawfontbox#1{%
+   {\itshape\fontboxfont@cx
+   \savebox{\fontbox}{#1}
+   \pgfmathsetlength{\xheight@cx}{\ht\fontbox}
+   \pgfmathsetlength{\xwidth@cx}{\wd\fontbox}
+   \pgfmathsetlength{\xdepth@cx}{\dp\fontbox}
+   \pgfmathsetlength{\xtotal@cx}{\xdepth@cx+\xheight@cx}
+  \begin{tikzpicture}[scale=1,label/.style={font={\fontboxlabelfont@cx}}]
+    \node[rectangle,draw,inner sep=0pt,outer sep=0pt] (X){#1};
+    \draw[red, line width=0.4pt,label] (X.text)  circle(1pt)[fill=red] -- (X.base east);
+    \draw[|<->|,>=latex] ([yshift=5pt] X.north west)
+       --([yshift=5pt] X.north east) node [label,above=-5pt,midway]{width = \convert@cx{\xwidth@cx}};
+    % draw the xheight
+    \draw[|<->|,>=latex,label]([xshift=-5pt]X.base west)
+          --([xshift=-5pt] X.north west)
+          node [left,midway,label] {x-height=\convert@cx{\xheight@cx}};
+    \draw[-|,>=latex,label]([xshift=-5pt]X.base west)
+          --([xshift=-5pt] X.south west)
+          node [left,midway,label] {depth=\convert@cx{\xdepth@cx}};
+    \draw[<-,>=latex]([xshift=-5pt]X.south west)
+          --++(0,-8pt);
+\draw[|<->|,>=latex,label]([xshift=5pt]X.north east)
+          --([xshift=5pt] X.south east)
+          node [right,midway] {height=\convert@cx{\xtotal@cx}};
+
+  \end{tikzpicture}}
+}
+\newcounter{linecount}
+\def\loop@line#1#2{%
+ \par
+ \hb@xt@\hsize{%
+  \global\advance#1\@ne
+  \edef\@tempa{\@ifnum{100>#1}{0}{}\@ifnum{10>#1}{0}{}\number#1}%
+  \@tempa\edef\@tempa{\special{line:\@tempa}}\@tempa
+  \vrule depth2.5\p@#2\leaders\hrule\hfil
+ }%
+}%
+\def\lineloop#1{%
+ \loopwhile{\loop@line\c@linecount{}\@ifnum{#1>\c@linecount}}%
+}%
+\def\linefoot#1{%
+ \loop@line\c@linecount{%
+  \footnote{%
+   #1\special{foot:#1}\vrule depth2.5\p@\leaders\hrule\hfill
+  }%
+ }%
+}%
+
+
+
+
+%% 
+%% Copyright (C) 2013 by Dr. Yiannis Lazarides <yannislaz@gmail.com>
+%% 
+%% This work may be distributed and/or modified under the
+%% conditions of the LaTeX Project Public License (LPPL), either
+%% version 1.3c of this license or (at your option) any later
+%% version.  The latest version of this license is in the file:
+%% 
+%% http://www.latex-project.org/lppl.txt
+%% 
+%% This work is "maintained" (as per LPPL maintenance status) by
+%% Dr. Yiannis Lazarides.
+%% 
+%% This work consists of the file xlayouts.dtx
+%% and the derived files          xlayouts.ins,
+%%                                xlayouts.pdf,
+%%                                xlayouts.sty
+%%                                page-<Language>.dict
+%%                                README.txt
+%% 
+%%
+%% End of file `xlayouts.sty'.
