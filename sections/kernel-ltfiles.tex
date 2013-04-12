@@ -68,19 +68,25 @@
 \end{tabular}
 
 
+\begin{algorithm}
+ \cs{includeonly}\marg{FILELIST} ==
+ \Begin{%
+   \cs{@partsw}   := True\\
+   \cs{@partlist} := FILELIST}
+\end{algorithm}
+
+
+\begin{algorithm}
+ \cs{include}\marg{FILE} ==
+  \Begin{
+    \cs{clearpage}\\
+   \If{\cs{@filesw} = True}{
+     \cs{immediate}\cs{write}\cs{@mainaux}{\cs{string}\cs{@input}\marg{FILE.AUX}}}
+  }
+\end{algorithm}
+
 \begin{comment}
-% \includeonly{FILELIST} ==
-%  BEGIN
-%   \@partsw   := T
-%   \@partlist := FILELIST
-%  END
-%
-% \include{FILE} ==
-%  BEGIN
-%   \clearpage
-%   if \@filesw = T
-%     then  \immediate\write\@mainaux{\string\@input{FILE.AUX}}
-%   fi
+
 %   if  \@partsw = T
 %     then \@tempswa := F
 %          \reserved@b == FILE
@@ -418,11 +424,31 @@ Next
  \begin{macro}{\@include} The definition of |\@include| is fairly
  straightforward less one puzzle, why would the |\clearpage| be
  issued and thus have a behaviour which is totally different from
- |\input|. My suspicion it has to do with early bugs.
- 
+ |\input|. As explained by egreg on TEX.SX this was to correct the references.
+ David Carlisle added that floats can also get passed none included
+ files, which is also an issue.
+ \footnote{http://tex.stackexchange.com/questions/108268/redefining-include}. This is a very subtle error and easily missed. David Carlisle added that: ``\ldots as a historical note it wasn't a "team" it has always done this so this is Leslie's doing before we got involved''.
+Frank provided a more lengthy explanation which I quote:
+\begin{quotation}
+The purpose of the \cs{include} mechanism is to allow for partially compiling the document when making a modest amount of changes without the need to recompile the full document and still get cross-references etc correctly resolved (even to parts outside the current part under the knife).
+
+For this to work the part or parts that are included have to be selfcontained in the sense that changes to it do not automatically (and always) render the formatting of other parts not included invalid. To make this possible (at least for smaller changes) the following prerequisites are needed:
+
+The mechanism need to ensure that small changes in text length in the part being compiles doesn't result in formatting changes in other parts not compiled
+Floats in the parts compiled need to be placed in the parts compiled
+If either of the above points is not valid then using \cs{include} would (nearly) always result in invalid documents whereas in the current scheme you can all include parts individually and still arrive and maintain a valid document. (Just for the record, when we produced the first edition of the LaTeX Companion it took ages to compile this book and even the second edition took about 30 minutes in 2004 to compile all examples + all pages and rerun the whole book (I think 5 times) to get all cross-references resolved successfully. So building out things chapter by chapter was essential and even then compiling took long :-)
+
+Of course the first point will be invalid the moment a lot of text is added or removed such as the resulting document get one or more pages longer or shorter.
+
+So using page breaks at the boundaries of the included parts is simply necessary to make the mechanism worth while in the first place and using \cs{clearpage} is needed to to ensure that the floats stay within the included part and not move in or out.
+
+@egreg already gave the additional explanation that the mechanism to write aux file data works only on \cs{shipout} so that it wouldn't be possible (or at least not easy) to ensure that such things like cross-references or data for table of contents aren't lost. Technically one could think of a possibility to manage this, but using more than one aux file per include, but that wouldn't resolve the point above.
+
+Finally, this is not something the LaTeX Project team invented, it goes back to Leslie Lamport's original design and was in existance since LaTeX 2.08 (at least) so before 1986.
+\end{quotation} 
  \end{macro}
     \begin{teX}
-\def\@include#1{%
+\def\@include#1 {%
   \clearpage
   \if@filesw
     \immediate\write\@mainaux{\string\@input{#1.aux}}%
@@ -526,19 +552,13 @@ Next
   \reserved@a}
  \end{teX}
 
-\end{document}
-%
-% \begin{macro}{\@iffileonpath}
-% If the file is not found by |\openin|, and |\input@path| is defined,
-% look in all the directories specified in |\input@path|.
-% \changes{v0.9p}{1994/01/18}{Macro added}
-% \changes{v1.0f}{1994/05/02}
-%     {\cs{@break@loop} renamed to \cs{@break@tfor}}
-% \changes{v1.0t}{1995/05/25}
-%         {(CAR) added \cs{long}}
-% \changes{v1.1d}{1996/01/10}
-%     {Change argument handling to not require doubled hash. latex/2024}
-%    \begin{macrocode}
+
+ \begin{macro}{\@iffileonpath}
+ \end{macro}
+ If the file is not found by |\openin|, and |\input@path| is defined,
+ look in all the directories specified in |\input@path|.
+
+    \begin{teX}
 \long\def\@iffileonpath#1{%
   \let\reserved@a\@secondoftwo
   \expandafter\@tfor\expandafter\reserved@b\expandafter
@@ -551,29 +571,22 @@ Next
       \@break@tfor
     \fi}%
   \reserved@a}
-%    \end{macrocode}
-%  \end{macro}
-%  \end{macro}
-%
-% \begin{macro}{\InputIfFileExists}
-% \changes{v0.9b}
-%         {1993/12/04}{Macro added}
-% \changes{v0.9p}
-%         {1994/01/18}{New Definition}
-% \changes{v0.3b}{1994/03/13}
-%         {Use new cmd \cs{@addtofilelist}}
-% Now define |\InputIfFileExists| to input |#1| if it seems to exist.
-% Immediately prior to the input, |#2| is executed.
-% If the file |#1| does not exist, execute `|#3|'.
-% \changes{v1.0t}{1995/05/25}
-%         {(CAR) added \cs{long}}
-%    \begin{macrocode}
+    \end{teX}
+
+
+ \begin{macro}{\InputIfFileExists}
+ Now define |\InputIfFileExists| to input |#1| if it seems to exist.
+ Immediately prior to the input, |#2| is executed.
+ If the file |#1| does not exist, execute `|#3|'.
+ \end{macro}
+
+    \begin{teX}
 \long\def \InputIfFileExists#1#2{%
   \IfFileExists{#1}%
     {#2\@addtofilelist{#1}\@@input \@filef@und}}
-%    \end{macrocode}
-%  \end{macro}
-%
+    \end{teX}
+
+
   \begin{macro}{\input}
     Input a file: if the argument is given in braces use safe input
     macros, otherwise use \TeX's primitive |\input| command (which is
@@ -584,12 +597,12 @@ Next
 \def\input{\@ifnextchar\bgroup\@iinput\@@input}
     \end{teX}
 
-%
-% \begin{macro}{\@iinput}
-%    Define |\@iinput| (i.e., |\input|) in terms of
-%    |\InputIfIfileExists|.
-% \changes{v0.9b}{1993/12/04}{Macro reimplemented}
-%    \begin{macrocode}
+
+ \begin{macro}{\@iinput}
+    Define |\@iinput| (i.e., |\input|) in terms of
+    |\InputIfIfileExists|.
+ \end{macro}
+    \begin{teX}
 \def\@iinput#1{%
   \InputIfFileExists{#1}{}%
   {\filename@parse{#1}%
@@ -597,56 +610,37 @@ Next
      {\filename@area\filename@base}%
      {\ifx\filename@ext\relax tex\else\filename@ext\fi}}%
    \reserved@a}}
-%    \end{macrocode}
-%  \end{macro}
-%
-% \begin{macro}{\@input}
-% \changes{v0.9b}{1993/12/04}{Macro reimplemented}
-% \changes{v0.9p}{1994/01/18}%
-%         {do not use a different definition for \cs{input@path}}
-%    Define |\@input| in terms of |\IfIfileExists|.
-%    So this is a `safe input' command, but the files input are not
-%    listed by |\listfiles|.
-%
-%    We don't want |.aux|, |.toc| files etc be listed by |\listfiles|.
-%    However, something like |.bbl| probably should be listed and thus
-%    should be implemented not by |\@input|.
-%    \begin{macrocode}
+    \end{teX}
+
+
+ \begin{macro}{\@input}
+    Define |\@input| in terms of |\IffileExists|.
+    So this is a `safe input' command, but the files input are not
+    listed by |\listfiles|.
+    We don't want |.aux|, |.toc| files etc be listed by |\listfiles|.
+    However, something like |.bbl| probably should be listed and thus
+    should be implemented not by |\@input|.
+ \end{macro}
+    \begin{teX}
 \def\@input#1{%
   \IfFileExists{#1}{\@@input\@filef@und}{\typeout{No file #1.}}}
-%    \end{macrocode}
-%  \end{macro}
-%
-% \begin{macro}{\@input@}
-% \changes{v0.9p}{1994/01/18}{Macro added}
-% \task{???}{share code with `@input ?}
-% Version of |\@input| that does add the file to |\@filelist|.
-%    \begin{macrocode}
+    \end{teX}
+
+
+ \begin{macro}{\@input@}
+ Version of |\@input| that does add the file to |\@filelist|.
+ \end{macro}
+    \begin{teX}
 \def\@input@#1{\InputIfFileExists{#1}{}{\typeout{No file #1.}}}
-%    \end{macrocode}
-%  \end{macro}
-%
-% \begin{macro}{\@missingfileerror}
-% This `error' command avoids \TeX's primitive missing file loop.
-%
-% Missing file error. Prompt for a new filename, offering a default
-% extension.
-% \changes{LaTeX2e}{1993/11/21}
-%         {Stop infinite looping on \cs{@er@ext}}
-% \changes{LaTeX2e}{1993/11/28}
-%         {Use filename parser from dircheck}
-% \changes{LaTeX2e}{1994/03/15}
-%         {Quit on x or X just like a real error}
-% \changes{LaTeX2e}{1994/05/26}
-%         {Modify message format}
-% \changes{v1.0j}{1994/11/03}
-%         {Move here from ltclass}
-% \changes{v1.0w}{1995/10/06}
-%         {Autoload error}
-%    \begin{macrocode}
-%<autoload>\def\@missingfileerror{\@autoerr\@missingfileerror}
-%</2ekernel|autoload>
-%<*2ekernel|autoerr>
+    \end{teX}
+
+
+ \begin{macro}{\@missingfileerror}
+ This `error' command avoids \TeX's primitive missing file loop.
+ Missing file error. Prompt for a new filename, offering a default
+ extension.
+ \end{macro}
+    \begin{teX}
 \gdef\@missingfileerror#1#2{%
      \typeout{^^J! LaTeX Error: File `#1.#2' not found.^^J^^J%
       Type X to quit or <RETURN> to proceed,^^J%
@@ -669,48 +663,46 @@ Next
             {\filename@area\filename@base}{\filename@ext}}}%
       \reserved@a
     \fi}
-%</2ekernel|autoerr>
-%<*2ekernel|autoload>
-%    \end{macrocode}
-% \end{macro}
-%
-% \begin{macro}{\@obsoletefile}
-%    For compatibility with \LaTeX~2.09 document styles, we distribute
-%    files called |article.sty|, |book.sty|, |report.sty|,
-%    |slides.sty| and |letter.sty|.  These use the command
-%    |\@obsoletefile|, which produces a warning message.
-%    \changes{v0.9m}{1993/12/20}{Added this command, removed
-%                               @oldfilewarning}
-% \changes{v1.0f}{1994/05/02}{Make \cs{@onlypreamble}}
-%    \begin{macrocode}
+    \end{teX}
+
+
+ \begin{macro}{\@obsoletefile}
+    For compatibility with \LaTeX~2.09 document styles, we distribute
+    files called |article.sty|, |book.sty|, |report.sty|,
+    |slides.sty| and |letter.sty|.  These use the command
+    |\@obsoletefile|, which produces a warning message.
+ \end{macro}
+    \begin{teX}
 \def\@obsoletefile#1#2{%
    \@latex@warning@no@line{inputting `#1' instead of obsolete `#2'}}
 \@onlypreamble\@obsoletefile
-%    \end{macrocode}
-%
-% \subsection{Listing files}
-%
-% \begin{macro}{\@filelist}
-% A list of files input so far. The initial value of |\@gobble| eats
-% the comma before the first file name.
-%    \begin{macrocode}
+    \end{teX}
+
+ \subsection{Listing files}
+
+ \begin{macro}{\@filelist}
+ A list of files input so far. The initial value of |\@gobble| eats
+ the comma before the first file name.
+ \end{macro}
+    \begin{teX}
 \let\@filelist\@gobble
-%    \end{macrocode}
-% \end{macro}
-%
-% \begin{macro}{\@addtofilelist}
-% Add to the  list of files input so far.
-% This `real' definition is only used for `cfg' files during initex.
-% An initial definition of |\@gobble| has already been set.
-%    \begin{macrocode}
-%\def\@addtofilelist#1{\xdef\@filelist{\@filelist,#1}}
-%    \end{macrocode}
-% \end{macro}
-%
-% \begin{macro}{\listfiles}
-% A preamble command to cause |\end{document}| to list files input
-% from the main file.
-%    \begin{macrocode}
+    \end{teX}
+
+
+ \begin{macro}{\@addtofilelist}
+ Add to the  list of files input so far.
+ This `real' definition is only used for `cfg' files during initex.
+ An initial definition of |\@gobble| has already been set.
+ \end{macro}
+    \begin{teX}
+\def\@addtofilelist#1{\xdef\@filelist{\@filelist,#1}}
+    \end{teX}
+
+\begin{macro}{\listfiles}
+ A preamble command to cause |\end{document}| to list files input
+ from the main file.
+\end{macro}
+    \begin{teX}
 \def\listfiles{%
   \let\listfiles\relax
   \def\@listfiles##1##2##3##4##5##6##7##8##9\@@{%
@@ -719,11 +711,12 @@ Next
        \ifx\reserved@c\reserved@d
          \edef\filename@area{ \filename@area}%
        \fi}}%
-%    \end{macrocode}
-%
-% \changes{v1.0o}{1994/11/30}
-%         {Use \cs{@dofilelist}}
-%    \begin{macrocode}
+    \end{teX}
+
+\begin{macro}{\@dofilelist}
+\end{macro}
+
+    \begin{teX}
   \def\@dofilelist{%
      \typeout{^^J *File List*}%
      \@for\@currname:=\@filelist\do{%
@@ -739,32 +732,31 @@ Next
          \filename@area\reserved@a
          \ifx\reserved@b\relax\else\@spaces\reserved@b\fi}}%
      \typeout{ ***********^^J}}}
-%    \end{macrocode}
-%
-% \changes{LaTeX2e}{1994/03/13}
-%         {Reset \cs{@addtofilelist} at begin document}
-% \changes{LaTeX2e}{1994/03/16}
-%         {Move this code directly into \cs{document}}
-% The |\@filelist| will be de-activated if |\listfiles| does not
-% appear in the preamble. |\begin{document}| contains code equivalent
-% to the following:
-%\begin{verbatim}
-% \AtBeginDocument{%
-%   \ifx\@listfiles\@undefined
-%     \let\@filelist\relax
-%     \let\@addtofilelist\@gobble
-%   \fi}
-%\end{verbatim}
-%    \begin{macrocode}
-\@onlypreamble\listfiles
-%    \end{macrocode}
-% \end{macro}
-%
-%  \begin{macro}{\@dofilelist}
-% \changes{v1.0o}{1994/11/30}
-%         {Macro added}
-%    \begin{macrocode}
-\let\@dofilelist\relax
-%    \end{macrocode}
-%  \end{macro}
+    \end{teX}
 
+
+ The |\@filelist| will be de-activated if |\listfiles| does not
+ appear in the preamble. |\begin{document}| contains code equivalent
+ to the following:
+\begin{verbatim}
+ \AtBeginDocument{%
+   \ifx\@listfiles\@undefined
+     \let\@filelist\relax
+     \let\@addtofilelist\@gobble
+   \fi}
+\end{verbatim}
+
+    \begin{teX}
+\@onlypreamble\listfiles
+   \end{teX}
+
+
+  \begin{macro}{\@dofilelist}
+  \end{macro}
+    \begin{teX}
+\let\@dofilelist\relax
+    \end{teX}
+
+Hope you are still with me and that the explanations have been adequate. I still
+think some design decisions should not be carried over to LaTeX3, such as the
+|\clearpage| before an |\include| file.
