@@ -37,46 +37,49 @@
 \message{floats,}
     \end{teX}
 
- \begin{oldcomments}
+
 
  Where floats may appear on a page, and how many may appear there
  are specified by the following float placement parameters.  The
  numbers are named like counters so the user can set them with
  the ordinary counter-setting commands.
 
-  \c@topnumber      : Number of floats allowed at the top of a column.
-  \topfraction      : Fraction of column that can be devoted to floats.
-  \c@dbltopnumber, \dbltopfraction 
-                    : Same as above, but for double-column floats.
-  \c@bottomnumber, \bottomfraction 
-                    : Same as above for bottom of page.
-  \c@totalnumber    : Number of floats allowed in a single column,
-                          including in-text floats.
-  \textfraction     :Minimum fraction of column that must contain text.
-  \floatpagefraction: Minimum fraction of page that must be taken
-                          up by float page.
-  \dblfloatpagefraction 
-                    : Same as above, for double-column floats.
+\begin{tabular}{lp{6cm}}
+
+  \cs{c@topnumber}      & Number of floats allowed at the top of a column.\\
+  \cs{topfraction}      & Fraction of column that can be devoted to floats.
+  \cs{c@dbltopnumber}, \cs{dbltopfraction} \\
+                    & Same as above, but for double-column floats.\\
+  \cs{c@bottomnumber}, \cs{bottomfraction}\\ 
+                    & Same as above for bottom of page.\\
+  \cs{c@totalnumber}    & Number of floats allowed in a single column,
+                          including in-text floats.\\
+  \cs{textfraction}     &Minimum fraction of column that must contain text.\\
+  \cs{floatpagefraction}& Minimum fraction of page that must be taken
+                          up by float page.\\
+  \cs{dblfloatpagefraction} 
+                    & Same as above, for double-column floats.\\
+\end{tabular}
+
 
  The document style must define the following.
 
-    \fps@TYPE   : The default placement specifier for floats of type
-                  TYPE. 
-
-    \ftype@TYPE : The type number for floats of type TYPE.
-
-    \ext@TYPE   : The file extension indicating the file on which the
+\begin{longtable}{lp{6cm}}
+    \cs{fps@TYPE}   & The default placement specifier for floats of type
+                  TYPE. \\
+    \cs{ftype@TYPE} & The type number for floats of type TYPE.\\
+    \cs{ext@TYPE}   & The file extension indicating the file on which the
                   contents list for float type TYPE is stored.
-                    For example,  \ext@figure = 'lof'.
-
-    \fnum@TYPE  : A macro to generate the figure number for a caption.
-                  For example, \fnum@TYPE == Figure \thefigure.
-
-    \@makecaption{NUM}{TEXT} : 
+                    For example,  \cs{ext@figure = 'lof'}.\\
+    \cs{fnum@TYPE}  & A macro to generate the figure number for a caption.
+                  For example, \cs{fnum@TYPE} == Figure \cs{thefigure}.\\
+    \cs{@makecaption}{NUM}{TEXT} & 
               A macro to make a caption, with NUM the value
-              produced by \fnum@... and TEXT the text of the caption.
-              It can assume it's in a \parbox of the appropriate width.
+              produced by \cs{fnum@}... and TEXT the text of the caption.
+              It can assume it's in a \cs{parbox} of the appropriate width.\\
+\end{longtable}
 
+\begin{teX}
  \@float{TYPE}[PLACEMENT] : This macro begins a float environment for a
      single-column float of type TYPE with PLACEMENT as the placement
      specifier.  The default value of PLACEMENT is defined by
@@ -152,23 +155,25 @@
   \@dblfloat{TYPE}[PLACEMENT] ==
      Identical to \@float{TYPE}[PLACEMENT] except \hsize and \linewidth
      are set to \textwidth.
- \end{oldcomments}
-%
- \begin{macro}{\@floatpenalty}  
+\end{teX}
 
+ \begin{macro}{\@floatpenalty}  
+The float penalty is saved in a counter to enable ease of use.
+ \end{macro}
     \begin{teX}
 \newcount\@floatpenalty
     \end{teX}
- \end{macro}
+ 
 
-% \begin{macro}{\caption}
-%
-%    This is set to be an error message outside a float since no
-%    captype is defined there; this may need to be changed by some 
-%    classes.
-% \changes{v1.1u}{1999/04/19}
-%    {Made caption an error oustside a float: latex/2815}
-%    \begin{teX}
+
+\begin{macro}{\caption}
+
+    This is set to be an error message outside a float since no
+    captype is defined there; this may need to be changed by some 
+    classes. Note if the caption is outside a float it triggers
+	an error.
+
+    \begin{teX}
 \def\caption{%
    \ifx\@captype\@undefined
      \@latex@error{\noexpand\caption outside float}\@ehd
@@ -179,128 +184,92 @@
    \fi
    {\@dblarg{\@caption\@captype}}%
 } 
-%    \end{teX}
-% \end{macro}
-%
-% \begin{macro}{\@caption}
-% \changes{v1.0b}{1994/03/28}
-%     {Use \cs{normalsize} not \cs{@normalsize}}
-% \changes{v1.1r}{1996/12/06}
-%     {Call \cs{@setminpage} if needed. latex/2318}
-%    \begin{teX}
+    \end{teX}
+ \end{macro}
+
+ \begin{macro}{\@caption}
+    \begin{teX}
 \long\def\@caption#1[#2]#3{%
   \par
   \addcontentsline{\csname ext@#1\endcsname}{#1}%
     {\protect\numberline{\csname the#1\endcsname}{\ignorespaces #2}}%
   \begingroup
-%    \end{teX}
-%
-% The paragraph setting parameters are normalised at this point, however
-% |\@parboxrestore| resets |\everypar| which is not correct in this
-% context so |\@setminipage| is called if needed.
-%
-% The float mechanism, like minipage, sets the flag |@minipage| true
-% before executing the user-supplied text. Many \LaTeX\ constructs
-% test for this flag and do not add vertical space when it is true.
-% The intention is that this emulates \TeX's `top of page' behaviour.
-% The flag must be set false at the start of the first paragraph. This
-% is achieved by a redefinition of |\everypar|, but the call to
-% |\@parboxrestore| removes that redefinition, so it is re-inserted 
-% if needed. If the flag is already false then the |\caption| was not
-% the first entry in the float, and so some other paragraph has already
-% activated the special |\everypar|. In this case no further action is
-% needed.
-%    \begin{teX}
+    \end{teX}
+
+ The paragraph setting parameters are normalised at this point, however
+ |\@parboxrestore| resets |\everypar| which is not correct in this
+ context so |\@setminipage| is called if needed.
+
+ The float mechanism, like minipage, sets the flag |@minipage| true
+ before executing the user-supplied text. Many \LaTeX\ constructs
+ test for this flag and do not add vertical space when it is true.
+ The intention is that this emulates \TeX's `top of page' behaviour.
+ The flag must be set false at the start of the first paragraph. This
+ is achieved by a redefinition of |\everypar|, but the call to
+ |\@parboxrestore| removes that redefinition, so it is re-inserted 
+ if needed. If the flag is already false then the |\caption| was not
+ the first entry in the float, and so some other paragraph has already
+ activated the special |\everypar|. In this case no further action is
+ needed.
+    \begin{teX}
     \@parboxrestore
     \if@minipage
       \@setminipage
     \fi
-%    \end{teX}
-%
-%    \begin{teX}
+    \end{teX}
+
+    \begin{teX}
     \normalsize
     \@makecaption{\csname fnum@#1\endcsname}{\ignorespaces #3}\par
   \endgroup}
-%    \end{teX}
-% \end{macro}
-%
-% \begin{macro}{\@float}
-% \begin{macro}{\@dblflset}
-% \changes{v1.1a}{1994/10/31}{Macro added}
-% \changes{v1.1g}{1994/12/10}{Macro removed temporarily}
-% \changes{v1.1a}{1994/10/31}
-%    {Major changes to parameter parsing, setting of local variables,
-%    etc; two-column and one-column cases merged; space hacks moved}
-% \changes{v1.1c}{1994/11/05}
-%         {Add compatibility with old version of \cs{@xfloat}.}
-% \changes{v1.1g}{1994/12/10}{Old version reinstated temporarily}
-%
-%    \begin{teX}
+    \end{teX}
+ \end{macro}
+
+ \begin{macro}{\@float}
+ \begin{macro}{\@dblflset}
+
+    \begin{teX}
 \def\@float#1{%
   \@ifnextchar[%
     {\@xfloat{#1}}%
     {\edef\reserved@a{\noexpand\@xfloat{#1}[\csname fps@#1\endcsname]}%
      \reserved@a}}
-%    \end{teX}
-%    
-% \end{macro}
-% \end{macro}
-%
-%  \begin{macro}{\@dblfloat}
-% \changes{v1.1a}{1994/10/31}
-%     {Major changes since two-column and one-column cases merged}
-% \changes{v1.1g}{1994/12/10}{Old version reinstated temporarily}
-%
-%    \begin{teX}
+    \end{teX}
+    
+ \end{macro}
+ \end{macro}
+
+  \begin{macro}{\@dblfloat}
+
+    \begin{teX}
 \def\@dblfloat{%
   \if@twocolumn\let\reserved@a\@dbflt\else\let\reserved@a\@float\fi
   \reserved@a}
-%    \end{teX}
-%  \end{macro}
-%
-%    
-%  \begin{macro}{\fps@dbl}
-% \changes{v1.1a}{1994/10/31}{Macro added}
-% \changes{v1.1g}{1994/12/10}{Macro removed temporarily}
-%  Note that all double floats have default fps `tp'.
-%  \end{macro}
-%  
-%  \begin{macro}{\@setfps}
-% \changes{v1.1a}{1994/10/31}{Macro added}
-% \changes{v1.1c}{1994/11/05}
-%         {Add compatibility with old version of \cs{@xfloat}.}
-% \changes{v1.1g}{1994/12/10}{Macro removed temporarily}
-%    This sets the fps, dealing with error conditions by adding
-%    the default.
-%    
-%  \end{macro}
-%
-%  \begin{macro}{\@xfloat}
-% \changes{LaTeX2e}{1993/12/05}{Command changed}
-% \changes{LaTeX2e}{1994/01/21}{Added missing percent characters.}
-% \changes{v1.1a}{1994/10/31}
-%     {Major changes, removing setting of local variables, space hacks
-%     etc; two-column and one-column cases merged}
-% \changes{v1.1c}{1994/11/05}
-%         {Add compatibility with old version of \cs{@xfloat}: but the
-%         arguments, provided at exorbitant cost, are now completely
-%         ignored}
-% \changes{v1.1f}{1994/11/21}
-%     {Missing percents reinserted after 4, 8: these are not numbers.}
-% \changes{v1.1g}{1994/12/10}{Old version reinstated temporarily}
-% \changes{v1.1g}{1994/12/10}{Sanitisation added temporarily}
-%     The first part of this sets the count register that stores all
-%     the information about the type and fps of the float.
-%
-%    We assume here that the default specifiers already contain no
-%    active characters.
-%
-%    It may be better to store the defaults as numbers, rather than
-%    symbol strings.
-%
-% \changes{v1.1p}{1996/10/24}{Added \cs{@nodocument} to trap
-%                  floats in the preamble}
-%    \begin{teX}
+    \end{teX}
+  \end{macro}
+
+    
+  \begin{macro}{\fps@dbl}
+  Note that all double floats have default fps `tp'.
+  \end{macro}
+  
+  \begin{macro}{\@setfps}
+    This sets the fps, dealing with error conditions by adding
+    the default.
+    
+  \end{macro}
+
+  \begin{macro}{\@xfloat}
+     The first part of this sets the count register that stores all
+     the information about the type and fps of the float.
+
+    We assume here that the default specifiers already contain no
+    active characters.
+
+    It may be better to store the defaults as numbers, rather than
+    symbol strings.
+
+    \begin{teX}
 \def\@xfloat #1[#2]{%
   \@nodocument
   \def \@captype {#1}%
@@ -358,15 +327,15 @@
        }%
     \@fltovf
   \fi
-%    \end{teX}
-%    The remainder sets up the box in which the float is typeset, and
-%    the typesetting environment to be used.  It is essential to have
-%    the extra box to avoid the unwanted space that would otherwise
-%    often be put at the top of the float.
-%
-%    It ends with a hook; not sure how useful this is but it is needed
-%    at present to deal with double-column floats.
-%    \begin{teX}
+    \end{teX}
+    The remainder sets up the box in which the float is typeset, and
+    the typesetting environment to be used.  It is essential to have
+    the extra box to avoid the unwanted space that would otherwise
+    often be put at the top of the float.
+
+    It ends with a hook; not sure how useful this is but it is needed
+    at present to deal with double-column floats.
+    \begin{teX}
   \global \setbox\@currbox
     \color@vbox
       \normalcolor
@@ -375,122 +344,121 @@
         \@parboxrestore
         \@floatboxreset
 }
-%    \end{teX}
-%  \end{macro}
-%  
-%  \begin{macro}{\@floatboxreset}
-%    
-% The rational for allowing these normally global flags to be set
-% locally here, via |\@parboxrestore|, was stated originally by
-% Donald Arseneau and extended by Chris Rowley.
-% It is because these flags are only set globally to
-% true by section commands, and these should never appear within
-% marginals or floats or, indeed, in any group; and they are only ever
-% set globally to false when they are definitely true.
-%
-% If anyone is unhappy with this argument then both flags should be
-% treated as in |\set@nobreak|; otherwise this command will be
-% redundant. 
-%     {Added local settings of flags: dangerous!!}
-%    \begin{teX}
+    \end{teX}
+  \end{macro}
+  
+  \begin{macro}{\@floatboxreset}
+    
+ The rational for allowing these normally global flags to be set
+ locally here, via |\@parboxrestore|, was stated originally by
+ Donald Arseneau and extended by Chris Rowley.
+ It is because these flags are only set globally to
+ true by section commands, and these should never appear within
+ marginals or floats or, indeed, in any group; and they are only ever
+ set globally to false when they are definitely true.
+
+ If anyone is unhappy with this argument then both flags should be
+ treated as in |\set@nobreak|; otherwise this command will be
+ redundant. 
+     {Added local settings of flags: dangerous!!}
+    \begin{teX}
 \def \@floatboxreset {%
         \reset@font
         \normalsize
         \@setminipage
 }
-%    \end{teX}
-%  \end{macro}
-%  
-%  \begin{macro}{\@setnobreak}
-%    \begin{teX}
+    \end{teX}
+  \end{macro}
+  
+  \begin{macro}{\@setnobreak}
+    \begin{teX}
 \def \@setnobreak{%
   \if@nobreak
     \let\outer@nobreak\@nobreaktrue
     \@nobreakfalse
   \fi
 }
-%    \end{teX}
-%  \end{macro}
-%
-%  \begin{macro}{\@setminipage}
-%    \begin{teX}
+    \end{teX}
+  \end{macro}
+
+  \begin{macro}{\@setminipage}
+    \begin{teX}
 \def \@setminipage{%
   \@minipagetrue
   \everypar{\@minipagefalse\everypar{}}%
 }
-%    \end{teX}
-%  \end{macro}
-%
-% \begin{macro}{\end@float}
-%    \begin{teX}
+    \end{teX}
+  \end{macro}
+
+ \begin{macro}{\end@float}
+    \begin{teX}
 \def\end@float{%
   \@endfloatbox
   \ifnum\@floatpenalty <\z@
-%    \end{teX}
-% We make sure that we never exceed |\textheight|, otherwise float
-% will never get typeset (91/03/15 FMi).
-%    \begin{teX}
+    \end{teX}
+ We make sure that we never exceed |\textheight|, otherwise float
+ will never get typeset (91/03/15 FMi).
+    \begin{teX}
     \@largefloatcheck
     \@cons\@currlist\@currbox
     \ifnum\@floatpenalty <-\@Mii
       \penalty -\@Miv
-%    \end{teX}
-% Saving and restoring |\prevdepth| added 26 May 87 to prevent extra
-% vertical space when used in vertical mode.
-%    \begin{teX}
+    \end{teX}
+ Saving and restoring |\prevdepth| added 26 May 87 to prevent extra
+ vertical space when used in vertical mode.
+    \begin{teX}
       \@tempdima\prevdepth
       \vbox{}%
       \prevdepth\@tempdima
-%    \end{teX}
-%
-%    \begin{teX}
+    \end{teX}
+
+    \begin{teX}
       \penalty\@floatpenalty
-%    \end{teX}
-% \changes{LaTeX2.09}{1992/03/18}
-%         {(RmS) changed \cs{@esphack} to \cs{@Esphack}}
-%    \begin{teX}
+    \end{teX}
+ 
+    \begin{teX}
     \else
       \vadjust{\penalty -\@Miv \vbox{}\penalty\@floatpenalty}\@Esphack
     \fi
   \fi
 }
-%    \end{teX}
-% \end{macro}
-%
-% \begin{macro}{\end@dblfloat}
-%    \begin{teX}
+    \end{teX}
+ \end{macro}
+
+ \begin{macro}{\end@dblfloat}
+    \begin{teX}
 \def\end@dblfloat{%
 \if@twocolumn
   \@endfloatbox
   \ifnum\@floatpenalty <\z@
-%    \end{teX}
-% We make sure that we never exceed |\textheight|, otherwise float
-% will never get typeset (91/03/15 FMi).
-%    \begin{teX}
+    \end{teX}
+ We make sure that we never exceed |\textheight|, otherwise float
+ will never get typeset (91/03/15 FMi).
+    \begin{teX}
     \@largefloatcheck
     \@cons\@dbldeferlist\@currbox
   \fi
-%    \end{teX}
-% RmS 92/03/18 changed |\@esphack| to |\@Esphack|.
-%    \begin{teX}
+    \end{teX}
+ RmS 92/03/18 changed |\@esphack| to |\@Esphack|.
+    \begin{teX}
     \ifnum \@floatpenalty =-\@Mii \@Esphack\fi
 \else
   \end@float
 \fi
 }
-%    \end{teX}
-% \end{macro}
-% 
-% \begin{macro}{\@endfloatbox}
-%    This macro is not intended to be a hook; it is designed to help
-%    maintain the integrity of this code, which is used twice and, as
-%    can be seen, is subject to frequent changes.
-%    \begin{teX}
+    \end{teX}
+ \end{macro}
+ 
+ \begin{macro}{\@endfloatbox}
+    This macro is not intended to be a hook; it is designed to help
+    maintain the integrity of this code, which is used twice and, as
+    can be seen, is subject to frequent changes.
+    \begin{teX}
 \def \@endfloatbox{%
       \par\vskip\z@skip      %% \par\vskip\z@ added 15 Dec 87
-%    \end{teX}
-%   
-%    \begin{teX}
+    \end{teX}
+   
+    \begin{teX}
       \@minipagefalse   
       \outer@nobreak
     \egroup                  %% end of vbox
@@ -555,36 +523,36 @@
    \@fpmin   \floatpagefraction\@colht}
     \end{teX}
 
-%  \begin{macro}{\@dblfloatplacement}
-% 
-%     This should be called only within a group.  Now changed to
-%     provide extra checks in |\@addtodblcol|, needed when processing a
-%     BANG float.
-%    
-%    \begin{teX}  
+  \begin{macro}{\@dblfloatplacement}
+ 
+     This should be called only within a group.  Now changed to
+     provide extra checks in |\@addtodblcol|, needed when processing a
+     BANG float.
+    
+    \begin{teX}  
 \def \@dblfloatplacement {%
-%    \end{teX}
-%    Textpage bit: global, but need not be.
-%    \begin{teX}  
+    \end{teX}
+    Textpage bit: global, but need not be.
+    \begin{teX}  
   \global \@dbltopnum \c@dbltopnumber
   \global \@dbltoproom \dbltopfraction\@colht
-%    \end{teX}
-%   This new bit uses |\@textmin| to locally store the amount of extra
-%   room in the column.   
-%    \begin{teX}
+    \end{teX}
+   This new bit uses |\@textmin| to locally store the amount of extra
+   room in the column.   
+    \begin{teX}
   \@textmin \@colht
   \advance \@textmin -\@dbltoproom
-%    \end{teX}
-%    Floatpage bit: must be local.
-%    \begin{teX}
+    \end{teX}
+    Floatpage bit: must be local.
+    \begin{teX}
   \@fpmin \dblfloatpagefraction\textheight
   \@fptop \@dblfptop
   \@fpsep \@dblfpsep
   \@fpbot \@dblfpbot
 }
-%    \end{teX}
-%  \end{macro}
-%
+    \end{teX}
+  \end{macro}
+
 \section{Marginal Notes}
 
    Marginal notes use the same mechanism as floats to communicate
@@ -763,24 +731,25 @@ right text. Note it call \cs{@xympar}
     \end{teX}
  \end{macro}
  \end{macro}
-%
-%    \begin{teX}
+
+    \begin{teX}
 \message{footnotes,}
-%    \end{teX}
-%
+    \end{teX}
+
  \section{Footnotes}
-%
-% \begin{oldcomments}
-%
-%   \footnote{NOTE}       : User command to insert a footnote.
-%
-%   \footnote[NUM]{NOTE}: User command to insert a footnote numbered
-%                       NUM, where NUM is a number -- 1, 2,
-%                       etc.  For example, if footnotes are numbered
-%                       *, **, etc. within pages, then \footnote[2]{...}
-%                       produces footnote '**'.  This command does not
-%                       step the footnote counter.
-%
+
+We start with a summary of all user commands.
+
+\begin{tabular}{lp{6cm}}
+   \cs{footnote}\marg{text} &User command to insert a footnote.\\
+   \cs{footnote}\oarg[NUM]\marg{NOTE} &User command to insert a footnote numbered, NUM, where NUM is a number -- 1, 2,
+                       etc.  For example, if footnotes are numbered
+                       *, **, etc. within pages, then \cs{footnote}|[2]{...}|
+                       produces footnote '**'.  This command does not
+                       step the footnote counter.
+\end{tabular}
+
+\begin{oldcomments}
 %   \footnotemark[NUM] : Command to produce just the footnote mark in
 %                        the text, but no footnote.  With no argument,
 %                        it steps the footnote counter before generating
@@ -790,6 +759,7 @@ right text. Note it call \cs{@xympar}
 %                              no mark.  \footnote is equivalent to
 %                              \footnotemark \footnotetext .
 %
+
 %   As in PLAIN, footnotes use \insert\footins, and the following
 %   parameters: 
 %
@@ -916,9 +886,20 @@ right text. Note it call \cs{@xympar}
 %    END
 %
 % \end{oldcomments}
-%
-%
-%
+
+\begin{algorithm}
+\cs{footnotetext}[NUM] ==\\
+\Begin{
+ begingroup\\
+  counter \cs{@mpfn} := L NUM\\
+  \cs{protect} == \cs{noexpand}\\
+  \cs{@thefnmark} :=G eval(\cs{thempfn})\\
+ endgroup\\
+ \cs{@footnotetext}\\
+}
+\end{algorithm}
+
+
  \begin{macro}{\footins}
  \LaTeX\ does use the same insert for footnotes as PLAIN.
     \begin{teX}
@@ -961,110 +942,61 @@ right text. Note it call \cs{@xympar}
     \end{teX}
  \end{macro}
 
-% \begin{macro}{\@makefnmark}
-% \changes{v1.1i}{1995/05/16}{Now use \cs{textsuperscript}.}
-% \changes{v1.1j}{1995/05/18}{Added \cs{normalfont}.}
-% \changes{v1.1k}{1995/05/20}{Moved \cs{normalfont} to
-%                             \cs{textsuperscript}}
-% \changes{v1.1k}{1995/05/20}{Moved \cs{normalfont} back
-%                        and use \cs{@textsuperscript}}
-%    Default definition.
-%    \begin{teX}
-%\def\@makefnmark{\hbox{$^{\@thefnmark}\m@th$}}
+ \begin{macro}{\@makefnmark}
+    \begin{teX}
+\def\@makefnmark{\hbox{$^{\@thefnmark}\m@th$}}
 \def\@makefnmark{\hbox{\@textsuperscript{\normalfont\@thefnmark}}}
-%    \end{teX}
-% \end{macro}
-%
-%  \begin{macro}{\textsuperscript}
-% \changes{v1.1i}{1995/05/16}{Command added./pr1503}
-% \changes{v1.1k}{1995/05/20}{Use \cs{normalfont}.}
-% \changes{v1.1l}{1995/05/24}{Use \cs{@textsuperscript}}
-%    This command provides superscript characters in the current text
-%    font. It's implementation might change!!!
-%    \begin{teX}
+    \end{teX}
+ \end{macro}
+
+  \begin{macro}{\textsuperscript}
+    This command provides superscript characters in the current text
+    font. It's implementation might change!!!
+    \begin{teX}
 \DeclareRobustCommand*\textsuperscript[1]{%
   \@textsuperscript{\selectfont#1}}
-%    \end{teX}
-%  \end{macro}
-%
-%  \begin{macro}{\@textsuperscript}
-% \changes{v1.1l}{1995/05/24}{Command added.}
-% \changes{v1.1n}{1995/12/05}{Use \cs{ensuremath} for latex/1984.}
-% \changes{v1.1m}{1995/12/07}
-%      {Move \cs{m@th} out of the \cs{ensuremath} for latex/1984.}
-%    This command should not be used directly, but may be used to define
-%   other commands |\textsuperscript|, |\@makefnmark|. |#1| should
-%   always start with a font selection command, to activate the font
-%   size switch.
-%    \begin{teX}
+    \end{teX}
+  \end{macro}
+
+  \begin{macro}{\@textsuperscript}
+    This command should not be used directly, but may be used to define
+   other commands |\textsuperscript|, |\@makefnmark|. |#1| should
+   always start with a font selection command, to activate the font
+   size switch.
+    \begin{teX}
 \def\@textsuperscript#1{%
   {\m@th\ensuremath{^{\mbox{\fontsize\sf@size\z@#1}}}}}
-%    \end{teX}
-%  \end{macro}
-%
-% \begin{macro}{\footnotesep}
-%    \begin{teX}
+    \end{teX}
+  \end{macro}
+
+ \begin{macro}{\footnotesep}
+    \begin{teX}
 \newdimen\footnotesep
-%    \end{teX}
-% \end{macro}
-%
-% \begin{macro}{\footnote}
-% \changes{LaTeX2.09}{1991/11/01}
-%         {(RmS) Added \cs{let}\cs{protect}\cs{noexpand} in
-%          \cs{footnote}, \cs{footnotemark},
-%               and \cs{footnotetext}, since \cs{xdef} is used}
-% \changes{LaTeX2.09}{1991/11/22}
-%         {(RmS) Added \cs{let}\cs{protect}\cs{noexpand} in
-%             \cs{@xfootnote}, \cs{@xfootnotemark},
-%               and \cs{@xfootnotetext}}
-% \changes{LaTeX2.09}{1992/11/26}
-%         {(RmS) Changed all to 
-%             `def`protect\string{`noexpand`protect`noexpand\string}}
-% \changes{v1.1b}{1994/11/26}
-%         {(ASAJ) Added \cs{protected@xdef}.}
-%
-%    \begin{teX}
+    \end{teX}
+ \end{macro}
+
+ \begin{macro}{\footnote}
+
+    \begin{teX}
 \def\footnote{\@ifnextchar[\@xfootnote{\stepcounter\@mpfn
      \protected@xdef\@thefnmark{\thempfn}%
      \@footnotemark\@footnotetext}}
-%    \end{teX}
-% \end{macro}
-%
-% \begin{macro}{\@xfootnote}
-%    \begin{teX}
+    \end{teX}
+ \end{macro}
+
+ \begin{macro}{\@xfootnote}
+    \begin{teX}
 \def\@xfootnote[#1]{%
    \begingroup 
      \csname c@\@mpfn\endcsname #1\relax
      \unrestored@protected@xdef\@thefnmark{\thempfn}%
    \endgroup
    \@footnotemark\@footnotetext}
-%    \end{teX}
-% \end{macro}
-%
-% \begin{macro}{\@footnotetext}
-% \changes{LaTeX2.09}{1991/09/29}
-%     {(RmS) added \cs{reset@font}}
-% \changes{LaTeX2.09}{1992/11/26}
-%     {(RmS) added protection for \cs{edef}}
-% \changes{v1.0a}{1994/03/07}
-%     {(DPC) Extra group for colour}
-% \changes{v1.0c}{1994/03/14}
-%     {(DPC) Use \cs{color@begingroup}, add \cs{endgraf}}
-% \changes{v1.0d}{1994/04/18}
-%     {(DPC) Remove Colour support}
-% \changes{v1.0g}{1994/05/13}
-%     {(DPC) Add new style colour support: \cs{normalcolor}}
-% \changes{v1.0g}{1994/05/13}
-%     {(DPC) Use \cs{@finalstrut}}
-% \changes{v1.1a}{1994/10/31}
-%     {(DPC/CAR) Move colour setting to output routine}
-% \changes{v1.1b}{1994/11/04}
-%     {(ASAJ) Added \cs{protected@edef}.}
-% \changes{v1.1c}{1994/11/05}
-%         {Removed \cs{normalcolor} (again)}
-% \changes{v1.1t}{1997/11/19}
-%         {Missing percent, again}
-%    \begin{teX}
+    \end{teX}
+ \end{macro}
+
+ \begin{macro}{\@footnotetext}
+    \begin{teX}
 \long\def\@footnotetext#1{\insert\footins{%
     \reset@font\footnotesize
     \interlinepenalty\interfootnotelinepenalty
@@ -1078,74 +1010,72 @@ right text. Note it call \cs{@xympar}
       \@makefntext{%
         \rule\z@\footnotesep\ignorespaces#1\@finalstrut\strutbox}%
     \color@endgroup}}%
-%    \end{teX}
-% \end{macro}
-%
-% \begin{macro}{\footnotemark}
-% \changes{v1.1b}{1994/11/04}{Added \cs{protected@xdef} to
-%    \cs{footnotemark}.} 
-%    \begin{teX}
+    \end{teX}
+ \end{macro}
+
+ \begin{macro}{\footnotemark}
+
+    \cs{footnotemark}.} 
+    \begin{teX}
 \def\footnotemark{%
    \@ifnextchar[\@xfootnotemark
      {\stepcounter{footnote}%
       \protected@xdef\@thefnmark{\thefootnote}%
       \@footnotemark}}
-%    \end{teX}
-% \end{macro}
-%
-% \begin{macro}{\@xfootnotemark}
-%    \begin{teX}
+    \end{teX}
+ \end{macro}
+
+ \begin{macro}{\@xfootnotemark}
+    \begin{teX}
 \def\@xfootnotemark[#1]{%
    \begingroup 
       \c@footnote #1\relax
       \unrestored@protected@xdef\@thefnmark{\thefootnote}%
    \endgroup
    \@footnotemark}
-%    \end{teX}
-% \end{macro}
-%
-% \begin{macro}{\@footnotemark}
-% \changes{v1.1h}{1995/05/12}
-%         {Add \cs{nobreak} to allow hyphenation. latex/1605}
-%    \begin{teX}
+    \end{teX}
+ \end{macro}
+
+ \begin{macro}{\@footnotemark}
+
+         {Add \cs{nobreak} to allow hyphenation. latex/1605}
+    \begin{teX}
 \def\@footnotemark{%
   \leavevmode
   \ifhmode\edef\@x@sf{\the\spacefactor}\nobreak\fi
   \@makefnmark
   \ifhmode\spacefactor\@x@sf\fi
   \relax}
-%    \end{teX}
-% \end{macro}
-%
-% \begin{macro}{\footnotetext}
-%    \begin{teX}
+    \end{teX}
+ \end{macro}
+
+ \begin{macro}{\footnotetext}
+    \begin{teX}
 \def\footnotetext{%
      \@ifnextchar [\@xfootnotenext
        {\protected@xdef\@thefnmark{\thempfn}%
     \@footnotetext}}
-%    \end{teX}
-% \end{macro}
-%
-% \begin{macro}{\@xfootnotenext}
-%    \begin{teX}
+    \end{teX}
+ \end{macro}
+
+ \begin{macro}{\@xfootnotenext}
+    \begin{teX}
 \def\@xfootnotenext[#1]{%
   \begingroup 
      \csname c@\@mpfn\endcsname #1\relax
      \unrestored@protected@xdef\@thefnmark{\thempfn}%
   \endgroup
   \@footnotetext}
-%    \end{teX}
-% \end{macro}
-%
-% \begin{macro}{\thempfn}
-% \begin{macro}{\@mpfn}
-%    \begin{teX}
+    \end{teX}
+ \end{macro}
+
+ \begin{macro}{\thempfn}
+ \begin{macro}{\@mpfn}
+    \begin{teX}
 \def\@mpfn{footnote}
 \def\thempfn{\thefootnote}
 
-%    \end{teX}
-% \end{macro}
-% \end{macro}
-%
-% \Finale
-%
+    \end{teX}
+ \end{macro}
+ \end{macro}
+
