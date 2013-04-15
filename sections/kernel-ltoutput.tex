@@ -132,11 +132,6 @@ The output routine as defined in the kernwl covers a lot of functionality.
 \end{tabular}
 
 
-  FOOTNOTES: As in PLAIN, footnotes use |\insert\footins|.
-
-  PAGE LAYOUT SWITCHES AND MACROS
-
-
 
 \section{Float placement parameters}
 
@@ -280,26 +275,35 @@ This solves two special problems:
 
 
 \begin{macro}{\@trycolumn}
-\begin{verbatim}
- \@tryfcolumn\FLIST : Tries to form a float column composed of floats
-         from \FLIST (if nonempty) with the following parameters:
+\begin{description}
+ \item[|\@tryfcolumn\FLIST|]  Tries to form a float column composed of floats
+         from |\FLIST| (if nonempty) with the following parameters:
+ 
+           \begin{tabular}{p{3cm}l}
+                |\@colht|  & height of box\\
+                |\@fpmin| & minimum height of floats in the box\\
+                |\@fpsep|  & interfloat space\\
+                |\@fptop | & glue at top of box\\
+                |\@fpbot | & glue at bottom of box.\\
+          \end{tabular}
 
-                \@colht : height of box
-                \@fpmin : minimum height of floats in the box
-                \@fpsep : interfloat space
-                \@fptop : glue at top of box
-                \@fpbot : glue at bottom of box.
 
-              If it succeeds, then it does the following:
-                * \@outputbox :=L the composed float box.
-                * @fcolmade   :=G true
-                * \FLIST      :=G \FLIST - floats put in box
-                * \@freelist  :=G \@freelist + floats put in box
+  If it succeeds, then it does the following:
+
+         \begin{tabular}{p{3cm}l}
+                 |\@outputbox| & L the composed float box.\\
+                 |@fcolmade|   & G true\\
+                 |\FLIST|          & G |\FLIST| - floats put in box\\
+                 |\@freelist|     & G |\@freelist| + floats put in box\\
+         \end{tabular}
 
               If it fails, then:
-                * @fcolmade :=G false
+
+         \begin{tabular}{ll}
+                |@fcolmade| & G false\\
+        \end{tabular}
            NOTE: BIT MUST BE A SINGLE TOKEN!
-\end{verbatim}
+\end{description}
 \end{macro}
 
 
@@ -312,34 +316,44 @@ This solves two special problems:
              the first box in |\FLIST|, disregarding |\@fpmin|.
 \end{macro}
 
-\end{document}
+\begin{macro}{\@startcolumn}
 
-\begin{verbatim}
-% \@startcolumn :
-%       Calls \@tryfcolumn\@deferlist.  If \@tryfcolumn returns with
-%       (globally set) @fcolmade = false, then:
-%                * Globally sets \@toplist and \@botlist to floats
-%                  from \@deferlist to go at top and bottom of column,
-%                  deleting them from \@deferlist.  It does
-%                  this using \@colht as the total height, the page
-%                  style parameters \@floatsep and \@textfloatsep, and
-%                  the float placement parameters \@topnum, \@toproom,
-%                  \@botnum, \@botroom, \@colnum and \textfraction.
-%                * Globally sets \@colroom to \@colht minus the height
-%                  of the added floats.
-%
-% \@startdblcolumn :
-%      Calls \@tryfcolumn\@dbldeferlist{8}.  If \@tryfcolumn returns
-%      with (globally set) @fcolmade = false, then:
-%               * Globally sets \@dbltoplist to floats from
-%                 \@dbldeferlist to go at top and bottom of column,
-%                 deleting them from \@dbldeferlist.
-%                 It does this using \textheight as the
-%                 total height, and the parameters \@dblfloatsep, etc.
-%               * Globally sets \@colht to \textheight minus the height
-%                 of the added floats.
-%
-\end{verbatim}
+\begin{description}
+\item[ \cs{@startcolumn} ]
+       Calls |\@tryfcolumn\@deferlist|.  If |\@tryfcolumn| returns with
+       (globally set) @fcolmade = false, then:
+
+\item           Globally sets |\@toplist| and |\@botlist| to floats
+                  from |\@deferlist| to go at top and bottom of column,
+                  deleting them from |\@deferlist|.  It does
+                  this using |\@colht| as the total height, the page
+                  style parameters |\@floatsep| and |\@textfloatsep|, and
+                  the float placement parameters |\@topnum|, |\@toproom|,
+                  |\@botnum|, |\@botroom|, |\@colnum| and |\textfraction|.
+
+\item          Globally sets |\@colroom| to |\@colht| minus the height
+                  of the added floats.
+\end{description}
+\end{macro}
+
+
+
+
+\begin{macro}{\@startdblcolumn }
+
+      Calls |\@tryfcolumn\@dbldeferlist{8}|.  If |\@tryfcolumn| returns
+      with (globally set) @fcolmade = false, then:
+
+               * Globally sets |\@dbltoplist| to floats from
+                 |\@dbldeferlist| to go at top and bottom of column,
+                 deleting them from |\@dbldeferlist|.
+                 It does this using |\textheight| as the
+                 total height, and the parameters |\@dblfloatsep|, etc.
+
+               * Globally sets |\@colht| to |\textheight| minus the height
+                 of the added floats.
+
+\end{macro}
 
 \begin{macro}{\@combinefloats}
  \cs{@combinefloats} Combines the text from box
@@ -352,16 +366,16 @@ This solves two special problems:
 \end{macro}
 
 \begin{macro}{\@makecol}
-\begin{verbatim}
-% \@makecol : Makes the contents of \box255 plus the accumulated
-%              footnotes, plus the floats in \@toplist and \@botlist,
-%              into a single column of height \@colht (unless the page
-%              height has been locally changed), which it puts
-%              into box \@outputbox.  It puts boxes in \@midlist back
-%              onto \@freelist and restores \maxdepth.
-\end{verbatim}
+|\@makecol| Makes the contents of |\box255| plus the accumulated
+              footnotes, plus the floats in |\@toplist| and |\@botlist|,
+              into a single column of height |\@colht| (unless the page
+              height has been locally changed), which it puts
+              into box |\@outputbox|.  It puts boxes in |\@midlist| back
+              onto |\@freelist| and restores |\maxdepth|.
 \end{macro}
-%
+
+\end{document}
+
 \begin{macro}{\@opcol}
  \cs{@opcol} Outputs a column whose text is in box \cs{@outputbox}
 
@@ -379,72 +393,76 @@ This solves two special problems:
 \end{macro}
 
 
+\section{User commands  that call  AFFECT THE OUTPUT ROUTINE
 
+\begin{macro}{\newpage}
+ \newpage == BEGIN \par\vfil\penalty -10000 END
+\end{macro}
 
-\begin{verbatim}
-%
-%            USER COMMANDS THAT CALL OR AFFECT THE OUTPUT ROUTINE
-%            ----------------------------------------------------
-%
-% \newpage == BEGIN \par\vfil\penalty -10000 END
-%
-% \clearpage == BEGIN \newpage
-%                     \write -1{}    % Part of hack to make sure no
-%                     \vbox{}        % \write's get lost.
-%                     \penalty -10001
-%               END
-%
-% \cleardoublepage == BEGIN \clearpage
-%                           if @twoside = true and c@page is even
-%                             then \hbox{} \newpage fi
-%                     END
-%
-%  
-% \twocolumn[BOX] : starts a new page, changing to twocolumn setting
-%     and puts BOX in a parbox of width \textwidth across the top.
-%     Useful for full-width titles for double-column pages.
-%     SURPRISE: The stretch from \@dbltextfloatsep will be inserted
-%               between the BOX and the top of the two columns.
-%
+\beegin{macro}{\clearpage}
+\begin{verabtim}
+              == BEGIN \newpage
+                     \write -1{}    % Part of hack to make sure no
+                     \vbox{}        % \write's get lost.
+                     \penalty -10001
+               END
 \end{verbatim}
+\begin{verbatim}
+ \cleardoublepage == BEGIN \clearpage
+                           if @twoside = true and c@page is even
+                             then \hbox{} \newpage fi
+                     END
+
+  
+ \twocolumn[BOX] : starts a new page, changing to twocolumn setting
+     and puts BOX in a parbox of width \textwidth across the top.
+     Useful for full-width titles for double-column pages.
+     SURPRISE: The stretch from \@dbltextfloatsep will be inserted
+               between the BOX and the top of the two columns.
+\end{verbatim}
+
 
 
 \section{Float-handling mechanisms}
 
-\begin{verbatim}
-% The float environment obtains an insertion number B from the
-% \@freelist (see below for a description of list manipulation), puts
-% the float into box B and sets \count B to a FLOAT SPECIFIER.  For
-% a normal (not double-column) float, it then causes a page break
-% in one of the following two ways:
-%   - In outer hmode: \vadjust{\penalty -10002}
-%   - In vmode :      \penalty -10003.
-% For a double-column float, it puts B onto the \@dbldeferlist.
-% The float specifier has two components:
-%    * A PLACEMENT SPECIFICATION, describing where the float may
-%      be placed.
-%    * A TYPE, which is a power of two--e.g., figures might be
-%      type 1 floats, tables type 2 floats, programs type 4 floats, etc.
-% The float specifier is encoded as follows, where bit 0 is the least
-% significant bit.
+ The float environment obtains an insertion number B from the
+ |\@freelist| (see below for a description of list manipulation), puts
+ the float into box B and sets |\count| B to a FLOAT SPECIFIER.  For
+ a normal (not double-column) float, it then causes a page break
+ in one of the following two ways:
 
-\end{verbatim}
+   - In outer hmode: |\vadjust{\penalty -10002}|
+   - In vmode :      |\penalty -10003.|
 
-%  Bit    Meaning
-%  ---    -------
-%   0     1 iff the float may go where it appears in the text.
-%   1     1 iff the float may go on the top of a page.
-%   2     1 iff the float may go on the bottom of a page.
-%   3     1 iff the float may go on a float page.
-%   4     1 unless the PLACEMENT incluses a !
-%   5     1 iff a type 1 float
-%   6     1 iff a type 2 float
-%   etc.
+ For a double-column float, it puts B onto the |\@dbldeferlist|.
+ The float specifier has two components:
+
+    * A PLACEMENT SPECIFICATION, describing where the float may
+      be placed.
+    * A TYPE, which is a power of two--e.g., figures might be
+      type 1 floats, tables type 2 floats, programs type 4 floats, etc.
+ The float specifier is encoded as follows, where bit 0 is the least
+ significant bit.
 
 
 
-  A negative float specifier is used to indicate a marginal note.
+\begin{tabular}{ll}
+  Bit    & Meaning\\
+\midrule
+   0     & 1 if the float may go where it appears in the text.\\
+   1     & 1 if the float may go on the top of a page.\\
+   2     & 1 if the float may go on the bottom of a page.\\
+   3     & 1 if the float may go on a float page.\\
+   4     & 1 unless the PLACEMENT incluses a !\\
+   5     &  if a type 1 float\\
+   6     & 1 if a type 2 float
+          etc.\\
+\end{tabular}
 
+
+A negative float specifier is used to indicate a marginal note.
+
+\end{document}
 
 \section{Macros and data structures for processing floats}
 
@@ -499,6 +517,7 @@ This solves two special problems:
 %  Note: log2 [(\count I)/32] is the bit number corresponding to the
 %  type of float I.  To see if there is any float in \LIST having
 %  the same type as float I, you run \@bitor with
+%
 %    \NUM = [(\count I)/32] * 32.
 %
 % \@bitor\NUM\LIST ==
@@ -526,8 +545,6 @@ This solves two special problems:
 \section{Box lists for float-placement algorithms}
 
 
-
-
 \begin{tabular}{p{3cm}p{6cm}}
     |\@freelist|     & List of empty boxes for placing new floats.\\
     |\@toplist|      & List of floats to go at top of current column.\\
@@ -544,21 +561,31 @@ This solves two special problems:
 
 \section{Float-Placement algorithms}
 
+
+\begin{macro}{\@addtobot}  Tries to put insert |\@currbox| on |\@botlist|.
+                     Called only when:
+
+                  * |\ht BOX < \@colroom|\\
+                  * type of |\@currbox| not on |\@deferlist|\\
+                  * |\@colnum > 0|\\
+                  * @insert = false\\
+\end{macro}
+
+
+
+               If it succeeds, then:
+\begin{trivlist}
+                  \item  sets @insert true\\
+                  \item  decrements |\@botroom| by |\ht| BOX\\
+                  \item  decrements |\@botnum| and |\@colnum| by 1\\
+                  \item decrements |\@colroom| by |\ht| BOX + either |\floatsep|
+                    or |\textfloatsep|, as appropriate.\\
+                 \item sets |\maxdepth| to 0pt\\
+\end{trivlist}
+
+
+
 \begin{verbatim}
-%  \@addtobot : Tries to put insert \@currbox on \@botlist.
-%               Called only when:
-%                  * \ht BOX < \@colroom
-%                  * type of \@currbox not on \@deferlist
-%                  * \@colnum > 0
-%                  * @insert = false
-%               If it succeeds, then:
-%                  * sets @insert true
-%                  * decrements \@botroom by \ht BOX
-%                  * decrements \@botnum and \@colnum by 1
-%                  * decrements \@colroom by \ht BOX + either \floatsep
-%                    or \textfloatsep, as appropriate.
-%                  * sets \maxdepth to 0pt
-%
 %  \@addtotoporbot : Tries to put insert \@currbox on \@toplist or
 %                    \@botlist.
 %                    Called only under same conditions as \@addtobot.
@@ -588,6 +615,8 @@ This solves two special problems:
 %                 adding it to \@dbltoplist if it succeeds and
 %                 \@dbldeferlist if it fails.
 \end{verbatim}
+
+\end{document}
 
 \begin{algorithm}
   \cs{@addmarginpar} ==\\
