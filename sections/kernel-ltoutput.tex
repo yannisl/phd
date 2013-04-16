@@ -276,7 +276,7 @@ This solves two special problems:
 
 \begin{macro}{\@trycolumn}
 \begin{description}
- \item[|\@tryfcolumn\FLIST|]  Tries to form a float column composed of floats
+ \item[\cs{@tryfcolumn}\cs{FLIST}]  Tries to form a float column composed of floats
          from |\FLIST| (if nonempty) with the following parameters:
  
            \begin{tabular}{p{3cm}l}
@@ -374,7 +374,7 @@ This solves two special problems:
               onto |\@freelist| and restores |\maxdepth|.
 \end{macro}
 
-\end{document}
+
 
 \begin{macro}{\@opcol}
  \cs{@opcol} Outputs a column whose text is in box \cs{@outputbox}
@@ -393,14 +393,14 @@ This solves two special problems:
 \end{macro}
 
 
-\section{User commands  that call  AFFECT THE OUTPUT ROUTINE
+\section{User commands  that call  affect the output routine}
 
 \begin{macro}{\newpage}
  \newpage == BEGIN \par\vfil\penalty -10000 END
 \end{macro}
 
-\beegin{macro}{\clearpage}
-\begin{verabtim}
+\begin{macro}{\clearpage}
+\begin{verbatim}
               == BEGIN \newpage
                      \write -1{}    % Part of hack to make sure no
                      \vbox{}        % \write's get lost.
@@ -439,14 +439,16 @@ This solves two special problems:
 
     * A PLACEMENT SPECIFICATION, describing where the float may
       be placed.
+
     * A TYPE, which is a power of two--e.g., figures might be
       type 1 floats, tables type 2 floats, programs type 4 floats, etc.
  The float specifier is encoded as follows, where bit 0 is the least
  significant bit.
-
+\medskip
 
 
 \begin{tabular}{ll}
+\toprule
   Bit    & Meaning\\
 \midrule
    0     & 1 if the float may go where it appears in the text.\\
@@ -457,18 +459,17 @@ This solves two special problems:
    5     &  if a type 1 float\\
    6     & 1 if a type 2 float
           etc.\\
+\bottomrule
 \end{tabular}
-
+\medskip
 
 A negative float specifier is used to indicate a marginal note.
 
-\end{document}
+
 
 \section{Macros and data structures for processing floats}
 
-
-
-  A FLOAT LIST consisting of the floats in boxes |\boxa ... \boxN| has
+  A \textit{float list} consisting of the floats in boxes |\boxa ... \boxN| has
   the form:
 
   \begin{verbatim}
@@ -585,38 +586,46 @@ A negative float specifier is used to indicate a marginal note.
 
 
 
-\begin{verbatim}
-%  \@addtotoporbot : Tries to put insert \@currbox on \@toplist or
-%                    \@botlist.
-%                    Called only under same conditions as \@addtobot.
-%                    If it succeeds, then:
-%                       * sets @insert true
-%                       * decrements \@toproom or \@botroom by \ht BOX
-%                       * decrements \@colnum and either \@topnum or
-%                         \@botnum by 1
-%                       * decrements \@colroom by \ht BOX + \floatsep
-%                         or \textfloatsep, as appropriate.
-%
-% \@addtocurcol : Tries to add \@currbox to current column, setting
-%                 @insert true if it succeeds, false otherwise.
-%                 It will add \@currbox to top only if bit 0 of
-%                 \count \@currbox is 0, and to the bottom only if
-%                 bit 0 = 0 or an earlier float of the same type is
-%                 put on the bottom.
-%                 If the float is put in the text, then
-%                 \penalty\interlinepenalty is put
-%                 right after the float, before the following \vskip,
-%                 and \outputpenalty :=L 0.
-%
-% \@addtonextcol : Tries to add \@currbox to the next column, setting
-%                  @insert true if it succeeds, false otherwise.
-%
-% \@addtodblcol : Tries to add \@currbox to the next double-column page,
-%                 adding it to \@dbltoplist if it succeeds and
-%                 \@dbldeferlist if it fails.
-\end{verbatim}
+\begin{macro}{\@addtotoporbot}
 
-\end{document}
+ Tries to put insert |\@currbox| on |\@toplist| or
+                    |\@botlist|.
+
+                    Called only under same conditions as |\@addtobot|.
+
+                    If it succeeds, then:
+                       * sets @insert true
+                       * decrements |\@toproom| or |\@botroom| by |\ht| BOX
+                       * decrements |\@colnum| and either |\@topnum| or
+                         |\@botnum| by 1
+                       * decrements |\@colroom| by |\ht| BOX + |\floatsep|
+                         or |\textfloatsep|, as appropriate.
+\end{macro}
+
+\begin{macro}{\@addtocurcol}  Tries to add |\@currbox| to current column, setting
+                 @insert true if it succeeds, false otherwise.
+                 It will add |\@currbox| to top only if bit 0 of
+                |\count \@currbox| is 0, and to the bottom only if
+                 bit 0 = 0 or an earlier float of the same type is
+                 put on the bottom.
+
+                 If the float is put in the text, then
+                 |\penalty\interlinepenalty| is put
+                 right after the float, before the following |\vskip|,
+                 and 
+                     
+                         |\outputpenalty :=L 0.|
+\end{macro}
+
+\begin{macro}{\@addtonextcol} Tries to add |\@currbox| to the next column, setting
+                  @insert true if it succeeds, false otherwise.
+\end{macro}
+
+\begin{macro}{\@addtodblcol} Tries to add |\@currbox| to the next double-column page,
+                 adding it to |\@dbltoplist| if it succeeds and
+                 |\@dbldeferlist| if it fails.
+\end{macro}
+
 
 \begin{algorithm}
   \cs{@addmarginpar} ==\\
@@ -675,25 +684,25 @@ A negative float specifier is used to indicate a marginal note.
 \end{algorithm}
 
 
-%   Floats and marginpars add a lot of dead cycles.
-%    \begin{teX}
+   Floats and marginpars add a lot of dead cycles.
+    \begin{teX}
 \maxdeadcycles = 100
-%    \end{teX}
-%
-%    \begin{teX}
+    \end{teX}
+
+    \begin{teX}
 \let\@elt\relax
-%    \end{teX}
-%
-%    \begin{teX}
+    \end{teX}
+
+    \begin{teX}
 \def\@next#1#2#3#4{\ifx#2\@empty #4\else
    \expandafter\@xnext #2\@@#1#2#3\fi}
-%    \end{teX}
-%
-%    \begin{teX}
+    \end{teX}
+
+    \begin{teX}
 \def\@xnext \@elt #1#2\@@#3#4{\def#3{#1}\gdef#4{#2}}
-%    \end{teX}
-%
-% \changes{v1.1v}{1996/07/26}{put \cs{global} into definition}
+    \end{teX}
+
+
 %    \begin{teX}
 \def\@testfalse{\global\let\if@test\iffalse}
 \def\@testtrue {\global\let\if@test\iftrue}
@@ -900,13 +909,13 @@ A negative float specifier is used to indicate a marginal note.
 %    \end{teX}
 
 
-%  \begin{macro}{\clearpage}
-% The tests at the beginning are an experimental attempt to avoid a
-% completely empty page after a |\twocolumn[...]|.  This prevents the
-% text from the argument vanishing into a float box, never to be seen
-% again.  We hope that it does not produce wrong formatting in other
-% cases.
-%    \begin{teX}
+  \begin{macro}{\clearpage}
+ The tests at the beginning are an experimental attempt to avoid a
+ completely empty page after a |\twocolumn[...]|.  This prevents the
+ text from the argument vanishing into a float box, never to be seen
+ again.  We hope that it does not produce wrong formatting in other
+ cases.
+    \begin{teX}
 \def\clearpage{%
   \ifvmode
     \ifnum \@dbltopnum =\m@ne
@@ -920,19 +929,19 @@ A negative float specifier is used to indicate a marginal note.
   \vbox{}%
   \penalty -\@Mi
 }
-%    \end{teX}
-% \end{macro}
-%
-%  \begin{macro}{\cleardoublepage}
-%  
-%    \begin{teX}
+    \end{teX}
+ \end{macro}
+
+  \begin{macro}{\cleardoublepage}
+  
+    \begin{teX}
 \def\cleardoublepage{\clearpage\if@twoside \ifodd\c@page\else
     \hbox{}\newpage\if@twocolumn\hbox{}\newpage\fi\fi\fi}
-%    \end{teX}
-% \end{macro}
-%
-%  \begin{macro}{\onecolumn}
-%    \begin{teX}
+    \end{teX}
+ \end{macro}
+
+  \begin{macro}{\onecolumn}
+    \begin{teX}
 \def\onecolumn{%
   \clearpage
   \global\columnwidth\textwidth
@@ -941,18 +950,18 @@ A negative float specifier is used to indicate a marginal note.
   \global\@twocolumnfalse
   \col@number \@ne
   \@floatplacement}
-%    \end{teX}
-% \end{macro}
-%
-%  \begin{macro}{\newpage}
-%    The two checks at the beginning ensure that an item label or
-%    run-in section title immediately before a |\newpage| get printed
-%    on the correct page, the one before the page break.
-%
-%    All three tests are largely to make error processing more robust;
-%    that is why they all reset the flags explicitly, even when it
-%    would appear that this would be done by a |\leavevmode|. 
-%    \begin{teX}
+    \end{teX}
+ \end{macro}
+
+  \begin{macro}{\newpage}
+    The two checks at the beginning ensure that an item label or
+    run-in section title immediately before a |\newpage| get printed
+    on the correct page, the one before the page break.
+
+    All three tests are largely to make error processing more robust;
+    that is why they all reset the flags explicitly, even when it
+    would appear that this would be done by a |\leavevmode|. 
+    \begin{teX}
 \def \newpage {%
   \if@noskipsec 
     \ifx \@nodocument\relax
@@ -968,21 +977,21 @@ A negative float specifier is used to indicate a marginal note.
   \par
   \vfil
   \penalty -\@M}
-%    \end{teX}
-%  \end{macro}
-%  
-%  \begin{macro}{\@emptycol}
-%    It may be better to use an invisible rule rather than an empty
-%    box here.  
-%    \begin{teX}
+    \end{teX}
+  \end{macro}
+  
+  \begin{macro}{\@emptycol}
+    It may be better to use an invisible rule rather than an empty
+    box here.  
+    \begin{teX}
 \def \@emptycol {\vbox{}\penalty -\@M}
-%    \end{teX}
-%  \end{macro}
-%
-%  \begin{macro}{\twocolumn}
-%  \begin{macro}{\@topnewpage}
-%    There are several bug fixes to the two-column stuff here.
-%    \begin{teX}
+    \end{teX}
+  \end{macro}
+
+  \begin{macro}{\twocolumn}
+  \begin{macro}{\@topnewpage}
+    There are several bug fixes to the two-column stuff here.
+    \begin{teX}
 \def \twocolumn {%
   \clearpage
   \global\columnwidth\textwidth
@@ -993,20 +1002,20 @@ A negative float specifier is used to indicate a marginal note.
   \global\@twocolumntrue
   \global\@firstcolumntrue
   \col@number \tw@
-%    \end{teX}
-%    There is no reason to put a |\@dblfloatplacement| here since
-%    |\@topnewpage| ignores these settings.
-%    The |\@floatplacement| is needed in case this comes after some
-%    changes.
-% \changes{v1.0h}{1993/12/12}{braces removed}
-%    \begin{teX}
+    \end{teX}
+    There is no reason to put a |\@dblfloatplacement| here since
+    |\@topnewpage| ignores these settings.
+    The |\@floatplacement| is needed in case this comes after some
+    changes.
+
+    \begin{teX}
   \@ifnextchar [\@topnewpage\@floatplacement
 }
-%    \end{teX}
-%    
-%    Note that here, getting a box from the freelist can assume
-%    success since this comes just after a |\clearpage|.
-%    \begin{teX}
+    \end{teX}
+    
+    Note that here, getting a box from the freelist can assume
+    success since this comes just after a |\clearpage|.
+    \begin{teX}
 \long\def \@topnewpage [#1]{%
   \@nodocument
   \@next\@currbox\@freelist{}{}%
@@ -1021,10 +1030,10 @@ A negative float specifier is used to indicate a marginal note.
         \vskip -\dbltextfloatsep
              }%
     \color@endbox
-%    \end{teX}
-%    Added size test and warning message; perhaps we should use
-%    an error message.
-%
+    \end{teX}
+    Added size test and warning message; perhaps we should use
+    an error message.
+
 %    \begin{teX}
   \ifdim \ht\@currbox>\textheight
     \ht\@currbox \textheight
@@ -1147,6 +1156,7 @@ A negative float specifier is used to indicate a marginal note.
 
 
 % \begin{oldcomments}
+
 % CHANGES TO \@specialoutput:
 % * \penalty\z@ changed to \penalty\interlinepenalty so \samepage
 %   works properly with figure and table environments.
