@@ -274,10 +274,10 @@ This solves two special problems:
 \end{macro}
 
 
-\begin{macro}{\@trycolumn}
+\begin{macro}{\@tryfcolumn}
 \begin{description}
- \item[\cs{@tryfcolumn}\cs{FLIST}]  Tries to form a float column composed of floats
-         from |\FLIST| (if nonempty) with the following parameters:
+ \item[\cs{@tryfcolumn}\cs{FLIST}]  tries to form a float column composed of floats
+         from |\FLIST| (if nonempty) with the following parameters see \autoref{tryfcolumn}:
  
            \begin{tabular}{p{3cm}l}
                 |\@colht|  & height of box\\
@@ -420,7 +420,7 @@ This solves two special problems:
      SURPRISE: The stretch from \@dbltextfloatsep will be inserted
                between the BOX and the top of the two columns.
 \end{verbatim}
-
+\end{macro}
 
 
 \section{Float-handling mechanisms}
@@ -488,21 +488,20 @@ A negative float specifier is used to indicate a marginal note.
 
   This is a lot more efficient than looping through the list.
 
-  The following macros are used for manipulating float lists.
+  The following macros are used for manipulating float lists. Of interest here---and a bit
+  difficult to follow is |\@next| see \ref{next}.
 
   \begin{verbatim}
   \@next \CS \LIST {NONEMPTY}{EMPTY} ==  %% NOTE: ASSUME \@elt = \relax
     BEGIN  assume that \LIST == \@elt \B1 ... \@elt \Bn
            if n = 0
              then  EMPTY
-             else  \CS    :=L \B1
-                   \LIST  :=G \@elt \B2 ... \@elt \Bn
+             else   \CS    := L \B1
+                     \LIST  := G \@elt \B2 ... \@elt \Bn
                    NONEMPTY
            fi
     END
   \end{verbatim}
-
-
 
 \begin{verbatim}
 %
@@ -641,7 +640,7 @@ A negative float specifier is used to indicate a marginal note.
        then if @firstcolumn = true
               then \cs{@tempcnta} := -1
             fi}{
-            \eI{@mparswitch = true}{
+            \eIf{@mparswitch = true}{
                \If{count0 odd}{}{
                    \cs{@tempcnta} := -1
                }
@@ -683,8 +682,8 @@ A negative float specifier is used to indicate a marginal note.
   }
 \end{algorithm}
 
+ Floats and marginpars add a lot of dead cycles.
 
-   Floats and marginpars add a lot of dead cycles.
     \begin{teX}
 \maxdeadcycles = 100
     \end{teX}
@@ -694,7 +693,7 @@ A negative float specifier is used to indicate a marginal note.
     \end{teX}
 
     \begin{teX}
-\def\@next#1#2#3#4{\ifx#2\@empty #4\else
+\def\@next#1#2#3#4{\ifx#2\@empty #4\else (*@\label{next}@*)
    \expandafter\@xnext #2\@@#1#2#3\fi}
     \end{teX}
 
@@ -729,7 +728,8 @@ A negative float specifier is used to indicate a marginal note.
 %    \end{teX}
 %
 \section{Definition of Float Boxes}
-
+All boxes are defined using |\newinsert|.  A total of eighteen boxes are defined here
+and later on inserted in the freelist (See line \ref{freelist}).
     \begin{teX}
 \newinsert\bx@A
 \newinsert\bx@B
@@ -751,12 +751,17 @@ A negative float specifier is used to indicate a marginal note.
 \newinsert\bx@R
     \end{teX}
 
+The |\@freelist| is defined next. Notice that |\@elt| is included here to enable
+the manipulation of the list later on.
+
     \begin{teX}
-\gdef\@freelist{\@elt\bx@A\@elt\bx@B\@elt\bx@C\@elt\bx@D\@elt\bx@E
+\gdef\@freelist{\@elt\bx@A\@elt\bx@B\@elt\bx@C\@elt\bx@D\@elt\bx@E (*@\label{freelist} @*)
                \@elt\bx@F\@elt\bx@G\@elt\bx@H\@elt\bx@I\@elt\bx@J
                 \@elt\bx@K\@elt\bx@L\@elt\bx@M\@elt\bx@N
                 \@elt\bx@O\@elt\bx@P\@elt\bx@Q\@elt\bx@R}
     \end{teX}
+
+The rest of the lists are defined below and they are initialized as empty lists.
 
     \begin{teX}
 \gdef\@toplist{}
@@ -769,6 +774,10 @@ A negative float specifier is used to indicate a marginal note.
     \end{teX}
 
 \section{Page layout parameters}
+
+The page layout parameters (all taking values by the standard classes later on
+are defined here. They are important in building up the page calculations.
+
     \begin{teX}
 \newdimen\topmargin
 \newdimen\oddsidemargin
@@ -806,7 +815,7 @@ A negative float specifier is used to indicate a marginal note.
 }                             
     \end{teX}
  \end{macro}
- \end{macro}
+
   
   \begin{macro}{\@maxdepth}
     This is not the right place to set this; it needs to be set in a
@@ -820,9 +829,12 @@ A negative float specifier is used to indicate a marginal note.
 \@maxdepth = \maxdepth
     \end{teX}
   \end{macro}
+
+
  \begin{macro}{\paperheight}
  \begin{macro}{\paperwidth}
-    New |\paper|\ldots\ registers.
+ Although earlier on, page parameters have been defined, we also need to define the paper height
+and width.
     \begin{teX}
 \newdimen\paperheight
 \newdimen\paperwidth
@@ -830,7 +842,7 @@ A negative float specifier is used to indicate a marginal note.
  \end{macro}
  \end{macro}
 
-
+The following nine switches have to be defined to keep track of various options.
  \begin{macro}{\if@insert}
  \begin{macro}{\if@fcolmade}
  \begin{macro}{\if@specialpage}
@@ -880,9 +892,9 @@ A negative float specifier is used to indicate a marginal note.
  \end{macro}
 
 
-% INTERNAL REGISTERS
-%
-%    \begin{teX}
+\section{Internal registers}
+
+    \begin{teX}
 \newcount\@topnum
 \newdimen\@toproom
 \newcount\@dbltopnum
@@ -901,12 +913,14 @@ A negative float specifier is used to indicate a marginal note.
 \newbox\@outputbox
 \newbox\@leftcolumn
 \newbox\@holdpg
-%    \end{teX}
-%
-%    \begin{teX}
-\def\@thehead{\@oddhead} % initialization
+    \end{teX}
+
+The page headers and page footers are initialized to their odd values, this makes sense
+as a document always starts at an odd number.
+    \begin{teX}
+\def\@thehead{\@oddhead} % 
 \def\@thefoot{\@oddfoot}
-%    \end{teX}
+    \end{teX}
 
 
   \begin{macro}{\clearpage}
@@ -1116,10 +1130,7 @@ A negative float specifier is used to indicate a marginal note.
     guarantee that the float mechanism will interact correctly with
     this stuff, but that mechanism does not always work properly
     with footnotes already.
-
-    RmS 91/09/29:
-
-    added reset of |\par| to the output routine.
+    The reset of |\par| to the output routine.
     This avoids problems when the output routine is
     called within a list where |\par| may be a no-op.
 
@@ -1154,19 +1165,7 @@ A negative float specifier is used to indicate a marginal note.
     \end{teX}
 \end{macro}
 
-
-% \begin{oldcomments}
-
-% CHANGES TO \@specialoutput:
-% * \penalty\z@ changed to \penalty\interlinepenalty so \samepage
-%   works properly with figure and table environments.
-%   (Changed 23 Oct 86)
-%
-% * Definition of \@specialoutput changed 26 Feb 88 so \@pageht and
-%   \@pagedp aren't changed for a marginal note.
-%   (Change suggested by Chris Rowley.)
-% \end{oldcomments}
-%
+\begin{macro}{\@specialoutput}
 %    \begin{teX}
 \gdef\@specialoutput{%
    \ifnum \outputpenalty>-\@Mii
@@ -1267,11 +1266,10 @@ A negative float specifier is used to indicate a marginal note.
      \fi
    \fi
 }
-%</2ekernel|def1|autoload|fltrace>
 %    \end{teX}
 %  \end{macro}
-%  \end{macro}
-%
+
+
   \begin{macro}{\@doclearpage}
     This is a very much an emergency action, just dumping everything:
     footnotes first then floats.  A more sophisticated version is
@@ -1331,32 +1329,30 @@ A negative float specifier is used to indicate a marginal note.
 }
     \end{teX}
  \end{macro}
-%
-%  \begin{macro}{\@opcol}
-%
-%    \begin{teX}
+
+  \begin{macro}{\@opcol}
+
+    \begin{teX}
 \def \@opcol {%
   \if@twocolumn
     \@outputdblcol
   \else
     \@outputpage
   \fi
-%    \end{teX}
-%    These do not need to be done every time |\@opcol| is used: they
-%    should be grouped together since they all need to be done at the
-%    end of the non-special output routine, or at the end of a clearpage
-%    one.
-%    \begin{teX}
+    \end{teX}
+    These do not need to be done every time |\@opcol| is used: they
+    should be grouped together since they all need to be done at the
+    end of the non-special output routine, or at the end of a clearpage
+    one.
+    \begin{teX}
   \global \@mparbottom \z@ \global \@textfloatsheight \z@
   \@floatplacement
 }
-%    \end{teX}
-%  \end{macro}
+    \end{teX}
+  \end{macro}
 %
 %
 %  \begin{macro}{\@makecol}
-% \changes{v0.1c}{1993/11/23}{Command changed}
-% \changes{v1.0b}{1993/11/29}{\cs{@makespecialcolbox} added}
 %    We must rewrite this macro to alllow for variations in page-makeup
 %    required by changes in page-length.
 %     
@@ -1364,7 +1360,6 @@ A negative float specifier is used to indicate a marginal note.
 %    produced.
 %
 %    \begin{teX}
-%<*2ekernel|def1|autoload>
 \gdef \@makecol {%
    \ifvoid\footins
      \setbox\@outputbox \box\@cclv
@@ -1379,7 +1374,6 @@ A negative float specifier is used to indicate a marginal note.
 %    below the bottom floats.}
 %
 %    But see also its use when combining floats.
-% \changes{v1.0l}{1994/03/15}{\cs{maxdepth} changed to \cs{@maxdepth}}
 %    \begin{teX}
        \boxmaxdepth \@maxdepth                   
        \unvbox \@cclv
@@ -1450,31 +1444,31 @@ A negative float specifier is used to indicate a marginal note.
 %    \end{teX}
 %  \end{macro}
 %
-%  \begin{macro}{\@reinserts}
-%    This is the code which reinserts the inserts.  It puts them all
-%    in one place; this can make some of them come out on the wrong
-%    page.
-%    It has been put into a separate macro to expedite experimentation.
-%    \begin{teX}
+  \begin{macro}{\@reinserts}
+    This is the code which reinserts the inserts.  It puts them all
+    in one place; this can make some of them come out on the wrong
+    page.
+    It has been put into a separate macro to expedite experimentation.
+    \begin{teX}
 \gdef \@reinserts{%
   \ifvoid\footins\else\insert\footins{\unvbox\footins}\fi
 }
-%    \end{teX}
-%  \end{macro}
+    \end{teX}
+  \end{macro}
 %
 %
 %
-%  \begin{macro}{\@makespecialcolbox}
-%    This implements certain variations in page-makeup.
-%    \begin{teX}
+  \begin{macro}{\@makespecialcolbox}
+    This implements certain variations in page-makeup.
+    \begin{teX}
 \gdef \@makespecialcolbox {%
-%    \end{teX}
+    \end{teX}
 
-%    First we find the natural height of the column.
-%    See above for discussion of what is happening here.
-%    This needs further investigation, especially in this `special
-%    case'. 
-%    \begin{teX}
+    First we find the natural height of the column.
+    See above for discussion of what is happening here.
+    This needs further investigation, especially in this `special
+    case'. 
+    \begin{teX}
    \setbox\@outputbox \vbox {%
      \@texttop
      \dimen@ \dp\@outputbox
@@ -1483,37 +1477,37 @@ A negative float specifier is used to indicate a marginal note.
      }%
    \@tempdima \@colht
    \ifdim \wd\@kludgeins>\z@
-%    \end{teX}
-%    Note that in this case (the *-version), the height of the
-%    |\@kludgeins| box is not used since its value is somewhat
-%    arbitrary: it need only be big enough to ensure that the
-%    page-break is not taken prematurely.
-%
-%    Here we calculate how much vertical space needs to be added in
-%    order to enable the column to fit into a box of size |\@colht|
-%    using the best information we have about the amount of shrink
-%    available (another thing which is known internally about a box,
-%    but cannot be accessed at the \TeX{} level!).
-%
-%    This needs \TeX3 otherwise |\pageshrink| is zero anyway; it may
-%    not be exactly the figure we wish as it is the total available
-%    from the all the material collected before the page-break
-%    decision is made.  It will, we think, always be an overestimate
-%    of the actual shrink in the box; therefore this should always
-%    force the shortest possible column with the possibility of an
-%    overfull box.
-%
-%    This should work for bothe flush- and ragged-bottom setting since
-%    it makes the contents no smaller than the size (|\@colht|) of the
-%    box into which they are put.
-%
-%    Their should perhaps be an upper limit, of 0pt?, on the extra
-%    space added to force shrinking.
-%    \task{CAR}{Further investigation of kludge-* space}
-%
-%    See above for a discussion of the |\boxmaxdepth| setting here.
-%    
-%    \begin{teX}
+    \end{teX}
+    Note that in this case (the *-version), the height of the
+    |\@kludgeins| box is not used since its value is somewhat
+    arbitrary: it need only be big enough to ensure that the
+    page-break is not taken prematurely.
+
+    Here we calculate how much vertical space needs to be added in
+    order to enable the column to fit into a box of size |\@colht|
+    using the best information we have about the amount of shrink
+    available (another thing which is known internally about a box,
+    but cannot be accessed at the \TeX{} level!).
+
+    This needs \TeX3 otherwise |\pageshrink| is zero anyway; it may
+    not be exactly the figure we wish as it is the total available
+    from the all the material collected before the page-break
+    decision is made.  It will, we think, always be an overestimate
+    of the actual shrink in the box; therefore this should always
+    force the shortest possible column with the possibility of an
+    overfull box.
+
+    This should work for bothe flush- and ragged-bottom setting since
+    it makes the contents no smaller than the size (|\@colht|) of the
+    box into which they are put.
+
+    Their should perhaps be an upper limit, of 0pt?, on the extra
+    space added to force shrinking.
+    \task{CAR}{Further investigation of kludge-* space}
+
+    See above for a discussion of the |\boxmaxdepth| setting here.
+    
+    \begin{teX}
      \advance \@tempdima -\ht\@outputbox
      \advance \@tempdima \pageshrink
      \setbox\@outputbox \vbox to \@colht {%
@@ -1521,37 +1515,37 @@ A negative float specifier is used to indicate a marginal note.
        \vskip \@tempdima
        \@textbottom
        }%
-%    \end{teX}
-%    For the unstarred version, the final size of the page is
-%    precisely specified.  Therefore, at least for the flush-bottom
-%    case, we need to ensure that, visually, it has this size exactly.
-%
-%    Thus we calculate this size and set the material in a box of this
-%    size, which is then put into a box of size |\@colht| with |\vss|
-%    at the bottom.
-%    \begin{teX}
+    \end{teX}
+    For the unstarred version, the final size of the page is
+    precisely specified.  Therefore, at least for the flush-bottom
+    case, we need to ensure that, visually, it has this size exactly.
+
+    Thus we calculate this size and set the material in a box of this
+    size, which is then put into a box of size |\@colht| with |\vss|
+    at the bottom.
+    \begin{teX}
    \else
      \advance \@tempdima -\ht\@kludgeins
-%    \end{teX}
-%    This type of final packaging could be done always; this may
-%    simplify all of this page-makeup.
-%
-%    It is not necessary to set |\boxmaxdepth| here since the
-%    |\@outputbox| ends with glue.
-%
-%    \begin{teX}
+    \end{teX}
+    This type of final packaging could be done always; this may
+    simplify all of this page-makeup.
+
+    It is not necessary to set |\boxmaxdepth| here since the
+    |\@outputbox| ends with glue.
+
+    \begin{teX}
      \setbox \@outputbox \vbox to \@colht {%
        \vbox to \@tempdima {%
          \unvbox\@outputbox
          \@textbottom}%
        \vss}%
    \fi
-%    \end{teX}
-%    Finally we need to explicitly make the insert box void.
-%    \begin{teX}
+    \end{teX}
+    Finally we need to explicitly make the insert box void.
+    \begin{teX}
    {\setbox \@tempboxa \box \@kludgeins}%
-%    \end{teX}
-%  \end{macro}
+    \end{teX}
+  \end{macro}
 
 The following macros are just hooks and can be set to add top and
 bottom glue on all pages. They are hardly used by anyone.\footnote{http://tex.stackexchange.com/questions/40469/use-of-texttop-and-textbottom-for-vertical-positioning} 
@@ -1565,13 +1559,13 @@ bottom glue on all pages. They are hardly used by anyone.\footnote{http://tex.st
   \end{macro}
   \end{macro}
 
-%  \begin{macro}{\@resetactivechars}
-%  \begin{macro}{\@activechar@info}
-%
-% added hook to protect against certain active characters in the
-% output routine. Default checks are for active space and end-of-line.
-%
-%    \begin{teX}
+  \begin{macro}{\@resetactivechars}
+  \begin{macro}{\@activechar@info}
+
+ added hook to protect against certain active characters in the
+ output routine. Default checks are for active space and end-of-line.
+
+    \begin{teX}
 \def\@activechar@info #1{%
       \@latex@info@no@line {Active #1 character found while
                             output routine is active  
@@ -1579,10 +1573,10 @@ bottom glue on all pages. They are hardly used by anyone.\footnote{http://tex.st
                             This may be a bug in a package file
                             you are using}%
 }
-%    \end{teX}
-%    
-%    Do not put any spaces in this next bit!
-%    \begin{teX}
+    \end{teX}
+    
+    Do not put any spaces in this next bit!
+    \begin{teX}
 \begingroup
 \obeylines\obeyspaces%
 \catcode`\'\active%
@@ -1591,10 +1585,12 @@ bottom glue on all pages. They are hardly used by anyone.\footnote{http://tex.st
 \def {\@activechar@info{space}\space}%
 \let'\active@math@prime}%
 \endgroup
-%    \end{teX}
-%  \end{macro}
-%  \end{macro}
-%
+    \end{teX}
+  \end{macro}
+  \end{macro}
+
+
+
   \begin{macro}{\@outputpage}
          
     The |\color@hbox| hooks here are used to avoid putting just a
@@ -1792,23 +1788,23 @@ bottom glue on all pages. They are hardly used by anyone.\footnote{http://tex.st
 }
 %    \end{teX}
 %  \end{macro}
-%  \end{macro}
-%  \end{macro}
+
 %
-% \begin{macro}{\@begindvi}
-%    This unboxes stuff that must appear before anything else in the
-%    |.dvi| file, then returns that box register to the free list and
-%    cancels itself.
-%
-%    The stuff in the box should not add any typeset material to the
-%    page. 
-%    \begin{teX}
+ \begin{macro}{\@begindvi}
+    This unboxes stuff that must appear before anything else in the
+    |.dvi| file, then returns that box register to the free list and
+    cancels itself.
+
+    The stuff in the box should not add any typeset material to the
+    page.  Provided that you inserting material which is absolutely
+    positioned, this is a good place to hook-in.
+    \begin{teX}
 \def \@begindvi{%
   \unvbox \@begindvibox
   \global\let \@begindvi \@empty
 }
-%    \end{teX}
-% \end{macro}
+    \end{teX}
+ \end{macro}
 
 
 % \begin{macro}{\@combinefloats}
@@ -1861,7 +1857,6 @@ bottom glue on all pages. They are hardly used by anyone.\footnote{http://tex.st
     \global \let \@botlist\@empty
 }
 %    \end{teX}
-%  \end{macro}
 %  \end{macro}
 %  \end{macro}
 %
@@ -1921,15 +1916,13 @@ bottom glue on all pages. They are hardly used by anyone.\footnote{http://tex.st
 %  \begin{macro}{\@startcolumn}
 % 
 %    We could combine (most of) these two into |\@startcol <list>|.
-%    Note that |\@xstartcol| was only used once (\ie in
-%    |\@startcolumn|); it has therefore been removed.  This is not quite
+%   This is not quite
 %    as efficient but it now has the same structure as
 %    |\@startdblcolumn|.
 %
 %    The empty-list test has been moved to |\@tryfcolumn|.
 %
 %    \begin{teX}
-%<*2ekernel|autoload|fltrace>
 \def \@startcolumn {%
   \global \@colroom \@colht
   \@tryfcolumn \@deferlist
@@ -1979,15 +1972,14 @@ bottom glue on all pages. They are hardly used by anyone.\footnote{http://tex.st
 }
 %    \end{teX}
 %  \end{macro}
-%  \end{macro}
+
 %
-%  \begin{macro}{\@tryfcolumn}
-% \changes{v1.0f}{1993/12/05}{Command changed}
+%  \begin{macro}{\@tryfcolumn} 
 %    Now tests if its list is empty before any further exertion.
 %
 %    \begin{teX}
-\def \@tryfcolumn #1{%
-  \global \@fcolmadefalse
+\def \@tryfcolumn #1{%   
+  \global \@fcolmadefalse  (*@ \label{tryfcolumn}  @*)
   \ifx #1\@empty
   \else
 %<*trace>
@@ -2866,9 +2858,6 @@ bottom glue on all pages. They are hardly used by anyone.\footnote{http://tex.st
 %  \begin{macro}{\@traceval}
 %  \begin{macro}{\tracefloatvals}
 %  \begin{macro}{\@tracemessage}
-% \changes{v1.0c}{1993/11/30}{Commands added}
-% \changes{v1.0h}{1993/12/12}{Commands changed}
-% \changes{v1.0j}{1993/12/17}{tracefloatvals made a document command}
 %    Set-up tracing for floats independent of other tracing as it
 %    produces mega-output.  Default is no tracing.
 % \changes{v1.1j}{1995/04/24}
@@ -2908,23 +2897,22 @@ bottom glue on all pages. They are hardly used by anyone.\footnote{http://tex.st
 %  \end{macro}
 %  \end{macro}
 %
-%  \begin{macro}{\suppressfloats}
-%  \begin{macro}{\@flstop}
-% \changes{v1.0f}{1993/12/05}{Commands added}
-% Float suppression commands: these set the relevant counter
-% globally to zero.  Thus they are overridden for a particular float
-% by an ! specifier.
-%
-%    \begin{teX}
-%<*2ekernel|autoload>
+
+  \begin{macro}{\suppressfloats}
+  \begin{macro}{\@flstop}
+ Float suppression commands: these set the relevant counter
+ globally to zero.  Thus they are overridden for a particular float
+ by an ! specifier.
+
+    \begin{teX}
 \def \suppressfloats {%
    \@ifnextchar [%
      \@flstop
     {\global \@colnum \z@}%
 }
-%    \end{teX}
-% Maybe this should be a loop over |#1|?
-%    \begin{teX}
+    \end{teX}
+ Maybe this should be a loop over |#1|?
+    \begin{teX}
 \def \@flstop [#1]{%
    \if t#1%
      \global \@topnum \z@
@@ -2933,9 +2921,9 @@ bottom glue on all pages. They are hardly used by anyone.\footnote{http://tex.st
      \global \@botnum \z@
    \fi
 }
-%    \end{teX}
-%  \end{macro}
-%  \end{macro}
+    \end{teX}
+  \end{macro}
+  \end{macro}
 %
 %
 % Manipulation of float placement and type; both their strings and the
@@ -2944,7 +2932,6 @@ bottom glue on all pages. They are hardly used by anyone.\footnote{http://tex.st
 %  \begin{macro}{\@fpstype}
 %  \begin{macro}{\@reqcolroom}
 %  \begin{macro}{\@textfloatsheight}
-% \changes{v1.0f}{1993/12/05}{Commands added}
 % First a new count register to go with |\@currtype|.
 %
 % Then a new skip register, for information needed to remove the
@@ -2961,7 +2948,6 @@ bottom glue on all pages. They are hardly used by anyone.\footnote{http://tex.st
 \newcount \@fpstype
 \newdimen \@reqcolroom
 \newdimen \@textfloatsheight
-%</2ekernel|autoload>
 %    \end{teX}
 %  \end{macro}
 %  \end{macro}
@@ -2997,7 +2983,6 @@ bottom glue on all pages. They are hardly used by anyone.\footnote{http://tex.st
 %  \end{macro}
 %
 %  \begin{macro}{\@setfloattypecounts}
-% \changes{v1.0f}{1993/12/05}{Command added}
 % Sets counters |\@fpstype| and |\@currtype|.
 %
 % BANG $==$ bit4 of $|\count\@currbox| = 0$.
@@ -3031,37 +3016,36 @@ bottom glue on all pages. They are hardly used by anyone.\footnote{http://tex.st
   \fi
 %</trace>
 }
-%</2ekernel|autoload|fltrace>
 %    \end{teX}
 %  \end{macro}
 %
 % Macros for getting, testing and setting bits of the fps.
 %
 %
-%  \begin{macro}{\@getfpsbit}
-% Sets |\@tempcnta| to required bit of |\count\@currbox|.
-%
-%    \begin{teX}
+  \begin{macro}{\@getfpsbit}
+ Sets |\@tempcnta| to required bit of |\count\@currbox|.
+
+    \begin{teX}
 \def \@getfpsbit {%
    \@boxfpsbit \@currbox
 }
-%    \end{teX}
-%  \end{macro}
+    \end{teX}
+  \end{macro}
 %
 %
-%  \begin{macro}{\@boxfpsbit}
-%    Used above.
-%    \begin{teX}
+  \begin{macro}{\@boxfpsbit}
+    Used above.
+    \begin{teX}
 \def \@boxfpsbit #1#2{%
    \@tempcnta \count#1%
    \divide \@tempcnta #2\relax
 }
-%    \end{teX}
-%  \end{macro}
-%
-%  \begin{macro}{\@testfp}
-% New definition of the float page test.
-%    \begin{teX}
+    \end{teX}
+  \end{macro}
+
+  \begin{macro}{\@testfp}
+ New definition of the float page test.
+    \begin{teX}
 \def \@testfp #1{%
    \@boxfpsbit #18\relax % Really `#1 8' for human readers!
    \ifodd \@tempcnta
@@ -3069,9 +3053,9 @@ bottom glue on all pages. They are hardly used by anyone.\footnote{http://tex.st
      \@testtrue
    \fi
 }
-%    \end{teX}
-%  \end{macro}
-%
+    \end{teX}
+  \end{macro}
+
 %
 %  \begin{macro}{\@setfpsbit}
 % \changes{v1.0f}{1993/12/05}{Command added}
@@ -3086,19 +3070,18 @@ bottom glue on all pages. They are hardly used by anyone.\footnote{http://tex.st
      \advance \@tempcnta #1\relax
    \fi
 }
-%</2ekernel|autoload>
 %    \end{teX}
 %  \end{macro}
 %
 %
-%  \begin{macro}{\@resethfps}
-% Globally adds t as a possible location for an h or !h only placement:
-% this must be done using the count.
-%
-% Although it will leave |\@fpstype| set to 17 even if it was
-% originally 1, this does not matter since it is the last thing in
-% |\@addtocurcol|. 
-%    \begin{teX}
+  \begin{macro}{\@resethfps}
+ Globally adds t as a possible location for an h or !h only placement:
+ this must be done using the count.
+
+ Although it will leave |\@fpstype| set to 17 even if it was
+ originally 1, this does not matter since it is the last thing in
+ |\@addtocurcol|. 
+    \begin{teX}
 \def \@resethfps {%
    \let\reserved@a\@empty
    \ifnum \@fpstype=\@ne
@@ -3111,10 +3094,10 @@ bottom glue on all pages. They are hardly used by anyone.\footnote{http://tex.st
        `\reserved@a h' float specifier changed to `\reserved@a ht'}%
    \fi
 }
-%    \end{teX}
-%  \end{macro}
-%
-%
+    \end{teX}
+  \end{macro}
+
+
 % Special stuff for BANG floats.
 %
 %  \begin{macro}{\@flsetnum}
@@ -3135,7 +3118,6 @@ bottom glue on all pages. They are hardly used by anyone.\footnote{http://tex.st
 % considerations pertain to |\@addtodblcol|.  There may be more
 % efficient ways to handle this, but the group seems to be the simplest.
 %
-% \changes{v1.0n}{1994/04/30}{Rogue space removed}
 %    \begin{teX}
 \def \@flsetnum #1{%
 %<*trace>
@@ -3158,7 +3140,6 @@ bottom glue on all pages. They are hardly used by anyone.\footnote{http://tex.st
 %
 %
 %  \begin{macro}{\@flsettextmin}
-% \changes{v1.0f}{1993/12/05}{Command added}
 % This ignores |\textfraction| space restriction in case BANG.
 %
 %    \begin{teX}
@@ -3450,219 +3431,225 @@ bottom glue on all pages. They are hardly used by anyone.\footnote{http://tex.st
 %
  \subsubsection{Float placement parameters}
 
-%
-% The main purpose of this section is to ensure that all the
-% float-placement parameters which need to be set in a class file or
-% package have been declared.  It also describes their use and sets
-% values for them which are reasonable for typical douments using
-% US letter or A4 sized paper.
-% 
-% \paragraph{Limits for the placement of floating objects}
-%
-% \begin{macro}{\c@topnumber}
-%    This counter holds the maximum number of
-%    floats that can appear at the top of a text page or column.
-%    \begin{teX}
-%<*2ekernel|autoload>
+
+ The main purpose of this section is to ensure that all the
+ float-placement parameters which need to be set in a class file or
+ package have been declared.  It also describes their use and sets
+ values for them which are reasonable for typical douments using
+ US letter or A4 sized paper. Unlike many other parameters that
+\LaTeXe\ leaves to be determined by the classes default values are
+entered here. 
+ 
+ \paragraph{Limits for the placement of floating objects}
+
+ \begin{macro}{\c@topnumber}
+    This counter holds the maximum number of
+    floats that can appear at the top of a text page or column.
+    \begin{teX}
 \newcount\c@topnumber
 \setcounter{topnumber}{2}
-%    \end{teX}
-% \end{macro}
-%
-% \begin{macro}{\topfraction}
-%    This macro holds the maximum proportion (as a decimal number) of
-%    a text page or column that can be occupied by floats at the top.
-%    \begin{teX}
+    \end{teX}
+ \end{macro}
+
+ \begin{macro}{\topfraction}\label{topfraction}
+    This macro holds the maximum proportion (as a decimal number) of
+    a text page or column that can be occupied by floats at the top. In the
+    |phd| package, we set this as |.85|. Many of the images we use are quite
+    high and a value of |.85| is more appropriate.
+    \begin{teX}
 \newcommand\topfraction{.7}
-%    \end{teX}
-% \end{macro}
-%
-% \begin{macro}{\c@bottomnumber}
-%    This counter holds the maximum number of
-%    floats that can appear at the bottom of a text page or column.
-%    \begin{teX}
+    \end{teX}
+ \end{macro}
+
+
+ \begin{macro}{\c@bottomnumber}
+    This counter holds the maximum number of
+    floats that can appear at the bottom of a text page or column. Lamport's value to
+    allow only one is reasonable for many publications, but fails in many others. In the |phd|
+    package we allowed a much larger number as we are aiming for more compact documents.
+    \begin{teX}
 \newcount\c@bottomnumber
 \setcounter{bottomnumber}{1}
-%    \end{teX}
-% \end{macro}
-%
-% \begin{macro}{\bottomfraction}
-%    This macro holds the maximum proportion (as a decimal number) of
-%    a text page or column that can be occupied by floats at the bottom.
-%    \begin{teX}
+    \end{teX}
+ \end{macro}
+
+ \begin{macro}{\bottomfraction}
+    This macro holds the maximum proportion (as a decimal number) of
+    a text page or column that can be occupied by floats at the bottom.
+    \begin{teX}
 \newcommand\bottomfraction{.3}
-%    \end{teX}
-% \end{macro}
+    \end{teX}
+ \end{macro}
 %
-% \begin{macro}{\c@totalnumber}
-%    This counter holds the maximum number of floats that can appear on
-%    any text page or column.
-%    \begin{teX}
+ \begin{macro}{\c@totalnumber}
+    This counter holds the maximum number of floats that can appear on
+    any text page or column.
+    \begin{teX}
 \newcount\c@totalnumber
 \setcounter{totalnumber}{3}
-%    \end{teX}
-% \end{macro}
-%
-% \begin{macro}{\textfraction}
-%    This macro holds the minimum proportion (as a decimal number) of
-%    a text page or column that must be occupied by text.
-%    \begin{teX}
+    \end{teX}
+ \end{macro}
+
+ \begin{macro}{\textfraction}
+    This macro holds the minimum proportion (as a decimal number) of
+    a text page or column that must be occupied by text.
+    \begin{teX}
 \newcommand\textfraction{.2}
-%    \end{teX}
-% \end{macro}
-%
-% \begin{macro}{\floatpagefraction}
-%    This macro holds the minimum proportion (as a decimal number) of
-%    a page or column that must be occupied by floating objects before a
-%    `float page' is produced.
-%    \begin{teX}
+    \end{teX}
+ \end{macro}
+
+ \begin{macro}{\floatpagefraction}
+    This macro holds the minimum proportion (as a decimal number) of
+    a page or column that must be occupied by floating objects before a
+    `float page' is produced.
+    \begin{teX}
 \newcommand\floatpagefraction{.5}
-%    \end{teX}
-% \end{macro}
-%
-% \begin{macro}{\c@dbltopnumber}
-%    This counter holds the maximum number of double-column floats that
-%    can appear on the top of a two-column text page.
-%    \begin{teX}
+    \end{teX}
+ \end{macro}
+
+ \begin{macro}{\c@dbltopnumber}
+    This counter holds the maximum number of double-column floats that
+    can appear on the top of a two-column text page.
+    \begin{teX}
 \newcount\c@dbltopnumber
 \setcounter{dbltopnumber}{2}
-%    \end{teX}
-% \end{macro}
-%
-% \begin{macro}{\dbltopfraction}
-%    This macro holds the maximum proportion (as a decimal number) of
-%    a two-column text page that can be occupied by double-column floats
-%    at the top.
-%    \begin{teX}
+    \end{teX}
+ \end{macro}
+
+ \begin{macro}{\dbltopfraction}
+    This macro holds the maximum proportion (as a decimal number) of
+    a two-column text page that can be occupied by double-column floats
+    at the top.
+    \begin{teX}
 \newcommand\dbltopfraction{.7}
-%    \end{teX}
-% \end{macro}
-%
-% \begin{macro}{\dblfloatpagefraction}
-%    This macro holds the minimum proportion (as a decimal number) of
-%    a page that must be occupied by double-column floating objects
-%    before a `double-column float page' is produced.
-%    \begin{teX}
+    \end{teX}
+ \end{macro}
+
+ \begin{macro}{\dblfloatpagefraction}
+    This macro holds the minimum proportion (as a decimal number) of
+    a page that must be occupied by double-column floating objects
+    before a `double-column float page' is produced.
+    \begin{teX}
 \newcommand\dblfloatpagefraction{.5}
-%    \end{teX}
-% \end{macro}
-%
+    \end{teX}
+ \end{macro}
+
  \paragraph{Floats on a text page}
 
-% \begin{macro}{\floatsep}
-% \begin{macro}{\textfloatsep}
-% \begin{macro}{\intextsep}
-%    When a floating object is placed on a page with text, these
-%    parameters control the seperation between the float and the other
-%    objects on the page. These parameters are used for both
-%    one-column mode and single-column floats in two-column mode.
-%    They are all rubber lengths.
-%
-%    |\floatsep| is the space between adjacent floats that are placed
-%    at the top or bottom of the text page or column.
-%
-%    |\textfloatsep| is the space between the main text and floats
-%    at the top or bottom of the page or column.
-%
-%    |\intextsep| is the space between in-text floats and the text.
-%    \begin{teX}
+ \begin{macro}{\floatsep}
+ \begin{macro}{\textfloatsep}
+ \begin{macro}{\intextsep}
+    When a floating object is placed on a page with text, these
+    parameters control the seperation between the float and the other
+    objects on the page. These parameters are used for both
+    one-column mode and single-column floats in two-column mode.
+    They are all rubber lengths.
+
+    |\floatsep| is the space between adjacent floats that are placed
+    at the top or bottom of the text page or column.
+
+    |\textfloatsep| is the space between the main text and floats
+    at the top or bottom of the page or column.
+
+    |\intextsep| is the space between in-text floats and the text.
+    \begin{teX}
 \newskip\floatsep
 \newskip\textfloatsep
 \newskip\intextsep
 \setlength\floatsep    {12\p@ \@plus 2\p@ \@minus 2\p@}
 \setlength\textfloatsep{20\p@ \@plus 2\p@ \@minus 4\p@}
 \setlength\intextsep   {12\p@ \@plus 2\p@ \@minus 2\p@}
-%    \end{teX}
-% \end{macro}
-% \end{macro}
-% \end{macro}
-%
-% \begin{macro}{\dblfloatsep}
-% \begin{macro}{\dbltextfloatsep}
-%    When double-column floats (floating objects that span the whole
-%    |\textwidth|) are placed at the top of a text page in two-column
-%    mode, the separation between the float and the text is controlled
-%    by |\dblfloatsep| and |\dbltextfloatsep|.  They are rubber lengths.
-%
-%    |\dblfloatsep| is the space between adjacent double-column floats
-%    placed at the top of the text page.
-%
-%    |\dbltextfloatsep| is the space between the main text and
-%    double-column floats at the top of the page.
-%    \begin{teX}
+    \end{teX}
+ \end{macro}
+ \end{macro}
+ \end{macro}
+
+ \begin{macro}{\dblfloatsep}
+ \begin{macro}{\dbltextfloatsep}
+    When double-column floats (floating objects that span the whole
+    |\textwidth|) are placed at the top of a text page in two-column
+    mode, the separation between the float and the text is controlled
+    by |\dblfloatsep| and |\dbltextfloatsep|.  They are rubber lengths.
+
+    |\dblfloatsep| is the space between adjacent double-column floats
+    placed at the top of the text page.
+
+    |\dbltextfloatsep| is the space between the main text and
+    double-column floats at the top of the page.
+    \begin{teX}
 \newskip\dblfloatsep
 \newskip\dbltextfloatsep
 \setlength\dblfloatsep    {12\p@ \@plus 2\p@ \@minus 2\p@}
 \setlength\dbltextfloatsep{20\p@ \@plus 2\p@ \@minus 4\p@}
-%    \end{teX}
-% \end{macro}
-% \end{macro}
-%
+    \end{teX}
+ \end{macro}
+ \end{macro}
+
  \paragraph{Floats on their own page or column}
-%
-% \begin{macro}{\@fptop}
-% \begin{macro}{\@fpsep}
-% \begin{macro}{\@fpbot}
-%    When floating objects are placed on a seperate page or column,
-%    called a `float page', the layout of the page is controlled by
-%    these parameters, which are rubber lengths.
-%    
-%    At the top of the page |\@fptop| is inserted;
-%    typically this supplies some stretchable whitespace.
-%    At the bottom of the page |\@fpbot| is inserted.
-%    Between adjacent floats |\@fpsep| is inserted.
-%
-%    These parameters are used for all floating objects on a
-%    `float page' in one-column mode, and for single-column
-%    floats in two-column mode.
-%
-%    Note that at least one of the two parameters |\@fptop| and
-%    |\@fpbot| should contain a |plus ...fil| so as to fill the
-%    remaining empty space.
-%    \begin{teX}
+    When floating objects are placed on a seperate page or column,
+    called a `float page', the layout of the page is controlled by
+    these parameters, which are rubber lengths.
+    
+ \begin{macro}{\@fptop}
+ \begin{macro}{\@fpsep}
+ \begin{macro}{\@fpbot}
+   
+    At the top of the page |\@fptop| is inserted;
+    typically this supplies some stretchable whitespace.
+    At the bottom of the page |\@fpbot| is inserted.
+    Between adjacent floats |\@fpsep| is inserted.
+
+    These parameters are used for all floating objects on a
+    `float page' in one-column mode, and for single-column
+    floats in two-column mode.
+
+    Note that at least one of the two parameters |\@fptop| and
+    |\@fpbot| should contain a |plus ...fil| so as to fill the
+    remaining empty space.
+    \begin{teX}
 \newskip\@fptop
 \newskip\@fpsep
 \newskip\@fpbot
 \setlength\@fptop{0\p@ \@plus 1fil}
 \setlength\@fpsep{8\p@ \@plus 2fil}
 \setlength\@fpbot{0\p@ \@plus 1fil}
-%    \end{teX}
-% \end{macro}
-% \end{macro}
-% \end{macro}
-%
-% \begin{macro}{\@dblfptop}
-% \begin{macro}{\@dblfpsep}
-% \begin{macro}{\@dblfpbot}
-%    Double-column `float pages' in two-column mode use similar
-%    parameters.
-%    \begin{teX}
+    \end{teX}
+ \end{macro}
+ \end{macro}
+ \end{macro}
+
+ \begin{macro}{\@dblfptop}
+ \begin{macro}{\@dblfpsep}
+ \begin{macro}{\@dblfpbot}
+    Double-column `float pages' in two-column mode use similar
+    parameters.
+    \begin{teX}
 \newskip\@dblfptop
 \newskip\@dblfpsep
 \newskip\@dblfpbot
 \setlength\@dblfptop{0\p@ \@plus 1fil}
 \setlength\@dblfpsep{8\p@ \@plus 2fil}
 \setlength\@dblfpbot{0\p@ \@plus 1fil}
-%    \end{teX}
-% \end{macro}
-% \end{macro}
-% \end{macro}
-% 
-% \begin{macro}{\topfigrule}
-% \begin{macro}{\botfigrule}
-% \begin{macro}{\dblfigrule}
-%    The macros can be used to put in rules between floats and text;
-%    whatever they insert should be vertical mode material which takes
-%    up zero space.
-% \task{CAR}{Add more rules (for Frank in addtocurcol)}
-%    \begin{teX}
+    \end{teX}
+ \end{macro}
+ \end{macro}
+ \end{macro}
+ 
+ \begin{macro}{\topfigrule}
+ \begin{macro}{\botfigrule}
+ \begin{macro}{\dblfigrule}
+    The macros can be used to put in rules between floats and text;
+    whatever they insert should be vertical mode material which takes
+    up zero space.
+ \task{CAR}{Add more rules (for Frank in addtocurcol)}
+    \begin{teX}
 \let\topfigrule=\relax
 \let\botfigrule=\relax
 \let\dblfigrule=\relax
-%    \end{teX}
-% \end{macro}
-% \end{macro}
-% \end{macro}
-% 
-% 
+    \end{teX}
+ \end{macro}
+ \end{macro}
+ \end{macro}
+ 
+ 
 
