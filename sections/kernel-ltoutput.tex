@@ -1,6 +1,8 @@
 \chapter{ltoutput.dtx}
 
- In \autoref{ch:OTR}, we described the mechanics of output routines both
+\section{Introduction}
+
+ In Chapter \ref{ch:OTR}, we described the mechanics of output routines both
  as found in Plain \tex and in \LaTeXe. This is
  a longer treatise of the subject and includes commentary on the
  actual listing as found in \LaTeXe. The Output Routine (OR) or (OTR) as is sometimes denoted in the literature, is the procedure
@@ -10,19 +12,78 @@ footers and then ships out the page to produce a |.dvi| or with some \tex engine
 be translated straight into |.pdf| output. It is a very complex process
 as it has to keep a lot of different material in different lists and boxes.
 
-The output routine as defined in the kernwl covers a lot of functionality.
+The output routine as defined in the kernel covers a lot of functionality.
 
 \begin{enumerate}
-\item Defines page gemetry parameters.
-\item Positions floats
-\item Adds headers and footers
-\item Adds hooks
+\item Defines page geometry parameters.
+\item Positions floats.
+\item Adds headers and footers.
+\item Adds hooks.
 \end{enumerate}
 
 
- \section{Output Routine}
+ \section{Floats}
 
- \subsection{Floats}
+The interesting and complicated part of the OR is its algorithm for handling floats.  The floating environments are defined by the standard classes. For example the |book| class defines both
+the figure as well as the table environments. It is instructive to start the discussion of the algorithm from this point. The class defines the default float placement specifier using 
+|\fps@figure| and then goes on to define the figure environment with the help of |\@float| and |\@endfloat|, which are defined in the generic float.dtx in the kernel.
+
+
+\begin{teX}
+\def\ftype@figure{1}
+\def\ext@figure{lof}
+\def\fnum@figure{\figurename\nobreakspace\thefigure}
+\newenvironment{figure}
+               {\@float{figure}}
+               {\end@float}
+\newenvironment{figure*}
+               {\@dblfloat{figure}}
+               {\end@dblfloat}
+\end{teX}
+
+
+A float specifier is made of two parts the float type, which is a power of two--e.g., figures in the case of the book class are type 1 and tables type 2 and the \textit{placement specification} describing where the float can be placed.  The type is defined in powers of two due to the way the specifiers are represented using a binary representation internally.
+
+\begin{figure}[h]
+
+\begin{tabular}{rl}
+{\fboxsep2pt \LARGE  \fbox{1} \fbox{1} \fbox{0} \fbox{0} \fbox{1} \fbox{0}} &= 50\\
+{\fboxsep2pt\LARGE \fbox{1} \fbox{0} \fbox{1} \fbox{0} \fbox{0} \fbox{1} \fbox{0}} &= 82
+\end{tabular}
+
+\caption{Binary representation of float specifiers. Top is for figure with [t] option and the bottom is for table with the [t] option.}
+\end{figure}
+
+So a new float will need to be shifted in powers of two. The kernel defines routines to check
+for various combinations. This has simplified the programming although it may not be easy to
+follow. The float specifier is encoded as follows, where bit 0 is the least
+ significant bit. 
+
+\begin{table}[h]
+\begin{tabular}{ll}
+\toprule
+  Bit    & Meaning\\
+\midrule
+   0     & 1 if the float may go where it appears in the text.\\
+   1     & 1 if the float may go on the top of a page.\\
+   2     & 1 if the float may go on the bottom of a page.\\
+   3     & 1 if the float may go on a float page.\\
+   4     & 1 unless the \textit{placement} includes a !\\
+   5     & 1 if a type 1 float\\
+   6     & 1 if a type 2 float
+          etc.\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+If a number is odd  denotes  a here placement specification [h] and if it is negative a marginpar. 
+Since TeX's number limit of $ 2^{31}-1$ and the first 5 bits are taken by the float identifiers there remain 26 available float types for the adventurous. \url{http://tex.stackexchange.com/questions/32359/what-is-the-exact-purpose-of-ftypetype}.
+
+We have seen so far how a float is defined in the standard classes and what type of parameters are coded. Once \LaTeXe\  sees the environment it will execute the macro |\@float| which is defined in the |float.dtx|. 
+
+Once in |\@float| the bits are set as well as the relevant penalties. The penalties are distinct in order to signal to the output routines the type of float.
+
+One needs to remember that the floats are placed based on constraints and page sizing parameters.
 
 
 \section{Page Layout Parameters}
@@ -39,7 +100,7 @@ The output routine as defined in the kernwl covers a lot of functionality.
                             pages.\\
    |\headheight|     & height of head\\
    |\headsep|        & separation between head and text\\
-   |\footskip|       & distance separation between baseline of last
+   |\footskip|         & distance separation between baseline of last
                      line of text and baseline of foot.
                      Note difference between |\footSKIP| and |\headSEP|.\\
 
@@ -71,7 +132,7 @@ The output routine as defined in the kernwl covers a lot of functionality.
 \end{tabular}
 
 
-   Page layout must initialize |\@colht| and |\@colroom| to |\textheight|.
+Page layout must initialize |\@colht| and |\@colroom| to |\textheight|.
 
 \section{Page Style Parameters}
 
@@ -435,6 +496,8 @@ This solves two special problems:
    - In vmode :      |\penalty -10003.|
 
  For a double-column float, it puts B onto the |\@dbldeferlist|.
+
+
  The float specifier has two components:
 
     * A PLACEMENT SPECIFICATION, describing where the float may
@@ -442,6 +505,7 @@ This solves two special problems:
 
     * A TYPE, which is a power of two--e.g., figures might be
       type 1 floats, tables type 2 floats, programs type 4 floats, etc.
+
  The float specifier is encoded as follows, where bit 0 is the least
  significant bit.
 \medskip
