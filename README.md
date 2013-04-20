@@ -49,6 +49,8 @@ work still to be carried out to improve the template styles
 provided, to test it more thoroughly and to add a number of
 improvements in the special designs.
 
+__The package as it stands is not production stable.__
+
 
 
 
