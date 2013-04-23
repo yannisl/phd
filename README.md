@@ -13,7 +13,7 @@ and the derived files   `phd.ins`,  `phd.pdf`, and `phd.sty`.
 run
 
            pdflatex phd.dtx
-           makeindex -s gind.ist phd.idx
+           makeindex -s gind.ist -g phd
 
 If you have any difficulties with the package come and join us at
 http://tex.stackexchange.com and post a new question or
