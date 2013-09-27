@@ -1,8 +1,8 @@
 ###The `phd` LaTeX2e package
 
-This latex package and the class with the same name provide
+The `phd` latex package and the class with the same name provide
 convenient methods to create new styles for books, reports
-and articles. It also preloads the most commonly used packages
+and articles. It also loads the most commonly used packages
 and resolves conflicts.
 
 This work consists of the file  `phd.dtx`,
