@@ -1,5 +1,5 @@
-pdflatex phd.dtx
+xelatex phd.dtx
 makeindex -s gind.ist phd.idx
-pdflatex phd.dtx
+xelatex phd.dtx
 makeindex -s gind.ist phd.idx
-pdflatex phd.dtx
+xelatex phd.dtx

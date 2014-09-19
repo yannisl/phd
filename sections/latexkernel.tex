@@ -1,14 +1,13 @@
-\makeatletter
-\cxset{section color=black,
-          section font-weight=\bfseries}
-\renewsection
+\cxset{chapter toc=true}
 
 \chapter{The LateX Kernel}
 
 
 \latex is the batteries of \tex. It has given authors the ability to write documents easily and in a consistent way. It has also provided pacakage writers with endless nights of work trying to figure out how things work. In this chapter we will describe briefly the workings of \latex and the areas where one could use it for improvements. The best source for how the \latex kernel works is \latex itself and the publication that comes with it \docfile{sourc2e.pdf}
 
-\paragraph{Code Organization.} The \latex source code is distributed in a number of classes. These classes are saved in files |a|..|z| and files |A-O| The source files are documented in |source2e|, just |texdoc source2e| to read it. What I am describing here, is a step by step analysis of the classes, supplemented by additional materials, in order to understand the inner workings. 
+\section{Code Organization.} 
+
+The \latex source code is distributed in a number of classes. These classes are saved in files |a|..|z| and files |A-O| The source files are documented in |source2e|, just |texdoc source2e| to read it. What I am describing here, is a step by step analysis of the classes, supplemented by additional materials, in order to understand the inner workings. 
 
 {\RaggedRight
 \begin{tabular}{lp{5cm}}
@@ -28,6 +27,7 @@ n ltlengths      & Length setting commands. See~pg~[\pageref{kernel:lengths}]\\
 }
 
 \section{Autoloading}
+
 When LaTeX2e was released, personal computers had much less power than nowadays. Moreover, TeX was often compiled with a rather small amount of available memory.
 \footnote{\url{http://tex.stackexchange.com/questions/38436/what-is-autoload}}.
 
@@ -97,9 +97,11 @@ The |\@TeXversion| is only defined for very old versions of |TeX|, on a reasonab
 
 
 
-\paragraph{Listing files}  A list of files so far. The initial value of |@gobble| eats the comma before the first file name. Here we start encountering \LaTeX's iteration macros:
+\section{Listing files}  
 
-The |\@filelist| is a comma delimited list that will hold the value of all files. It is let to |\@gobble| in order to eat the first comma. This is a nifty trick. \index{@filelist}\index{@addtofilelist}.
+A list of files so far. The initial value of |@gobble| eats the comma before the first file name. Here we start encountering \LaTeX's iteration macros:
+
+The |\@filelist| is a comma delimited list that will hold the value of all files. It is let to |\@gobble| in order to eat the first comma. This is a nifty trick. 
 
 \begin{teX}
 204 \let\@filelist\@gobble
@@ -108,7 +110,7 @@ The |\@filelist| is a comma delimited list that will hold the value of all files
 The next macro adds a file name to the list. If you are not familiar with lists this is an interestin way of understanding, how a comma delimited list is build.
 
 \begin{teXXX}
-205 %\def\@addtofilelist#1{\xdef\@filelist{\@filelist,#1}}
+205 \def\@addtofilelist#1{\xdef\@filelist{\@filelist,#1}}
 \end{teXXX}
 
 Note that the |\@filelist| gets deactivated if |\listfiles| does not appear in the preamble. The |begin{document}|
@@ -143,7 +145,7 @@ if the format is too old. If it is older than 65 months it emits an error.
 3 \edef\fmtversion{2011/06/27}
 \end{teXXX}
 
-After the format version is hardcoded, a macro using one of LaTeX's scatch names is defined. The parameters
+After the format version is hardcoded, a macro using one of LaTeX's scratch names is defined. The parameters
 of this macro are delimited in the same way as the date in the format version definition, thus a comparison can be made between the two periods. If it is longer than a preset period it emits an error.
 
 \begin{teXXX}
@@ -182,7 +184,7 @@ It does not appear that this macro is currently activated, but I can be wrong. O
 
 \section{File d ltplain.dtx}
 
-The routines covered by this class go deep into the heart of the kernel. Besides storing some of the plain commands in new macros, this section of the kernel defines its own defining commands like |\newcommand|, |\newenvironment| and similar other macros. We start by summarizing the author and internal commands available in this section.
+The routines covered by this file go deep into the heart of the kernel. Besides storing some of the plain commands in new macros, this section of the kernel defines its own defining commands like |\newcommand|, |\newenvironment| and similar other macros. We start by summarizing the author and internal commands available in this section.
 
 
 
@@ -444,7 +446,7 @@ The internal version of \texttt{\textbackslash parbox}. The parameter text is as
 \end{comment}
 
 
-To complete the code the \index{@arrayparboxrestore} is defined. This  restores various paragraph parameters. The rational for allowing two normally global 
+To complete the code the \cmd{\@arrayparboxrestore} is defined. This  restores various paragraph parameters. The rational for allowing two normally global 
 flags to be set locally here was stated originally by Donald Arsenau and extended by Chris Rowley. It is because these  flags are only set globally to true by section commands, and these should
 never appear within boxes or, indeed, in any group; and they are only ever set globally to false when they are definitely true.
 File B: ltboxes.dtx Date: 2006/05/18 Version v1.1g 237
@@ -488,7 +490,7 @@ Finally the \cmd{parboxrestore} restores various paragraph parameters, and also 
 }
 \makeatother
 
-The code between \index{\@begin@tempboxa} are helper macros for supporting \cmd{height}, \cmd{width} etc. It grabs \#1 into \index{@tempboxa} and measures it. It also allows for macros involved with the coloring of the box.
+The code between \cmd{\@begin@tempboxa} are helper macros for supporting \cmd{height}, \cmd{width} etc. It grabs \#1 into \index{@tempboxa} and measures it. It also allows for macros involved with the coloring of the box.
 
 
 This was a long write and possibly a long read. As \latex was written a long time ago. One could improve the user interface of the command by
@@ -521,7 +523,9 @@ defining the |\parbox| with the |keyval| package. Will it be more intuitive to d
 \tex's possibilities are almost infinite. Here is another example of
 an argument that is thrown away\cite{amy1990}, that just strips the backslash:
 
+\begin{teXXX}
 \def\stripbackslash#1#2*{\def\one{#2}}
+\end{teXXX}
 
 which only uses the second argument, throwing away the
 first argument, in this case stripping away a backslash
@@ -530,14 +534,14 @@ can then be used in another macro which
 needs a control sequence without its backslash to work
 correctly, for instance:
 
+\begin{texexample}{Stripping a backslash}{}
+\def\stripbackslash#1#2*{\def\one{#2}}
 \def\newdef#1{\expandafter
 \stripbackslash\string#1* \one}
 
 \newdef\testmacro
+\end{texexample}
 
-produces
-
-\newdef\testmacro
 
 
 Instead of simply printing the control sequence without
@@ -553,7 +557,7 @@ a |\csname...\endcsname| environment will be understood
 to be equal to |\relax|, whereas an already defined
 control sequence will not:
 
-
+\begin{texexample}{A command to define commands}{}
 \def\newdef#1{%
   \expandafter\stripbackslash\string#1*
   %% \stripbackslash defines \one
@@ -568,13 +572,13 @@ control sequence will not:
     {\tt Sorry, \string#1 has already been
      defined. Please supply a new name.}
 \fi}
+\end{texexample}
 
-
+\cxset{chapter toc=true}
 \chapter{\LaTeX counters}
-\clearpage
 
 \thispagestyle{plain}
-{\centering\includegraphics[width=\textwidth]{./graphics/moneylenders}\par}
+{\centering\includegraphics[width=\textwidth]{./images/agnewesclinic.png}\par}
 
 {\centering \onelineheader{THE LATEX COUNTERS}\par}
 
@@ -950,6 +954,7 @@ To understand the command we first need to check the definition of |\m@th|, whic
 
 
 Lisp was originally implemented on the IBM 704 computer, in the late 1950s. The 704 hardware had special support for splitting a 36-bit machine word into four parts, an "address part" and "decrement part" of 15 bits each and a "prefix part" and "tag part" of three bits each.
+
 Precursors to Lisp included functions:
 
 \begin{description}

@@ -1,0 +1,574 @@
+\cxset{steward,
+  numbering=arabic,
+  custom=stewart,
+  offsety=0cm,
+  image={elevendays.jpg},
+  texti={An introduction to the use of font related commands. Thee chapter also gives a historical background to font selection using \tex and \latex. },
+  textii={In this chapter we discuss keys that are available through the \texttt{phd} package. The image is William Hogarth's painting (c. 1755) which is the main source for `Give us our Eleven Days'.
+ },
+ pagestyle = empty
+}
+\chapter{Handling Dates and Time}
+\label{dates}\label{ch:dates}
+
+\parindent1.5em
+
+\section{Problems with time and date}
+
+\tex and \latex do not offer\cite{Thanh:TB18-4-249} any sophisticated support for date and time routines.
+One can get the current system date using \cmd{today}
+Typing |\today| we get \texttt{\today}. Normally the format of |\today| would vary from class to class, as this is one of the first things class authors style. The |\today| command is build using three other commands \footnote{It appears that there is also a time=now in IniTeX}
+
+
+
+\makeatletter
+|\the\month| \the\month
+
+|\the\day| \the\day
+
+|\the\time| \two@digits{\the\count@}:\two@digits{\the\count2}
+\makeatother
+
+\tex offers only one macro \cmd{time} which is the time in hours since midnight.
+
+
+The code below is from the \latex kernel and can be found in the \docfile{ltdirchk.dtx}
+
+\startlineat{126}
+\begin{teX}
+\count@\time
+\divide\count@ 60
+\count2=-\count@
+\multiply\count2 60
+\advance\count2 \time
+
+\edef\today{%
+  \the\year/\two@digits{\the\month}/\two@digits{\the\day}:%
+  \two@digits{\the\count@}:\two@digits{\the\count2}
+ }
+\end{teX}
+
+\begin{texexample}{Time in LaTeX}{}
+\makeatletter
+\count@\time
+\divide\count@ 60
+\count2=-\count@
+\multiply\count2 60
+\advance\count2 \time
+
+\edef\today{%
+\the\year/\two@digits{\the\month}/\two@digits{\the\day}:%
+\two@digits{\the\count@}:\two@digits{\the\count2}}
+
+
+\today:   \the\count2:  \the\count@
+
+the time \the\time
+\makeatother
+\end{texexample}
+
+
+
+
+\section{Getting the time}
+
+\tex has a primitive register that contains “the number of minutes since midnight”; with this knowledge it’s a moderately simple programming job to print the time (one that no self-respecting Plain \tex user would bother with anyone else’s code for).
+
+However, \latex provides no primitive for “time”, so the non-programming LaTeX user needs help.
+
+
+\section*{Getting the time using pdf internal commands}
+
+One of the problems with \tex's |\time| is that it is not possible to count seconds. One way to by-pass this is to use the pdfLaTeX or pdfTeX macro
+\cmd{pdfcreationdate}.
+
+
+\texttt{> \textbackslash pdfcreationdate}
+
+\texttt{\pdfcreationdate}
+
+As you can observe from the above, the pdf has a special format and it even includes infromation about the timezone.
+
+PDF defines a standard date format, which closely follows that of the international standard ASN.1 (Abstract Syntax Notation One), defined in ISO/IEC 8824 (see the Bibliography). A date is a string of the form
+
+|(D:YYYYMMDDHHmmSSOHH'mm')|
+
+where
+
+\begin{teX}
+YYYY is the year
+MM is the month
+DD is the day (01-31)
+HH is the hour (00-23)
+mm is the minute (00-59)
+SS is the second (00-59)
+\end{teX}
+
+
+O is the relationship of local time to Universal Time (UT), denoted by one of the characters +, -, or Z (see below)
+HH followed by ' is the absolute value of the offset from UT in hours (00–23)
+mm followed by ' is the absolute value of the offset from UT in minutes (00–59)
+
+The quotation mark character (') after HH and mm is part of the syntax. All fields after the year are optional. (The prefix D:, although also optional, is strongly recommended.) The default values for MM and DD are both 01; all other numerical fields default to zero values. A plus sign (+) as the value of the O field signifies that local time is later than UT, a minus sign (-) that local time is earlier than UT, and the letter Z that local time is equal to UT. If no UT information is specified, the relationship of the specified time to UT is considered to be unknown. Whether or not the time zone is known, the rest of the date should be specified in local time.
+
+For example, December 23, 1998, at 7:52 PM, U.S. Pacific Standard Time, is represented by the string,
+
+
+|D:199812231952-08'00'|
+
+
+Two packages are available, both providing ranges of ways of printing the date, as well as of the time: this question will concentrate on the time-printing capabilities, and interested users can investigate the documentation for details about dates.
+
+
+\section*{Using \protect\texttt{datetime}}
+
+The \pkg{datetime} package defines two time-printing functions: \cmd{\xxivtime} (for 24-hour time), \cmd{\ampmtime} (for 12-hour time) and \cmd{\oclock} (for time-as-words, albeit a slightly eccentric set of words).
+
+\emphasis{xxivtime,ampmtime,oclock}
+
+\begin{texexample}{Using DateTime}{ex:datetime}
+The time is \xxivtime
+The time is \ampmtime
+The time is \oclock
+
+The time is \xxivtime
+
+The time is \ampmtime
+
+The time is \oclock
+\end{texexample}
+
+
+\section{Using scrtime}
+
+The \pkg{scrtime} package (part of the compendious KOMA-Script bundle) takes a package option (12h or 24h) to specify how times are to be printed. The command \cmd{\thistime} then prints the time appropriately (though there's no am or pm in 12h mode). The \cmd{\thistime} command also takes an optional argument, the character to separate the hours and minutes.
+
+
+\begin{texexample}{Example scrtime}{ex;scrtime}
+The time is \thistime
+The time is \thistime[h]
+\end{texexample}
+
+\label{datesend}
+
+
+The time is \thistime[ hours ] minutes 
+
+{> The time is \thistime*[:] } 
+
+|\thistime*| works in almost the same way as |\thistime|. The only
+diffrence is that unlike with |\thistime|, with |\thistime*| the value of
+the minute field is not preceded by a zero when its value is less than 10.
+Thus, with |\thistime| the minute field has always two places.
+
+\todaysname
+
+\begin{comment}
+%% Hack to get the time zone
+%% This is based on a macro at http://tex.stackexchange.com/questions/8612/write-date-time-and-time-zone by Will Robertson
+
+
+
+\pdfcreationdate
+\newcounter{temp}
+\setcounter{temp}{1}
+\let\Box=\boxed
+
+\def\Box#1{\fbox{\strut\textbf{#1}$\scriptscriptstyle\,_{\thetemp}$\stepcounter{temp} }}
+
+\Box{D}\Box{:} \Box{\color{red}2}\Box{\color{red}0}\Box{\color{red}1}%
+\Box{\color{red}1}
+ \Box{0}\Box{1}
+\Box{\color{purple}1} \Box{\color{purple}1}\Box{0}
+
+\newtoks\tyear
+\newtoks\tmonth
+\newtoks\tday
+\newtoks\thour
+\newtoks\tminutes
+\newtoks\tseconds
+\newtoks\UTCh
+
+\def\grabtimezone #1#2#3#4#5#6#7#8{
+\tyear={#3#4#5#6}%
+\tmonth{#7#8}%
+\grabtimezoneB}
+
+\def\grabtimezoneB #1#2#3#4#5#6#7#8{
+  \tday={#1#2}%
+  \thour={#3#4}%
+  \tminutes={#5#6}%
+  \tseconds={#7#8}%
+\grabtimezoneC}
+
+%\def\grabtimezoneC #1#2#3'#4'{\UTCh={sign:#1  hr: #2#3 min: #4}}
+%\expandafter \grabtimezone\pdfcreationdate
+%
+%
+%%\@namedef{timezone+0930}{CST}
+%%\@namedef{timezone+1000}{EST}
+%%\@namedef{timezone+1030}{CST'}
+%
+%\the\tyear 
+%
+%\the\tmonth
+%
+%\the\tday
+%
+%\the\thour
+%
+%\the\tminutes
+%
+%\the\tseconds
+%
+%\the\UTCh
+\end{comment}
+
+\section*{Day of the Week}
+The day of the week can be calculated using the |dow| macro that 
+has been around for a while
+
+\begin{comment}
+\def\DayOfWeekLong{%
+%
+% 	Calculate day of the week, return "Sunday", etc.
+%
+  \newcount\dow				% Gets day of the week
+  \newcount\leap			% Leap year fingaler
+  \newcount\x				% Temp register
+  \newcount\y 				% Another temp register
+%		leap = year + (month - 14)/12;
+  \leap=\month \advance\leap by -14 \divide\leap by 12
+  \advance\leap by \year
+%		dow = (13 * (month + 10 - (month + 10)/13*12) - 1)/5
+  \dow=\month \advance\dow by 10
+  \y=\dow \divide\y by 13 \multiply\y by 12
+  \advance\dow by -\y \multiply\dow by 13 \advance\dow by -1 \divide\dow by 5
+%		dow += day + 77 + 5 * (leap % 100)/4
+  \advance\dow by \day \advance\dow by 77
+  \x=\leap \y=\x \divide\y by 100 \multiply\y by 100 \advance\x by -\y
+  \multiply\x by 5 \divide\x by 4 \advance\dow by \x
+%		dow += leap / 400
+  \x=\leap \divide\x by 400 \advance\dow by \x
+%		dow -= leap / 100 * 2;
+%		dow = (dow % 7)
+  \x=\leap \divide\x by 100 \multiply\x by 2 \advance\dow by -\x
+  \x=\dow \divide\x by 7 \multiply\x by 7 \advance\dow by -\x
+  \ifcase\dow Sunday\or Monday\or Tuesday\or Wednesday\or
+	Thursday\or Friday\or Saturday\fi
+}
+
+\def\DayOfWeekShort{%
+%
+% 	Calculate day of the week, return "Sunday", etc.
+%
+  \newcount\dow				% Gets day of the week
+  \newcount\leap			% Leap year fingaler
+  \newcount\x				% Temp register
+  \newcount\y 				% Another temp register
+%		leap = year + (month - 14)/12;
+  \leap=\month \advance\leap by -14 \divide\leap by 12
+  \advance\leap by \year
+%		dow = (13 * (month + 10 - (month + 10)/13*12) - 1)/5
+  \dow=\month \advance\dow by 10
+  \y=\dow \divide\y by 13 \multiply\y by 12
+  \advance\dow by -\y \multiply\dow by 13 \advance\dow by -1 \divide\dow by 5
+%		dow += day + 77 + 5 * (leap % 100)/4
+  \advance\dow by \day \advance\dow by 77
+  \x=\leap \y=\x \divide\y by 100 \multiply\y by 100 \advance\x by -\y
+  \multiply\x by 5 \divide\x by 4 \advance\dow by \x
+%		dow += leap / 400
+  \x=\leap \divide\x by 400 \advance\dow by \x
+%		dow -= leap / 100 * 2;
+%		dow = (dow % 7)
+  \x=\leap \divide\x by 100 \multiply\x by 2 \advance\dow by -\x
+  \x=\dow \divide\x by 7 \multiply\x by 7 \advance\dow by -\x
+  \ifcase\dow Sun\or Mon\or Tue\or Wed\or
+	Thur\or Fri\or Sat\fi
+}
+
+
+\DayOfWeekLong
+
+\DayOfWeekShort
+\end{comment}
+
+\makeatother
+
+
+
+
+
+
+
+
+The \pkg{datenumber} has been developed by J\"org-Michael Schr\"oder and provides commands to convert a date into a number. Turned around a date can be calculated also by a number. Additionally there are commands for incrementing and decrementing a date. Leap years and the Gregorian calendar reform are considered.
+\index{dates}\index{dates!leap year}\index{dates! Gregorian calendar}
+
+\section{Start year}
+
+The start of the counting is determined with \verb+\setstartyear{year}+ (standard 1800). The first day of the start year gets the number 1. The value of \texttt{startyear} must be greater 0. It may not be larger than the year of a date to be calculated. If the difference of date and \texttt{startyear} is large, the calculation can last for a long time. The correct setting of the weekdays is guaranteed only if the value of \texttt{startyear} is 1800, 1900 or 2000.
+
+
+\section{Counters}
+There are five counters defined \doccmd{datenumber}, \doccmd{dateyear}, \doccmd{datemonth}
+
+\begin{description}
+\item[\texttt{datenumber}:] number of the day
+\item[\texttt{dateyear}:] year
+\item[\texttt{datemonth}:] month
+\item[\texttt{dateday}:] day
+\item[\texttt{datedayname}:] weekday: 1--7 (Monday--Sunday)
+\end{description}
+
+
+\section{Macros}
+\subsection{Macros which operate with defined counters\label{macro}}
+All counters specified above are updated by these macros. \verb+\datedayname+ and \verb+\datemonthname+ are also updated.
+
+\begin{description}
+\item[\texttt{\textbackslash setdatenumber\{year\}\{month\}\{day\}}:] Sets the counter \texttt{datenumber} to a value, which corresponds to the date.
+\item[\texttt{\textbackslash setdatebynumber\{number\}}:] Sets the counters \texttt{dateyear}, \texttt{datemonth}, and \texttt{dateday} to values, which corresponds to the number.
+\item[\texttt{\textbackslash nextdate}:] Sets the counters \texttt{dateyear}, \texttt{datemonth}, and \texttt{dateday} to the next date.
+\item[\texttt{\textbackslash prevdate}:] Sets the counters \texttt{dateyear}, \texttt{datemonth}, and \texttt{dateday} to the previous date.
+\item[\texttt{\textbackslash setdate\{year\}\{month\}\{day\}}:] Sets the counters \texttt{dateyear}, \texttt{datemonth}, and \texttt{dateday} to \texttt{year}, \texttt{month}, and \texttt{day}.
+\item[\texttt{\textbackslash setdatetoday}:] Sets the counters \texttt{dateyear}, \texttt{datemonth}, and \texttt{dateday} to the current date.
+\item[\texttt{\textbackslash datemonthname}:] typesets the month (see section \ref{monthname}).
+\item[\texttt{\textbackslash datedayname}:] typesets the weekday (see section \ref{dayname}).
+\item[\texttt{\textbackslash datedate}:] typesets the date, corresponding to the counters \texttt{dateyear}, \texttt{datemonth}, \texttt{dateday}.
+\end{description}
+
+
+\subsection{Macros which operate with your own counters}
+Only the counters you specified are updated by these macros. \verb+\datedayname+ and \verb+\datemonthname+ are not updated.
+\begin{description}\sloppypar
+\item[\texttt{\textbackslash setmydatenumber\{numbercount\}\{year\}\{month\}\{day\}}:] Sets the counter \texttt{numbercount} to a value, which corresponds to the date.
+\item[\texttt{\textbackslash setmydatebynumber\{number\}\{yearcount\}\{monthcount\}\{daycount\}}:] Sets the counters \texttt{yearcount}, \texttt{monthcount}, and \texttt{daycount} to values, which corresponds to the number.
+\item[\texttt{\textbackslash mynextdate\{yearcount\}\{monthcount\}\{daycount\}}:] Sets the counters \texttt{yearcount}, \texttt{monthcount}, and \texttt{daycount} to the next date.
+\item[\texttt{\textbackslash mynextdate\{yearcount\}\{monthcount\}\{daycount\}}:]Sets the counters \texttt{yearcount}, \texttt{monthcount}, and \texttt{daycount} to the previous date.
+\end{description}
+
+
+
+\subsection{Month\label{monthname}}
+The command \verb+\datemonthname+ typesets the month. It is updated by macros described in section \ref{macro}. You can do this by your own saying \verb+\setmonthname{number}+.
+
+\subsection{Weekday\label{dayname}}
+To typeset the weekday say \verb+\datedayname+. This command is updated by macros described in section \ref{macro}.
+You can do this by your own saying \verb+\setmonthname{number}+ (1 for Monday and 7 for Sunday). You can also write \verb+\setdaynamebynumber{number}+, were \verb+number+ is the number of a date. If \texttt{startyear} is set to 1800, 1900 or 2000 the calculation of the weekday will work.
+
+\section{Language}\sloppypar
+The language options \texttt{english}, \texttt{USenglish} (standard), \texttt{french}, \texttt{spanish}, \texttt{german}, and \texttt{ngerman} are supported. Say \verb+\dateselectlanguage{language}+ to select a language. For other languages: Create a file \texttt{datenumbermylanguage.ldf}. Copy the text from \texttt{datenumberdummy.ldf}. Replace every ``dummy'' with ``mylanguage'' and change the months and weekdays. Say \verb+\usepackage{datenumber}+ \verb+\input{datenumbermylanguage.ldf}+ in your document.
+
+\section{Examples}
+
+\begin{teX}
+\setdate{2002}{1}{1}
+\thedatenumber
+\end{teX}
+
+\setdate{2000}{1}{1}
+
+\noindent\texttt{\printf{\textbackslash setdate  \thedatenumber}}
+
+
+\begin{verbatim}
+\setdatetoday
+\addtocounter{datenumber}{10}%
+\setdatebynumber{\thedatenumber}%
+In 10 days is \datedate
+\end{verbatim}
+
+\setdatetoday
+\addtocounter{datenumber}{10}%
+\setdatebynumber{\thedatenumber}%
+
+Result: In 10 days is \datedate
+
+
+We can now find the days to Christmas
+
+\begin{teX}
+\newcounter{dateone}\newcounter{datetwo}%
+
+\newcommand{\daydifftoday}[3]{%
+  \setmydatenumber{dateone}{\the\year}{\the\month}{\the\day}%
+  \setmydatenumber{datetwo}{#1}{#2}{#3}%
+  \addtocounter{datetwo}{-\thedateone}%
+  \thedatetwo
+}
+\end{teX}
+\newcounter{dateone}%
+\newcounter{datetwo}%
+\newcommand{\daydifftoday}[3]{%
+  \setmydatenumber{dateone}{\the\year}{\the\month}{\the\day}%
+  \setmydatenumber{datetwo}{#1}{#2}{#3}%
+  \addtocounter{datetwo}{-\thedateone}%
+  \thedatetwo}
+
+There is still \daydifftoday{\the\year}{12}{25} days to Christmas.
+
+
+Result: There is still \daydifftoday{\the\year}{12}{25} days to Christmas.
+
+
+\newcommand{\sd}{%
+\ifcase\thedatedayname \or
+    Mon\or Tue\or Wed\or Thu\or
+    Fri\or Sat\or Sun\fi
+}%
+
+\newcommand{\pnext}{%
+\thedateyear/%
+\ifnum\value{datemonth}<10 0\fi
+\thedatemonth/%
+\ifnum\value{dateday}<10 0\fi
+\thedateday%
+\nextdate
+}
+
+
+
+\begin{verbatim}
+\setdate{2001}{9}{29}%
+\[\begin{tabular}{lll}
+\sd & \pnext & Abc\\
+\sd & \pnext & Def\\
+\sd & \pnext & Ghi\\
+\sd & \pnext & Jkl\\
+\end{tabular}\]
+\end{verbatim}
+
+
+Result: \setdate{2001}{9}{29}%
+
+\[\begin{tabular}{lll}
+\sd & \pnext & Abc\\
+\sd & \pnext & Def\\
+\sd & \pnext & Ghi\\
+\sd & \pnext & Jkl\\
+\end{tabular}\]
+
+
+\newthought{Get your age calculated}
+
+\begin{teXXX}
+\documentclass{article}
+\usepackage{datenumber,fp}
+\begin{document}
+\newcounter{dateone}%
+\newcounter{datetwo}%
+\setmydatenumber{dateone}{1989}{08}{01}%
+\setmydatenumber{datetwo}{\the\year}{\the\month}{\the\day}%
+\FPsub\result{\thedatetwo}{\thedateone}
+\FPdiv\myage{\result}{365.25} 
+\FPround\myage{\myage}{0}\myage\ years old
+\end{document}
+\end{teXXX}
+
+
+\subsection{Other}
+
+Because of the Protestant Reformation, however, many Western European countries did not initially follow the Gregorian reform, and maintained their old-style systems. Eventually other countries followed the reform for the sake of consistency, but by the time the last adherents of the Julian calendar in Eastern Europe (Russia and Greece) changed to the Gregorian system in the 20th century, they had to drop 13 days from their calendars, due to the additional accumulated difference between the two calendars since 1582.
+
+The leapyear \index{dates!leapyear} can be tested using
+\pmac{datenumber}{leapyear} and the date can be checked for validity using
+\pmac{datenumber}{ifvaliddate}. the examples below show such tests
+
+\begin{itemize}
+\item leap year test
+\begin{quote}
+\begin{verbatim}
+The year 2012 is
+\ifleapyear{2012} a \else no \fi leap year.
+\end{verbatim}
+Result: The year |2012| is \ifleapyear{2012} a \else no \fi leap year.
+\end{quote}
+\item date test
+\begin{quote}
+\begin{verbatim}
+The 29.2.1900 is
+\ifvaliddate{1900}{2}{29} a \else no \fi valid date.
+\end{verbatim}
+
+
+Result: The 29.2.1900 is \ifvaliddate{1900}{2}{29} a \else no \fi valid date.%
+\end{quote}
+\end{itemize}
+
+\section*{Calculating the week number}
+\begin{figure}%
+  \centering
+  \includegraphics[width=1.1\linewidth]{./graphics/babylonianmaps.jpg}
+  \caption[Babylonian Imago Mundi]{\protect\footnotesize \protect\raggedright The Babylonian Imago Mundi, dated to the 6th century BC (Neo-Babylonian Empire). The map shows Babylon on the Euphrates, surrounded by a circular landmass showing Assyria, Armenia and several cities, in turn surrounded by a `bitter river' (Oceanus), with seven islands arranged around it so as to form a seven-pointed star.}
+  \label{fig:eleven days}
+\end{figure}
+
+I an attempt to produce gantt charts (see Section \ref{ganttcharts}) that follow Tufte's ideas of simplicity, I came across the need to define a week number. The ISO week date system is a leap week calendar system that is part of the ISO 8601 date and time standard. The system is used (mainly) in government and business for fiscal years, as well as in timekeeping.
+
+The system uses the same cycle of 7 weekdays as the Gregorian calendar. Weeks start with Monday. ISO week-numbering years have a year numbering which is approximately the same as the Gregorian years, but not exactly (see below). An ISO week-numbering year has 52 or 53 full weeks (364 or 371 days). The extra week is here called a leap week (ISO 8601 does not use the term).
+
+
+
+A date is specified by the ISO week-numbering year in the format YYYY, a week number in the format ww prefixed by the letter W, and the weekday number, a digit d from 1 through 7, beginning with Monday and ending with Sunday. For example, |2006-W52-7| (or in compact form |2006W527|) is the Sunday of the 52nd week of 2006. In the Gregorian system this day is called 31 December 2006.
+
+The system has a 400-year cycle of 146 097 days (20 871 weeks), with an average year length of exactly 365.2425 days, just like the Gregorian calendar. In every 400 years there are 71 years with 53 weeks.
+
+\textsc{The first week of a year is the week that contains the first Thursday of the year.}
+
+Based on this a calculation can be made using routines available from the above packages. However, how many weeks are included in a typical month it is still a problem.
+
+
+\section{Summary}
+
+This rather long chapter discussed the various options and packages available to deal with dates. The best way so far, for pdfLaTeX and pdfTeX users is to use the \cmd{pdfcreation} to access system time. Once the information made available by this command is parsed the rest of the routines can be developed. And now we have dates. Next we are going to try and develop some scheduling routines for gantt charts.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

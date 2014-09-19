@@ -1,8 +1,13 @@
-\chapter{THE OUTPUT ROUTINE (OTR)}
+\chapter{Page Breaking and The Output Routine (OTR)}
+\precis{In this chapter we outline a number of experimental keys that been defined to handle Table of Contents (ToC) formatting. These keys are currently experimental.}
+\addtocimage{-12pt}{-20pt}{../images/tocblock-flower.jpg}
+
+
 \label{ch:OTR}
 
-\epigraph{Sherlock Holmes in "The sign of four": "'My mind," he said, "rebels at stagnation. Give me problems, give me work, give me the most abstruse cryptogram or the most intricate analysis, and I am in my own proper atmosphere.'" }{}
-\normalsize
+\epigraph{Sherlock Holmes in ``The sign of four'': ``'My mind,'' he said, "rebels at stagnation. Give me problems, give me work, give me the most abstruse cryptogram or the most intricate analysis, and I am in my own proper atmosphere.'" }{}
+
+
 The output routine is one of the more mysterious pieces
 of \tex.
 and as  David Salomon noted\footnote{TUGboat/tb-11-1/tb27salomon.pdf}, advanced users hardly need to be convinced that an unerstanding of OTRs is important, since they must be used whenever, special output is desired.
@@ -10,10 +15,10 @@ and as  David Salomon noted\footnote{TUGboat/tb-11-1/tb27salomon.pdf}, advanced 
 routines claims that designing output routines makes one:
 
 \begin{quotation}
-achieve the level of a `\tex Grandmaster'.
+`achieve the level of a `\tex Grandmaster'.
 As is so often the case, mastery of the concept of an
-output routine in plain TEX will only barely prepare you
-for the complexities awaiting you with LATEX’s variant of
+output routine in plain \tex will only barely prepare you
+for the complexities awaiting you with \latexe's variant of
 an output routine.
 \end{quotation}
 
@@ -44,7 +49,7 @@ complicate the page breaking algorithms, as well as the theory.
 
 \subsection{Typographical constraints}
 
-There are various typographical guidelines for what a page should look like, and TEX has
+There are various typographical guidelines for what a page should look like, and \tex has
 mechanisms that can encourage, if not always enforce, this behaviour.
 
 \begin{enumerate}
@@ -198,10 +203,11 @@ be b(n - 1) + h (Fig. 3). However, the height of
 usually supplied by the flexible glues on the page,
 the most common of which is |\parskip|
 
+\begin{comment}
 \begin{figure}[htp]
-\includegraphics{./graphics/heightofpagebox}
+\includegraphics{./graphics/heightofpagebox.jpg}
 \end{figure}
-
+\end{comment}
 
 \subsection{Dead cycles.} An execution of the OTR without shipping any material is called a \texttt{dead cycle}. Dead cycles, have their uses and we will explain this a bit later on. However, long iterations that just return \textit{dead cycles} is an indication of an error somewhere. \tex counts the number of dead cycles in a counter named |\deadcycles| and stops the run if |\deadcycles >= \maxdeadcycles|.  In the \textit{plain} format |\maxdeadcycles| is set as 25 and in \latex as \the\deadcycles. |\maxdeadcycles = 100| is \the\maxdeadcycles. Each time |\shipout| is invoked, it resets |\deadcycles| to zero.
 
@@ -382,12 +388,14 @@ as  much.
 
 \section{OTR Example}
 
+\begin{comment}
 \begin{figure}%
  \centering
-  \includegraphics[width=0.37\linewidth]{./graphics/framedpage}
+  \includegraphics[width=0.37\linewidth]{./graphics/framedpage.jpg}
   \caption{A boxed page}
   \label{fig:framedpage}
 \end{figure}
+\end{comment}
 
 Here is an OTR for a \textit{framed} page. It surrounds the
 page with double rules on all sides, and centers the
@@ -553,7 +561,7 @@ END
 22   \fi}
 \end{teX}
 
-\begin{multicols}{2}
+
 \subsection{Float boxes and lists.} 
 A \textit{float list} consisting of the 
 floats in boxes |\boxa ... \boxN| has
@@ -572,8 +580,8 @@ This is a lot more efficient than looping through the list.
 \LaTeX\ defines float boxes as |bx@A| to |bx@R| to make them available for 
 inserts. These will be used later to define the lists that hold these boxes. 
 
+\latex now defines the float boxes. Each one is defined as an \cmd{\newinsert.}
 
-\latex now defines the float boxes. Each one is defined as an insert.
 \begin{teXXX}
 \newinsert\bx@A
 ...
@@ -590,17 +598,19 @@ inserts. These will be used later to define the lists that hold these boxes.
 \end{teXXX}
 
 
-\end{multicols}
+
 Once these boxes are defined they are inserted in the |@freelist|. At this point all the other lists are defined.
 
 \emphasis{@freelist,@toplist,@botlist,@midlist,@currlist}
 \begin{teXXX}
-41 \gdef\@freelist{\@elt\bx@A\@elt\bx@B\@elt\bx@C\@elt\bx@D\@elt\bx@E
+41 \gdef\@freelist{\@elt\bx@A\@elt\bx@B\@elt\bx@C\@elt\bx@D
+         \@elt\bx@E
 42                 \@elt\bx@F\@elt\bx@G\@elt\bx@H\@elt\bx@I\@elt\bx@J
 43                 \@elt\bx@K\@elt\bx@L\@elt\bx@M\@elt\bx@N
 44                 \@elt\bx@O\@elt\bx@P\@elt\bx@Q\@elt\bx@R}
 \end{teXXX}
 
+\startlineat{45}
 All the lists are defined initially to be empty.
 \begin{teXXX}
 45 \gdef\@toplist{}
@@ -616,7 +626,7 @@ All the lists are defined initially to be empty.
 The lists are similar to those defined in \texttt{plain}.
 
 \begin{description}
-\item[\string\@freelist] : List of empty boxes for placing new 
+\item[\cs{@freelist}] : List of empty boxes for placing new 
 floats.
 \item[\string\@toplist] : List of 
 floats to go at top of current column.
@@ -749,11 +759,13 @@ and a lot of other internal registers
 
 \subsection{\texttt{\textbackslash clearpage}}
 
+\begin{macro}{\clearpage}
 The clearpage macro is a bit complicated, as it needs to avoid a complete empty page after a |\twocolumn[..]|. This prevents the text from the argument
 vanishing into a  float box, never to be seen again. We hope that it does not
 produce wrong formatting in other cases.
+\end{macro}
 
-\begin{teX}
+\begin{teXXX}
 106 \def\clearpage{%
 107   \ifvmode
 108   \ifnum \@dbltopnum =\m@ne
@@ -771,14 +783,25 @@ produce wrong formatting in other cases.
 
 \subsection{The \texttt{\textbackslash clearpagedoublepage} macro} 
 
+\begin{macro}{cleardoublepage}
 This checks for odd and even pages by using the
 page counter |c@page|.  It also provides switches of twoside printing. 
-\TODO{Why not from auxiliary?}
 
+\numberlineat{119}
 \begin{teXXX}
-119 \def\cleardoublepage{\clearpage\if@twoside \ifodd\c@page\else
-120 \hbox{}\newpage\if@twocolumn\hbox{}\newpage\fi\fi\fi}
+\def\cleardoublepage{%
+   \clearpage
+   \if@twoside 
+     \ifodd\c@page
+     \else
+       \hbox{}
+       \newpage
+       \if@twocolumn\hbox{}\newpage
+       \fi
+     \fi
+  \fi}
 \end{teXXX}
+\end{macro}
 
 Note the |\newpage| is defined a bit further on. This is a fairly simple definition, since most of the code that follows only gets a bit complicated with the twocolumn option. It sets the dimensions and the booleans to those appropriate for the |onecolumn| option. An important note we back to \tex's |\hsize|. Both the linewidth as well as the columnwidth are set to this.
 
@@ -1045,7 +1068,7 @@ The package reminds in some sense
 
 
 Also in some sense \Lpack{everypage} can be related to package
- \Lpack{everyshi} by Martin Schroeder, but it differs radically from
+ \Lpack{everyshi} by Martin Schroeder \cite{everyshi}, but it differs radically from
  it in the implementation. In fact,\Lpack{everypage} operates by
  manipulation of the |\@begindvi| macro, rather than at the
  lower level |shipout| macro.
@@ -1053,7 +1076,7 @@ Also in some sense \Lpack{everypage} can be related to package
 
 \section{How to place a background image}
 
-One can use TikZ to place a background image on a page
+One can use |TikZ| to place a background image on a page
 
 First we define some utility macros:
 
@@ -1102,7 +1125,7 @@ This package provides the hooks \cs{EveryShipout} and
 
   An example application for this package would be a package for
   adding text to the bottom of each page.
-  Such a package does exist: \docpkg{prelim2e}\cite{package!prelim2e}.
+ The  \docpkg{prelim2e} package adopts this method \citep{prelim2e}.
 
 The solution  uses is based on code developed in  \textsf{quire.tex} by
  Marcel R.~van der Goot.  It is based upon \cs{afterassignment} and \cs{aftergroup}.

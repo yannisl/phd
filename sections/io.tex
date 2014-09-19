@@ -1,0 +1,212 @@
+
+\chapter{File Input and Output}
+
+\tex provides commands for writing and reading of streams
+either from a file or a terminal. Both the available commands as well as a limitation in the number of files that can be allocated, shows \tex's age. For more complicated programming one needs to escape to the shell and use a scripting language or LuaTeX. 
+
+An example from the \latexe kernel, can illustrate better than
+words the mechanism. The example is the definition of
+the command \cs{bibliography}. Bibliographic information is written first to the |.aux| file, and then at the second run is read from a file the extension |.bbl|.
+
+\begin{codeexample}[code only,vbox]
+   \def\bibliography#1{%
+   \if@filesw
+     \immediate\write\@auxout{\string\bibdata{#1}}%
+   \fi
+   \@input@{\jobname.bbl}}
+\end{codeexample}
+
+\tex\ and \latex\  ability to read and write to external filesmakes it possible to produce
+a Table of Contents or a List of Figures. 
+
+
+Table , summarizes the available \tex\ commands. 
+
+\begin{macro}{\input}
+\begin{macro}{\read}
+\begin{macro}{\endinput}
+\begin{macro}{\write}
+\begin{macro}{\endinput}
+\begin{macro}{\pausing}
+\begin{macro}{\openin}
+\begin{macro}{\openout}
+\bgroup
+\parindent0pt
+The command \cs{input} inputs the specified file as \tex input and is perhaps the most widely  i/o command used by authors.
+
+\cs{endinput} Terminate inputting the current file after the current line.
+
+\cs{pausing}  Specify that TEX should pause after each line that is read from a file.
+
+\cs{inputlineno} Number of the current input line.
+
+\cs{message} Write a message to the terminal. This is used widely in the kernel which is sprinklered with code such as:
+
+\begin{codeexample}[code only]
+\message{registers,}
+\end{codeexample}
+
+For package and class writers \latex2e, offers more user friendly macros, that can also relate to errors such as \cs{PackageError}.
+
+\cs{write} write a general text to the terminal or to a file.
+
+\cs{read} Read a line from a stream into a control sequence.
+
+\cs{newread} \cs{newwrite} Macro for allocating a new input/output stream.
+
+\cs{openin} \cs{closein} Open/close an input stream.
+\cs{openout} \cs{closeout} Open/close an output stream.
+\egroup
+\end{macro}
+\end{macro}
+\end{macro}
+\end{macro}
+\end{macro}
+\end{macro}
+\end{macro}
+\end{macro}
+
+
+\begin{tabularx}{\linewidth}{lX}
+
+
+
+\cs{ifeof} &Test whether a file has been fully read, or does not exist.\\
+\cs{immediate} &Prefix to have output operations executed right away.\\
+\cs{escapechar} &Number of the character that is used when control sequences are being converted into character tokens. IniTEX default: 92.\\
+\cs{newlinechar} &Number of the character that triggers a new line in \cs{write} and \cs{message}
+statements.\\
+\end{tabularx}
+
+\section{Opening and closing files}
+
+It is easy to write and read text files from inside a \tex\  document. The \cmd{input} is well known and is commonly used
+to break a long document into smaller - and more logical parts. In addition the \cmd{read} makes it  possible to
+read a file record by record. New files can be created by \tex\ and data written on them record by record. There can be
+a maximum of 16 input and 16 output files open at any given time. Each file is identified  internally by means of a file number. 
+
+
+The \cmd{\newread} and \cmd{\newwrite} generate the next available file number. 
+
+
+
+Output is done by write or \cmd{\immediate}\cmd{\write}. Input is done either by \cmd{read} to or 
+\verb+ \input<filename>+. Each write creates a record on the file, whose maximum size is only limited by the operating system, so these can be quite large.
+
+An important feature of file output is that expandable tokens are expanded during a \cmd{write}. If the
+name of a control sequence, rather than its expansion, should be written on a file, either
+\cmd{\noexpand} or \cmd{\string} should be used to inhibit the expansion. If a control sequence is unexpandable,
+its name is written on the file. If it is undefined an error message is issued when \tex\ tries to expand it during
+the \cmd{\write}. It is also possible to avoid expansion during a \\cs{write} by changing the catcode of `\textbackslash'.
+This way, anything that starts with a backslash is no longer considered a control sequence.
+
+To complicate matters more, the actual write is deferred until the current page is shipped out. The reason for that is that the user may want to write the page number on the file (this is common when a table-of-contents file or index file is generated) and this number is only known inside the OR. If no page numbers are involved, the user can force the record to be written on the file immediately by:
+
+\begin{teXXX}
+  \immediate\write
+\end{teXXX}
+
+\section{Interaction with the user}
+
+File numbers are between 0 and 15. File numbers outside this range refer to the standard I/O devices. If you 
+write
+
+\begin{teXXX}
+  \read-1 to \note
+\end{teXXX}
+
+will read from the keyboard without a prompt into \cmd{note}. The quantity \cmd{note} does not need to be predefined
+or declared. Once input is read into it, \\cs{note}  can be expanded like a macro.
+The |filenumber| 16 displays information to the screen.
+
+\begin{teXXX}
+  \write16{...}
+\end{teXXX}
+
+
+\section{Writing Arbitrary Strings on a File}
+
+We start with a short review of \cmd{edef}. In |\edef\abc{\xyz \kern1em}|, the control 
+sequence |xyz| is expanded immediately (when |\abc| is defined), but the 
+\cmd{kern} is only executed later, when |\abc| is expanded.
+
+
+\section{writing to standard latex files}
+
+You can write to the aux file with
+
+|\write\@auxout{hello}|
+
+or
+
+|\immediate\write\@auxout{hello2}|
+
+or
+
+|\protected@write\@auxout{}{hello3}|
+
+Depending on requirements.
+
+|\immediate\write| writes to the specified file at that point, expanding the supplied tokens (like |\edef|) so fragile commands will do the wrong thing.
+
+\cs{write} does not write at that point it puts a write node into the current vertical or horizontal list and if that list is shipped out to make a page then the write happens. This is needed to get page numbers correct. (If the write is inside a box and that box is never used on the main page then nothing is written to the file.)
+
+|\protected@write| is a LaTeX-defined macro that uses |\write| but arranges that |\protect| works as required in LaTeX to protect fragile commands. The extra argument unused above allows you to locally insert extra definitions to make more commands be safe or have special definition in the write, see for example the definition of |\index| or |\addtocontents|.
+
+It is safe to write to the aux file, however you have to be aware that the file will be read back at least at the begin and end of the document, so you need to write lines that are safe in that context.
+
+If you want to write to your own file then you just need to do
+
+\begin{teXXX}
+\newwrite\myfile
+\immediate\openout\myfile=\jobname.foo
+\end{teXXX}
+
+in the preamble and then replace |\@auxout| by |\myfile| when writing.
+
+Have a look at the way |\tableofcontents| or |\listoftables| or |\listoffigures| work in latex.ltx or documented in source2e. They basically all use
+
+\begin{teXXX}
+\def\@starttoc#1{%
+  \begingroup
+    \makeatletter
+    \@input{\jobname.#1}%
+    \if@filesw
+      \expandafter\newwrite\csname tf@#1\endcsname
+      \immediate\openout \csname tf@#1\endcsname \jobname.#1\relax
+    \fi
+    \@nobreakfalse
+  \endgroup}
+\end{teXXX}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

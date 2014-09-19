@@ -69,7 +69,7 @@ __The package as it stands is not production stable.__
 %</readmemd>
 %
 %<*TODO>
-add tcolorbox support c
+add tcolorbox support fix pgf codeexample has issues with integration
 %</TODO>
 %<*internal>
 \fi
@@ -80,7 +80,7 @@ add tcolorbox support c
 %</internal>
 %<*install>
 \input docstrip.tex
-
+\keepsilent
 \askforoverwritefalse
 \preamble
 ----------------------------------------------------------------
@@ -116,7 +116,7 @@ See http://www.latex-project.org/lppl.txt
   \file{\jobname.ins}{\from{\jobname.dtx}{install}}
 }
 \nopreamble\nopostamble
-%\usedir{source/phd}
+
 \generate{
 	\file{README.txt}{\from{\jobname.dtx}{readme}}
   }
@@ -130,6 +130,7 @@ See http://www.latex-project.org/lppl.txt
 \generate{
   \file{MWE-01.tex}{\from{\jobname.dtx}{MWE-01}}
 }
+
 \ifx\fmtname\nameofplainTeX
   \expandafter\endbatchfile
 \else
@@ -138,8 +139,13 @@ See http://www.latex-project.org/lppl.txt
 %</internal>
 %<*driver>
 \listfiles
-\documentclass[reqno,twoside,11pt,letter,a4paper]{ltxdoc}
-\usepackage[pass]{geometry}
+
+\documentclass[oneside,12pt,a4paper]{ltxdoc}
+\makeatletter
+\gdef\@notprerr{text command only in preamble} 
+%\def\@eha{}
+\makeatother
+\usepackage{geometry}
 
 \newgeometry{left=3.5cm,right=3.5cm,top=2.0cm,bottom=1.5cm,
     marginparsep=5mm,marginparwidth=10mm,
@@ -149,37 +155,89 @@ See http://www.latex-project.org/lppl.txt
 \savegeometry{std}
 
 \setcounter{secnumdepth}{6}
-\usepackage[T1]{fontenc}
+
 %\usepackage{libertine}
 %\renewcommand{\ttfamily}{\fontencoding{OT1}\fontfamily{cmtt}\selectfont}
-\usepackage{lmodern,algorithm2e} %lmodern,
+\usepackage{ifluatex}
+
+\usepackage{multido}
+\ifxetex
+  %\usepackage{txfonts} %works for both
+  \usepackage[Tibetan,DominoTiles, MahjongTiles]{ucharclasses}
+  
+  \setTransitionTo{DominoTiles}{\fontspec{FreeSerif}}
+  \setTransitionTo{MahjongTiles}{\fontspec{FreeSerif}}
+  \setTransitionTo{Tibetan}{\fontspec[Language=Tibetan]{TibMachUni.ttf}}
+  \usepackage[no-math]{fontspec}
+   %\defaultfontfeatures{Mapping=tex-text,Ligatures=TeX}
+   \setmainfont[Ligatures=TeX]{Linux Libertine O}
+   \usepackage{polyglossia}
+   %\usepackage{farsical}
+   \setmainlanguage[variant=british,ordinalmonthday=false]{english}
+   \setotherlanguages{armenian,italian,greek,russian,catalan}
+   \usepackage{metalogo}
+%% fontspec declarations:
+   \setsansfont{Linux Biolinum O}
+   \setmonofont[Scale=MatchLowercase]{DejaVu Sans Mono}
+   \newfontfamily\arabicfont[Script=Arabic]{Amiri}
+   \newfontfamily\arabicfonttt[Script=Arabic,Scale=.75]{DejaVu Sans Mono}
+\newfontfamily\gujarati[Scale=1.0]{code2000.ttf}
+\newfontfamily\bengal[Script=Bengali,Scale=1]{Shonar Bangla}
+   \newfontfamily\russianfonttt{DejaVu Sans Mono}
+\newfontfamily\russianfont[Script=Cyrillic,Scale=MatchLowercase]{Arial Unicode MS}
+\newfontfamily\armenianfont[Script=Armenian,Scale=MatchLowercase]
+{FreeSans}
+   %\newfontfamily\syriacfont[Script=Syriac]{Serto Jerusalem}
+   %\newfontfamily\hebrewfont[Script=Hebrew]{Ezra SIL}
+
+\linespread{1.05}
+\frenchspacing
+
+ \fi
+
+
+\usepackage{algorithm2e} %lmodern,
+
 %%\usepackage[toc,lof,lot]{multitoc}
 \usepackage{fancyhdr}
 %\usepackage{dateiliste}
-\usepackage{\jobname}
+
+\usepackage{phd}
 %\usepackage[listings,theorems]{tcolorbox}
 \tcbset{before={\par\medskip\pagebreak[0]\noindent},after={\par\medskip}}%
 %\usepackage{multicol}
-\def\AmSmath{AmSmath}
-%
-% The hypdoc loads the {hyperref}[2002/05/09] package with
-% certain options.
-%
 
-\usepackage{hyperref}[2012/02/06]
-% hyperdoc has a problem with tcolorboc documentation
-% macros.
-%\usepackage{hypdoc}
-\hypersetup{pdftex,
+%
+\ifxetex
+  \else
+  \usepackage[dutch, german, main=english]{babel}
+\fi
+\makeatletter
+\let\l@addto@macro\undefined
+\usepackage{datetime,scrtime} %%scrtime
+\usepackage{datenumber}
+\makeatother
+\usepackage{xkvview}
+\usepackage{hyperref}
+%% hyperdoc has a problem with tcolorboc documentation
+%% macros.
+%%\usepackage{hypdoc}
+\hypersetup{
   bookmarks,
   raiselinks,
   pageanchor,
-  hyperindex,
+  hyperindex=true,
   colorlinks,
   allcolors=theblue, 
   linktocpage,
-  %anchorcolor= blue,
-  %filecolor=blue,
+  hyperfootnotes=true,
+  breaklinks=true,
+  anchorcolor= blue,
+  filecolor=blue,
+  hypertexnames=true,
+  backref,
+  backref=page,
+  pagebackref=true,
   urlcolor= teal,
   linkcolor= teal,
   pdftitle={My Title},
@@ -188,17 +246,14 @@ See http://www.latex-project.org/lppl.txt
   pdfkeywords={LaTeX package management, document design}
  }
 
-%% PACKAGES AFTER HYPERREF
-\usepackage{arydshln}
-%\usepackage{cleveref}
-
+\usepackage{minitoc}
 % add pdfinfo  
 % 
 % 
 %\newcommand*{\file}[1]{\texttt{#1}}
 \newcommand*{\pkg}[1]{\texttt{#1}}
 %\usepackage[numbered]{hypdoc}
-\definecolor{lstbgcolor}{rgb}{0.9,0.9,0.9}
+
 \newcommand*{\Lpack}[1]{\textsf {#1}}  
 \let\package\Lpack
 \makeatletter
@@ -238,7 +293,7 @@ See http://www.latex-project.org/lppl.txt
  title font-size= Large,
  title font-shape= upshape,
  title spaceout= none,
-  title beforeskip={\vspace*{10pt}},
+ title beforeskip={\vspace*{10pt}},
  title afterskip={\vspace*{50pt}\par},
  title before={\hfill\hfill\raggedleft},
 %
@@ -270,11 +325,11 @@ See http://www.latex-project.org/lppl.txt
        subsection font-family= rmfamily,
        subsection font-size= large,
        subsection font-weight= bold,
-       subsection font-shape= normal,
+       subsection font-shape= upshape,
        subsection align= centering,
        subsection numbering prefix=\thesection.,%\S\hairsp,%add . 
        subsection numbering custom =\@arabic\c@subsection,% \two@digits{\@arabic\c@subsection},%
-       subsubsection color= thered,
+       subsubsection color= gray,
        subsubsection beforeskip=5pt plus3pt minus 2pt,
        subsubsection afterskip=5pt,
        subsubsection indent=0pt,
@@ -283,7 +338,7 @@ See http://www.latex-project.org/lppl.txt
        subsubsection font-weight= bold,
        subsubsection font-shape= itshape,
        subsubsection align= centering,
-       subsubsection numbering prefix =, %\thesection.
+       subsubsection numbering prefix =\thesubsection.\@arabic\c@subsubsection,
        subsubsection numbering custom =, %\two@digits{\@arabic\c@subsubsection},
        subsubsection number after =, 
 %
@@ -328,12 +383,13 @@ See http://www.latex-project.org/lppl.txt
  chapter font-family= sffamily,
  chapter font-weight= bold,
  chapter font-size= LARGE,
- chapter before={\thinrule\vspace*{20pt}\par\hfill\hfill},
+ chapter before={\tikzrule\vspace*{20pt}\par\hfill\hfill},
  chapter color= black!50,
  title beforeskip={\vspace*{10pt}},
  title afterskip={\vspace*{50pt}\par},
  title before={\hfill\hfill\raggedleft},
- title after=\par\thinrule,
+ chapter rule color=teal,
+ title after=\par\tikzrule,
  title font-family= sffamily,
  title font-color= teal,
  title font-weight= bfseries,
@@ -368,22 +424,45 @@ See http://www.latex-project.org/lppl.txt
 \renewsubsubsection
 \makeatother
  
+\usepackage[verbose]{backref}
+%\backrefsetup{verbose=false}
+\RequirePackage[round]{natbib}
+\bibliographystyle{apalike}
 
-
+\usepackage{bibentry}
+\bibpunct{(}{)}{;}{a}{,}{,}
+% gives error
+%
+%% PACKAGES AFTER HYPERREF
+%\usepackage{arydshln}
+%\usepackage{cleveref}
 \usepackage{float}
 \usepackage{expl3}
+\usepackage{xparse}
+%\usepackage{pagenote}
+%\usepackage{pkgindoc}
 
+\usepackage{subcaption}
+\usepackage[dutch,german,english]{xlayouts}
+\usedictionary{pages}
+%\usepackage{xfrac}
+%Fix overfful hboxes automatically
 
-\EnableCrossrefs
-\CodelineIndex
+\tolerance=2000
+\emergencystretch=10pt
+\makepagenote
+%\EnableCrossrefs
+%\CodelineIndex
+\PageIndex
 \RecordChanges
+%\usepackage{bidi}
 \begin{document}
-
+\mtcsetrules{minitoc}{off}
+\dominitoc
 
 \cxset{blank page text=}
 
 \def\file#1{\texttt{#1}}
-
 
 \DocInput{\jobname.dtx}
 \end{document}
@@ -391,7 +470,7 @@ See http://www.latex-project.org/lppl.txt
 %</driver>
 % \fi
 %  
-%  \CheckSum{4769}
+%  \CheckSum{0}
 %  \CharacterTable
 %  {Upper-case    \A\B\C\D\E\F\G\H\I\J\K\L\M\N\O\P\Q\R\S\T\U\V\W\X\Y\Z
 %   Lower-case    \a\b\c\d\e\f\g\h\i\j\k\l\m\n\o\p\q\r\s\t\u\v\w\x\y\z
@@ -414,7 +493,7 @@ See http://www.latex-project.org/lppl.txt
 %
 % \DoNotIndex{\newcommand,\newenvironment}
 % \GetFileInfo{phd.dtx}
-% \providecommand*{\url}{\texttt}
+% 
 %  \def\fileversion{v1.0}          
 %  \def\filedate{2012/03/06}
 % \title{The \textsf{phd} package.
@@ -430,7 +509,7 @@ See http://www.latex-project.org/lppl.txt
 % ^^A\maketitle
 % \pagestyle{empty}
 % \frontmatter
-% \coverpage{hine02}{Yiannis Lazarides}{Published by Camel Press}
+% \coverpage{./images/hine02.jpg}{Yiannis Lazarides}{Published by Camel Press}
 % \secondpage
 % \pagestyle{empty}
 %
@@ -452,62 +531,178 @@ See http://www.latex-project.org/lppl.txt
 % \gdef\dotsep{10000}          ^^A (bug in \LaTeX)
 % \makeatletter
 %  \tableofcontents
-% ^^A\listoftables
-% ^^A\listoffigures
+%   \listoftables
+%  ^^A\listoffigures
 % }
 % 
 % \mainmatter
 % \raggedbottom
 %  \newgeometry{left=3.8cm, right=2cm,top=2cm,bottom=3cm}
-%  \input{./sections/introduction}
-%  
-%
-%
+%  \def\partname{Part}
+%  \let\sidenote\footnote
+% \ifluatex \input{./sections/luatex}\fi
+%  ^^A\input{./sections/fonts}
+%  ^^A\input{./sections/symbols}
+%  \input{./sections/xetex-notes}
+%  \input{./sections/languages}
+%  \end{document}
+%  ^^A\input{./sections/document-divisions}
 % 
 
-% \section{Ordering of Packages}
+%  \end{document}
+%  \part{Visualizations and Plotting}
+%  \input{./sections/pictureenvironment}
+%  \input{./sections/tikz}
 % 
-% One package that normally leads to errors is the 
-% |hyperref|. As a lot of internal commands of the kernel
-% and of some packages it has to be loaded at the end
-% of the preable with the exception of some packages! 
+%  \input{./sections/introduction}
+
+
+
+%  \parindent1em
+%  \input{./sections/quotations}
+%  \input{./sections/quotationsandotherintrusions}
+%  \input{./sections/numbers}
+%  \input{./sections/acronyms}
+%  \input{./sections/generalsettings}
+% \end{document}
+%  \input{./sections/maths}
 % 
-% This manual is typeset according to the conventions of the
-% \LaTeX \textsc{docstrip} utility which enables the automatic
-% extraction of the \LaTeX{} macro source files~\cite{GOOSSENS94}.
+
+%  \input{./sections/rulesandleaders}
+%  \input{./sections/headersandfooters}
+%  \input{./sections/chapterdesign}
+%  \input{./sections/specialdesigns}
+%  \input{./sections/tableofcontents}
+
+%  \part{Graphics}
+%  \input{./sections/graphics}
+%  \input{./sections/floats}
+%  \input{./sections/wrapfig-02}
+%  \input{./sections/pericula}
+%  \input{./sections/subfigure}
+%  \input{./sections/long-figures}
+%  \input{./sections/sideways}
+%  \input{./sections/twowomenreverse}
+%  \input{./sections/twowomen}
+%  \input{./sections/kroll}
+%  \input{./sections/bache}
+%  \input{./sections/elgreco.tex}
+%  \input{./sections/captions}
+%  \input{./sections/captionsandothers}
+%
+%  \input{./sections/macros}
+
+%  \part{The Structural Elements of Documents}
+
+
+%  \input{./sections/paragraphs}
+%  \input{./sections/verse}
+%  \input{./sections/pagenotes}
+%   \input{./sections/indices}
+
+%  \input{./sections/tables}
+%
+%  \input{./sections/epigraphschapter}
+%  \input{./sections/lowerlevelheadings}
+%  \input{./sections/docmacros}
+%  \cxset{section color=teal}
+%  \input{./sections/lists}
+
+% \pagestyle{myheadings}
+%
+%  \part{THE TYPESETTING ENGINES}
+% 
+%  \input{./sections/boxesandglue}
+
+
+%  \input{./sections/characters}
+%  \input{./sections/charting01}
+%
+%  %  \part{Programming Topics}
+%  \input{./sections/grouping}
+%  \input{./sections/iteration}
+%  \input{./sections/expandafter} 
+%  \input{./sections/futurelet}
+%  \input{./sections/datastructures}
+
+%  \input{./sections/io}
+%  \input{./sections/classes}
+%  \input{./sections/keyvalues}
+%  \input{./sections/pgfmanual-en-pgfkeys}
+%  \input{./sections/colors}
+%  \input{./sections/dates}
+%  \input{./sections/codingstyle}
+%  \input{./sections/OTR}
+
+
+%  \part{The LaTeX2e Kernel}
+%
+%  \input{./sections/latexkernel}
+%  \input{./sections/kernel-ltspace}
+%  \input{./sections/kernel-ltfloat.tex} 
+%  \input{./sections/kernel-ltlists}
+%  \input{./sections/kernel-N-ltlength.tex}
+%
+%	\part{The Standard Classes}
+%  \input{./sections/book.cls.tex}
+%  \input{./sections/pages}
+%  \input{./sections/bibliographies}
+
+
+%  
+%\iffalse
+%   \includepdf[pages=1]{grid.pdf}
+%\fi
+%  \iffalse
+%  \@specialfalse
+%  \input{./styles/style01}
+%  \input{./styles/style02}
+%  \input{./styles/style04}
+%  \input{./styles/style05}
+%  \input{./styles/style06}
+%  \input{./styles/style07}
+%  \input{./styles/style08}
+%  \input{./styles/style09}
+%  \input{./styles/style10}
+%  \input{./styles/style11}
+%  \input{./styles/style12}^^A
+%  \input{./styles/style15}^^A
+%  \input{./styles/style18}^^A
+%  \input{./styles/style19}^^A
+%   \input{./styles/style20}^^A
+%  \input{./styles/style20a}^^A
+%  \input{./styles/style21}
+%  \input{./styles/style22}
+%  \input{./styles/style23}
+%  \input{./styles/style24}^^A
+%   \input{./styles/style25}^^A
+%   \input{./styles/style26}^^A
+%   \input{./styles/style27}^^A
+%   \input{./styles/style28}^^A
+%   \input{./styles/style29}^^A
+%   \input{./styles/style30}^^A
+%   \input{./styles/style31}^^A
+%   \input{./styles/style32}^^A
+%   \input{./styles/style33}^^A
+%   \input{./styles/style34}^^A
+%   \input{./styles/style35}^^A
+%   \input{./styles/style36}^^A
+%   \input{./styles/style37}^^A
+%   \input{./styles/style38}^^A
+%   \input{./styles/style39}^^A
+%   \input{./styles/versochapter}^^A
+%   ^^A\input{./styles/style41}^^A
+%   \input{./styles/style42}^^A
+%   \input{./styles/style43}^^A
+%   \input{./styles/style50}
+%  \input{./styles/style52}
+%  \input{./styles/style54}
+%  
+%  \fi
+
 %
 % 
-% \href{http://tex.stackexchange.com/questions/96350/problem-with-algorithmic-and-hyperref}{problem with algorithmic and hyperref}
-% \begin{verbatim}
-%\usepackage{float}  % load float package first!
-%
-%\usepackage{hyperref} % let hyperref patch the float package stuff
-%.
-% \usepackage{algorithm} % let algorithm use the patched version of the float package
-% \end{verbatim}
-% \section{Conventions}
-% \subsection{Defining Colors}
-% All color definitions are of the form |the<color>|. So the setting for |theblue| is called
-% |theblue|. This provides easy to remember commands.
-% 
-% \section{Document Structure}
-% We do not load too many packages for document structure, a these are expected to be
-% treated at class level.
-% \begin{table}[ht]
-% \centering
-% \caption{Packages used for structure.}
-% \begin{tabular}{ll}
-%   \toprule
-%   Package  & Default\\
-%   \midrule
-%   |multicol| & called by author  \\
-%   \bottomrule
-% \end{tabular}
-% \end{table}
-%
-% 
-% \StopEventually{}
-%
+^^A \StopEventually{}
 %
 %<*package>
 %
@@ -515,35 +710,14 @@ See http://www.latex-project.org/lppl.txt
 % \cxset{style13}
 % \cxset{section align=left,
 %        section color=teal,
-%         section font-weight=bold,
-%         title font-family=sfamily,
-%         title font-shape=upshape,
-%         subsection indent=0pt,
-%          subsection font-shape=upshape}
+%        section font-weight=bold,
+%        title font-family=sfamily,
+%        title font-shape=upshape,
+%        subsection indent=0pt,
+%        subsection font-shape=upshape}
 % \renewsubsection
 %
 % \thispagestyle{headings}
-% \def\partname{Part}
-% \input{./sections/chapterdesign}
-%%  \input{./sections/specialdesigns}
-%
-%\restoregeometry 
-%\newpage
-%  \input{./sections/epigraphschapter}
-%  \input{./sections/lowerlevelheadings}
-%  \input{./sections/twowomenreverse}
-%  \input{./sections/twowomen}
-%  \input{./sections/kroll}
-%  \cxset{section color=teal}
-%  \input{./sections/lists}
-%% 
-%  \cxset{textii = {In this chapter we outline methods that can be used to construct different layouts for the quotation and quote environments of LaTeX, using a key-value interface.},
-%   }
-%  \input{./sections/quotations}
-%  \input{./sections/generalsettings}
-%%  \input{./sections/docmacros}
-%  \input{./sections/colors}
-
 %
 % \cxset{style13}
 % \cxset{section align=left,
@@ -575,7 +749,7 @@ See http://www.latex-project.org/lppl.txt
 %       providing a number of interface commands.
 %
 %  \item[The Sectioning Layouts Manager] This section manages 
-%       the design of complex layouts for sectioning comands.
+%       the design of complex layouts for sectioning commands.
 %
 %  \item [The Image Page Manager] This section manages the design of 
 %       pages that consist primarily of images and complex
@@ -597,7 +771,10 @@ See http://www.latex-project.org/lppl.txt
 % an adequate number of packages to enable the typesetting
 % of a diverse number of large documents without requiring
 % additional packages to be loaded by typical groups of
-% authors.
+% authors. This has its advantages, but of course it does 
+% slow things down. A long term objective is to select
+% packages depending as an option on the type of document
+% being prepared.
 %
 % \section{Preliminaries}
 %
@@ -610,10 +787,20 @@ See http://www.latex-project.org/lppl.txt
 \ProvidesPackage{phd}[2013/2/26 v1.0 less preamble (YL)]%
 %    \end{macrocode}
 %
-% Load \pkg{fixltx2e} to update \LaTeX2e for various fixes.
+% Load \pkg{fixltx2e} to update \LaTeX2e for various fixes. fixes a few things in the LaTeX2e kernel.
+%
+%Due to LaTeX's stability policy, these corrections have not been incorporated into the LaTeX2e kernel, but this package does things most people would agree are bugfixes. So to load this package is always recommended for newly created documents. The corrections have no commonalities, but the package's description has a nice summary:
+%
+%ensure one-column floats don't get ahead of two-column floats;
+%correct page headers in twocolumn documents;
+%stop spaces disappearing in moving arguments;
+%allowing |\fnsymbol| to use text symbols;
+%allow the first word after a float to hyphenate;
+% cs{emph} can produce caps/small caps text;
+%bugs in \cs{setlength} and \cs{flushbottom.}
 % 
 %    \begin{macrocode}
-\RequirePackage{fixltx2e}                
+\RequirePackage{fixltx2e}[2006/03/24]
 %    \end{macrocode}
 % 
 %
@@ -653,7 +840,7 @@ See http://www.latex-project.org/lppl.txt
 %    \end{macrocode}
 % \end{macro}
 %    
-
+%
 % \begin{macro}{\restoresymbols}
 % 	Restore a previously saved symbol, and rename the current one.
 %    \begin{macrocode}
@@ -683,6 +870,7 @@ See http://www.latex-project.org/lppl.txt
 %    \end{macrocode}
 % \begin{macro}{\ifcomplete}
 %    \begin{macrocode}
+\let\oldcontentsline\contentsline
 \newif\ifcomplete
 %    \end{macrocode}
 % \end{macro}    
@@ -788,7 +976,8 @@ See http://www.latex-project.org/lppl.txt
 % 
 % \begin{environment}{etex}
 %    \begin{macrocode}
-\RequirePackage{etex}
+\ifxetex\else
+\RequirePackage{etex}\fi
 %    \end{macrocode}
 % \end{environment}
 %
@@ -825,8 +1014,8 @@ See http://www.latex-project.org/lppl.txt
 % 	For |xcolor| we try and load as many pre-defined colornames as
 % 	possible.
 %    \begin{macrocode}
-\cxset{xcolor keys={fixpdftex,xtable,usenames,dvipsnames,
-                    svgnames,x11names}}                     
+\cxset{xcolor keys={fixpdftex,usenames,dvipsnames,
+                    svgnames,x11names,table}}                     
 % Set amsmath keys
 %
 %    \end{macrocode}
@@ -845,12 +1034,16 @@ See http://www.latex-project.org/lppl.txt
 % being introduced in the typsetting of the document. The recommended 
 % way is to use |\[|\ldots|\]|. The package was developed by Harold Harders
 % and although targetted for class writers one might as well use it directly.
-% 
+%
+% The package \pkgname{microtype} is loaded with no options
+% as it provides facilities for loading individual features
+% at run time.
 %    \begin{macrocode}
 
 %\PassOptionsToPackage{\onlyamsmathkeys@cx}{onlyamsmath}
 %\RequirePackage{onlyamsmath} 
-\RequirePackage{microtype}
+\ifxetex\else
+\RequirePackage{microtype}\fi
 %    \end{macrocode}
 % \end{macro}
 %
@@ -876,7 +1069,8 @@ See http://www.latex-project.org/lppl.txt
 % \begin{macro}{graphicx}
 %    \begin{macrocode}
 \RequirePackage{graphicx}[1999/02/16]
-\graphicspath{{graphics/}{graphics//}{images//}{./graphics/}{../graphics/}{./pic/}{../pic}}
+\DeclareGraphicsExtensions{jpg,JPG,jpeg,png,eps}
+\graphicspath{{graphics/}{graphics//}{../images/}{images//}{./images/}{./graphics/}{../graphics/}{./pic/}{../pic}}
 %    \end{macrocode}
 % \end{macro}
 %
@@ -976,8 +1170,19 @@ See http://www.latex-project.org/lppl.txt
 %
 % \subsection{Color management}
 %    \begin{macrocode}
+\providecommand\href[2]{\texttt{#1}}
+\definecolor{lstbgcolor}{rgb}{0.9,0.9,0.9}
+\colorlet{examplefill}{yellow!80!black}
+\definecolor{graphicbackground}{rgb}{0.96,0.96,0.8}
+\definecolor{glyphbox}{rgb}{0.86,0.86,0.8}
+\definecolor{codebackground}{rgb}{0.8,0.8,1}
 \definecolor{theblue} {rgb}{0.02,0.04,0.48}
 \definecolor{thered}  {rgb}{0.65,0.04,0.07}
+\colorlet{Headings}{black} %font examples
+\colorlet{Subheadings}{black} %font examples
+\colorlet{thefontname}{black}%font examples
+\colorlet{thehighlight}{yellow}%soul  highlight
+\colorlet{thecancel}{thered}%for cancel commands
 \definecolor{thegreen}{rgb}{0.06,0.44,0.08}
 \definecolor{thelightgreen}{rgb}{0.06,0.44,0.06}
 \definecolor{thegrey} {gray}{0.5}
@@ -998,8 +1203,8 @@ See http://www.latex-project.org/lppl.txt
 \definecolor{ExampleBack}{rgb}{0.963,0.971,0.994}
 \definecolor{Hyperlink}{rgb}{0.281,0.275,0.485}
 \colorlet{thehyperlink}{theblue}
-\newcommand*{\defaultcolor}{\color{black}}
-\newcommand*{\spotcolor}{\color{spot}}
+%\newcommand*{\defaultcolor}{\color{black}}
+%\newcommand*{\spotcolor}{\color{spot}}
 %    \end{macrocode}
 % 
 %    \begin{macrocode}
@@ -1010,14 +1215,15 @@ See http://www.latex-project.org/lppl.txt
 %
 % \section{Rules}
 %
-% \begin{macro}{\thickrule}
 % \begin{macro}{\thinrule}
 % \begin{macro}{\mediumrule}
+% \begin{macro}{\thickrule}
 %	We will use later on different styles of rules to decorate chapter headings.
 %	We define a few here to simplify code later on.
 %
 %    \begin{macrocode}
-\DeclareRobustCommand\thickrule{\leavevmode \leaders \hrule height 3pt \hfill \kern \z@}
+\DeclareRobustCommand\thickrule{
+\leavevmode \leaders \hrule height 2pt \hfill \kern \z@}
 \DeclareRobustCommand\thinrule{\rule{\textwidth}{0.4pt}}
 \DeclareRobustCommand\mediumrule{\rule{\textwidth}{0.8pt}}
 %    Adjusted to get toc parameters in
@@ -1030,13 +1236,21 @@ See http://www.latex-project.org/lppl.txt
 % \end{macro}
 % \end{macro}
 % \end{macro}
+%
+%    \begin{macrocode}
+\cxset{chapter rule color/.store in={\chapter@rule@color}}%
+\cxset{chapter rule color=thered}%
+\DeclareRobustCommand\tikzrule{%
+\tikz [color=\chapter@rule@color, very thick] \draw(0,0)--(\the\linewidth,0);
+}
 
+%    \end{macrocode}
 %
 % \section{Filler Text}
 %
 %
 % \begin{macro}{lipsum}
-% 	publishing and graphic design, lorem ipsum is placeholder text (filler text) 
+% 	In publishing and graphic design, lorem ipsum is placeholder text (filler text) 
 % 	commonly used to demonstrate the graphics elements of a document or visual 
 % 	presentation, such as font, typography, and layout, by removing the distraction 
 % 	of meaningful content. The lorem ipsum text is typically a section of a Latin text 
@@ -1071,7 +1285,7 @@ See http://www.latex-project.org/lppl.txt
 % \begin{macro}{\fox} A classic one liner containing all the letters
 %	 of the alphabet, used as a testing code.
 %    \begin{macrocode}
-\newcommand{\fox}{\leavevmode ``The quick brown fox jumps over the lazy dog'' \par} 
+\newcommand{\fox}{``The quick brown fox jumps over the lazy dog''} 
 %    \end{macrocode}
 % \end{macro}
 %
@@ -1234,20 +1448,75 @@ ball was her favorite plaything.}%
 % \end{macro}
 %
 % \begin{macro}{longtable}
-% 
+% \makeatletter
 % The |longtable| package, needs no introduction. It has some
 % peculiar settings and sometimes a couple of runs before it settles
 % down. The package has four keys |errorshow|, |pausing|, |set| and |final| looks 
 % as if they deprecated, at this stage we make onlty a mental note of it.
 % The package cannot be used within |multicolumn| environments and will
-% emit an error. 
+% emit an error. \let\origLT@array=\LT@array
+% \meaning\origLT@array
 % 
 %    \begin{macrocode}
 \RequirePackage{longtable}
+\let\origLT@array=\LT@array
+\let\origLT@start=\LT@start
+
+\newenvironment{longsymtable}[2][true]{%
+  \expandafter\global\expandafter\let
+    \expandafter\ifshowsymtable\csname if#1\endcsname
+  \ifshowsymtable
+    \mbox{}%
+    \Needspace*{13\baselineskip}%
+    \mbox{}%
+    \begin{center}%
+    \phantomsection
+    \refstepcounter{table}%
+    \let\refstepcounter=\@gobble
+    \let\LT@array=\origLT@array
+    \let\LT@start=\origLT@start
+%
+    \addcontentsline{toc}{subsection}{%
+      \protect\numberline{\tablename~\thetable:}{#2}}%
+    \@makecaption{\fnum@table}{#2}%
+    \gdef\lt@indexed{}%
+    \let\next=\relax
+  \else
+    % The following was taken verbatim from verbatim.sty.
+    \let\do\@makeother\dospecials\catcode`\^^M\active
+    \let\verbatim@startline\relax
+    \let\verbatim@addtoline\@gobble
+    \let\verbatim@processline\relax
+    \let\verbatim@finish\relax
+    \let\next=\verbatim@
+  \fi
+  \next
+}{%
+  \ifshowsymtable
+    \end{center}
+    \let\@elt=\index\lt@indexed  % Close our index ranges.
+    \gdef\lt@indexed{}%
+    \vskip 8ex minus 2ex
+  \fi
+}
+
+
+% Define \index-like commands for use with longsymtable that
+% automatically apply to the entire table, not just the start of it.
+
+\newcommand{\ltindex}[1]{%
+  \index{#1|(}%
+  \@cons{\lt@indexed}{{#1|)}}%
+}
+\newcommand{\ltidxboth}[2]{\mbox{}\ltindex{#1 #2}\ltindex{#2>#1}}
+
+\let\LT@array=\origLT@array
+\let\LT@start=\origLT@start
 %    \end{macrocode}
 % \end{macro}   
 %
 % \begin{macro}{multirow}
+% \meaning\LT@array
 % 
 % The |multirow| by Piet van Oostrum and its two companion packages
 % |bigdelim| and |bigstrut| can be used to define multirow cells. They are difficult
@@ -1256,14 +1525,24 @@ ball was her favorite plaything.}%
 % and a hack around its usage which we will load next.
 % 
 %    \begin{macrocode}
+% If we have type1cm.sty, use it.
+% If we have type1cm.sty, use it.
+\IfStyFileExists*{type1cm}
+  {\usepackage{type1cm}}
+  {}
 \RequirePackage{colortbl}
-\RequirePackage{multirow}
+% If we have multirow.sty, use it.
+\newif\ifhavemultirow
+\IfStyFileExists*{multirow}
+  {\havemultirowtrue\RequirePackage{multirow}}
+  {}
 %    \end{macrocode}
 % \end{macro}
 % 
 % \begin{macro}{threeparttable}
 % This package by Donal Arsenau facilitates tables with titles (captions) and notes. The
 % package comes with a number of options |para|, |flushleft|, online and normal.
+% \label{threeparttable}
 %    \begin{macrocode}
 \RequirePackage{threeparttable}
 %    \end{macrocode}
@@ -1293,13 +1572,13 @@ ball was her favorite plaything.}%
 % I do not have a normal use for it, personally but I have included it here for correct ordering in case there is a need for it. According to the package documentation, it has to be loaded after \pkg{array}, \pkg{longtable}, \pkg{colortab}, \pkg{colortbl}. Also according to the hyperref documentation it has to be loaded after hyperref as well. 
 %\end{macro}
 %
-% \begin{center}
-%\begin{tabular}{|l::c:r|}\hline
-%A&B&C\\\hdashline
-%AAA&BBB&CCC\\\cdashline{1-2}
-%\multicolumn{2}{|l:}{AB}&C\\\hdashline\hdashline
-%\end{tabular}
-% \end{center}
+^^A \begin{center}
+^^A\begin{tabular}{|l::c:r|}\hline
+^^A A&B&C\\\hdashline
+^^A %AAA&BBB&CCC\\\cdashline{1-2}
+^^A %\multicolumn{2}{|l:}{AB}&C\\\hdashline\hdashline
+^^A %\end{tabular}
+^^A % \end{center}
 %  
 % \section{Landscape Pages}
 %
@@ -1319,7 +1598,7 @@ ball was her favorite plaything.}%
 % \end{macro}
 % \end{macro}
 %  
-% \section{Maths}
+% \chapter{Maths Implementation}
 %
 % 	Although we cognisant that there are documents that do not use math
 % 	and perhaps others that our selection of packages is inadequate, we
@@ -1335,11 +1614,419 @@ ball was her favorite plaything.}%
 % 	appears to be very popular with a lot of scholars in the sciences and
 % 	mathematical fields and hence I decided to  include it here.
 % 
+%  We provide egreg's hack to extend the math alphabets for XeTeX
+%    \begin{macrocode}
+\ifxetex
+  \def\new@mathgroup{\alloc@8\mathgroup\mathchardef\@cclvi}
+  \patchcmd{\document@select@group}{\sixt@@n}{\@cclvi}{}{}
+  \patchcmd{\select@group}{\sixt@@n}{\@cclvi}{}{}
+\if
+%    \end{macrocode}
+%
+%
+%    \begin{macrocode}
+\newif\ifAMS
+\newcommand\AMS{\AmS\index{AMS=\AmS}}
+\IfStyFileExists{amssymb}
+  {\AMStrue
+   \savesymbol{angle} \savesymbol{rightleftharpoons}
+   \savesymbol{leftharpoondown} \savesymbol{rightharpoonup}
+   \savesymbol{iint} \savesymbol{iiint}
+   \savesymbol{iiiint} \savesymbol{idotsint}
+   \let\orig@ifstar=\@ifstar
+   \let\overleftrightarrow \undefined%CHECK
+   \let\underleftarrow\undefined
+    \let\underrightarrow\undefined 
+    \let\underleftrightarrow\undefined 
+   \RequirePackage{amsmath}
+   \RequirePackage{amssymb}
+   \let\@ifstar=\orig@ifstar
+   \restoresymbol{AMS}{angle} \restoresymbol{AMS}{rightleftharpoons}
+   \restoresymbol{AMS}{lefthapoondown} \restoresymbol{AMS}{rightharpoonup}
+   \restoresymbol{AMS}{iint} \restoresymbol{AMS}{iiint}
+   \restoresymbol{AMS}{iiiint} \restoresymbol{AMS}{idotsint}
+  }
+  {
+    % The following was modified from amsmath.sty.
+    \newcommand{\AmSfont}{%
+      \usefont{OMS}{cmsy}{m}{n}}
+    \providecommand{\AmS}{{\protect\AmSfont
+      A\kern-.1667em\lower.5ex\hbox{M}\kern-.125emS}}
+  }
+%    \end{macrocode}
+%
+% 
+% Macros to try and find available fonts for XeTeX sample docs. This is
+% copied verbatim from XeTeX documentation bundle.
+%
+% Usage:
+%
+% |\testFontIsAvailable{font-name}|
+%   sets |\ifFontIsAvailable| according to whether or not it could be found
+%
+% |\FindAnInstalledFont{font-name/alternative/another/yet-another}{\cs}|
+%   searches for an available font from among the names given,
+%   and |\def|'s the control sequence |\cs| to the first one found
+%   or to <No suitable font found> if none (which will subsequently
+%   cause an error when used in a |\font| command). 
+%
+%    \begin{macrocode}
+
+
+\newif\ifFontIsAvailable
+\def\testFontAvailability#1{
+  \count255=\interactionmode
+  \batchmode
+  \let\preload=\nullfont
+  \font\preload="#1" at 10pt
+  \ifx\preload\nullfont \FontIsAvailablefalse
+  \else \FontIsAvailabletrue \fi
+  \interactionmode=\count255
+}
+
+\def\FindAnInstalledFont#1#2{
+  \expandafter\getFirstFontName#1/\end
+  \let\next\gobbleTwo
+  \ifx\trialFontName\empty
+    \def#2{<No suitable font found>}%
+  \else
+    \testFontAvailability{\trialFontName}
+    \ifFontIsAvailable
+      \edef#2{\trialFontName}%
+    \else
+      \let\next\FindAnInstalledFont
+    \fi
+  \fi
+  \expandafter\next\expandafter{\remainingNames}{#2}
+}
+\def\getFirstFontName#1/#2\end{\def\trialFontName{#1}\def\remainingNames{#2}}
+\def\gobbleTwo#1#2{}
+%
+%    \end{macrocode}
+% \begin{macro}{\ligatures}
+%    \begin{macrocode}
+\newcommand\ligatures[2][Old Standard-Regular]{%
+  \bgroup
+  \fontspec[Ligatures = Common]{#1}%
+  \textit{#2}%
+  \egroup
+}
+\renewcommand\U[1]{{\texttt{U+#1}}(\char"#1)\xspace}
+%    \end{macrocode}
+% \end{macro}
+
+% 
+%
+%
+% 
+% \subsection{ymath}
+%
+% We load Yiannis Haralambous \pkgname{ymath}\ctan{ymath} package for its extensible wide accents. ($\widetriangle{ABC}, \widering{ABCDEFG}$) $\ring{ABC}$. \citep{ymath}
+% 
+% \index{yhmath>\string \widetriangle}
+% \index{yhmath>\string \wideparen}
+% \index{yhmath>\string \adots}
+% \index{yhmath>\string \ring}
+% \index{yhmath>\string \widering}
+%
+% Examples: \[\widering{ABCDEFG}\] 
+%    \begin{macrocode}
+\newif\ifYH
+\newcommand\YH{\pkgname{yhmath}}
+\IfStyFileExists{yhmath}
+  {\YHtrue
+   \let\origRequirePackage=\RequirePackage    % We don't want amsmath loaded.
+   \def\RequirePackage##1{}
+   \usepackage{yhmath}
+   \let\RequirePackage=\origRequirePackage
+  }
+  {}
+%    \end{macrocode}
+
+%
+
+%
+% \section{The accents package}
+% If we have the \pkgname{accents}\ctan{accents} package \citep{accents}, use it (for an example in the section
+% on constructing new symbols). Please do note that you need to use the
+% right command name if we have restored it. Do note that the package redeclares
+\index{accents (package commands)>\ttfamily\string\underaccent}%
+\index{accents (package commands)>\ttfamily\string\ring}%
+\index{accents (package commands)>\ttfamily\string\undertilde}%
+\index{accents (package commands)>\ttfamily\string\dddot}%
+\index{accents (package commands)>\ttfamily\string\ddddot}%
+%    \begin{macrocode}
+\newif\ifACCENTS
+\IfStyFileExists{accents}
+  {\ACCENTStrue
+   \savesymbol{undertilde}
+   \savesymbol{dddot}
+   \savesymbol{ddddot}
+   \RequirePackage{accents}
+   \restoresymbol{ACCENTS}{undertilde}
+   \restoresymbol{ACCENTS}{dddot}
+   \restoresymbol{ACCENTS}{ddddot}
+  }
+  {}   
+%    \end{macrocode}
+%
+% \subsection{mathrsfs}
+%
+%  The package \pkgname{mathrsfs} provides calligraphic style fonts.
+%  \mathscr{A B C D E F G}
+% \begin{macro}{\mathscr}
+%    \begin{macrocode}
+\IfStyFileExists{mathrsfs}
+  {\newcommand{\mathscr}[1]{\mbox{\usefont{U}{rsfs}{m}{n}##1}}}
+  {}
+%    \end{macrocode}
+% \end{macro}
+%
+% \section{txfonts}
+% 
+% pxfonts relies on txfonts (I think), so either package can be loaded.
+% Note that txfonts/pxfonts redefine every LaTeX and AMS character,
+% which is not what we want.  As a result, we have to rely on some
+% serious trickery to prevent our old characters from getting redefined.
+% If we are running with XeTeX this has to be before AMS and other packages
+% and on top of fontspec. 
+%    \begin{macrocode}
+\def\TX{txfonts}
+%    \end{macrocode}
+% 
+%
+% \subsection{mathabx}
+%
+% Here's a real problem child: mathabx, which also redefines virtually
+% every symbol provided by LaTeX2e and AMS.  We have to resort to our
+% most devious trickery to get mathabx to load properly.
+%
+%    \begin{macrocode}
+\newif\ifABX
+\def\ABX{\pkgname{mathabx}}
+\let\origDeclareMathSymbol=\DeclareMathSymbol
+\let\origDeclareMathDelimiter=\DeclareMathDelimiter
+\let\origDeclareMathRadical=\DeclareMathRadical
+\let\origDeclareMathAccent=\DeclareMathAccent
+
+  % Redefine \DeclareMathSymbol to stick "ABX" in front of each symbol name.
+  \renewcommand{\DeclareMathSymbol}[4]{%
+    \let\mathabx@undefine=\@gobble  % Undefining symbols causes all sorts of problems for us.
+    \edef\newname{\expandafter\@gobble\string#1}
+    \ifx\newname\@empty
+    \else
+      \edef\newname{ABX\newname}
+      \expandafter\origDeclareMathSymbol\expandafter{%
+        \csname\newname\endcsname}{#2}{#3}{#4}%
+    \fi
+  }
+  % Do the same for \DeclareMathDelimiter.
+  \def\DeclareMathDelimiter#1{%
+    \edef\newname{\expandafter\@gobble\string#1}
+    \def\eatfour##1##2##3##4{}%
+    \def\eatfive##1##2##3##4##5{}%
+    \ifx\newname\@empty
+      \if\relax\noexpand#1%
+        \def\next{\eatfive}
+      \else
+        \def\next{\eatfour}
+      \fi
+    \else
+      \edef\newname{ABX\newname}
+      \def\next{%
+        \expandafter\origDeclareMathDelimiter\expandafter{%
+          \csname\newname\endcsname}}
+    \fi
+    \next
+  }
+  % Do the same for \DeclareMathAccent.
+  \renewcommand{\DeclareMathAccent}[4]{%
+    \edef\newname{\expandafter\@gobble\string#1}
+    \ifx\newname\@empty
+    \else
+      \edef\newname{ABX\newname}
+      \expandafter\origDeclareMathAccent\expandafter{%
+        \csname\newname\endcsname}{#2}{#3}{#4}%
+    \fi
+  }
+  % Redefine \DeclareMathRadical to do nothing.
+  \renewcommand{\DeclareMathRadical}[5]{}
+
+\let\proofmode=1
+\IfStyFileExists{mathabx}
+  {\ABXtrue
+   \savesymbol{not} \savesymbol{widering}\savesymbol{Moon}
+   \savesymbol{notowner} \savesymbol{iint} \savesymbol{iiint}
+   \savesymbol{oint} \savesymbol{oiint} \savesymbol{bigboxperp}
+   \savesymbol{bigoperp} \savesymbol{boxedcirc} \savesymbol{boxeddash}
+   \savesymbol{boxeedast} \savesymbol{boxperp} \savesymbol{boy}
+   \savesymbol{Cap} \savesymbol{centerdot} \savesymbol{circledast}
+   \savesymbol{circledcirc} \savesymbol{circleddash} \savesymbol{Cup}
+   \savesymbol{curvearrowtopleft} \savesymbol{curvearrowtopleftright}
+   \savesymbol{curvearrowtopright} \savesymbol{doteqdot}
+   \savesymbol{geqslant} \savesymbol{gets} \savesymbol{girl}
+   \savesymbol{Join} \savesymbol{land} \savesymbol{leqslant}
+   \savesymbol{looparrowupleft} \savesymbol{looparrowupright}
+   \savesymbol{lor} \savesymbol{lsemantic}
+   \savesymbol{mayaleftdelimiter} \savesymbol{mayarightdelimiter}
+   \savesymbol{ndivides} \savesymbol{nequiv} \savesymbol{ngeqslant}
+   \savesymbol{ni} \savesymbol{nleqslant} \savesymbol{notni}
+   \savesymbol{notowns} \savesymbol{notsign} \savesymbol{operp}
+   \savesymbol{rsemantic} \savesymbol{sqCap} \savesymbol{sqCup}
+   \savesymbol{to} \savesymbol{ulsh} \savesymbol{ursh}
+   \savesymbol{overbrace} \savesymbol{underbrace}
+   \savesymbol{overgroup} \savesymbol{undergroup}
+   \savesymbol{dddot} \savesymbol{ddddot}
+
+   \RequirePackage{mathabx}
+
+   \restoresymbol{ABX}{not} \restoresymbol{ABX}{widering}
+   \restoresymbol{ABX}{Moon} \restoresymbol{ABX}{notowner}
+   \restoresymbol{ABX}{iint} \restoresymbol{ABX}{iiint}
+   \restoresymbol{ABX}{oint} \restoresymbol{ABX}{oiint}
+   \restoresymbol{ABX}{bigboxperp} \restoresymbol{ABX}{bigoperp}
+   \restoresymbol{ABX}{boxedcirc} \restoresymbol{ABX}{boxeddash}
+   \restoresymbol{ABX}{boxeedast} \restoresymbol{ABX}{boxperp}
+   \restoresymbol{ABX}{boy} \restoresymbol{ABX}{Cap}
+   \restoresymbol{ABX}{centerdot} \restoresymbol{ABX}{circledast}
+   \restoresymbol{ABX}{circledcirc} \restoresymbol{ABX}{circleddash}
+   \restoresymbol{ABX}{Cup} \restoresymbol{ABX}{curvearrowtopleft}
+   \restoresymbol{ABX}{curvearrowtopleftright}
+   \restoresymbol{ABX}{curvearrowtopright}
+   \restoresymbol{ABX}{doteqdot} \restoresymbol{ABX}{geqslant}
+   \restoresymbol{ABX}{gets} \restoresymbol{ABX}{girl}
+   \restoresymbol{ABX}{Join} \restoresymbol{ABX}{land}
+   \restoresymbol{ABX}{leqslant} \restoresymbol{ABX}{looparrowupleft}
+   \restoresymbol{ABX}{looparrowupright} \restoresymbol{ABX}{lor}
+   \restoresymbol{ABX}{lsemantic}
+   \restoresymbol{ABX}{mayaleftdelimiter}
+   \restoresymbol{ABX}{mayarightdelimiter}
+   \restoresymbol{ABX}{ndivides} \restoresymbol{ABX}{nequiv}
+   \restoresymbol{ABX}{ngeqslant} \restoresymbol{ABX}{ni}
+   \restoresymbol{ABX}{nleqslant} \restoresymbol{ABX}{notni}
+   \restoresymbol{ABX}{notowns} \restoresymbol{ABX}{notsign}
+   \restoresymbol{ABX}{operp} \restoresymbol{ABX}{rsemantic}
+   \restoresymbol{ABX}{sqCap} \restoresymbol{ABX}{sqCup}
+   \restoresymbol{ABX}{to} \restoresymbol{ABX}{ulsh}
+   \restoresymbol{ABX}{ursh} \restoresymbol{ABX}{overbrace}
+   \restoresymbol{ABX}{underbrace} \restoresymbol{ABX}{overgroup}
+   \restoresymbol{ABX}{undergroup}
+   \restoresymbol{ABX}{dddot} \restoresymbol{ABX}{ddddot}
+  }
+  {}
+\let\DeclareMathAccent=\origDeclareMathAccent
+\let\DeclareMathRadical=\origDeclareMathRadical
+\let\DeclareMathDelimiter=\origDeclareMathDelimiter
+\let\DeclareMathSymbol=\origDeclareMathSymbol
+\ifABX
+  % Define only those accents that are not defined elsewhere.
+  \DeclareMathAccent{\widecheck}     {0}{mathx}{"71}
+  \DeclareMathAccent{\widebar}       {0}{mathx}{"73}
+  \DeclareMathAccent{\widearrow}     {0}{mathx}{"74}
+  % Redefine all let-bound symbols.
+  \let\ABXcenterdot=\ABXsqbullet
+  \let\ABXcircledast=\ABXoasterisk
+  \let\ABXcircledcirc=\ABXocirc
+  % Ensure that \ABXwidering invokes \ABXwideparen, not \wideparen.
+  \def\ABXwidering#1{\ring{\ABXwideparen{#1}}}
+  % Redefine commands that are used by other commands.
+  \DeclareMathSymbol{\ABXnotsign}    {3}{matha}{"7F}
+  \DeclareMathSymbol{\ABXvarnotsign} {3}{mathb}{"7F}
+  \DeclareMathSymbol{\ABXnotowner}   {3}{matha}{"53}
+  
+    \def\ABXoverbrace{\overbrace@{\bracefill\ABXbraceld\ABXbracemd\ABXbracerd\ABXbracexd}}
+    \def\ABXunderbrace{\underbrace@{\bracefill\ABXbracelu\ABXbracemu\ABXbraceru\ABXbracexu}}
+    \def\ABXovergroup{\overbrace@{\bracefill\ABXbraceld{}\ABXbracerd\ABXbracexd}}
+    \def\ABXundergroup{\underbrace@{\bracefill\ABXbracelu{}\ABXbraceru\ABXbracexu}}
+  
+  % Define a command to select the mathb font.
+  \newcommand{\mathbfont}{\usefont{U}{mathb}{m}{n}}
+\fi    % ABX test
+%
+%    \end{macrocode}
+%
+%    $\widering{ABC}$
+%
+% \section{mathtools}
+%
+% 
+%    \begin{macrocode}
+%
+\newif\ifMTOOLS
+\newcommand\MTOOLS{\pkgname{mathtools}}
+\IfStyFileExists{mathtools}
+  {\MTOOLStrue
+   \savesymbol{xleftrightarrow} \savesymbol{xLeftarrow}
+   \savesymbol{xRightarrow} \savesymbol{xLeftrightarrow}
+   \savesymbol{xrightharpoondown} \savesymbol{xrightharpoonup}
+   \savesymbol{xleftharpoondown} \savesymbol{xleftharpoonup}
+   \savesymbol{xleftrightharpoons} \savesymbol{xrightleftharpoons}
+   \savesymbol{xhookleftarrow} \savesymbol{xhookrightarrow}
+   \savesymbol{xmapsto} \savesymbol{underbracket}
+   \savesymbol{overbracket} \savesymbol{lparen} \savesymbol{rparen}
+   \savesymbol{dblcolon} \savesymbol{coloneqq} \savesymbol{Coloneqq}
+   \savesymbol{coloneq} \savesymbol{Coloneq} \savesymbol{eqqcolon}
+   \savesymbol{Eqqcolon} \savesymbol{eqcolon} \savesymbol{Eqcolon}
+   \savesymbol{colonapprox} \savesymbol{Colonapprox}
+   \savesymbol{colonsim} \savesymbol{Colonsim} \savesymbol{overbrace}
+   \savesymbol{underbrace}
+
+   % The mathtools package delays the definitions of some of its symbols
+   % to the \begin{document}.  We redefine \AtBeginDocument to force
+   % mathtools to define everything immediately.
+   \let\origAtBeginDocument=\AtBeginDocument
+   \def\AtBeginDocument##1{##1}
+   \usepackage[donotfixamsmathbugs]{mathtools}
+   \let\AtBeginDocument=\origAtBeginDocument
+
+   \restoresymbol{MTOOLS}{xleftrightarrow}
+   \restoresymbol{MTOOLS}{xLeftarrow}
+   \restoresymbol{MTOOLS}{xRightarrow}
+   \restoresymbol{MTOOLS}{xLeftrightarrow}
+   \restoresymbol{MTOOLS}{xrightharpoondown}
+   \restoresymbol{MTOOLS}{xrightharpoonup}
+   \restoresymbol{MTOOLS}{xleftharpoondown}
+   \restoresymbol{MTOOLS}{xleftharpoonup}
+   \restoresymbol{MTOOLS}{xleftrightharpoons}
+   \restoresymbol{MTOOLS}{xrightleftharpoons}
+   \restoresymbol{MTOOLS}{xhookleftarrow}
+   \restoresymbol{MTOOLS}{xhookrightarrow}
+   \restoresymbol{MTOOLS}{xmapsto}
+   \restoresymbol{MTOOLS}{underbracket}
+   \restoresymbol{MTOOLS}{overbracket} \restoresymbol{MTOOLS}{lparen}
+   \restoresymbol{MTOOLS}{rparen} \restoresymbol{MTOOLS}{dblcolon}
+   \restoresymbol{MTOOLS}{coloneqq} \restoresymbol{MTOOLS}{Coloneqq}
+   \restoresymbol{MTOOLS}{coloneq} \restoresymbol{MTOOLS}{Coloneq}
+   \restoresymbol{MTOOLS}{eqqcolon} \restoresymbol{MTOOLS}{Eqqcolon}
+   \restoresymbol{MTOOLS}{eqcolon} \restoresymbol{MTOOLS}{Eqcolon}
+   \restoresymbol{MTOOLS}{colonapprox}
+   \restoresymbol{MTOOLS}{Colonapprox}
+   \restoresymbol{MTOOLS}{colonsim} \restoresymbol{MTOOLS}{Colonsim}
+   \restoresymbol{MTOOLS}{overbrace} \restoresymbol{MTOOLS}{underbrace}
+
+   % Some of the above are defined in terms of \dblcolon.  At the time
+   % of this writing it doesn't seem like any other package uses the
+   % name \dblcolon so it should be safe to retain its mathtools
+   % definition.
+   \let\dblcolon=\MTOOLSdblcolon
+  }
+  {}
+%    \end{macrocode}
+% \PassOptionsToPackage{leqno}{mathtools}
+% \section{empheq}
+%
 %    \begin{macrocode}
 \RequirePackage[allowspaces]{empheq} %defines harpoon macros
-\PassOptionsToPackage{leqno}{mathtools}
-\RequirePackage{mathtools}
+%    \end{macrocode}
+%
+% \section{Fractions}
+% We load two packages for fractions, but our preference is to use the
+% \pkgname{xfrac}. We load \pkgname{nicefrac} in case anyone disagrees.
+% 
+% \subsection{The nicefrac and xfrac package}
+%    \begin{macrocode}
 \RequirePackage{nicefrac}
+\RequirePackage{xfrac}
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
@@ -1389,8 +2076,19 @@ ball was her favorite plaything.}%
 \RequirePackage{amsthm}[2002/01/22]
 \RequirePackage{amsopn}
 \RequirePackage{amscd}
-\RequirePackage{accents}
-\RequirePackage{dsfont}
+%    \end{macrocode}
+%
+% \subsection{dsfont}
+%
+% The \pkgname{dsfont} which is available in MikTeX as dstroke can be useful
+% for typesetting the mathematical symbols for the natural numbers
+% \mathds{N}, whole numbers \mathds{Z}, rational numbers (\mathds{Q}),real numbers \mathds{R}, complex numbers \mathds{C}, and others. The font and the package is the creation of \person{Olaf}{Kummer} \citep{dsfont}. 
+% \mathdsss{\ALPHABET}
+%    \begin{macrocode}  
+\IfStyFileExists{dsfont}
+  {\newcommand{\mathds}[1]{\mbox{\usefont{U}{dsrom}{m}{n}##1}}
+   \newcommand{\mathdsss}[1]{\mbox{\usefont{U}{dsss}{m}{n}##1}}}
+  {}
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
@@ -1413,9 +2111,10 @@ ball was her favorite plaything.}%
 %
 %This package\footnote{The package is part of the \texttt{mh}-bundle 
 %of Morten H\o gholm (\href{http://www.ctan.org/tex-archive/macros/latex/contrib/mh/}{CTAN://macros/latex/contrib/mh/}).} 
-%supports different frames for math environments of the AmSmath
-%package. It doesn't support  all the environments from standard \LaTeX{} which 
-%are not modified by \AmSmath.
+%supports different frames for math environments of the 
+% AmSmath
+%package. It doesn't support  all the environments from %standard \LaTeX{} which 
+% are not modified by \AmS{}math.
 %
 %With the optional argument of the empheq
 %the preferred box type
@@ -1430,7 +2129,132 @@ ball was her favorite plaything.}%
 % we temporarily make |RequirePckage| a no-op to prevent
 % LaTeX from complaining.
 % 
-%    \begin{macrocode}   
+%    \begin{macrocode} 
+% Manually define every symbol in cmll so we don't have to use any more
+% math alphabets.
+
+% feyn provides yet another math font for which we have no room.
+% Fortunately, it's relatively easy to define all of its symbols in
+% terms of a text font.
+\newif\ifFEYN
+\newcommand\FEYN{\pkgname{feyn}}
+\IfStyFileExists{feyn}
+  {\FEYNtrue
+   \let\origProvidesPackage=\ProvidesPackage
+   \def\ProvidesPackage##1[##2]{\origProvidesPackage{##1}[##2]\endinput}
+   \savesymbol{filename}
+   \usepackage{feyn}
+   \restoresymbol{FEYN}{filename}
+   \let\ProvidesPackage=\origProvidesPackage
+   \DeclareFontFamily{OMS}{textfeyn}{\skewchar\font'000}
+   \DeclareFontShape{OMS}{textfeyn}{m}{n}{%
+     <-10.5>feyntext10%
+     <10.5-11.5>feyntext11%
+     <11.5->feyntext12%
+   }{}
+   \DeclareRobustCommand{\feyn}[1]{{\usefont{OMS}{textfeyn}{m}{n}##1}}
+   \DeclareRobustCommand{\wfermion}{\feyn{\char"64}}
+   \DeclareRobustCommand{\hfermion}{\feyn{\char"6B}}
+   \DeclareRobustCommand{\shfermion}{\feyn{\char"6C}}
+   \DeclareRobustCommand{\whfermion}{\feyn{\char"6D}}
+   \DeclareRobustCommand{\gvcropped}{\feyn{\char"07}}
+   \DeclareRobustCommand{\bigbosonloop}{\feyn{\char"7B}}
+   \DeclareRobustCommand{\smallbosonloop}{\feyn{\char"7C}}
+   \DeclareRobustCommand{\bigbosonloopA}{\feyn{\char"5B}}
+   \DeclareRobustCommand{\smallbosonloopA}{\feyn{\char"5C}}
+   \DeclareRobustCommand{\bigbosonloopV}{\feyn{\char"1B}}
+   \DeclareRobustCommand{\smallbosonloopV}{\feyn{\char"1C}}
+  }
+  {}
+\newif\ifULSY
+\newcommand\ULSY{\pkgname{ulsy}}
+\IfStyFileExists{ulsy}
+  {\ULSYtrue\usepackage{ulsy}}
+  {}
+
+\newif\ifIGO
+\newcommand\IGO{\pkgname{igo}}
+\IfStyFileExists{igo}
+  {\savesymbol{black}
+   \savesymbol{white}
+   \savesymbol{repeat}
+   % Don't let igo redefine all of the font-size commands.
+   \savesymbol{scriptsize}\newcommand{\scriptsize}{}
+   \savesymbol{tiny}\newcommand{\tiny}{}
+   \savesymbol{large}\newcommand{\large}{}
+   \savesymbol{Large}\newcommand{\Large}{}
+   \savesymbol{LARGE}\newcommand{\LARGE}{}
+   \savesymbol{huge}\newcommand{\huge}{}
+   \savesymbol{Huge}\newcommand{\Huge}{}
+   \IGOtrue\usepackage{igo}
+   \restoresymbol{IGO}{black}
+   \restoresymbol{IGO}{white}
+   \restoresymbol{IGO}{repeat}
+   \restoresymbol{IGO}{tiny}
+   \restoresymbol{IGO}{large}
+   \restoresymbol{IGO}{Large}
+   \restoresymbol{IGO}{LARGE}
+   \restoresymbol{IGO}{huge}
+   \restoresymbol{IGO}{Huge}
+   % Define a version of \whitestone and \blackstone that avoid
+   % bracketed arguments.
+   \DeclareRobustCommand{\igowhitestone}[1]{\whitestone[##1]}
+   \DeclareRobustCommand{\igoblackstone}[1]{\blackstone[##1]}
+  }
+  {}
+
+
+\newif\ifCEQ
+\newcommand\CEQ{\pkgname{colonequals}}
+\IfStyFileExists{colonequals}
+  {\savesymbol{colonapprox}
+   \savesymbol{colonsim}
+   \CEQtrue
+   \usepackage{colonequals}
+   \restoresymbol{CEQ}{colonapprox}
+   \restoresymbol{CEQ}{colonsim}
+  }
+  {}
+%    \end{macrocode}
+%
+% \section{Linear Logic Symbols cmll}
+% 
+% The \pkgname{cmll} font defines a handful of symbols useful in linear logic that were not defined in other fonts and packages. The package needs to be loaded
+% after txtfonts. We rename some of 
+%
+%   \CMLLbigparr 
+%   \CMLLbigwith
+%
+%    \begin{macrocode}
+\newif\ifCMLL
+\newcommand\CMLL{\pkgname{cmll}}
+\IfStyFileExists{cmll}
+  {\CMLLtrue
+   \newcommand*{\textCMLL}[1]{{\usefont{U}{cmllr}{m}{n}##1}}
+   \DeclareRobustCommand{\CMLLparr}{\textCMLL{\char0}}
+   \DeclareRobustCommand{\CMLLshpos}{\textCMLL{\char1}}
+   \DeclareRobustCommand{\CMLLshneg}{\textCMLL{\char2}}
+   \DeclareRobustCommand{\CMLLshift}{\textCMLL{\char3}}
+   \DeclareRobustCommand{\CMLLcoh}{\textCMLL{\char4}}
+   \DeclareRobustCommand{\CMLLscoh}{\textCMLL{\char5}}
+   \DeclareRobustCommand{\CMLLincoh}{\textCMLL{\char6}}
+   \DeclareRobustCommand{\CMLLsincoh}{\textCMLL{\char7}}
+   \DeclareRobustCommand{\CMLLbigwith}{\raisebox{2ex}{\textCMLL{\char8}}}
+   \DeclareRobustCommand{\CMLLbigparr}{\raisebox{2ex}{\textCMLL{\char10}}}
+  }
+  {}
+
+ \newif\ifST
+\newcommand\ST{\pkgname{stmaryrd}}
+\IfStyFileExists{stmaryrd}
+  {\STtrue
+   \savesymbol{lightning}
+   \savesymbol{bigtriangleup} \savesymbol{bigtriangledown}
+   \usepackage{stmaryrd}
+   \restoresymbol{ST}{lightning}
+   \restoresymbol{ST}{bigtriangleup} \restoresymbol{ST}{bigtriangledown}
+  }
+  {} 
 \newif\ifXPFEIL
 \newcommand\XPFEIL{\pkgname{extpfeil}}
 \IfStyFileExists{extpfeil}
@@ -1450,25 +2274,120 @@ ball was her favorite plaything.}%
   }
   {}
 %    \end{macrocode}
-%      
-% For calligraphic fonts we load the package |eucal|. The package 
-% is not actually needed, if 
-% amsfonts are loaded? Consider removing.
+%   
+% \section{euscript} 
+%  
+% For calligraphic fonts we load the package \pkgname{euscript}. 
+%
+% The expected normal use of the Euler Script alphabet is as a substitute
+%for the Computer Modern calligraphic alphabet found in cmsy. Therefore we
+% change the meaning of \mathcal. The package uses the Euler script alphabet found in |cmy| and changes the meaning of \cmd{\mathcal} \seedocs{euscript}
+%
+% \[ \mathcal{A} = \EuScript{A} \neq \CMcal{A} \] 
+% 
 %    \begin{macrocode}
+
 \newif\ifEU
 \IfStyFileExists{euscript}
   {\EUtrue\RequirePackage[mathcal]{euscript}
    \renewcommand{\mathcal}[1]{\mbox{\usefont{U}{eus}{m}{n}##1}}
   }
   {\let\CMcal\mathcal}
+
 %    \end{macrocode}
 %
+% \section{Blackboard fonts}
+% \subsection{The bm and bbm fonts}
 % \begin{macro}{bm}
 % \begin{macro}{bbm}
-% These two packages provide bold math fonts.
+% These two packages provide bold math fonts. If we have the bm package, use it (to show how to typeset bold math).
+% \mathbbmtt{\ALPHABET} 
+% The characters can be also be used for subscripts and superscripts.
+% $M_{\mathbbm{i}}$. The package is the work of \person{Torsten}{Hilbrich}
+%
 %    \begin{macrocode}
-\RequirePackage{bm}  
-\RequirePackage{bbm}
+
+\newif\ifBM
+\IfStyFileExists{bm}
+  {\BMtrue
+   \RequirePackage{bm}
+  }
+  {}  
+\IfStyFileExists{bbm}
+  {\newcommand{\mathbbm}[1]{\mbox{\usefont{U}{bbm}{m}{n}##1}}
+   \newcommand{\mathbbmss}[1]{\mbox{\usefont{U}{bbmss}{m}{n}##1}}
+   \newcommand{\mathbbmtt}[1]{\mbox{\usefont{U}{bbmtt}{m}{n}##1}}}
+  {}
+%    \end{macrocode}
+%
+%    \begin{macrocode}
+\IfStyFileExists{bbold}
+  {\newcommand{\BBmathbb}[1]{\mbox{\usefont{U}{bbold}{m}{n}##1}}
+   % We have to manually define all of the symbols we care about.
+   \newcommand{\BBsym}[1]{\ensuremath{\BBmathbb{\char##1}}}
+   \newcommand{\Langle}{\BBsym{`<}}
+   \newcommand{\Lbrack}{\BBsym{`[}}
+   \newcommand{\Lparen}{\BBsym{`(}}
+   \newcommand{\bbalpha}{\BBsym{"0B}}
+   \newcommand{\bbbeta}{\BBsym{"0C}}
+   \newcommand{\bbgamma}{\BBsym{"0D}}
+   \newcommand{\Rparen}{\BBsym{`)}}
+   \newcommand{\Rbrack}{\BBsym{`]}}
+   \newcommand{\Rangle}{\BBsym{"3E}}
+  }
+  {}
+%The font calligra provides a calligraphic font. Calligra can be found on the CTAN
+%in the directory tex-archive/fonts/calligra. This package provides means to
+%use this font in \latexe \citep{calligra}.\idxfont{Calligra}
+%idxfont{Calligra (font)>\string\textcalligra}
+
+\IfStyFileExists{calligra}
+  {\savesymbol{filename}
+   \RequirePackage{calligra}
+   \restoresymbol{CAL}{filename}
+  }
+  {}
+%    \end{macrocode}
+%
+%
+% \section{Chancery}
+%    \begin{macrocode}
+\IfStyFileExists{chancery}
+  {\newcommand{\mathpzc}[1]{\mbox{\usefont{OT1}{pzc}{m}{it}##1}}}
+  {}
+%    \end{macrocode}
+%
+% \section{mbboard}
+%
+%  
+%    \begin{macrocode}
+\IfStyFileExists{mbboard}
+  {\newcommand{\MBBmathbb}[1]{\mbox{\usefont{OT1}{mbb}{m}{n}##1}}}
+  {}
+\ifx\MBBmathbb\undefined
+\else
+  % Define only the symbols we actually use.
+  \newcommand{\bbnabla}{\MBBmathbb{\char"9A}}
+  \newcommand{\bbdollar}{\MBBmathbb{\char"24}}
+  \newcommand{\bbeuro}{\MBBmathbb{\char"FB}}
+  \newcommand{\bbpe}{\MBBmathbb{\char"D4}}
+  \newcommand{\bbqof}{\MBBmathbb{\char"D7}}
+  \newcommand{\bbyod}{\MBBmathbb{\char"C9}}
+  \newcommand{\bbfinalnun}{\MBBmathbb{\char"CF}}
+
+  % The following was copied from mbboard.sty.
+  \DeclareFontFamily{OT1}{mbb}{\hyphenchar\font45}
+  \DeclareFontShape{OT1}{mbb}{m}{n}{
+        <5> <6> <7> <8> <9> <10> gen * mbb
+        <10.95> mbb10 <12> <14.4> mbb12 <17.28> <20.74> <24.88> mbb17
+        }{}
+\fi
+
+% \mathfrak is defined by a number of packages, to check for it by name.
+\ifx\mathfrak\undefined
+\else
+  \renewcommand{\mathfrak}[1]{\mbox{\fontencoding{U}\fontfamily{euf}\selectfont#1}}
+\fi
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
@@ -1477,7 +2396,7 @@ ball was her favorite plaything.}%
 % \begin{macro}{upgreek} 
 % This package by Walter Schmidt provides fonts
 % and commands for an upright Greek alphabet. It makes the upright
-% Greek characters from the `Euler'  or `Adobe Symbol' typefaces avaialable as 
+% Greek characters from the `Euler'  or `Adobe Symbol' typefaces available as 
 % math symbols. It defaults to the Euler option. The package offers three
 % options |Euler|, |Symbol| and |Symbolsmallscale|.
 % 
@@ -1515,6 +2434,77 @@ ball was her favorite plaything.}%
 %
 %\subsection{Symbols}
 %
+% The \pkgname{ascii} will typeset a document in typewriter
+% font. We only need some of its commands to print
+% the ASCI table from 1-32.
+%    \begin{macrocode}
+
+
+\newif\ifASCII
+\newcommand\ASCII{\pkgname{ascii}}
+\IfStyFileExists{ascii}
+  {\ASCIItrue
+   \savesymbol{HT}
+   \usepackage{ascii}
+   \restoresymbol{ascii}{HT}
+   \let\SI\undefined
+  }
+  {}
+%    \end{macrocode}
+%
+% \section{The china2e package}
+%
+% The \pkgname{china2e} is a fairly old package, but can provide some
+% useful commands. It also provides helpful Chinese lunar symbols, although
+% now with specialized Chinese packages, these is fairly redundant for any
+% major use.
+%
+% Of interest is some useful maths commands. \cmd{\Natural} \cmd{\NATURAL}
+% {\huge\color{thered}\Fire} \seedocs{china}.
+% 
+%    \begin{macrocode}
+\newif\ifCHINA
+\newcommand\CHINA{%
+  \Chinasym
+  \index{china2e=\textsf{china2e} (package)}%
+  \index{packages>china2e=\textsf{china2e}}}
+\IfStyFileExists{china2e}
+  {\CHINAtrue
+   \savesymbol{Info}
+   \savesymbol{Earth}
+   \savesymbol{Telephone}
+   \savesymbol{Fire}
+   \savesymbol{vdots}
+   \let\origDeclareSymbolFont=\DeclareSymbolFont
+   \let\origDeclareMathSymbol=\DeclareMathSymbol
+   \renewcommand{\DeclareSymbolFont}[5]{}
+   \renewcommand{\DeclareMathSymbol}[4]{%
+     \DeclareRobustCommand{##1}{{\uchr##4}}}
+   \usepackage{china2e}
+   \let\DeclareSymbolFont=\origDeclareSymbolFont
+   \let\DeclareMathSymbol=\origDeclareMathSymbol
+   \restoresymbol{china}{Info}
+   \restoresymbol{china}{Earth}
+   \restoresymbol{china}{Telephone}
+   \restoresymbol{china}{Fire}
+   \restoresymbol{CHINA}{vdots}
+  }
+  {}
+%    \end{macrocode}
+%
+%  \section{harpoon}
+% 
+%    \begin{macrocode}
+\newif\ifHARP
+\newcommand\HARP{\pkgname{harpoon}}
+\IfStyFileExists{harpoon}
+  {\HARPtrue\usepackage{harpoon}}
+  {}
+
+%    \end{macrocode}
+%
+% \section{texcomp and mathcomp}
+%
 % We use the \pkg{texcomp} package for special symbols, such as |\checkmark|
 %  \( \mho \Diamond \leadsto \rhd \diamond \Diamond \). The sort of the standard package
 % latexsym is not loaded as it duplicates functionality of the if one makes use of the packages |amsfonts| or |amssymb|.
@@ -1525,21 +2515,30 @@ ball was her favorite plaything.}%
 % on ctan can give the erroneous idea that it is obsolete; on the contracry 
 % is part of the original distribution.textcomp is not obsolete, it's just not distributed as extra package any more since it's distributed with the basic LaTeX distribution. The \pkg{mathcomp} package defines macros for using some of these text... symbols with math and the abbreviation tc...
 %
-%  The symbols are used by calling them by their name. E.g. \textleaf:
+%  The symbols are used by calling them by their name. E.g. \ifxetex\else\textleaf\fi:
 %  \verb|\textleaf|.
 %  
 %  In mathematics the package \verb|mathcomp| works. Then the prefix
 %  \verb|text| is replaced by \verb|tc|, for \emph{t}ext\emph{c}omp:
-%  |tcohm|  \( \tcohm \)
+%  |tcohm|  
 % 
 % The |mathcomp| package takes one option to describe the
-% font to be used. We use |rmdfault| as teh option to default to
+% font to be used. We use |rmdfault| as the option to default to
 % the \cs{rmdefault} font.
 % 
 %    \begin{macrocode}
+% Redefine the LaTeX commands that are replaced by textcomp.
+% This was swiped right out of ltoutenc.dtx, but with "\text..."
+% changed to "\ltext...".
+\DeclareTextCommandDefault{\ltextcopyright}{\textcircled{c}}
+\DeclareTextCommandDefault{\ltextregistered}{\textcircled{\scshape r}}
+\DeclareTextCommandDefault{\ltexttrademark}{\textsuperscript{TM}}
+\DeclareTextCommandDefault{\ltextordfeminine}{\textsuperscript{a}}
+\DeclareTextCommandDefault{\ltextordmasculine}{\textsuperscript{o}}
+\ifxetex\else
 \RequirePackage{textcomp}
 \PassOptionsToPackage{mathcomp}{rmdefault}
-\RequirePackage{mathcomp}
+\RequirePackage{mathcomp}\fi
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
@@ -1547,23 +2546,26 @@ ball was her favorite plaything.}%
 % \begin{macro}{exscale}
 %
 % 
-% \index{Packages=exscale}
+% \index{Packages>exscale}
+%
 %This package implements scaling of the math extension font |cmex|. If this package is used the site needs scaled versions of the font |cmex10| in the sizes 10.95pt, 12pt, 14.4pt, 17.28pt, 20.74pt, and 24.88pt (corresponding to standard magsteps using |\magstephalf|, and |\magstep1| through |\magstep5|). Additionally |cmex| variants for the sizes |7pt| to |9pt| are necessary. These fonts are part of the AMS font pack­age.
 %
 %    \begin{macrocode}
+\ifxetex\else
 \RequirePackage{exscale}
-\RequirePackage{relsize}
+\RequirePackage{relsize}\fi
 %    \end{macrocode}
 % \end{macro}
 %
 % An example to scale math using the \pkg{exscale} package. Perhaps for
 % using slides etc.
-%
 %\begin{minipage}[c]{1.0\textwidth}%
 %\centering\large\[
 %\int_{-1}^{+1}\frac{f(x)}{\sqrt{1-x^{2}}}\,\mathrm{d}x\approx\frac{\pi}{n}%
 %\sum_{i=1}^{n}f\left(\cos\left(\frac{2i-1}{2n}\right)\right)\]
 %\end{minipage}%
+%
+% \section{textcomp}
 %
 % \begin{macro}{\tabitem} The \package{textcomp} 
 % provides a nice helper macro for typesetting symbols in normal, bold
@@ -1649,6 +2651,7 @@ ball was her favorite plaything.}%
 %  \tabitem{texteuro}{texttimes}
 %  \tabitem{textdiv}{}
 %
+%
 %\end{longtable}
 %
 % \begin{macro}{wasysym} \url{http://tex.stackexchange.com/questions/80053/wasysym-symbols-render-to-something-different}
@@ -1661,7 +2664,7 @@ ball was her favorite plaything.}%
    \savesymbol{Box}
    \savesymbol{Diamond}
    \savesymbol{clock}
-   \RequirePackage[nointegrals]{wasysym}
+   \RequirePackage{wasysym}
    \restoresymbol{WASY}{lightning}
    \restoresymbol{WASY}{Box}
    \restoresymbol{WASY}{Diamond}
@@ -1676,8 +2679,8 @@ ball was her favorite plaything.}%
 % \Lpack{pifont} package, providing commands for using the Zapf Dingbats font,
 % as well as an interface to other families.\footnote{%
 % This section was adopted, with minor changes, 
-% from \cite{companion}, 1st ed.}
-%
+% from \cite{Mittelbach2004}}.
+% 
 %    \begin{macrocode}
 \newif\ifPI
 \newcommand\PI{\pkgname{pifont}}
@@ -1687,10 +2690,15 @@ ball was her favorite plaything.}%
 %    \end{macrocode}
 % \end{macro}
 % 
+% 
 %\begin{table}[bt!]
-%  \caption{The characters in the postscript font Zapf Dingbats {\color{red}\ding{190}}}
+% \bgroup
+% \let\oldding\ding
+% \def\ding#1{{\color{teal}\oldding{#1}}}
+% 
+%  \caption{The characters in the postscript font Zapf Dingbats} 
 %  \label{tab:dingbats}
-%  \medskip
+%  \centering
 %  
 %{\footnotesize
 %\begin{tabular}{|rr|rr|rr|rr|rr|rr|rr|rr|}
@@ -1720,15 +2728,18 @@ ball was her favorite plaything.}%
 %    &             & 241 &  \ding{241} & 242 &  \ding{242} & 243 &  \ding{243} & 244 &  \ding{244} & 245 &  \ding{245} & 246 &  \ding{246} & 247 &  \ding{247}  \\ \hline
 %248 &  \ding{248} & 249 &  \ding{249} & 250 &  \ding{250} & 251 &  \ding{251} & 252 &  \ding{252} & 253 &  \ding{253} & 254 &  \ding{254} &     &              \\ \hline
 %\end{tabular}
+% \let\ding\oldding
+%\egroup
 %\par}
+% \label{tbl:dingbats}
+% \end{table}
 %
-%\end{table}
 %
 %    
 % \begin{macro}{marvosym}
-% The package pkg{marvosym} underwent a major rewrite for the 2000/05/01 version, adding
+% The package \ctan{marvosym} underwent a major rewrite for the 2000/05/01 version, adding
 % a large number of new symbols.  If it looks like we have only the
-% older version, pretend we don't have it at all. The tables illustrating the available symbols have been extracted from \cite{marvosym}
+% older version, pretend we don't have it at all. The tables illustrating the available symbols have been extracted from \citep{marvosym}.
 %
 %    \begin{macrocode}  
 \newif\ifMARV
@@ -1990,6 +3001,8 @@ ball was her favorite plaything.}%
 %\sho{\Florin} \\
 %\hline
 %\end{tabular}
+%\label{currencysymbols} 
+
 %\subsection{Safety}
 %
 %\begin{tabular}{|*{8}{c}|} \hline
@@ -2362,6 +3375,34 @@ ball was her favorite plaything.}%
 %    \end{macrocode}
 % \end{macro}
 %
+%    \begin{macrocode}
+\newif\ifEUSYM\EUSYMfalse
+\newcommand\EUSYM{\pkgname{eurosym}}
+\IfStyFileExists{eurosym}
+  {\EUSYMtrue
+   \savesymbol{EUR}
+   \usepackage{eurosym}
+   \restoresymbol{MARV}{EUR}
+  }
+  {}
+
+\newif\ifESV\ESVfalse
+\newcommand\ESV{\pkgname{esvect}}
+%\IfStyFileExists{esvect}
+%  {\ESVtrue
+%   \usepackage{esvect}
+%   \DeclareMathSymbol{\fldra}{\mathrel}{esvector}{'021}
+%   \DeclareMathSymbol{\fldrb}{\mathrel}{esvector}{'022}
+%   \DeclareMathSymbol{\fldrc}{\mathrel}{esvector}{'023}
+%   \DeclareMathSymbol{\fldrd}{\mathrel}{esvector}{'024}
+%   \DeclareMathSymbol{\fldre}{\mathrel}{esvector}{'025}
+%   \DeclareMathSymbol{\fldrf}{\mathrel}{esvector}{'026}
+%   \DeclareMathSymbol{\fldrg}{\mathrel}{esvector}{'027}
+%   \DeclareMathSymbol{\fldrh}{\mathrel}{esvector}{'030}
+%  }
+%  {}
+%    \end{macrocode}
+%
 %
 % \begin{figure}[tbp] \small 
 % \begin{commandsInColumns}{2}
@@ -2563,7 +3604,7 @@ ball was her favorite plaything.}%
 %
 %
 % I am not too sure if I should leave the package here for the long
-% term or remove it, perhaps make a "bundle" for LaTeX authors.
+% term or remove it, perhaps make a "bundle" for LaTeX authors. This package I normally use for the fire symbol for hot issues for my Team.
 %
 % \subsection{ifsym}
 % \begin{macro}{ifsym}
@@ -2753,13 +3794,54 @@ ball was her favorite plaything.}%
 % the package \pkg{pict2e} and the \pkg{picture} for maximum
 % flexibility.
 %
+% We also load a new kid on the block xpicture
 %    \begin{macrocode}
 % Used in chapter for picture environment.
 \RequirePackage{pict2e}
 \RequirePackage{picture}
+%\RequirePackage{xpicture}
 \RequirePackage{tikz}
-\usetikzlibrary{decorations.markings,decorations.shapes,shapes}
+\usetikzlibrary{%
+  arrows,%
+  calc,%
+  fit,%
+  patterns,%
+  plotmarks,%
+  shapes.geometric,%
+  shapes.misc,%
+  shapes.symbols,%
+  shapes.arrows,%
+  shapes.callouts,%
+  shapes.multipart,%
+  shapes.gates.logic.US,%
+  shapes.gates.logic.IEC,%
+  er,%
+  automata,%
+  backgrounds,%
+  chains,%
+  topaths,%
+  trees,%
+  petri,%
+  mindmap,%
+  matrix,%
+  calendar,%
+  folding,%
+  fadings,%
+  through,%
+  positioning,%
+  scopes,%
+  decorations.fractals,%
+  decorations.shapes,%
+  decorations.text,%
+  decorations.pathmorphing,%
+  decorations.pathreplacing,%
+  decorations.footprints,%
+  decorations.markings,%
+  shadows}
+
+\usetikzlibrary{tikzmark}
 \RequirePackage{pgfplots}
+\RequirePackage{pgfplotstable}
 %    \end{macrocode}
 %    
 % \section{Code Typesetting}
@@ -2769,6 +3851,7 @@ ball was her favorite plaything.}%
 %    some predefined environments for styling.
 % 	
 %    \begin{macrocode}
+\RequirePackage{verse}
 \RequirePackage[listings,theorems, skins, 
       documentation, breakable]{tcolorbox}
 \lstdefinelanguage{extras}{morekeywords={%
@@ -2860,7 +3943,9 @@ ball was her favorite plaything.}%
 {}
 
 %% Emphasis
+\ifxetex\else
 \renewcommand{\ttdefault}{cmtt}			% prefer old tt font
+\fi
 \newcommand\emphasis[2][teal]{\lstset{emph={write, writeln,#2},
    emphstyle={\ttfamily\textcolor{#1}}}}%
 \lstnewenvironment{teXXX}[1][]
@@ -2927,7 +4012,7 @@ ball was her favorite plaything.}%
 %    
 % \section{Common packages for Typography}
 %
-% We load |ragged2e| package for typography
+% We load \pkgname{ragged2e} package for typography
 % \begin{macro}{ragged2e}
 % This package by Martin Schr\"oeder provides new commands and environments for
 % setting ragged text which are easy to configure to allow hyphenation. The
@@ -2936,7 +4021,7 @@ ball was her favorite plaything.}%
 % defines a number of useful environments. The package also loads the
 % |footmisc| package if loaded with the option |footnotes|. Hm.. It also
 % loads the package |everysel|. More fun. Passing of options, should be in 
-% a settings file? 
+% a settings file? \index{justification>ragged}\index{justification>ragged2e (package)}
 % 
 %
 %
@@ -2949,39 +4034,57 @@ ball was her favorite plaything.}%
 %    \end{macrocode}
 % \end{macro}
 % \subsection{Highlighting}
+% We load the \pkgname{soul} for spacing out and for
+% highlighting words. We do not pass any options. These
+% are left to the user.
+%
+% \begin{macro}{\sethlcolor}\marg{color name} sets
+% the color for soul's \hl{highlight} command \cmd{\hl}.
 %    \begin{macrocode}
-\RequirePackage{color}% check where we captured it.
-
-\RequirePackage{soul}
-\sethlcolor{blue}
-%\RequirePackage{ulem} % redefines emphasis need to capture it
-\RequirePackage{cancel}
-\RequirePackage{framed}
-\RequirePackage{mdframed}
-\RequirePackage{varioref}
-\RequirePackage{setspace}
+\newif\ifSOUL
+\IfStyFileExists{soul}
+{\SOULtrue\RequirePackage{soul}
+ \sethlcolor{thehighlight}}
+{}
 %    \end{macrocode}
-%    \begin{macrocode}
-\RequirePackage{xfrac}
-\providecommand*\switch[2]{{\fontfamily{#1}\selectfont #2}}
-%    \end{macrocode}  
+% \end{macro} 
+%
+% \section{cancel}  
+%  
+% The \pkgname{ulem}  redefines emphasis so we rather
+% use the cancel package.
+% \cmd{\uline}\uline{important} underlined text like important
+%\uuline{urgent} double-underlined text like urgent
+%\uwave{boat} wavy underline like 
+%boat
+%\sout{wrong} line struck through word like wrong
+%\xout{removed} marked over like removed
+%\dashuline{dashing} dashed underline like dashing
+%\dotuline{dotty} dotted underline like 
+% dotty
+% 
+% Similar functionality is also offered by the \pkgname{soul}
+%
+%The following commands are defined for general use:\\[5pt]
+%  \indent \begin{tabular}{l@{\quad}l}\hline\noalign{\vskip2pt}
+%   |\uline{important}|  & underlined text like \uline{important}\\[1pt]
+%   |\uuline{urgent}|    & double-underlined text like  \uuline{urgent}\\[1pt]
+%   |\uwave{boat}|       & wavy underline like {\let\ULleaders\cleaders\uwave{boat}}\\[1pt]
+%   |\sout{wrong}|       & line struck through word like \sout{wrong}\\[1pt]
+%   |\xout{removed}|     & marked over like \xout{removed} \\[1pt]
+%   |\dashuline{dashing}|& dashed underline like \dashuline{dashing}\\[1pt]
+%   |\dotuline{dotty}|   & dotted underline like \dotuline{dotty}\\[3pt]\hline
+%  \end{tabular}\\[6pt]
+%   Other similar commands can be defined with relative ease by utilizing the
+%   \cs{markoverwith} command provided by ulem.
 
-%
-% \section{Producing Math Symbols}
-% If we have slashed.sty, use it.
 %    \begin{macrocode}
-\newif\ifhaveslashed
-\IfStyFileExists*{slashed}
-  {\haveslashedtrue\RequirePackage{slashed}}
-  {}
-%
-% If we have centernot.sty, use it.
-\newif\ifhavecenternot
-\IfStyFileExists*{centernot}
-  {\havecenternottrue\RequirePackage{centernot}}
-  {}
+\newif\ifULEM
+\IfStyFileExists{ulem}
+{\ULEMtrue\RequirePackage[normalem]{ulem}}
+{}
 %    \end{macrocode}
-%
+% 
 %
 %This is a nice package for canceling anything in mathmode with a slash, 
 %backslash or a \verb+X+. To get
@@ -2989,12 +4092,30 @@ ball was her favorite plaything.}%
 %with an optional argument
 %for the line color (requires package \pkg{color}):
 %
+%$ 
+%\slashed{D} \slashed{p} \slashed{k} \slashed{r} \slashed{A}
+% \slashed{f}
+%\slashed{U} \slashed{\partial}
+% $
 %    \begin{macrocode}
-\newcommand\hcancel[2][black]{\setbox0=\hbox{#2}%
-	\rlap{\raisebox{.45\ht0}{\textcolor{#1}{\rule{\wd0}{1pt}}}}#2}
+% If we have slashed.sty, use it.
+\newif\ifhaveslashed
+\IfStyFileExists*{slashed}
+  {\haveslashedtrue\RequirePackage{slashed}}
+  {}
+
+\newif\ifhavecancel
+\IfStyFileExists*{cancel}
+  {\havecanceltrue\RequirePackage{cancel}}
+  {}
 %    \end{macrocode}
 %
+%
 %It is no problem to redefine the cancel macros to get also colored lines. 
+%    \begin{macrocode}
+\newcommand\hcancel[2][thecancel]{\setbox0=\hbox{#2}%
+	\rlap{\raisebox{.45\ht0}{\textcolor{#1}{\rule{\wd0}{1pt}}}}#2}
+%    \end{macrocode}
 %A horizontal line for
 %single characters is also decribed in section~\vref{sec:Accents}.
 %
@@ -3012,11 +4133,70 @@ ball was her favorite plaything.}%
 % $\xcancel{3}\qquad\xcancel{1234567}$\\[0.5cm]
 % $\hcancel{3}\qquad\hcancel[red]{1234567}$
 %\end{verbatim}
+% \section{staves}
 %
+% This is a peculiar package providing some old Icelandic runes.
+% \runictext{\alphabet}
+% \staveXXXV \staveVI \runictext{abcdef}
+%    \begin{macrocode}
+\newif\ifSTAVE
+\newcommand\STAVE{\pkgname{staves}}
+\IfStyFileExists{staves}
+  {\STAVEtrue\usepackage{staves}}
+  {}
+%    \end{macrocode}
+
+% No point wasting a math alphabet on shuffle.
+%    \begin{macrocode}
+\newif\ifSHUF
+\newcommand\SHUF{\pkgname{shuffle}}
+\IfStyFileExists{shuffle}
+  {\let\origDeclareSymbolFont=\DeclareSymbolFont
+   \let\origDeclareMathSymbol=\DeclareMathSymbol
+   \renewcommand{\DeclareSymbolFont}[5]{}
+   \renewcommand{\DeclareMathSymbol}[4]{%
+     \DeclareRobustCommand{##1}{{\usefont{U}{shuffle}{m}{n}\char##4\relax}}
+   }
+   \SHUFtrue
+   \usepackage{shuffle}
+   \let\DeclareSymbolFont=\origDeclareSymbolFont
+   \let\DeclareMathSymbol=\origDeclareMathSymbol
+  }
+  {}
+%    \end{macrocode}
+
+
+
+%    \begin{macrocode}
+\RequirePackage{framed}
+\RequirePackage{varioref}
+\RequirePackage{setspace}
+%    \end{macrocode}
+%    \begin{macrocode}
+
+\providecommand*\switch[2]{{\fontfamily{#1}\selectfont #2}}
+%    \end{macrocode}  
+
+%
+% \section{Producing Math Symbols}
+% 
+% The \pkgname{centernot} package \citep{centernot} provides \cmd{\centernot} that prints the symbol \cmd{\not} on the
+%following argument. Unlike \cmd{\not} the symbol is horizontally centered. |$A \centernot\parallel B$| will
+% typeset $A \centernot\parallel B$. The \pkgname{amssymb} and \pkgname{mathbax} provide built-in symbols. The package
+%can be used for building other symbols $\centernot\alpha$. 
+% (\seedocs{centernot}).
+%    \begin{macrocode}
+\newif\ifhavecenternot
+\IfStyFileExists*{centernot}
+  {\havecenternottrue\RequirePackage{centernot}}
+  {}
+%    \end{macrocode}
+%
+
 %
 % \section{Acronyms}
 % For acronyms and abbreviations we load the \package{acronym} package
-% by Tobias Oetiker. This package makes sure, that all acronyms used 
+% by Tobias Oetiker \citep{acronym}. This package makes sure, that all acronyms used 
 % in the text are spelled out in full at least once. In one of its
 % options it loads the |relsize| package. My recommendation is to
 % load the package with the options |smaller, printonly| and 
@@ -3039,11 +4219,13 @@ ball was her favorite plaything.}%
 %    \begin{macrocode}
 \newcommand{\hairsp}{\hspace{1pt}}% hair space
 \newcommand{\hquad}{\hskip0.5em\relax}% half quad space
+% Sometimes, we need a little more horizontal spacing, too (used for symbols).
+\newcommand{\qqquad}{\qquad\quad}
 \newcommand{\TODO}{\textcolor{red}{\bf TODO!}\xspace}
-\newcommand{\ie}{\textit{i.\hairsp{}e.}\xspace}
+\newcommand{\ie}{\textit{i.\hairsp{}e\@.}\xspace}
 \newcommand{\eg}{\textit{e.\hairsp{}g.}\xspace}
-\newcommand{\BC}[1]{\textsc{#1 bc}} %European Union Style Guide
-\newcommand{\AD}[1]{\textsc{ad #1}} %European Union Style Guide
+\newcommand{\BC}[1]{\textsc{#1 BC}} %European Union Style Guide FIX
+\newcommand{\AD}[1]{\textsc{AD #1}} %European Union Style Guide FIX
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
@@ -3051,7 +4233,7 @@ ball was her favorite plaything.}%
 % \subsection{Standard phantom widths}
 %
 %    \begin{macrocode}
-\newcommand\Z{\phantom{0}}
+\newcommand\Zi{\phantom{0}} %Z conflicts with symbols 
 \newcommand\ZZ{\phantom{00}}
 \newcommand\ZZZ{\phantom{000}}
 \newcommand\ZZZZ{\phantom{0000}}
@@ -3059,10 +4241,43 @@ ball was her favorite plaything.}%
    \addvspace{1.0\baselineskip plus 0.5ex minus 0.2ex}%
    \noindent\textsc{#1}%
 }
-%\let\equation\gather                           %% See tabu and hyperref docs
+%    \end{macrocode}
+%\let\equation\gather             %% See tabu and hyperref docs
 %\let\endequation\endgather
+%
+%
+% \section{Logos and other common elements}
+% Here we define some of the most common logos, used
+% in documentatio
+%    \begin{macrocode}
+\newcommand{\seedocs}[1]{%
+  See the #1 documentation for more information%
+}
 \def\tex{\TeX\xspace}
 \def\latex{\LaTeX\xspace}
+\def\latexe{\LaTeX\xspace}
+\newcommand{\fontdefdtx}{\filename{fontdef.dtx}\xspace}
+\newcommand{\postscript}{PostScript\index{PostScript}\xspace}
+\newcommand{\TC}{\pkgname{textcomp}}
+%\newcommand\TX{\pkgname{txfonts}}
+\newcommand\PX{\pkgname{pxfonts}}
+\newcommand{\TeXbook}{%
+  The \TeX{}book\index{TeXbook, The=\TeX{}book, The}~\cite{Knuth:ct-a}\xspace}
+\newcommand{\ctt}{%
+  \texttt{comp.text.tex}%
+  \index{comp.text.tex=\texttt{comp.text.tex} (newsgroup)}\xspace}
+\newcommand{\fntenc}[1][]{%
+  \def\firstarg{#1}%
+  font encoding%
+  \ifx\firstarg\empty%
+    \index{font encodings}%
+  \else
+    \index{font encodings>\firstarg}%
+  \fi
+}
+\DeclareRobustCommand{\xelatexInternal}{%
+  \mbox{X\lower0.5ex\hbox{\kern-0.15em\reflectbox{E}}\kern-0.1em\LaTeX}}
+\newcommand{\xelatex}{\xelatexInternal\index{XeLaTeX=\xelatexInternal}\xspace}
 \def\otr{OTR\xspace}
 \let\alltex\LaTeX
 \let\doccmd\cmd
@@ -3077,7 +4292,12 @@ ball was her favorite plaything.}%
 \def\amstex{\AmS-\TeX\xspace}
 %
 \def\docpkg#1{\texttt{#1}}
-\RequirePackage{scalefnt}						
+\RequirePackage{scalefnt}	
+%    \end{macrocode}
+%
+% The package fonttable provides a number of interesting testing tests
+% for fonts
+%    \begin{macrocode}					
 \RequirePackage{fonttable}	
 %    \end{macrocode}
 %
@@ -3090,10 +4310,10 @@ ball was her favorite plaything.}%
 \RequirePackage{multienum}
 \RequirePackage{fourier-orns}
 \RequirePackage{eso-pic}
-\RequirePackage{layouts}
+%\RequirePackage{layouts}
 \RequirePackage{alphalph}
 \RequirePackage{fmtcount}
-\RequirePackage{calligra}
+
 \RequirePackage{varwidth}
 \RequirePackage{comment}
 \RequirePackage{textcase}
@@ -3101,7 +4321,8 @@ ball was her favorite plaything.}%
 \RequirePackage{alltt}[1997/06/16]
 \RequirePackage{caption} % check
 \RequirePackage{currfile}
-\RequirePackage{filemod}
+
+%\RequirePackage{filemod}
 \RequirePackage{afterpage}
 %    \end{macrocode}
 %
@@ -3141,6 +4362,7 @@ ball was her favorite plaything.}%
 % define everything else as text-mode symbols.
 % 
 %    \begin{macrocode} 
+\ifxetex\else
 \newif\ifFOUR
 \newcommand\FOUR{\pkgname{fourier}}
 \IfStyFileExists{fourier}
@@ -3218,6 +4440,7 @@ ball was her favorite plaything.}%
      \raisebox{0.5ex}{\textvcenter{\FOURverticals{\char147\cr\char147\cr\char147\cr\char147\cr}}}}
   }
   {}
+\fi
 %    \end{macrocode} 
 %
 % \begin{macro}{dirtree}
@@ -3237,7 +4460,7 @@ ball was her favorite plaything.}%
 % \subsection{Linear A}
 %    \begin{macrocode}
 \newif\ifarchaic
-\archaictrue
+  \archaictrue
 \ifarchaic
 %    \end{macrocode}
 
@@ -3261,11 +4484,6 @@ ball was her favorite plaything.}%
   {}
 %    \end{macrocode}
 %
-% \begin{commandsInColumns}{3}
-% \Ca   
-% \Cku    
-% \Cpo                     
-% \end{commandsInColumns}
 %
 %    \begin{macrocode}
 \newif\ifSARAB
@@ -3273,17 +4491,19 @@ ball was her favorite plaything.}%
 \IfStyFileExists{sarabian}
   {\SARABtrue\RequirePackage{sarabian}}
   {}
-
-% Cuneiform -- not sure if this is appropriate for the list so it's
-% commented out for now.
+%    \end{macrocode}
+%
+% \subsection{Cuneiform}
+%
+% Cuneiform .
+%    \begin{macrocode}
 \newif\ifPRSN
 \newcommand\PRSN{\pkgname{oldprsn}}
 \IfStyFileExists{oldprsn}
   {\PRSNtrue\RequirePackage{oldprsn}}
   {}
 
-% Cuneiform -- not sure if this is appropriate for the list so it's
-% commented out for now.
+
 \newif\ifUGAR
 \newcommand\UGAR{\pkgname{ugarite}}
 \RequirePackage{ugarite}
@@ -3462,15 +4682,27 @@ ball was her favorite plaything.}%
      \precistoc@cx{#1}
 }
 
-
 \def\precis@cx#1{%
 \bgroup
 \small
-\smallskip\parindent0pt
+\smallskip\parindent0pt%
 #1\par\medskip\egroup}
 
-\def\precistoc@cx#1{
-\addtocontents{toc}{{\vskip0pt\vbox{\par\color{teal} \smallskip\leftskip15pt\rightskip10pt\parindent0pt\leavevmode #1\par\protect\medskip}}}
+\def\precistoc@cx#1{%
+  \addtocontents{toc}{%
+    \protect\bgroup
+    \protect\parindent0pt
+    \protect\color{teal}#1\par
+    \protect\medskip%
+ \egroup}
+}
+
+\long\def\addtocimage@cx#1#2#3{%
+\tikz[remember picture,overlay] {%
+\node[anchor=east,xshift=#1,yshift=#2] at (0,0) {\includegraphics[width=.15\linewidth]{#3}};}%
+}
+\def\addtocimage#1#2#3{%
+ \addtocontents{toc}{\protect\addtocimage@cx{#1}{#2}{#3}}%
 }
 %    \end{macrocode}
 % \end{macro}
@@ -3594,11 +4826,6 @@ ball was her favorite plaything.}%
 %	a number of commands, if nothing else to illustrate 
 %	techniques for defining them.
 %
-% \marge[ProprietesEllipsoideCentral]{(\textit{a}) � l'ellipso�de\\central d'inertie}
-%La consid�ration du centre de gravit� d'un syst�me en mouvement
-%est assez famili�re en Dynamique pour que nous n'ayons pas � la rappeler
-%ici; mais nous pousserons plus loin l'analogie dans la m�me voie,
-%et nous consid�rerons ce que nous appellerons \emph{plans principaux, moments}\ldots
 %
 % \begin{macro}{\MarginBox}
 %    \begin{macrocode}
@@ -3640,14 +4867,12 @@ ball was her favorite plaything.}%
 
 \DeclareRobustCommand\ctan[1]{%
   \textcolor{green}{%
-    \href{http://www.ctan.org/tex-archive/help/Catalogue/entries/#1.html} {#1}
-    \footnote{\protect\url{http://www.ctan.org/tex- archive/help/Catalogue/entries/#1.html}}}
-\index{Packages!#1}%
+      \href{http://www.ctan.org/pkg/#1} {#1}%
+  \footnote{\protect\url{http://www.ctan.org/pkg/#1}}}
+  \index{Packages>#1}%
 }
 
-\def\graybox#1{\par\medskip
- \noindent\colorbox{black!7}{\parbox{0.98\textwidth}{\noindent#1}}\par\medskip}
- 
+
 %    \end{macrocode}
 %
 % \begin{macro}{\keyval}
@@ -3682,19 +4907,565 @@ ball was her favorite plaything.}%
 %    \end{macrocode}
 % \end{macro}
 %
+% \section{Documentation Macros}
+
+% This section defines commands for printing documentation
+% such as this one. It draws inspiration and plagiarizes pgf,
+% doc,symbols and many other packages for which I am grateful.
+% First some macros for indexing commands.
+% 
+%    \begin{macrocode}
+% Define a table environment that's similar to symtable except that it
+% floats and it doesn't write an entry into the Table of Contents.  This
+% is used for tables that contain something other than symbol lists.
+
+\def\DescribeMacro{\leavevmode\@bsphack
+   \begingroup\MakePrivateLetters\Describe@Macro}
+\def\Describe@Macro#1{\endgroup
+              {\raggedleft\PrintDescribeMacro{#1}}%
+              \SpecialUsageIndex{#1}\@esphack\ignorespaces}
+
+
+\def\DescribeEnv{\leavevmode\@bsphack\begingroup\MakePrivateLetters
+  \Describe@Env}
+\def\Describe@Env#1{\endgroup
+              {\raggedleft\PrintDescribeEnv{#1}}{}%
+              \SpecialEnvIndex{#1}\@esphack\ignorespaces}
+\setlength\marginparpush{0pt}  
+
+
+
+\newlength{\atemp}
+ \def\PrintDescribeMacro#1{%
+  \settowidth\atemp{\string #1} 
+  \strut\MacroFont\color{thered}\normalsize\string#1}
+
+\def\Describe#1{%
+   \settowidth\atemp{\string #1}% 
+  \par\penalty-500\vskip3ex\noindent
+  \DescribeMacro{#1}\args}
+\def\DescribeOther{\vskip-4ex\Describe}
+
+\def\args#1{%
+  \def\bbl@tempa{#1}%
+  \ifx\bbl@tempa\@empty\else#1\vskip1ex\fi\ignorespaces}
+
+
+\newenvironment{nonsymtable}[1]{%
+  \begin{table}[htbp]
+  \centering
+  \caption{#1}\medskip
+}{%
+  \end{table}
+}
+
+\IfStyFileExists*{needspace}
+  {\RequirePackage{needspace}}
+  {\newcommand{\Needspace}[2]{\par \penalty-100\begingroup
+     \setlength{\dimen@}{##2}%
+     \dimen@ii\pagegoal \advance\dimen@ii-\pagetotal
+     \ifdim \dimen@>\dimen@ii
+       \break
+     \fi\endgroup}
+  }
+
+
+
+
+% Index "X Y" and "Y, X".  The "begin" and "end" variants are for page ranges.
+
+\newcommand{\cmdI}[2][]{%
+  \def\first@arg{#1}%
+  \ifx\first@arg\@empty
+    \texttt{\string#2}\indexcommand[#2]{#2}%
+  \else
+    \texttt{\string#2}\indexcommand[#1]{#2}%
+  \fi
+}
+\newcommand{\cmdX}[1]{\cmdI[$\string#1$]{#1}}
+\newcommand{\cmdW}[1]{\cmdI[$\string\blackacc{\string#1}$]{#1}}
+\newcommand{\cmdIp}[1]{\texttt{\string#1}\indexpunct[$#1$]{#1}}
+%    \end{macrocode}
+
+% \begin{macro}{\CMDI}\oarg[symbol command]\marg{command}
+% This macro \#1 symbol to be typeset next to
+% \#2 in the index |\gothic (symbol)|
+%    \begin{macrocode}
+\DeclareRobustCommand\CMDI[1]{%
+\bgroup
+\smallskip
+\noindent\color{thered}\texttt{\string#1}%
+\indexcommand{#1}
+\egroup%
+}
+%    \end{macrocode}
+% \end{macro}
+
+%\newcommand{\ascii}{ASCII\index{ASCII}\xspace}
+%    \begin{macrocode}
+\newcommand{\utfviii}{\mbox{UTF-8}\index{UTF-8}\xspace}
+\newcommand{\idxboth}[2]{\mbox{}\index{#1 #2}\index{#2>#1}}
+\newcommand{\idxbothbegin}[2]{\mbox{}\index{#1 #2|(}\index{#2>#1|(}}
+\newcommand{\idxbothend}[2]{\mbox{}\index{#1 #2|)}\index{#2>#1|)}}
+% Index TeXbook symbols and the CTAN repository.
+\newcommand{\idxTBsyms}{%
+  \index{symbols>TeXbook=\TeX{}book}%
+  \index{TeXbook, The=\TeX{}book, The>symbols from}%
+}
+
+% Index logical styles.
+\newcommand{\pkgname}[1]{%
+  \href{http://ctan.org/pkg/#1}{#1}%
+  \index{#1=\textsf{#1} (package)}%
+  \index{packages>#1=\textsf{#1}}}
+
+\newcommand{\optname}[2]{%
+  \textsf{#2}%
+  \index{#2=\textsf{#2} (\textsf{#1} package option)}%
+  \index{package options>#2=\textsf{#2} (\textsf{#1})}}
+
+\newcommand{\docfilename}[1]{%
+  \texttt{#1}%
+  \index{#1=\texttt{#1} (file)}}
+
+\newcommand{\docfileextension}[1]{%
+  \texttt{#1}%
+  \index{#1=\texttt{#1} (file extension)}}
+   \index{#1=\texttt{#1}}
+\newcommand{\PSfont}[1]{%
+  #1%
+  \index{#1 (font)}%
+  \index{fonts>#1}%
+}
+\DeclareRobustCommand{\person}[2]{#1\index{#2, #1} #2}
+\newcommand{\idxCTAN}{%
+  \index{Comprehensive TeX Archive Network=Comprehensive \string\TeX{} Archive Network}}
+% Typeset a string in various encodings.
+\newcommand{\encone}[1]{{\fontencoding{T1}\selectfont#1}}
+\newcommand{\encfour}[1]{{\fontencoding{T4}\selectfont#1}}
+\newcommand{\encfive}[1]{{\fontencoding{T5}\selectfont#1}}
+\newcommand{\encgreek}[1]{{\fontencoding{LGR}\selectfont#1}}
+
+% Various punctuation marks confuse makeindex when used directly.
+\let\magicrbrack=]
+\let\magicequal=\=
+\DeclareRobustCommand{\magicequalname}{\texttt{\string\=}}
+\DeclareRobustCommand{\magicvertname}{\texttt{|}}
+\DeclareRobustCommand{\magicVertname}{\texttt{\string\|}}
+
+% Vertically center a text-mode symbol.
+\newsavebox{\tvcbox}
+\newcommand*{\textvcenter}[1]{%
+  \savebox{\tvcbox}{#1}%
+  \raisebox{0.5\dp\tvcbox}{\raisebox{-0.5\ht\tvcbox}{\usebox{\tvcbox}}}%
+}
+% Many tables have notes beneath them.  Define an environment in which to
+% display such a note, with an optional, superscripted math symbol
+% preceding it.
+\newenvironment{tablenote}[1][]{
+  \makebox[1em]{\ensuremath{^{#1}}}%
+  \begin{minipage}[t]{0.75\textwidth}%
+  \setlength{\parskip}{2ex}
+}{%
+  \end{minipage}%
+}
+
+% Define various messages we reuse repeatedly.
+\newcommand{\twosymbolmessage}{%
+  \begin{tablenote}
+    Where two symbols are present, the left one is the ``faked'' symbol
+    that \latexe provides by default, and the right one is the ``true''
+    symbol that \TC\ makes available.
+  \end{tablenote}
+}
+
+\newcommand{\notpredefinedmessage}{%
+  \begin{tablenote}[*]
+    Not predefined in \latexe.  Use one of the packages
+    \pkgname{latexsym}, \pkgname{amsfonts}, \pkgname{amssymb},
+    \pkgname{txfonts}, \pkgname{pxfonts}, or \pkgname{wasysym}.
+  \end{tablenote}
+}
+
+\newcommand{\notpredefinedmessageABX}{%
+  \begin{tablenote}[*]
+    Not predefined in \latexe.  Use one of the packages
+    \pkgname{latexsym}, \pkgname{amsfonts}, \pkgname{amssymb},
+    \pkgname{mathabx}, \pkgname{txfonts}, \pkgname{pxfonts}, or
+    \pkgname{wasysym}.
+  \end{tablenote}
+}
+
+\newcommand{\usetextmathmessage}[1][]{%
+  \begin{tablenote}[#1]
+    It's generally preferable to use the corresponding symbol from
+    \vref{math-text} because the symbols in that table work
+    properly in both text mode and math mode.
+  \end{tablenote}
+}
+
+
+
+\newcommand{\usefontcmdmessage}[2]{%
+  These symbols must appear either within the argument to \cmd{#1} or
+  following the \cmd{#2} font-selection command within a scope%
+}
+% Define an environment in which to write a single table of symbols.  The
+% environment looks a lot like a table, but it doesn't float, and it gets
+% an entry in the table of contents as opposed to the list of tables.
+%
+% The first argument is a conditional.  The table will appear only if
+% the value of the conditional is true.  The second argument is the
+% table's caption.
+
+\def\fnum@table{\textsc{\tablename}~\thetable}
+\newenvironment{symtable}[2][true]{%
+  \expandafter\global\expandafter\let%
+    \expandafter\ifshowsymtable\csname if#1\endcsname
+  \ifshowsymtable
+    \noindent%
+    \begin{minipage}[t]{\linewidth}    % Prevent page breaks
+    \begin{center}
+    \refstepcounter{table}%
+    \phantomsection
+    \addcontentsline{toc}{subsection}{%
+      \protect\numberline{\tablename~\thetable:}{#2}}%
+    \@makecaption{\fnum@table}{#2}\medskip
+    \let\next=\relax
+  \else
+    % The following was taken verbatim from verbatim.sty.
+    \let\do\@makeother\dospecials\catcode`\^^M\active
+    \let\verbatim@startline\relax
+    \let\verbatim@addtoline\@gobble
+    \let\verbatim@processline\relax
+    \let\verbatim@finish\relax
+    \let\next=\verbatim@
+  \fi
+  \next
+}{%
+  \ifshowsymtable
+    \end{center}
+    \end{minipage}
+    \vskip 8ex minus 2ex
+  \fi
+}
+%    \end{macrocode}
+
+%\subsection{Unicode font tables}
+%
+%    \begin{macrocode}
+% Define a command for the head of the table
+\newcommand\htable@cx[1][U+"109A0]{%
+  \bgroup%
+  \ttfamily%
+  \def\fm##1{\makebox[2em]{##1}}%
+  \leavevmode\makebox[5em]{\texttt{#1}}\fm 0\fm1 \fm2 \fm3 \fm4\fm5 \fm 6 \fm 7 \fm 8 \fm 9\fm A\fm B\fm C\fm D\fm E\fm F
+\egroup%
+\par}%
+
+\def\urow@cx#1{%
+\parindent0pt%
+\n=#1% 
+\makebox[5em]{\texttt{U+#1}}%
+\loop%
+\makebox[2em]{\char\n}%   
+\advance\n by1%
+\ifnum\n<\numexpr#1+16\relax%
+\repeat}
+
+
+
+\def\typeseturows@cx#1{%
+\@for\next:=#1\do{%
+\urow@cx\next\par}}
+
+%#language #comma listfor ranges
+\newcommand\unicodetable[2]{%
+  \bgroup%
+   \parindent0pt%
+   \newcount\n%
+   \raggedright%
+   \@nameuse{#1}%
+   \htable@cx%
+   \typeseturows@cx{#2}%
+  \egroup%
+}
+
+%    \end{macrocode}
+
+
+%\subsection{Indexing macros}
+%
+% Index a symbol, which may or may not begin with a backslash.  (Is
+% there a better way to do this?)  Also, if symbol is given as an
+% optional argument is given, typeset that symbol in the index, as well.
+% We define a related macro for indexing accents.  In a previous version
+% of this file, \indexaccent additionally included "see also accents" in
+% the index.  This became distracting so I made \indexaccent a synonym
+% for \indexcommand for the time being.  Because punctuation marks can
+% be problematic for makeindex, we define an \indexpunct macro that
+% sorts its argument under the comparatively innocuous "_".
+%
+%    \begin{macrocode}
+\begingroup
+ \catcode`\|=0
+ \catcode`\\=12
+ |gdef|sanitize#1#2!!!{%
+   |ifx#1\%
+     #2%
+   |else
+     #1#2%
+   |fi
+}
+|endgroup
+%    \end{macrocode}
+% \begin{macro}{indexcommand}
+%    \begin{macrocode}
+  \newcommand{\indexcommand}[2][]{%
+    \edef\sanitized{\expandafter\sanitize\string#2!!!}%
+    \def\first@arg{#1}%
+    \ifx\first@arg\@empty
+      \expandafter\index\expandafter{\sanitized=\string\verb+\string#2+}%
+    \else
+      \expandafter\index\expandafter{\sanitized=\string\verb+\string#2+ (#1)}%
+    \fi
+  }
+  \let\indexaccent=\indexcommand
+  \def\CLSLpipe{|}%
+%    \end{macrocode}
+%   \end{macro}
+
+% \begin{macro}{\indexpunct}
+%    \begin{macrocode}
+%    \begin{macrocode}
+  \newcommand{\indexpunct}[2][]{%
+    \def\first@arg{#1}%
+    \def\second@arg{#2}%
+    \ifx\first@arg\@empty
+      \ifx\second@arg\CLSLpipe
+        \index{_=\magicvertname}%
+      \else
+        \index{_=\string\verb+\string#2+}%
+      \fi
+    \else
+      \ifx\second@arg\CLSLpipe
+        \index{_=\magicvertname{} (#1)}%
+      \else
+        \index{_=\string\verb+\string#2+ (#1)}%
+      \fi
+    \fi
+  }
+%    \end{macrocode}
+%    \begin{macrocode}
+\DeclareRobustCommand{\idxfont}[1]{\index{#1 (font)}\texttt{#1}\xspace}%
+\DeclareRobustCommand{\idxlanguage}[1]{\index{#1 (script)}\index{scripts>#1}\texttt{#1}\xspace}%
+%    \end{macrocode}
+% \end{macro}
+%    \begin{macrocode}
+% Define a counter to keep track of how many symbols are listed.
+% Output this counter to the log file at the end of each run.
+% Define \prevtotalsymbols to be the total number of symbols from
+% the previous run.
+
+\newif\ifMDOTS
+\newcommand\MDOTS{\pkgname{mathdots}}
+\IfStyFileExists{mathdots}
+  {\MDOTStrue
+   \savesymbol{ddots}
+   \savesymbol{vdots}
+   \savesymbol{iddots}
+   \savesymbol{dddot}
+   \savesymbol{ddddot}
+   \usepackage{mathdots}
+   \restoresymbol{MDOTS}{ddots}
+   \restoresymbol{MDOTS}{vdots}
+   \restoresymbol{MDOTS}{iddots}
+   \restoresymbol{MDOTS}{dddot}
+   \restoresymbol{MDOTS}{ddddot}
+  }
+  {}
+
+%\usepackage{longdiv}
+\newcommand\FC{\pkgname{fc}}
+\newcommand\VIET{\pkgname{vietnam}}
+%\newcommand\ABX{\pkgname{mathabx}}
+\newcounter{totalsymbols}
+\newcommand{\incsyms}{\addtocounter{totalsymbols}{1}}
+% If we have color.sty, use it to display accents atop gray boxes in the
+% index.  (See below.)  If we don't have color.sty, use black boxes.
+\IfStyFileExists*{color}
+  {\usepackage{color}
+   \newcommand*{\graybox}{\textcolor[gray]{0.7}{\rule[-\adp]{\awd}{\aht}}}}
+  {\newcommand*{\graybox}{\rule[-\adp]{\awd}{\aht}}}
+% Define \blackacc to display an accented box, given an accent command.
+% Define \blackacchack to display an accented "a" and then black out
+% the "a".
+\newlength\awd
+\newlength\aht
+\newlength\adp
+\settowidth{\awd}{a}
+\settoheight{\aht}{a}
+\settodepth{\adp}{a}
+\advance\adp by 0.06pt    % In Computer Modern, "a" extends slightly below its bounding box.
+\advance\aht by \adp
+\gdef\blackacchack#1{#1a\llap{\graybox}}
+\gdef\blackacc#1{#1{\graybox}}
+\gdef\blackacctwo#1{#1{\graybox}{\graybox}}
+
+% Symbol+verbatim for various types of symbols
+\def\E#1{%
+  \begingroup
+    \lccode`|=`\\
+    \def\EStruename{ES#1T}
+    \lowercase{\incsyms\index{#1=\string\verb+\string|#1+ (\string|\EStruename)}}
+  \endgroup
+  \csname ES#1T\endcsname & \csname ES#1D\endcsname &
+  \ttfamily\expandafter\string\csname#1\endcsname
+}
+
+\def\K@opt@arg[#1]#2{\incsyms\indexcommand[#1]{#2}#1 &\ttfamily\string#2}
+  \def\K@no@opt@arg#1{\incsyms\indexcommand[#1]{#1}#1 &\ttfamily\string#1}
+
+\def\K{\@ifnextchar[{\K@opt@arg}{\K@no@opt@arg}}
+
+\def\Kp#1{\incsyms\indexpunct[$#1$]{#1}#1 &\ttfamily\string#1}
+
+\def\KED[#1][#2][#3]#4{\incsyms\indexcommand[#1]{#2}#3 &\ttfamily\string#4}
+\def\Kfeyn#1{\incsyms\indexcommand[\string\feyn{#1}]{\feyn{#1}}\feyn{#1} &\ttfamily\string\feyn\string{\string#1\string}}
+
+\def\Kp#1{\incsyms\indexpunct[$#1$]{#1}#1 &\ttfamily\string#1}
+
+\def\Kpig#1{\incsyms\index{pigpenfont #1=\string\verb+{\string\pigpenfont\space#1}+\space(\string\CLSLpig{#1})}\CLSLpig{#1} &\ttfamily\string{\string\pigpenfont\space\string#1\string}}
+\def\Ks#1{\incsyms\indexcommand[\string\encone{\string#1}]{#1}{\encone{#1}} &\ttfamily\string#1$^*$}
+%    \end{macrocode}
+
+% \begin{macro}{Kt}
+%
+% This macro is also from the comprehensive and takes
+% the symbol command as its only argument. It provides
+% |T1| encoding and also adds the command to the index.
+%    \begin{macrocode}   
+\newcommand\Kt[1]{\incsyms\indexcommand[\string\encone{\string#1}]{#1}{\encone{#1}} &\ttfamily\string#1}
+%    \end{macrocode}
+% \end{macro}
+%    \begin{macrocode}
+\def\Kv#1{\incsyms\indexcommand[\string\encfive{\string#1}]{#1}{\encfive{#1}} &\ttfamily\string#1}
+
+\def\Kgr@opt@arg[#1]#2{\incsyms\indexcommand[\string\encgreek{\string#1}]{#2}{\encgreek{#1}} &\ttfamily\string#2}
+  \def\Kgr@no@opt@arg#1{\incsyms\indexcommand[\string\encgreek{\string#1}]{#1}{\encgreek{#1}} &\ttfamily\string#1}
+  \def\Kgr{\@ifnextchar[{\Kgr@opt@arg}{\Kgr@no@opt@arg}}
+
+\def\KN[#1][#2]#3{\incsyms\indexcommand[\string#1]{#3} #1 & #2 & \ttfamily\string#3}
+\def\KNbig[#1][#2]#3{\incsyms\indexcommand[\string#2]{#3} #1 & #2 & \ttfamily\string#3}
+\def\Knoidx#1{\incsyms#1 &\ttfamily\string#1}
+%% N
+ \def\N@opt@arg[#1]#2{\incsyms\indexcommand[$\string#1$]{#2}$#1$ & $\Big#1$ &\ttfamily\string#2}
+  \def\N@no@opt@arg#1{\incsyms\indexcommand[$\string#1$]{#1}$#1$ & $\Big#1$ &\ttfamily\string#1}
+  \def\N{\@ifnextchar[{\N@opt@arg}{\N@no@opt@arg}}
+  \def\Nn[#1]#2{%
+    \incsyms\indexcommand[$\string\nathdouble\string#1$]{#2}%
+    $\nathdouble#1$ & $\nathdouble{\Big#1}$ & \ttfamily\string#2}
+  \def\Nnt#1[#2]#3{%
+    \incsyms\indexcommand{\triple}%
+    $\nathtriple#2$ & $\nathtriple{\Big#2}$ &
+    \ttfamily\expandafter\string\csname#1triple\endcsname\string#3}
+  \def\Np@opt@args[#1]{\@ifnextchar[{\Np@two@opt@args[#1]}{\Np@one@opt@arg[#1]}}
+  \def\Np@two@opt@args[#1][#2]#3{\incsyms\index{_=\string#2{} ($\string#1$)}$#1$ & $\Big#1$ &\ttfamily\string#3}
+  \def\Np@one@opt@arg[#1]#2{\incsyms\indexpunct[$\string#1$]{#2}$#1$ & $\Big#1$ &\ttfamily\string#2}
+  \def\Np@no@opt@args#1{\incsyms\indexpunct[$\string#1$]{#1}$#1$ & $\Big#1$ &\ttfamily\string#1}
+  \def\Np{\@ifnextchar[{\Np@opt@args}{\Np@no@opt@args}}
+  \def\Nbig[#1]#2{\incsyms\indexcommand[$\string\Big\string#1$]{#2}$#1$ & $\Big#1$ &\ttfamily\string#2}
+%% Q commands
+ \def\Q@opt@arg[#1]#2{\incsyms\indexaccent[\string\blackacchack{\string#1}]{#2}#1{A}#1{a} &
+           \ttfamily\string#2\string{A\string}\string#2\string{a\string}}
+  \def\Q@no@opt@arg#1{\incsyms\indexaccent[\string\blackacchack{\string#1}]{#1}#1{A}#1{a} &
+           \ttfamily\string#1\string{A\string}\string#1\string{a\string}}
+  \def\Q{\@ifnextchar[{\Q@opt@arg}{\Q@no@opt@arg}}
+
+\def\Qc#1{\incsyms\indexaccent[\string\blackacc{\string#1}]{#1}#1{A}#1{a} &
+         \ttfamily\string#1\string{A\string}\string#1\string{a\string}}
+\def\Qe[#1][#2]#3{%
+  \incsyms\incsyms\index{_=\string#2{} (\string\blackacchack{\string#1})}%
+  #3{A}#3{a} &
+  \ttfamily\string#3\string{A\string}\string#3\string{a\string}}
+\def\Qt#1{\incsyms\indexaccent[\string\encone{\string\blackacc{\string#1}}]{#1}{\encone{#1{A}#1{a}}} &
+          \ttfamily\string#1\string{A\string}\string#1\string{a\string}}
+
+\def\Qpc#1#2{\incsyms\indexcommand{#2}{\raisebox{1pt}{\tiny[#1]}} &
+             \ttfamily\string#2\string{A\string}\string#2\string{a\string}}
+\def\Qpfc[#1]#2{\incsyms\indexaccent[\string\encfour{\string\blackacchack{\string#1}}]{#2}\encfour{#1{A}#1{a}} &
+           \ttfamily\string#2\string{A\string}\string#2\string{a\string}}
+%% TODO
+\newif\ifFC\FCfalse
+\ifFC
+  \def\Qiv#1#2{\incsyms\indexaccent[\string\encfour{\string\blackacchack{\string#1}}]{#1}\encfour{#1{A}#1{a}} &
+               \ttfamily\string#1\string{A\string}\string#1\string{a\string}$^#2$}
+  \def\QivBAR#1{\incsyms\index{_=\string\magicVertname{}
+                (\string\encfour{\string\blackacchack{\string\FCbar}})}
+                \encfour{\FCbar{A}\FCbar{a}} &
+                \ttfamily\string\|\string{A\string}\string\|\string{a\string}$^#1$}
+\else
+  \def\Qiv#1#2{\Qpc{T4}{#1}$^#2$}
+  \def\QivBAR#1{\Qpc{T4}{\|}$^#1$}
+\fi
+\newif\ifVIET\VIETfalse
+\ifVIET
+  \def\Qv#1#2{\incsyms\indexaccent[\string\encfive{\string\blackacchack{\string#1}}]{#1}{\encfive{#1{A}#1{a}}} &
+              \ttfamily\string#1\string{A\string}\string#1\string{a\string}$^#2$}
+\else
+  \def\Qv#1#2{\Qpc{T5}{#1}$^#2$}\def\Qv#1#2{Err}%TODO
+\fi
+%% R Commands
+  % We use \cmd{displaystyle} so that variable-sized symbols will be big.
+  \def\R@opt@arg[#1]#2{\incsyms\indexcommand[$\string#1$]{#2}$#1$ & $\displaystyle#1$ &\ttfamily\string#2}
+  \def\R@no@opt@arg#1{\incsyms\indexcommand[$\string#1$]{#1}$#1$ & $\displaystyle#1$ &\ttfamily\string#1}
+  \def\R{\@ifnextchar[{\R@opt@arg}{\R@no@opt@arg}}
+%% T commands
+\def\Tp#1{\incsyms\indexcommand{\ding}\ding{#1} &\ttfamily\string\ding\string{#1\string}}
+\def\Tm#1{\incsyms\indexcommand{\maya}$\mayadigit{#1}$ &\ttfamily\string\maya\string{#1\string}}
+\def\Tmoon#1{\incsyms\indexcommand{\MoonPha}\MoonPha{#1} &\ttfamily\string\MoonPha\string{#1\string}}
+%% V Commands
+\newcommand{\V}[2][]{\incsyms#1 & \indexcommand[#2]{#2}#2 &\ttfamily\string#2}
+\newcommand{\Vp}[2][]{\incsyms#1 & \indexpunct[$#2$]{#2}#2 &\ttfamily\string#2}
+
+%W
+\def\W@opt@arg[#1]#2#3{%
+    \incsyms\indexaccent[$\string\blackacc{\string#1}$]{#2}%
+    $#1{#3}$ &\ttfamily\string#2\string{#3\string}}
+  \def\W@no@opt@arg#1#2{%
+    \incsyms\indexaccent[$\string\blackacc{\string#1}$]{#1}%
+    $#1{#2}$ &\ttfamily\string#1\string{#2\string}}
+  \def\W{\@ifnextchar[{\W@opt@arg}{\W@no@opt@arg}}
+
+\def\Wf#1#2{\incsyms\indexcommand{#1}$#1{#2}$ &\ttfamily\string#1\string{#2\string}}
+\def\Ww#1#2#3{\incsyms\indexcommand{#2}$#1{#3}$ &\ttfamily\string#2\string{#3\string}}
+\def\Wul#1#2#3{%
+  \incsyms\indexaccent[$\string\blackacctwo{\string#1}$]{#1}%
+  $#1{#2}{#3}$ &\ttfamily\string#1\string{#2\string}\string{#3\string}}
+
+\def\X@opt@arg[#1]#2{\incsyms\indexcommand[$\string#1$]{#2}$#1$ &\ttfamily\string#2}
+  \def\X@no@opt@arg#1{\incsyms\indexcommand[$\string#1$]{#1}$#1$ &\ttfamily\string#1}
+  \def\X{\@ifnextchar[{\X@opt@arg}{\X@no@opt@arg}}
+
+\def\Y#1{\incsyms\indexcommand[$\string\big\string#1$]{#1}$\big#1$ & $\Bigg#1$ &\ttfamily\string#1}
+\def\Z#1{\incsyms\indexcommand[$\string#1$]{#1}\ttfamily\string#1}
+%    \end{macrocode}
+%
+%
 % \begin{macro}{\docfile}
 % NEED TO CHECK IF THIS IS NECESSARY
 %    \begin{macrocode}
-\def\docfile#1{\protect\texttt{\textbackslash #1}}
+\def\docfile#1{\protect\texttt{\textbackslash #1}\index{#1}}
 %    \end{macrocode}
 % \end{macro}
 %
+% \begin{macro}{\bibsample}
+%  Typesets a sample of bib
 %    \begin{macrocode}
 \newenvironment{bibsample}
   {\trivlist\samepage
    \setlength{\itemsep}{0pt}}
   {\endtrivlist}
-
 %% doccommands
 \newcommand*{\marglistfont}{\itshape}
 
@@ -3754,6 +5525,782 @@ ball was her favorite plaything.}%
 \def\colOpt#1{\textcolor{theblue}{#1}}
 \newcommand{\option}[1]{\colOpt{#1}}
 %    \end{macrocode}
+% \end{macro}
+%
+% \section{Documentation Symbols for PGF type docs}
+%
+% Copyright 2006 by Till Tantau
+%
+% These type of documentation macros. 
+%
+%    \begin{macrocode}
+\newenvironment{pgfmanualentry}{\list{}{\leftmargin=2em\itemindent-\leftmargin
+ \def\makelabel##1{\hss##1}}}{\endlist}%%
+%    \end{macrocode}
+%
+% \begin{pgfmanualentry}
+%  \item pgfversion
+%  \item test
+% \end{pgfmanualentry}
+%    \begin{macrocode}
+\newcommand\pgfmanualentryheadline[1]{\itemsep=0pt\parskip=0pt\item\strut{#1}\par\topsep=0pt}
+%    \end{macrocode}
+%
+%
+% \begin{macro}{\pgfmanualbody} Just a helper macro to insert a 
+% \cs{parskip}.
+%    \begin{macrocode}
+\newcommand\pgfmanualbody{\parskip3pt}
+%    \end{macrocode}
+% \end{macro}
+%
+% 
+%    \begin{macrocode}
+\newenvironment{pgflayout}[1]{
+  \begin{pgfmanualentry}
+    \pgfmanualentryheadline{\texttt{\string\pgfpagesuselayout\char`\{\declare{#1}\char`\}}\oarg{options}}
+    \index{#1@\protect\texttt{#1} layout}%
+    \index{Page layouts!#1@\protect\texttt{#1}}%
+    \pgfmanualbody
+}
+{
+  \end{pgfmanualentry}
+}
+%
+%    \end{macrocode}
+%
+% \begin{environment}{command}
+%  command environment
+% The command strips the backslash and  handles the at for 
+% indexing.
+% \end{environment}
+%    \begin{macrocode}
+\newenvironment{command}[1]{
+  \begin{pgfmanualentry}
+    \extractcommand#1\@@
+    \pgfmanualbody
+}
+{
+  \end{pgfmanualentry}
+}
+%% MW: START MATH MACROS
+\def\mvar#1{{\rmfamily\textit{#1}}}
+\def\extractmathfunctionname#1{\extractmathfunctionname@#1(,)\tmpa\tmpb}
+\def\extractmathfunctionname@#1(#2)#3\tmpb{\def\mathname{#1}}
+
+\def\extractmathoperatorname{\begingroup\def\mvar##1{}\def\ {}\extractmathoperatorname@}
+\def\extractmathoperatorname@#1{\xdef\mathname{#1}\endgroup}
+\def\vskipspecial#1{\vskip#1\vskip0em}
+
+\newenvironment{math-function}[1]{
+	\begin{pgfmanualentry}
+		\extractmathfunctionname{#1}
+		\pgfmanualentryheadline{\texttt{#1}}%
+		\index{\mathname @\protect\texttt{\mathname} math function}%
+		\index{Math functions!\mathname @\protect\texttt{\mathname}}
+		\pgfmanualbody
+}
+{
+	\end{pgfmanualentry}\vskipspecial{-3em}
+}
+\newenvironment{math-operator}[1]{	
+	\begin{pgfmanualentry}
+		\extractmathoperatorname{#1}
+		\pgfmanualentryheadline{\texttt{#1}}%
+		\index{\mathname @\protect\texttt{\mathname} math operator}%
+		\index{Math operators!\mathname @\protect\texttt{\mathname}}
+    	\pgfmanualbody
+}
+{%
+	\end{pgfmanualentry}\vskipspecial{-3em}
+}
+\newenvironment{math-constant}[1]{
+	\begin{pgfmanualentry}
+		\pgfmanualentryheadline{\texttt{#1}}%
+		\index{#1@\protect\texttt{#1} math constant}%
+		\index{Math constants!#1@\protect\texttt{#1}}
+		\pgfmanualbody
+}
+{
+	\end{pgfmanualentry}\vskipspecial{-3em}
+}
+\def\calcname{\textsc{calc}}
+%% MW: END MATH MACROS
+\def\extractcommand#1#2\@@{%
+  \pgfmanualentryheadline{\declare{\texttt{\string#1}}#2}%
+  \removeats{#1}%
+  %%\index{\strippedat @\protect\myprintocmmand{\strippedat}}
+}
+
+
+\renewenvironment{environment}[1]{
+  \begin{pgfmanualentry}
+    \extractenvironement#1\@@
+    \pgfmanualbody
+}
+{
+  \end{pgfmanualentry}
+}
+
+\def\extractenvironement#1#2\@@{%
+  \pgfmanualentryheadline{{\ttfamily\char`\\begin\char`\{\declare{#1}\char`\}}#2}%
+  \pgfmanualentryheadline{{\ttfamily\ \ }\meta{environment contents}}%
+  \pgfmanualentryheadline{{\ttfamily\char`\\end\char`\{\declare{#1}\char`\}}}%
+  \index{#1@\protect\texttt{#1} environment}%
+  \index{Environments!#1@\protect\texttt{#1}}}
+
+
+\newenvironment{plainenvironment}[1]{
+  \begin{pgfmanualentry}
+    \extractplainenvironement#1\@@
+    \pgfmanualbody
+}
+{
+  \end{pgfmanualentry}
+}
+
+\def\extractplainenvironement#1#2\@@{%
+  \pgfmanualentryheadline{{\ttfamily\declare{\char`\\#1}}#2}%
+  \pgfmanualentryheadline{{\ttfamily\ \ }\meta{environment contents}}%
+  \pgfmanualentryheadline{{\ttfamily\declare{\char`\\end#1}}}%
+  \index{#1@\protect\texttt{#1} environment}%
+  \index{Environments!#1@\protect\texttt{#1}}}
+
+
+\newenvironment{contextenvironment}[1]{
+  \begin{pgfmanualentry}
+    \extractcontextenvironement#1\@@
+    \pgfmanualbody
+}
+{
+  \end{pgfmanualentry}
+}
+
+\def\extractcontextenvironement#1#2\@@{%
+  \pgfmanualentryheadline{{\ttfamily\declare{\char`\\start#1}}#2}%
+  \pgfmanualentryheadline{{\ttfamily\ \ }\meta{environment contents}}%
+  \pgfmanualentryheadline{{\ttfamily\declare{\char`\\stop#1}}}%
+  \index{#1@\protect\texttt{#1} environment}%
+  \index{Environments!#1@\protect\texttt{#1}}}
+
+
+\newenvironment{shape}[1]{
+  \begin{pgfmanualentry}
+  	\pgfmanualentryheadline{Shape {\ttfamily\declare{#1}}}%
+    \index{#1@\protect\texttt{#1} shape}%
+    \index{Shapes!#1@\protect\texttt{#1}}
+    \pgfmanualbody
+}
+{
+  \end{pgfmanualentry}
+}
+
+
+\newenvironment{handler}[1]{
+  \begin{pgfmanualentry}
+    \extracthandler#1\@nil%
+    \pgfmanualbody
+}
+{
+  \end{pgfmanualentry}
+}
+
+\def\gobble#1{}
+\def\extracthandler#1#2\@nil{%
+  \pgfmanualentryheadline{Key handler \meta{key}{\ttfamily/\declare{#1}}#2}%
+  \index{\gobble#1@\protect\texttt{#1} handler}%
+  \index{Key handlers!#1@\protect\texttt{#1}}
+}
+
+
+
+\newenvironment{stylekey}[1]{
+  \begin{pgfmanualentry}
+    \def\extrakeytext{style, }
+    \extractkey#1\@nil%
+    \pgfmanualbody
+}
+{
+  \end{pgfmanualentry}
+}
+%    \end{macrocode}
+%
+% \begin{key}{/chapter/section color=black\value{test}}
+% Typesets a key in the pgfmanual style. It extracts the key
+% \end{key}
+%    \begin{macrocode}
+\newenvironment{key}[1]{
+  \begin{pgfmanualentry}
+    \def\extrakeytext{}
+    %\def\altpath{\emph{\color{gray}or}}%
+    \extractkey#1\@nil%
+    \pgfmanualbody
+}
+{
+  \end{pgfmanualentry}
+}
+
+\def\extractkey#1\@nil{%
+  \pgfutil@in@={#1}%
+  \ifpgfutil@in@%
+    \extractkeyequal#1\@nil
+  \else%
+    \pgfutil@in@{(initial}{#1}%
+    \ifpgfutil@in@%
+      \extractequalinitial#1\@nil%
+    \else
+      \pgfmanualentryheadline{{\ttfamily\declare{#1}}\hfill(\extrakeytext no value)}%
+      \def\mykey{#1}%
+      \def\mypath{}%
+      \def\myname{}%
+      \firsttimetrue%
+      \decompose#1/\nil%
+    \fi
+  \fi%
+}
+
+\def\extractkeyequal#1=#2\@nil{%
+  \pgfutil@in@{(default}{#2}%
+  \ifpgfutil@in@%
+    \extractdefault{#1}#2\@nil%
+  \else%
+    \pgfutil@in@{(initial}{#2}%
+    \ifpgfutil@in@%
+      \extractinitial{#1}#2\@nil%
+    \else
+      \pgfmanualentryheadline{{\ttfamily\declare{#1}=}#2\hfill(\extrakeytext no default)}%
+    \fi%
+  \fi%
+  \def\mykey{#1}%
+  \def\mypath{}%
+  \def\myname{}%
+  \firsttimetrue%
+  \decompose#1/\nil%
+}
+
+\def\extractdefault#1#2(default #3)\@nil{%
+  \pgfmanualentryheadline{{\ttfamily\declare{#1}\opt{=}}\opt{#2}\hfill (\extrakeytext default {\ttfamily#3})}%
+}
+
+\def\extractinitial#1#2(initially #3)\@nil{%
+  \pgfmanualentryheadline{{\ttfamily\declare{#1}=}#2\hfill (\extrakeytext no default, initially {\ttfamily#3})}%
+}
+
+\def\extractequalinitial#1 (initially #2)\@nil{%
+  \pgfmanualentryheadline{{\ttfamily\declare{#1}}\hfill (\extrakeytext initially {\ttfamily#2})}%
+  \def\mykey{#1}%
+  \def\mypath{}%
+  \def\myname{}%
+  \firsttimetrue%
+  \decompose#1/\nil%
+}
+
+\def\keyalias#1{\vspace{-3pt}\item{\small alias {\ttfamily/#1/\myname}}\vspace{-2pt}\par}
+
+\newif\iffirsttime
+
+
+\def\decompose/#1/#2\nil{%
+  \def\test{#2}%
+  \ifx\test\empty%
+    % aha.
+    \index{#1@\protect\texttt{#1} key}%
+    \index{\mypath#1@\protect\texttt{#1}}%
+    \def\myname{#1}%
+  \else%
+    \iffirsttime
+      \def\mypath{#1@\protect\texttt{/#1/}!}%
+      \firsttimefalse
+    \else
+      \expandafter\def\expandafter\mypath\expandafter{\mypath#1@\protect\texttt{#1/}!}%
+    \fi
+    \def\firsttime{}
+    \decompose/#2\nil%
+  \fi%
+}
+
+
+\newenvironment{predefinednode}[1]{
+  \begin{pgfmanualentry}
+    \pgfmanualentryheadline{Predefined node {\ttfamily\declare{#1}}}%
+    \index{#1@\protect\texttt{#1} node}%
+    \index{Predefined node!#1@\protect\texttt{#1}}
+    \pgfmanualbody
+}
+{
+  \end{pgfmanualentry}
+}
+
+\newenvironment{coordinatesystem}[1]{
+  \begin{pgfmanualentry}
+    \pgfmanualentryheadline{Coordinate system {\ttfamily\declare{#1}}}%
+    \index{#1@\protect\texttt{#1} coordinate system}%
+    \index{Coordinate systems!#1@\protect\texttt{#1}}
+    \pgfmanualbody
+}
+{
+  \end{pgfmanualentry}
+}
+
+\newenvironment{snake}[1]{
+  \begin{pgfmanualentry}
+    \pgfmanualentryheadline{Snake {\ttfamily\declare{#1}}}%
+    \index{#1@\protect\texttt{#1} snake}%
+    \index{Snakes!#1@\protect\texttt{#1}}
+    \pgfmanualbody
+}
+{
+  \end{pgfmanualentry}
+}
+
+\newenvironment{decoration}[1]{
+  \begin{pgfmanualentry}
+    \pgfmanualentryheadline{Decoration {\ttfamily\declare{#1}}}%
+    \index{#1@\protect\texttt{#1} decoration}%
+    \index{Decorations!#1@\protect\texttt{#1}}
+    \pgfmanualbody
+}
+{
+  \end{pgfmanualentry}
+}
+
+
+\def\pgfmanualbar{\char`\|}
+
+\newenvironment{pathoperation}[3][]{
+  \begin{pgfmanualentry}
+    \pgfmanualentryheadline{\textcolor{gray}{{\ttfamily\char`\\path}\
+        \ \dots}
+      \declare{\texttt{#2}}#3\ \textcolor{gray}{\dots\texttt{;}}}%
+    \def\pgfmanualtest{#1}%
+    \ifx\pgfmanualtest\@empty%
+      \index{#2@\protect\texttt{#2} path operation}%
+      \index{Path operations!#2@\protect\texttt{#2}}%
+    \fi%
+    \pgfmanualbody
+}
+{
+  \end{pgfmanualentry}
+}
+
+
+\def\extractcommand#1#2\@@{%
+  \pgfmanualentryheadline{\declare{\texttt{\string#1}}#2}%
+  \removeats{#1}%
+  \index{\strippedat @\protect\myprintocmmand{\strippedat}}}
+
+\def\doublebs{\texttt{\char`\\\char`\\}}
+
+
+\newenvironment{package}[1]{
+  \begin{pgfmanualentry}
+    \pgfmanualentryheadline{{\ttfamily\char`\\usepackage\char`\{\declare{#1}\char`\}\space\space \char`\%\space\space  \LaTeX}}
+    \index{#1@\protect\texttt{#1} package}%
+    \index{Packages and files!#1@\protect\texttt{#1}}%
+    \pgfmanualentryheadline{{\ttfamily\char`\\input \declare{#1}.tex\space\space\space \char`\%\space\space  plain \TeX}}
+    \pgfmanualentryheadline{{\ttfamily\char`\\usemodule[\declare{#1}]\space\space \char`\%\space\space  Con\TeX t}}
+    \pgfmanualbody
+}
+{
+  \end{pgfmanualentry}
+}
+
+
+\newenvironment{pgfmodule}[1]{
+  \begin{pgfmanualentry}
+    \pgfmanualentryheadline{{\ttfamily\char`\\usepgfmodule\char`\{\declare{#1}\char`\}\space\space\space
+        \char`\%\space\space  \LaTeX\space and plain \TeX\space and pure pgf}}
+    \index{#1@\protect\texttt{#1} module}%
+    \index{Modules!#1@\protect\texttt{#1}}%
+    \pgfmanualentryheadline{{\ttfamily\char`\\usepgfmodule[\declare{#1}]\space\space \char`\%\space\space  Con\TeX t\space and pure pgf}}
+    \pgfmanualbody
+}
+{
+  \end{pgfmanualentry}
+}
+
+\newenvironment{pgflibrary}[1]{
+  \begin{pgfmanualentry}
+    \pgfmanualentryheadline{{\ttfamily\char`\\usepgflibrary\char`\{\declare{#1}\char`\}\space\space\space
+        \char`\%\space\space  \LaTeX\space and plain \TeX\space and pure pgf}}
+    \index{#1@\protect\texttt{#1} library}%
+    \index{Libraries!#1@\protect\texttt{#1}}%
+    \pgfmanualentryheadline{{\ttfamily\char`\\usepgflibrary[\declare{#1}]\space\space \char`\%\space\space  Con\TeX t\space and pure pgf}}
+    \pgfmanualentryheadline{{\ttfamily\char`\\usetikzlibrary\char`\{\declare{#1}\char`\}\space\space
+        \char`\%\space\space  \LaTeX\space and plain \TeX\space when using \tikzname}}
+    \pgfmanualentryheadline{{\ttfamily\char`\\usetikzlibrary[\declare{#1}]\space
+        \char`\%\space\space  Con\TeX t\space when using \tikzname}}
+    \pgfmanualbody
+}
+{
+  \end{pgfmanualentry}
+}
+
+\newenvironment{tikzlibrary}[1]{
+  \begin{pgfmanualentry}
+    \pgfmanualentryheadline{{\ttfamily\char`\\usetikzlibrary\char`\{\declare{#1}\char`\}\space\space \char`\%\space\space  \LaTeX\space and plain \TeX}}
+    \index{#1@\protect\texttt{#1} library}%
+    \index{Libraries!#1@\protect\texttt{#1}}%
+    \pgfmanualentryheadline{{\ttfamily\char`\\usetikzlibrary[\declare{#1}]\space \char`\%\space\space Con\TeX t}}
+    \pgfmanualbody
+}
+{
+  \end{pgfmanualentry}
+}
+
+
+
+\newenvironment{filedescription}[1]{
+  \begin{pgfmanualentry}
+    \pgfmanualentryheadline{File {\ttfamily\declare{#1}}}%
+    \index{#1@\protect\texttt{#1} file}%
+    \index{Packages and files!#1@\protect\texttt{#1}}%
+    \pgfmanualbody
+}
+{
+  \end{pgfmanualentry}
+}
+
+
+\newenvironment{packageoption}[1]{
+  \begin{pgfmanualentry}
+    \pgfmanualentryheadline{{\ttfamily\char`\\usepackage[\declare{#1}]\char`\{pgf\char`\}}}
+    \index{#1@\protect\texttt{#1} package option}%
+    \index{Package options for \textsc{pgf}!#1@\protect\texttt{#1}}%
+    \pgfmanualbody
+}
+{
+  \end{pgfmanualentry}
+}
+
+
+
+\newcommand\opt[1]{{\color{black!50!green}#1}}
+\newcommand\ooarg[1]{{\ttfamily[}\meta{#1}{\ttfamily]}}
+
+\def\opt{\afterassignment\pgfmanualopt\let\next=}
+\def\pgfmanualopt{\ifx\next\bgroup\bgroup\color{black!50!green}\else{\color{black!50!green}\next}\fi}
+
+
+
+\def\beamer{\textsc{beamer}}
+\def\pdf{\textsc{pdf}}
+\def\pgfname{\textsc{pgf}}
+\def\tikzname{Ti\emph{k}Z}
+\def\pstricks{\textsc{pstricks}}
+\def\prosper{\textsc{prosper}}
+\def\seminar{\textsc{seminar}}
+\def\texpower{\textsc{texpower}}
+\def\foils{\textsc{foils}}
+
+{
+  \makeatletter
+  \global\let\myempty=\@empty
+  \global\let\mygobble=\@gobble
+  \catcode`\@=12
+  \gdef\getridofats#1@#2\relax{%
+    \def\getridtest{#2}%
+    \ifx\getridtest\myempty%
+      \expandafter\def\expandafter\strippedat\expandafter{\strippedat#1}
+    \else%
+      \expandafter\def\expandafter\strippedat\expandafter{\strippedat#1\protect\printanat}
+      \getridofats#2\relax%
+    \fi%
+  }
+
+  \gdef\removeats#1{%
+    \let\strippedat\myempty%
+    \edef\strippedtext{\stripcommand#1}%
+    \expandafter\getridofats\strippedtext @\relax%
+  }
+  
+  \gdef\stripcommand#1{\expandafter\mygobble\string#1}
+}
+
+\def\printanat{\char`\@}
+
+\def\declare{\afterassignment\pgfmanualdeclare\let\next=}
+\def\pgfmanualdeclare{\ifx\next\bgroup\bgroup\color{red!75!black}\else{\color{red!75!black}\next}\fi}
+
+
+\let\textoken=\command
+\let\endtextoken=\endcommand
+
+\def\myprintocmmand#1{\texttt{\char`\\#1}}
+
+\def\example{\par\smallskip\noindent\textit{Example: }}
+\def\themeauthor{\par\smallskip\noindent\textit{Theme author: }}
+
+
+\def\indexoption#1{%
+  \index{#1@\protect\texttt{#1} option}%
+  \index{Graphic options and styles!#1@\protect\texttt{#1}}%
+}
+
+\def\itemcalendaroption#1{\item \declare{\texttt{#1}}%
+  \index{#1@\protect\texttt{#1} date test}%
+  \index{Date tests!#1@\protect\texttt{#1}}%
+}
+
+
+
+\def\class#1{\list{}{\leftmargin=2em\itemindent-\leftmargin\def\makelabel##1{\hss##1}}%
+\extractclass#1@\par\topsep=0pt}
+
+\def\endclass{\endlist}
+
+\def\extractclass#1#2@{%
+\item{{{\ttfamily\char`\\documentclass}#2{\ttfamily\char`\{\declare{#1}\char`\}}}}%
+  \index{#1@\protect\texttt{#1} class}%
+  \index{Classes!#1@\protect\texttt{#1}}}
+
+
+
+\def\index@prologue{\section*{Index}\addcontentsline{toc}{section}{Index}
+  This index only contains automatically generated entries. A good
+  index should also contain carefully selected keywords. This index is
+  not a good index.
+  \bigskip
+}
+\c@IndexColumns=2
+  \def\theindex{\@restonecoltrue
+    \columnseprule \z@  \columnsep 29\p@
+    \twocolumn[\index@prologue]%
+       \parindent -30pt
+       \columnsep 15pt
+       \parskip 0pt plus 1pt
+       \leftskip 30pt
+       \rightskip 0pt plus 2cm
+       \small
+       \def\@idxitem{\par}%
+    \let\item\@idxitem \ignorespaces}
+  \def\endtheindex{\onecolumn}
+\def\noindexing{\let\index=\@gobble}
+
+
+
+\newcommand\symarrow[1]{
+  \index{#1@\protect\texttt{#1} arrow tip}%
+  \index{Arrow tips!#1@\protect\texttt{#1}}
+  \texttt{#1}& yields thick  
+  \begin{tikzpicture}[arrows={#1-#1},thick,baseline]
+    \useasboundingbox (0pt,-0.5ex) rectangle (1cm,2ex);
+    \draw (0pt,.5ex) -- (1cm,.5ex);
+  \end{tikzpicture} and thin
+  \begin{tikzpicture}[arrows={#1-#1},thin,baseline]
+    \useasboundingbox (0pt,-0.5ex) rectangle (1cm,2ex);
+    \draw (0pt,.5ex) -- (1cm,.5ex);
+  \end{tikzpicture}
+}
+
+\newcommand\sarrow[2]{
+  \index{#1@\protect\texttt{#1} arrow tip}%
+  \index{Arrow tips!#1@\protect\texttt{#1}}
+  \index{#2@\protect\texttt{#2} arrow tip}%
+  \index{Arrow tips!#2@\protect\texttt{#2}}
+  \texttt{#1-#2}& yields thick  
+  \begin{tikzpicture}[arrows={#1-#2},thick,baseline]
+    \useasboundingbox (0pt,-0.5ex) rectangle (1cm,2ex);
+    \draw (0pt,.5ex) -- (1cm,.5ex);
+  \end{tikzpicture} and thin
+  \begin{tikzpicture}[arrows={#1-#2},thin,baseline]
+    \useasboundingbox (0pt,-0.5ex) rectangle (1cm,2ex);
+    \draw (0pt,.5ex) -- (1cm,.5ex);
+  \end{tikzpicture}
+}
+
+\newcommand\carrow[1]{
+  \index{#1@\protect\texttt{#1} arrow tip}%
+  \index{Arrow tips!#1@\protect\texttt{#1}}
+  \texttt{#1}& yields for line width 1ex
+  \begin{tikzpicture}[arrows={#1-#1},line width=1ex,baseline]
+    \useasboundingbox (0pt,-0.5ex) rectangle (1.5cm,2ex);
+    \draw (0pt,.5ex) -- (1.5cm,.5ex);
+  \end{tikzpicture}
+}
+\def\myvbar{\char`\|}
+\newcommand\plotmarkentry[1]{%
+  \index{#1@\protect\texttt{#1} plot mark}%
+  \index{Plot marks!#1@\protect\texttt{#1}}
+  \texttt{\char`\\pgfuseplotmark\char`\{\declare{#1}\char`\}} &
+  \tikz\draw[color=black!25] plot[mark=#1,mark options={fill=examplefill,draw=black}] coordinates{(0,0) (.5,0.2) (1,0) (1.5,0.2)};\\
+}
+\newcommand\plotmarkentrytikz[1]{%
+  \index{#1@\protect\texttt{#1} plot mark}%
+  \index{Plot marks!#1@\protect\texttt{#1}}
+  \texttt{mark=\declare{#1}} & \tikz\draw[color=black!25]
+  plot[mark=#1,mark options={fill=examplefill,draw=black}] 
+    coordinates {(0,0) (.5,0.2) (1,0) (1.5,0.2)};\\
+}
+
+
+
+\ifx\scantokens\@undefined
+  \PackageError{phd}{You need to use extended latex
+    (elatex) or (pdfelatex) to process this document}{}
+\fi
+
+\begingroup
+\catcode`|=0
+\catcode`[= 1
+\catcode`]=2
+\catcode`\{=12
+\catcode `\}=12
+\catcode`\\=12 |gdef|find@example#1\end{codeexample}[|endofcodeexample[#1]]
+|endgroup
+
+\begingroup
+\catcode`\^=7
+\catcode`\^^M=13
+\catcode`\ =13%
+\gdef\returntospace{\catcode`\ =13\def {\space}\catcode`\^^M=13\def^^M{}}%
+\endgroup
+
+\begingroup
+\catcode`\%=13
+\catcode`\^^M=13
+\gdef\commenthandler{\catcode`\%=13\def%{\@gobble@till@return}}
+\gdef\@gobble@till@return#1^^M{}
+\gdef\@gobble@till@return@ignore#1^^M{\ignorespaces}
+\gdef\typesetcomment{\catcode`\%=13\def%{\@typeset@till@return}}
+\gdef\@typeset@till@return#1^^M{{\def%{\char`\%}\textsl{\char`\%#1}}\par}
+\endgroup
+
+\define@key{codeexample}{width}{\setlength\codeexamplewidth{#1}}
+\define@key{codeexample}{graphic}{\colorlet{graphicbackground}{#1}}
+\define@key{codeexample}{code}{\colorlet{codebackground}{#1}}
+\define@key{codeexample}{execute code}{\csname code@execute#1\endcsname}
+\define@key{codeexample}{code only}[]{\code@executefalse}
+\define@key{codeexample}{pre}{\def\code@pre{#1}}
+\define@key{codeexample}{post}{\def\code@post{#1}}
+\define@key{codeexample}{vbox}[]{\def\code@pre{\vbox\bgroup\setlength{\hsize}{\linewidth-6pt}}\def\code@post{\egroup}}
+\define@key{codeexample}{ignorespaces}[]{\let\@gobble@till@return=\@gobble@till@return@ignore}
+\define@key{codeexample}{leave comments}[]{\def\code@catcode@hook{\catcode`\%=12}\let\commenthandler=\relax\let\typesetcomment=\relax}
+
+\def\code@pre{}
+\def\code@post{}
+\def\code@catcode@hook{}
+
+\newdimen\codeexamplewidth
+\newif\ifcode@execute
+\newbox\codeexamplebox
+\def\codeexample[#1]{%
+  \begingroup%
+  \code@executetrue
+  \setlength\codeexamplewidth{4cm+7pt}
+  \setkeys{codeexample}{#1}%
+  \parindent0pt
+  \begingroup%
+  \par%
+  \medskip%
+  \let\do\@makeother%
+  \dospecials%
+  \obeylines%
+  \@vobeyspaces%
+  \catcode`\%=13%
+  \catcode`\^^M=13%
+  \code@catcode@hook%
+  \relax%
+  \find@example}
+\def\endofcodeexample#1{%
+  \endgroup%
+  \ifcode@execute%
+    \setbox\codeexamplebox=\hbox{%
+      {%
+        {%
+          \returntospace%
+          \commenthandler%
+          \xdef\code@temp{#1}% removes returns and comments
+        }%
+        \colorbox{graphicbackground}{\color{black}\ignorespaces%
+          \code@pre\expandafter\scantokens\expandafter{\code@temp\ignorespaces}\code@post\ignorespaces}%
+      }%
+    }%
+    \ifdim\wd\codeexamplebox>\codeexamplewidth%
+      \def\code@start{\par}%
+      \def\code@flushstart{}\def\code@flushend{}%
+      \def\code@mid{\parskip2pt\par\noindent}%
+      \def\code@width{\linewidth-6pt}%
+      \def\code@end{}%
+    \else%
+      \def\code@start{%
+        \linewidth=\textwidth%
+        \parshape \@ne 0pt \linewidth
+        \leavevmode%
+        \hbox\bgroup}%
+      \def\code@flushstart{\hfill}%
+      \def\code@flushend{\hbox{}}%
+      \def\code@mid{\hskip6pt}%
+      \def\code@width{\linewidth-12pt-\codeexamplewidth}%
+      \def\code@end{\egroup}%
+    \fi%
+    \code@start%
+    \noindent%
+    \begin{minipage}[t]{\codeexamplewidth}\raggedright
+      \hrule width0pt%
+      \footnotesize\vskip-1em%
+      \code@flushstart\box\codeexamplebox\code@flushend%
+      \vskip-1ex
+      \leavevmode%
+    \end{minipage}%
+  \else%
+    \def\code@mid{\par}
+    \def\code@width{\linewidth-6pt}
+    \def\code@end{}
+  \fi%
+  \code@mid%  
+  \colorbox{codebackground}{%
+    \begin{minipage}[t]{\code@width}%
+      {%
+        \let\do\@makeother
+        \dospecials
+        \frenchspacing\@vobeyspaces
+        \normalfont\ttfamily\footnotesize
+        \typesetcomment%
+        \@tempswafalse
+        \def\par{%
+          \if@tempswa
+          \leavevmode \null \@@par\penalty\interlinepenalty
+          \else
+          \@tempswatrue
+          \ifhmode\@@par\penalty\interlinepenalty\fi
+          \fi}%
+        \obeylines
+        \everypar \expandafter{\the\everypar \unpenalty}%
+        #1}
+    \end{minipage}}%
+  \code@end%
+  \par%
+  \medskip
+  \end{codeexample}
+}
+
+\def\endcodeexample{\endgroup}
+%    \end{macrocode}
+%
+% \begin{macro}{codeexample}
+% From pgfplots manual
+% \end{macro}
+%    \begin{macrocode}
+\long\def\codeexamplenl{\noexpand\par}%
+\pgfqkeys{/codeexample}{%
+	every codeexample/.style={
+		width=3.9cm,
+		/pgfplots/every axis/.append style={legend style={fill=graphicbackground}}
+	},
+	narrow/.style={width=6.9cm},
+	%tabsize=4,
+	%pre={\begin{minipage}{\linewidth}\begingroup},
+	%post={\endgroup\end{minipage}},
+	%vbox,
+	%newline=\codeexamplenl,
+}
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: "beameruserguide"
+%%% End: 
+%    \end{macrocode}
+%
 %
 %
 % \section{Phonetic Symbols}
@@ -3764,13 +6311,21 @@ ball was her favorite plaything.}%
 % pronunciation. 
 %\href{http://tex.stackexchange.com/questions/36542/using-tex-for-writing-papers-on-linguistics}{using Tex for linguistics}
 %
-%
-%    \begin{macrocode} 
-\RequirePackage[tone,extra,safe]{tipa}
+% I am indebted to egreg at \url{http://tex.stackexchange.com/questions/64830/using-tipa-with-fontspec} for the hack to get tipa to work with fontspec
+
+%    \begin{macrocode}
+\newif\ifTIPA 
+\newcommand\TIPA{\pkgname{tipa}}
+\newcommand\WIPA{\pkgname{wipa}}
+\ifxetex
+\else
+  \TIPAtrue
+  \RequirePackage[tone,extra,safe]{tipa}
+\fi
 %    \end{macrocode}
 % 
 % This is also quite useful for Wikipedia transcriptions. 
-% For example `phonetics' is pronounced as  \textipa{\sffamily f@"nEtIks} and typed as
+% For example `phonetics' is pronounced as  |\textipa{\sffamily f@"nEtIks}| and typed as
 % |\textipa{\sffamily f@"nEtIks}|
 %
 % |texdoc tipaman| for the full manual if this is part of your field
@@ -4144,8 +6699,13 @@ ball was her favorite plaything.}%
 % \end{enumerate}
 % 
 %    \begin{macrocode}
-  \newcounter{texexp}[chapter]
-  \@addtoreset{c@texexp}{c@chapter}
+  \ifx\c@chapter\@undefined
+    \newcounter{texexp}[section]
+    \@addtoreset{c@texexp}{c@section}
+  \else
+    \newcounter{texexp}[chapter]
+    \@addtoreset{c@texexp}{c@chapter}
+  \fi 
 %    \end{macrocode}
 %
 %	
@@ -4155,12 +6715,14 @@ ball was her favorite plaything.}%
       fonttitle=\small\sffamily\bfseries, 
       fontupper=\small, 
       fontlower=\small},
-      example/.code 2 args={\refstepcounter{texexp}\label{#2}}%
+      arc=0pt,
+      outer arc=0pt,
+      example1/.code 2 args={\refstepcounter{texexp}\label{#2}}%
      \pgfkeysalso{texexp, enhanced, breakable, title={Example \thetexexp\ #1}},
 }
 \newenvironment{texexp}[1]{\tcblisting{texexp,#1}}{\endtcblisting}
-\newenvironment{example}[3][]{\tcblisting{example={#2}{#3},#1}}{\endtcblisting}
-\newenvironment{texexample}[3][]{\noindent\tcblisting{example={#2}{#3},#1}}{\endtcblisting}
+\newenvironment{example1}[3][]{\tcblisting{example1={#2}{#3},#1}}{\endtcblisting}
+\newenvironment{texexample}[3][]{\noindent\tcblisting{example1={#2}{#3},#1}}{\endtcblisting}
 %    \end{macrocode}
 % \end{environment}
 %
@@ -5564,6 +8126,7 @@ ball was her favorite plaything.}%
 %    \begin{macrocode}
 \def\HUGE{\@setfontsize\Huge{38}{47}}
 \def\HHUGE{\@setfontsize\HHUGE{58}{67}}
+\def\HHHUGE{\@setfontsize\HHHUGE{94}{105}}
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
@@ -5805,6 +8368,7 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
   section font-family/.store in=\sectionfontfamily@cx,
   section font-shape/.store in=\sectionfontshape@cx,
   section color/.store in=\sectioncolor@cx,
+  section color/.initial=black,
 %    \end{macrocode}
 % \end{macro}
 %
@@ -6121,6 +8685,7 @@ section numbering/Roman/.code={%
 % \end{macro}
 %
 % \begin{macro}{\printchaptername}
+%
 % 	This macro  typesets the chapter label i.e., |CHAPTER|. We
 %	set the font parameters as defined by the key value system.
 %	The label is defined first as |CHAPTER| by the standard
@@ -6164,9 +8729,9 @@ section numbering/Roman/.code={%
            \expandafter\setfontparam@cx\numberfontsize@cx;
            \expandafter\setfontparam@cx\numberfontfamily@cx;
            \expandafter\setfontparam@cx\numberfontweight@cx;
-          \color{\numbercolor@cx}%
+           \color{\numbercolor@cx}%
            \thechapter
-          \numberpunctuation@cx
+           \numberpunctuation@cx
          \egroup
         \numberafter@cx}% 
 %    \end{macrocode}
@@ -6183,7 +8748,6 @@ section numbering/Roman/.code={%
      \customdesign@cx{#2}
   \else
 %    \end{macrocode}
-% 
 %
 % 	We now ready to typeset the chapter heading, we run everything 
 % 	within a group and
@@ -6230,17 +8794,17 @@ section numbering/Roman/.code={%
        \counterdisplay\c@chapter\afternumber@cx%
      \fi
 % Display title
-      \expandafter\setfontparam@cx\titlefontweight@cx;
-      \expandafter\setfontparam@cx\titlefontfamily@cx;
-      \expandafter\setfontparam@cx\titlefontshape@cx;
-      \expandafter\setfontparam@cx\titlefontsize@cx;
+      \expandafter\setfontparam@cx\titlefontweight@cx;%
+      \expandafter\setfontparam@cx\titlefontfamily@cx;%
+      \expandafter\setfontparam@cx\titlefontshape@cx;%
+      \expandafter\setfontparam@cx\titlefontsize@cx;%
       % \selectfont
       \titlebefore@cx
       \if@titlespaceout
-        {\color{\titlefontcolor@cx}\so{#2}}%
+        {\bgroup\color{\titlefontcolor@cx}\so{#2}\egroup}%
       \else
-         {\color{\titlefontcolor@cx}
-         #2}%title \textorpdfstring here?
+         {\bgroup\noindent\color{\titlefontcolor@cx}
+         #2\egroup}%title \textorpdfstring here?
       \fi%
       \titleafter@cx
       \if@righttitle%
@@ -6271,7 +8835,7 @@ section numbering/Roman/.code={%
 %	allow the chapter heading to be continuous i.e., more
 %	like a section. 
 %    \begin{macrocode}
-\providecommand\chapter{%
+\renewcommand\chapter{%
   \if@openright\cleardoublepage\fi
   \if@openleft\cleartoevenpage\fi
   \if@openany\clearpage\fi
@@ -6314,7 +8878,6 @@ section numbering/Roman/.code={%
 %    \begin{macrocode}
 \newif\if@tocspecial
 \@tocfalse
-%
 \def\@chapter[#1]#2{%
     \ifnum \c@secnumdepth >\m@ne
         \if@mainmatter
@@ -6343,6 +8906,7 @@ section numbering/Roman/.code={%
 %   This way we can have a separate case for typesetting titles and numbers.
 %   TODO CHECK WHY BOOKMARKS HAS AN ISSUE WITH THIS
 %    \begin{macrocode}
+           \phantomsection
            \addcontentsline{toc}{chapter}{%
            \protect\chapternumberline{\thechapter}{#1}{\tocimage@cx}}%
 			\fi
@@ -6375,10 +8939,12 @@ section numbering/Roman/.code={%
 %
 %    \begin{macrocode}
 \cxset{toc image/.store in = \tocimage@cx}
-\cxset{toc image = \empty}
+\cxset{toc image ={}}
 
 \gdef\setdefaults{%
 \cxset{%
+  chapter toc=true,
+  toc image={},
   chapter name=CHAPTER,
   title font-family=\rmfamily,
   title font-weight=\bfseries,
@@ -6414,6 +8980,7 @@ section numbering/Roman/.code={%
   section font-shape=upshape,
   section align= left,
   title font-shape=upshape,
+  blank page text=,
 }
 }
 \cxset{rule color/.store in={\rulecolor@cx},
@@ -6462,7 +9029,6 @@ section numbering/Roman/.code={%
 \clearpage
 
 \begin{tikzpicture}[remember picture,overlay]
-% Main shading block
 \node [xshift=5cm,yshift=-\paperheight] at (current page.north west)
 [text width=0.98\textwidth,text height=\paperheight, fill=thecream!30,rounded corners,above right]
 {};
@@ -6477,14 +9043,12 @@ section numbering/Roman/.code={%
 
 \node [xshift=-0.2cm,yshift=-21.5cm] at (current page.north west)
 [text width=3cm,above right]%
-{\includegraphics[width=1.0\paperwidth,height=\textheight,keepaspectratio]{./chapters/\image@cx}};
-% second box left
+{\includegraphics[width=1.0\paperwidth,height=\textheight,keepaspectratio]{\image@cx}};
 \node [xshift=3cm,yshift=-19.5cm] at (current page.north west)
 [text width=9cm,minimum height=2.5cm,inner sep=0.5em, fill=blue,below right]
 {\color{white}
-  \bfseries\sffamily \texti@cx
+  \bfseries\sffamily\texti@cx
 };
-% Last block
 \node [xshift=6.5cm,yshift=-26cm] at (current page.north west)
 [text width=12cm,above right]
 {\textii@cx
@@ -6573,7 +9137,7 @@ section numbering/Roman/.code={%
 \caption@cx%
 \vspace*{2cm}%
 
-\includegraphics[width=\dimexpr\linewidth-0.5cm\relax,totalheight=3.8cm]{chapterconcept-01}\llap{\raise20pt\hbox to \linewidth{\HHUGE \hskip1cm\color{lightgray!40}\thechapter}\hfill}%
+\includegraphics[width=\dimexpr\linewidth-0.5cm\relax,totalheight=3.8cm]{./images/chapterconcept-01.jpg}\llap{\raise20pt\hbox to \linewidth{\HHUGE \hskip1cm\color{lightgray!40}\thechapter}\hfill}%
 \end{minipage}%
 }%
 %
@@ -6582,7 +9146,7 @@ section numbering/Roman/.code={%
 \leavevmode
 \includegraphics[width=1\linewidth]{\image@cx}%
 
-\includegraphics[width=\linewidth]{chapterconcept-02}.%
+\includegraphics[width=\linewidth]{./images/chapterconcept-02.jpg}.%
 \end{minipage}}%
 \end{minipage}%
 %    \end{macrocode}
@@ -6610,6 +9174,8 @@ section numbering/Roman/.code={%
 
 % \subsection{Epigraphs}
 %
+% This section deals with epigraphs.\index{epigraph}\index{epigraph!rule}
+%
 %    \begin{macrocode}
 \cxset{
   epigraph width/.code={\setlength\epigraphwidth{#1}},
@@ -6629,7 +9195,7 @@ section numbering/Roman/.code={%
   epigraph text align/right/.code={\renewcommand{\textflush}{flushright}},
   epigraph text align/center/.code={\renewcommand{\textflush}{center}},
   epigraph rule width/.code={\setlength\epigraphrule{#1}},
-  epigraph rule/.code={\renewcommand{\@epirule}{\color{orange}\rule[.5ex]{\epigraphwidth}{\epigraphrule}}},
+  epigraph rule/.code={\renewcommand{\@epirule}{\color{teal}\rule[.5ex]{\epigraphwidth}{\epigraphrule}}},
 }
 
 \cxset{epigraph width=0.5\linewidth,
@@ -6690,7 +9256,7 @@ section numbering/Roman/.code={%
           header style=headings,
           chaptermark name color=theblue,
           chaptermark after number={\thinspace:\space },
-          chaptermark name=,%\@chapapp,
+          chaptermark name=,
           chaptermark title color=black!80,
           leftmark before=\thepage\hfill, 
           leftmark after=,
@@ -6830,7 +9396,7 @@ section numbering/Roman/.code={%
   \newcommand\coverpage[3]{%
   \vbox{%
       \vspace*{-1\baselineskip}
-      \hskip-4cm\includegraphics[width=\paperwidth]{#1}\par
+      \hskip-4cm\includegraphics[width=\paperwidth]{hine02.jpg}\par
       \vspace*{3\baselineskip}
       \hbox to \hsize{%
          \Huge \hfill\hfill{\MakeUppercase{\bfseries  
@@ -6853,7 +9419,7 @@ section numbering/Roman/.code={%
 %	\begin{macrocode}
 \newcommand\secondpage{\clearpage\null\vfill\vfill
   \begin{minipage}[b]{0.9\textwidth}
-  \includegraphics[width=3cm]{hine02}\par
+  \includegraphics[width=3cm]{./images/hine02.jpg}\par
   \raggedright
   \textit{Cover image: }
     The cover image shows Jo Bodeon, a back-roper in the mule room at 
@@ -6958,16 +9524,16 @@ section numbering/Roman/.code={%
 % \caption{Layout of a ToC (LoF, LoT) entry} \label{fig:ltoc}
 % \end{figure}
 %
-% \begin{macro}{\quit@cx}
+% \begin{command}{\quit@cx}
 % \begin{macro}{\if@haschapter@cx}
 % We will be using either chapter or section type headings for the ToC, etc.,
 % so we need to know which of these the document class supports.
 %    \begin{macrocode}
 \newcommand{\quit@cx}{}
-\newif\if@haschapter@cx
+\newif\if@haschapter@cx\@haschapter@cxtrue
 %    \end{macrocode}
 % \end{macro}
-% \end{macro}
+% \end{command}
 % \begin{macro}{\if@koma@cx}
 % The \pkg{koma} classes have different defaults than the standard classes,
 % so we need to know if a \pkg{koma} class has been loaded.
@@ -7221,17 +9787,20 @@ section numbering/Roman/.code={%
 % \end{macro}
 %
 %
-% \section{Styling the Toc Part}
+% \section{Styling Part in the Toc}
 
 % \begin{macro}{\l@part}
-% \begin{macro}{\if@cftdopart}
+% \begin{macro}{\if@dopart}
 %  |\l@part{|\meta{title}|}{|\meta{page}|}| typesets the ToC entry for
 % a |part| heading. It is a parameterised copy of the default |\l@part|
 % (see \file{classes.dtx} for the original definition and the code
-%  below for |\l@subsection| for an explanation of most of this
-%  code). By default, Parts
+%  below for |\l@part| for an explanation of most of this
+%  code). 
+%
+% By default, Parts
 % (and Chapters) do not have dotted leaders. This package provides
-% for all entries to have dotted leaders.
+% for all entries to have the ability to have dotted leaders, as some styles treat the part in a similar manner.
+%
 % In article class, Part level is 0 not -1 and hence the conditional below.
 %	
 %	We start by defining a number of keys and macros to store parameters.
@@ -7244,25 +9813,39 @@ section numbering/Roman/.code={%
        toc part numwidth/.store in = \tocpartnumwidth@cx,
        toc part font-size/.store in =\tocpartfontsize@cx,
        toc part before number/.store in = \tocpartbeforenumber@cx,
+       toc part after number/.store in=\partafterpnum@cx,
        toc part beforeskip/.store in = \tocpartbeforeskip@cx,
-       toc part page font-size/.store in=\tocpartpagefontsize@cx,
-       }
+       toc part page font-size/.store in=\tocpartpagefontsize@cx
+}
+
+
+
 \cxset{toc part beforeskip = 2.25em \@plus\p@,
-       toc part indent=0pt,
+       toc part indent=-50pt,
        toc part numwidth=0em,
-       toc part font-size=\large\bfseries\sffamily,
-       toc part before number=\kern1.5pt,
-       toc part page font-size=\bfseries}
-%    \end{macrocode}
+       toc part after number=:,
+       toc part font-size={\color{teal}\large\bfseries\sffamily},
+       toc part before number={\kern1.5pt},
+       toc part page font-size=\bfseries
+       }
+  %    \end{macrocode}
 % \end{macro}
+%
+% We need first to define conditionals to switch from
+% printing the part or not.
 %
 %    \begin{macrocode}
 \newif\if@dopart@cx
 \newif\if@haspart@cx
-\@ifundefined{part}{\@haspart@cxfalse}{\@haspart@cxtrue}
+  \@ifundefined{part}{\@haspart@cxfalse}{\@haspart@cxtrue}
 \if@haspart@cx
-
-
+%    \end{macrocode}
+%
+% We now renew the command, in order to allow for hooks. 
+% This might be cloberred by hyperref if too many changes
+% are carried out. It takes two parameters (one for the caption and another for the title if different).
+% 
+%    \begin{macrocode}
 \renewcommand*{\l@part}[2]{%
   \@dopart@cxfalse
   \ifnum \c@tocdepth >-2\relax
@@ -7275,6 +9858,13 @@ section numbering/Roman/.code={%
       \fi
     \fi
   \fi
+%    \end{macrocode}
+%
+% The code needs to distinguish between a chapter or a section
+% level and adds the appropriate penalties.
+% 
+%    \begin{macrocode}
+%
   \if@dopart@cx
     \if@haschapter@cx
       \addpenalty{-\@highpenalty}%
@@ -7303,14 +9893,12 @@ section numbering/Roman/.code={%
        %
        {\tocpartfontsize@cx 
        \tocpartbeforenumber@cx #1}%
-       \cftpartfillnum{#2}}%
+       \partfillnum@cx{#2}}%
       \nobreak
       \if@haschapter@cx
         \global\@nobreaktrue
         \everypar{\global\@nobreakfalse\everypar{}}%
-      \else
-	  % removed compatibility stuff here don't care for earlier versions     
-      \fi
+ 	   \fi
     \endgroup
   \fi}
 \fi
@@ -7318,45 +9906,44 @@ section numbering/Roman/.code={%
 % \end{macro}
 % \end{macro}
 %
-% \begin{macro}{\cftbeforepartskip}
-% \begin{macro}{\cftpartnumwidth}
+% \begin{macro}{\beforepartskip@cx}
+% \begin{macro}{\partnumwidth@cx}
 % \begin{macro}{\cftpartfont}
-% \begin{macro}{\cftpartpresnum}
-% \begin{macro}{\cftpartaftersnum}
-% \begin{macro}{\cftpartaftersnumb}
-% \begin{macro}{\cftpartleader}
-% \begin{macro}{\cftpartdotsep}
-% \begin{macro}{\cftpartpagefont}
-% \begin{macro}{\cftpartafterpnum}
-% \begin{macro}{\cftpartindent}
-% \begin{macro}{\cftpartfillnum}
+% \begin{macro}{\partpresnum@cx}
+% \begin{macro}{\partaftersnum@cx}
+% \begin{macro}{\partaftersnumb@cx}
+% \begin{macro}{\partleader@cx}
+% \begin{macro}{\partdotsep@cx}
+% \begin{macro}{\partpagefont@cx}
+% \begin{macro}{\partafterpnum@cx}
+% \begin{macro}{\partindent@cx}
+% \begin{macro}{\partfillnum@cx}
 %  These are the user commands to control the typesetting of Part entries.
 %  They are initialised to give the standard appearance.
-% \changes{v2.3a}{2002/10/03}{Deleted \cs{cftpartaftersnum} and \cs{cftpartaftersnumb}}
-% \changes{v2.3b}{2003/01/20}{Reinstated \cs{cftpartaftersnum} and \cs{cftpartaftersnumb}}
 %    \begin{macrocode}
 \if@haspart@cx
-%  \newlength{\cftbeforepartskip}
-%    \setlength{\cftbeforepartskip}{2.25em \@plus\p@}
-%  \newlength{\cftpartnumwidth}
-%    \setlength{\cftpartnumwidth}{0em}
+%  \newlength{\beforepartskip@cx}
+%    \setlength{\beforepartskip@cx}{2.25em \@plus\p@}
+%  \newlength{\partnumwidth@cx}
+%    \setlength{\partnumwidth@cx}{0em}
 %  \newcommand{\cftpartfont}{\large\bfseries}
-  \newcommand{\cftpartpresnum}{}
-  \newcommand{\cftpartaftersnum}{}
-  \newcommand{\cftpartaftersnumb}{}
+  \newcommand{\partpresnum@cx}{}
+  \newcommand{\partaftersnum@cx}{..}
+  % defined in parameters \newcommand{\partaftersnumb@cx}{}
 %
 % 
-  \newcommand{\cftpartleader}{\large\bfseries\dotfill@cx{\cftpartdotsep}}
+  \newcommand{\partleader@cx}{\large\bfseries\dotfill@cx{\partdotsep@cx}}
+%
   \def\cftnodots{10000}
-  \newcommand{\cftpartdotsep}{\cftnodots}
+  \newcommand{\partdotsep@cx}{\cftnodots}
   \newcommand{\cftpartpagefont}{\large\bfseries}
-  \newcommand{\cftpartafterpnum}{}
-%  \newlength{\cftpartindent}
-%    \setlength{\cftpartindent}{0em}
-  \newcommand{\cftpartfillnum}[1]{%
-    {\cftpartleader}%
+  %\newcommand{\partafterpnum@cx}{}
+  \newlength{\partindent@cx}
+  \setlength{\partindent@cx}{0em}
+  \newcommand{\partfillnum@cx}[1]{%
+    {\partleader@cx}%
     {\hb@xt@\@pnumwidth{\hss {%
-       \tocpartpagefontsize@cx #1}}}\cftpartafterpnum\par}%
+       \tocpartpagefontsize@cx #1}}}\partafterpnum@cx\par}%
 %    \end{macrocode}
 % \Lpack{koma} classes use some different settings.
 %   \begin{macrocode}
@@ -7383,8 +9970,8 @@ section numbering/Roman/.code={%
 %
 
 
-
-
+% \section{Handling of chapters in ToC.}
+%
 % \begin{macro}{\beforetocchapterskip@cx}
 % \begin{macro}{\cftchapindent}
 % \begin{macro}{\cftchapnumwidth}
@@ -7415,7 +10002,7 @@ section numbering/Roman/.code={%
   \newcommand{\cftchapleader}{\bfseries\dotfill@cx{\cftchapdotsep}}
 %    \end{macrocode}
 
-%	The following code determines the spacing of he dots.
+%	The following code determines the spacing of the dots.
 %    \begin{macrocode}
   \newcommand{\cftchapdotsep}{\chapterdotsep@cx} 
   \newcommand{\cftchappagefont}{\sffamily\bfseries\color{teal}}
@@ -7481,7 +10068,7 @@ section numbering/Roman/.code={%
        toc chapter no dots,
        toc chapter numberwidth=0pt,
        toc chapter font= \bfseries\sffamily\large\color{teal}}
-
+%CHECK IF IS NOT WORKING
 \if@haschapter@cx
 \renewcommand*{\l@chapter}[2]{%
   \ifnum \c@tocdepth >\m@ne
@@ -7545,7 +10132,7 @@ section numbering/Roman/.code={%
        toc section font-shape = upshape,
        toc section color= teal,
        toc section font-size=,
-       toc section numwidth = 2.8em,
+       toc section numwidth = 4.2em,
        toc section page font-size=,
        toc section page font-shape= upshape,  
        toc section page font-weight=, 
@@ -7648,6 +10235,7 @@ section numbering/Roman/.code={%
 %
 %
 % \section{Toc subsection styling}
+%
 % \begin{macro}{\l@subsection}
 %  |\l@subsection{|\meta{title}|}{|\meta{page}|}| typesets the ToC entry for
 % a |section| heading. It is a parameterised copy of the default |\l@section|
@@ -7692,7 +10280,7 @@ toc subsection case/.is choice,
        toc subsection color= teal,
        toc subsection font-size=,
        toc subsection case = none,
-       toc subsection numwidth = 2.8em,
+       toc subsection numwidth = 4.2em,
        toc subsection page font-size=,
        toc subsection page font-shape= upshape,  
        toc subsection page font-weight=, 
@@ -7779,6 +10367,7 @@ toc subsection case/.is choice,
 %    \end{macrocode}
 %
 % \section{Toc subsubsection styling}
+%
 % \begin{macro}{\l@subsubsection}
 %  |\l@subsubsection{|\meta{title}|}{|\meta{page}|}| typesets the ToC entry for
 % a |subsubsection| heading. It is a parameterised copy of the default |\l@subsubsection|
@@ -7822,7 +10411,7 @@ toc subsubsection case/.is choice,
        toc subsubsection color= teal,
        toc subsubsection font-size=,
        toc subsubsection case = none,
-       toc subsubsection numwidth = 2.8em,
+       toc subsubsection numwidth = 4.2em,
        toc subsubsection page font-size=,
        toc subsubsection page font-shape= upshape,  
        toc subsubsection page font-weight=, 
@@ -7836,7 +10425,8 @@ toc subsubsection case/.is choice,
 %
 %    For convenience we define font setting commands for
 %    the page number. We use \cs{setfont@cx}, which we have
-%	defined earlier.
+%	defined earlier. Note this might be clobbered if 
+%  hyperref is to provide a page link.
 %    
 %    \begin{macrocode}
 \newcommand\tocsubsubsectionpagefont@cx{%
@@ -7952,7 +10542,7 @@ toc paragraph case/.is choice,
        toc paragraph color= teal,
        toc paragraph font-size=,
        toc paragraph case = none,
-       toc paragraph numwidth = 2.8em,
+       toc paragraph numwidth = 4.2em,
        toc paragraph page font-size=,
        toc paragraph page font-shape= upshape,  
        toc paragraph page font-weight=, 
@@ -8056,7 +10646,38 @@ toc paragraph case/.is choice,
    \tocparagraphpageafter@cx\par}%
 %    \end{macrocode}
 %
+% This brings us, dear reader to a long and arduous 
+% path. Surely there must be an easier way. we have 
+% added parameters in all sectioning commands, down to 
+% paragraph level and we can even lower if you want
+% for the legal guys and for construction specs.
+%
+% \chapter{Handling Footnotes and Endnotes}
+%
+% \precis{Handling of Footnotes and Endnotes.}
+%
+% Keeping up with the spirit of the package, we now
+% have a go at footnotes and endnotes. This is a difficult
+% topic, with many packages and a diverse way of handlingg
+% things.
+% TO DO STORE IN PREHOOKS
+% AND POST HOOKS
+%
+%    \begin{macrocode}
+\cxset{endnotes package/.code ={\gdef\endnotes@cs{#1}%
+                   \RequirePackage{\endnotes@cs}%
+                }%
+}%
+\cxset{endotes package/.default=pagenote}
+\cxset{endnotes package=pagenote}%
+%
+%    \end{macrocode}
+%
+%    \begin{macrocode}
+% \RequirePackage{bigfoot}
+%    \end{macrocode}
 % \chapter{Handling Images}
+%
 % \precis{Commands for laying out complex pages composed primarily of images.}
 
 % \section{creating Image Page Styles}
@@ -8206,17 +10827,17 @@ toc paragraph case/.is choice,
 % \vspace*{-.8cm}
 % \hspace*{-1cm}\begin{leftcolumn}%
 %   \MainHeader{Leon\\[15pt] Kroll}
-%   \putimage[width=0.5\linewidth]{krollportrait}\par
+%   \putimage[width=0.5\linewidth]{krollportrait.jpg}\par
 %   \aheader{shows Kroll at 59. Says he. ``Painting is 
 %             fascinating'' even when motif my own mug.}
 % \end{leftcolumn}%
 % \begin{minipage}[b]{0.8\textwidth}%
-%   \includegraphics[width=\linewidth]{nudeback}
+%   \includegraphics[width=\linewidth]{nudeback.jpg}
 %       \onelinecaption{{\resizebox{\linewidth}{5.5pt}{\bfseries \hfill NUDE \hfill BACK \hfill SHOWS \hfill  A \hfill DANCER \hfill WHOSE \hfill BACK \hfill SAYS \hfill KROLL, \hfill HAS \hfill BEAUTIFUL \hfill PLANES }}\par}
 %       \onelineheader{THE DEAN OF U.S. NUDE-PAINTERS}
 %      \begin{multicols}{2}
 %      \small
-%      \lettrine{A}{t the} age of 63 when businessmen are thinking of retiring leon Kroll according to Life Magazine was having the busiest time of his life, just doing what comes naturally.  \lorem\lorem
+%      \lettrine{A}{t the} age of 63 when businessmen are thinking of retiring Leon Kroll according to Life Magazine was having the busiest time of his life, just doing what comes naturally.  \lorem\lorem
 %      \end{multicols}
 %   \end{minipage}
 %\stoptemplate
@@ -8227,11 +10848,11 @@ toc paragraph case/.is choice,
 %\starttemplate{kroll}
 %    \begin{minipage}[b]{0.3\textwidth}
 %       \MainHeadera{Sandro Botticelli}
-%       \includegraphics[width=1.0\linewidth]{botticelli-34}\par
+%       \includegraphics[width=1.0\linewidth]{botticelli-34.jpg}\par
 %       \byline[BOTTICELLI ]{ painted hundreds of portraits. He is famous for his `Young Woman' series. Even in his larger compositions, he took extreme care of the details of women's faces.}
 %   \end{minipage}\hspace*{0.2cm}
 %   \begin{minipage}[b]{0.67\textwidth}
-%       \putimage[width=\linewidth]{youngwoman}\par
+%       \putimage[width=\linewidth]{youngwoman.png}\par
 %       \tinyskip
 %       \onelinecaption{YOUNG WOMAN}\par
 %       \onelineheader{SADRO BOTTICELLI'S PORTRAITS}
@@ -8269,7 +10890,7 @@ toc paragraph case/.is choice,
 %
 %\begin{minipage}[b]{0.6\textwidth}
 %\normalsize
-%\includegraphics[width=\linewidth]{lorenzattractor01}
+%\includegraphics[width=\linewidth]{lorenzattractor01.jpg}
 %
 %\textbf{PRESENTED BY THE CAROLINA DYNAMICAL \\ SYSTEMS GROUP}. Some more text here to fill the space. You need to get the reader to stop and read a bit more. Some more text here to fill the space. \par 
 %\rule{0pt}{32pt}
@@ -8367,6 +10988,13 @@ toc paragraph case/.is choice,
 %\end{lstlisting}
 %\end{tcolorbox}
 %
+%  BIDI SUPPORT EXPERIMENTAL
+%
+%    \begin{macrocode}
+     \RequirePackage{mdframed}
+
+%    \end{macrocode}
+%
 % \section{Test macros}
 % We provide a series of MWE for testing purposes.
 % \subsection{Letter MWE}
@@ -8456,7 +11084,7 @@ toc paragraph case/.is choice,
 \usepackage{phd}
 \newcommand{\encone}[1]{{\fontencoding{T1}\selectfont#1}}
 \begin{document}
-\def\Kt#1{{\encone{#1}} &{\small\ttfamily\string#1}}
+
 
 \noindent\begin{tabular}{@{}*8l@{}}
 \toprule
@@ -8662,161 +11290,6 @@ go back to the beginning of current section\;
 % \input{packages-table}
 % \label{tbl:listofpaks}
 %
+% \bibliography{phd}
 \endinput
-
-
-% ^^A\addtocontents{toc}{\protect\end{multicols}}
-%\begin{thebibliography}{1}
-%\raggedright
-%
-%\bibitem{companion}
-%Frank Mittelbach et al.:
-%\textit{The LaTeX Companion}.\\
-%2nd edition. Addison Wesley, 2004.
-%
-%
-%\bibitem{fntguide}
-%\LaTeX3 Project Team (Ed.):
-%\textit{LaTeX2e font selection.}\\
-%CTAN: \path{macros/latex/doc/fntguide.pdf}\\
-%(Part of the \LaTeX{} online documentation)
-%
-%\bibitem{marvosym}
-%Thomas Henlich,Mojca Miklavec:
-%\textit{The MarVoSym Font Package}
-%
-% ^^A\end{thebibliography}
-%
-For custom section
-\makeatletter
-\renewcommand\thesubsection{\thesection.\two@digits{\value{subsection}}}
-\renewcommand\thesubsubsection{\thesubsection.\two@digits{\value{subsubsection}}}
-\makeatother
-
-TODO 
-http://tex.stackexchange.com/questions/45651/how-do-i-determine-in-which-order-packages-have-been-loaded
-% 
-%   
-% 
-% 
-%  
-%  
-%  
-%  
-%  
-%  
-%  \input{./sections/captionsandothers}
-%  
-
-%  \input{./sections/floats}
-%  
-%	\input{./sections/grouping}  
-%  \makeatletter
-% 
-%  \input{./sections/maths-01}
-%  \input{./sections/pericula}
-%  \input{./sections/italics}
-%  \input{./styles/style01.tex}
-%  \makeatletter
-%  \input{./sections/versochapter}
-% \makeatletter
-% \input{./styles/style03.tex}
-% \input{./styles/style04.tex}
-% \input{./styles/style05.tex}
-% \input{./styles/style06.tex}
-% \input{./styles/style07.tex}
-% \input{./styles/style08.tex}
-% \input{./styles/style09.tex}
-% \input{./styles/style10.tex}
-% \input{./styles/style11.tex}
-% \input{./styles/style12.tex}
-% \input{./styles/style14.tex}
-% \input{./styles/style15.tex}
-% \input{./styles/style16.tex}
-% \input{./styles/style17.tex}
-% \input{./styles/style18.tex}
-% \input{./styles/style20.tex}
-% \input{./styles/style20a.tex}
-% \input{./styles/style21.tex}
-% \input{./styles/style22.tex}
-% \input{./styles/style23.tex}
-% \input{./styles/style24.tex}
-% \input{./styles/style25.tex}
-% \input{./styles/style26.tex}
-% \input{./styles/style27.tex}
-% \input{./styles/style28.tex}
-% \input{./styles/style29.tex}
-% \input{./styles/style30.tex}
-% \input{./styles/style31.tex}
-% \input{./styles/style32.tex}
-% \input{./styles/style33.tex}
-% \input{./styles/style34.tex}
-% \input{./styles/style35.tex}
-% \input{./styles/style36.tex}
-% \input{./styles/style37.tex}
-% \input{./styles/style38.tex}
-% \input{./styles/style39.tex}
-% \input{./styles/style40.tex}
-% \input{./styles/style40.tex}
-% \input{./styles/style42.tex}
-% \input{./styles/style43.tex}
-% \input{./styles/style50.tex}
-% \input{./styles/style51.tex}
-% \input{./styles/style53.tex}
-%
-
-%  \makeatletter
-% ^^A \input{./sections/sideways}
-% ^^A \input{./sections/elgreco}
-%  \makeatletter
-% ^^A \input{./sections/fourfigures.tex}
-
-%  \makeatletter
-%  
-%  \restoregeometry
-%  ^^A \input{./sections/web}
-%  ^^A \input{./sections/OTR}
-%  ^^A \input{./sections/charting01}
-%  ^^A \input{./sections/wrapfig-02}
-%  ^^A \input{./sections/colors}
-%  \makeatletter
-%  ^^A \input{./sections/pictureenvironment}
-% 
-% ^^A 
-LATEST
-%  \input{./sections/chapterdesign}
-%  \input{./sections/epigraphschapter}
-%  \input{./sections/lowerlevelheadings}
-%  \input{./sections/tableofcontents}
-
-%  \part{Hackers Manual}
-%  \input{./sections/rulesandleaders} 
-%  \input{./sections/paragraphs}
-%  \input{./sections/tables}
-%  \input{./sections/OTR}
-%  \pagestyle{plain}
-% \input{./sections/kernel-ltoutput}\end{document}
-% \input{./sections/kernel-ltxref}\end{document}
-% \input{./sections/kernel-ltspace}\end{document}
-%  \input{./sections/kernel-ltspace}\end{document}
-%  \input{./sections/kernel-ltlists}\end{document}
-%  \input{./sections/kernel-ltfloat}\end{document}
-%  \input{./sections/latexkernel}
-%  \input{./sections/kernel-lterror}
-%   \input{./sections/OTR}
-%  \input{./sections/kernel-ltfiles}\end{document}
-%  \newpage
-%  \input{./sections/kernel-d-ltxdefns}
-%  \makeatletter
-%  \@specialfalse
-%  \input{./styles/style02.tex}
-%  \input{./styles/style03.tex}
-%  \input{./styles/style04.tex}
-%  \input{./styles/style05.tex}
-%  \input{./styles/style06.tex}
-%  \input{./styles/style07.tex}
-%  \input{./styles/style08.tex}
-%  \input{./styles/style09.tex}
-%  \input{./styles/style10.tex}
-%  \input{./styles/style11.tex}
 

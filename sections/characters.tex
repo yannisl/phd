@@ -1,0 +1,390 @@
+\chapter{Characters}
+
+\normalsize
+
+\tex\ works internally by translating characters into character codes. The way characters are encoded in a computer
+may differ from system to system.\index{characters!encoding}
+
+
+There are 256 characters that \tex\  might encounter at
+each step, in a file or in a line of text typed directly on your terminal. These
+256 characters are classified into 16 categories numbered 0 to 15:\index{characters!catcodes}\index{catcodes}
+
+\begin{table}[htbp]
+\begin{tabular}{rll}
+\toprule
+Code & Description & Representation\\
+\midrule
+0 &  Escape character & (\textbackslash in this book)\\
+1 & Beginning of group & (\{ in this book)\\
+2 & End of group & (\} in this book )\\
+3 & Math shift & (\$ in this book)\\
+4 & Alignment tab & (\& in this book)\\
+5 & End of line &(return in this book)\\
+6 & Parameter &(\# in this book\\
+7 & Supescript &(\^ in this book)\\
+8 & Subscript &(\_ in this bookl)\\
+9 & Ignored character &(null in this manual)\\
+10 & Space &(\char32 in this book)\\
+11 &Letter &(A,\ldots,Z and a,\ldots z)\\
+12 &Other character &(none of the above or below)\\
+13 &Active character &(\~ in this manual)\\
+14 &Comment character &(\% in this book)\\
+15 &Invalid character &(delete in this book)\\
+\bottomrule
+\end{tabular}
+\caption{\tex\ Character Codes}
+\end{table}
+\medskip
+
+When \tex reads a line of text from a file, or a line of text that you entered
+directly on your keyboard, it converts that text into a list of \cmd{\tokens}." A
+token is either (a) a single character with an attached category code, or (b) a control
+sequence. For example, if the normal conventions of plain \tex  are in force, the text
+\verb*+ `{\hskip 36 pt}'+  is converted into a list of \textit{eight} tokens:
+\medskip
+
+$ \{_{1}$ hskip $3_{12}~~6_{12}~~\_{10}~~p_{11}~~t_{11}~~\}_2 $
+
+\medskip
+The subscripts here are the category codes, as listed earlier:
+\begin{itemize}
+\item[1] for beginning of group,
+\item[12] for |other| character," and so on. The |hskip| doesn't get a subscript, because it
+represents a control sequence token instead of a character token. Notice that the space
+after \cmd{hskip} does not get into the token list, because it follows a control word.
+\end{itemize}
+
+Knuth in the \texbook notes that:
+
+\begin{quote}
+
+It is important to understand the idea of token lists, if you want to gain a
+thorough understanding of \tex, and it is convenient to learn the concept by
+thinking of \tex as if it were a living organism. The individual lines of input in your
+files are seen only by \tex's \textit{eyes} and \textit{mouth}; but after that text has been gobbled
+up, it is sent to \tex's \textit{stomach} in the form of a token list, and the digestive processes
+that do the actual typesetting are based entirely on tokens. As far as the stomach is
+concerned, the input 
+flows in as a stream of tokens, somewhat as if your \tex manuscript
+had been typed all on one extremely long line.
+\end{quote}
+
+\section{Control sequences for characters}
+
+\DescribeMacro{\char}
+There are a number of ways in which a control sequence can denote a character. The \cmd{\char} command
+specifies a character to be typeset; the \cmd{\let} command introduces a synonym for a character
+token, that is, the combination of character code and category code.
+
+\section{Denoting characters to be typeset: \texttt{char}}
+
+\index{\string\char}
+Characters can be denoted numerically by, for example, \verb+ \char98 +. This command tells \tex to add
+character number 98 of the current font to the horizontal list currently under construction.
+
+Instead of decimal notation, it is often more convenient to use octal or hexadecimal notation. For
+octal the single quote is used: \verb+ \char’142+; hexadecimal uses the double quote: \verb+ \char"62+. Note that
+
+\begin{texexample}{Characters}{ex:chars}
+\bgroup
+\ttfamily
+
+\char65
+
+\char`b
+
+\char`\b
+
+\egroup
+\end{texexample}
+
+\verb+ \char’’62+  is incorrect; the process that replaces two quotes by a double quote works at a later
+stage of processing (the visual processor) than number scanning (the execution processor).
+
+Because of the explicit conversion to character codes by the back quote character it is also possible
+to get a ‘b’ – provided that you are using a font organized a bit like the ASCII table – with \verb+ \char‘b+
+or \verb+ \char‘\b+.
+
+The \cmd{\char} command looks superficially a bit like the \verb+  ^^+ substitution mechanism.
+Both mechanisms access characters without directly denoting them. However, the \verb+ ^^+ mechanism
+operates in a very early stage of processing (in the input processor of TEX, but before category
+code assignment); the \cmd{\char} command, on the other hand, comes in the final stages of processing.
+In effect it says ‘typeset character number so-and-so’.
+
+\DescribeMacro{\chardef}
+There is a construction to let a control sequence stand for some character code: the \cmd{\chardef}
+command. The syntax of this is\\
+\cs{chardef}\meta{control sequence}=\meta{number},\\
+where the number can be an explicit representation or a counter value, but it can also be a character
+code obtained using the left quote command (see above; the full definition of hnumberi is
+given in Chapter 7). In the plain format the latter possibility is used in definitions such as
+
+\verb+ \chardef\%=‘\%+
+
+or 
+
+\verb+ \chardef\%=37   +
+
+command to typeset character 37 (usually the per cent character).\index{characters!percent character}
+
+A control sequence that has been defined with a \cmd{\chardef} command can also be used as a hnumberi.
+This fact is used in allocation commands such as \verb+ \char{newbox}+ (see Chapters 7 and 31). Tokens defined
+with \verb+ \char{mathchardef}+ can also be used this way.
+
+
+But \tex\ actually provides another kind of number that makes it unnecessary
+for you to know texttt{ASCII} at all! The token `12 (left quote), when followed by
+any character token or by any control sequence token whose name is a single character,
+stands for \tex's internal code for the character in question. For example, \verb+\char`b+ and
+\verb+ \char`\b+ are also equivalent to \verb+ \char98+. If you look in Appendix B to see how \verb+ \%+ is
+defined, you'll notice that the definition is
+
+\verb+\def\%{\char`\%}+
+
+instead of \verb+ \char37+  as claimed above.
+
+\section{Special notation for invisible characters}
+
+\tex has a standard way to refer to the invisible characters of |ASCII|: 
+
+Code 0 can be typed as the sequence of three characters \verb+ ^^@+, code 1 can be typed
+\verb+ ^^A+, and so on up to code 31, which is \verb+ ^^_  +(see Appendix C). If the character following
+\verb+ ^^+ has an internal code between 64 and 127, TEX subtracts 64 from the code; if the
+code is between 0 and 63, \tex adds 64. 
+
+Hence code 127 can be typed \verb+^^?+, and
+the dangerous bend sign can be obtained by saying \verb+{\manual^^?}+. However, you must
+change the category code of character 127 before using it, since this character ordinarily
+has category 15 (invalid); say, e.g., 
+
+\verb+ \catcode`\^^?=12 +
+
+The \verb+ ^^+ notation is different from
+\cmd{\char}, because \verb+ ^^+ combinations are like single characters; for example, it would not
+be permissible to say \verb+ \catcode`\char127+, but \verb+^^+ symbols can even be used as letters within control words.
+
+\begin{texexample}{Special notation}{ex:texbook1}
+\def\^^zz{test}
+\^^zz
+\end{texexample}
+
+
+Most of the \verb+ ^^+ codes are unimportant except in unusual applications. But
+\verb+ ^^M+ is particularly noteworthy because it is code 13, the |ASCII| return that
+\tex normally places at the right end of every line of your input file. By changing the
+category of \verb+ ^^M+  you can obtain useful special effects, as we shall see later.
+
+\section{Upper and Lowercase characters}
+
+\verb*+\lccode +the character code for the lowercase form of a letter (p. 103)
+
+\DescribeMacro{\lowercase}
+\DescribeMacro{\uppercase}
+The twin operations \cmd{\uppercase}\marg{token list} and \cmd{\lowercase}\marg{token listi}
+go through a given token list and convert all of the character tokens to their
+\cmd{\uppercase}  or \cmd{lowercase} equivalents.
+
+\begin{texexample}{Uppercase and Lowercase}{ex:lowercase} 
+\uppercase{abcdefgh} 
+\lowercase{ABCDEFGH}
+\end{texexample}
+
+Here's how: Each of the 256 possible characters
+has two associated values called the \cmd{\uccode} and the \cmd{lccode}; these values are
+changeable just as a \cmd{\catcode} is. Conversion to uppercase means that a character
+is replaced by its \cmd{\uccode} value, unless the \cmd{\uccode} value is zero (when no change
+is made). Conversion to lowercase is similar, using the
+\verb+  \lccode+. The category codes
+aren't changed. 
+
+When INITEX begins, all \verb+ \uccode+ and \verb+ \lccode+ values are zero except
+that the letters a to z and A to Z have \verb+\uccode+ values A to Z and \verb+\lccode+ values a to z.
+
+These tow control sequences are used to build a hash table, mapping all the capital and lowercase letters to their respective character codes.
+(see pg 41 TeXbook)
+
+\section{Some Practical Examples}
+
+If you are typesetting anything that has to do with \tex\ or \latex\ you are bound to have to typeset a lot of commands. This short code below will change the category code of the \texttt{"} (double quote) to be the active command. This way anything between double quotes will be  typed out verbatim and in a Maroon color. By mainipulating the \cmd{catcode} of characters we can achieve this.
+
+\begin{teX}
+%% Code to catch commands
+\def\Meaningless#1>{}
+\catcode`\"=\active
+\def\startV{\leavevmode\begingroup
+  \ifdim 0pt=\lastskip\penalty200 \fi
+  \catcode`\{11 \catcode`\}11 \catcode`\%11
+  \moreV}
+\long\def\moreV#1"{%
+  \def\LtxCode{#1}%
+  \ignorespaces
+      \expandafter\Meaningless\meaning\LtxCode
+      \unskip%
+  \endgroup}
+\let"\startV
+
+\bgroup
+\catcode`\<=\active
+\def<#1>{\ensuremath{\langle\mbox{\textsl{#1}}\rangle}}
+\end{teX}
+
+\begin{comment}
+\bgroup
+\def\Meaningless#1>{}
+\catcode`\"=\active
+\def\startV{\leavevmode\begingroup
+  \ifdim 0pt=\lastskip\penalty200 \fi
+  \catcode`\{11 \catcode`\}11 \catcode`\%11
+  \moreV}
+\long\def\moreV#1"{%
+  \def\LtxCode{#1}%
+  \ignorespaces
+      \expandafter\Meaningless\meaning\LtxCode
+      \unskip%
+  \endgroup}
+\let"\startV
+
+\catcode`\<=\active
+\def<#1>{\ensuremath{\langle\mbox{\textsl{#1}}\rangle}}
+
+\noindent Testing it out with a few commands we get 
+"\catcode", "\char" ,"\def" etc. We will revert back to this short example later on in our book, when you have learned a bit more about macros and programming \tex\. Note that this also affects "quotes".
+
+\egroup
+\end{comment}
+
+A more complex example is the \pkg{shortvrb} package code.
+
+\begin{teX}
+%% Copyright (C) 1989-1999 Frank Mittelbach, all rights reserved.
+\def\MakeShortVerb{%
+  \@ifstar
+    {\def\@shortvrbdef{\verb*}\@MakeShortVerb}%
+    {\def\@shortvrbdef{\verb}\@MakeShortVerb}}
+
+\def\@MakeShortVerb#1{%
+  \expandafter\ifx\csname cc\string#1\endcsname\relax
+    \@shortvrbinfo{Made }{#1}\@shortvrbdef
+    \add@special{#1}%
+    \expandafter
+    \xdef\csname cc\string#1\endcsname{\the\catcode`#1}%
+    \begingroup
+      \catcode`\~\active  \lccode`\~`#1%
+      \lowercase{%
+      \global\expandafter\let
+         \csname ac\string#1\endcsname~%
+      \expandafter\gdef\expandafter~\expandafter{\@shortvrbdef~}}%
+    \endgroup
+    \global\catcode`#1\active
+  \else
+    \@shortvrbinfo\@empty{#1 already}{\@empty\verb(*)}%
+  \fi}
+\def\DeleteShortVerb#1{%
+  \expandafter\ifx\csname cc\string#1\endcsname\relax
+    \@shortvrbinfo\@empty{#1 not}{\@empty\verb(*)}%
+  \else
+    \@shortvrbinfo{Deleted }{#1 as}{\@empty\verb(*)}%
+    \rem@special{#1}%
+    \global\catcode`#1\csname cc\string#1\endcsname
+    \global \expandafter\let \csname cc\string#1\endcsname \relax
+    \ifnum\catcode`#1=\active
+      \begingroup
+        \catcode`\~\active   \lccode`\~`#1%
+        \lowercase{%
+          \global\expandafter\let\expandafter~%
+          \csname ac\string#1\endcsname}%
+      \endgroup \fi \fi}
+\def\@shortvrbinfo#1#2#3{%
+  \PackageInfo{shortvrb}{%
+     #1\expandafter\@gobble\string#2 a short reference
+                                          for \expandafter\string#3}}
+\def\add@special#1{%
+  \rem@special{#1}%
+  \expandafter\gdef\expandafter\dospecials\expandafter
+    {\dospecials \do #1}%
+  \expandafter\gdef\expandafter\@sanitize\expandafter
+    {\@sanitize \@makeother #1}}
+\def\rem@special#1{%
+  \def\do##1{%
+    \ifnum`#1=`##1 \else \noexpand\do\noexpand##1\fi}%
+  \xdef\dospecials{\dospecials}%
+  \begingroup
+    \def\@makeother##1{%
+      \ifnum`#1=`##1 \else \noexpand\@makeother\noexpand##1\fi}%
+    \xdef\@sanitize{\@sanitize}%
+  \endgroup}
+\endinput
+%%
+%% End of file `shortvrb.sty'.
+\end{teX}
+
+We will spent the rest of the book in trying to understand and write code like this. My ultimate aim is  to be able to produce \tex\ code like any other program. 
+
+\section{Example}
+
+In this example we wish to redefine some of the active codes to act as text only:
+
+\begin{teX}
+\newenvironment{plaintext}{%
+        \catcode`\$12
+        \def\&{&}%
+        \catcode`\&12
+        \def\_{_}%
+        \catcode`\_12
+        \def\^{^}%
+        \catcode`\^12
+        \catcode`\#12
+        \catcode`\%12
+        \let\~~%
+        \catcode`\~12
+}{}
+\end{teX}
+
+\newenvironment{plaintext}{%
+        \catcode`\$12
+        \def\&{&}%
+        \catcode`\&12
+        \def\_{_}%
+        \catcode`\_12
+        \def\^{^}%
+        \catcode`\^12
+        \catcode`\#12
+        \catcode`\%12
+        \let\~~%
+        \catcode`\~12
+}{}
+Use it like
+
+\begin{plaintext}
+Here is some test text % ^ & _ $ # &.
+
+How about some math \(x\_y\^z\). You're still out of luck with braces
+though.
+\end{plaintext}
+
+\begingroup
+\catcode`\{=11 
+\catcode`\}=11
+\catcode`\[=1
+\catcode`\]=2
+
+{This is a test}
+
+\endgroup
+
+
+\section{Checking to see the meaning of a control sequence
+}
+Finding out just what a control sequence has been defined to be with |\let| can be done using
+
+%\meaning: the sequence
+
+\begin{teXXX}
+\let\x=3 \meaning\x
+\end{teXXX}
+\graybox{
+gives 'the character 3'.}
+
+
+

@@ -1,0 +1,153 @@
+\chapter{Expandafter}
+
+One of the most often misunderstood \TeX\ commands is \cmd{\expandafter}
+expandafter is an instruction that reverses the order of expansion. It is not a typesetting instruction, but an instruction that influences the expansion of macros. But what is \textit{expansion}? The term expansion means the replacement of the macro and its arguments, if there are any, by the \textit{replacement} text of the macro. If we have defined a macro
+
+\begin{teX}
+\def\test{ABC};
+\end{teX}
+
+
+\noindent then the replacement text of |\test| is |ABC| and the \textit{expansion} of |\test| is |ABC|.
+
+As a control sequence |expandafter| can be followed by any number of tokens.
+
+\begin{teX}
+\expandafter\token_e\token_1\token_2\token_n etc
+\end{teX}
+
+\noindent then the following rules describe the execution of |expandafter|:
+
+\begin{enumerate}
+\item  $<token_e$, the token immediately following |\expandafter|, is saved without expansion.
+\item $<token_1>$, which is the token after the saved $token_e$, is analyzed. The following cases can be distinguished:
+\begin{enumerate}
+\item If is a macro: The macro will be expanded. In other words, the macro and its arguments, if any, will be replaced by the replacement text. After this \tex will \textbf{not} look at the first token of this new replacement text to expand it again or to execute it.
+\end{enumerate}
+
+
+
+\begin{teX}
+\def\xx [#1]{[#1]}
+\def\yy{[ABC]}
+
+\expandafter\xx\yy
+\end{teX}
+
+This results in 
+\def\xx [#1]{[#1]}
+\def\yy{[ABC]}
+
+\texttt{> \expandafter\xx\yy}
+
+
+\item token1 is primitive: Normally a primitive token can not be expanded so the |\expandafter| has no effect; but there are exceptions, which we will discuss after the example.
+
+\begin{texexample}{Expansion}{}
+\expandafter AB
+\end{texexample}
+
+Character A is saved. Then \tex\ tries to expand it, but \textit{not} print B, because B cannot be expanded. Finally A is put back in front of the B ; in other words, the two characters are printed in the given order, and we may well have omitted the |\expandafter|. So what's the point here? |\expandafter| reverses the order of expansion, not of execution.
+
+\noindent But there are exceptions to the above:
+\begin{enumerate}
+\item \textbf{temporarily suspend an opening curly brace} token 1 is is an opening curly brace which leads to the opening curly brace temporarily suspended. This is listed as a separate case because it has some interesting, applications;
+
+\begin{teX}
+\newtoks\ta
+\newtoks\tb
+\ta = {\a\b\c}
+\tb=\expandafter{\the\ta}
+\tb={\the\ta}
+\tb
+\end{teX}
+
+\begin{texexample}{Expansion}{}
+\begingroup
+
+\def\a{A}
+\def\b{B}
+\def\c{C}
+\newtoks\ta
+\newtoks\tb
+\ta = {\a\b\c}
+\tb=\expandafter{\the\ta}
+\tb={\the\ta}
+
+\texttt{> \the\tb}
+
+\texttt{> \the\ta}
+
+\endgroup
+\end{texexample}
+
+\item \meta{$token_1$} is another expandafter. The best way to understand this is to write a \tex mnmal example and watch it in action
+
+\begin{teX}
+\tracingmacros=2  \tracingcommands=2
+\def\a{A}
+\def\b{B}
+\def\c{C}
+
+\expandafter\expandafter\expandafter\a\expandafter\b\c
+
+\bye
+\end{teX}
+
+Checking the log file with |\tracingmacros=2 \tracingcommands=2| we get
+
+\begin{verbatim}
+{vertical mode: \def}
+{blank space  }
+{\def}
+{blank space  }
+{\def}
+{blank space  }
+{\par}
+{\expandafter}
+{\expandafter}
+{\expandafter}
+
+\c ->C
+{\expandafter}
+
+\b ->B
+
+\a ->A
+{the letter A}
+{horizontal mode: the letter A}
+{\par}
+
+\meaning\futurenonspacelet
+\end{verbatim}
+
+
+\end{enumerate}
+
+
+\section{Defining Macros on the fly}
+
+This is a very common requirement. 
+
+\begin{texexample}{csname}{}
+\def\newtest#1#2{
+  \expandafter\def\csname#1\endcsname{#2}%
+}
+\newtest{letters}{test for letters}
+\letters
+\end{texexample}
+
+
+
+
+
+\end{enumerate}
+
+
+
+
+
+
+
+
+

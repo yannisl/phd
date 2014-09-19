@@ -1,8 +1,10 @@
 \cxset{steward,
+  chapter toc=true,
+  toc image=false,
   numbering=arabic,
   custom = stewart,
   offsety=0cm,
-  image=hine06,
+  image={./images/hine06.jpg},
   texti={A picture is worth a thousand words, but if you don't add a good description of what it is in a caption, your readers will be left scratching their heads. Here we discuss captions in general as well as the formatting commands available in LaTeX, some common packages and athena.},
   textii={In this chapter we discuss methods that allow the formatting and positioning of captions, based on a set of key values. Central  to this process is the separation of content from presentation.
 We also discuss the basic formatting tools that are available and how one can modify them to blend them with the rest of the design.
@@ -44,7 +46,7 @@ As users will probably only have to set these keys once, my recommendation is to
 \keyval{caption belowskip}{\marg{dim}}{Sets the \cs{abovecaptionskip}. You use as simply \texttt{10pt} ot similar. In LaTeX this value is normally set as \texttt{0pt}. Note that below a float normally an additional skip is introduced.}
 
 \keyval{caption font}{\marg{bf|tt|it}}{Sets the font commands. }
-\keyval{caption figure name}{}{}
+\keyval{caption figure name}{Figure}{Sets the figure name}
 \keyval{caption defaults}{\marg{true|false}}{Sets all styling back to default styles.}
 }
 
@@ -55,12 +57,14 @@ More complicated styles can be build in a simila fashion to chapter
 heads, by diverting to a custom command \cs{captionspecial}. This
 will be provided at the next release of the package.
 
+
 \cxset{caption format/.code=\captionsetup[figure]{format=#1}} 
 
 
 \begin{texexample}{}{}
 \bgroup
 \cxset{caption format = hang}
+\includegraphics[width=80pt]{../graphics/sudan.jpg}
 \captionof{figure}{This is a very long command to see how all
 these can wrap in a hang format, if the text is longer than
 a paragraph.}
@@ -79,11 +83,11 @@ they are within a group.
 
 
 
+\makeatletter
 \def\captionlabelfont@cx{bf}
 \cxset{caption font/.code = \captionsetup[figure]{font=#1}}
-
 \cxset{caption font={bf}}
-
+\makeatother
 
 
 
@@ -99,68 +103,64 @@ a paragraph.}
 
 \section{Technical discussion}
 
-The formatting of the caption, happens in stages like the sectioning commands.  \lstinline+\@makecaption}+  command is responsible for the typesetting and is defined in the standard LaTeX classes. The \cs{caption} and command is defined in the LaTeX kernel in the 
+The formatting of the caption, happens in stages like the sectioning commands.  |\@makecaption|  command is responsible for the typesetting and is defined in the standard LaTeX classes. The \cs{caption} and command is defined in the LaTeX kernel in the 
 |float.dtx| class. As always we will start our discussion from the user command and follow it through to the typesetting macros.
 
 When the user command \cs{caption} is processed, LaTeX checks if it is outside a float and if it is issues an error message. It then swallows the argument. It then calls \cs{@caption} which does further processing.
 
-
-\begin{tcolorbox}
-\begin{lstlisting}
+\startlineat{5}
+\begin{teXXX}
 \def\caption{%
-5 \ifx\@captype\@undefined
-6 \@latex@error{\noexpand\caption outside float}\@ehd
-7 \expandafter\@gobble
-8 \else
-9 \refstepcounter\@captype
-10 \expandafter\@firstofone
-11 \fi
-12 {\@dblarg{\@caption\@captype}}%
-13 }
-
+  \ifx\@captype\@undefined
+   \@latex@error{\noexpand\caption outside float}\@ehd
+   \expandafter\@gobble
+ \else
+   \refstepcounter\@captype
+  \expandafter\@firstofone
+ \fi
+ {\@dblarg{\@caption\@captype}}%
+}
 
 \long\def\@caption#1[#2]#3{%
-15 \par
-16 \addcontentsline{\csname ext@#1\endcsname}{#1}%
-17 {\protect\numberline{\csname the#1\endcsname}{\ignorespaces #2}}%
-18 \begingroup
+  \par
+  \addcontentsline{\csname ext@#1\endcsname}{#1}%
+  {\protect\numberline{\csname the#1\endcsname}{\ignorespaces  #2}}%
+  \begingroup
         \@parboxrestore
-20 \if@minipage
-21     \@setminipage
-22 \fi
-23 \normalsize
-24 \@makecaption{\csname fnum@#1\endcsname}{\ignorespaces #3}\par
-25 \endgroup}
-\end{lstlisting}
-\end{tcolorbox}
+  \if@minipage
+     \@setminipage
+  \fi
+  \normalsize
+ \@makecaption{\csname fnum@#1\endcsname}{\ignorespaces #3}
+ \par
+ \endgroup}
+\end{teXXX}
+
 
 The \cs{@makecaption} is the main typesetting macro and this is
 where we need to hook if we want finer grain of control.
 
-
+\makeatletter
 \cxset{label punctuation/.code = \gdef\labelpunctuation@cx{#1}}
 \cxset{label space/.code = \gdef\labelhspace@cx{\hskip#1}}
 \cxset{caption above skip/.store in= \abovecaptionskip@cx}
 \cxset{caption above skip=10pt}
+\makeatother
 
 \captionof{figure}{This is a very long command to see how all
 these can wrap in a hang format, if the text is longer than
 a paragraph.}
 
 \begin{texexample}{}{}
-
 \cxset{caption format = hang}
-\cxset{caption font={tt}}
 \cxset{label punctuation=?}
 \cxset{label space =1.5em}
-
-
-
 \captionof{figure}{This is a very long command to see how all
 these can wrap in a hang format, if the text is longer than
 a paragraph.}
 
 \end{texexample}
+
 
 
 \cxset{label punctuation=?}
@@ -172,6 +172,7 @@ a paragraph.}
 \cxset{label space =.5em}
 \def\figurename{\textbf{Figure}}
 
+\makeatletter
 \setlength\abovecaptionskip{\abovecaptionskip@cx}
 \setlength\belowcaptionskip{0\p@}
 
@@ -185,9 +186,9 @@ a paragraph.}
     \hb@xt@\hsize{\hfil\box\@tempboxa\hfil}%
   \fi
   \vskip\belowcaptionskip}
+\makeatother
 
-\begin{tcolorbox}
-\begin{lstlisting}
+\begin{teXXX}
 \newlength\abovecaptionskip
 \newlength\belowcaptionskip
 \setlength\abovecaptionskip{10\p@}
@@ -203,12 +204,20 @@ a paragraph.}
     \hb@xt@\hsize{\hfil\box\@tempboxa\hfil}%
   \fi
   \vskip\belowcaptionskip}
-\end{lstlisting}
-\end{tcolorbox}
+\end{teXXX}
+
+
 
 \section{List of Figures}
-\begin{tcolorbox}
-\begin{lstlisting}
+
+\begin{macro}{listoffigures}
+The list of figures (lof) is included on a page by using the command \cs{listoffigures}.
+\end{macro}
+
+The command is not defined in the kernel but rather in the standard classes as shown below. By default it uses the |\chapter| to typeset its heading. Commands like |\tableofcontents| that should set the marks in some page
+styles use a |\@mkboth| command, which is |\let| by the pagestyle command |(\ps@...)| to |\markboth| for setting the heading or to |\@gobbletwo| to do nothing.\footnote{See source ltpage.dtx Date: 2000/06/02 Version v1.0k, page311.}
+
+\begin{teXXX}
 \newcommand\listoffigures{%
     \if@twocolumn
       \@restonecoltrue\onecolumn
@@ -221,8 +230,8 @@ a paragraph.}
     \@starttoc{lof}%
     \if@restonecol\twocolumn\fi
     }
-\end{lstlisting}
-\end{tcolorbox}
+\end{teXXX}
+
 
 
 In the |phd| package this is set as a property via a key-value interface and hence we can use a normal chapter. If it need be we can define a special chapter style only for this heading. This way we can control all aspects of the formatting of the head.
@@ -235,14 +244,16 @@ The \textit{List of Figures} for example in many Social Sciences books is typed 
 
 
 \begin{figure}[htp]
-\includegraphics[width=\textwidth]{listofillustrations}
+\includegraphics[width=\textwidth]{./images/listofillustrations.jpg}
 \caption{List of Illustrations extract from \textit{Oxford History of Art, Portraiture}, Shearer West, Oxford University Press, 2004.}
 \end{figure}
 \begin{figure}[htp]
-\includegraphics[width=0.67\textwidth]{titian}
+\includegraphics[width=0.67\textwidth]{./images/titian.jpg}
 \centering
 \caption{Figure from \textit{Oxford History of Art, Portraiture}, Shearer West, Oxford University Press, 2004. The figures are numbered consecutively and the text in the List of Illustrations have different formatting.}
 \end{figure}
+
+
 
 \section{Formatting the List of Figures Heading}
 
@@ -256,16 +267,14 @@ So if you want to change settings for the current figure or table only, just pla
 command.
 
 
-Many of the caption figures can be changed within LaTeX itself. For example to get continuous numbering in the book class.
+Many of the caption figures can be changed within \latexe itself. For example to get continuous numbering in the book class.
 
-\begin{tcolorbox}
-\begin{lstlisting}
+\begin{teXXX}
 \makeatletter
 \@removefromreset{table}{chapter}
 \renewcommand{\thetable}{\arabic{table}}
 \makeatother
-\end{lstlisting}
-\end{tcolorbox}
+\end{teXXX}
 
 \begin{macro}{removefromreset}
 The command \cs{removefromreset} can be found by loading the \pkg{remreset} package. Other combinations are also possible.
@@ -280,12 +289,23 @@ options:
 \keyval{caption numbering scheme}{\marg{default|continuous| chapter|section}}{The numbering style either continous or reset per spacing etc...}
 
 
+\begin{comment}
 % Date: Sat, 30 Jul 1994 17:58:55 PST
 % From: Donald Arseneau <asnd@erich.triumf.ca>
 %
 %  |\@removefromreset{FOO}{BAR}| : Removes counter FOO from the list of
 %                       counters |\cl@BAR| to be reset when counter BAR
 %                       is stepped.  The opposite of |\@addtoreset|.
+\end{comment}
+
+
+
+\begin{texexample}{}{}
+\makeatletter
+\setdefaults
+\cxset{chapter opening=anywhere,
+          chapter font-size=\normalfont,
+          title font-size=\large}
 
 \def\@removefromreset#1#2{\let\@tempb\@elt
    \expandafter\let\expandafter\@tempa\csname c@#1\endcsname
@@ -298,14 +318,6 @@ options:
 \renewcommand{\thefigure}{\arabic{figure}}
 
 \@specialfalse\@tocfalse
-
-\begin{texexample}{}{}
-\setdefaults
-\cxset{chapter opening=anywhere,
-          chapter font-size=\normalfont,
-          title font-size=\large}
-
-
 \gdef\continuousfigures@cx{\@removefromreset{figure}{chapter}
 \gdef{\thefigure}{\arabic{figure}}}
 
@@ -318,13 +330,15 @@ options:
 \chapter{This is the Second Chapter}
 \captionof{figure}{test}
 \captionof{figure}{test}
+\makeatother
 \end{texexample}
 
 
 \begin{figure}[htp]
-\includegraphics[width=0.98\textwidth]{captionspecial}
+\includegraphics[width=0.98\textwidth]{./images/captionspecial.jpg}
 \centering
 \caption{Figure from \textit{Oxford History of Art, Portraiture}, Shearer West, Oxford University Press, 2004. The figures are numbered consecutively and the text in the List of Illustrations have different formatting.}
 \end{figure}
+
 
 

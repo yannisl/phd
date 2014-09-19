@@ -1,13 +1,30 @@
-\@specialtrue
+\makeatletter\@specialtrue\makeatother
+
+\newcommand{\mf}{{\fontencoding{U}\fontfamily{zmf}\selectfont METAFONT}}
+
+\newcommand{\pcstrut}{\vrule height11pt width0pt}
+
+\newcommand{\sample}{Typographia Ars Artium Omnium Conservatrix}
+
+\newcommand{\thefont}[4][OT1]{%
+	\textcolor{thefontname}{#2}&%
+	\pcstrut\fontencoding{#1}\fontfamily{#3}\selectfont#4\\}
+
+\newcommand{\fonttitle}[1]{%
+	\multicolumn2{p{\columnwidth}}{\vrule height1.5pc width0pt
+	\fontseries{b}\selectfont\textcolor{Subheadings}{#1}}\\[3pt]}
+
+\newcommand{\normalencoding}{\fontencoding{OT1}}
+\newcommand\ttverb[1]{\texttt{\string#1}}
+
 \cxset{steward,
   numbering=arabic,
   custom=stewart,
   offsety=0cm,
-  image=hine03,
-  texti={When Lamport designed the original \LaTeX\ sectioning commands he did not provide a fully comprehensive interface for modifying their design. With current tools available improvements are much easier to program and this chapter provides the details.},
-%
-  textii={In this chapter we discuss a method that allows the production of fancy chapter headings and formatting, based on a set of key values. Central  to this process is the separation of content from presentation.
-We also discuss the basic formatting tools that are available and how one can modify them to mould new book designs.
+  image={hine03.jpg},
+  texti={An introduction to the use of font related commands. The chapter also gives a historical background to font selection using \tex and \latex. },
+  textii={In this chapter we discuss keys that are available through the \texttt{phd} package and give a background as to how fonts are used
+in \latex.
  },
  pagestyle = empty
 }
@@ -15,12 +32,536 @@ We also discuss the basic formatting tools that are available and how one can mo
 
 
 \chapter{Setting up Fonts}
-
+\label{ch:fonts}
 \section{Introduction}
 
-Selecting the right fonts for a book is the job of the book designer. For people using pdfLaTeX this is rather limiting and I would highly recommend for any serious typesetting work to move onto XeLaTeX.
 
-One of the things we need to take care of, is to ensure that the document compiles irrespective of the \TeX\ engine used. I suggest code similar to that shown in the example below that enables loading of main fonts based on the \TeX\ engine.
+Selecting the right fonts for a book traditionally was the job of the book designer. Most \latex authors would get their hands dirty trying to play the book designer. A word of advice is that most of them make a royal mess of it. If you use only |pdfLaTeX| the range of fonts is rather limiting and I would highly recommend for any serious typesetting work to move onto |XeLaTeX| and the use of the package \pkg{fontspec} \citep{fontspec}.
+
+One of the things we wanted to achieve with the \pkgname{phd} was  to take care of different \tex engines, and to ensure that the package can be used irrespective of the \TeX\ engine used. 
+
+Before we start outlining the scheme let us start, by demonstrating how to load one of the standard fonts provided by \latexe. We will load the Computer Modern font.\index{Computer Modern (font)} 
+
+\begin{texexample}{How to load a font}{ex:fonts}
+\newcommand{\fontdemo}[4][OT1]{%
+    \textcolor{thefontname}{#2}%
+    \fontencoding{#1}\fontfamily{#3}\selectfont#4\\ }
+
+\fontdemo{CM}{cmtt}{\ttfamily\alphabet}
+
+\fox
+\end{texexample}
+
+In the example we have used a number of convenience commands that
+are provided by the |phd| package.
+
+\CMDI{\alphabet} Typesets the letters of the English alphabet
+\CMDI{\fox} Typesets the fox passage
+
+The example  creates a convenience command to call the |computer modern typewriter| font and to print the alphabet.\footnote{The command \cs{alphabet} is provided by the \texttt{phd} package.} In this case we are asking \latex to load a font from the |cmtt| family. 
+
+To load a font two things are required the encoding scheme [|OT1|] in the example and the somewhat cryptic font family name [|cmtt|].
+
+\subsection{What’s a font?}
+
+As the |fontinst| manual says: ``Once upon a time, this question was easily answered: a font is a set of type
+in one size, style, etc. There used to be no ambiguity, because a font was a
+collection of chunks of type metal kept in a drawer, one drawer for each font'' \citet{fontinst}.
+
+With digital typesetting, things are more complicated. What a font
+\textit{is} isn't easy to pin down. A typical use of a PostScript font with \latex might
+use these elements:
+
+\begin{enumerate}
+\item Type 1 printer font file
+\item Bitmap screen font file
+\item Adobe font metric file (afm file)
+\item \tex font metric file (tfm file)
+\item Virtual font file (vf file)
+\item font definition file (fd file)
+\end{enumerate}
+
+Looked at from a particular point of view, each of these files \textit{is} the font. So
+what’s going on? Every text font in \latex has five attributes:
+
+\index{encoding schemes>OML}\index{encoding schemes>OMS}\index{encoding schemes>OMX}\index{encoding schemes>U}\index{encoding schemes>OML}
+\index{encoding schemes}\index{encoding schemes>OT1}
+\begin{description}
+\item[Encoding Schemes]
+The \textit{encoding} scheme (in the example |OT1|) provides information as to which glyph goes into what slot in a font table. These font tables can be printed using |fonttest.tex|. We show the test for |cmtt10| in Figure~\ref{fig:fonttest}. The
+most common values for the font encoding are:
+\medskip
+
+\begin{longtable}{ll}
+OT1 &TEX text\\
+T1  &TEX extended text\\
+OML &TEX math italic\\
+OMS &TEX math symbols\\
+OMX &TEX math large symbols\\
+U   &Unknown\\
+L\meta{xx}  A local encoding\\
+\end{longtable}
+\medskip
+
+\item[family]\index{fonts>family}\index{fonts>cmr}\index{fonts>cmss}
+\index{fonts>cmtt}
+The name for a collection of fonts, usually grouped under a common
+name by the font foundry. For example, `Adobe Times', `ITC Garamond',
+and Knuth's `Computer Modern Roman' are all font families.
+
+There are far too many font families to list them all, but some common ones
+are:
+
+\begin{longtable}{ll}
+cmr  &Computer Modern Roman\\
+cmss &Computer Modern Sans\\
+cmtt &Computer Modern Typewriter\\
+cmm  &Computer Modern Math Italic\\
+cmsy &Computer Modern Math Symbols\\
+cmex &Computer Modern Math Extensions\\
+ptm  &Adobe Times\\
+phv  &Adobe Helvetica\\
+pcr  &Adobe Courier\\
+\end{longtable}
+
+\item[series] How heavy or expanded a font is. For example, `medium weight', `narrow'
+and `bold extended' are all series.
+
+\item[shape] The form of the letters within a font family. For example, `italic',
+`oblique' and `upright' (sometimes called `roman') are all font shapes. The most common values for the font shape are:
+
+\begin{longtable}{ll}
+n  &Normal (that is `upright' or `roman')\\
+it &Italic\\
+sl &Slanted (or `oblique')\\
+sc &Caps and small caps\\
+\end{longtable}
+
+\item[size] The design size of the font, for example `10pt'. If no dimension is specified, `pt' is assumed.
+\end{description}
+
+These five parameters specify every \latex
+font, for example:
+
+\begin{longtable}{lll}
+|LaTeX| specification &Font  &TEX font name\\
+|OT1 cmr m n 10|      &Computer Modern Roman 10 point &cmr10\\
+|OT1 cmss m sl 1pc|   &Computer Modern Sans Oblique 1 pica &cmssi12\\
+|OML cmm m it 10pt|   &Computer Modern Math Italic 10 point &cmmi10\\
+|T1 ptm b it 1in|  &Adobe Times Bold Italic 1 inch &ptmb8t at 1in\\
+\end{longtable}
+
+When you get a font error or an underfull or overfull box \tex always will print an error with the font specification in full as shown below:
+
+\begin{verbatim}
+LaTeX Font Warning: Font shape `EU1/cmr/m/sc' undefined
+(Font)              using `EU1/cmr/m/n' instead on input line 160.
+\end{verbatim}
+
+
+
+\begin{tabbing}
+\ttverb\textvisiblespace\quad\=bbbbbbbbbbbbbb\=b'b'\=ccccccccccc\kill
+\ttverb\`{}               \>OT1,T1\>   \a`{}\> (grave)      \\
+\ttverb\'{}               \>OT1,T1\>   \a'{}\> (acute)      \\
+\ttverb\^{}               \>OT1,T1\>   \^{}\>  (circumflex) \\
+\ttverb\~{}               \>OT1,T1\>   \~{}\>  (tilde)      \\
+\ttverb\"{}               \>OT1,T1\>   \"{}\>  (umlaut)     \\
+\ttverb\H{}               \>OT1,T1\>   \H{}\>  (Hungarian umlaut) \\
+\ttverb\r{}               \>OT1,T1\>   \r{}\>  (ring)       \\
+\ttverb\v{}               \>OT1,T1\>   \v{}\>  (ha\v{c}ek)  \\
+\ttverb\u{}               \>OT1,T1\>   \u{}\>  (breve)      \\
+\ttverb\t{}               \>OT1,T1\>   \t{}\>  (tie)        \\
+\ttverb\={}               \>OT1,T1\>   \a={}\> (macron)     \\
+\ttverb\.{}               \>OT1,T1\>   \.{}\>  (dot)        \\
+\ttverb\b{}               \>OT1,T1\>   \b{}\>  (underbar)   \\
+\ttverb\c{}               \>OT1,T1\>   \c{}\>  (cedilla)    \\
+\ttverb\d{}               \>OT1,T1\>   \d{}\>  (dot under)  \\
+\ttverb\k{}               \>T1    \>   \k{}\>  (ogonek)     \\
+\ttverb\AE                \>OT1,T1\>   \AE \>               \\
+\ttverb\DH                \>T1    \>   \DH \>               \\
+\ttverb\DJ                \>T1    \>   \DJ \>               \\
+\ttverb\L                 \>OT1,T1\>   \L  \>               \\
+\ttverb\NG                \>T1    \>   \NG \>               \\
+\ttverb\OE                \>OT1,T1\>   \OE \>               \\
+\ttverb\O                 \>OT1,T1\>   \O  \>               \\
+\ttverb\SS                \>OT1,T1\>   \SS \>               \\
+\ttverb\TH                \>T1    \>   \TH \>               \\
+\ttverb\ae                \>OT1,T1\>   \ae \>               \\
+\ttverb\dh                \>T1    \>   \dh \>               \\
+\ttverb\dj                \>T1    \>   \dj \>               \\
+\ttverb\guillemotleft     \>T1    \>   \guillemotleft  \> (guillemet) \\
+\ttverb\guillemotright    \>T1    \>   \guillemotright \> (guillemet) \\
+\ttverb\guilsinglleft     \>T1    \>   \guilsinglleft  \> (guillemet) \\
+\ttverb\guilsinglright    \>T1    \>   \guilsinglright \> (guillemet) \\
+\ttverb\i                 \>OT1,T1\>   \i  \>               \\
+\ttverb\j                 \>OT1,T1\>   \j  \>               \\
+\ttverb\l                 \>OT1,T1\>   \l  \>               \\
+\ttverb\ng                \>T1    \>   \ng \>               \\
+\ttverb\oe                \>OT1,T1\>   \oe \>               \\
+\ttverb\o                 \>OT1,T1\>   \o  \>               \\
+\ttverb\quotedblbase      \>T1    \>   \quotedblbase   \>   \\
+\ttverb\quotesinglbase    \>T1    \>   \quotesinglbase \>   \\
+\ttverb\ss                \>OT1,T1\>   \ss \>               \\
+\ttverb\textasciicircum   \>OT1,T1\>   \textasciicircum \>  \\
+\ttverb\textasciitilde    \>OT1,T1\>   \textasciitilde  \>  \\
+\ttverb\textbackslash     \>OT1,T1\>   \textbackslash   \>  \\
+\ttverb\textbar           \>OT1,T1\>   \textbar         \>  \\
+\ttverb\textbraceleft     \>OT1,T1\>   \textbraceleft   \>  \\
+\ttverb\textbraceright    \>OT1,T1\>   \textbraceright  \>  \\
+\ttverb\textcompwordmark  \>OT1,T1\>   \textcompwordmark\> (invisible) \\
+\ttverb\textdollar        \>OT1,T1\>   \textdollar      \>  \\
+\ttverb\textemdash        \>OT1,T1\>   \textemdash      \>  \\
+\ttverb\textendash        \>OT1,T1\>   \textendash      \>  \\
+\ttverb\textexclamdown    \>OT1,T1\>   \textexclamdown  \>  \\
+\ttverb\textgreater       \>OT1,T1\>   \textgreater     \>  \\
+\ttverb\textless          \>OT1,T1\>   \textless        \>  \\
+\ttverb\textquestiondown  \>OT1,T1\>   \textquestiondown\>  \\
+\ttverb\textquotedbl      \>T1    \>   \textquotedbl    \>  \\
+\ttverb\textquotedblleft  \>OT1,T1\>   \textquotedblleft\>  \\
+\ttverb\textquotedblright \>OT1,T1\>   \textquotedblright\> \\
+\ttverb\textquoteleft     \>OT1,T1\>   \textquoteleft   \>  \\
+\ttverb\textquoteright    \>OT1,T1\>   \textquoteright  \>  \\
+\ttverb\textregistered    \>OT1,T1\>   \textregistered  \>  \\
+\ttverb\textsection       \>OT1,T1\>   \textsection     \>  \\
+\ttverb\textsterling      \>OT1,T1\>   \textsterling    \>  \\
+\ttverb\texttrademark     \>OT1,T1\>   \texttrademark   \>  \\
+\ttverb\textunderscore    \>OT1,T1\>   \textunderscore  \>  \\
+\ttverb\textvisiblespace  \>OT1,T1\>   \textvisiblespace\>  \\
+\ttverb\th                \>T1    \>   \th              \>
+\end{tabbing}                        
+
+Do note that when you use the \pkgname{hyperref}, you will get a surprise, all the commands have been converted to "PU" encoding. This is mostly harmless and iss  done in order for |hyperref| to mark bookmarks\footnote{http://tex.stackexchange.com/questions/198810/why-does-the-hyperref-package-changes-encoding-of-font-commands} in a safe way.
+
+\begin{texexample}{font encoding}{ex:encoding}
+\meaning\textasciitilde\\
+\meaning\"\\
+\meaning\NG\\
+\meaning\k\\
+\meaning\alpha
+\meaning\printfontparams
+
+\printfontparams
+\end{texexample}
+
+A peek at the \docfile{puenc.def} reveals the inner workings
+of the encoding mechanism.
+
+\begin{verbatim}
+\ProvidesFile{puenc.def}
+  [2003/01/20 v6.73l
+  Hyperref: PDF Unicode definition (HO)]
+\DeclareFontEncoding{PU}{}{}
+\DeclareTextCommand{\textLF}{PU}{\80\012} % line feed
+\DeclareTextCommand{\textCR}{PU}{\80\015} % carriage return
+\DeclareTextCommand{\textHT}{PU}{\80\011} % horizontal tab
+\DeclareTextCommand{\textBS}{PU}{\80\010} % backspace
+\DeclareTextCommand{\textFF}{PU}{\80\014} % formfeed
+\DeclareTextAccent{\`}{PU}{\textgrave}
+\DeclareTextAccent{\'}{PU}{\textacute}
+\DeclareTextAccent{\^}{PU}{\textcircumflex}
+\end{verbatim}
+
+\printfontparams 
+
+
+\latex uses a number of other files to get to the particular file that contains the font metrics file |cmtt10| and to find the appropriate file. For the original Knuth fonts the filenames have been kept the same, essentially as a request from Knuth that one should not change them.
+
+Most of the difficulty in selecting and using fonts is figuring the encoding scheme and the Karl Berry naming scheme. In the Example~\ref{ex:fonts} we select the \cs{fontfamily} |cmtt| which is computer modern type writer and then we invoke the macros for the shape \cs{itshape} and print the |alphabet|. The macro \cmd{\alphabet} is build-in the |phd| package as we use it in a few places.
+
+\begin{figure}[htbp]
+\centering
+
+\hspace*{-2cm}\includegraphics[width=\textwidth]{./images/testfont-output.pdf}
+
+\caption{Output from testfont.tex for cmtt10 font}
+\label{fig:fonttest}
+\end{figure}
+
+
+
+\subsection{The postscript fonts}
+
+With Adobe reader a number of fonts come pre-packaged and these have been incorporated into \latex2e. These fonts can be found in all \tex distributions. The \textit{Times New Roman} is named |ptm|. 
+
+\begin{texexample}{The Postscript fonts}{ex:postscriptfonts}
+\raggedright
+\begin{tabular}{@{}>{\sffamily\bfseries}rl}
+\fonttitle{The Adobe `LaserWriter 35', 10 typefaces in a total of 35
+different styles, standard on all PostScript printers}
+
+\thefont{Avant Garde Book}{pag}{\fontsize{9}{9}\selectfont\sample}
+\thefont{Bookman Light}{pbk}{\sample}
+\thefont{Courier}{pcr}{\sample}
+\thefont{Helvetica}{phv}{\sample}
+\thefont{New Century Schoolbook}{pnc}{\sample}
+\thefont{Palatino}{ppl}{\sample}
+\thefont[U]{Symbol}{psy}{\sample}
+\thefont{Times New Roman}{ptm}{\sample}
+\thefont{Zapf Chancery Medium Italic}{pzc}{\fontsize{12}{12}\selectfont\itshape\sample}
+\thefont[U]{Zapf Dingbats}{pzd}{\sample}
+\end{tabular}
+\end{texexample}
+
+Using the |phd| package we can come closer to the |fontspec| or LuaTeX way of doing things and use longer font names as those found in the operating system.
+
+\begin{key}{/chapter/font name=\marg{Zapf Chancery Medium Italic}}
+This is how it is typeset
+\end{key}
+
+
+
+Activating the key will set the font to |pzc| and unless is within a group
+will typeset the rest of the document with this typeface.
+
+\makeatletter
+\def\fontname@cx{}
+\makeatother
+
+\cxset{font name/.is choice,
+       font name/Zapf Chancery Medium Italic/.code={\fontfamily{pzc}\selectfont },
+font name/courier/.code={\fontfamily{pcr}\selectfont},
+font name/Helvetica/.code={\fontfamily{phv}\selectfont},
+font name/helvetica/.code={\fontfamily{phv}\selectfont},
+font name/Bookman Light/.code={\fontfamily{pbk}\selectfont},
+font name/bookman/.code={\fontfamily{pbk}\selectfont},
+font name/Utopia/.code={\fontfamily{put}\selectfont},
+font name/Palatino/.code={\fontfamily{put}\selectfont},
+font name/Old Standard/.code={\fontspec{OldStandard-Regular}\addfontfeature{StylisticSet=2}},
+font name/Junicode/.code={\fontspec{Junicode}\addfontfeature{StylisticSet=2}}
+}
+
+
+
+\begin{key}{/chapter/font name=\marg{Old Standard}}
+Setting the key to \texttt{Old Standard} will typeset the next sample in \texttt{OldStandard-Regular}, |Stylistic Set=2|. 
+
+\bgroup
+\parindent1em\itshape
+\cxset{font name=Old Standard}
+
+\aliceii
+
+abcdefg
+\egroup
+\end{key}
+
+\begin{key}{/chapter/font name=\marg{Junicode}}
+Setting the key to \texttt{Junicode} will typeset the next sample in \texttt{Junicode}, \texttt{Stylistic Set=2}. 
+
+\bgroup
+\parindent1em\itshape
+\cxset{font name=Junicode}
+
+\aliceii
+
+abcdefg
+\egroup
+\end{key}
+
+
+
+
+\begin{key}{/chapter/font name=\marg{Bookman Light or bookman}}
+Bookman Light or |bookman|
+\end{key}
+
+\bgroup
+\cxset{font name=bookman}
+
+\aliceiii
+\egroup
+
+
+\begin{key}{/chapter/font name=\marg{Utopia or utopia}}
+
+\end{key}
+
+\bgroup
+\cxset{font name=Utopia}
+
+\renewcommand{\LettrineFontHook}{\fontfamily{put}\fontseries{bx}}%
+\par\leavevmode
+
+\lettrine[lines=5, lhang=0.1,lraise=0.28,findent=1pt]{g}{oats} are animals found in all sort of places. The paragraph has been set using the font family |utopia|. The comment about the goats was just to get the letter g.
+comfortable in mountain areas. I don't recall Alice  They are more
+comfortable in mountain areas. I don't recall Alice  They are more
+comfortable in mountain areas. I don't recall Alice  They are more
+comfortable in mountain areas. I don't recall Alice  They are more
+comfortable in mountain areas. I don't recall Alice  They are more
+comfortable in mountain areas. I don't recall Alice  They are more
+comfortable in mountain areas. I don't recall Alice 
+
+
+\renewcommand{\LettrineFontHook}{\fontfamily{phv}\fontseries{bx}}%
+
+
+%\cxset{font name=Helvetica}
+\par\leavevmode
+
+\lettrine[lines=5, lhang=0.1,lraise=0.28,findent=1pt]{g}{oats} are animals found in all sort of places. The paragraph has been set using the font family |utopia|. The comment about the goats was just to get the letter g.
+comfortable in mountain areas. I don't recall Alice  They are more
+comfortable in mountain areas. I don't recall Alice   They are more
+comfortable in mountain areas. I don't recall Alice   They are more
+comfortable in mountain areas. I don't recall Alice  They are more
+comfortable in mountain areas. I don't recall Alice  They are more
+comfortable in mountain areas. I don't recall Alice  They are more
+comfortable in mountain areas. I don't recall Alice 
+
+\medskip
+
+\cxset{font name=Zapf Chancery Medium Italic}
+
+\lettrine{G}{o}ats are among the earliest animals domesticated by humans. The most recent genetic analysis confirms the archaeological evidence that the wild Bezoar ibex of the Zagros Mountains are the likely origin of almost all domestic goats today. Neolithic farmers began to herd wild goats for easy access to milk and meat, primarily, as well as for their dung, which was used as fuel, and their bones, hair, and sinew for clothing, building, and tools. The earliest remnants of domesticated goats dating 10,000 years before present are found in Ganj Dareh in Iran. Goat remains have been found at archaeological sites in Jericho, Choga Mami Djeitun and Çay\"on\"u, dating the domestication of goats in Western Asia at between 8000 and 9000 years ago.\footnote{Text is from wikipedia's article for the domesticated goat.}
+
+\cxset{font name=bookman}
+
+As you have observed we did not change the normal size of paragraphs, but the examples demonstrate that differences in font families also affect the visual size of the typeset text. |Helvetica| is normally scaled down to 0.95 and |Chancery| is scaled a little bit up or we use a larger font size.
+
+
+
+
+\subsubsection*{\textsf{Additional free fonts for use with \LaTeX}}
+A number of archaic and other fonts are available in the \latexe historical collection. These are very impressive. They also provide in most instances transliterations.
+
+\begin{tabular}{@{}>{\sffamily\bfseries}rl}
+\fonttitle{\textit{The Historical Collection}}
+\thefont{Cypriot}{cypr}{\fontsize{7}{7}\selectfont\sample}
+\thefont{Linear `B'}{linb}{\fontsize{8}{8}\selectfont\sample}
+\thefont{Phoenician}{phnc}{\sample}
+\thefont{Runic}{fut}{TYPOGRAPHIA ARS ARTIUM OMNIUM CONSERVATRIX}
+\thefont{Rustic}{rust}{\sample}
+\thefont[U]{Bard}{zba}{\sample}
+\thefont{Uncial}{uncl}{\sample}[-3pt]
+\end{tabular}
+
+The following fonts are all selections from Yiannis Haralambous wonderful collection and we categorize them as other scripts collection.
+
+\begin{tabular}{@{}>{\sffamily\bfseries}rl}
+\fonttitle{\textit{The Other Scripts Collection}}
+\thefont{Calligraphic}{zca}{\fontsize{15}{15}\selectfont\sample}
+\thefont[U]{Fraktur}{yfrak}{%
+	Alle\char'215\ Verg\"angliche ist nur ein Gleichni
+	Da\char'215\ Unzul\"angliche hier wird'\char'215\
+	Ereigni\char'215;}
+
+\thefont[U]{Schwabacher}{yswab}{%
+	Da\char'215\ Unbeschreibliche hier wird'\char'215\ getan / 
+	Da\char'215\ Ewig-Weibliche zieht un\char'215\ hinan!}
+\thefont[U]{`Gothic'}{ygoth}{If it plese ony man spirituel or temporel
+to bye any pye\char'140\ of two and thre comemoraci\~o\char'140}[6pt]
+\thefont[U]{Decorative Initials}{yinit}{\fontsize{8}{8}\selectfont
+\raisebox{-12pt}{HARALAMBOUS}}
+\end{tabular}
+
+\section{Dingbat Fonts}
+
+\index{fonts>Zapf Dingbats}
+
+Fonts containing collections of special symbols, which are normally not found in a text font, are called  \textit{dingbats}. One such font, the PostScript font Zapf Dingbats, is available if you use the |pifont| package, originally written by Sebastian Rahtz, and now part of |PSNFSS|. This is loaded automatically by the |phd| package. (See also implementation code at Page \pageref{dingbats}).
+
+The parameter for the \cs{ding} command is an integer that specifies the character to be typeset according to Table~\ref{tbl:dingbats}. For example |\ding{38}| gives \ding{38}.
+
+For Open Type fonts the |Wingdings| family can be found on Windows systems. The advent of Unicode and the universal character set allowed commonly used dingbats to be given their own character codes. Although fonts claiming Unicode coverage will contain glyphs for dingbats \textit{in addition} to alphabetic characters continue to be popular, primarily for ease of input. Such fonts are sometimes known as \textit{pi fonts}.\index{fonts!pi fonts}
+
+\subsection{Unicode Dingbats block}
+
+The Dingbats block |U+2700-U+27BF| was added to the Unicode Standard in June, 1993, with the release of version 1.1. This code block  contains decorative character variants, and other marks of emphasis and non-textual symbolism. Most of its characters were taken from Zapf Dingbats. 
+
+The Ornamental Dingbats block (|U+1F650–U+1F67F|) was added to the Unicode Standard in June 2014 with the release of version 7.0. This code block contains ornamental leaves, punctuation, and ampersands, quilt squares, and checkerboard patterns. It is a subset of dingbat fonts Webdings, Wingdings, and Wingdings 2. \footnote{See \url{http://std.dkuug.dk/jtc1/sc2/wg2/docs/n4115.pdf}}
+
+A font that we will be using for many of the \XeLaTeX examples is |code2000|
+and |code2001|. The fonts were designed by James Kas
+\footnote{They can be downloaded at \url{http://www.alanwood.net/downloads/index.html}}. They are True type fonts. The fonts contain a respectable collection of more or less exotic Unicode characters both within the Basic Multilingual Plane (BMP). They were designed by James Kass and were freeware. Sadly the website is no longer available, but the files can be downloaded in the links I have provided. I have also included them in the distribution for the |phd| package, as they are such a useful tool.
+
+\index{Unicode}\index{Basic Multilingual Plane}
+
+\CMDI{\codetwothousand} Loads the TrueType font \texttt{code2000.ttf}\index{fonts>code2000}\index{code2001}
+\CMDI{\codetwothousandone} Loads the TrueType font \texttt{code2001}
+\CMDI{\symbola} Loads the TrueType font \texttt{symbola}\index{fonts>Symbola}
+\begin{verbatim}
+\newfontfamily{\codetwothousand}{code2000.ttf}
+  \newfontfamily{\codetwothousandone}{code2001.ttf}
+  \newfontfamily{\symbola}{symbola.ttf}
+\end{verbatim}
+
+
+\newfontfamily{\codetwothousand}{code2000.ttf}
+  \newfontfamily{\codetwothousandone}{code2001.ttf}
+  \newfontfamily{\symbola}{symbola.ttf}
+
+\index{fonts>wingdings}
+\begin{texexample}{Wingdings}{ex:wingdings}
+\ifxetex
+  
+  {\codetwothousand \symbol{9742} \symbol{9743}
+    Katakana (片仮名, カタカナ)
+   \codetwothousandone \symbol{57508}
+   \symbola \symbol{9816}
+  }
+\else
+   Compile the document with XeTeX to see the example
+\fi
+\end{texexample}
+
+Another useful font for experimenting if you are using a Windows computer is |Arial Unicode MS|.
+\index{Arial Unicode MS (font)}\index{fonts>Arial Unicode MS}
+
+\begin{verbatim}
+\documentclass{article}
+\usepackage{fontspec}
+\setmainfont{Arial Unicode MS}
+\usepackage{multicol}
+\setlength{\columnseprule}{0.4pt}
+\usepackage{multido}
+\setlength{\parindent}{0pt}
+\begin{document}
+
+\begin{multicols}{8}
+\multido{\i=0+1}{"10000}{^^A from U+0000 to U+FFFF
+  \iffontchar\font\i
+    \makebox[3em][l]{\i}^^A
+    \symbol{\i}\endgraf
+  \fi
+}
+\end{multicols}
+\centering
+\symbol{57352}
+\end{document}
+\end{verbatim} 
+
+The |Symbola Font| has many other symbols, including chess and even Mahjong symbols.\footnote{\url{http://users.teilar.gr/~g1951d/Symbola.pdf}}. \person{George Douros} has packaged many of the fonts for archaic languages, but sadly the substitution mechanisms of \latexe do not always map the fonts properly.
+
+With |LuaLaTeX| and |XeLaTeX|, \tex has moved into the twenty-first century and its usefulness can now be extended to many other languages and fields. 
+
+\section{Naming digital fonts}
+
+Commercial and Open Source fonts come as a set of several files. The |.pfb| file and less frequently, a |.pfa| file or other files depending on the type of font and the operating system and provider. The metric information file resides in an associated |.afm| file. Other files, with extensions |.inf| (information) and |.pfm| are irrelevant to \latex and \tex.
+
+Fonts already have names given them by their designers. The problem lies in associating this name with the font files. Restriction of operating systems originally from PC-DOS dates, restricted to the initial part of file names to eight characters.
+
+\subsection{Karl Berry naming scheme}\index{Karl Berry Scheme}\index{fonts>Karl Berry scheme}
+
+The original inspiration for Fontname was Frank Mittelbach and Rainer Schoepf's article in TUGboat 11(2) (June 1990). This led to an article by Karl Berry in TUGboat 11(4) (November pages 512-519).
+
+Karl Berry then suggested a system---with many limitations, but perhaps the best that could have been done in its time, for mapping a lengthy font name into a file name that was eight or fewer characters long. If the font files are renamed accordingly then we can deduce the nature of the font by examining its file name. The scheme did not apply to the original Computer Modern fonts that retained their original names \citep{fontname}.
+
+This scheme assumes that only eight characters or fewer can be available for naming the font. These eight characters look like,
+
+\begin{verbatim}
+FNNW[S][V]7V
+\end{verbatim}
+
+Some additional comments on this shorthand notation is in order. 
+The most common foundry abbreviations are |p| for Adobe (from PostScript), \textbf{b} for BitStream, and \textbf{m} Monotype. A font flouting this scheme will begin with a z.
+
+The next two letters are reserved for the typeface name. The hundreds and hundred of available faces guarantees  that many of these will be cryptic, even for the most common typefaces---Adobe Garamond is |ad|. 
+
+
+
+\section{Using fonts with XeTeX based engines}
+
+Depending on the fonts in your system, some features that are described here, might not be available.
 
 \begin{tcolorbox}
 \begin{lstlisting}
@@ -42,9 +583,9 @@ For free fonts there exist a few resources that can be used with \LaTeX.
 
 \section{Terminology}
 
-The best source of information for XeTeX is the fontspec manual. It is not an easy read, but if you are going to be resetting a lot of fonts, it is advisable to do so.
+The best source of information for XeTeX is the \ctan{fontspec} manual. It is not an easy read, but if you are going to be resetting a lot of fonts, it is advisable to do so.
 
-Most typesetting systems allow for setting document wide fonts. In LaTeX we get the following commands:
+Most typesetting systems allow for setting document wide fonts. In \latexe we get the following commands:
 
 
 \cs{sffamily}
@@ -53,13 +594,14 @@ Most typesetting systems allow for setting document wide fonts. In LaTeX we get 
 
 \cs{ttfamily}
 
-To be able to use \athena\ properly you will have to familiarize yourself with the terminology, if you are not.
+To be able to use the |phd| package properly you will have to familiarize yourself with the terminology, if you are not.
 
-CSS uses a combination of font-family and fallback generic families to achieve this and it is instructive to review it as we will use such a system here.
+\index{CSS}
+\texttt{CSS} uses a combination of font-family and fallback generic families to achieve this and it is instructive to review it as we will a similar system here.
 
 \begin{tcolorbox}
 \begin{lstlisting}
-p{font-family:"Times New Roman",Georgia,Serif;}
+p{font-family:"Times New Roman", Georgia, Serif;}
 \end{lstlisting}
 \end{tcolorbox}
 
@@ -94,16 +636,61 @@ lists; these are described in later:
 
 \ifxetex
 \begin{texexample}{}{}
+\bgroup
 \fontspec{Verdana}
 \raggedright
-\lorem
+\knutext
+
+\newfontfamily\calibri{Calibri}
+  \calibri 
+
+
+\def\setchapterfont{\calibri\huge}
+
+\textsf{\large \lorem}
+\egroup
 \end{texexample}
 \fi
 
+\begin{verbatim}
+\DeclareTextFontCommand{\textsf}{\calibri}
+\end{verbatim}
+
+\subsection{fontspec commands to select font families}
+
+In many cases there is only a need to define a new font for specific case, for example only for a chapter head. It is 
+
+\CMDI{\newfontfamily}\marg{font-switch}\oarg{font features}\marg{font name}
+
+For cases when a specific font with a specific feature set is going to be re-used
+many times in a document, it is inefficient to keep calling \cs{fontspec} for every use. For this reason, new commands can be created for loading a particular font family
+
+While the \cs{fontspec} command does not define a new font instance after the first
+call, the feature options must still be parsed and processed.
+\cs{newfontfamily}. The example that follows, defines a new font family to be used only for chapterheads. This is more efficient and also provides a semantic interface for the author.
+
+\begin{texexample}{newfontfamily}{ex:newfontfamily}
+ 
+\newfontfamily\calibri{Calibri}
+\def\setchapterfont{%
+   \calibri\huge\bfseries}
+
+\bgroup
+\setchapterfont CHAPTER 10
+\egroup
+\end{texexample}
+
+\begin{teX}
+15 \DeclareTextFontCommand{\textrm}{\rmfamily}
+16 \DeclareTextFontCommand{\textsf}{\sffamily}
+17 \DeclareTextFontCommand{\texttt}{\ttfamily}
+18 \DeclareTextFontCommand{\textnormal}{\normalfont}
+\end{teX}
 
 \subsection{Setting font features}
+\index{fontspec>font features}
 
-The fontspec package enables the selection of font features during run-time; font features are items such as colors, proportional OldStyle numbers and other similar items. Some of the examples that follow have been extracted from the fontspec documentation.
+The \pkgname{fontspec} package enables the selection of font features during run-time; font features are items such as colors, proportional OldStyle numbers and other similar items. Some of the examples that follow have been extracted from the fontspec documentation.
 
 \ifxetex
 \begin{texexample}{}{}
@@ -121,9 +708,9 @@ miles in 56 boats.' \bigskip
 \fi
 
 
-\section{The \athena\ package interface.}
+\section{The phd package interface.}
 
-By design feature options for XeTeX/XeLaTeX have currently bee restricted. The reason behind this decision is that I was concerned that I would have added a complicated interface with very little reason as to its use. I opted for a more semantic approach and expect the user to define custom macros to handle anything else.
+By design feature options for XeTeX/XeLaTeX have currently been restricted. The reason behind this decision is that I was concerned that I would have added a complicated interface with very little reason as to its use. I opted for a more semantic approach and expect the user to define custom macros to handle anything else.
 \medskip
 
 \keyval{mainfont}{\marg{font1,font2,font3}}{A comma separated list of one or more font-names. The main font will be set to the first font found.}
@@ -134,14 +721,194 @@ By design feature options for XeTeX/XeLaTeX have currently bee restricted. The r
 
 Note that the package will first check if is running under XeTeX. If it does it will execute the commands and load the macros, otherwise it will fall back on pdfLaTeX commands.
 
+\section{Viewing and selecting fonts}
+
+\subsection*{\textsf{\color{Headings}Typefaces that come with the
+standard \LaTeX\ distribution on the \TeX\ Live CD-ROM}}
+{
+\raggedright
+\begin{tabular}{@{}>{\sffamily\bfseries}rl}
+\fonttitle{Computer Modern (CM), \LaTeX's default typeface}
+\thefont{CM Roman}{cmr}{\sample}
+\thefont{CM Italic}{cmr}{\itshape\sample}
+\thefont{CM Slanted (Oblique)}{cmr}{\slshape\sample}
+\thefont{CM Bold}{cmr}{\fontseries{b}\selectfont\sample}
+\thefont{CM Bold Extended}{cmr}{\bfseries\sample}
+\thefont{CM Bold Italic}{cmr}{\itshape\bfseries\sample}
+\thefont{CM Bold Slanted}{cmr}{\slshape\bfseries\sample}
+\thefont{CM Caps \& Small Caps}{cmr}{\scshape\sample}
+\thefont{CM Sans-Serif}{cmss}{\sample}
+\thefont{CM Sans-Serif Oblique}{cmss}{\itshape\sample}
+\thefont{CM Sans-Serif Bold}{cmss}{\bfseries\sample}
+\thefont{CM Typewriter}{cmtt}{\sample}
+\thefont{CM Typewriter Italic}{cmtt}{\itshape\sample}
+\thefont{CM Typewriter Bold}{cmtt}{\bfseries\sample}
+\thefont{CM Typewriter C\&SC}{cmtt}{\scshape\sample}
+\thefont[OMS]{CM Mathematics}{cmsy}{$E=mc^2$\qquad}
+\thefont{CM `Dunhill'}{cmdh}{\sample}
+\thefont{CM `Fibonacci'}{cmfib}{\sample}
+\end{tabular}
+}\index{fonts>Fibonacci}\index{fonts>Dunhill}
 \section{Discussion}
 
 
 Unfortunately, even with the best will loading fonts will always be a difficult task in TeX. Hopefully the interface provided will result in better separation of presentation from content and offers consistency in the styling of documents. Nothing prevents you from adding normal macros to styles. Each style can be treated as a package in many respects.
 
+\section{XeLaTeX and LuaLaTeX}
+
+
+
+\bgroup
+\fontspec{Verdana}
+\begin{minipage}[t]{.2\linewidth}
+\hbox to \linewidth{\hfill\hfill Verdana\hspace{2em}}
+\end{minipage}
+\begin{minipage}[t]{.75\linewidth}
+^^A\addfontfeature{ItalicFeatures={Alternate = 1}}
+\noindent\fox\\
+\alphabet\\
+\punctuation\\
+\frogking
+\end{minipage}
+\egroup
+
+\bgroup
+\fontspec{Calibri}
+\begin{minipage}[t]{.2\linewidth}
+\hbox to \linewidth{\hfill\hfill Calibri\hspace{2em}}
+\end{minipage}
+\begin{minipage}[t]{.65\linewidth}
+^^A\addfontfeature{ItalicFeatures={Alternate = 1}}
+\noindent\fox\\
+\alphabet\\
+\textsc{\alphabet}\\
+\punctuation\\
+\frogking
+Θαμκυαμ πλαθονεμ ραθιονιβυς ναμ ει, δυις περπετυα σιθ αδ, νες ιδ δισυντ σοντεντιωνες. Κυι σινθ μυνδι εα, φιμ αν γραεσω ιυδισαβιτ, εραθ δολορ φιρθυθε υθ δυο. Συ νοσθερ οπθιων ευμ, μει ερος προβο φιερενθ ευ. Ιυς μανδαμυς τωρκυαθος εξπεθενδις ιδ. Σεδ θε νιβχ νονυμυ δελισαθισιμι, φιμ νο νιβχ λαβωραμυς, σεα εα δισο ποσιμ αντιωπαμ.
+\end{minipage}
+\egroup
+
+\section{Utilities for testing fonts}
+
+The package \pkg{fonttable} is an extension and re-implementation of Donald Knuth’s testfont.tex, which
+is available from CTAN. The package was developed by Peter Wilson and currently maintained by Will Robertson \citep{fonttable}. It provides a number of utility commands for typesetting font tables.
+
+\begin{macro}{\fonttable}
+The \cs{fonttable}\marg{font} takes the font file as an  argument and prints a nice table. 
+\end{macro}
+ 
+\ifxetex\else
+\fonttable{pzdr}\fi
+
+\section{ \texttt{.tfm } files}
+
+
+When you tell \tex that you will be using a particular font, it has to find out information about that font. This information is stored in a file with the extension \docfileextension{.tfm}. For example when you say:
+
+|\font a=cmr10|
+
+\noindent \tex looks for  a file named |cmr10.tfm|. If this is not found then an error is issued |Lookup failed on file CMR10.TFM|
+
+Generall speaking, a font's |.tfm| file contains information about the height, width and depth of all the characters in the font plus kerning and ligature information. So, cmr10.tfm might say that the lower-case "d" in CMR10 is 5.5 points wide, 6.94 points high, etc. This is the information that \tex uses to make its lowest-level boxes---those around characters. See the \tex manual for information about what \tex does with these boxes. Note the |.tfm| files do not contain any information that is device dependent. Only device-drivers read \tex's |dvi| output files can use that sort of information.
+
+
+\section{Fonts for Far East Languages}
+
+In internationalization, CJK is a collective term for the Chinese, Japanese, and Korean languages, all of which use Chinese characters and derivatives (collectively, CJK characters) in their writing systems. Occasionally, Vietnamese is included, making the abbreviation CJKV, since Vietnamese historically used Chinese characters as well.
+The characters are known as hànzì in Chinese, kanji in Japanese, hanja in Korean, and Chữ Nôm in Vietnamese.\index{kanji}\index{hanja}\index{hànzì}\index{CJK}\index{CJKV}
+
+
+\subsection{Selecting a font}
+
+The easiest way is with Will Robertson's \pkgname{fontspec} package. In this sample, we have used the \texttt{SimSun} font, which can be found on windows machines:
+
+\begin{verbatim}
+\usepackage{fontspec}
+\setromanfont{SimSun}
+\end{verbatim}
+in the preamble, to use a Far Eastern font as the initial default typeface.
+
+\section{Entering CJK text}
+
+You can just enter Unicode text directly in the document: 你好. Don't use legacy \LaTeX\ packages such as \verb|inputenc| or \verb|CJK|, as \XeTeX\ reads the text as Unicode characters, not the separate byte codes of UTF-8 sequences, and passes them directly to the Unicode font. (Actually, it would probably be possible to use \verb|\XeTeXinputencoding "bytes"| and work with legacy \LaTeX\ input encoding support. But then you're pretty much committed to all the old encoding and font machinery, and there's not much point in using the \XeTeX\ engine at all.)
+
+\setromanfont{Times New Roman}
+
+\subsection{A CJK environment}
+
+\newenvironment{CJK}{\fontspec[Scale=0.9]{SimSun}}{}
+
+\newcommand{\cjk}[1]{{\fontspec[Scale=0.9]{SimSun}#1}}
+
+Rather than selecting a CJK font as the main document typeface, you might want to define a CJK environment for text fragments used in the midst of a document using a normal Roman font. This allows me to say \verb|\begin{CJK}東光\end{CJK}| to generate \begin{CJK}東光\end{CJK}, without putting the whole paragraph into the Far Eastern font. Or I could define a command that takes the CJK text as an argument, so that \verb|\cjk{北京}| produces \cjk{北京}. It's that easy! Such an environment can easily be set using the \cmd{newfamily} or \cmd{\fontspec}.
+
+\begin{verbatim}
+\newenvironment{CJK}{\fontspec[Scale=0.9]{SimSun}}{}
+\newcommand{\cjk}[1]{{\fontspec[Scale=0.9]{SimSun}#1}}
+\end{verbatim}
+
+\section{Running text}
+
+The \XeTeX\ extension \verb|\XeTeXlinebreaklocale| is used to enable line-breaking without inter-word spaces (or hyphenation); we can use \verb|\XeTeXlinebreakskip = 0pt plus 1pt| to allow a little bit of intercharacter stretchability at each potential breakpoint, so that the lines can be justified. (An alternative is to leave \verb|\XeTeXlinebreakskip| at zero, but tell \LaTeX\ to use ragged-right setting.)\index{hyphenation>CJK scripts}
+
+This text is taken from the Japanese translation of "What is Unicode?", on the Unicode web site and the example is from the |XeTeX| documentation bundle.
+
+\begin{macro}{\XeTeXlinebreaklocale}
+|XeLaTeX| provides primitive commands to set hyphenation based on the concept of locale. 
+\end{macro}
+\setromanfont{SimSun}
+\XeTeXlinebreaklocale "ja" 
+\XeTeXlinebreakskip = 0pt plus 1pt 
+\XeTeXlinebreakpenalty = 100 
+
+コンピューターは、本質的には数字しか扱うことができません。コンピューターは、文字や記号などのそれぞれに番号を割り振ることによって扱えるようにします。ユニコードが出来るまでは、これらの番号を割り振る仕組みが何百種類も存在しました。どの一つをとっても、十分な文字を含んではいませんでした。例えば、欧州連合一つを見ても、そのすべての言語をカバーするためには、いくつかの異なる符号化の仕組みが必要でした。英語のような一つの言語に限っても、一つだけの符号化の仕組みでは、一般的に使われるすべての文字、句読点、技術的な記号などを扱うには不十分でした。
+
+
+これらの符号化の仕組みは、相互に矛盾するものでもありました。二つの異なる符号化の仕組みが、二つの異なる文字に同一の番号を付けることもできるし、同じ文字に異なる番号を付けることもできるのです。どのようなコンピューターも（特にサーバーは）多くの異なった符号化の仕組みをサポートする必要があります。たとえデータが異なる符号化の仕組みやプラットフォームを通過しても、いつどこでデータが乱れるか分からない危険を冒すことのなるのです。
+
+\setromanfont{Times New Roman}
+Now some Chinese, which works similarly to the Japanese. This time we'll make it \verb|\raggedright| and use the "monospaced" feature of the font, so that the characters remain on a consistent grid:
+
+{
+\raggedright
+\newfontfeature{Monospaced}{Text Spacing=Monospaced Text}
+\setromanfont[Monospaced]{SimSun}
+\setlength{\parskip}{0.5\baselineskip plus 0.5ex minus 0.2ex}
+\XeTeXlinebreaklocale "zh"
+\XeTeXlinebreakskip = 0pt ^^A no stretchability
+
+基本上，计算机只是处理数字。它们指定一个数字，来储存字母或其他字符。在创造Unicode之前，有数百种指定这些数字的编码系统。没有一个编码可以包含足够的字符：例如，单单欧州共同体就需要好几种不同的编码来包括所有的语言。即使是单一种语言，例如英语，也没有哪一个编码可以适用于所有的字母，标点符号，和常用的技术符号。
+
+
+这些编码系统也会互相冲突。也就是说，两种编码可能使用相同的数字代表两个不同的字符，或使用不同的数字代表相同的字符。任何一台特定的计算机(特别是服务器)都需要支持许多不同的编码，但是，不论什么时候数据通过不同的编码或平台之间，那些数据总会有损坏的危险。
+
+
+\newcommand\CJKnumber[1]{
+\ifcase#1\or
+一\or二\or三\or四\or五\or
+六\or七\or八\or九\or十\fi}
+
+The number 4 in Chinese is \CJKnumber{4}.
+}
 
 
 
 
+
+
+
+\setromanfont{Times New Roman}
+And here's an equivalent passage in Thai; by setting \verb|\XeTeXlinebreaklocale "th"| we get access to the Thai (dictionary-based) linebreak rules:
+
+
+
+\setromanfont{code2000.ttf}
+\XeTeXlinebreaklocale "th" % enable Thai (dictionary-based) line-breaking
+
+โดยพื้นฐานแล้ว, คอมพิวเตอร์จะเกี่ยวข้องกับเรื่องของตัวเลข. คอมพิวเตอร์จัดเก็บตัวอักษรและอักขระอื่นๆ โดยการกำหนดหมายเลขให้สำหรับแต่ละตัว. ก่อนหน้าที่๊ Unicode จะถูกสร้างขึ้น, ได้มีระบบ encoding อยู่หลายร้อยระบบสำหรับการกำหนดหมายเลขเหล่านี้. ไม่มี encoding ใดที่มีจำนวนตัวอักขระมากเพียงพอ: ยกตัวอย่างเช่น, เฉพาะในกลุ่มสหภาพยุโรปเพียงแห่งเดียว ก็ต้องการหลาย encoding ในการครอบคลุมทุกภาษาในกลุ่ม. หรือแม้แต่ในภาษาเดี่ยว เช่น ภาษาอังกฤษ ก็ไม่มี encoding ใดที่เพียงพอสำหรับทุกตัวอักษร, เครื่องหมายวรรคตอน และสัญลักษณ์ทางเทคนิคที่ใช้กันอยู่ทั่วไป.
+
+ระบบ encoding เหล่านี้ยังขัดแย้งซึ่งกันและกัน. นั่นก็คือ, ในสอง encoding สามารถใช้หมายเลขเดียวกันสำหรับตัวอักขระสองตัวที่แตกต่างกัน,หรือใช้หมายเลขต่างกันสำหรับอักขระตัวเดียวกัน. ในระบบคอมพิวเตอร์ (โดยเฉพาะเซิร์ฟเวอร์) ต้องมีการสนับสนุนหลาย encoding; และเมื่อข้อมูลที่ผ่านไปมาระหว่างการเข้ารหัสหรือแพล็ตฟอร์มที่ต่างกัน, ข้อมูลนั้นจะเสี่ยงต่อการผิดพลาดเสียหาย.
+
+\setmainfont[Ligatures=TeX]{Linux Libertine O}
 
 

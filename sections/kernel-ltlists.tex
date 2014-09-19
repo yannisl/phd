@@ -179,9 +179,10 @@
 
 
  \subsection{Default Values}
-      Defaults for the list environment are set as follows.
-      First, \cs{rightmargin}, \cs{listparindent} and \cs{itemindent}
-      are set
+ 
+ Defaults for the list environment are set as follows.
+ First, \cs{rightmargin}, \cs{listparindent} and \cs{itemindent}
+ are set
       to 0pt.  Then, one of the commands
       \cs{@listi}, \cs{@listii}, ... , \cs{@listvi}
       is called, depending upon the current level of the list.
@@ -312,17 +313,19 @@ The \cs{@trivlist} is define as,
    }
 \end{algorithm}
 
+\index{kernel>lists>\textbackslash item}
 The definition of item, is fairly simple deferring the complexity
 to |\@item| which follows.
 
-\begin{algorithm}
+\begin{algorithm}[htbp]
  \cs{item} == \Begin{
-    \If{math mode}{WARNING}
-    \eIf{ next char = \texttt{[}}{
+    \If{math mode}{issue warning}
+    \eIf{ next char = {\tt [}}{
              \cs{@item}}{
-              @noitemarg := true\\
-             \cs{@item}[@itemlabel]}
+              \cs{@noitemarg} := true\\
+             \cs{@item}[\cs{@itemlabel}]}
   }
+\caption{The algorithm for \textbackslash item}
 \end{algorithm}
 
 
@@ -529,6 +532,9 @@ to |\@item| which follows.
  \end{macro}\end{macro}\end{macro}
 
  \begin{macro}{\list}
+\index{kernel>lists>\textbackslash list}
+ List takes two arguments and is an author command for building
+other lists.
     \begin{teX}
 \def\list#1#2{%
   \ifnum \@listdepth >5\relax
@@ -637,6 +643,7 @@ to |\@item| which follows.
     The definition of \cs{trivlist} used to be in ltspace.dtx 
     so that other commands could be `let to it'.  
     They now use \cs{def}.
+
  \begin{macro}{\endtrivlist}
  \changes{v1.2b ltspace}{1994/11/12}{Changed order of tests to make
  \cs{@noitemerror} correct: end of an era.}
@@ -684,7 +691,7 @@ to |\@item| which follows.
  To suppress the paragraph indentation in text immediately following
  a paragraph-making environment, \cs{everypar} is changed to remove the
  space, and \cs{par} is redefined to restore \cs{everypar}.  Instead of
- redefining \cs{par} and \cs{everpar}, \cs{@endparenv} was changed to 
+ redefining \cs{par} and \cs{everypar}, \cs{@endparenv} was changed to 
  set the @endpe switch, letting \cs{end} redefine \cs{par} and 
  \cs{everypar}.  
 
@@ -697,14 +704,16 @@ to |\@item| which follows.
 
     \begin{teX}
 \def\@doendpe{\@endpetrue
-     \def\par{\@restorepar\everypar{}\par\@endpefalse}\everypar
+     \def\par{\@restorepar\everypar{}
+          \par\@endpefalse}\everypar
     \end{teX}
     
     Use |\setbox0=\lastbox| instead of   |\hskip -\parindent|   
     so that a \cs{noindent} becomes a no-op when used before 
     a line immediately following a list environment(23 Oct 86).
  \changes{v1.0k}{1995/11/07}{Enclosed \cs{setbox0} assignment by a
- group so that it leaves the contents of box $0$ intact.} 
+ group so that it leaves the contents of box $0$ intact.
+    } 
     \begin{teX}
                {{\setbox\z@\lastbox}\everypar{}\@endpefalse}}
     \end{teX}
@@ -748,12 +757,13 @@ to |\@item| which follows.
   \global\setbox\@labels\hbox{\hskip -\leftmargin
                                \unhbox\@labels
                                 \hskip \leftmargin}%
-  \if@minipage\else
-    \@tempskipa\lastskip
-    \vskip -\lastskip
-    \advance\@tempskipa\@outerparskip
-    \advance\@tempskipa -\parskip
-    \vskip\@tempskipa
+  \if@minipage
+    \else
+      \@tempskipa\lastskip
+      \vskip -\lastskip
+      \advance\@tempskipa\@outerparskip
+      \advance\@tempskipa -\parskip
+      \vskip\@tempskipa
   \fi}
     \end{teX}
  \end{macro}
@@ -1032,7 +1042,7 @@ to |\@item| which follows.
     \edef\@itemitem{labelitem\romannumeral\the\@itemdepth}%
     \end{teX}
     
- \changes{v1.0j}{1995/07/09}{Use \cs{expandafter}}
+ \footnote{changes v1.0j 1995/07/09 Use \textbackslash expandafter. Hard to believe the team missed it!}
     \begin{teX}
     \expandafter
     \list

@@ -1,0 +1,537 @@
+\newtcolorbox{scriptexample}[2][shavian]{colback=graphicbackground,
+boxrule=0pt,toprule=0pt,colframe=white}
+
+
+\chapter{Those Other Languages}
+\minitoc
+\parindent1em
+
+\pagestyle{myheadings}
+
+Probably there are more users of \latexe whose mother tongue is not English than those who speak the language. \tex out of the box does not offer facilities for using non-latin based scripts easily; presents numerous problems. The biggest problem---which has been solved to a large extent---was the entering of text without having to mark all the special
+characters such as umlauts (\"o) with commands. The second issue and which has been addressed by packages such as Babel, is redefining the strings such as "Chapter" to another language. In software this is called internationalization and a governing standard is |i18n|. None of the current packages take such an approach and none of them as yet offer a satisfactory solution for |LuaLaTeX|. 
+
+Another issue with writing systems and scripts is that of appropriate fonts. Most writing systems that have ever existed are now extinct. Only minute vestiges of one of the most ancient - Egyptian hieroglyphs - live on, unrecognized, in the Latin alphabet in which English, among hundreds of other languages, is conveyed today. The latin \textit{m}, for example, ultimately derives from the Egyptian's cononantal n-sign, depicting waves.
+
+Many of the scripts have other peculiarities, some languages such as Hanunó'o is written vertically from bottom to top. Others from top to bottom and many others from right to left. 
+
+\section{TeX's support for different languages}
+
+TeX's primitives such as \cmd{\language}=\meta{number} can be used to store hyphenation patterns and exceptions for up to 256 different languages. This primitive is then used by TeX to apply an appropriate set of hyphenation rules for each paragraph or part of a paragraph in a document\footnote{\url{http://www.tug.org/utilities/plain/cseq.html language-rp}}. When TeX begins a ne paragraph it sets the \emph{current language} to \cmd{\language}. Just before it adds each new character to the paragraph in unrestricted horizontal mode, it compares the current language to \cmd{\language}. If they are different, TeX : a) changes the current language to \cmd{\language}; b) inserts a whatsit\index{whatsit>language} containing the new language and the values of |\lefthyphenmin| and |\righthyphenmin|; and c) inserts the character. The |\setlanguage| command should be used to change languages in restricted horizontal mode (i.e., inside an |\hbox|). If \meta{number} is less than 0 or greater than 255, 0 is used [455]. Plain TeX has a |\newlanguage| command which may be used to allocate numbers for languages [347]. Changes made to |\language| are local to the group containing the change 
+
+\section{LaTeX}
+
+As far as hyphenation patterns are concerned \latexe follows very closely to the methods employed by \tex and Plain Tex. In the source2e the File |lthyphen.dtx| describes the approach to loading the default file |hyphen.ltx| . If a file hyphen.cfg is found \latexe will load the appropriate hyphenaion patterns. Traditionally language management was achieved via Johan 
+Braams package Babel which we describe in the next section.
+
+
+\section{The Babel Package} 
+
+Babel \citet{babel} was the first package to systematically offer foreign language
+support for \tex. It has been updated for use with |XeTeX| and |LuaTeX| and provides an environment
+in which documents can be typeset in a language
+other than US English, or in more than one language
+or script. However, no attempt has been done to
+take full advantage of the features provided by the
+latter, which would require a completely new core
+(as for example polyglossia or as part of \latex3).
+
+The package has a number of predefined language files with the extension |ldf|. 
+
+
+\Describe\selectlanguage{\marg{language}}{}
+When a user wants to switch from one language to another he can
+do so using the macro |\selectlanguage|. This macro takes the
+language, defined previously by a language definition file, as
+its argument. It calls several macros that should be defined in
+the language definition files to activate the special definitions
+for the language chosen. For ``historical reasons'', a macro name is
+converted to a language name without the leading |\|; in other words,
+the two following declarations are equivalent:
+\begin{verbatim}
+\selectlanguage{german}
+\selectlanguage{\german}
+\end{verbatim}
+
+\Describe\foreignlanguage{\marg{language}\marg{text}}
+The command |\foreignlanguage| takes two arguments; the second
+argument is a phrase to be typeset according to the rules of the
+language named in its first argument. This command (1) only
+switches the extra definitions and the hyphenation rules for the
+language, \emph{not} the names and dates, (2) does not send
+information about the language to auxiliary files (i.e., the
+surrounding language is still in force), and (3) it works even if
+the language has not been set as package option (but in such a
+case it only sets the hyphenation patterns and a warning is shown).
+
+\Describe{otherlanguage*}%
+{\marg{language}{otherlanguage*}}
+
+Same as |\foreignlanguage| but as environment. Spaces after the
+environment are \textit{not} ignored.
+
+
+
+\section{The Polyglossia package}
+
+The \pkgname{polyglossia} package has a lot of potential and has solved many issues
+but its integration with large parts of the traditional |pdfLaTeX| world
+is still under development and will probably take a while before one could
+declare it easy to use and bug free. For example anything with the |bidi| package has issues with loading orders for a number of packages and least of which is with
+the Ams packages. So if you are going to mix a number of languages in a \XeTeX\ document
+you need to take extra care.
+
+ Polyglossia is a package for facilitating multilingual typesetting with
+ \XeLaTeX\ and (at an early stage) \LuaLaTeX.  Basically, it
+ can be used as a replacement of \pkg{babel} for performing the following
+ tasks automatically:
+ 
+ \begin{enumerate}
+ \item Loading the appropriate hyphenation patterns.
+ \item Setting the script and language tags of the current font (if possible and
+       available), via the package \pkg{fontspec}.
+ \item Switching to a font assigned by the user to a particular script or language.
+ \item Adjusting some typographical conventions according to the current language
+       (such as afterindent, frenchindent, spaces before or after punctuation marks,
+       etc.).
+ \item Redefining all document strings (like chapter, “figure”, “bibliography”).
+ \item Adapting the formatting of dates (for non-Gregorian calendars via external
+       packages bundled with polyglossia: currently the Hebrew, Islamic and Farsi
+       calendars are supported).
+ \item For languages that have their own numbering system, modifying the formatting
+       of numbers appropriately (this also includes redefining the alphabetic sequence
+       for non-Latin alphabets).\footnote{ %
+         For the Arabic script this is now done by the bundled package \pkg{arabicnumbers}.}
+ \item Ensuring proper directionality if the document contains languages
+       that are written from right to left (via the package \pkg{bidi},
+       available separately).
+ \end{enumerate}
+ 
+ Several features of \pkg{babel} that do not make sense in the \XeTeX\ world (like font
+ encodings, shorthands, etc.) are not supported.
+ Generally speaking, \pkg{polyglossia} aims to remain as compatible as possible
+ with the fundamental features of \pkg{babel} while being cleaner, light-weight,
+ and modern. The package \pkg{antomega} has been very beneficial in our attempt to
+ reach this objective.
+
+
+\section{Loading language definition files}
+
+The recommended way of \pkg{polyglossia} to load language definition files
+is given in the manual as:
+ 
+\Describe{\setdefaultlanguage}{\oarg{options}\marg{lang}}
+ (or equivalently \cmd\setmainlanguage).
+ Secondary languages can be loaded with
+
+\Describe{\setotherlanguage}{\oarg{options}\marg{lang}}
+ These commands have the advantage of being explicit and of allowing you to set
+ language-specific options.\footnote{ %
+ More on language-specific options below.}
+ It is also possible to load a series of secondary languages at once using
+
+\Describe\setotherlanguages{\marg{lang1,lang2,lang3,\ldots}}
+
+ Language-specific options can be set or changed at any time by means of
+\Describe\setkeys{\marg{lang}\marg{opt1=value1,opt2=value2,\ldots}}
+
+\subsection{Bidirectional languages}
+
+
+
+\begin{verbatim}
+\begin{Arabic}
+ّ هو إذ الغاية؛ شريف الفوائد، جم المذهب، عزيز فنّ التاريخ فنّ أنّ اعلم
+والملوك سيرهم، في والأنبياء أخلاقهم، في الأمم من الماضين أحوال على يوقفنا
+ّ أحوال في يرومه لمن ذلك في الإقتداء فائدة تتم حتّى وسياستهم؛ دولهم في
+والدنيا. الدين
+\end{Arabic}
+\end{verbatim}
+
+\begin{comment}
+\begin{Arabic}
+ّ هو إذ الغاية؛ شريف الفوائد، جم المذهب، عزيز فنّ التاريخ فنّ أنّ اعلم
+والملوك سيرهم، في والأنبياء أخلاقهم، في الأمم من الماضين أحوال على يوقفنا
+ّ أحوال في يرومه لمن ذلك في الإقتداء فائدة تتم حتّى وسياستهم؛ دولهم في
+والدنيا. الدين
+\end{Arabic}
+\end{comment}
+
+The Greek language is represented both in modern Greek as well as its ancient variants.
+
+\begin{verbatim}
+\begin{greek}
+\textbf{Η ελληνική γλώσσα} είναι μία από τις ινδοευρωπαϊκές γλώσσες, για την
+οποία έχουμε γραπτά κείμενα από τον 15ο αιώνα π.Χ. μέχρι σήμερα. Αποτελεί το
+μοναδικό μέλος ενός κλάδου της ινδοευρωπαϊκής οικογένειας γλωσσών. Ανήκει
+επίσης στον βαλκανικό γλωσσικό δεσμό.\\	
+(\today) 
+\end{greek}
+\end{verbatim}
+
+\topline
+
+\textbf{Η ελληνική γλώσσα} είναι μία από τις ινδοευρωπαϊκές γλώσσες, για την
+οποία έχουμε γραπτά κείμενα από τον 15ο αιώνα π.Χ. μέχρι σήμερα. Αποτελεί το
+μοναδικό μέλος ενός κλάδου της ινδοευρωπαϊκής οικογένειας γλωσσών. Ανήκει
+επίσης στον βαλκανικό γλωσσικό δεσμό.\\	
+(\today) 
+
+\bottomline
+
+\begin{verbatim}
+\begin{russian}
+\textbf{Русский язык} — один из восточнославянских языков, один из 
+крупнейших языков мира, в том числе самый распространённый из славянских
+языков и самый распространённый язык Европы, как географически, так и по
+числу носителей языка как родного (хотя значительная, и географически бо́
+льшая, часть русского языкового ареала находится в Азии).	\\
+(\today)
+\end{russian}
+\end{verbatim}
+
+
+
+\textbf{Русский язык} — один из восточнославянских языков, один из крупнейших языков мира, в том числе самый распространённый из славянских языков и самый распространённый язык Европы, как географически, так и по числу носителей языка как родного (хотя значительная, и географически бо́льшая, часть русского языкового ареала находится в Азии).	\\
+(\today)
+
+
+\section{The Translator package}
+
+The \pkgname{translator} package was developed by \person{Till Tantau} \citep{translator}. It provides a flexible
+mechanism for translating individual words into different languages.
+For example, it can be used to translate a word like ``figure'' into,
+say, the German word ``Abbildung''. Such a translation mechanism is
+useful when the author of some package would like to localize the
+package such that texts are correctly translated into the language
+preferred by the user. The translator package is \emph{not} intended
+to be used to automatically translate more than a few words. 
+
+You may wonder whether the translator package is really necessary
+since there is the (very nice) |babel| package available for
+\LaTeX. This package already provides translations for words like
+``figure''. Unfortunately, the architecture of the babel package was
+designed in such a way that there is no way of adding translations of
+new words to the (very short) list of translations directly build into
+babel.
+
+The translator package was specifically designed to allow an easy
+extension of the vocabulary. It is both possible to add new words that
+should be translated and translations of these words.
+
+\subsection{Using the Translator Package}
+
+  The \pkg{Translator} needs to be used with Babel and I am not too sure yet 
+  if it is ready  to be used with Polyglossia.
+
+Once the package has loaded a language or a set of languages the optional argument to the
+\cmd{\translate} can be used to translate a string. 
+
+\begin{texexample}{Translating strings}{ex:translator}
+  \translate[to=german]{rightpagename}
+  \translate[to=dutch]{rightpagename}
+\end{texexample}
+
+Before you can provide the translations you need to provide your own dictionaries, where you require them. These need to be installed at a place where \tex can find them.
+
+\CMDI{\ProvidesDictionary}
+
+The dictionary has to be saved in a specific format that relates to the \cmd{\ProvidesDictionary} command. The second argument of the command must be appended to the file name; for the example the file is saved as\footnote{This  example is from the translator package bundle and is under the folder \texttt{base}}:
+
+|translator-basic-dictionary-German|
+
+The concepts take a bit of time to sink in, but once you have everything set up, it is quite easy and straight forward to incorporate it, into your package. 
+
+\begin{teXXX}
+\ProvidesDictionary{translator-basic-dictionary}{German}
+
+\providetranslation{Abstract}{Zusammenfassung}
+\providetranslation{Addresses}{Adressen}
+\providetranslation{addresses}{Adressen}
+\providetranslation{Address}{Adresse}
+\providetranslation{address}{Adresse}
+\providetranslation{and}{und}
+\providetranslation{Appendix}{Anhang}
+\providetranslation{Authors}{Autoren}
+\providetranslation{authors}{Autoren}
+\providetranslation{Author}{Autor}
+\providetranslation{author}{Autor}
+\end{teXXX} 
+
+This is in contrast to Babel and Polyglossia that define
+commands for each string to be translated such as,
+
+\begin{teXXX}
+\def\captionsdutch{%
+    \def\prefacename{Voorwoord}%
+    \def\refname{Referenties}%
+    \def\abstractname{Samenvatting}%
+    \def\bibname{Bibliografie}%
+    \def\chaptername{Hoofdstuk}%
+    \def\appendixname{Bijlage}%
+    \def\contentsname{Inhoudsopgave}%
+    \def\listfigurename{Lijst van figuren}%
+    \def\listtablename{Lijst van tabellen}%
+    \def\indexname{Index}%
+    \def\figurename{Figuur}%
+    \def\tablename{Tabel}%
+    \def\partname{Deel}%
+    \def\enclname{Bijlage(n)}%
+    \def\ccname{cc}%
+    \def\headtoname{Aan}%
+    \def\pagename{Pagina}%
+    \def\seename{zie}%
+    \def\alsoname{zie ook}%
+    \def\proofname{Bewijs}%
+    \def\glossaryname{Verklarende woordenlijst}%
+    \def\today{\number\day~\ifcase\month%
+      \or januari\or februari\or maart\or april\or mei\or juni\or
+      juli\or augustus\or september\or oktober\or november\or
+      december\fi
+      \space \number\year}}
+\end{teXXX}
+
+\begin{macro}{\usedictionary}\marg{kind}
+  This command tells the |translator| package, that at the beginning of
+  the document it should load \textit{all} dictionaries of kind \meta{kind} for
+  the languages used in the document. Note that the dictionaries are
+  not loaded immediately, but only at the beginning of the document.
+
+  If no dictionary of the given \emph{kind} exists for one of the
+  language, nothing bad happens.
+
+  Invocations of this command accumulate, that is, you can call it
+  multiple times for different dictionaries.
+\end{macro}
+
+\Describe{\uselanguage}{\marg{list of languages}}
+  This command tells the |translator| package that it should load the
+  dictionaries for all languages in the \meta{list of languages}. The
+  dictionaries are loaded at the beginning of the document.
+
+\section{Fonts for All the World Scripts}
+
+Many commercial as well as open source fonts exist that can be used to typeset text the world's scripts and languages. The aim of this section of the documentation is to present an overview of the most common scripts represented in the Unicode~7.0 standard. All the examples require the use of the \XeTeX\ engine. In addition you need to have a copy of the font on your own system. If you do not have them, the font loading mechanism of \XeTeX\ will take some time to search all the directories and slows compilation tremendously. 
+
+
+
+
+\section{Pan-Unicode Fonts}
+
+Thousands of fonts exist on the market, but fewer than a dozen fonts—sometimes described as "pan-Unicode" fonts—attempt to support the majority of Unicode's character repertoire. Instead, Unicode-based fonts typically focus on supporting only basic ASCII and particular scripts or sets of characters or symbols. Several reasons justify this approach: applications and documents rarely need to render characters from more than one or two writing systems; fonts tend to demand resources in computing environments; and operating systems and applications show increasing intelligence in regard to obtaining glyph information from separate font files as needed, i.e. font substitution. Furthermore, designing a consistent set of rendering instructions for tens of thousands of glyphs constitutes a monumental task; such a venture passes the point of diminishing returns for most typefaces.
+
+The \texttt{NotSerif} font from Google\footnote{\protect\url{http://www.google.com/get/noto/}} has good support for many languages.
+
+Another freeware pan-Unicode font is Titus\footnote{\protect\url{http://titus.fkidg1.uni-frankfurt.de/unicode/tituut.asp?Inp1=A&Inp2=B&Inp3=C&Inp4=d%40e.com&Inp6=0&Inp5=1}}
+This is an extended version of this font is TITUS Cyberbit Unicode, includes 36,161 characters in v4.0.
+
+\newfontfamily\titus[Scale=1.05]{TITUSCBZ.ttf}
+\newfontfamily\noto{NotoSerif-Regular.ttf}
+
+\begin{scriptexample}[]{Titus}
+\titus
+
+\lorem
+\end{scriptexample}
+\bigskip
+
+\begin{scriptexample}[]{Noto}
+\noto
+
+\lorem
+\end{scriptexample}
+
+
+\section{The \texttt{ucharclasses} package}
+
+For multilingual texts font switching can become cumbersome. The use of a pan-Unicode font as the default can help. However, if the languages are distinct enough to use different Unicode blocks, which are not covered by the \pkgname{polyglossia} package Mike Kamermans' package \pkgname{ucharclasses} can be used.
+
+\begin{verbatim}
+% and the font switching magic
+\usepackage[CJK, Latin, Thai, Sinhala, Malayalam, DominoTiles, MahjongTiles]{ucharclasses}
+\usepackage{fontspec}
+
+% default transition uses the widest coverage font I know of
+\setDefaultTransitions{\fontspec{Code2000.ttf}}{}
+
+% overrides on the default rules for specific informal groups
+\setTransitionsForLatin{\fontspec{Palatino Linotype}}{}
+\setTransitionsForCJK{\fontspec{code2000.ttf}}{}%HAN NOM A
+\setTransitionsForJapanese{\fontspec{code2000.ttf}}{}%Ume Mincho
+
+% overrides on the default rules for specific unicode blocks
+\setTransitionTo{CJKUnifiedIdeographsExtensionB}{\fontspec{SimSun-ExtB}}
+\setTransitionTo{Thai}{\fontspec{IrisUPC}}
+\setTransitionTo{Sinhala}{\fontspec{Iskoola Pota}}
+\setTransitionTo{Malayalam}{\fontspec{Arial Unicode MS}}
+
+\end{verbatim}
+
+\bgroup
+\begin{verbatim}
+domino tiles, 🁇 🀼 🁐 🁋 🁚 🁝, and mahjong tiles: 🀑 🀑 🀑 🀒 🀒 🀒 🀕 🀕 🀕 🀗 🀗 🀗 🀅 🀅 (using FreeFont)
+\end{verbatim}
+
+domino tiles, 🁇 🀼 🁐 🁋 🁚 🁝, and mahjong tiles: 🀑 🀑 🀑 🀒 🀒 🀒 🀕 🀕 🀕 🀗 🀗 🀗 🀅 🀅 (using FreeFont)
+\egroup
+
+\section{PhD Settings}
+\def\test{}
+\cxset{language/.code=\test}
+\cxset{language=greek}
+\cxset{languages/.code=\test}
+\cxset{languages={english,greek,spanish,chinese}}
+\cxset{greek font/.code=\test}
+\cxset{greek font=code2000.ttf}
+
+\begin{key}{/chapter/language=\meta{language name}}  
+The key language sets the main language for the document. This language will be used for the sectioning commands and common string translations.
+
+If the language is English Polyglossia or Babel are not loaded automatically. If the language is other than English we load either Babel or Polyglossia depending on the engine used.
+\end{key}
+
+
+\begin{key}{/chapter/languages=\meta{language1, language2, language3}}  
+The key |languages|, determines all the other scripts available for typesetting. For each language default font commands are create automatically. The aim is to be able to run a fully multilingual system with the minimum of upfront settings. These we leave to customize in the style template files.
+\end{key}
+
+\begin{key}{/chapter/greek font=\meta{options}\meta{font file}}  
+The package comes with numerous language and appropriate default fonts
+for each operating system. 
+\end{key}
+
+\section{Ancient and Historic Scripts}
+
+Unicode encodes a number of ancient scripts, which have not been in normal use for a millennium or more, as well as historic scripts, whose usage ended in recent centuries. Although these scripts are no longer used to write living languages, documents and inscriptions using these languages exist, both for extinct languages and for precursors of modern languages. The primary user communities for these scripts are scholars, interested in studying the scripts and the languages written in them. A few, such as Coptic, also have contemporary liturgical or other special purposes. Some of the historic scripts are related to each other as well as to modern alphabets. The following are provides as of Unicode version~6.2.
+
+\begin{center}
+\begin{tabular}{lll}
+Ogham.     &Ancient Anatolian Alphabets. &Avestan.\\
+Old Italic &Old South Arabian &Ugaritic\\
+Runic &Phoenician. &Old Persian\\
+Gothic &Imperial Aramaic &Sumero-Akkadian\\
+Old Turkic. &Mandaic &Egyptian Hieroglyphs.\\
+Linear B &Inscriptional Parthian &Meroitic.\\
+Cypriot Syllabary &Inscriptional Pahlavi&\\
+\end{tabular}
+\end{center}
+
+The following scripts are also encoded but following the Unicode
+convention are described in other sections
+
+\begin{center}
+\begin{tabular}{llllll}
+Coptic &Glagolithic &Phags-pa. &Kaithi &Kharoshi &Brahmi.\\
+\end{tabular}
+\end{center}
+
+
+\input{./languages/ogham}
+\input{./languages/ancient-anatolian}
+\input{./languages/avestan}
+\input{./languages/old-turkic}
+
+\subsection{Phonenician}
+
+The Phoenician alphabet and its successors were widely used over a broad area surrounding the Mediterranean Sea.
+
+\let\phoenician\lycian
+
+\begin{scriptexample}[]{Phoenician}
+
+
+\unicodetable{phoenician}{"10900,"10910}
+
+\end{scriptexample}
+
+The Phoenician alphabet, called by convention the Proto-Canaanite alphabet for inscriptions older than around 1200 BCE, is the oldest verified consonantal alphabet, or abjad.[1] It was used for the writing of Phoenician, a Northern Semitic language, used by the civilization of Phoenicia. It is classified as an abjad because it records only consonantal sounds (matres lectionis were used for some vowels in certain late varieties).
+
+Phoenician became one of the most widely used writing systems, spread by Phoenician merchants across the Mediterranean world, where it evolved and was assimilated by many other cultures. The Aramaic alphabet, a modified form of Phoenician, was the ancestor of modern Arabic script, while Hebrew script is a stylistic variant of the Aramaic script. The Greek alphabet (and by extension its descendants such as the Latin, the Cyrillic, and the Coptic) was a direct successor of Phoenician, though certain letter values were changed to represent vowels.
+
+As the letters were originally incised with a stylus, most of the shapes are angular and straight, although more cursive versions are increasingly attested in later times, culminating in the Neo-Punic alphabet of Roman-era North Africa. Phoenician was usually written from right to left, although there are some texts written in boustrophedon.
+
+\section{Meroitic}
+
+The Meroitic script is an alphabetic script, used to write the Meroitic language of the Kingdom of Meroë in Sudan. It was developed in the Napatan Period (about 700–300 BCE), and first appears in the 2nd century BCE. For a time, it was also possibly used to write the Nubian language of the successor Nubian kingdoms. Its use was described by the Greek historian Diodorus Siculus (c. 50 BCE).
+
+Although the Meroitic alphabet did continue in use by the Nubian kingdoms that succeeded the Kingdom of Meroë, it was replaced by the Coptic alphabet with the Christianization of Nubia in the sixth century CE. The Nubian form of the Coptic alphabet retained three Meroitic letters.
+
+The script was deciphered in 1909 by Francis Llewellyn Griffith, a British Egyptologist, based on the Meroitic spellings of Egyptian names. However, the Meroitic language itself has yet to be translated. In late 2008 the first complete royal dedication was found,[1] which may help confirm or refute some of the current hypotheses.
+
+The longest inscription found is in the Museum of Fine Arts, Boston.
+
+\newfontfamily\meroitic{Nilus.ttf}
+
+\begin{scriptexample}[]{}
+\unicodetable{meroitic}{"109A0,"109B0,"109C0,"109E0,"109F0}%
+\end{scriptexample}
+
+The examples here use the \idxfont{Nilus.ttf} font of George Douros\footnote{\url{http://users.teilar.gr/~g1951d/}}.
+
+\section{South East Asian Scripts}
+
+This section documents the facilities offered to typeset Southeast Asian Scripts. These scripts are used in most of Southeast Asia, Indonesia and the Philippines.
+
+\begin{table}[htb]
+\centering
+\begin{tabular}{lll}
+Thai & Tai Tham &Balinese\\
+Lao  &Tai Viet  &Javanese\\
+Myanmar &Kayah Li &Rejang\\
+Khmer &Cham &Batak\\
+Tai Le &Philippine Scripts &Sundanese\\
+New Tai Lue & Buginese\\
+\end{tabular}
+\end{table}
+
+^^A\input{./languages/oriya}
+^^A\input{./languages/tifnagh}
+^^A\input{./languages/mongolian}
+^^A\input{./languages/khmer}
+^^A\input{./languages/tibetan}
+^^A\input{./languages/javanese}
+^^A\input{./languages/sundanese}
+^^A\input{./languages/balinese}
+^^A\input{south-asian-scripts}
+^^A\input{./languages/tamil}
+^^A\input{./languages/armenian}
+^^A\input{./languages/hieroglyphics}
+^^A\input{./languages/bopomofo}
+^^A\input{./languages/georgian}
+
+^^A\input{./languages/lao}
+^^A\input{./languages/malayalam}
+^^A\input{./languages/greek}
+^^A\input{./languages/thai}
+^^A\input{./languages/kannada}
+^^A\input{./languages/myanmar}
+^^A\input{./languages/cherokee}
+^^A\input{./languages/canadian-unified}
+^^A\input{./languages/deseret}
+^^A\input{./languages/shavian}
+^^A\input{./languages/osmanian}
+^^A\input{./languages/hanuno}
+^^A\input{./languages/languages-list}
+
+\input{./languages/glagolithic}
+
+\section{Middle Eastern Scripts}
+
+The scripts in this section have a common origin in the ancient Phoenician alphabet. They include:
+
+\begin{center}
+\begin{tabular}{ll}
+Hebrew & Samaritan\\
+Arabic & Thaana\\
+Syriac &\\
+\end{tabular}
+\end{center}
+
+\input{./languages/hebrew}
+\input{./languages/thaana}
+\input{./languages/samaritan}
+
+
+\end{document}
+
+

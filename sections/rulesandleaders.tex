@@ -1,7 +1,8 @@
 \chapter{Rules and Leaders}
 
 Dot leaders are a row of dots that visually connect the chapter titles and section headings to their corresponding page numbers. 
-You can use leaders to fill a space with copies of a pattern,
+
+Leaders don't have to be composed of dots, with \tex leaders can be used fill a space with copies of a pattern,
 \eg, to put repeated dots between a title and a page number in a table
 of contents. A leader is a single copy of the pattern. The specification of
 leaders contains three pieces of information:
@@ -13,20 +14,24 @@ leaders contains three pieces of information:
 \end{enumerate}
 
 \begin{macro}{\leaders}
+\begin{macro}{\cleaders}
+\begin{macro}{\xleaders}
 \tex  provides three commands for specifying leaders:\cs{leaders},\cs{cleaders},
 and\cs{xleaders} (p. 174). The argument of each command specifies the
 leader. The command must be followed by glue; the size of the glue specifies
 how much space is to be filled. The choice of command determines how
 the leaders are arranged within the space.
 \end{macro}
+\end{macro}
+\end{macro}
 
 Rule leaders \textit{fill} the specified amount of space with a rule extending in the direction of the skip
 specified. \index{Rules and Leaders!rule leaders}
 
-The most common application for leaders is to fill the space with either a rule or with dots, such as shown in the example below.
+The most common application for leaders is to fill the space with either a rule or with dots, such as shown in Example~ref{leaders} below.
 
 \emphasis{leaders,hbox,hfill}
-\begin{texexample}{}{}
+\begin{texexample}{Leader example}{leaders}
 \hbox{Exa\leaders\hrule\hskip20pt e}
 \hbox to \linewidth{Section 1.2 \leaders\hbox{..}\hfill\space 15}
 Section 1.3 \leaders\hbox{..}\hfill\space 15
@@ -36,11 +41,13 @@ Section 1.3 \leaders\hbox{..}\hfill\space 15
 \lipsum*[1]\leaders\hbox{..}\hfill\space 15
 \end{texexample}
 
-One thing to note is that the leaders must be in a box, such as an \cs{hbox}.
+Leaders must be in a box, such as an \cs{hbox}. If they are not in a box an error is issued by \tex.
 
+\begin{texexample}{}{hboxleaders}
 \hbox to \textwidth{g\leaders\hbox{+}\hfill 112}
+\end{texexample}
 
-because a horizontal rule has a default height of .4pt. On the other hand,\index{Rules and Leaders!default value}
+because a horizontal rule has a default height of |.4pt|. On the other hand,\index{Rules and Leaders!default value}
 
 \verb+\hbox{g\leaders\vrule\hskip10pt f}+
 
@@ -62,34 +69,26 @@ instead of leaders.
 
 \section{Box leaders}
 
-Box leaders fill the available spaces with copies of a given box, instead of with a rule.
-For all of the following examples, assume that a box register has been allocated:
+Box leaders fill the available spaces with copies of a given box, instead of with a rule. For all of the following examples, assume that a box register has been allocated:
 
-\newbox\centerdot \setbox\centerdot=\hbox{\hskip.7em*\hskip.7em}
+\begin{texexample}{Box leaders}{}
+\newbox\starbox
+\setbox\starbox=\hbox{\hskip.7em*\hskip.7em}
+\hbox to 5cm {lorem \leaders\copy\starbox\hfill lorem}.
+\end{texexample}
 
-Now the output of
+If you notice you have to use the \cs{copy} command rather than \cs{usebox}, as we cannot use the |\leavevmode| with leaders
 
-\verb+\hbox to 8cm {here\leaders\copy\centerdot\hfil there}+
-
-is
-
-\hbox to 8cm {here\leaders\copy\centerdot\hfil there}
+\begin{verbatim}
+\usebox unchanged
+81 \def\usebox#1{\leavevmode\copy #1\relax}
+\end{verbatim}
 
 That is, copies of the box register fill up the available space.
 
 Dot leaders, as in the above example, are often used for tables of contents. In such applications it
-is desirable that dots on subsequent lines are vertically aligned. The\cs    {leaders} command does this
+is desirable that dots on subsequent lines are vertically aligned. The\cs{leaders} command does this
 automatically:
-
-\begin{teX}
-\hbox to 8cm {here\leaders\copy\centerdot\hfil there}
-\hbox to 8cm {over here\leaders\copy\centerdot\hfil over there}
-\end{teX}
-
-gives
-
-\hbox to 8cm {here\leaders\copy\centerdot\hfil there}
-\hbox to 8cm {over here\leaders\copy\centerdot\hfil over there}
 
 
 The mechanism behind this is the following: TEX acts as if an infinite row of boxes starts (invisibly)
@@ -111,7 +110,7 @@ which gives,
 
 The row of leaders boxes becomes visible as soon as it does not coincide with other material.
 The above discussion only talked about leaders in horizontal mode. Leaders can equally well be
-placed in vertical mode; for box leaders the ‘infinite row’ then starts at the top of the surrounding
+placed in vertical mode; for box leaders the \textit{infinite row} then starts at the top of the surrounding
 box.
 
 
@@ -160,6 +159,7 @@ If margins have been shifted, leaders may look different depending on how the sh
 For an illustration of how\cs    {hangindent} and\cs{leftskip} influence the look of leaders, consider
 the following examples, where
 
+\begin{texexample}{Ratata}{ex:ratata}
 \setbox0=\hbox{R a t a t a  }
 \verb+\setbox0=\hbox{R a t a t a  }+
 
@@ -169,7 +169,7 @@ the following examples, where
 
 \hangindent=1em \hangafter=-1 \noindent
 \leaders\copy0\hskip5cm\hbox{}\par
-
+\end{texexample}
 
 gives (note the shift with respect to the previous example)
 \medskip

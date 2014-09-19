@@ -1,0 +1,742 @@
+\chapter{TikZ}
+
+\section{The \protect\texttt{TikZ} package}
+\ctan{TikZ}, a high-level interface to \pkgname{PGF}, is a language-based tool for specifying graphics.
+It uses familiar graphics-related concepts, such as point, line, and circle and
+has a concise and natural syntax. It meshes well with pdfLATEX in the sense that
+no additional processing steps are needed. Another positive aspect of \pkgname{TikZ} is
+its ability to blend \tex fonts, symbols, and mathematics within the generated
+graphics.
+
+
+Using the |TikZ| package you can draw figures and intermingle them with text. To draw a simple diamond as shown in \fref{fig:diamond} we use
+the following commands. The package comes with a very comprehensive manual of 560 pages long. One can state that there is nothing that you cannot draw with PGF/TikZ, if you have the patience and perseverance. TikZ's language has a syntax of its own with very little connection to what we have used so far. You will need to set aside adequate time to study this, especially if your work has a lot of specially drawn figures that you need. The result like anything else in \tex make the effort worthwhile.
+
+
+\begin{center}
+\begin{tikzpicture}
+ \draw (1,0) -- (0,1) -- (-1,0) -- (0,-1) -- cycle;
+\end{tikzpicture}
+\end{center}
+\captionof{figure}{Diamond drawn using \protect\texttt{TikZ}}
+\label{fig:diamond}
+
+
+
+\emphasis{-,draw,begin,end,tikzpicture}
+\begin{teXXX}
+\begin{tikzpicture}
+\draw (1,0) -- (0,1) -- (-1,0) -- (0,-1) -- cycle;
+\end{tikzpicture}
+\end{teXXX}
+
+
+
+Sometimes it is quite useful when debugging to add a backround grid. 
+
+
+\begin{centering}
+\begin{tikzpicture}
+\draw[step=0.25cm,color=green] (-1,-1) grid (1,1);
+\draw (1,0) -- (0,1) -- (-1,0) -- (0,-1) -- cycle;
+\end{tikzpicture}
+\captionof{figure}{You can add a background grid using \texttt{step=0.25cm, color=green} as an option}
+\end{centering}
+
+
+\emphasis{step,color,green,grid,begin,end}
+\begin{teXXX}
+\begin{tikzpicture}
+  \draw[step=0.25cm,color=green] (-1,-1) grid (1,1);
+  \draw (1,0) -- (0,1) -- (-1,0) -- (0,-1) -- cycle;
+\end{tikzpicture}
+\end{teXXX}
+
+The grid is specified by providing two diagonally opposing points: (-1,-1)
+and (1, 1). The two options supplied give a step size for the grid lines and a
+specification for the color of the grid lines, using the \docpkg{xcolor} package
+
+\subsection{Specifying points and paths}
+
+\begin{codeexample}[vbox]
+\begin{tikzpicture}
+% Define the points of a regular pentagon
+\path (0,0) coordinate (origin);
+\path (0:1cm) coordinate (P0);
+\path (1*72:1cm) coordinate (P1);
+\path (2*72:1cm) coordinate (P2);
+\path (3*72:1cm) coordinate (P3);
+\path (4*72:1cm) coordinate (P4);
+% Draw the edges of the pentagon
+\draw (P0) -- (P1) -- (P2) -- (P3) -- (P4) -- cycle;
+% Add "spokes"
+\draw (origin) -- (P0) (origin) -- (P1) (origin) -- (P2)
+(origin) -- (P3) (origin) -- (P4);
+\end{tikzpicture}
+\caption{Drawing a complicated polygon, using paths and the \texttt{draw} command}
+\end{codeexample}
+
+
+Two key ideas used in TikZ are points and paths. Both of these ideas were used
+in the diamond examples. Much more is possible, however. For example, points
+can be specified in any of the following ways:
+\begin{enumerate}
+\item  Cartesian coordinates
+\item  Polar coordinates
+\item  Named points
+\item  Relative points
+\end{enumerate}
+
+\subsection*{coordinates}
+The cartesian coordinates can be defined and named using the following syntax.
+
+%\emphasis{begin,end,coordinate,at,draw}
+%\begin{teXXX}
+%\begin{tikzpicture}
+%  \coordinate (A) at (0,0);
+%  \coordinate (B) at (1.25,0.25);
+%  \draw[blue] (A) -- (B);
+%\end{tikzpicture}
+%\end{teXXX}
+
+\noindent This produces:
+\begin{tikzpicture}
+\coordinate (A) at (0,0);
+\coordinate (B) at (1.25,0.25);
+\draw[blue] (A) -- (B);
+\end{tikzpicture}
+
+
+We can add labels to the points by using the |label| option.
+\begin{tikzpicture}
+\coordinate [label=left:\textcolor{orange}{$A$}] (A) at (0,0);
+\coordinate [label=right:\textcolor{orange}{$B$}]  (B) at (1.15,0.25);
+\draw[blue] (A) -- (B);
+\end{tikzpicture}
+
+\emphasis{label,left,label:,right}
+\begin{teXXX}
+\begin{tikzpicture}
+  \coordinate [label=left:\textcolor{orange}{$A$}] (A) at (0,0);
+  \coordinate [label=west:\textcolor{orange}{$B$}] (B) at (1.25,0.25);
+  \draw[blue] (A) -- (B);
+\end{tikzpicture}
+\end{teXXX}
+
+
+
+
+If you tempted to write \texttt{label=top:} it will not work, as the command accepts the following keywords.
+
+\begin{tikzpicture}
+  \coordinate [label=left:\textcolor{orange}{east}]  (A) at (0,0);
+  \coordinate [label=right:\textcolor{orange}{west}] (B) at (0,0);
+  \draw[blue] (A)--(B);
+\end{tikzpicture}
+
+
+
+
+%To summarize, what we have been doing so far is to learn a set of primitive TikZ commands for drawing paths, drawing shapes and labeling them. All TikZ command work by passing options to them. For example to change the above line to an arrow, we just pass the option |->| to the |draw| command.
+%
+
+%\begin{tikzpicture}
+%  \coordinate [label=left:\textcolor{orange}{$A$}] (A) at (0,0);
+%  \coordinate [label=right:\textcolor{orange}{$B$}] (B) at (1.25,0.25);
+%  \draw[->,o-stealth] (A)--(B);
+%\end{tikzpicture}
+%\caption{Effect of the option \protect\texttt{draw[->]}.}
+
+%\emphasis{begin,end,->,draw}
+%\begin{teXXX}
+%\begin{tikzpicture}
+%  ...
+%  ...
+%  \draw[->,blue] (A)--(B);
+%\end{tikzpicture}
+%\end{teXXX}
+%
+%\section*{Relative coordinates}
+%\index{TikZ!coordinates, relative}
+%A coordinate can be made "relative" by prefixing it with |++|. relative coordinates are useful in many applications.
+%\medskip
+%
+%\noindent The code is simple, except before the coordinate you add the |++| signs. This tells the PGF engine to add the x,y dimensions of the new coordinate to that of its predecessor's. In many instances this is more intuitive and easier to determine.
+
+
+
+%\begin{tikzpicture}
+%\draw[step=0.5cm,color=gray] (-1,-1) grid (3.5,3);
+%\draw[->,red,thick] (0,0) -- ++(1,0) -- ++(0,1) -- ++(-1,0) -- cycle;
+%\draw[->,red,thick] (2,0) -- ++(1,0) -- ++(0,1) -- ++(-1,0) -- cycle;
+%\draw[arrows=o-stealth,blue] (1.5,1.5) -- ++(1,0) -- ++(0,1) -- ++(-1,0) -- cycle;
+%\end{tikzpicture}
+%\caption{Example of use of the \protect\texttt{++} to specify relative coordinates.}
+%\label{fig:relative}
+
+%\begin{teXXX}
+%\begin{tikzpicture}
+%  \draw[step=0.5cm,color=gray] (-1,-1) grid (3.5,3);
+%  \draw[red,very thick] (0,0) -- ++(1,0) -- ++(0,1) -- ++(-1,0) -- cycle;
+%  \draw[red,very thick] (2,0) -- ++(1,0) -- ++(0,1) -- ++(-1,0) -- cycle;
+%  \draw[->,red,very thick] (1.5,1.5) -- ++(1,0) -- ++(0,1) -- ++(-1,0) -- cycle;
+%\end{tikzpicture}
+%\end{teXXX}
+%
+%Instead of |++| you can also use a single |+|. This also specifies a relative coordinate, but it does not "update"
+%the current point for subsequent usages of relative coordinates. Thus, you can use this notation to specify
+%numerous points, all relative to the same "initial" point:
+%
+
+%\begin{tikzpicture}
+%\draw[step=0.5cm,color=gray] (-1,-1) grid (3.5,3);
+%\draw[purple, fill=white] (0,0) -- +(1,0) -- +(1,1) -- +(0,1) -- cycle;
+%\draw[purple, fill=white] (2,0) -- +(1,0) -- +(1,1) -- +(0,1) -- cycle;
+%\draw[purple, fill=white] (1.5,1.5) -- +(1,0) -- +(1,1) -- +(0,1) -- cycle;
+%\path (0,0) node [shape=circle,draw]{(0,0)};
+%\end{tikzpicture}
+%\caption{Example of use of the \protect\texttt{+} to specify relative coordinates.}
+%\label{fig:relative1}
+
+%\begin{teXXX}
+%  \draw (0,0) -- +(1,0) -- +(1,1) -- +(0,1) -- cycle;
+%  \draw (2,0) -- +(1,0) -- +(1,1) -- +(0,1) -- cycle;
+%  \draw (1.5,1.5) -- +(1,0) -- +(1,1) -- +(0,1) -- cycle;
+%\end{teXXX}
+%
+%
+%Personally, I don't favour this method of specifying co-ordinates, but it can be useful, if you are automating the production of figures through an external script\sidenote{For drawing Bezier curves, the \texttt{+} behaves differently.  You can refer to the PGF Manual for more details.}.
+%
+%
+%\section*{Arrows}
+%\index{TikZ!arrows}
+%The function |->| creates a tooltip arrow. You can use different arrow tips and there is a long section for them in the PGF manual. You can even define your own.
+
+\bgroup
+%\centering
+%\begin{tikzpicture}
+%  \draw[->] (0,0) -- (2,0);
+%  \draw[arrows=o-stealth,blue] (0,-0.3) -- (2,-0.3);
+%  \draw[->,o-stealth,orange] (0,-0.6) -- (2,-0.6);
+%  \draw[arrows=|-stealth,purple] (0,-0.9) -- (2,-0.9);
+%\end{tikzpicture}
+%\captionof{figure}{Special arrow endings}
+%\label{fig:specials}
+\egroup
+%
+%\emphasis{o,stealth,begin,end,draw}
+%\begin{teXXX}
+%\begin{tikzpicture}
+% \draw[->] (0,0) -- (2,0);
+% \draw[arrows=o-stealth,blue] (0,-0.3) -- (2,-0.3);
+% \draw[->,o-stealth,orange] (0,-0.6) -- (2,-0.6);
+% \draw[arrows=X-stealth,purple] (0,-0.9) -- (2,-0.9);
+%\end{tikzpicture}
+%\end{teXXX}
+
+%
+
+\begin{verbatim}
+\begin{tikzpicture}
+% Define the points of a regular pentagon
+\path (0,0) coordinate (origin);
+\path (0:1cm) coordinate (P0);
+\path (1*72:1cm) coordinate (P1);
+\path (2*72:1cm) coordinate (P2);
+\path (3*72:1cm) coordinate (P3);
+\path (4*72:1cm) coordinate (P4);
+% Draw the edges of the pentagon
+\draw (P0) -- (P1) -- (P2) -- (P3) -- (P4) -- cycle;
+% Add "spokes"
+\draw (origin) -- (P0) (origin) -- (P1) (origin) -- (P2)
+(origin) -- (P3) (origin) -- (P4);
+\end{tikzpicture}
+\end{verbatim}
+
+
+
+
+
+\section{Nodes}
+
+A node is a small part of a picture. When a node is created, you provide a position where the node
+should be drawn and a shape. A node of shape circle will be drawn as a |circle|, a node of shape |rectangle|
+as a rectangle, and so on. A node may also contain same text, which is why they can used nodes to show text.
+
+Finally, a node can get a name for later reference.
+
+
+
+\emphasis{node,shape,draw}
+\begin{teXXX}
+\begin{tikzpicture}
+\path ( 0,2) node [shape=circle,draw] {.}
+( 0,1) node [shape=circle,draw] {..}
+( 0,0) node [shape=circle,draw] {...}
+( 1,1) node [shape=rectangle,draw] {....}
+(-2,1) node [shape=rectangle,draw] {rectangle (-2,1)};
+\end{tikzpicture}
+\end{teXXX}
+\medskip
+
+\begin{tikzpicture}
+\path ( 0,2) node [shape=circle,draw] {1}
+( 0,1) node [shape=circle,draw] {\textbf{10}}
+( 0,0) node [shape=circle,draw] {\textbf{100}}
+( 1,1) node [shape=circle,draw] {\textbf{1000}}
+(-2,1) node [shape=circle,draw] {\textbf{10000}};
+\end{tikzpicture}
+
+In the above code, this text is empty (because of the
+|empty {}|). So, why do we see anything at all at all the nodes? The answer is the draw option for the node operation: It
+causes the |shape| around the text" to be drawn. If you have an empty |{}|, PGF still sees the empty space as a character and justs draws around it. The reason is than TikZ automatically adds some space around the text. The amount is set
+using the option inner sep. So, to increase the size of the nodes. Modifying the example slightly we get.
+
+
+
+\begin{tikzpicture}
+\path ( 0,2) node [shape=circle,draw] {.}
+( 0,1) node [shape=circle,draw] {..}
+( 0,0) node [shape=circle,draw] {...}
+( 1,1) node [shape=circle,draw] {....}
+(-1,1) node [shape=circle,draw] {.....};
+\end{tikzpicture}
+
+\noindent As you can observe the size of the circle has been adjusted to fit the text that is enclosing it.
+
+\subsection{Drawing circles}
+
+
+\begin{centering}
+\begin{tikzpicture}
+\draw (0,0) circle (1cm);
+\draw (0.5,0) circle (0.5cm);
+\draw (0,0.5) circle (0.5cm);
+\draw (-0.5,0) circle (0.5cm);
+\draw (0,-0.5) circle (0.5cm);
+\end{tikzpicture}
+\captionof{figure}{Drawing multiple circles, using mutiple \texttt{draw} commands}
+\end{centering}
+
+
+A circle is specified by providing its center point and the desired radius. The
+command:
+
+\medskip
+
+\begin{tikzpicture}
+  \draw[step=0.25cm,color=green] (-1,-1) grid (1,1);
+  \draw (0,0) circle (1cm);
+\end{tikzpicture}
+\medskip
+
+\begin{teXXX}
+\begin{tikzpicture}
+  \draw (x,y) circle (dia);
+\end{tikzpicture}
+\end{teXXX}
+
+
+
+You  can use one |\draw| command to draw multiple circles as shown in \fref{fig:circles}
+
+
+\begin{tikzpicture} 
+ \draw (0,0) 
+  circle (1cm)
+  circle (0.6cm)
+  circle (0.2cm)
+ ;
+\end{tikzpicture}
+
+\emphasis{circle,begin,end}
+\begin{teXXX}
+\begin{tikzpicture} 
+ \draw (0,0) 
+  circle (1cm)
+  circle (0.6cm)
+  circle (0.2cm)
+ ;
+\end{tikzpicture}
+\end{teXXX}
+
+
+
+
+
+\begin{center}
+\begin{tikzpicture}
+\draw (0,0) circle (1cm)
+circle (0.6cm)
+circle (0.2cm);
+\end{tikzpicture}
+\caption{You can use one draw command to draw multiple circles}
+\label{fig:circles}
+\end{center}
+\caption{Drawing multiple circles, using mutiple \texttt{circle} commands}
+
+
+\subsection{Drawing ellipses}
+
+Ellipses can be drawn in a similar fashion to circles. As an ellipse needs two center points to be specified the command used has the following general form:
+
+\begin{verbatim}
+\draw (a,b) ellipse (r1 dim and r2 dim);
+\end{verbatim}
+
+We can draw two ellipses as shown in the figure, using the code:
+\begin{teX}
+\begin{tikzpicture}[scale=0.6]
+\draw[color=red] (0,0) ellipse (2cm and 1cm);
+\draw[color=red] (0,0) ellipse (1cm and 2cm);
+\end{tikzpicture}
+\end{teX}
+
+\begin{centering}
+\begin{tikzpicture}[scale=0.6]
+\draw[color=red] (0,0) ellipse (2cm and 1cm);
+\draw[color=red] (0,0) ellipse (1cm and 2cm);
+\end{tikzpicture}
+\caption[Drawing ellipses]{Use the draw command in combination with ellipse to draw ellipses}
+\end{centering}
+
+
+\begin{teX}
+\begin{tikzpicture}
+\draw (0,0) ellipse (2cm and 1cm)
+ellipse (0.5cm and 1 cm)
+ellipse (0.5cm and 0.25cm);
+\end{tikzpicture}
+\caption{Drawing multiple circles, using mutiple \texttt{draw} commands}
+\end{teX}
+
+\section{Drawing more complicated shapes}
+we can place a parabola in a rectangle as shown in \fref{fig:parabola}, by using the |rectangle| and the |parabola| options.
+
+\bgroup
+\centering
+
+\begin{tikzpicture}
+\draw[color=blue] (0,0) rectangle (1,1.5)
+(0,0) parabola[color=orange] (1,1.5);
+\draw[xshift=1.5cm] (0,0) rectangle (1,1.5)
+(0,0) parabola[bend at end] (1,1.5);
+\draw[xshift=3cm] (0,0) rectangle (1,1.5)
+(0,0) parabola bend (.75,1.75) (1,1.5);
+\end{tikzpicture}
+\captionof{figure}{Parabolas drawn using the parabola and rectangle options.}
+\label{fig:parabola}
+\egroup
+
+
+
+
+\emphasis{parabola,rectangle}
+\begin{teX}
+\begin{tikzpicture}
+\draw[color=blue] (0,0) rectangle (1,1.5)
+(0,0) parabola[color=orange] (1,1.5);
+\draw[xshift=1.5cm] (0,0) rectangle (1,1.5)
+(0,0) parabola[bend at end] (1,1.5);
+\draw[xshift=3cm] (0,0) rectangle (1,1.5)
+(0,0) parabola bend (.75,1.75) (1,1.5);
+\end{tikzpicture}
+\caption{Parabolas drawn using the parabola command}
+\label{fig:parabola}
+\end{teX}
+
+\subsection*{The shape library}
+
+\begin{tikzpicture}
+\draw [help lines] (0,0) grid (2,2);
+\draw [blue, dashed] (1,1) circle(1cm);
+\draw [red, dashed] (1,1) circle(.5cm);
+\node [star, star point height=.5cm, minimum size=2cm, draw]
+at (1,1) {S};
+\end{tikzpicture}
+
+\section{Iterations}
+One convenient construct provided with TikZ is a |foreach| command sequence
+
+\bgroup
+\centering
+\begin{tikzpicture}[scale=1.3, color=red]
+\foreach \i in {1,...,4}
+{
+  \path (\i,0) coordinate (X\i);
+  \fill (X\i) circle (1pt);
+}
+  \foreach \j in {1,...,3}
+{
+  \path (\j,1) coordinate (Y\j);
+  \fill (Y\j) circle (1pt);
+}
+\foreach \i in {1,...,4}
+{
+  \foreach \j in {1,...,3}
+  {
+     \draw[color=blue] (X\i) -- (Y\j);
+  }
+}
+\end{tikzpicture}
+\captionof{figure}{Drawing a bi-partite garph using foreach loops}
+\egroup
+
+\begin{teX}
+\begin{tikzpicture}[scale=1.3, color=red]
+\foreach \i in {1,...,4}
+{
+  \path (\i,0) coordinate (X\i);
+  \fill (X\i) circle (1pt);
+}
+  \foreach \j in {1,...,3}
+{
+  \path (\j,1) coordinate (Y\j);
+  \fill (Y\j) circle (1pt);
+}
+\foreach \i in {1,...,4}
+{
+  \foreach \j in {1,...,3}
+  {
+     \draw[color=blue] (X\i) -- (Y\j);
+  }
+}
+\end{tikzpicture}
+\end{teX}
+
+
+
+
+
+
+\subsection{Loading data from files}
+
+Scientific work, especially that associated with research tends to generate
+a lot of data. The data would normally come from external applications and stored in files. With |TikZ| one can import the data
+by using the word |file|:
+
+\emphasis{addplot,file,x}
+\begin{teXXX}
+ \addplot file {./raw/wavefunctions/wavefunc\x.dat};
+\end{teXXX}
+
+In the example we use a file with a path. The data is saved in
+files with the same name but a different ending. We use a |foreach| function to add the ending i.e, the file names are |wavefunc1|, |wavefunc2| and |wavefunc3|. By using external data files and the foreach command it can substantially reduce the amount of text in the macros. This improves debugging and readability.
+
+
+\begin{tikzpicture}[scale=0.6]
+    \begin{axis}[
+    xlabel=$n$,
+    ylabel=$\Theta{j}{n}$]
+    \foreach \x in {0,...,2}
+    {
+        \addplot file {./raw/wavefunctions/wavefunc\x.dat};
+    }
+    \legend{$j=0$,$j=1$,$j=2$};
+    \end{axis}
+\end{tikzpicture}
+\captionof{figure}{Example plot with data imported from external files, using \texttt{file}}
+
+
+
+\begin{teXXX}
+\begin{tikzpicture}[scale=0.6]
+  \begin{axis}[
+    xlabel=$n$,
+    ylabel=$\Theta{j}{n}$]
+    \foreach \x in {0,...,2}
+    {
+      \addplot file {./raw/wavefunctions/wavefunc\x.dat};
+    }
+    \legend{$j=0$,$j=1$,$j=2$};
+  \end{axis}
+\end{tikzpicture}
+\end{teXXX}
+
+
+
+\section*{Plotting functions}
+Functions can be defined for plotting using a variety of methods. They are powerful but generally difficult to remember.
+
+
+
+\section{Saving Data to a file}
+
+You can save your data to a file in many ways. One easy way is to use
+the \docpkg{filecontents} package. This package extends the LaTeX environment
+with the same name, but allows you to overwrite the file {\protect\ctan{filecontents}}.
+
+\begin{teXXX}
+\documentclass[justified]{tufte-book}
+\usepackage{pgfplots,lipsum,booktabs}
+\usepackage{pgfplotstable}
+\pgfplotsset{compat=newest}
+\usepackage{filecontents*}
+\begin{filecontents}{my1.dat}
+    Label       value       num
+    Integrity     33         4
+    Standalone    14         3
+    Interface      6         2
+    Overall       18         1
+\end{filecontents*}
+\begin{document}
+    your code here ...
+\end{document}
+\end{teXXX}
+
+It is good practice to keep, such data at the top of your file, although with
+the |filecontents| package, they can be inserted anywhere. Sometimes it maybe
+easier to have a number of minimal files with the type of charts you using regularly and just update the data on top. In general if the data is entered
+by hand rather than generated automatically by software this is a good way
+to keep your work tidy.
+
+\newenvironment{Chart}[1][black!70!green]{%
+%%  defaults
+    \gdef\level##1{Level ##1}
+    \def\setchartwidth##1{%
+      \def\chartwidth{##1}}%
+    \setchartwidth{3.9cm}%
+    \def\chartcolor{#1}
+    \newcommand\addTitle[2][test]{
+%% For the chart title we set it in a minipage for
+%% better control
+    \def\charttitle{\minipage{4cm}%
+       \footnotesize %
+       \centering\textbf{##2}\\##1%
+       \endminipage}}%
+   \def\xlabel{Completion (\%)}%
+%% renders the chart 
+    \def\renderChart{%
+%%
+    \footnotesize%
+%%
+%%
+    \IfFileExists{#1.dat}{Test}{}
+   \begin{tikzpicture}
+   \begin{axis}[
+    xbar, width=\chartwidth,title=\charttitle,
+    y=0.5cm, enlarge y limits={true, abs value=0.75},
+    xmin=0, xmax=100,enlarge x limits={upper, value=0.25},
+    xlabel=\xlabel,
+    %ylabel=Label,
+    xmajorgrids=true,
+    ytick=data,
+    yticklabels from table={\dataTable}{Label},
+    nodes near coords, nodes near coords align=horizontal
+     ]
+    \addplot[draw=none, fill=\chartcolor] table [x=value, y=num]
+    {\dataTable};
+    \end{axis}%
+    \end{tikzpicture}}}
+{}
+
+\begin{comment}
+\begin{figure*}
+\centering
+
+\hskip-2cm\begin{Chart}
+ \addTitle[Mechanical Systems]{Shangri-la}
+ \def\dataTable{SH-mechanical.dat}
+ \renderChart
+\end{Chart}\hspace{0.3cm}
+\begin{Chart}
+ \addTitle[FM-200 System]{All areas}
+ \def\dataTable{my1.dat}
+ \renderChart
+\end{Chart}
+\begin{Chart}
+ \addTitle[Electrical Works]{Merweb}
+ \def\dataTable{my6.dat}
+ \renderChart
+\end{Chart}
+\caption{Mechanical Systems Shangrila. Commissioning status}
+\end{figure*}
+
+
+\begin{filecontents*}{my1.dat}
+Label     value       num
+Integrity         33            4
+Standalone      14            3
+Interface        6            2
+Overall           18            1
+\end{filecontents*}
+
+\begin{filecontents*}{SH-mechanical.dat}
+Label     value       num
+{Fan coil units}       43             8
+{Air Handling Units}       13             7 
+{CW Pumps}       13             6
+{ECU}       11             5
+{Pressurization Fans}        15             4
+{Smoke Extract Fan}       5             3
+{Jet fan}       5             2
+{Overall}       12              1
+\end{filecontents*}
+
+\begin{filecontents*}{my6.dat}
+Label    value         num   other
+{Level 7}  50           11   13
+L6         90           10   12
+L5       80             9    16
+L4       90             8    18
+L3       70             7    90
+L2       80             6    21
+L1       70             5    22
+\end{filecontents*}
+
+\begin{filecontents*}{carparkventilation.dat}
+Label    value         num   other
+L5         50           11   13
+L4         90           10   12
+L3         80           9    16
+GR         90           8    18
+B1         70           7    90
+B2         80           6    21
+B3         70           5    22
+\end{filecontents*}
+%% CO SYSTEM
+%% DATA
+\begin{filecontents*}{carparkco.dat}
+Label    value         num   other
+L5         78           7   13
+L4         90           6   12
+L3         80           5    16
+GR         90           4    18
+B1         70           3    90
+B2         80           2    21
+B3         70           1    22
+B5         50          {}    {}
+\end{filecontents*}
+
+\begin{filecontents*}{carparkco2.dat}
+value,   num,   other,
+78,       7,   13,
+90,       6,   12,
+80,       5,    16,
+90,       4,    18,
+70,       3,    90,
+80,       2,    21,
+70,       1,    22,
+\end{filecontents*}
+\end{comment}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

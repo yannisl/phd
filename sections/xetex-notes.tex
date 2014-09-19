@@ -1,0 +1,1139 @@
+
+\def\reflect#1{{\setbox0=\hbox{#1}\rlap{\kern0.5\wd0
+  \special{x:gsave}\special{x:scale -1 1}}\box0 \special{x:grestore}}}
+\def\XeTeX{\leavevmode
+  \setbox0=\hbox{X\lower.5ex\hbox{\kern-.15em\reflect{E}}\kern-.1667em \TeX}%
+  \dp0=0pt\ht0=0pt\box0 }
+
+\def\eTeX{$\varepsilon$-\TeX}
+\def\TeXgX{\TeX\lower.5ex\hbox{\kern-.15em G}\kern-.25em X}
+\def\extractfontname"#1"#2\relax{\edef\testa{#1}}
+\def\checkfont#1#2{^^A
+  \ifx#1\nullfont \message{Font "#2" not available!}\rm \else \edef\testb{\detokenize{#2}}%
+  \let\x=#1\x \edef\testa{\fontname\x}\expandafter\extractfontname\testa\relax
+  \ifx\testa\testb\else\errmessage{Loaded font "\testa", expected "\testb"!}\fi\fi}
+
+\def\showfont#1#2{\tt #1&
+  \edef\INT{\the\interactionmode}\interactionmode=0
+  \font\x=#1 \interactionmode=\INT \relax \checkfont{\x}{#2}#2\cr}
+
+\newICUfeature{StyleSet}{insular}{+ss02,-liga}
+\newICUfeature{StyleSet}{highline}{+ss04}
+\newICUfeature{StyleSet}{medline}{+ss05}
+\newICUfeature{StyleSet}{enlarged}{+ss06}
+\newICUfeature{StyleSet}{underdot}{+ss07}
+\newICUfeature{StyleSet}{altyogh}{+ss08}
+\newICUfeature{StyleSet}{altpua}{+ss09}
+\newICUfeature{StyleSet}{althook}{+ss14}
+\newICUfeature{StyleSet}{altogonek}{+ss15}
+\newICUfeature{StyleSet}{oldpunct}{+ss18}
+\newICUfeature{StyleSet}{gothic}{+ss19}
+\newICUfeature{StyleSet}{gothtolat}{+ss20}
+\newICUfeature{MirrorRunes}{on}{+rtlm}
+\newICUfeature{IPAMode}{on}{+mgrk,-liga}
+\newICUfeature{Fractions}{on}{+frac}
+\newICUfeature{Superscripts}{on}{+sups}
+\newICUfeature{Subscripts}{on}{+subs}
+
+
+\chapter{XeTeX and XeLaTeX}
+
+\epigraph{“The use of ornament, in whatever style or quality, comes from an attitude of childish naivety. It shows a 
+reluctance to use ”pure design,” a giving-in to a primitive instinct to decorate...It is so easy to employ ornament 
+to cover up bad design!”}{Jan Tschichold}
+
+\minitoc
+\cxset{section color=gray,section font-weight=normal,subsection color=gray, subsection font-weight=normal}
+
+\section{Introduction}
+\index{HarfBuzz}\index{ICU Layout Engine}\index{font rendering engines>Harfbuzz}\index{font rendering engines>ICU Layout Engine}
+\XeTeX\footnote{Normally pronounced as if it were written {\em zee-\TeX}.} is an adaptation of the \TeX\ typesetting system developed by Professor Donald E. Knuth of Stanford University. It was originally developed to enable the typesetting of different language scripts by providing support for Unicode, especially for OS/2 computers.  XeTeX was written and maintained by Jonathan Kew, but lately has been maintained and extended by Khaled Hosny supported by TUG with fixes to some long standing OpenType math issues. Hosny also extended \XeTeX to use \texttt{HarfBuzz} the XeTeX were using the ICU LayoutEngine library to do OpenType layout, but it is no longer being maintained for quite sometime now, with bugs and even regressions left unfixed, not to mention support for new features. XeTeX was even used a locally patched version of it to handle many features not supported upstream. HarfBuzz, on the other hand, is an actively maintained, feature rich library with a versatile API and a very cooperative developers (I got at least a couple new API calls for my XeTeX needs, not to mention regular bug fixes), and is used by many high profile free software projects (though it lacks documentation, but hey, who needs documentation, one can always read the code or ask on the mailing list :)). The HarfBuzz port went smooth and in a few weeks we had a new version of XeTeX no longer using a patched ICU library (we still use ICU for other stuff like input encodings, bidirectional algorithm and locale sensetive line breaking), followed by a few months of bug fixes, re-factoring and code removal, so we ended up with more functionality and less code (yay).
+
+XeTeX also supports Graphite font technology, but it was using the first generation Graphite engine, but in the meantime a new faster and more robust engine has been developed. While working on the HarfBuzz port, Martin Hosken (Graphite developer) approached me about upgrading XeTeX to the new library, and since HarfBuzz already have a Graphite2 backend I found it would be easier to use it, so I did just that, and ported our other uses of the old Graphite API (line breaking, querying font features etc.) to directly use the new Graphite2 API, with big help from Martin and other Graphite hackers.
+
+\index{Core Text}
+Jiang Jiang also ported XeTeX on Mac from the long deprecated ATS/ATSUI font APIs (which Apple didn’t even provide on their 64-bit systems) to the new |Core Text| ones.
+\footnote{\XeTeX\ is copyright ©1994-2005 by SIL International. It is a successor to the \TeXgX\ program that was developed for earlier versions of Mac OS, using the now-obsolete QuickDraw GX technology.}
+
+\XeTeX documentation is not widely available but, some good resources can be found in \citep{xetexcompanion}. This is a free booklet and has also a good section describing the various font technologies.
+
+\section{It is all about Unicode}
+
+With \XeLaTeX you can just type in any script in your editor (including those available with \tex distributions such as |TeXworks|\index{TeXworks} and you can have \XeLaTeX typeset the document with excellent results. One issue is that you need to have the right fonts in your system. One font with excellent support for most of the worlds scripts is a free font called |code2000|. For particular languages your own OS should have a number of fonts installed. Unlike \tex and \latexe these fonts are available to you. The below text was just cut and pasted from Wikipedia and it has been rendered using |Arial Unicode MS| and |code2000|
+
+
+
+\begin{quote}
+{
+\fontspec{Arial Unicode MS}
+Telugu /ˈtɛlʉɡuː/[2] (తెలుగు telugu, IPA: [t̪el̪uɡu]) is a Dravidian language predominantly spoken in the Indian states of Telangana, Andhra Pradesh and in Yanam where it is an official language. It is also spoken by significant minorities in the states Chhattisgarh, Karnataka, Maharashtra, Odisha, Tamil Nadu, the union territory Puducherry, and by the Sri Lankan Gypsy people. It is one of six languages designated a classical language of India.[3][4] Telugu ranks third by the number of native speakers in India (74 million),[5] thirteenth in the Ethnologue list of most-spoken languages worldwide[6] and is the most widely spoken Dravidian language. It is one of the twenty-two scheduled languages of the Republic of India.[7]
+
+
+\fontspec{code2000.ttf}
+\subsection{\protect\fontspec{code2000.ttf}తెలుగు telugu}
+
+तेलुगुभाषा (Telugu) द्राविडभाषा परिवारस्‍य एका भाषा अस्ति । एषा दक्षिणभारते विद्यमानस्य आन्ध्रप्रदेशराज्यस्य अधिकारभाषा वर्तते । इयं भाषा भारतस्य प्रान्तीयभाषासु प्रथमे स्थाने, तथा च विश्वस्तरे लोकैः भाष्यमाणासु भाषासु त्रयोदशे स्थाने च तिष्ठति । अपि च भारते राष्ट्रभाषायाः हिन्द्याः अनन्तरं द्वितीयं स्थानम् आवहति । अस्मिन् जगति उपसार्धनवकोटि (९.३२ कोटिः ) जनाः ( प्रमाणम् अपेक्ष्यते ) इमां तेलुगुभाषां भाषन्ते । ३१-१०-२००८ तमे दिनाङ्के भारतीयसर्वकारेण अतिप्राचीनासु राष्ट्रीयभाषासु संस्कृततमिलभाषाभ्यां सहैव तेलुगुभाषा अपि अन्तर्भाविता।
+
+Telugština (తెలుగు, telugu) je drávidský jazyk, používaný v indickém svazovém státě Ándhrapradéš, kde je úředním jazykem. Počet mluvčích se odhaduje na 70 miliónů, což činí z telugštiny (vedle tamilštiny s cca 75 miliony mluvčích) nejpoužívanější ze všech drávidských jazyků a třetí (po hindštině a bengálštině) nejpoužívanější jazyk Indie. Uvádí se, že telugština byla nejvíce ze všech drávidských jazyků vystavena vlivu (indoevropského) sanskrtu
+
+Мова тэлугу (తెలుగు) — адна з дравідыйскіх моў. Распаўсюджана ў індыйскім штаце Андхра-Прадэш, дзе мае статус афіцыйнай, а таксама дзяржавах са значнай дыяспарай народа тэлугу - краінах Паўднёва-Усходняй Азіі, у некаторых дзяржавах Афрыкі і Блізкага Усходу, на астравах Фіджы і на Маўрыкіі.
+
+}
+\end{quote}
+
+
+\section{Better Control of a Document's Typography}
+
+With a Pandora's box of fonts opening to the \latex world the typography of books and documents can be improved. Combinations of system fonts can be experimented with and one of course can always employ the services of an interior book designer and purchase a set or two of commercial fonts. The example below uses two fonts available with windows systems Book Antiqua and Calibri. These were typeset by just selecting the fonts using the \cmd{\fontspec}, which we describe in detail on the Chapter for fonts.
+\bigskip
+
+\newfontfamily\antiqua{Book Antiqua}
+\newfontfamily\calibri{Calibri}
+
+\centerline{
+\color{gray}\huge{\antiqua a}a {\antiqua e}\calibri e \antiqua{g}\calibri g \antiqua m\calibri m 
+\antiqua o{\calibri o} {\antiqua t}{\calibri t} {\antiqua y}{\calibri y}
+}
+ 
+\medskip
+
+\begin{multicols}{2}
+\bgroup
+\fontspec[OpticalSize=12]{Book Antiqua}
+ Big fjords vex quick walz nymph. (|\large|)\\
+ Big fjords vex quick walz nymph. (|\small|)\\
+\lorem 
+
+\columnbreak
+ Big fjords vex quick walz nymph. (|\large|)\\
+ Big fjords vex quick walz nymph. (|\small|)\\
+\lorem
+\egroup
+\end{multicols}
+
+
+
+\section{Unicode support}
+
+\XeTeX use Unicode both for input as well as output and so is particularly suited for non-latin scripts.
+
+While \TeX\ is an 8-bit system, processing text encoded as a stream of single bytes, and accessing fonts using single-byte character indexes, \XeTeX\ is designed to work with Unicode text. The fundamental "characters" that \XeTeX\ works with are 16-bit codes that are assumed to represent the UTF-16 encoding form of Unicode (so characters in Planes 1–16 are represented as surrogate pairs, two \XeTeX\ code units each).
+
+The most common form of Unicode text used with \XeTeX\ is UTF-8; this is also the encoding form used for all text output files (the |.log| file and any |\write| output). \XeTeX\ reads UTF-8 input files and converts the byte sequences into Unicode character codes automatically ({\em without} the use of additional \TeX\ macros such as the \LaTeX\ |inputenc| package). It will also automatically read files using UTF-16, should this be necessary.
+
+Because \XeTeX\ works with UTF-16 code units, \TeX\ commands that deal with character codes, such as |\char|, |\catcode|, |\lccode|, etc., have been extended to handle 16-bit values (up to 65535, or |"FFFF|). Note that it is {\em not} possible to assign individual character properties such as |\catcode| to non-Plane 0 Unicode characters, because these are treated as a pair of surrogate codes; however, there is probably little reason to need to do this. Supplementary-plane characters can still be treated as normal text to be typeset.
+
+It is also possible for \XeTeX\ to convert external files in non-Unicode encodings into its internal Unicode representation as they are read; see section~\ref{sec:encoding} below.
+
+\section{Font access}
+
+The second main feature of \XeTeX\ that sets it apart from \TeX\ is the ability to easily use Unicode-compliant fonts and work with both Mac OS~X's advanced typographic services (AAT: Apple Advanced Typography) and OpenType layout features. In general, any font installed in the operating system's various Library/Fonts folders is directly available for use in a \XeTeX\ document; there is no need for |.tfm| files as used by standard \TeX.
+
+\begin{codeexample}[vbox]
+\bgroup
+ \font\x="Code2000:script=arab" \x  يبرعلا → العربي
+ \par
+
+ \font\x="Code2000:script=deva" \x हिन्दी → िहदी \par
+
+ \font\x="Epigrafica:style=Entona" \x Entona\par
+
+ \font\x="Linux Libertine G:smcp=1" \x fjord par
+
+ \addfontfeature{Letters = SmallCaps} fjord\par
+
+ \font\DoulosViet="Doulos SIL:language=VIT" \DoulosViet 
+ Unicode cung cấp một con số duy nhất
+ cho mỗi ký tự
+\egroup
+\end{codeexample}
+
+This brings great flexibility in font use; any font available on the system can immediately be used in \XeTeX, including whatever "smart" AAT, OpenType or Graphite features it may offer.
+
+However, documents which use such "native" OS~X fonts will typically not be portable to standard \TeX\ systems, and even if |.tfm| files for the "same" fonts are available on another system the results will almost certainly not be identical. (\XeTeX\ was created primarily to typeset text in complex non-Roman scripts, implemented using AAT or OpenType fonts, and for this purpose it works well; many "normal" \TeX\ jobs may be better done with a standard version of \TeX.)
+
+\begin{codeexample}[vbox]
+{
+\font\x="Epigrafica:style=Entona" \x
+\textbf{Πρόταση 4.1} ΄Εστω γ καμπύλη με παραμετρική εξίσωση x = g(t), y = f(t),
+
+\begin{eqnarray}\frac{1}{n}\sum_{k=1}^{n}\sqrt[n]{e^k} =
+\frac{1}{n}\sqrt[n]{e}+\frac{1}{n}\sqrt[n]{e^2}+\cdots +
+\frac{1}{n}\sqrt[n]{e^n}\nonumber\\
+=\frac{1}{n}e^{\frac{1}{n}}+\frac{1}{n}e^{\frac{2}{n}}+\cdots+\frac{1}{n}e^{\frac{n}{n}}\nonumber
+\end{eqnarray}
+}
+\end{codeexample}
+
+
+
+
+
+\subsection{The \cs{font} command}
+
+Traditionally, fonts were selected in \tex like this:
+|\font\1=|\marg{tfm name} with various options possibly appended
+
+such as \ ‘| at 10pt|’ \ or \ ‘| scaled 1.2|’, with obvious meaning. This syntax
+still works, but it has been greatly extended in \XeTeX.
+
+The extended syntax looks schematically like this:
+\smallskip
+
+{\centering
+ |\font\1="|\marg{font identifier}\marg{font options}|:|\marg{font features}|"|
+ \marg{\tex font options}\par}
+
+
+\noindent The \marg{font identifier} is the only mandatory part of the
+above syntax.  If it is given in square brackets, (e.g.,
+|[lmroman10-regular]|), it is taken as a font file name.
+Without brackets, the name is looked up both as a file name and a system
+font name.
+When using a font name, the font is looked up through the operating
+system, using (except on Mac~OS~X) the |fontconfig| library.  Running
+|fc-list| should show you the font names available.  For example 
+\begin{quote}\small
+|\font\1="Liberation Serif"| \hfill \emph{look for OS-installed font}
+\end{quote}
+
+Fonts have many internal names, and XeTeX matches them in the following order:
+\vskip1ex
+\begin{itemize}
+  \item Full Name;
+  \item if the name has a hyphen, it is split into Family-Style pair then matched;
+  \item PostScript Name;
+  \item Family Name, if there is more than one match;
+  \begin{itemize}
+    \item look for font with “regular” bit set in OS/2 table, if no match;
+    \item look for font with style “Regular”, “Plain”, “Normal” or “Roman”, in that order.
+  \end{itemize}
+\end{itemize}
+\bigskip
+
+When using a file name, the |xdvipdfmx| driver must be used (this is the
+default). The current directory and the |texmf| trees are searched for
+files matching the name, or the path may be embedded in the font
+declaration, as usual with |kpathsea|. \eg,
+\begin{quote}\small
+|\font\2="[lmroman10-regular]"| \hfill
+  {\em find |lmroman10-regular.otf| in any tree}
+|\font\3="[/myfonts/fp9r8a]"| \hfill
+  {\em look for |fp9r8a| only in |/myfonts/|}
+\end{quote}
+
+A file with either an |.otf|, |.ttf| or |.pfb| extension (in that order) will be found.  The
+extension can also be specified explicitly.
+If the file is a font collection (e.g., |.ttc| or |.dfont|), the index of the
+font can be specified using a colon followed by zero-based font index inside
+the square brackets. \eg,
+\begin{quote}\small
+|\font\4="[myfont.ttc:1]"| \hfill {\em load the second font from |myfont.ttc| file}
+\end{quote}
+
+
+To provide this flexibility, \XeTeX\ reinterprets \TeX's |\font| command slightly. When a |\font| command is read, it attempts to locate an installed font in Mac OS~X with the given name. If one is found, then this font will be used in either ATSUI or OpenType mode, making use of layout features that may be included in the AAT/OT font tables, and without reference to any |.tfm| file. (Note that because such font names may include spaces or other characters that would not normally be considered part of a filename by \TeX, they can be quoted by enclosing them in single quotes, double quotes, or parentheses.)
+
+In order to provide some compatibility with the "standard" fonts of the \TeX\ world, such as Computer Modern, \XeTeX\ can also read |.tfm| files, and when using a font for which a |.tfm| file is present it should normally provide the same results as any standard \TeX. In particular, math mode requires the use of |.tfm|-based fonts.
+
+If no installed font is found for a |\font| declaration, \XeTeX\ will attempt to load a |.tfm| file and perform standard |.tfm|-based typesetting with this font. Note that for the font to actually be visible in the final output, it must be available as a |.pfb| or |.otf| file where the |xdv2pdf| tool can find it, based on the |dvips.map| font map file and |texmf.cnf| path settings, or else installed as a regular font in OS~X.
+
+Note that a document may freely mix the use of |.tfm|-based, AAT, and OpenType fonts.
+
+\section{AAT fonts}
+
+\XeTeX\ can take advantage of most advanced features of AAT fonts, such as contextual variants, complex ligatures, alternate swash forms, variation fonts, etc.
+
+To allow access to the advanced features of AAT fonts, the "font name" in a |\font| declaration for a non-|.tfm|-based font may include additional information. The font name specified should be the full name of a font, as seen by AAT (this may sometimes differ from the name in most Font menus). It may be enclosed in quotes (this also applies to file names, such as in |\input| commands); this allows names to include spaces and other "special" characters. In ATSUI typesetting mode, \XeTeX\ will automatically use the default features of an AAT font; this may include automatic ligatures, contextual swash forms, and so on.
+
+To control the exact set of features used, a |\font| command may include feature settings after the font name. To do this, you add a colon after the font name, and then a semicolon-separated list of {\em <feature>=<setting>} pairs. To turn {\em off} a feature that is enabled by default, put an exclamation mark ("not", in various programming languages) before the setting name. The allowable features and settings are font-dependent; the Typography palette in applications such as TextEdit lets you see what features any given font supports, or the file |AAT-info.tex| shows how \XeTeX\ itself can determine the available features. In the same way, {\em <variation>=<value>} pairs may be used to control the style of variation fonts such as Skia. (All this is easier illustrated than described; look in the |FontSamples.tex| file to see how it works.)
+
+\section{OpenType fonts}
+
+Starting with release 0.8, \XeTeX\ includes  support for complex layout features in OpenType fonts. This support is based on code from the ICU (International Components for Unicode) library.\footnote{ICU License - ICU 1.8.1 and later
+
+COPYRIGHT AND PERMISSION NOTICE
+
+Copyright (c) 1995-2003 International Business Machines Corporation and others
+
+All rights reserved.
+
+Permission is hereby granted, free of charge, to any person obtaining a
+copy of this software and associated documentation files (the
+"Software"), to deal in the Software without restriction, including
+without limitation the rights to use, copy, modify, merge, publish,
+distribute, and/or sell copies of the Software, and to permit persons
+to whom the Software is furnished to do so, provided that the above
+copyright notice(s) and this permission notice appear in all copies of
+the Software and that both the above copyright notice(s) and this
+permission notice appear in supporting documentation.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT
+OF THIRD PARTY RIGHTS. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR
+HOLDERS INCLUDED IN THIS NOTICE BE LIABLE FOR ANY CLAIM, OR ANY SPECIAL
+INDIRECT OR CONSEQUENTIAL DAMAGES, OR ANY DAMAGES WHATSOEVER RESULTING
+FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT,
+NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION
+WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+
+Except as contained in this notice, the name of a copyright holder
+shall not be used in advertising or otherwise to promote the sale, use
+or other dealings in this Software without prior written authorization
+of the copyright holder.
+
+All trademarks and registered trademarks mentioned herein are the property of their respective owners.}
+The OpenType feature support is currently incomplete, and the \TeX\ macro interface as well as details of the internal implementation are liable to change in future releases. See the OpenType sample files provided (in the Sample Files archive) for hints on how to work with OpenType fonts in \XeTeX.
+
+
+
+\section{Font style options}
+
+Any installed font may be accessed by using its full name (the "display name" as shown by Font Book, for example) in a |\font| command. However, it is also possible to access the bold and italic faces within a font family without giving their precise names; if the modifiers |/B| and/or |/I| are added to the name of the regular font, \XeTeX\ will find and load the associated bold or italic style (if available). Similarly, |/BI| (or |/B/I|) will load the bold-italic style.
+
+This feature makes it simpler to load the basic styles of a font family, without having to know the exact names in advance. For example:
+
+
+\begin{comment}
+\begin{tabular}{ll}
+\em Name specified&\em Font used\cr
+\showfont{"Palatino Linotype/B"}{Palatino Linotype Bold}
+\showfont{"Times New Roman/B"}{Times New Roman Bold}
+\showfont{"Times New Roman/I"}{Times New Roman Italic}
+\showfont{"Linux Libertine O/BI"}{Linux Libertine Black Italic}
+\end{tabular}
+\end{comment}
+
+
+
+Of course, in the case of families with additional weights (light, book, semibold, bold, ultra, etc.) it is still necessary to use full names to select the exact face desired from among all those available; the |/B| modifier will simply find whatever ATS considers to be the default bold face.
+
+\subsection{Optical sizes}
+\index{optical sizes}
+\index{XeLaTeX>optical sizes}
+
+With release 0.94 of \XeTeX, there is built-in support for optically-sized faces in font families, such as some of the Adobe Pro fonts. If a font family has optically-sized faces, with the OpenType |size| feature tag associating them, then \XeTeX\ will, by default, load the most appropriate face for the font size requested. 
+
+\begin{texexample}{Optical Sizing}{ex:opt sizing}
+\bgroup
+\egroup
+\end{texexample}
+
+\begin{comment}
+%\fontspec{Latin Modern Roman}
+%Automatic optical size \\
+%\scalebox{0.4}{\Huge
+%Automatic optical size}
+%
+%
+%\fontspec[OpticalSize=0]{Calibri 5 Regular}
+%Latin Modern optical sizes \\
+%\fontspec[OpticalSize=0]{Latin Modern Roman 8 Regular}
+%Latin Modern optical sizes \\
+%\fontspec[OpticalSize=0]{Latin Modern Roman 12 Regular}
+%Latin Modern optical sizes \\
+%\fontspec[OpticalSize=0]{Latin Modern Roman 17 Regular}
+%Latin Modern optical size
+\end{comment}
+
+\subsection{Latin Script}
+
+\subsubsection{Standard Ligatures}
+\index{ligatures}
+\index{ligatures>f-ligatures}
+\index{fonts>Old Standard}
+
+Some fonts such as |Old Standard| offer the standard f-ligatures (namely \ligatures{ff, fi, ffi} and \ligatures{Old Standard-Regular}{ffl}) present in most OpenType fonts and also
+\textit{fj} and \textit{ffj} ligatures which are required for proper
+typesetting in Nordic languages. All these ligatures are accessible via the
+\texttt{liga} feature, enabled by default in most applications which
+support it\footnote{Such as Adobe InDesign}. In |XeTeX| this can easily be enabled using \cmd{\fontspec}\oarg[Ligatures=Common]\marg{font name}. Most fonts would provide language-dependent exceptions according to the common convention usually
+applied to OpenType fonts. For example using |OldStandard|:
+
+\begin{itemize}
+\index{languages>Turkish}\index{languages>Crimean Tatar}
+\item Turkish, Azerbaijani and Crimean Tatar alphabets have two distinct
+versions of the letter \textit{i}, one dotted and the other dotless. For
+this reason the \textit{fi} and \textit{ffi} ligatures are not applied for
+those language systems to avoid the confusion which would be possible
+otherwise.
+
+\item No ligatures are enabled by default for German, since this language
+has very complex rules of ligature processing. You still can get them if
+you enable the \texttt{dlig} feature tag in addition to \texttt{liga}.
+
+\end{itemize}
+
+Note that the exceptions described above will work as expected only if your
+application can perform OpenType processing depending from the current
+language.
+
+
+\subsection{Stylistic Sets}
+\index{fonts>stylistic sets}
+
+Stylistic sets are used to enable a group of stylistic variant glyphs,
+designed to harmonize visually, and make them automatically substituted
+instead of the default forms. OpenType allows to specify up to 20 stylistic
+sets, marking them \texttt{ss01}, \texttt{ss02}\ldots{} \texttt{ss20}. The following stylistic sets, currently available in Old Standard, are relevant for the Latin script:
+
+\begin{description}
+
+\item[ss01] This set allows to automatically substitute small and capital
+\textit{s} and \textit{t} with comma accent (\U{0218}, \U{0219}, U+021A, U+021B)
+instead of the corresponding letters with cedilla (U+015E, U+015F, U+0162,
+U+0163), as required by Romanian typographic rules. The same substitution
+can be done automatically for Romanian and Moldavian languages, if only
+your application supports the \texttt{local} feature tag; otherwise you can
+use \texttt{ss01} instead. Of course this is important only if the glyph
+variants with commaaccent are not typed directly (which is also possible,
+as now those letterforms have separate Unicode codepoints).\index{languages>Moldavian}\index{languages>Romanian}
+
+\begin{center}
+\LARGE
+\begin{tabular}[c]{ccc}
+
+\fontspec[Script=Latin, Color=696969]{OldStandard-Regular}
+raţiune şi conştiinţă & ⇒ &
+\fontspec[Script=Latin,Language=Romanian]{OldStandard-Regular}
+raţiune şi conştiinţă \\
+\fontspec[Script=Latin,Color=696969]{OldStandard-Regular}
+\itshape raţiune şi conştiinţă & ⇒ &\itshape 
+\fontspec[Script=Latin,Language=Romanian]{OldStandard-Regular}
+raţiune şi conştiinţă \\
+
+\end{tabular}
+\end{center}
+
+\item[ss02] By enabling this feature tag you can get all occurrences of
+small and capital Latin \textit{g} automatically replaced with “insular”
+forms, sometimes preferred for typesetting Old English:
+
+\begin{center}
+\LARGE
+\begin{tabular}[c]{ccc}
+
+\fontspec[Script=Latin,Color=696969]{OldStandard-Regular}
+Gosfregð & ⇒ &
+\fontspec[Script=Latin,RawFeature=+ss02]{OldStandard-Regular}
+Gosfregð \\
+\fontspec[Script=Latin,Color=696969]{OldStandard-Regular}
+\itshape Gosfregð & ⇒ &\itshape 
+\fontspec[Script=Latin,RawFeature=+ss02]{OldStandard-Regular}
+Gosfregð \\
+
+\end{tabular}
+\end{center}
+
+This stylistic set is preserved for backwards compatibility: I no longer 
+recommend using it, as both capital and small insular \textit{g} now 
+have dedicated Unicode codepoints, and it is probably better to type them
+directly.
+
+\end{description}
+
+
+Insular form of a font face is commonly required in studies
+of medieval Texts. Fonts that are suitable for this is \texttt{Junicode} and \texttt{Old standard}. This is available with |TeX| distributions and can be found on common operating systems.\footnote{Junicode ("Junius-Unicode") is a free (SIL Open Font License) old-style serif typeface developed by Peter S. Baker of the University of Virginia. The design is based on a 17th-century typeface used in Oxford, England.}
+
+\texttt{Junicode} contains many special characters and ligatures for medievalists, along with numerous other Unicode glyphs. The font has OpenType features for advanced typesetting and includes true small caps.
+\index{ligatures>medieval}
+
+\begin{texexample}{Insular Forms}{ex:insularforms}
+\bgroup
+\huge
+\fontspec{Junicode}
+\addfontfeature{StylisticSet=2}
+\fox \\
+\egroup
+
+\bgroup
+\huge
+\fontspec{Old Standard}
+\addfontfeature{StylisticSet=2}
+\fox \\
+\egroup
+\end{texexample}
+
+The Junicode font was developed especially for medievalists, due to the need for a font to cover the large number of special characters and ligatures used in medieval manuscripts. The font has complete support for the Medieval Unicode Font Initiative version 1.0, and nearly complete support for version 2.0.
+Despite the specialization of Junicode for the needs of medievalists, the font is quite complete and supports a large number of Unicode characters. In the regular style, over 3000 characters are available. This makes Junicode useful for a wide range of languages that utilize the Latin alphabet, including scholarly texts and publications that require special diacritics not traditionally found in conventional fonts.
+
+\begin{description}\index{roman numbers>overline}
+\item[ss04, ss05] Overlined characters (ss04, ss05)
+
+Use “Style Set 4” (ss04) for roman numbers with high overline
+({\fontspec[StyleSet=highline]{Junicode} viii XCXV}) and “Style Set 5”
+(ss05) for lower-case roman numbers with medium-high overline
+({\fontspec[StyleSet=medline]{Junicode} viii dclx}). These Stylistic
+Sets will work only with letters used in Roman numbers.
+
+\begin{codeexample}[vbox]
+\fontspec[StyleSet=highline]{Junicode} iii, viii, XCXV, XXIV
+\end{codeexample}
+
+\item [ss06] Enlarged minuscules
+
+“Style Set 6” (ss06) produces enlarged minuscules, thus:
+{\fontspec{Junicode}\addfontfeature{StyleSet=enlarged} abcdefg.} Since the underlying
+text remains unchanged, enlarged text can be searched like normal
+text and this offers an advantage for reading texts on screen.
+
+\item[ss07] Deleted text (ss07)
+
+In medieval manuscripts, text is often deleted by placing a dot under each
+letter. Both Unicode and MUFI define many characters with dots below:
+{\fontspec{Junicode}\addfontfeature{StyleSet=underdot} if possible, you should avoid
+hard-coding these and instead use} “Style Set 7” (ss07).\index{MUFI}
+
+\item[ss08] Alternate yogh (ss08)
+
+For Middle English, always use the yogh at \U{021C} and \U{021D}  (Ȝȝ).
+Unicode also has an alternative yogh, which in Junicode has a
+flat top. If you prefer this, leave the underlying text the same and
+specify “Style Set 8” (ss08):
+
+{\fontspec{Junicode}
+  \addfontfeature{StyleSet=altyogh} Ȝȝ yogh 
+  \addfontfeature{StylisticSet=8}
+  \alphabet
+}.
+
+
+\item[ss14] Letters with hook above (ss14)
+
+The Unicode standard contains several precomposed characters with
+combining hook above in the Latin Extended Additional range
+(e.g. ẢỎ). These are used automatically when a vowel is followed by
+the diacritic U+0309. However, MUFI contains a series of precomposed
+characters in which the hook differs in shape and position. Use “Style
+Set 14” (ss14) for the MUFI characters (e.g.
+\addfontfeature{StyleSet=althook}ẢỎ E\char"0309).
+
+\item[ss15] E caudata \index{E caudata}
+
+Medieval Latin texts often use an {\itshape e} with tail, called
+{\itshape e caudata}; this represents Latin {\itshape ae} or {\itshape
+  oe}. Polish, Lithuanian, and several other languages also use this
+letter. While in modern editions of medieval texts the {\itshape
+  cauda} (or in Polish, the {\itshape ogonek}) is often attached to
+the very bottom of the letter, in modern Polish and Lithuanian
+printing it is attached to the end of the bottom stroke: Polish ę,
+medieval Latin {\fontspec[Script=Latin,StylisticSet=15,]{Junicode}\addfontfeatures{StylisticSet=15}ę}. The modern
+Polish version of the letter is acceptable for medieval Latin;
+however, if you prefer a centered {\itshape cauda}, use
+“Style Set 15” (ss15) from Junicode or other suitable font.
+
+A form of the letter e modified by the addition of a diacritical “tail”: \meta{ę}.
+Used in Latin for a long ē that represents an etymological \meta{ae} or \marg{oe} diphthong. (Both of which diphthongs had phonologically merged into ē by the early Mediaeval period.)
+Used in Middle and Early Modern Irish for e, ae, and ea.
+Used in Old Norse for /æ(ː)/, representing the Proto-Germanic */a/ (as opposed to the Proto-Germanic */e/).
+
+\item [ss18] Old Punctuation
+
+\marginpar{\texttt{oldpunct}\\
+\texttt{StylisticSet}}
+{\fontspec{Junicode}
+\addfontfeature{StyleSet=oldpunct, Contextuals=Alternate,
+    StylisticSet=18}
+
+
+Old books generally set
+extra space before the heavier punctuation marks (; : ! ?);
+they also leave extra space inside quotation marks and
+parentheses (e.g. “here”). For a similar effect, use Stylistic Set 18 (ss18). Make sure
+that Contextual Alternates are also on so that Junicode can correct
+the spacing in certain environments (but you will have to kern the English plural
+possessive apostrophe manually). Say? What is this?
+
+}
+
+\end{description}
+
+\subsection*{Letters with flourishes (swsh)}
+\index{swashes}
+For letters with flourishes (sometimes used for setting Middle English
+texts), use “Swash” (swsh):
+{\fontspec{Junicode}\addfontfeature{Style=Swash}c d f g k n r. Some capital swashes are also
+available in the italic face, based on those in Hickes's \textit{Thesaurus}:
+\addfontfeature{Style=Swash}\textit{A D J Q Æ
+  The stylish Actor}  
+
+
+}.
+
+Windows does include several OpenType fonts that include these advanced features.  Calibri, Cambria, Constantia, and Corbel all include multiple number forms, while Consolas, Palatino Linotype, and Gabriola (Windows 7 only) include all the OpenType features. 
+
+{
+\Large
+\fontspec{Gabriola.ttf}
+\addfontfeature{StylisticSet=2}
+\lorem
+
+\addfontfeature{StylisticSet=3}
+\lorem
+
+\addfontfeature{StylisticSet=4,Contextuals=Alternate}
+\lorem
+
+\addfontfeature{StylisticSet=5,Contextuals=Alternate}
+\lorem
+}
+
+{
+\large
+\fontspec{Cambria}
+
+\lorem
+
+\textit{\fox}
+\textbf{\fox}
+\textsc{\fox}
+}
+
+
+
+\subsection*{German}
+\newcommand{\salt}[1]{{\addfontfeatures{Alternate=0}{#1}}}
+\newcommand{\saltb}[1]{{\addfontfeatures{Alternate=1}{#1}}}
+Ich ſag üch aber / minen fründen / Foechtēd üch nit von denen die den
+lyb toedend / vnd darnach nichts habennd das ſy mer thuͤgind. Ich wil
+üch aber zeigē von welchem ir üch \saltb{f}ochten ſollend. Foͤꝛchtend üch voꝛ
+dem / der / nach dem er toͤdet hat / ouch macht hat zewerffen inn die
+hell: ja ich ſag üch / voꝛ dem ſelben \saltb{f}ochtēd üch. Koufft man nit
+fünff Sparen vm̄ zween pfennig\\[1ex]
+{\Large Die straße ist zu schmal für autos. Wohin fährt dieser Zug?}\\
+DIE STRAẞE IST ZU SCHMAL FÜR AUTOS.
+{\itshape DIE STRAẞE IST ZU SCHMAL FÜR AUTOS.}
+{\bfseries DIE STRAẞE IST ZU SCHMAL FÜR AUTOS.}
+{\itshape\bfseries DIE STRAẞE IST ZU SCHMAL FÜR AUTOS.}\\[1ex]
+{\scshape Die straße ist zu schmal für autos.
+\bfseries Die straße ist zu schmal für autos.}
+{\itshape Use c2sc for small cap Eszett:}
+{\addfontfeature{Letters=UppercaseSmallCaps}DIE STRAẞE IST ZU SCHMAL FÜR AUTOS.
+\bfseries DIE STRAẞE IST ZU SCHMAL FÜR AUTOS.}
+
+
+\subsection*{Old Icelandic}
+\index{languages>Old Icelandic}
+\fontspec[Language=Icelandic, StylisticSet=1]{Junicode}
+{\itshape For Nordic shapes of þ and ð, specify the Icelandic
+language, if your application has good language support; or apply the OpenType
+ss01 (Style Set 1) feature.}\\[1ex]
+Um haustit sendi Mǫrðr Valgarðsson orð at Gunnarr myndi vera einn heimi, en
+lið alt myndi vera niðri í eyjum at lúka heyverkum. Riðu þeir Gizurr Hvíti ok
+Geirr Goði austr yfir ár, þegar þeir spurðu þat, ok austr yfir sanda til Hofs.
+Þá sendu þeir orð Starkaði undir Þríhyrningi; ok fundusk þeir þar allir er at
+Gunnari skyldu fara, ok réðu hversu at skyldi fara.
+
+
+
+\def\test#1#2{%
+#2 $\to$ {\addfontfeature{#1} #2}\\}
+\fontspec{Linux Libertine O}
+\test{Ligatures=Historic}{strict}
+
+It takes a while to absorb all the font terminology and to get
+used to all the font features, but truly \XeTeX\ has cast
+\tex into the forefront of text rendering and modern
+techniques of font typography. 
+
+
+It is possible to override this behavior by adding a |/S=#| modifier to the font name, where |#| is a specific optical size (in points). This will load the face appropriate to the given optical size, regardless of the actual size to which the font is being scaled. A size of 0 may be used to disable optical sizing altogether, simply loading the named font. Thus:
+
+\begin{comment}
+\begin{quote}
+\begin{tabular}{ll}
+\em Name and size requested&\em Font used\cr
+\showfont{"Brioso Pro/S=7" at 9pt}{BriosoPro-Capt}
+\showfont{"Brioso Pro/S=10" at 9pt}{BriosoPro-Regular}
+\showfont{"Brioso Pro/S=18" at 9pt}{BriosoPro-Subh}
+\showfont{"Brioso Pro/S=36" at 9pt}{BriosoPro-Disp}
+\showfont{"Brioso Pro Subhead" at 9pt}{BriosoPro-Capt}
+\showfont{"Brioso Pro Subhead/S=0" at 9pt}{BriosoPro-Subh}
+\end{tabular}
+\end{quote}
+\end{comment}
+
+
+(Incidentally, this also illustrates that some fonts may be known by multiple names; "Brioso Pro" is also called "BriosoPro-Regular", for example, and "Brioso Pro Subhead" is also "BriosoPro-Subh". This seems to occur primarily with OpenType CFF fonts, where Apple Type Services apparently sees the PostScript font name as well as the "full" name. \XeTeX\ will accept either form.)
+
+\section{Output}
+
+Because \XeTeX\ is so closely tied to the AAT font machinery, the concept of a \docfileextension{DVI} (device-independent) output file is not very useful—a typeset \XeTeX\ document is inherently system-specific. If any \XeTeX\ features (AAT fonts or graphics inclusion; see below) are used, the source document will not work on a standard \TeX\ system.
+
+\XeTeX\ is implemented as a command-line tool, |xetex|, similar to standard Unix-based \TeX\ tools. The |xetex| tool writes a form of "extended DVI" (|.xdv|) data to describe the typeset pages. A separate tool, |xdv2pdf|, can read this |.xdv| data and convert it to PDF, which may then be viewed or printed on any platform.
+
+By default, |xetex| automatically executes |xdv2pdf| and pipes its |.xdv| output to the converter; therefore, in effect the default output format is PDF. It is possible to suppress the conversion and generate an |.xdv| file instead by specifying the |-no-pdf| option to |xetex|. This is generally much faster, as the PDF generation process is relatively slow; but the |.xdv| file cannot be directly viewed or printed. However, when multiple typesetting runs are required (such as with \LaTeX\ and similar formats), it is more efficient to specify |-no-pdf| for all runs except the last.
+
+\subsection{\texttt{\char`\\special} commands}
+
+\subsubsection{Color}
+
+The |xdv2pdf| driver supports several |\special|s to allow color to be used in \XeTeX\ documents. These are:
+{\obeylines \parskip0pt \parindent2\parindent
+	|\special{x:textcolor=|{\em color}|}|
+	|\special{x:textcolorpush}|
+	|\special{x:textcolorpop}|
+	|\special{x:rulecolor=|{\em color}|}|
+	|\special{x:rulecolorpush}|
+	|\special{x:rulecolorpop}|\par}\noindent
+where {\em color} is an RGB color value expressed as 6 hexadecimal digits. If the color value is omitted, the color is reset to the default (which may not be black, in the case of ATSUI fonts, as |color=|{\em color} is a possible option in the |\font| command). The |push| and |pop| forms of the |\special|s allow color settings to be saved and restored using a simple stack mechanism, which may be simpler than explicitly restoring the previous color after a local change.
+
+Beginning with release 0.7, color values may also be given as RGBA values with 8 hexadecimal digits, thus allowing transparency effects.
+
+The |xdv2pdf| driver also supports a set of color |\special|s based on those used in drivers such as |dvips| and |dvipdfm|. These begin with the keyword |color|, followed by any of a number of color commands:
+{\obeylines \parskip0pt \parindent2\parindent
+	|\special{color push}|
+	|\special{color pop}|
+	|\special{color rgb| {\em R G B}|}|
+	|\special{color cmyk| {\em C M Y K}|}|
+	|\special{color hls| {\em H L S}|}|
+	|\special{color hsv| {\em H S V}|}|
+	|\special{color hsb| {\em H S B}|}|
+	|\special{color gray| {\em Gray}|}|
+	|\special{color |{\em colorname}|}|\par}\noindent
+The color value can be expressed according to a number of different color models, with one, three, or four values in the range 0.0–1.0, or one of the predefined color names known to the |dvips| driver can be given. In addition, any of these can be followed by the keyword |alpha| and an alpha-channel value in the range 0.0–1.0, for transparency. These |\special| commands set the color for both text and rules together.
+
+\subsubsection{Hyperlinks and outlines}
+
+While \XeTeX\ does not support the PDF-specific extensions of pdf\TeX, some PDF features can be accessed via |\special|s similar to those used by the |dvipdfm| driver. When it generates a PDF file, |xdv2pdf| writes an auxiliary file with the extension |.marks| that contains a record of all |\special| commands that begin with the text |pdf:|. Each such |\special| is written with information on its exact location (page number and ({\em x, y}) coordinates). A Perl script |xdv2pdf_mergemarks| is then automatically executed, and has the opportunity to integrate information from the marks file into the main PDF document.
+
+The |xdv2pdf_mergemarks| script attempts to handle the |\special|s used by the |dvipdfm| driver to implement document outlines (bookmarks) and some kinds of hyperlinks, to support the \LaTeX\ |hyperref| package with the |dvipdfm| output option. The |.marks| file is deleted after processing; to retain it for inspection or further processing, modify the script to remove the |unlink| command.
+
+\subsubsection{Transforms and other effects}
+
+The |xdv2pdf| driver also supports |\special|s for modifying the transformation matrix used in producing the PDF output. This allows rotation, reflection, scaling and skewing of arbitrary \TeX\ output. The available commands are:
+{\obeylines \parskip0pt \parindent2\parindent
+	|\special{x:gsave}|
+	|\special{x:grestore}|
+	|\special{x:scale |{\em X Y}|}|
+	|\special{x:rotate |{\em D}|}|
+	|\special{x:shadow(|{\em X}|,|{\em Y}|),|{\em blur}|}|
+	|\special{x:colorshadow(|{\em X}|,|{\em Y}|),|{\em blur}|,|{\em color}|}|
+	|\special{x:backgroundcolor=|{\em color}|}|\par}\noindent
+The |transforms.tex| sample file demonstrates use of most of these |\special|s.
+
+\section{\TeX\ language extensions}
+
+\subsection[Identifying the XeTeX version]{Identifying the \XeTeX\ version}
+
+\ifx\XeTeXversion\undefined \def\XeTeXversion{0} \def\XeTeXrevision{.[unknown pre-0.5]} \fi
+
+\the\XeTeXversion 
+
+There are several additions to the \TeX\ language in \XeTeX. 
+Beginning with release 0.5, there are commands |\XeTeXversion| (a number) and |\XeTeXrevision| (a string, beginning with a period) that make it possible for a document to detect which version of the |xetex| processor is running. (This document was typeset using \XeTeX\ version \number\XeTeXversion\XeTeXrevision.)
+
+\subsection{\eTeX\ features}
+
+\XeTeX\ includes the TeX--XeT extension from \eTeX, which provides the |\beginL|, |\endL|, |\beginR|, and |\endR| primitives to control bidirectional typesetting (for Arabic, Hebrew, and similar languages). Note that \XeTeX\ is also affected by the inherent directionality of Unicode characters; therefore, it is not actually necessary to use |\beginR...\endR| around a word in an Arabic font, for example, to have it appear correctly. However, these commands are required for the overall layout of right-to-left or bidirectional paragraphs to work properly. (Note that |\TeXXeTstate=1| is required to enable these commands.)
+
+Other \eTeX\ features such as additional registers (beyond 255) and primitives are also available in \XeTeX; see the documentation of \eTeX\ for details. A short reference manual can be found at \url{http://www.staff.uni-mainz.de/knappen/etex_ref.html}.
+
+\subsection{Graphics support}
+
+To support graphics inclusion, \XeTeX\ provides the |\XeTeXpicfile| command. Normally, in other \TeX\ systems, this is done with the |\special| command. However, |\XeTeXpicfile| offers the advantage that \XeTeX\ can determine the size of the picture, and thus macros can be written to fit the picture to a certain space or create the needed space for the picture, bypassing the manual picture-measuring process otherwise needed. Specifically, |\XeTeXpicfile| is used as follows:\hfil\break\indent\indent
+  |\XeTeXpicfile <filename> [options]|\hfil\break
+where {\em<filename>} is the name (full pathname, or relative to the main document) of a graphics file. Most graphic file formats are supported (using QuickTime's Graphic Importer facility).
+
+The [options] in the |\XeTeXpicfile| command use the following keywords:{\obeylines \parskip0pt \parindent2\parindent
+  |width| <dimen>
+  |height| <dimen>
+  |scaled| <scalefactor>
+  |xscaled| <scalefactor>
+  |yscaled| <scalefactor>
+  |rotated| <degrees>\par}\noindent
+Scaling and rotation operations are executed in the order specified. If one of |width| or |height|, but not the other, is specified at any stage, the other dimension is scaled in proportion. If both absolute size and |scaled| are used at the same stage in the transformation sequence, not separated by a rotation, the size is set as requested and the scale factor is ignored.
+
+The options are unlike keys in most of the \latexe world, you just write them next to the command.
+
+\begin{texexample}{XeTeX graphics}{}
+\XeTeXpicfile "./images/amato.jpg" width 3cm
+\end{texexample}
+
+The final result of a |\XeTeXpicfile| command is an object which can be included in the text being typeset just like a character, albeit usually a rather large one. It could be thought of as a box, though it cannot be unboxed. It can, however, be put inside a normal \TeX\ box register, and in fact this is often desirable. After saying, for example,\hfil\break
+\indent\indent |\box0=\hbox{\XeTeXpicfile "my-pic.jpg"|\hfil\break
+\indent\indent\indent\indent |scaled 750 rotated 45}|\hfil\break
+you can find the dimensions of the graphic by examining the width and height of box 0. (The depth will always be zero.) Your macros can then arrange to place the picture suitably on the page. (See the |PicFileSample.tex| file.)
+
+
+
+There is also a |\XeTeXpdffile| command. This is similar to |\XeTeXpicfile|, but recognizes an additional option:{\obeylines\parskip0pt\parindent2\parindent
+	|page| <number>\par}\noindent
+This specifies the page to be included from the PDF file (default is the first page). Negative numbers can be used to indicate pages relative to the end of the file; thus |page -2| means the second to last page. The |page| option, if used, must be specified as the {\em first} keyword after the filename, before any transformations.
+
+Note that PDF files can also be included by the |\XeTeXpicfile| command, but this has two significant drawbacks: they will be rendered as lower-resolution graphics, and only the first page is available.
+
+In versions before 0.5, these commands were named |\picfile| and |\pdffile| respectively, and were always enabled. Beginning with release 0.5 of \XeTeX, the command names have been changed to reduce the likelihood of clashes with names used in macro packages or other extensions. In addition, these commands (like other \eTeX\ extensions) are only available when the \XeTeX\ engine is running in “extended” mode (activated by an initial |*| when the format file is created). Note that the format files included with \XeTeX\ have extended mode active, so these commands will normally be available.
+
+For use with \LaTeX, there is a "driver" file |xetex.def| that maps features from the standard |graphics| packages onto these \XeTeX\ primitives.
+
+\subsection{Font information primitives}
+
+\CMDI{\XeTeXglyph}
+New in \XeTeX\ 0.7 are a set of commands that allow authors or macro writers to query AAT fonts to determine the available font features, their names, and default settings. Pending real documentation, see the sample file |AAT-info.tex|, which uses these commands to generate a page listing the features supported by a given font. There is also a |\XeTeXglyph| command that allows an arbitrary glyph, identified by glyph ID number, to be rendered from any font.
+
+Similarly, release 0.84 and later includes commands that can determine the available script, language, and feature tags in OpenType fonts. These are illustrated by the |OpenTypeInfo.tex| sample file, which iterates over and prints all the tags supported by a given font. Example~\ref{xetexglyph} counts the glyphs in a given font.\url{http://tex.stackexchange.com/questions/37412/how-to-access-webdings-opentype-font-in-xelatex}. Do note that the \cs{char} would not work in this case.
+
+\begin{texexample}{TeXeXglyph}{ex:xetexglyph}
+\raggedright
+%\newcounter{glyphcount}
+\setcounter{glyphcount}{0}
+\font\myfont = "Webdings"
+\whiledo
+{\value{glyphcount}<\XeTeXcountglyphs\myfont}
+{\arabic{glyphcount}:~
+{\myfont\XeTeXglyph\arabic{glyphcount}}\quad
+\stepcounter{glyphcount}}
+
+\end{texexample}
+
+\CMDI{\XeTeXOTcountscripts}
+\font\title="Calibri" at 12pt
+\font\tenrm="Calibri" at 10pt \tenrm
+\font\tentt="Arial" at 10pt
+\def\myfontname{OldStandard-Regular}
+\font\testfont="\myfontname" at 12pt
+\def\fourcharcode#1{\begingroup
+ \count0=#1\count1=\count0
+ \ifnum\count0=0
+  <default>%
+ \else
+  \tentt
+  '%
+  \divide\count0 by "1000000
+  \char\count0
+  \multiply\count0 by "1000000
+  \advance\count1 by -\count0
+  \count0=\count1
+  \divide\count0 by "10000
+  \char\count0
+  \multiply\count0 by "10000
+  \advance\count1 by -\count0
+  \count0=\count1
+  \divide\count0 by "100
+  \char\count0
+  \multiply\count0 by "100
+  \advance\count1 by -\count0
+  \ifnum\count1=32 \ \else \char\count1 \fi
+  '%
+ \fi
+ \endgroup
+}
+
+\newcount\scriptcount
+\newcount\scriptindex
+\newcount\scripttag
+\newcount\langcount
+\newcount\langindex
+\newcount\langtag
+\newcount\featurecount
+\newcount\featureindex
+\newcount\featuretag
+
+\leftline{\title OpenType Layout features found in \myfontname:}
+\nobreak\bigskip
+
+\scriptcount=\XeTeXOTcountscripts\testfont
+\ifnum\scriptcount=0 \noindent None\par\fi
+
+\loop
+ \ifnum\scriptindex<\scriptcount
+  \scripttag=\XeTeXOTscripttag\testfont\scriptindex
+  \noindent script = \fourcharcode{\scripttag}\endgraf\nobreak
+  \langcount=\XeTeXOTcountlanguages\testfont\scripttag
+  \advance\langcount by 1 
+  {\loop
+    \langtag=\XeTeXOTlanguagetag\testfont\scripttag\langindex
+    \indent language = \fourcharcode{\langtag}\endgraf\nobreak
+    \featurecount=\XeTeXOTcountfeatures\testfont\scripttag\langtag
+    {\indent\indent \hangindent=3\parindent \hangafter=1 features = \loop
+      \featuretag=\XeTeXOTfeaturetag\testfont\scripttag\langtag\featureindex
+      \fourcharcode{\featuretag}
+      \advance\featureindex by 1
+      \ifnum\featureindex<\featurecount \repeat\endgraf}
+    \advance\langindex by 1
+  \ifnum\langindex<\langcount \medskip \repeat}
+  \advance\scriptindex by 1
+  \bigskip \repeat
+
+
+
+
+\CMDI{\XeTeXOTcountscripts}\marg{font cmd}
+
+The script count of a font can be accessed via the \cs{XeTeXOTcountscripts}\marg{font cmd}. The value needs to
+be allocated to a count register, before it can be accessed.
+
+\begin{texexample}{Number of Scripts}{ex:noscripts}
+\font\testfont="Arial" 
+\scriptcount=\XeTeXOTcountscripts\testfont
+\ifnum\scriptcount=0 \noindent None\par\fi
+
+Number of scripts = \the\scriptcount
+\end{texexample}
+
+Similarly to the script count commands, the language count can be accessed using:
+
+\CMDI{\XeTeXOTcountlanguages}\meta{font}\meta{script tag}
+
+Expands to the number of languages in the script of \meta{font}. This is a more complicated command to use as one needs to get the \cs{scripttag}. It will not count all the languages available, which are termed ``scripts".
+
+
+\begin{texexample}{Number of Scripts}{ex:nolanguages}
+\font\testfont="OldStandard-Regular" 
+\scripttag=\XeTeXOTscripttag\testfont1
+\langcount=\XeTeXOTcountlanguages\testfont\scripttag
+\ifnum\langcount=0 \noindent None\par\fi
+
+Number of languages = \the\langcount
+\end{texexample}
+
+There are similar commands of all the features of a particular font.
+See \citet{xetexreference} for further details and commands. 
+
+\subsection{Input encodings}
+\label{sec:encoding}
+
+Although \XeTeX\ is designed as a Unicode-based system, and access to standard OS X fonts is via Unicode character code values, it is possible to use input text files in other legacy encodings. By default, \XeTeX\ examines each input file and reads it as either UTF-16 (if a UTF-16 Byte Order Mark is found, or if the presence of null byte values makes the text look like UTF-16 data), or else as UTF-8. Plain ASCII text is of course also valid UTF-8, so this can be read equally well with no further work.
+
+However, if the input text is 8-bit data in an encoding such as Mac OS Roman, ISO Latin 1, etc., it will not be read correctly in this way; byte codes above 127 will be taken as beginning UTF-8 sequences, not as individual codes in their own right. And because this happens at the file-reading level, it is not possible to reinterpret the codes at the \TeX\ macro level, as is done with legacy packages such as |inputenc| for \LaTeX.
+
+\CMDI{\XeteXinputencoding}
+
+To overcome this, and allow existing 8-bit text to be read without requiring conversion to Unicode before running \XeTeX, it is possible to switch the input encoding using:
+{\obeylines \parskip0pt \parindent2\parindent
+  |\XeTeXinputencoding "|{\em charset-name}|"|\par}\noindent
+(introduced in release 0.9). The {\em charset-name} here is the name of a character set recognized by the ICU library; see \url{http://www.iana.org/assignments/character-sets} for a large registry of names. Most of the expected forms such as |"mac"| (Mac OS Roman), |"cp1252"| (Windows codepage 1252, Western European), |"shift-jis"| (e.g., for Japanese), and many other codepage names and numbers should be recognized.
+
+In addition, there is a special "encoding" called |"bytes"| which can be used for legacy support. After |\XeTeXinputencoding "bytes"|, the byte values 0–255 will be mapped directly to the internal \XeTeX\ character codes 0–255. This will not generally be correct Unicode, but it should allow existing \TeX\ macro packages that expect this range of character codes to be used for further interpretation.
+
+The |\XeTeXinputencoding| command changes the interpretation of the {\em current input file} only; to be exact, it affects how text is read from the file, beginning at the {\em following} line. For a legacy-encoded file to be read correctly, the appropriate encoding command should be included near the beginning, with only standard ASCII characters preceding it.
+
+An additional command |\XeTeXdefaultencoding| works similarly, except that instead of changing the mapping used to read the {\em current} input file, it changes the {\em initial} mode that will be used for newly-opened files. This includes files opened with |\openin| as well as |\input|. The default behavior may be restored with |\XeTeXdefaultencoding "auto"|.
+
+\subsection{Line-breaking without spaces}
+\index{XeLaTeX>line breaking}
+
+\CMDI{\XeTeXlinebreaklocale}
+
+Normally, \TeX\ will only break lines at inter-word spaces, or according to its hyphenation rules. A new feature introduced in \XeTeX\ version 0.91 is support for line-breaking in scripts such as Chinese that are written without inter-word spaces. Additional line-break positions in such scripts will be found if a {\em line-break locale} is specified (the rules may differ between locales). The \XeTeX\ primitives used are:%
+{\obeylines \parskip0pt \parindent2\parindent
+  |\XeTeXlinebreaklocale| |"|{\em locale-id}|"|
+  |\XeTeXlinebreakskip =| {\em glue-specification}
+  |\XeTeXlinebreakpenalty =| {\em integer}\par}\noindent
+The locale ID is a POSIX standard identifier recognized by the ICU library; for example, |en_US| for the US English locale, or |th_TH| for Thai, or |zh_HK| for Hong Kong Chinese. Most locales simply use the default Unicode line-break rules based on character properties, so in practice even |\XeTeXlinebreaklocale "en"| is sufficient for East Asian line-breaking to work. Note that Thai, however, has additional rules that will only be activated if a Thai locale is specified.
+
+
+\CMDI{\XeTeXlinebreakskip}
+
+\CMDI{\XeTeXlinebreakpenalty}
+
+The parameters |\XeTeXlinebreakskip| and |\XeTeXlinebreakpenalty| (both zero by default) control what happens at the locale-dependent intercharacter line-break locations. A typical |\XeTeXlinebreakpenalty| setting might be 100, so that there is a slight preference for line-breaks at spaces if possible. If the text is to be justified (and there are no "real" spaces available for stretching), then |\XeTeXlinebreakskip| should be given some stretchability; for example, |\XeTeXlinebreakskip=0pt plus 1pt|.
+
+
+\CMDI{\XeTeXlinebreaklocale} 
+
+|\XeTeXlinebreaklocale| is a global setting, not affected by \TeX's grouping. To disable such line-breaking and revert to standard \TeX\ behavior, set the locale to an empty string: |\XeTeXlinebreaklocale ""|.
+
+\section{Limitations}\index{ATSUI}
+
+The marriage of \TeX\ and ATSUI is not without its problems; a few issues are mentioned here, though there are doubtless many others to be encountered. This is a "work in progress" and many features may change in future versions.
+
+Versions of \XeTeX\ before version 0.3 (like all versions of the earlier \TeXgX), did not support automatic hyphenation when using AAT-based fonts. This feature is now operational, using the standard \TeX\ hyphenation algorithm. (Note, however, that non-English hyphenation tables will need to be converted to Unicode before they can be used.) This means that version 0.3 is liable to format paragraphs differently from earlier versions, even when using the exact same fonts, unless hyphenation is suppressed using \TeX\ commands.
+
+Math typesetting works as expected, but as math symbol and extension fonts must have additional metric information, math mode can only be expected to work with |.tfm|-based fonts. There has been further discussion of these issues on the \href{http://tug.org/mailman/listinfo/xetex}{\XeTeX\ mailing list}.
+
+Currently, line breaking and hbox construction in \XeTeX\ with non-|.tfm| fonts is based on the width of each word, measured individually by ATSUI. This means that it is not perfect in cases where the width of a word changes significantly depending whether it is at a line end or in the middle of a line. We have not found this to be a serious problem in actual practice, but this would depend on the characteristics of the fonts used and the kind of material being typeset. In general, \XeTeX’s output is best when \TeX\ is able to pass relatively long runs of text, rather than individual characters or words, along to ATSUI for output, so that ATSUI's spacing and justification can work with enough text at a time.
+
+For standard \TeX\ documents using only |.tfm|-based fonts, \XeTeX\ should provide the same results as a standard version of \TeX. However, it will normally be considerably slower than a standard \TeX, so it is not particularly recommended unless you will be using its special features—in particular, the AAT capabilities. For completely standard \TeX\ documents, a standard \TeX\ implementation such as teTeX will be more efficient.
+
+\section{Summary}
+
+
+\XeTeX has brought the full power of modern font technology to the \tex world. This is not without its problems, selecting a set of fonts for a document is actually the work of the book interior designer and this cannot be expected to be done correctly by the occasional writer. The |phd| package comes with a set
+of styles for this purpose. The difficulty is when the book or article contains maths, as the range of maths fonts available is rather limiting. I am not too sure how best multi-lingual texts can be handled more efficiently. Some ideas are to handle them via styles, with styles which still are to be defined.
+
+
+
+Before you delve deeply into this topic, my suggestion use your system default editor and experiment with fonts there. Later when you are happy with the results move the font definitions to your |.tex| document. Not all features are available with all fonts and expect to spend sometime on fixing a document that is prone to crashing.
+
+Use \utfviii both for input and output.
+
+\CMDI{\XeTeXfonttype}
+Expands to a number corresponding to which renderer is used for a \meta{font}:
+
+0 for TEX (a legacy TFM-based font);\\
+1 for AAT;\\
+2 for OpenType;\\
+3 for Graphite.\\
+
+In Example~\ref{ex:fonttypetest} taken from \citep{xetexreference} we define a command:
+
+\CMDI{\whattype}\meta{font name}
+
+which can be used to determine the type of the font being used.
+
+\begin{texexample}{Font type test}{ex:fonttypetest}
+{
+\newcommand\whattype[1]{%
+  \texttt{\fontname#1} is rendered by
+  \ifcase\XeTeXfonttype#1\TeX\or AAT\or OpenType\or Graphite\fi.\par}
+\font\1="cmr10"
+\font\2="Cambria"
+\font\3="Times New Roman"
+\whattype\1 \whattype\2 \whattype\3
+}
+\end{texexample}
+
+\newenvironment{optdesc}
+  {\begin{description}[font=\ttfamily,style=nextline,leftmargin=1.5cm]}
+  {\end{description}}
+
+\subsubsection{Options for all fonts}
+
+Some font features may be applied for any font. These are
+
+\begin{description}
+\item[mapping=\textsl{<font map>}] 
+Uses the specified font mapping for this font. This uses the TECKit
+engine to transform unicode characters in the last-minute processing
+stage of the source. For example, |mapping=tex-text| will enable the
+classical mappings from ugly ascii |``---''| to proper typographical
+glyphs “—”, and so on.
+
+\item[color={\slshape RRGGBB}{[{\slshape TT}]}] 
+Triple pair of hex values to specify the colour in RGB space, with an
+optional value for the transparency.
+
+\item[letterspace=$x$] 
+Adds $x/S$ space between letters in words, where $S$ is the font size.
+
+\item[embolden=$x$]
+Increase the envelope of each glyph by the set amount (this makes the
+letters look ‘more bold’). $x=0$ corresponds to no change; $x=1.5$ is a
+good default value.
+
+\item[extend=$x$]
+Stretch each glyph horizontally by a factor of $x$ (i.e., $x=1$
+corresponds to no change).
+
+\item[slant=$x$]
+Slant each glyph by the set amount. $x=0$ corresponds to no change;
+$x=0.2$ is a good default value. The slant is given by $x=R/S$ where $R$
+is the displacement of the top edge of each glyph and $S$ is the point
+size.
+
+\end{description}
+
+\begin{texexample}{Bounds}{bounds}
+\def\shadebbox#1{%
+\leavevmode\rlap{%
+  \dimen0=\fontcharwd\font`#1%
+  \edef\gid{\the\XeTeXcharglyph`#1}%
+  \advance\dimen0 by -\XeTeXglyphbounds1 \gid
+  \advance\dimen0 by -\XeTeXglyphbounds3 \gid
+  \kern\XeTeXglyphbounds1 \gid
+  \special{color push rgb 0.7 .7 0.66667}%
+  \vrule width \dimen0
+         height \XeTeXglyphbounds2 \gid
+         depth \XeTeXglyphbounds4 \gid
+  \special{color pop}%
+  \kern\XeTeXglyphbounds3 \gid}%
+  #1}
+	
+\noindent
+\font\x="Times New Roman" at 24pt \x
+\shadebbox{A} \shadebbox{W} \shadebbox{a} \shadebbox{f}
+\shadebbox{;} \shadebbox{*} \shadebbox{=}
+\end{texexample}
+
+{
+\noindent\color{thered}\cmd{\suppressfontnotfounderror}\marg{integer}
+}
+
+\noindent When set to zero (default) if a font is loaded that cannot be
+located by xetex, an error message results and typesetting is
+halted. When set to one, this error message is
+suppressed and the font control sequence being defined is set to
+\cs{nullfont}.
+
+
+\begin{texexample}{supress errors}{err}
+%%\suppressfontnotfounderror=1
+%%\font\x="ImpossibleFont" at 10pt
+%%\ifx\x\nullfont
+%%  \font\x="Georgia" at 10pt
+%%\fi
+%%
+%%\x This would be ‘ImpossibleFont’, if it existed.
+\end{texexample}
+
+Letters
+\fontspec[Script=Latin]{OldStandard-Regular}
+
+10330 \U{10348} GOTHIC LETTER AHSA \char"10348 \char"10338\\
+
+\thorn
+
+\subsection*{Gothic}
+
+Jabai auk ƕas gasaiƕiþ þuk þana habandan kunþi in galiuge stada
+anakumbjandan, niu miþwissei is siukis wis\-an\-dins timrjada du
+galiugagudam gasaliþ matjan?  fraqistniþ auk sa unmahteiga ana
+þeinamma witubnja broþar in þize Xristus gaswalt.  swaþ~þan
+frawaurkjandans wiþra broþruns, slahandans ize gahugd siuka, du
+Xristau fra\-waur\-keiþ.\\
+
+{\fontspec{Junicode}\noindent\small\itshape Use ss19 to produce Gothic letters
+  automatically from transliterated text and ss20 to produce Latin
+  letters from Gothic. Available in all four faces.}\\[1ex]
+{\fontspec{Junicode}\addfontfeature{Script=Latin}jabai auk ƕas gasaiƕiþ þuk þana
+  habandan kunþi in ga\-liuge stada anakumbjandan, niu miþwissei is
+  siukis wis\-an\-dins timrjada du galiugagudam gasaliþ matjan?
+  {\bfseries jabai auk ƕas gasaiƕiþ þuk þana habandan kunþi in
+    ga\-liuge stada anakumbjandan, niu miþwissei is siukis
+    wis\-an\-dins timrjada du galiugagudam gasaliþ matjan?}
+  \textit{abgdeqzh \bfseries abgdeqzh}}
+
+Gothic Transliteration
+
+Two additional letters are used in Gothic transliteration: \textit{þ}
+(þiuþ, thorn) and \textit{ƕ} (hwair). Both of them are available in Old
+Standard:
+
+\begin{quote}
+\large
+
+\fontspec[Script=Latin]{OldStandard-Regular}
+Akei ik sunja izwis qiþa: batizo ist izwis ei ik galeiþau; unte jabai ik ni
+galeiþa, parakletus ni qimiþ at izwis; aþþan jabai gagga, sandja ina du
+izwis. Jah qimands is gasakiþ þo manaseþ bi frawaurht jah bi garaihtiþa
+jah bi staua; bi frawaurht raihtis, þata þatei ni galaubjand du mis; iþ bi
+garaihtiþa, þatei du attin meinamma gagga, jah ni þanaseiþs saiƕiþ mik;
+iþ bi staua, þatei sa reiks þis fairƕaus afdomiþs warþ.
+
+\smallskip
+
+\itshape
+Akei ik sunja izwis qiþa: batizo ist izwis ei ik galeiþau; unte jabai ik ni
+galeiþa, parakletus ni qimiþ at izwis; aþþan jabai gagga, sandja ina du
+izwis. Jah qimands is gasakiþ þo manaseþ bi frawaurht jah bi garaihtiþa
+jah bi staua; bi frawaurht raihtis, þata þatei ni galaubjand du mis; iþ bi
+garaihtiþa, þatei du attin meinamma gagga, jah ni þanaseiþs saiƕiþ mik;
+iþ bi staua, þatei sa reiks þis fairƕaus afdomiþs warþ.
+
+\end{quote}
+
+
+
+
+
+
+
+
+
+
+
+

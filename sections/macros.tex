@@ -1,13 +1,19 @@
-\bgroup
 \chapter{PROGRAMMING MACROS}
-
+\addtocimage{-10pt}{-40pt}{../graphics/harnett.jpg}
+\pagebreak
 \setlength\columnsep{1.5em}
 
 \thispagestyle{plain}
+{\centering  \includegraphics[width=0.7\linewidth]{./graphics/harnett.jpg}\par}
 
-
-\section{Getting started with macros}
-
+\newcommand*{\newacronym}[1]{{New acronym: [#1]\par}}
+\newcommand*{\newacronyms}{%
+  \let\do\newacronym
+  \docsvlist
+}
+\vspace{1.5\baselineskip}
+{\centering \Large\bf GETTING STARTED WITH MACROS\par}
+\bigskip
 
 \begin{multicols}{2}
 \lettrine{P}{rogramming} with \alltex is done through macros. \tex has a macro programming language,
@@ -16,90 +22,105 @@ and most widely used \tex macro package is \latex.
 (This is not quite accurate. Although originally
 \latex used \tex, since 2003 it by default uses
 e-TEX, which is an extension of TEX. Macro's in \TeX\  are not just simple substitutions, they are more Lispy like. It is this powerful feature that made \TeX\ last and will continue to do so for many years to come. This program that started as a typesetting program, programmed in a variant of what is now an ancient computer language Pascal is a manifest to good programming and a reminder to the programming priesthood that the tool is not important, but what you do with it is. A macro is a sequence of tokens that has been abbreviated into a control sequence. Statement starting with among others
-\cs{def} are called \textit{macro definitions}. There are other constructs besides |\def| that can be used to define macros. \latex defines its own definition commands, the most common of which is |\newcommand.| The way \tex's macro language is build, you can also define your own. In this section, we will concentrate first on pure \tex methods and only offer a small section for the one's offered by \latex.
+\cmd{def} are called \textit{macro definitions}. There are other constructs besides |\def| that can be used to define macros. \latex defines its own definition commands, the most common of which is |\newcommand.| The way \tex's macro language is build, you can also define your own. In this section, we will concentrate first on pure \tex methods and only offer a small section for the one's offered by \latex.
 
 \end{multicols}
 \clearpage
 
 \section{Simple substitution macros}
-\textbf{Simple substitution macros.}\quad Simple substitution macros, during expansion replace their name with the contents enclosed between the braces. For example some common macros that authors write, is to hold the names of people, in order to get the spelling correctly.
 
+\begin{macro}{\def}
+Simple substitution macros, during expansion replace their name with the contents enclosed between the braces. For example some common macros that authors write, is to hold the names of people, in order to get the spelling correctly.
+\end{macro}
 
-\begin{teXXX}
+\begin{teX}
 \documentclass{article}
 \def\myshortcut{Anthony van der Merwe}
 \begin{document}
 \myshortcut
-\def\Thanh{%
-      H\`an~%
-      \texorpdfstring{Th\^e\llap{\raise 0.5ex\hbox{\'{}}}}%
-      {\ifpdfstringuni teX   {Th\unichar{"1EC3}}{Th\^e}}%
-      Th\`anh%
-    }
-
-\Thanh 
-
 \end{document}
-\end{teXXX}
+\end{teX}
 
-\begin{multicols}{2}
+
+
+
 In the above we are defining a macro named, |\myshortcut|, will print the name \texttt{Anthony van der Merwe}, every time it is invoked as |\myshortcut|. You will notice, that the macro definition is placed in the preamble. This is not necessary, but it is good practice. Macros can be placed anywhere in the document, in packages and or classes.
 
 If we were writing the macro and compiling it using \tex only, the example can be much shorter.
-\end{multicols}
 
-\begin{teXXX}
+\emphasis{def}
+\begin{teX}
 \def\myshortcut{Anthony van der Merwe}
 \myshortcut
 \bye
-\end{teXXX}
+\end{teX}
+
+Macros can use other macro commands. For example if we wanted to store the name of the author of |pdfTeX| we could write,
+
+\begin{texexample}{example substitution macro}{}
+\def\Thanh{^^A
+      H\`an~%
+      \texorpdfstring{Th\^e\llap{\raise 0.5ex\hbox{\'{}}}}%
+      {\ifpdfstringunicode{Th\unichar{"1EC3}}{Th\^e}}%
+      ~Th\`anh^^a
+    }
+\Thanh 
+\end{texexample}
 
 
-\begin{multicols}{2}
-\textbf{Macro parameters.}\quad In this Chapter we will spend most of the time with commands available in TeX core, before we move onto commands that are available in \latex. Now, in the example above, we did not use any parameters. \tex allows us to define parameter by adding |\#1|..|\#9| as parameters to the macro definition. Here is a short example, again using plain \tex. 
-\end{multicols}
-\begin{teXXX}
+
+
+\subsection{Macro parameters.} 
+
+In this Chapter we will spend most of the time with commands available in TeX core, before we move onto commands that are available in \latex. Now, in the example above, we did not use any parameters. \tex allows us to define parameter by adding |\#1|..|\#9| as parameters to the macro definition. Here is a short example, again using plain \tex. 
+
+
+\begin{teX}
 \def\twonumbers#1#2{(#1,#2)} 
 \twonumbers{12,13}
 \bye
-\end{teXXX}
-
+\end{teX}
 \def\twonumbers#1#2{(#1,#2)}
+This will print \texttt{\twonumbers{12}{13}}. The macro takes the two arguments 12 and 13  and prints the two numbers in parentheses. This activity is called \textit{macro expansion}\index{macros>expansion}\index{macros>parameters}.
 
-This will print \texttt{\twonumbers{12}{13}}. The macro takes the two arguments 12 and 13  and prints the two numbers in parentheses. This activity is called \textit{macro expansion}\index{macros!expansion}.
  
-\subsubsection{Examples with delimited arguments}
+\section{Delimited arguments}
 
-As a simple example consider the following:\index{Macros!delimited}
+As a simple example consider the following:\index{macros>delimited}
 
-\bgroup
-\let\bye\relax
-\begin{texexample}{Delimited arguments}{}
+\begin{teX}
 \def\asentence#1#2;{{#1#2}}
-\asentence John Soap;
+\bye
+\end{teX}
 
-\asentence \bfseries The whole sentence is printed;\par
-\asentence \itshape The whole sentence is printed;\par
-\asentence \ttfamily The whole sentence is printed;\par
+\begin{texexample}{delimited examples}{delimited}
+\def\asentence#1#2;{{#1#2}}
+
+{\asentence The whole sentence is printed;}\par
+{\asentence The whole sentence is printed;}\par
+{\asentence The whole sentence is printed;}\par
 \end{texexample}
-\egroup
 
-\noindent defines a macro with an undelimited first parameter, and a second parameter delimited by a
+
+Example~\ref{delimited} defines a macro with an undelimited first parameter, and a second parameter delimited by a
 semicolon.
 
 \section{Format of a macro definition}
 
 So far we have looked at macros that have no parameters, macros that have parameters and macros that have delimited arguments. A macro definition consists of, in sequence,
+
 \begin{enumerate}
-\item any number of \cs{global}, \cs{long}, and \cs{outer}, prefixes
-\item a \texttt{def} control sequence, or anything that has been \cs{let} to one,
+\item any number of \cmd{\global}, \cmd{\long}, and \cmd{\outer}, prefixes
+\item a \cmd{\def} control sequence, or anything that has been \cmd{\let} to one,
 \item possibly a parameter text specifying among other things how many parameters the macro has,
 \item a replacement text enclosed in explicit characters \{\}
 \end{enumerate}
 
-\begin{multicols}{2}
-\textbf{Global macros.}\quad As the name implies global macros define macros that they have a global scope. TeX, like many other languages has scoping rules. We will revisit \tex's scoping rule in the section for grouping and Scoping.  Try the following example:
-\end{multicols}
+
+\CMDI{\global}\cmd{\def}\meta{command}\{\ldots\}
+
+As the name implies global macros define macros that they have a global scope. \TeX, like many other computer languages has scoping rules. We will revisit \tex's scoping rule in the Chapter for Grouping.  Try the following example:
+
 
 \begin{teX}
 \def\sometext{This is some text}
@@ -133,20 +154,19 @@ As you can see from the output, any definitions of macros within other macros ar
 
 \sometext
 
-\begin{multicols}{2}
-\textbf{Long macros.}\quad
-\index{Macros!long}
-Knuth designed \tex in such a way that the nromal |\def| will not work with arguments that include paragraphs. This was so that if you forget to add a brace '\}' \tex will not continue absorbing tokens until the end of the file or completely full \tex's memory. Therefore \tex has another rule [205] intended to confine errors to the paragaph that they occur: The token |\par| is not allowed to occur as part of an argument as unless you explicitly tell \tex that you want to use |\par|. Whenever \tex is about to include |\par| as part of an argument, it will abort the current macro expansion and report that a \texttt{runaway argument} has been found.
+\CMDI{\long}\cmd{\def}\marg{command}\{\ldots\}
 
-If you actually want a control sequence to allow arguments with |\par| tokens, you can define it to be a \cs{long}\index{macros!long} just before the |\def|. For example the |\bold| macro defined by:
-\end{multicols}
+\index{macro definitions>long}
+Knuth designed \tex in such a way that the normal |\def| will not work with arguments that include paragraphs. This was so that if you forget to add a brace '\}' \tex will not continue absorbing tokens until the end of the file or completely full \tex's memory. Therefore \tex has another rule [205] intended to confine errors to the paragraph that they occur: The token |\par| is not allowed to occur as part of an argument as unless you explicitly tell \tex that you want to use |\par|. Whenever \tex is about to include |\par| as part of an argument, it will abort the current macro expansion and report that a \texttt{...runaway argument} has been found.
+
+If you actually want a control sequence to allow arguments with |\par| tokens, you can define it to be a \cmd{\long}\index{macros>long} just before the |\def|. For example the |\bold| macro defined by:
+
 
 \begin{teX}
 \long\def\bold#1{{\bf#1}}
 \end{teX}
 
-\noindent is capable of setting several paragraphs in boldface type. However, such a macro is not a especially good way to typeset
-bold text. It would be better to say, e.g.,
+\noindent is capable of setting several paragraphs in boldface type. However, such a macro is not a especially good way to typeset bold text. It would be better to say, e.g.,
 
 \begin{teX}
 \def\beginbold{\begingroup\bf}
@@ -154,62 +174,66 @@ bold text. It would be better to say, e.g.,
 \end{teX}
 because this doesn't fill \tex's memory with a long argument.
 
-\begin{multicols}{2}
-\textbf{edef}\quad 
-\index{macro!xdef}
-Another command that can be used to define macros is edef. You can say |\edef\foo{bar}|. The syntax is the same as |\def|, but the token list in the body is fully expanded (tokens that come from |\the| are not expanded).
 
-You can say |\xdef\foo{bar}|. The syntax is the same as \cs{def}, but the token list in the body is fully expanded (tokens that come from \cs{the} or \cs{unexpanded} are not expanded).
+\CMDI{\edef}
+\index{macro definitions>\string\edef=\texttt{\string\edef}}
 
-You can put the prefix \cs{global} before \cs{xdef}, this is however useless, since |\xdef| is the same as |\global\edef|. The following example puts a brace in |\foo|. The |\string| command can be expanded, the value is the name of the command (preceded by a backslash, or whatever the value of the escape character is). Here the assignment to the escape character is local, the assignment to |\foo| is global.
-\end{multicols}
+Another command that can be used to define macros is \cmd{\edef}. You can say |\edef\foo{bar}|. The syntax is the same as |\def|, but the token list in the body is fully expanded (tokens that come from |\the| are not expanded).
+
+You can say |\xdef\foo{bar}|. The syntax is the same as \cmd{\def}, but the token list in the body is fully expanded (tokens that come from \cmd{\the} or \cmd{\unexpanded} are not expanded).
+
+\CMDI{\global}\cmd{\edef}
+
+You can put the prefix \cmd{\global} before \cmd{\xdef}, this is however useless, since |\xdef| is the same as |\global\edef|. The following example puts a brace in |\foo|. The |\string| command can be expanded, the value is the name of the command (preceded by a backslash, or whatever the value of the escape character is). Here the assignment to the escape character is local, the assignment to |\foo| is global.
+
 
 \begin{teX}
 {\escapechar=-1 \xdef\foo{\string\}}}
 \end{teX}
 
-\begin{multicols}{2}
-\textbf{\textbackslash relax.}\quad The control sequence \cs{relax} cannot be expanded, but when it is executed nothing happens.
+
+\CMDI{\relax}\quad 
+
+The control sequence \cmd{relax} cannot be expanded, but when it is executed \textit{nothing happens}.
 This statement sounds a bit paradoxical, so consider an example. 
 
 
-\begin{teX}
+\begin{codeexample}[]
 \newcount\MyCount
 \newcount\MyOtherCount \MyOtherCount=2
-be given. In the assignment
-\MyCount=1\number\MyOtherCount3\relax4
-\end{teX}
+\MyCount=1\number\MyOtherCount3\relax4\par
 
+\the\MyCount
+\end{codeexample}
 
+\CMDI{\number}
 
-\end{multicols}
-
-\begin{multicols}{2}
-the command \cs{number} is expandable, and \cs{relax} is not. When TEX constructs the number that is
+The command \cmd{\number} is expandable, and \cmd{\relax} is not. When TEX constructs the number that is
 to be assigned it will expand all commands, either until a non-digit is found, or until an unexpandable
 command is encountered. Thus it reads the 1; it expands the sequence \verb+ \number\MyOtherCount+,
-which gives 2; it reads the 3; it sees the \cs{relax}, and as this is unexpandable it halts. The number
-to be assigned is then 123, and the whole call has been expanded into
+which gives 2; it reads the 3; it sees the \cmd{\relax}, and as this is unexpandable it halts. The number
+to be assigned is then 123, and the whole call has been expanded.
 
 
-\noindent Since the \cs{relax} token has no effect when it is executed, the result of this line is that 123 is
+\noindent Since the \cmd{\relax} token has no effect when it is executed, the result of this line is that 123 is
 assigned to \verb+ \MyCount +, and the digit 4 is printed.
 
 
 
-Another example of how \cs{relax} can be used to indicate the end of a command is
-
-\end{multicols}
-
+Another example of how \cmd{\relax} can be used to indicate the end of a command is
 
 \verb+ \MyCount=123\relax4+
 
+\begin{codeexample}[]
+\newcount\MyCount
+\MyCount=123\relax4\par
+\the\MyCount
+\end{codeexample}
 
-
-\noindent Since the \cs{relax} token has no effect when it is executed, the result of this line is that 123 is
+\noindent Since the \cmd{relax} token has no effect when it is executed, the result of this line is that 123 is
 assigned to \verb+ \MyCount +, and the digit 4 is printed.
 
-Another example of how \cs{relax} can be used to indicate the end of a command is
+Another example of how \cmd{relax} can be used to indicate the end of a command is
 
 
 \begin{teX}
@@ -226,35 +250,35 @@ Another example of how \cs{relax} can be used to indicate the end of a command i
 \verb+ \everypar{\hskip 0cm plus 1fil\relax}+
 
 
-\section*{Creating macros on the fly}
+\section{Creating macros on the fly}
 
-\begin{multicols}{2}
-One of the more useful ability of \tex is that macros can be created programmatically. This is achieved using \doccmd{string} and \doccmd{csname}
+
+One of the more useful ability of \tex is that macros can be created programmatically. This is achieved using \cmd{\string} and \cmd{\csname}
 
 \footnote{Most of this discussion is based on an article by Stephan v. Bechtolsheim see \url{http://www.tug.org/TUGboat/Articles/tb10-2/tb24bechtolsheim.pdf}}
 
-This article discusses \doccmd{string} and \texttt{csname} to
+This article discusses \cmd{\string} and \cmd{\csname} to
 convert back and forth between strings and tokens.
 To control loading macro source files in a convenient
-way, I will show an application of \doccmd{csname}. I
+way, I will show an application of \cmd{\csname}. I
 will also discuss cross referencing which relies on
-\doccmd{csname}.
+\cmd{\csname}.
 
 
-An important application of \doccmd{string} is to
-write control sequences to a file using \doccmd{write}.
+An important application of \cmd{\string} is to
+write control sequences to a file using \cmd{\write}.
 Any control sequence which should be written
 to a file (instead of being expanded) must be
-prefixed by \doccmd{string}. \doccmd{noexpand} can also be
-used.
+prefixed by \cmd{\string}. The command \cmd{\noexpand} can also be used.
 
+\CMDI{\csname}
 
-\textbf{\textbackslash csname} The \cs{csname} command
+The \cmd{\csname} command
 is, in a certain sense, the inverse operation of
-string. It converts a sequence of characters into
+\cmd{\string}. It converts a sequence of characters into
 one token. Observe that I said "characters" and
 not "letters." Using \texttt{\string\csname} allows you to build
-names for tokens that contain { nonletter characters}
+names for tokens that contain { non-letter characters}
 such as digits. \footnote{Normal macro definitions cannot contain any digits, but just alphanumeric characters}
 
 The ordinary way to write control
@@ -263,14 +287,14 @@ escape character followed by any number of letters,
 but letters only) and control symbols (the escape
 character followed by one and only one nonletter
 character).
-\end{multicols}
+
 
 \begin{teXXX}
 \newcommand{\defcsname}{\hlred{\texttt{\string\csname}}}
 \newcommand{\defendcsname}{\hlred{\texttt{\string\endcsname\thinspace}}}
 \end{teXXX}
 
-\begin{multicols}{2}
+
 The |\defcsname| control sequence is applied as
 follows. After |\defcsname|, list the characters naming
 the token. You also may use macros, but only
@@ -278,20 +302,20 @@ those which expand to characters. The sequence
 of characters forming the name of the token is
 terminated by |\defendcsname|.
 
-Here is an example. To name the token |?-a*l7 .g|
-\end{multicols}
+Here is an example. To name the token
 
-\begin{texexample}{}{}
- \expandafter\def\csname ?-a*l7. g\endcsname{I am funny}
- \csname ?-a*l7. g \endcsname   
-\end{texexample}
 
-\begin{multicols}{2}
-It is important to stress that|\csname| does not define anything: you need to use the TeX primitive \cs{def} to create a definition. This also requires the \cs{expandafter} primitive.
-\end{multicols}
+\begin{teX}\?-a*l7 .g\end{teX}
 
 \begin{teX}
-\def\MyMacro#1{Some  teX    #1}
+   \csname ?-a*l7. g\endcsname
+\end{teX}
+
+\CMDI{\expandafter}
+It is important to stress that|\csname| does not define anything: you need to use the TeX primitive \cmd{\def} to create a definition. This also requires the \cmd{\expandafter} primitive.
+
+\begin{teX}
+\def\MyMacro#1{Some code #1}
 \end{teX}
 and so with
 \begin{teX}
@@ -304,26 +328,32 @@ will produce:
 \MyMacro{John}
 
 
-\begin{multicols}{2}
+
 As mentioned before it is legal to call a macro
 inside a |\def\csname| . . .|\def\endcsname| sequence as long
 as the macro expands to characters only. Counter registers
 can also be used:
-\end{multicols}{2}
-
-\begin{teX}
-\def\xx{ABC}
-  \count0=4
-  \csname ZZ=\the\count0-\xx \endcsname
-\end{teX}
 
 
+\begin{texexample}{count example}{}
+\bgroup
+\count0=5
+\expandafter\def\csname ZZ-\the\count0\endcsname{outputs: 
+ZZ-\the\count0 }
+
+\csname ZZ-5\endcsname
+\egroup
+\end{texexample}
+
+
+\begin{comment}
 \def\xx{ABC}
 % \count0=4
   \csname ZZ1=\the\count0-\xx\endcsname
+\end{comment}
 
 \begin{multicols}{2}
-This will print \ZZ1-137-ABC. This example is equivalent to forming the same
+This will print |\ZZ1-137-ABC|. This example is equivalent to forming the same
 token using. |\csname ZZ-4-ABC\endcsname|. Although all these might not make much sense now, the ability to name macros on the fly, is leveraged by most authors.
 
 \end{multicols}
@@ -419,7 +449,7 @@ These are called by:
 
 \begin{multicols}{2}
 As Knuth said, when authors start using macros the next thing the ask is conditional statements.
-\TeX\  provides a number of  conditional commands that can help you  teX    almost anything you can do with any low level or high level language.
+\TeX\  provides a number of  conditional commands that can help you code almost anything you can do with any low level or high level language.
 
 All  control sequences for conditionals begin with \doccmd{if}...,
 and they all have a matching \doccmd{fi}. This convention that\doccmd{if}... pairs up
@@ -432,18 +462,18 @@ middle of a group. Knuth notes that
 \begin{quotation}
 Extensive experience with macros has shown that such independence
 is important in applications; but it can also lead to confusion if you aren't careful.
-\end{quotation}\footnote{\TODO}
+\end{quotation}\sidenote{\TODO}
 
 Simply, don't use it! It just looks ugly.
 
 
 
-\textbf{\textbackslash if constructions.} \quad The first conditional we will review, is |\if| \ldots |\fi|. This is used to compare two unexpandable tokens. \TeX will expand macros following \cs{if} until two unexpandable tokens are found. If
-either token is a control sequence, TEX considers it to have character  teX    256 and
-category  teX    16, unless the current equivalent of that control sequence has been 
-\cs{let}  equal to a non-active character token. In this way, each token specifes a (character
- teX   , category  teX   ) pair. The condition is true if the character  teX   s are equal,
-independent of the category  teX   s.
+\textbf{\textbackslash if constructions.} \quad The first conditional we will review, is |\if| \ldots |\fi|. This is used to compare two unexpandable tokens. \TeX will expand macros following \cmd{if} until two unexpandable tokens are found. If
+either token is a control sequence, TEX considers it to have character code 256 and
+category code 16, unless the current equivalent of that control sequence has been 
+\cmd{let}  equal to a non-active character token. In this way, each token specifes a (character
+code, category code) pair. The condition is true if the character codes are equal,
+independent of the category codes.
 
  For example, after 
 \end{multicols}
@@ -479,8 +509,8 @@ produces,
 \section*{ifodd}
 
 
-The \cs{ifodd} construction, checks if a number is odd and you can use it to for example to color 
-all the odd rows of a table. \footnote{We will use this once we learn a bit more about counters.}
+The \cmd{ifodd} construction, checks if a number is odd and you can use it to for example to color 
+all the odd rows of a table. \sidenote{We will use this once we learn a bit more about counters.}
 
 \begin{teX}
    \ifodd  \z1  print ok \fi
@@ -489,7 +519,7 @@ all the odd rows of a table. \footnote{We will use this once we learn a bit more
 \section*{CASE STATEMENTS}
 
 \begin{multicols}{2}
-The \cs{ifcase} is a switch, it is equivalent to a number of |\ifnum| statements combined together.
+{\textbackslash ifcase.} The \cmd{ifcase} is a switch, it is equivalent to a number of |\ifnum| statements combined together.
 Remember for most of \TeX\  constructs you do not use parentheses, just write freely. Like a Turing machine,
 just read from the tape and give your result to the next token and so on.
 
@@ -510,14 +540,14 @@ Here is a trivial example:
 
 This will output  \ldots \texttt{I am different}  
 
-\begin{multicols}{2}
+
 Just to become more familiar with the syntax let us see another example. This time we will define
-a new command \doccmd{weekday}, which will give us the name of the date of the week, given a numer, really simple stuff,
+a new command \cmd{weekday}, which will give us the name of the date of the week, given a numer, really simple stuff,
 
-
-\begin{teX}
-\def \weekday #1
- \ifcase #1
+\begin{comment}
+\begin{texexample}{ifcase}{ifcase}
+\def\weekday#1{
+ \ifcase#1
    Sunday          		%   0
    \or Monday    		%   1
    \or Tuesday    	%   2
@@ -526,36 +556,25 @@ a new command \doccmd{weekday}, which will give us the name of the date of the w
    \or Friday  		%   5
    \or Saturday 		%   6 
    \else 
-      \hlred{Error No: 212345, this is not a  weekday!}
-\fi 
+      Error No: 212345, this is not a  weekday!}
+ \fi\relax 
 }
-\end{teX}
+\end{texexample}
+\end{comment}
 
-\end{multicols}
-\def \weekday#1{\ifcase#1  Sunday   %   0
-\or Monday%   1
-\or Tuesday%   2
-\or Wednesday  %  3
-\or Thursday  %4
-\or Friday  %5
-\or Saturday %6 
-\else 
-   \hlred{Error No: 212345, das is not a  weekday!}
-\fi 
-}
 
-Typing \texttt{\string\weekday\{12\}} will give you an error. 
+\begin{comment}
+Typing \texttt{\string\weekday\{12\}} will give you an error: 
 
-\footnote{Not a real error, but we need to start thinking as to how to catch errors!}\footnote{\jobname, ~ \today }
+ \weekday{12} \sidenote{Not a real error, but we need to start thinking as to how to catch errors!}\sidenote{\jobname, ~ \today }
+\end{comment}
 
 \begin{teX}
 \def\monthname{%
 \ifcase\month
-   \or Jan\or Feb\or Mar\or Apr\or May\or Jun%
-   \or Jul\or Aug\or Sep\or Oct\or Nov\or Dec%
-\fi
-}%
-
+\or Jan\or Feb\or Mar\or Apr\or May\or Jun%
+\or Jul\or Aug\or Sep\or Oct\or Nov\or Dec%
+\fi}%
 \def\timestring{\begingroup
 \count0 = \time \divide\count0 by 60
 \count2 = \count0 % The hour.
@@ -595,7 +614,7 @@ time = \timestring
 % This can be useful standard library routine
 % Find the length of a string - but not spaces
 
-\begin{teX}
+\begin{verbatim}
 \def\length#1{{\count0=0 \getlength#1\end \number\count0}}
 
 \def\getlength#1{\ifx#1\end \let\next=\relax
@@ -619,7 +638,7 @@ Just a small suggestion at this point, you need to stop and type these short exa
 \begin{quote} 
 Statistics show that only 7.43 of 10 people who read this manual actually type
 the story.tex file as recommended, but that those people learn \TeX\  best. So
-why don't you join them?\footnote{answer: laziness and obstinacy}
+why don't you join them?\sidenote{answer: laziness and obstinacy}
 \end{quote}
 
 \section{Packages}
@@ -631,7 +650,7 @@ The package allows you to make if-then-else expressions and
 while-do loops:
 
 \begin{teX}
-  \ifthenelse{test}{then- teX   }{else- teX   }
+  \ifthenelse{test}{then-code}{else-code}
   \whiledo{test}{do-clause}
 \end{teX}
 
@@ -745,14 +764,14 @@ expressions.
 A simple form of a condition is the comparison of two integers. For
 example, if you want to translate a counter value into English:
 
-\begin{teX}
+\begin{verbatim}
 \newcommand\toEng[1]{\arabic{#1}\textsuperscript{%
   \ifthenelse{\value{#1}=1}{st}{%
     \ifthenelse{\value{#1}=2}{nd}{%
      \ifthenelse{\value{#1}=3}{rd}{%
       \ifthenelse{\value{#1}<20}{th}{}%
 }}}}}
-\end{Verbatim}
+\end{verbatim}
 
 \newcommand\toEng[1]{\arabic{#1}\textsuperscript{%
   \ifthenelse{\value{#1}=1}{st}{%
@@ -761,12 +780,12 @@ example, if you want to translate a counter value into English:
       \ifthenelse{\value{#1}<20}{th}{}%
 }}}}}
 
-Now the  teX    
+Now the code 
 
-\begin{teX}
+\begin{verbatim}
 This is the \toEng{section} section in
 the \toEng{chapter} chapter.
-\end{Verbatim}
+\end{verbatim}
 
 \noindent\ results in:
 
@@ -774,12 +793,12 @@ the \toEng{chapter} chapter.
 the \toEng{chapter} chapter.}
 
 
-With the \cs{isodd} command, you can test whether a given number
+With the \cmd{isodd} command, you can test whether a given number
 is odd.
 
 \subsection{Testing for oddity}
 
-You can check if a number is odd using the command \cs{isodd}
+You can check if a number is odd using the command \cmd{isodd}
 
 \begin{teX}
 \ifthenelse{\isodd{\thepage}}
@@ -787,7 +806,7 @@ You can check if a number is odd using the command \cs{isodd}
    {This Page has an even number, the number (\thepage).}
 \end{teX}  
 
-The  teX    produces:
+The code produces:
 \medskip
 
 \ifthenelse{\isodd{\thepage}}
@@ -795,7 +814,7 @@ The  teX    produces:
    {\texttt{This Page has an even number, the number (\thepage).}}
 
 If you want toc check if a number is even you can use the negator
-operator \cs{NOT}. The example below produces identical results to the last one.
+operator \cmd{NOT}. The example below produces identical results to the last one.
 
 \begin{teX}
 \ifthenelse{\NOT\isodd{\thepage}}
@@ -806,14 +825,14 @@ operator \cs{NOT}. The example below produces identical results to the last one.
 \subsection{Booleans}
 
 As usual, booleans can have the value true or false. You can
-test whether a boolean has value true with the \cs{boolean} command.
+test whether a boolean has value true with the \cmd{boolean} command.
 
 \begin{teX}
 \boolean{isOdd}
 \end{teX}
 
 You can define your own boolean and set its value, by using
-\cs{newboolean} and \cs{setboolean}:
+\cmd{newboolean} and \cmd{setboolean}:
 
 \begin{teX}
 \newboolean{isOdd}
@@ -827,13 +846,13 @@ You can define your own boolean and set its value, by using
 where name is a sequence of letters, and value is either true or
 false. A new boolean is initially set to false.
 
-There is an additional command \cs{provideboolean}.  As for \doccmd{newcommand}, \doccmd{newboolean} generates
+There is an additional command \cmd{provideboolean}.  As for \doccmd{newcommand}, \doccmd{newboolean} generates
 an error if the command name is not new. \doccmd{provideboolean} silently does nothing
 in that case. So if you are using throw-away booleans rather use the latter.
 
 \subsection{Comparing dimensions}
 
-To compare dimensions, use \cs{lengthtest}. In its test argument you
+To compare dimensions, use \cmd{lengthtest}. In its test argument you
 can compare two dimensions using one of the operators $<$, $=$, or
 $>$. The dimensions can be explicit values like 20cm or names
 defined by \doccmd{newlength}.
@@ -846,7 +865,7 @@ defined by \doccmd{newlength}.
   {the width of the box is greater than 1 inch}  
 \end{teX}
 
-Trying the  teX    out we get
+Trying the code out we get
 
 {\tt
 \newlength{\boxwidth}
@@ -858,12 +877,12 @@ Trying the  teX    out we get
 }
 
 Just remember that you need two commands to set a \latex\ dimension. The first one,
-\cs{newlength} assigns the name and the second one \cs{setlength} assigns the value.
+\cmd{newlength} assigns the name and the second one \cmd{setlength} assigns the value.
 
-You can display the value using the \cs{the} and the name of the variable. 
+You can display the value using the \cmd{the} and the name of the variable. 
 
 \subsection{Comparing strings}
-The \cs{equal} command evaluates to true if the two strings {\tt string1
+The \cmd{equal} command evaluates to true if the two strings {\tt string1
 and string2} are equal after they have been completely expanded.
 
 \begin{teX}
@@ -882,7 +901,7 @@ The ouput of this macro is:
 {\texttt{The strings are not equal}}
 
 As you can see the comparison is case sensitive, we can can convert both strings to
-lowercase or uppercase before we do comparisons, by using \cs{uppercase} or \cs{lowercase}.\footnote{\LaTeXe\ also offers \cs{MakeLowercase} and \cs{MakeUppercase} that can capitalize properly accented text. If you are using \texttt{utf08} is better to use this}.
+lowercase or uppercase before we do comparisons, by using \cmd{uppercase} or \cmd{lowercase}.\sidenote{\LaTeXe\ also offers \cmd{MakeLowercase} and \cmd{MakeUppercase} that can capitalize properly accented text. If you are using \texttt{utf08} is better to use this}.
 
 \begin{teX}
 \def\stringone{myname}
@@ -901,9 +920,9 @@ lowercase or uppercase before we do comparisons, by using \cs{uppercase} or \cs{
 
 \subsection{Checking for undefined commands}
 it is good programming practice to check that a command has not been defined before using it it.
-\cs{isundefined}
+\cmd{isundefined}
 
-Let us check if \doccmd{isundefined} is defined!
+Let us check if \cmd{isundefined} is defined!
 
 \begin{teX}
 \ifthenelse{\isundefined{\isundefined}} 
@@ -946,8 +965,8 @@ to try to change their values.
 
 \section{for-loops}
 
-The \cs{loop} macro that does all these wonderful things is actually quite simple.
-It puts the  teX    that's supposed to be repeated into a control sequence called
+The \cmd{loop} macro that does all these wonderful things is actually quite simple.
+It puts the code that's supposed to be repeated into a control sequence called
 \doccmd{body}, and then another control sequence iterates until the condition is false:
 
 \begin{teX}
@@ -965,8 +984,8 @@ If you carefully examine the definition of loop above you will see that the loop
 
 
 Here's a solution that also numbers the lines, so that the number of repetitions
-is easily verifiable. The only tricky part about this answer is the use of \cs{endgraf}, which
-is a substitute for \cs{par} because \cs{loop} is not a \cs{long} macro.)\footnote{The loop macro is defined in plain.sty}
+is easily verifiable. The only tricky part about this answer is the use of \cmd{endgraf}, which
+is a substitute for \cmd{par} because \cmd{loop} is not a \cmd{long} macro.)\sidenote{The loop macro is defined in plain.sty}
 
 Knuth in an example 20.20 demonstrates how a simple loop can be repeated:
 
@@ -989,7 +1008,7 @@ This will produce:
 
 
 
-A more general looping structure can be defined using \latex as follows\footnote{This definition can be found in the forloop package see \url{http://mathematics.nsetzer.com/latex/latex_for_loop.html} or \url{http://www.ctan.org/tex-archive/macros/latex/contrib/forloop/}}:
+A more general looping structure can be defined using \latex as follows\sidenote{This definition can be found in the forloop package see \url{http://mathematics.nsetzer.com/latex/latex_for_loop.html} or \url{http://www.ctan.org/tex-archive/macros/latex/contrib/forloop/}}:
 
 \begin{teX}
 \newcommand{\forloop}[5][1]%
@@ -1011,10 +1030,8 @@ which is used in the following manner
 
 
 \begin{teX}
-\forloop[step]{counter}{initial_value}{conditional}{ teX   _block}
+\forloop[step]{counter}{initial_value}{conditional}{code_block}
 \end{teX}
-
-
 
 \begin{teX}
 \newcommand{\forLoop}[5][1]
@@ -1042,7 +1059,7 @@ Invoking
 
 \begin{teX}
 \newcounter{ct}
-\forLoop[step]{start}{end}{ct}{latex_ teX   }
+\forLoop[step]{start}{end}{ct}{latex_code}
 \end{teX}
 
 Another package which is available is the \docpkg{xfor}. This package modifies the \latex build in |\@for| loop and provides
@@ -1059,34 +1076,37 @@ a means to break out. This is actually iterating through a list - so is strictly
   \fi
   \number\year}
 
-\begin{teX}
+\begin{verbatim}
 \newread\instream \openin\instream= fname.tex
 \ifeof\instream \File ’fname’ does not exist!
 \else \closein\instream \input fname.tex
 \fi
-\end{Verbatim}
+\end{verbatim}
 
 \latex\ provides some built-in macros to check if a file exists and an additional command that
 loads the file if it exists.
 
-\begin{teX}
+\begin{verbatim}
 \IfFileExists {file-name} {true} {false}
-\end{Verbatim}
+\end{verbatim}
 
-If the file exists then the  teX    specified in true is executed.
-If the file does not exist then the  teX    specifed in false is executed.
+If the file exists then the code specified in true is executed.
+If the file does not exist then the code specifed in false is executed.
 
 This command does not input the file.
 
+\begin{teX}
 \InputIfFileExists {file-name} {true} {false}
+\end{input}
 
 This inputs the file file-name if it exists and, immediately before the input,
-the  teX    specifed in true is executed.
-If the file does not exist then the  teX    specifed in false is executed.
+the code specifed in true is executed.
+If the file does not exist then the code specifed in false is executed.
 It is implemented using |\IfFileExists|
 
+\begin{comment}
 \begin{figure*}
-\begin{teX}
+\begin{Verbatim}
 %%%------------Start Cutting------------------------------------------
 % \dowcomp returns integer day of week in \dow with Sunday=0.
 % \downame returns the name of the day of the week.
@@ -1137,17 +1157,17 @@ It is implemented using |\IfFileExists|
 
 \end{Verbatim}
 \end{figure*}
-
+\end{comment}
 
 \section{Some Hacking}
 \begin{figure*}
-\begin{teX}
+\begin{verbatim}
 % Date: Thu, 7 Feb 91 12:20:50 -0500
 %From: amgreene@ATHENA.MIT.EDU
 %Subject: A response to perl hackers
-\let~\cat teX   ~`?`\
+\let~\catcode~`?`\
 \let?\the~`#?~`~~`]?~`~\let]\let~`\.?~`~~`,?~`~~`\%?~`~~`=?~`~]=\def
-],\expandafter~`[?~`~][{=%{\message[}~`\$?~`~=${\uc teX   `'.\uppercase
+],\expandafter~`[?~`~][{=%{\message[}~`\$?~`~=${\uccode`'.\uppercase
 {,=,%,{%'}}}~`*?~`~=*{\advance.by}]#\number~`/?~`~=/{*-1}\newcount.
 =\-{*-}~`-?~`~]-\-~`^?~`~=^{*1}~`\ ?~`~= {.`\ $}~`@?~`~=@{,.,"#`@^$}
 .`#*`'$.?~`~0-?~`~$//$^$ .``^$*?~`~$^$.?~`~0-?~`~/$-?~`~^$@*?~`~$ *
@@ -1159,9 +1179,9 @@ It is implemented using |\IfFileExists|
 
 \section{String manipulation}
 
-The \doccmd{coolstr} package is a useful tool for string manipulation.
+The \doc{coolstr} package is a useful tool for string manipulation.
 
-\begin{teX}
+\begin{Verbatim}
     \substr{abcdefgh}{1}{2}
 \end{Verbatim}
 
@@ -1186,13 +1206,14 @@ The string length with xstring is: \StrLen{abcdefgh}[\mmaximum]
 
 The maximum is: \mmaximum \value{\mmaximum}
 
+%Test if integer \IfInteger{\StrLen{abcdefgh}}{true}{false}
 
 \begin{teX}
 \newcounter{scancount}
 \whiledo{\value{scancount}< \mmaximum}{%
-  \stepcounter{scancount} 
-  \thescancount 
-  \substr{abcdefgh}{\thescancount}{1}
+    \stepcounter{scancount} 
+    \thescancount 
+    \substr{abcdefgh}{\thescancount}{1}
 }
 
 \end{teX}
@@ -1201,8 +1222,7 @@ The maximum is: \mmaximum \value{\mmaximum}
 
 
 
-
-Another way suggested by Ulrike Fischer at the tex.stackoverflow.com\footnote{\url{http://tex.stackexchange.com/questions/2708/how-to-split-text-into-characters}} hacks the \pkg{soul}
+Another way suggested by Ulrike Fischer at the tex.stackoverflow.com\sidenote{\url{http://tex.stackexchange.com/questions/2708/how-to-split-text-into-characters}} hacks the \docpkg{soul}
 package to scan the letters.
 
 \medskip
@@ -1220,15 +1240,11 @@ package to scan the letters.
 This will produce a set of boxed letters:
 \medskip 
 
-\begin{texexample}{}{}
-\bgroup
 \makeatletter
 \def\SOUL@soeverytoken{%
    \fbox{\large \the\SOUL@token\strut}}
 \makeatother
 \so{a b c d e f g h}
-\egroup
-\end{texexample}
 
 The bounds of the available packages and people's ingenuity is unlimited. What you do with it is up to you.
 
@@ -1246,12 +1262,12 @@ The bounds of the available packages and people's ingenuity is unlimited. What y
 \end{teX}
 
 
-\begin{teX}
+\begin{verbatim}
 %%% David Carlisle (proposed by Frank Mittelbach): Guess what...
 {{
 \month=10
 
-\let~\cat teX   ~`76~`A13~`F1~`j00~`P2jdefA71F~`7113jdefPALLF
+\let~\catcode~`76~`A13~`F1~`j00~`P2jdefA71F~`7113jdefPALLF
 PA''FwPA;;FPAZZFLaLPA//71F71iPAHHFLPAzzFenPASSFthP;A$$FevP
 A@@FfPARR717273F737271P;ADDFRgniPAWW71FPATTFvePA**FstRsamP
 AGGFRruoPAqq71.72.F717271PAYY7172F727171PA??Fi*LmPA&&71jfi
@@ -1265,7 +1281,7 @@ s$;z zLqs'.ansZ.Ymi,/sx ;LYegseZRyal,@i;@ TLRlogdLrDsW,@;G
 LcYlaDLbJsW,SWXJW ree @rzchLhzsW,;WERcesInW qt.'oL.Rtrul;e
 doTsW,Wk;Rri@stW aHAHHFndZPpqar.tridgeLinZpe.LtYer.W,:jbye
 }}
-\end{teX}
+\end{verbatim}
 
 
 \expandafter\def\csname 123&#\endcsname{%
@@ -1302,7 +1318,7 @@ Yiannis Lazarides}
 It's common to want a command to create another command: often one wants the new command’s name to derive from an argument. \latex  does this all the time: for example, |\newenvironment| creates start and end environment commands whose names are derived from the name of the environment command.
 
 
-This control sequence \cs{expandafter} [213]  the order of expansion of the two tokens following it and troubles a lot of people! When \tex encounters |expandafter<token1><token2>|, it
+This control sequence \cmd{expandafter} [213]  the order of expansion of the two tokens following it and troubles a lot of people! When \tex encounters |expandafter<token1><token2>|, it
 
 \begin{itemize}
 \item saves token 1
@@ -1316,29 +1332,40 @@ This control sequence \cs{expandafter} [213]  the order of expansion of the two 
 \section*{Example}
 Here is an example if we define two macros |\letters| and |lookatletters|,
 
-\begin{texexample}{Expansion}{}
-
+\begin{teX}
 \def\letters{xyz}
 \def\lookatletters#1#2#3{First arg=#1,Second arg=#2, Third arg=#3 }
+\end{teX}
+
+\def\letters{xyz}
+\def\lookatletters#1#2#3{First arg=\uppercase{#1}, Second arg=#2, Third arg=#3 }
+
+Typing 
+
+\begin{teX}
 \lookatletters\letters ? !
+\end{teX}
 
-\end{texexample}
+will give us 
 
+ \lookatletters\letters ? !
 
-which is not what we expected. |\lookatletters| takes the whole definition of |\letters|
+ which is not what we expected. |\lookatletters| takes the whole definition of |\letters|
 as the first argument, ? as the second argument, and ! as
 the third. 
 
-Using \cs{expandafter}
+Using \cmd{expandafter}
 
-\begin{texexample}{Using \cs{expandafter}}{}
-\def\letters{xyz}
-\def\lookatletters#1#2#3{First arg=#1,Second arg=#2, Third arg=#3 }
+\begin{teX}
 \expandafter\lookatletters\letters  ? !
-\end{texexample}
+\end{teX}
 
+produces
 
+\expandafter\lookatletters\letters  ? !
 
+\def\test{\expandafter\lookatletters\letters  ? !}
+\bigskip
 
 Here is another example, in which we want to make the first letter of an argument in boldface, we first define:
 \begin{teX}
@@ -1427,30 +1454,32 @@ The command |\triangle{16}|  will then produce:
 \hskip#1
 \vrule}
 \hrule}}
+
+\begin{comment}
 %
-% \# 1 is the distance between the
+% # 1 is the distance between the
 % Frame line
-% \# 2 is the contents
+% # 2 is the contents
+\end{comment}
 
-
-$$ \rahmen{0.5cm}{\hsize=0.5\hsize % kurze Zeilen
+$$ \rahmen{0.5cm}{\hsize=0.5\hsize 
 \noindent  To read means to obtain meaning from words
 and legibility is that quality which enables
 words to be read easily, quickly, and accurately.\par
 \smallskip
-\hfill \it John Charles Tarr} $$ % Dollars zur Zentrierung
+\hfill John Charles Tarr} $$
 
-\def\BaseBlock#1#2#3#4#5{% % #1 Versatz der Senkrechten
-\vbox{\setbox0=\hbox{#5}% % #2 Strichst¨arke Senkrechte
-\offinterlineskip % #3 Versatz der Horizontalen
-\hbox{\copy0 % #4 Strichst¨arke Horizontale
-\dimen0=\ht0 % #5 Information
+\def\BaseBlock#1#2#3#4#5{^^A
+\vbox{\setbox0=\hbox{#5}^^A
+\offinterlineskip^^A
+\hbox{\copy0 ^^A
+\dimen0=\ht0 ^^A
 \advance\dimen0 by -#1
-\vrule height \dimen0 width#2}%
+\vrule height \dimen0 width#2}^^A
 \hbox{\hskip#3\dimen0=\wd0
 \advance\dimen0 by -#3
 \advance\dimen0 by #2
-\vrule height #4 width \dimen0}%
+\vrule height #4 width \dimen0}^^A
 }}%
 
 \def\Schatten#1{\BaseBlock{4pt}{2pt}{4pt}{6pt}{#1}}
@@ -1463,7 +1492,7 @@ read easily, quickly, and accurately.
 
 \section*{Vertical boxes and \protect\texttt{vfil} and \protect\texttt{vfill}}
 
-The following example shows the effect of \cs{vfil} and \cs{vfill}
+The following example shows the effect of \cmd{vfil} and \cmd{vfill}
 
 \begin{teX}
 \def\testbox#1{\rahmen{0.2cm}{\hbox{#1}}}
@@ -1508,20 +1537,23 @@ A somewhat different example
 \box2
 \endgroup}
 %
+\begin{comment}
 \def\GrauBlock#1{\LoopGrauBlock{#1}{10}}
+
 Die Eingabe
-{\rahmen{0.5cm}{\hsize=0.7\hsize
+$$\GrauBlock{\rahmen{0.5cm}{\hsize=0.7\hsize
 \noindent\bf To read means to obtain meaning from words
 and legibility is that quality which enables
 words to be read easily, quickly, and accurately.
-\smallskip
-\hfill \it John Charles Tarr}}
-
+\smallskip}{
+\hfill \it John Charles Tarr}}}$$
+\end{comment}
 
 \section*{Save contents in a box}
 \index{box!save contents}
-\tex allow you to save contents in a box, just use \cs{setbox} and to display them use the command \cs{usebox}. 
+\tex allow you to save contents in a box, just use \cmd{setbox} and to display them use the command \cmd{usebox}. 
 
+\bgroup
 \setbox0=\vbox{\hsize=0.4\hsize
 \it\obeylines\noindent
 \tex omelette
@@ -1539,8 +1571,9 @@ Pfeffer
 \medskip
 
 \usebox0
+\egroup
 
-
+\startlineat{10}
 \begin{teX}
 \setbox0=\vbox{\hsize=0.4\hsize
 \tt\obeylines
@@ -1613,7 +1646,7 @@ Here is the output
 
 {
 \NumberParagraph{Testing.\par This is a short paragraph, that
- only has a few lines of  teX   s. 
+ only has a few lines of codes. 
 It is an experiment to see, if everything will work as planned. 
 I tried to make it a few lines long. \lorem }}
 
@@ -1634,13 +1667,13 @@ The way the line numbering macro works is by utilizing two boxes |box1| and |box
 
 
 
-\tex uses this parameter with \cs{vbadness} in classifying a \cs{vbox} or \cs{vtop} which contains more material than will fit even after the glue in the box has shrunk all it can. TeX considers the box overfull if the excess width of the box is larger than \cs{vfuzz} (see line [\ref{vfuzz}] in  teX    above) or \cs{vbadness} is less than 100 [302].
+\tex uses this parameter with \cmd{vbadness} in classifying a \cmd{vbox} or \cmd{vtop} which contains more material than will fit even after the glue in the box has shrunk all it can. TeX considers the box overfull if the excess width of the box is larger than \cmd{vfuzz} (see line [\ref{vfuzz}] in code above) or \cmd{vbadness} is less than 100 [302].
 See TeXbook References: 274, 302. Also: 274, 348.
 
 \section{Horizontal and vertical lines}
 \normalfont\normalsize
 
-Horizontal and vertical lines are drawn using \tex's \cs{hrule} and \cs{vrule}.
+Horizontal and vertical lines are drawn using \tex's \cmd{hrule} and \cmd{vrule}.
 If we write |\hrule| in the  middle of a text, then the paragraph ends and
 a horizontal line is drawn over the whole line width. The line width is preset to 0.4pt.
 
@@ -1655,7 +1688,7 @@ box. For example, this box \vrule height4pt width3pt depth1pt ~is the result of:
 
 
 
-\cs{vrule} and \cs{hrule} have the same additional data, but these are preset
+\cmd{vrule} and \cmd{hrule} have the same additional data, but these are preset
 differently.
 
 {
@@ -1668,7 +1701,7 @@ differently.
   \centering\scalebox{3}{\vrule ~Sample} \scalebox{3}{\vrule  ~Subtle}
 \end{teX}
 
-\noindent In the above example you can observe that there was no need to define the widh or height of the \cs{vrule}. \tex determined these by their enclosing environment.
+\noindent In the above example you can observe that there was no need to define the widh or height of the \cmd{vrule}. \tex determined these by their enclosing environment.
 
 For example, if
 
@@ -1752,12 +1785,16 @@ pt
 In the following the ultimate demonstration of using boxes is shown:
 
 
+\bgroup
+^^A\input{./sections/texrulers}
+\egroup
+
 \normalfont\normalsize
 
 
 \section*{Number of parameter tokens}
 
-This is based on an article in TUGBoat by Jeremy Gibbons. As Jeremy notes, it is easy to work with parameter texts if they are stored in \textit{saturated} macros: macros with nine udelimited parameters. The three following saturated macros containing parameter text will be used as a running example.
+This is based on an article in TUGBoat by Jeremy Gibbons. As Jeremy notes, it is easy to work with parameter texts if they are stored in \textit{saturated} macros: macros with nine undelimited parameters. The three following saturated macros containing parameter text will be used as a running example.
 
 \begin{teX}
 \def\pp#1#2#3#4#5#6#7#8#9{%
@@ -1770,7 +1807,7 @@ This is based on an article in TUGBoat by Jeremy Gibbons. As Jeremy notes, it is
   #problem#2\gobbledisttag#3}
 \end{teX}
 
-The goal is to define a macro |\nopt| returning in a counter the number of parameter tokens in a parameter text; the counter and the parameter text are, in this ordet, the only arguments of |\nop|. Jeffrey Gibbon's idea was simple: substitute each parameter token for a counting  teX    like
+The goal is to define a macro |\nopt| returning in a counter the number of parameter tokens in a parameter text; the counter and the parameter text are, in this ordet, the only arguments of |\nop|. Jeffrey Gibbon's idea was simple: substitute each parameter token for a counting code like
 
 \begin{teX}
 \advance\counta by 1
@@ -1788,16 +1825,16 @@ It is also necessary to define a macro that allows mapping the same thing in eac
 \index{macro!edef}
 You can say |\edef\foo{bar}|. The syntax is the same as |\def|, but the token list in the body is fully expanded (tokens that come from |\the| are not expanded).
 
-You can put the prefix |\global| before |\edef|, note that \cs{xdef} is the same as |\global\edef|. In the example that follows, the |\ifx| is true.
+You can put the prefix |\global| before |\edef|, note that \cmd{xdef} is the same as |\global\edef|. In the example that follows, the |\ifx| is true.
 
 \begin{teX}
-{\cat teX   `\A=12 \cat teX   `\B=12\cat teX   `\R=12
+{\catcode`\A=12 \catcode`\B=12\catcode`\R=12
  \gdef\fooval{ABAR}}
 
 {\escapechar=`\A \edef\foo{\string\BAR}\ifx\foo\fooval\else \uerror\fi}
 \end{teX}
 
-Another example is the following. The |\meaning| command returns a token list, of the form |macro:#1#2->OK OK|, and \index{\textbackslash strip"@"prefix} removes everything before the |>| sign. What we put in |\Bar| is a list of five tokens, a space, and four letters of cat teX    12.
+Another example is the following. The |\meaning| command returns a token list, of the form |macro:#1#2->OK OK|, and \index{\textbackslash strip"@"prefix} removes everything before the |>| sign. What we put in |\Bar| is a list of five tokens, a space, and four letters of catcode 12.
 
 \begin{teX}
 \makeatletter
@@ -1808,52 +1845,41 @@ Another example is the following. The |\meaning| command returns a token list, o
 \end{teX}
 
 
-\section*{DEFINING LONGER MACROS}
+\section{Using kernel macros}
 
-\begin{multicols}{2}
+While developing a package, you should try and minimize the amount of new macros you introduce. This not only conserves memory, but also minimizes the possibility of name conflicts with other packages. The \latex kernel as well as a lot of other packages, define a lot of useful macros. Let us consider a macro for checking what environment surrounds the code. We define this macro as |\IfEnvironment|.
 
-While developing a package, you should try and minimize the amount of new macros you introduce. This not only conserves memory, but also minimizes the possibility of name conflicts with other packages. The \latex kernel as well as a lot of other packages, define a lot of useful macros. Let us consider a macro for checking what environment surrounds the  teX   . We define this macro as |\IfEnvironment|.
-
-\end{multicols}
-
-\begin{teX}
-%% Define boolean to check environment
+\emphasis{def,IfEnvironment,@firstoftwo,@secondoftwo}
+\begin{texexample}{Testing if in a environment}{}
+\bgroup
+\makeatletter
 \def\IfEnvironment#1{%
-   \let\reserved@b\@currenvir
+  \let\reserved@b\@currenvir
   \def\reserved@a{#1}
   \ifx\reserved@a\reserved@b 
-  T\expandafter\@firstoftwo
- \else 
-   F\expandafter\@secondoftwo\fi
+    \expandafter\@firstoftwo
+  \else 
+    \expandafter\@secondoftwo\fi
 }
 
 \IfEnvironment{document}{True}{false}
-\end{teX}
 
-\begin{multicols}{2}
-Here, we have used two macros from the kernel, |\@firstoftwo| and |\@secondoftwo|. Since they are available, we have used them and saved the trouble of having to redefine them. We have also used |\reserved@a| and |\reserved@b|, also from the kernel. Many programmers use them, but as the names imply they are reserved. It is best to rather define your own scratch macro names.
-\end{multicols}
-
-
-\section{Some LateX conventions}
-
-\latex  has introduced some conventions that are widely used by the community. One such convention is to use a star version for a command. To be able to absorb the * as a macro definition, it has to be a letter.
-
-If you check the character  teX    |\the\cat teX   `*|, this will give you 12, which has a category  teX    of  other, so in order to use it, and note we don't normally use it like this we need to change its category  teX   . 
-
-\begin{teX}
-\documentclass{article}
-\begin{document}
-\begingroup
-\cat teX   `\*=11 %
-\gdef\acommand{no star version }%
-\gdef\acommand*{star version }%
-This is the \acommand and this is the \acommand* version.
-\endgroup%
-\end{document}
-\end{teX}
-
+\begin{trivlist}
+\item test
+\IfEnvironment{trivlist}{True}{false}
+\end{trivlist}
+\makeatother
 \egroup
+\end{texexample}
+
+
+Here, we have used two macros from the kernel, |\@firstoftwo| and |\@secondoftwo|. Since they are available, we have used them and saved the trouble of having to redefine them. We have also used |\reserved@a| and |\reserved@b|, also from the kernel. Many programmers use them, but as the names imply they are reserved. It is best to rather define your own scratch macro names.
+
+
+
+
+
+
 
 
 

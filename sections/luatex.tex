@@ -1,0 +1,604 @@
+\chapter{LuaTeX}
+
+\begin{texexample}{Checking for Lua}{}
+\ifluatex
+  LuaTEX is running
+\else
+  Without LuaTEX
+\fi
+
+\ifxetex
+ XeTeX is running
+\else
+ Without XeTeX
+\fi
+\end{texexample}
+
+\section{Getting started}
+For an introduction to the most important gotchas of \string\directlua, see lualatex-doc.pdf.
+Before presenting the tools in this package, let me insist that the best way to manage a nontrivial piece of Lua code is probably to use an external file and source it from Lua, as explained in the cited document.
+
+\section{Basic print statements}
+
+To print you can use the Lua command \lstinline{print}.
+
+\directlua{tex.print(2+2)}
+
+Lua can handle subtraction, negative numbers, numbers with decimal points, multiplication (using *),
+division (using /), exponentiation (using \texttt{\^} ), and combinations of these. Here are some examples:
+\emphasis{directlua, tex,print}
+\begin{tcblisting}{}
+\directlua{tex.print(2+2^3)}
+\end{tcblisting}
+
+\subsection{Scientific notation}
+
+You can also write numbers using the \textit{scientific notation}, where the aprt before the upper multiplied by 10 to the power after $\textup{e}$
+
+\begin{tcblisting}{}
+\directlua{tex.print(1.2193263111264E17 / 987654321)}
+\end{tcblisting}
+
+\subsection{Hexadecimal numbers}
+Lua also understands hexadecimal (base 16) numbers, using the letters
+a-f (or A-F) to represent 10 through 15. Hexadecimal numbers should start with \texttt{0x} or \texttt{0X}.
+\begin{tcblisting}{}
+\directlua{tex.print(0XA)}
+\end{tcblisting}
+
+
+\section{Lua variables}
+
+\begin{tcblisting}{}
+\directlua{
+   A=2^0.5
+   B=42 
+   tex.print(A+B)
+}
+\end{tcblisting}
+
+Lua is case sensitive, which means NUM, Num and num are different variables.
+
+\begin{tcblisting}{}
+\directlua{
+   NUM=1
+   Num=2 
+   num=3
+   tex.print(NUM+Num+num)
+}
+\end{tcblisting}
+
+
+\subsection{Multiple Assignment}
+
+You can assign multiple values to multiple variables at the same time. You can also print multiple values
+at the same time. The comma is used for both. Here’s how you use the comma for multiple assignment,
+and for printing multiple values at the same time:
+
+\begin{tcblisting}{}
+\directlua{
+  Product, Exponent = 10*10, 999
+  A,B=1,2
+  tex.print(Product, Exponent)
+  tex.print(A,B)
+}
+\directlua{
+    A,B=1,2
+    tex.sprint(A,B)
+}
+\end{tcblisting}
+
+
+
+\section{Strings}
+The double quote characters (") mark the beginning and end of the string. Marking the beginning and
+end is all they do; they are not actually part of the string, which is why print doesn't print them, as in
+this example:
+
+\begin{tcblisting}{}
+\directlua{
+ tex.sprint("This is a string")
+}
+\end{tcblisting}
+
+Like numbers, strings are values, which means they can be assigned to variables. Here's an example
+
+\begin{tcblisting}{}
+\directlua{
+  Name, Phone = "Jane X. Doe", "248-555-5898"
+  tex.sprint(Name, Phone)
+}
+\end{tcblisting}
+
+\subsection{Quoting Strings with Square Brackets}
+
+\begin{tcblisting}{}
+\directlua{
+ tex.sprint([[
+    There are some 
+    funky  characters in this
+    string. 
+]])
+}
+\end{tcblisting}
+
+Now what do you do if you want to print to square brackets together?
+
+\begin{tcblisting}{}
+\ttfamily \directlua{
+ tex.sprint([=[
+    [[There]] are some 
+    funky  characters in this
+    string. 
+]=])
+}
+\end{tcblisting}
+
+\subsection{Escaping Characters}
+
+\begin{tcblisting}{}
+\ttfamily \directlua{
+ tex.sprint([=[
+    [[There]] are some 
+    funky \string\\ characters in this \string\\
+    string. 
+]=])
+}
+\end{tcblisting}
+
+
+\begin{tcblisting}{}
+\ttfamily \directlua{
+ tex.sprint("2"+21)
+}
+\end{tcblisting}
+
+\subsection{Concatenation operator}
+
+\begin{tcblisting}{}
+\ttfamily \directlua{
+ tex.sprint("99"..21) -- this is a comment
+}
+\end{tcblisting}
+
+\section{Comments}
+\begin{tcblisting}{}
+\ttfamily \directlua{
+ tex.sprint("99"..21) -- this is a comment
+}
+\end{tcblisting}
+
+\section{Conditionals}
+\begin{tcblisting}{}
+\directlua{
+ a=3
+ b=12^2
+ if a<b then 
+   tex.sprint("$a<b^2$ "..a..", "..b) 
+ else
+ end
+}
+\end{tcblisting}
+
+\subsection{while loop}
+\begin{tcblisting}{}
+\directlua{
+counter = 1
+ while counter <= 100 do
+ tex.print(counter)
+ counter = counter + 1
+ end
+}
+\end{tcblisting}
+
+\let\exec\directlua
+\subsection{for loop}
+\begin{tcblisting}{}
+\exec{
+for N = 1, 10 do
+ tex.print(N)
+ end
+}
+\end{tcblisting}
+
+\subsection{repeat until}
+\let\exec\directlua
+\begin{tcblisting}{}
+\exec{
+  N,Z=1,21
+  F=1
+  repeat
+    tex.print(N+Z)
+    N=N+1
+    F=F+10
+  until F>=99
+  tex.print(Z)
+}
+\end{tcblisting}
+
+\subsection{The break and do Statements}
+\begin{tcblisting}{}
+\exec{
+for N = 1, 10 do
+ if N > 5 then
+ break
+ end
+ tex.print(N)
+ end
+}
+\end{tcblisting}
+
+\chapter{Functions}
+
+\begin{tcblisting}{}
+\exec{
+function Average(Num1, Num2)
+ return (Num1 + Num2) / 2
+ end
+ tex.print(Average(10,12))
+}
+\end{tcblisting}
+
+Here is one that prints the Ackerman function. This is an interesting function as the value grows very quickly and can cause a stack overflow. It can also slow compilation quite a bit for higher values. ack(4,1) will cause a stack overflow. Whereas ack(3,11) compiles giving a value of 16381 ack(3,12) causes a stack overflow.  
+
+\[
+\begin{matrix}
+   a\uparrow\uparrow b & = {\ ^{b}a}  = & \underbrace{a^{a^{{}^{.\,^{.\,^{.\,^a}}}}}} & 
+   = & \underbrace{a\uparrow (a\uparrow(\dots\uparrow a))} 
+\\  
+    & & b\mbox{ copies of }a
+    & & b\mbox{ copies of }a
+  \end{matrix}
+\]
+
+\[
+\begin{bmatrix}
+   a\times b & = & \underbrace{a+a+\dots+a} \\
+   & & b\mbox{ copies of }a
+\end{bmatrix} 
+\]
+
+
+\begin{tcblisting}{}
+\exec{
+function ack(M,N)
+    if M == 0 then return N + 1 end
+    if N == 0 then return ack(M-1,1) end
+    return ack(M-1,ack(M, N-1))
+end
+tex.sprint(ack(3,8))
+}
+\end{tcblisting}
+
+
+\subsection{Returning multiple values}
+This return an error if Arg1 is a number
+\begin{tcblisting}{}
+\exec{
+function ReturnArgs(Arg1, Arg2, Arg3)
+  return Arg1, Arg2, Arg3
+end
+   tex.sprint(ReturnArgs("aaaa", 2, 3))
+function Fact(N)
+  local Ret = 1
+  for I = 1, N do
+    Ret = Ret * I
+  end
+  return Ret
+  end
+tex.print(Fact(10))
+}
+\end{tcblisting}
+
+
+\begin{tcblisting}{}
+\exec{
+function Fact(N)
+  local Ret = 1
+  for I = 1, N do
+    Ret = Ret * I
+  end
+  return Ret
+  end
+tex.print(Fact(10))
+}
+\end{tcblisting}
+
+\subsection{Anonymous Functions}
+\begin{tcblisting}{}
+\exec{
+(function(A, B)
+   tex.print(A + B^2)
+ end)(2, 3)
+}
+\end{tcblisting}
+
+\chapter{Working with Tables}
+This chapter explores a new data type called a table. It's a data structure, which means that it lets
+you combine other values. Because of its flexibility, it is Lua’s only data structure. (It is possible to
+create other, special-purpose data structures in C.)
+\begin{tcblisting}{}
+\begin{filecontents*}{test.lua}
+hash = {}
+hash[ "key-1" ] = "val1"
+hash[ "key-2" ] = 1
+hash[ "key-3" ] = {}
+tex.sprint(hash["key-2"])
+\end{filecontents*}
+\directlua{dofile("test.lua")}
+\end{tcblisting}
+
+
+\section{Using dofile}
+
+Although using \lstinline{directlua} has been a useful function so far, this is limiting in many respects.
+\begin{filecontents*}{test.lua}
+ function test(N)
+  return N
+end
+tex.print(test(5))
+\end{filecontents*}
+
+\begin{texexample}{Working with lua file}{ex:dofile}
+\begin{filecontents*}{test.lua}
+ function test(N)
+   return N
+ end
+ tex.print(test(5))
+\end{filecontents*}
+\directlua{dofile("test.lua")}
+\end{texexample}
+
+As we want to keep ourselves within a document, rather than a separate file, we
+use the \verb+filecontents+ package to save a lua file on disc and then use it with
+\lstinline{dofile}.
+
+\begin{tcblisting}{}
+\begin{filecontents*}{test.lua}
+hash = {}
+hash[ "key-1" ] = "val1"
+hash[ "key-2" ] = 1
+hash[ "key-3" ] = {}
+\end{filecontents*}
+\directlua{dofile("test.lua")}
+\end{tcblisting}
+
+
+\begin{tcblisting}{}
+\begin{filecontents*}{test.lua}
+Squares = {} -- A table constructor can be empty.
+ for I = 1, 5 do
+   Squares[I] = I ^ 2
+ end
+ for I = 1, 5 do
+   tex.sprint(I .. " squared is " .. Squares[I].."\\\\")
+ end
+\end{filecontents*}
+\directlua{dofile("test.lua")}
+\end{tcblisting}
+
+
+\begin{tcblisting}{}
+\begin{filecontents*}{test01.lua}
+ NameToInstr = {John = "rhythm guitar",
+ Paul = "bass guitar",
+ George = "lead guitar",
+ Ringo = "drumkit"}
+ for Name, Instr in ipairs(NameToInstr) do
+   tex.sprint(Name)
+ end
+\end{filecontents*}
+\directlua{dofile("test01.lua")}
+\end{tcblisting}
+
+\clearpage
+Using tables that contain functions is a handy way to organize functions, and Lua keeps many of its
+built-in functions in tables, indexed by strings. For example, the table found in the global variable table
+contains functions useful for working with tables. If you assign another value to table, or to one of the
+other global variables used to store built-in functions, the functions won’t be available anymore unless
+you put them somewhere else beforehand. If you do this accidentally, just restart the interpreter
+
+\subsection{table.sort}
+\begin{tcblisting}{}
+\begin{filecontents*}{test.lua}
+Names = {"Scarlatti", "Telemann", "Corelli", "Purcell",
+   "Vivaldi", "Handel", "Bach","Yiannis"}
+table.sort(Names)
+ for I, Name in ipairs(Names) do
+   tex.sprint(I.." ".. Name.."\\par")
+ end
+\end{filecontents*}
+\directlua{dofile("test.lua")}
+\end{tcblisting}
+
+\subsection{table.concat}
+\subsection{table.sort}
+\begin{tcblisting}{}
+\begin{filecontents*}{test.lua}
+require "lualibs"
+-- require "luasql.mysql"
+-- commas (and spaces):
+ function CommaSeparate(Arr)
+   return table.concat(Arr, ", ")
+ end
+ tex.print(CommaSeparate({"a", "bc", "d"}))
+ FileStr = os.tmpname()
+    tex.sprint("\\string"..os.tmpname().." \\% temporary file name")
+ Hnd = io.open(FileStr, "w")
+ if Hnd then
+   tex.sprint("Opened temporary file ", FileStr, " for writing\n")
+   Hnd:write("Line 1\nLine 2\nLine 3\n")
+Hnd:close()
+for Str in io.lines(FileStr) do
+  io.write(Str, "\n")
+end
+  os.remove(FileStr)
+else
+   io.write("Error opening ", FileStr, " for writing\n")
+end
+\end{filecontents*}
+
+\directlua{dofile("test.lua")}
+\end{tcblisting}
+
+\chapter{Packages}
+The luacode package provides commands to make entering of code from a teX
+file easier. It provides a better escape mechanism
+
+\emphasis{luaexec,luacode}
+\begin{tcblisting}{}
+\def\foo{156789.0001}
+\(
+ \luaexec{
+ texio.write_nl("Special chars: _ ^ & $ { } ~ working.\string\n"
+ .. "Backslashes still need a bit of care.\string\n"
+ .. "Single sharps are easier now: \#")
+  % a tex comment: we also get a % below
+ tex.sprint("\\pi \\neq ", tostring(math.pi):gsub('\%.', '+'))
+ % we can use TeX macros
+tex.sprint("-", math.sqrt(\foo))
+ }
+\)
+\end{tcblisting}
+\section{Using \texttt{luacode}}
+The luacode environment is similar to luaexec
+You can pass a macro, which must be fully expandable in order
+to work properly.
+\begin{tcblisting}{}
+\edef\foo{156789.0001}
+\[
+ \begin{luacode}
+    tex.sprint("a=", math.sqrt(\foo),"+ z^3")
+ \end{luacode}
+\]
+\end{tcblisting}
+
+\section{Creating new environments}
+\emphasis{luacode,endluacode,tex}
+If you need to create new environment you will have to use the \lstinline!\luacode...\endluacode! form  rather than the begin...end.
+\medskip
+
+\begin{tcblisting}{}
+\begin{luacode}
+  require "lfs"
+  local temp=lfs.currentdir()
+ -- tex.sprint(-2, temp)
+
+  function attrdir (path)
+    for file in lfs.dir(path) do
+        if file ~= "." and file ~= ".." then
+            local f = path..'/'..file
+            tex.sprint (-1, f.."\\par     ")
+            local attr = lfs.attributes (f)
+            assert (type(attr) == "table")
+            if attr.mode == "directory" then
+                attrdir (f)
+            else
+               -- for name, value in pairs(attr) do
+                    --tex.sprint (-2,name, value)
+                     -- tex.sprint (-2,name)
+               -- end
+            end
+        end
+    end
+  end
+  local z="C:/test"
+  attrdir (z)
+\end{luacode}
+\end{tcblisting}
+
+\chapter{Finding where everything is}
+
+One of the most frustrating things when you starting with a new language, is to find out where
+everything is and if the various paths are correct. The snippet below does just that. It tests for a file using \lstinline!kpse.find_file!
+\bigskip
+
+\emphasis{kpse,find}
+\begin{tcblisting}{}
+\begin{filecontents}{atest.tex}
+\end{filecontents}
+\begin{luacode}
+  -- kpse.set_program_name("lualatex")
+  -- uncomment if having problems
+  local file = "atest.tex"
+  local path = kpse.find_file(file, 'tex')
+    if path==nil then
+     tex.tprint({"\\color{red}"},{"File not found!"})
+   else
+     tex.tprint({path})
+   end
+\end{luacode}
+\end{tcblisting}
+
+In the example, we created a small file on the fly, using \lstinline!filecontents! package. Then we test using \lstinline!kpse.find_file!. It returns true and we print the full path.
+
+\subsection{the os library}
+Getting the operating system type and name
+\emphasis{kpse,find,require,os,name,lualibs,type}
+\begin{tcblisting}{}
+\begin{filecontents}{atest.tex}
+\end{filecontents}
+\begin{luacode}
+  -- get the os name
+  require("lualibs-os")
+  local G,Y=os.name,os.type
+  tex.tprint({G.."\\par"},{Y.."\\par"})
+\end{luacode}
+\end{tcblisting}
+
+Gettting the runtime of a program
+
+\begin{tcblisting}{}
+\begin{filecontents}{atest.tex}
+\end{filecontents}
+\begin{luacode}
+  -- get the os name
+  require("lualibs-os")
+  tex.sprint (">> ",os.runtime()," ms")
+  tex.tprint({-2,os.uuid()})
+\end{luacode}
+\end{tcblisting}
+
+\subsection{uuid}
+\emphasis{os,uuid}
+Getting a uuid or a slight variant of it we use \lstinline!os.uuid()!
+
+\section{Reading from a file}
+
+
+\usepackage{luatextra}
+
+
+\begin{filecontents}{testdata.dat}
+  A  B
+  1.0 20
+  1.1 21
+  1.2 22
+\end{filecontents}
+
+\begin{texexample}{Reading from files}{ex:readfile}
+\begin{luacode}
+  function readtxt()
+    file = io.open("testdata.dat", "r")
+    for line in file:lines() do
+      print(line)
+      tex.print(line)
+    end
+  end
+\end{luacode}
+\directlua{readtxt()}
+\end{texexample}
+
+
+
+
+
+
+
+
+
+
+
+
+
+

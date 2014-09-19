@@ -1,0 +1,738 @@
+\chapter{Defining Classes}
+
+\epigraph{First there was one user and I took a lot of time to satisfy myself. Then I had 10 users, and a whole new level of difficulties arose. Then I had a hundred users and another level of things happened. I had a thousand users, I had ten thousand each of those were special phases in the development, important. I couldn't have gone with ten thousand until I'd done
+it with a thousand. But each time a new wave of
+changes came along, the idea was to have \protect\TeX\ get
+better, and not get more diverse as it needed to handle
+new things.}{Donald Knuth}
+
+
+\section{Introduction}
+
+
+To \emph{make} a book is an interesting and somewhat involved process \cite{town}. The text is set in type and printed on pages, the pages are gathered and folded into signatures and these are gathered and folded into signatures and these are then bound and covered. Many of the aspects of this process that has passed down to us by previous generations is discussed extensively in other sections of this book.  Class authors have to distill this knowledge in a set of typographical rules to be described in a class file. The first thing such an author must do is to describe the \emph{rationale} of developing such a class. The |octavo|\cite{octavo} class was developed to enable printing books in dimensions that follow traditional styles. The |memoir|\cite{memoir}  class to offer a flexible system on which other classes could be based. The |tufte-book| and |tufte-handout| classes to provide a style that resembles those found in Tufte books. Many Universities offer \emph{Thesis} classes to standardize the way these are produced. Many of these Universities, translated the styles previously typed and the results are a typographical disaster, only mitigated by the ability to display beautiful mathematics. As these are printed on standard \emph{photocopy paper} one cannot do much with the layout. 
+
+\section{Identifying your class}
+The first thing a class must do is to identify any other formats it needs and to announce
+its name.\cmd{NeedsTeXFormat}\cmd{ProvidesClass}
+
+The following example, delares the version of \LaTeXe\ that it requires and then
+gives the class name. It can be found in the preable of most well written classes. You should also put some remarks to identify you as the author, the version number and other similar details. These are discussed in more detail in the next Chapter, where you will see how to automate documentation for your class.
+
+\begin{teXXX}
+\NeedsTeXFormat{LaTeX2e}[1994/06/01]
+\ProvidesClass{myclass-book}[2010/12/11 v3.5.0 myclass-book]
+\end{teXXX}
+
+The above syntax must be followed exactly so that this information can be
+used by \texttt{LoadClass} or \texttt{documentclass} (for classes) or \cmd{RequirePackage}
+ or\cmd{usepackage} (for packages) to test that the release is not too old.
+The whole of this $<release-info>$ information is displayed by \cmd{listfiles} and
+should therefore not be too long.
+
+\begin{teX}
+%%
+% Load the common style elements
+\input{myclass-common.def}
+\end{teX}
+
+
+
+Another command that can be used is \doccmd{ProvidesFile}. 
+This is similar to the two previous commands except that here the fullname,
+including the extension, must be given. It is used for declaring any files other
+than main class and package files.
+
+This is useful, if you decide to have your main definitions in a separate file.
+
+
+
+\section{Class Options}
+
+Before we see in detail how to add Options to a class, we need to review a package called
+\texttt{xkeyval}. Unless you are in the business of re-discovering wheels, this is an absolute must
+for developing, readable and maintenable code.You can download xkeyval at
+ \url{http://ctan.org/tex-archive/macros/latex/contrib/xkeyval/}
+
+\begin{teXXX}
+\usepackage[textcolor=red,font=times]{mypack}
+\end{teXXX}
+
+Class options are best set by using booleans\cmd{newboolean}.
+
+We first set a new boolean that we name@myclass@afourpaper. This is used using the package
+\texttt{ifthen}\sidenote{The ifthen package was developed by 
+David Carlisle, can be downloaded at \url{ http://www.ifi.uio.no/it/latex-links/ifthen.pdf }} 
+Then we can |DecalareOptionX| and we set the boolean to default to true. If the user then types
+
+myclass[a4paper]
+
+The a4paper options will be set. This is a much better and concise way of defining options.
+\cmd{newboolean}
+
+
+\begin{teX}
+\newboolean{@myclass@afourpaper}
+\DeclareOptionX[myclass]<common>{a4paper}
+  {
+   \setboolean{@myclass@afourpaper}
+   {true}
+  }
+\end{teX}
+
+Note that the command provide by \texttt{ifthen} \doccmd{setboolean} takes true or false, as \#2, and sets \#1 accordingly. In the above code we set the option as true. 
+
+
+It is much easier and most programmers use the \texttt{ifthen} package to check
+for option booleans
+
+\begin{teX}
+\ifthenelse{\boolean{@myclass@afourpaper}}
+  {\geometry{
+        a4paper,
+        left=24.8mm,
+        top=27.4mm,
+        headsep=2\baselineskip,
+        textwidth=107mm,
+        marginparsep=8.2mm,
+        marginparwidth=49.4mm,
+        textheight=49\baselineskip,
+        headheight=\baselineskip
+    }
+  }
+ {}
+\end{teX}
+
+\section{Set-up the fount sizes}
+LaTeX does not provide definitions of all the font-sizes. Unless you are
+extending an existing class, this is one of the first tasks you need to 
+do in your new class.
+
+Normally class authors will define all the commonly defined size commands,
+such as  \cmd{small}, \cmd{normalsize} and other similar commands.
+
+In the example shown below, we first start by defining the \doccmd{normalsize} font
+size. In this book the \doccmd{normalsize}  is defined as 14pt. We also define the vertical
+spaces that we need to have abovedisplay and belowdisplayskip. These are all very difficult to
+remember and once you have something you are happy with, just copy from class to class
+or even define a samll definition file to keep them all together.
+
+
+{\fontfamily{phv}\selectfont Helvetica looks like this}
+and {\fontencoding{OT1}\fontfamily{ppl} Palatino looks like this}.
+
+
+ The user has access to a number of commands which change the size of
+ the fount, relative to the `main' size used for the bulk of the text.
+
+
+ These \cmd{size} commands issue a \cmd{@setfontsize}\index{Latex kernel!@setfontsize} 
+ command.
+
+\begin{teX}
+  \@setfontsize\size\font-size{baselineskip} where:
+\end{teX}
+
+
+
+  \begin{description}
+    \item {font-size} The absolute size of the fount to use from
+        now on.
+    \item{baselineskip} The normal value of \cmd{baselineskip}
+        for the size of the fount selected. (The actual value will be
+       % |\baselinestretch| * \meta{baselineskip}.)
+    \end{description}
+
+A number of commands, defined in the \LaTeX  kernel, shorten the
+following  definitions and are used throughout. These are:
+
+    \begin{center}
+    \begin{tabular}{ll@{\qquad}ll@{\qquad}ll}
+    \verb=\@vpt= & 5 & \verb=\@vipt= & 6 & \verb=\@viipt= & 7 \\
+    \verb=\@viiipt= & 8 & \verb=\@ixpt= & 9 & \verb=\@xpt= & 10 \\
+    \verb=\@xipt= & 10.95 & \verb=\@xiipt= & 12 & \verb=\@xivpt= & 14.4\\
+    \ldots
+    \end{tabular}
+    \end{center}
+
+
+\subsection{Setting up the normalsize}
+ The user command to obtain the `main' size is \cmd{normalsize}. \LaTeX\
+ uses \cmd{@normalsize} \index{Latex kernel!@normalsize} when referring to the main size and maintains this
+ value even if \doccmd{normalsize} is redefined. The \doccmd{normalsize} macro also
+  sets values for \cmd{abovedisplayskip}, \cmd{abovedisplayshortskip} and 
+\cmd{belowdisplayshortskip}.
+
+
+
+\begin{teXXX}
+%%
+% Set the font sizes and baselines to match Tufte's books
+% normalsize
+%%
+\renewcommand\normalsize{%
+   \@setfontsize\normalsize\@xpt{14}%
+   \abovedisplayskip 10\p@ \@plus2\p@ \@minus5\p@
+   \abovedisplayshortskip \z@ \@plus3\p@
+   \belowdisplayshortskip 6\p@ \@plus3\p@ \@minus3\p@
+   \belowdisplayskip \abovedisplayskip
+   \let\@listi\@listI}
+
+\normalbaselineskip=14pt
+\normalsize
+\end{teXXX}
+
+
+
+\begin{teXXX}
+\renewcommand\small{%
+   \@setfontsize\small\@ixpt{12}%
+   \abovedisplayskip 8.5\p@ \@plus3\p@ \@minus4\p@
+   \abovedisplayshortskip \z@ \@plus2\p@
+   \belowdisplayshortskip 4\p@ \@plus2\p@ \@minus2\p@
+   \def\@listi{\leftmargin\leftmargini
+               \topsep 4\p@ \@plus2\p@ \@minus2\p@
+               \parsep 2\p@ \@plus\p@ \@minus\p@
+               \itemsep \parsep}%
+   \belowdisplayskip \abovedisplayskip
+}
+\renewcommand\footnotesize{%
+   \@setfontsize\footnotesize\@viiipt{10}%
+   \abovedisplayskip 6\p@ \@plus2\p@ \@minus4\p@
+   \abovedisplayshortskip \z@ \@plus\p@
+   \belowdisplayshortskip 3\p@ \@plus\p@ \@minus2\p@
+   \def\@listi{\leftmargin\leftmargini
+               \topsep 3\p@ \@plus\p@ \@minus\p@
+               \parsep 2\p@ \@plus\p@ \@minus\p@
+               \itemsep \parsep}%
+   \belowdisplayskip \abovedisplayskip
+}
+\renewcommand\scriptsize{\@setfontsize\scriptsize\@viipt\@viiipt}
+\renewcommand\tiny{\@setfontsize\tiny\@vpt\@vipt}
+\renewcommand\large{\@setfontsize\large\@xipt{15}}
+\renewcommand\Large{\@setfontsize\Large\@xiipt{16}}
+\renewcommand\LARGE{\@setfontsize\LARGE\@xivpt{18}}
+\renewcommand\huge{\@setfontsize\huge\@xxpt{30}}
+\renewcommand\Huge{\@setfontsize\Huge{24}{36}}
+
+%% Define a HUGE for fun
+\newcommand\HUGE{\@setfontsize\Huge{38}{47}}  
+\end{teXXX}
+
+
+\section{Adjusting paragraph parameters}
+
+ The parameters which control \TeX 's behaviour when typesetting
+ paragraphs receive a bit of a tweak here. Contrary to the usual
+ behaviour of modifying the grid with glue when difficulties are
+ encountered with vertical space, here we shall try to counteract
+ these tendencies and enforce as much as possible uniformity of the 
+ grid of lines.
+
+A good value for paragraph indentation is \texttt{parindent 0.5pt}, for vertical spacing between
+paragraphs that are indented use 0pt. At this point if you are using any marginals it is a good idea
+to allow hyphenation with the \docpkg{ragged2e} package. Since marginals use very narrow paragraphs you may
+get a very funny looking marginal text. Using the package, adjustments can be made to hyphenate
+the marginal text.
+
+\begin{teXXX}
+%%
+% \RaggedRight allows hyphenation
+
+\RequirePackage{ragged2e}
+\setlength{\RaggedRightRightskip}{\z@ plus 0.08\hsize}
+\setlength{\RaggedRightParindent}{1pc}
+
+% Paragraph indentation and separation for normal text
+\newcommand{\@tufte@reset@par}{%
+  \setlength{\RaggedRightParindent}{1.0pc}%
+  \setlength{\parindent}{1pc}%
+  \setlength{\parskip}{0pt}%
+}
+\@tufte@reset@par
+
+% Paragraph indentation and separation for marginal text
+\newcommand{\@tufte@margin@par}{%
+  \setlength{\RaggedRightParindent}{0.5pc}%
+  \setlength{\parindent}{0.5pc}%
+  \setlength{\parskip}{0pt}%
+}
+\end{teXXX}
+
+
+\section{Formatting Chapters and Sections}
+The section on Chapters etc, has more on this, but we will touch on it briefly.
+I normally use the |titlesec| and |titletoc| package to handle the complexity of these commands:
+
+\begin{teXXX}
+\titleformat{\subsection}%
+  [hang]% shape
+  {\normalfont\large}% format applied to label+text removed \itshape
+  {\thesubsection}% label
+  {1em}% horizontal separation between label and title body
+  {}% before the title body
+  []% after the title body
+\end{teXXX}
+
+These are normally followed by the "titlespacing" commands to define the space around these sections.
+
+\begin{teXXX}
+%% We set the titlespacing using the package titlesec and titletoc
+%
+\titlespacing*{\chapter}{0pt}{20pt}{40pt}
+\titlespacing*{\section}{0pt}{3.5ex plus 1ex minus .2ex}{2.3ex plus .2ex}
+\titlespacing*{\subsection}{0pt}{3.25ex plus 1ex minus .2ex}{1.5ex plus.2ex}
+\end{teXXX}
+
+\section{Adjusting the Index}
+
+For classes representing books, the index is treated like a chapter whereas for others it is normally
+treated like a section. Whatever your document ends up like, indices are best done in a multi-column environment.
+One possibility is shown below, using the package "multcol".
+
+\begin{teXXX}
+\RequirePackage{multicol}
+\renewenvironment{theindex}
+  {\begin{fullwidth}%
+    \small%
+    \ifthenelse{\equal{\@tufte@class}{book}}%
+      {\chapter{\indexname}}%
+      {\section*{\indexname}}%
+    \parskip0pt%
+    \parindent0pt%
+    \let\item\@idxitem%
+    \begin{multicols}{3}%
+  }
+  {\end{multicols}%
+    
+\renewcommand\@idxitem{\par\hangindent 2em}
+\renewcommand\subitem{\par\hangindent 3em\hspace*{1em}}
+\renewcommand\subsubitem{
+    \par\hangindent 4em\hspace*{2em}
+}
+\renewcommand\indexspace{
+    \par\addvspace{
+       1.0\baselineskip plus 0.5ex minus 0.2ex}\relax
+    }%
+%we now  swallow the letter heading in the index
+\newcommand{\lettergroup}[1]{}
+
+\end{teXXX}
+
+The code, renews the "theindex" environment, with minor tweaks and defines it as a three column
+layout at "fullwidth".
+
+\section{Provide some hooks}
+It is useful at the end of the class to allow for localization of the class
+by importing a local file. This is easily achieved by checking if the file exists
+and then loading it.  If there is a |myclass-book-local.sty|  file, load it.
+
+\begin{teX}
+\IfFileExists{myclass-book-local.tex}
+  {input{myclass-book-local}
+   \MyClassInfoNL{Loading myclass-book-local.tex}}
+  {}
+\end{teX}
+
+If you intent to publish your class, you may also want to consider adding a hook for a patch-file.
+
+
+\section{The final act of kindness to your users}
+Many common classes, such as the |memoir| use such a tactic to avoid breaking old code.\index{IfFileExists}
+
+\begin{teX}
+ \IfFileExists{mypatch.sty}{%
+ \RequirePackage{mempatch}}{}
+\end{teX}
+
+
+
+\chapter{How to Package Your Class}
+
+\cite{pakin2004} 
+In the previous chapter we have outlined the main sections that you probably need
+to define in your class. In this chapter we will go over the packaging of the class
+and automating the generation of user documentation.
+
+You should also be
+familiar with ``LATEX2'' for Class and Package Writers”, which is available
+from CTAN (\url{http://www.ctan.org}) and comes with most LATEX2" distributions
+in a file called clsguide.dvi. Finally, you should know how to
+install packages that are shipped as a \texttt{.dtx} file plus a \texttt{.ins} file.
+
+style (.sty) file is primarily a collection of macro and
+environment definitions. One or more style files (e.g., a main style file that
+\cmd{input}  or \cmd{RequirePackages} multiple helper files) is called a package.
+Packages are loaded into a document with \cmd{usepackage}{hmain .sty filei}.
+In the rest of this document, we use the notation texttt{<package>} to represent
+the name of your package.
+
+Motivation The important parts of a package are the code, the documentation
+of the code, and the user documentation. Using the \docpkg{Doc}  and
+DocStrip programs, it’s possible to combine all three of these into a single,
+documented LATEX(.dtx) file. The primary advantage of a .dtx file is that
+it enables you to use arbitrary LATEX constructs to comment your code.
+Hence, macros, environments, code stanzas, variables, and so forth can be
+explained using tables, figures, mathematics, and font changes. Code can
+be organized into sections using LATEX’s sectioning commands. Doc even
+facilitates generating a unified index that indexes both macro definitions (in
+the LATEX code) and macro descriptions (in the user documentation). 
+
+This emphasis on writing verbose, nicely typeset comments for code—essentially
+treating a program as a book that describes a set of algorithms—is known
+as literate programming \cite{literate} and has been in use since the early days of \tex\ .
+
+Furthermore,
+this tutorial shows how to write a single file that serves as both documentation
+and driver file, which is a more typical usage of the \texttt{Doc} system than
+using separate files.
+
+\subsection{The .ins file}
+
+The first step in preparing a package for distribution is to write an installer
+(|.ins|) file. An installer file extracts the code from a |.dtx| file, uses \cs{DocStrip}
+to strip off the comments and documentation, and outputs a .sty file. The
+good news is that a .ins file is typically fairly short and doesn’t change
+significantly from one package to another.
+
+\noindent|ins| files usually start with comments specifying the copyright and license
+information:
+
+
+\begin{teXXX}
+%%
+%% Copyright (C) year by your name %%
+%% This file may be distributed and/or modified under the
+%% conditions of the LaTeX Project Public License, either
+%% version 1.2 of this license or (at your option) any later
+%% version. The latest version of this license is in:
+%%
+%% http://www.latex-project.org/lppl.txt
+%%
+%% and version 1.2 or later is part of all distributions of
+%% LaTeX version 1999/12/01 or later.
+%%
+
+\end{teXXX}
+
+The LATEX Project Public License (LPPL) is the license under which most
+packages—and LATEX itself—are distributed. Of course, you can release your
+package under any license you want; the LPPL is merely the most common
+license for LATEX packages. The LPPL specifies that a user can do whatever
+he wants with your package—including sell it and give you nothing in return.
+The only restrictions are that he must give you credit for your work, and
+he must change the name of the package if he modifies anything to avoid
+versioning confusion.
+The next step is to load DocStrip:
+
+\begin{teXXX}
+%%\input docstrip.tex
+%%\keepsilent
+\end{teXXX}
+
+
+
+By default, DocStrip gives a line-by-line account of its activity. These messages
+aren’t terribly useful, so most people turn them off:
+
+\begin{teXXX}
+\keepsilent
+\end{teXXX}
+
+A system administrator can specify the base directory under which all
+TEX-related files should be installed, e.g., \texttt{/usr/share/texmf}. (See
+\cmd{\BaseDirectory} in the DocStrip manual.) The |ins| file specifies where
+its files should be installed relative to that. The following is typical:
+
+\begin{teXXX}
+\usedir{tex/latex/packagename}
+\preamble
+htexti \endpreamble
+\end{teXXX}
+
+
+
+The next step is to specify a preamble, which is a block of commentary that
+will be written to the top of every generated file:
+
+\begin{teXXX}
+\preamble
+
+This is a generated file.
+Copyright (C) <year> by <your name>
+This file may be distributed and/or modified under the
+conditions of the LaTeX Project Public License, either
+version 1.2 of this license or (at your option) any later
+version. The latest version of this license is in:
+http://www.latex-project.org/lppl.txt
+and version 1.2 or later is part of all distributions of
+LaTeX version 1999/12/01 or later.
+
+\endpreamble
+\end{teXXX}
+
+
+The preceding preamble would cause package.sty  to begin as follows:
+
+\begin{teXXX}
+%%
+%% This is file ‘hpackagei.sty’,
+%% generated with the docstrip utility.
+%%
+%% The original source files were:
+%%
+%% hpackagei.dtx (with options: ‘package’)
+%%
+%% This is a generated file.
+%%
+%% Copyright (C) hyeari by hyour namei %%
+%% This file may be distributed and/or modified under the
+%% conditions of the LaTeX Project Public License, either
+%% version 1.2 of this license or (at your option) any later
+%% version. The latest version of this license is in:
+%%
+%% http://www.latex-project.org/lppl.txt
+%%
+%% and version 1.2 or later is part of all distributions of
+%% LaTeX version 1999/12/01 or later.
+\end{teXXX}
+
+
+\begin{teXXX}
+\generate {\file {hstyle-filei} {\from {hdtx-filei} {htagi}}}
+\end{teXXX}
+
+We now reach the most important part of a .ins file: the specification of
+what files to generate from the |.dtx| file. The following tells DocStrip to
+generate hpackagei.sty from hpackagei.dtx by extracting only those parts
+marked as `package'  in the .dtx file. (Marking parts of a .dtx file is
+described in Section 3.)
+
+\begin{teXXX}
+\generate{\file{<package>.sty}{\from{<package>.dtx}{package}}}
+\end{teXXX}
+
+\cmd{\generate} can extract any number of files from a given .dtx file. It can
+even extract a single file from multiple |.dtx| files. See the DocStrip manual
+for details.
+
+\subsection{Generating messages} 
+
+The next part of a |.ins| file consists of commands to output a message to
+the user, telling him what files need to be installed and reminding him how
+to produce the user documentation. The following set of \cmd{Msg} commands is
+typical:
+
+\begin{teXXX}
+\obeyspaces
+\Msg{****************************************************}
+\Msg{* *}
+\Msg{* To finish the installation you have to move the *}
+\Msg{* following file into a directory searched by TeX: *}
+\Msg{* *}
+\Msg{* hpackagei.sty *}
+\Msg{* *}
+\Msg{* To produce the documentation run the file *}
+\Msg{* hpackagei.dtx through LaTeX. *}
+\Msg{* *}
+\Msg{* Happy TeXing! *}
+\Msg{* *}
+\Msg{****************************************************}
+Note the use of \obeyspaces to inhibit TEX from collapsing multiple spaces
+into one.
+\endbatchfile
+Finally, we tell DocStrip that we’ve reached the end of the .ins file:
+\endbatchfile
+\end{teXXX}
+
+
+Appendix A.1 lists a complete, skeleton .ins file. Appendix A.2 is similar
+but contains slight modifications intended to produce a class (|.cls|) file
+instead of a style (|.sty|) file
+
+\section{The .dtx file}
+A |dtx|\ file contains both the commented source code and the user documentation
+for the package. Running a |dtx|  file through latex typesets the
+user documentation, which usually also includes a nicely typeset version of
+the commented source code.
+
+Due to some Doc trickery, a |dtx|  file is actually evaluated twice. The first
+time, only a small piece of \latex\  driver code is evaluated. The second time,
+comments in the |dtx|  file are evaluated, as if there were no `\%'  preceding
+them. This can lead to a good deal of confusion when writing |dtx|  files
+and occasionally leads to some awkward constructions. Fortunately, once
+the basic structure of a |dtx|  file is in place, filling in the code is fairly
+straightforward.
+
+\begin{teXXX}
+\CharacterTable {<text>}
+\end{teXXX}
+
+The second mechanism that Doc uses to ensure that a |dtx|  file is uncorrupted
+is a character table. If you put the following command verbatim into
+your |dtx|  file, then Doc will ensure that no unexpected character translation
+took place in transport:
+
+\begin{teXXX}
+% \CharacterTable
+% {Upper-case \A\B\C\D\E\F\G\H\I\J\K\L\M\N\O\P\Q\R\S\T\U\V\W\X\Y\Z
+% Lower-case \a\b\c\d\e\f\g\h\i\j\k\l\m\n\o\p\q\r\s\t\u\v\w\x\y\z
+% Digits \0\1\2\3\4\5\6\7\8\9
+% Exclamation \! Double quote \" Hash (number) \#
+% Dollar \$ Percent \% Ampersand \&
+% Acute accent \’ Left paren \( Right paren \)
+% Asterisk \* Plus \+ Comma \,
+% Minus \- Point \. Solidus \/
+% Colon \: Semicolon \; Less than \<
+% Equals \= Greater than \> Question mark \?
+% Commercial at \@ Left bracket \[ Backslash \\
+% Right bracket \] Circumflex \^ Underscore \_
+% Grave accent \‘ Left brace \{ Vertical bar \|
+% Right brace \} Tilde \~}
+A success message looks like this:
+***************************
+* Character table correct *
+***************************
+
+and an error message looks like this:
+! Package doc Error: Character table corrupted.
+\end{teXXX}
+
+
+
+\subsection{DoNotIndex}
+
+
+
+When producing an index, Doc normally indexes every control sequence
+(i.e., backslashed word or symbol) in the code. The problem with this level
+of automation is that many control sequences are uninteresting from the
+perspective of understanding the code. For example, a reader probably
+doesn’t want to see every location where \cs{if} is used—or \cs{the} or \cs{let} or
+\cs{begin} or any of numerous other control sequences.
+
+As its name implies, the \cs{DoNotIndex} command gives |Doc| a list of control
+sequences that should not be indexed. \cs{DoNotIndex} can be used any
+number of times, and it accepts any number of control sequence names per
+invocation:
+
+
+
+
+\begin{teXXX}
+   % \DoNotIndex{\#,\$,\%,\&,\@,\\,\{,\},\^,\_,\~,\ }
+   % \DoNotIndex{\@ne}
+   % \DoNotIndex{\advance,\begingroup,\catcode,\closein}
+   % \DoNotIndex{\closeout,\day,\def,\edef,\else,\empty,\endgroup}
+\end{teXXX}
+
+
+
+
+\subsection{User documentation}
+
+We can finally start writing the user documentation. A typical beginning
+looks like this:
+
+\begin{teXXX}
+% \title{The \textsf{hpackagei} package\thanks{This document
+% corresponds to \textsf{hpackagei}~\fileversion,
+% dated~\filedate.}}
+% \author{hyour namei \\ \texttt{hyour e-mail addressi}}
+%
+% \maketitle
+\end{teXXX}
+
+
+The title can certainly be more creative, but note that it’s common for
+package names to be typeset with \cmd{\textsf} and for \cmd{\thanks} to be used to
+specify the package version and date. This yields one of the advantages
+of literate programming: Whenever you change the package version (the
+optional second argument to \cmd{\ProvidesPackage}), the user documentation
+is updated accordingly. Of course, you still have to ensure manually that
+the user documentation accurately describes the updated package.
+
+Write the user documentation as you would any LATEX document, except
+that you have to precede each line with a |\%|. Note that the ltxdoc document
+class is derived from article, so the top-level sectioning command is
+|\section|, not |\chapter|.
+
+
+
+\section{General tips}
+
+Evaluate, if there is a class that is nearer to what you wish to achive. If not do a set of
+requirements.
+
+Book structure - start with book or |Octavo| if you need to hack extensively. If not use memoir, |koma| or |tufte-book|.
+
+Paragraph looks
+
+Lists
+
+Figures
+
+Bibliography and citations
+
+Footnotes
+
+Index
+
+Titel pages
+
+Book Cover
+
+Language support
+
+Mathematics
+
+Graphs and figures
+
+Typography - fonts, indentations fontsize etc
+
+headers and footers
+\begin{comment}
+\end{comment}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

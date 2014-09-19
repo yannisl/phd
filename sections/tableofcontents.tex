@@ -1,12 +1,11 @@
-
+\makeatletter\@specialfalse\makeatother
 
 \cxset{toc image= ted_turner_2001}
 \chapter{TOC Styling}
-
-
-
 \precis{In this chapter we outline a number of experimental keys that been defined to handle Table of Contents (ToC) formatting. These keys are currently experimental.}
-\bigskip
+\addtocimage{-12pt}{-20pt}{../images/tocblock-rooster.jpg}
+
+\minitoc
 
 
 
@@ -14,8 +13,16 @@
 
 
 \section{Key values}
-\keyval{toc levels}{\marg{num}}{sets  the \texttt{tocdepth} counter. If empty no toc is defined. LaTeX uses this to determine how many levels of toc are included.}
-\keyval{toc number width}{marg{dimension}}{\cs{@pnumwidth}}
+
+
+\begin{key}{/chapter/toc levels=\meta{number}}
+ Equivalent parameterized key to |\toclevel|. It sets  the \texttt{tocdepth} counter. If empty no toc is defined. LaTeX uses this to determine how many levels of toc are included.
+\end{key}
+
+\begin{key}{/chapter/toc number width=marg{dimension}\cs{@pnumwidth}}
+\end{key}
+
+
 \keyval{toc chapter number color}{}{tocchapternumbercolor@cx}
 \keyval{toc chapter number fill}{}{tocchapternumberfill@cx}
 \keyval{toc chapter after}{}{tocchapterafter@cx}
@@ -104,31 +111,12 @@ The macros of a table of contents are saved in an auxiliary file named \marg{job
 \subsection{The \texttt{.toc} file}
 \subsubsection{The structure of the toc file}
 
+
+
 \begin{lstlisting}
-\defcounter {refsection}{0}\relax
 \contentsline {chapter}{\numberline {1}Table of Contents Styling}{1}{chapter.1}
-\defcounter {refsection}{0}\relax
 \contentsline {section}{\numberline {1.1}Width of page numbers and a very long and really very long section numbering scheme}{1}{section.1.1}
-\defcounter {refsection}{0}\relax
 \contentsline {section}{\numberline {1.2}test}{1}{section.1.2}
-\defcounter {refsection}{0}\relax
-\contentsline {section}{\numberline {1.3}Technical Details}{1}{section.1.3}
-\end{lstlisting}
-\
-
-When the file is imported back the commands are expanded and the table of contents lines printed as shown below.
-
-
-
-\begin{lstlisting}
-
-\defcounter {refsection}{0}\relax
-\contentsline {chapter}{\numberline {1}Table of Contents Styling}{1}{chapter.1}
-\defcounter {refsection}{0}\relax
-\contentsline {section}{\numberline {1.1}Width of page numbers and a very ong and really very long section numbering scheme}{1}{section.1.1}
-\defcounter {refsection}{0}\relax
-\contentsline {section}{\numberline {1.2}test}{1}{section.1.2}
-\defcounter {refsection}{0}\relax
 \contentsline {section}{\numberline {1.3}Technical Details}{1}{section.1.3}
 \end{lstlisting}
 
@@ -143,6 +131,98 @@ The \cs{contentsline} definition triggers the calling of macros that start with 
 \def\contentsline#1{\csname l@#1\endcsname}
 \end{lstlisting}
 \end{tcolorbox}
+
+When the file is imported back the commands are expanded and the table of contents lines printed.
+
+\begin{texexample}{Toc example}{ex:toc1}
+\oldcontentsline {chapter}{\numberline {1}First Chapter}{3}
+\oldcontentsline {section}{\numberline {1.1}Introduction}{3}
+\oldcontentsline {subsection}{\numberline {1.1.1}The difficulties}{3}
+\oldcontentsline {chapter}{\numberline {2}Second Chapter}{5}{}
+\end{texexample}
+
+When we use hyperef we get an additional parameter |chapter.1| on line one and if we combine the example above, we will get errors of run away arguments.
+
+\begin{texexample}{ToC example with hyperref}{ex:toc2}
+\contentsline {chapter}{\numberline {1}First Chapter}{3}{chapter.1}
+\contentsline {section}{\numberline {1.1}Introduction}{3}{section.1.1}
+\contentsline {subsection}{\numberline {1.1.1}The difficulties}{3}{subsection.1.1.1}
+\contentsline {chapter}{\numberline {2}Second Chapter}{5}{chapter.2}
+\end{texexample}
+
+Predictably |hyperref| redefines the |\contentsline| command.
+
+\startlineat{7901}
+\begin{teX}
+\def\contentsline#1#2#3#4{%
+  \ifx\\#4\\%
+    	\csname l@#1\endcsname{#2}{#3}%
+  \else
+ 	\ifcase\Hy@linktoc % none
+ 		\csname l@#1\endcsname{#2}{#3}%
+ 	\or % section
+ 		\csname l@#1\endcsname{%
+  	   \hyper@linkstart{link}{#4}{#2}\hyper@linkend
+    	}{#3}%
+  	 \or % page
+		\csname l@#1\endcsname{{#2}}{%
+    	\hyper@linkstart{link}{#4}{#3}\hyper@linkend
+    	}%
+ 	\else % all
+ 		\csname l@#1\endcsname{%
+ 	\hyper@linkstart{link}{#4}{#2}\hyper@linkend
+ 	}{%
+ 	\hyper@linkstart{link}{#4}{#3}\hyper@linkend
+ 	}%
+ 	\fi
+ \fi
+}
+\end{teX}
+
+and of course we get many variations as to how the links are styled by hyperref
+Here is a minimal how to set it.
+
+\emphasis{linktocpage}
+\begin{teX}
+\documentclass{book}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\hypersetup{pdftex,
+  bookmarks,
+  raiselinks,
+  pageanchor,
+  hyperindex=true,
+  colorlinks,
+  allcolors=theblue, 
+  hyperfootnotes=true,
+  breaklinks=true,
+  anchorcolor= blue,
+  filecolor=blue,
+  urlcolor= blue,
+  linkcolor= blue,
+  pdftitle={My Title},
+  pdfauthor={Yiannis Lazarides},
+  pdfsubject={The phd LaTeX package},
+  pdfkeywords={LaTeX package management, document design}
+ }
+\hypersetup{linktocpage}
+\begin{document}
+\tableofcontents
+\chapter{First Chapter}
+\section{Introduction}
+\subsection{The difficulties}
+\chapter{Second Chapter}
+test
+\end{document}
+\end{teX}
+
+/chapter/toc linktocpage=none or true or empty
+linktocpage make page number, not text, be link on TOC, LOF and LOT false
+
+
+\begin{verbatim}
+\hypersetup{linktocpage=true}
+\end{verbatim}
 
 \subsection{The \textbackslash @starttoc macro}
 
@@ -209,10 +289,11 @@ If one had to generate for example mini-toc's this would be difficult if not imp
 \end{tcolorbox}
 
 
-So far we have simplistically examined the formatting. Life can get a bit more complex if we want to have a layout as shown in Figure \ref{fig:toc}.
+So far we have simplistically examined the formatting. Life can gets more complex if we want to have a layout as shown in Figure \ref{fig:toc}. The |TOC| has different color formatting for sections and chapters, there are no leaders and and the layout is set in a two column format as compared to the one column format of the standard classes |TOC|.
 
 \begin{figure}[tp]
-\fbox{\includegraphics[width=0.5\textwidth]{contents01}}
+\centering
+\fbox{\includegraphics[width=0.5\textwidth]{contents01.png}}
 \caption{Complex table of contents layout.}
 \label{fig:toc}
 \end{figure}
@@ -264,13 +345,15 @@ So far we have simplistically examined the formatting. Life can get a bit more c
 \end{lstlisting}
 
 
-In this figure only the chapter number is shown, no page number and the section details are layed down in a two column format.
-
+\subsection{Images in the TOC}
+Figure \ref{fig:tocsteward} shows another |TOC| this time from a mathematics textbook. This is a much more complicated layout and includes images.
 
 If we take a similarly flexible approach of redefining l@chapter we can try and format the toc shown in Figure \ref{fig:tocsteward}.
 
 \begin{figure}[tp]
-\includegraphics[width=0.8\textwidth]{contents02}
+\centering
+
+\includegraphics[width=0.8\textwidth]{contents02.png}
 \caption{Complex table of contents layout.}
 \label{fig:tocsteward}
 \end{figure}
@@ -310,6 +393,7 @@ If we take a similarly flexible approach of redefining l@chapter we can try and 
        toc title after=\hspace*{1.5em},
        toc after pagenumber=,
 }
+
 \renewcommand\l@chapter[3]{%
 % #1 number #2
 %  title  #2 page number
@@ -339,15 +423,15 @@ If we take a similarly flexible approach of redefining l@chapter we can try and 
 \end{lstlisting}
 
 
-The above method of redefinition is a bit more flexible and can be extended to cover all cases that do not fall broadly with the standard class provisions.
+The above method of redefinition is a bit more flexible and can be extended to cover all cases that do not fall broadly with the standard class provisions. Any layout is possible.
 
 
 \section{Writing the Table of Contents Entries}
 
+One needs to keep in mind that there are two distinct operations in typesetting a |ToC|. The first one is the writing of the necessary information to the |.aux| file. The second one is the operations that happen when the file is read in a series of instructions triggered by the \cs{tableofcontents} command.
 
-One needs to keep in mind that there are two distinct operations in typesetting a ToC. The first one is the writing of the necessary information to the aux file. The second one is the operations that happen when the file is read in a series of instructions triggered by the \cs{tableofcontents} command.
+If we have to ensure that information survives we need to write it to the file. This is done via two macros.
 
-If we have to ensure that information survives we need to wrie it to the file. This is done via two macros.
 The \cs{addcontentsline}\marg{table}\marg{type}\marg{entry} command allows the user to add an entry to a table of contents. The command adds the entry
 \cs{contentsline}\marg{type}\marg{entry}\marg{page} to the \marg{.table} file.
 
@@ -377,7 +461,7 @@ The entries for this document with fancy chapter formatting end in the .toc file
 
 \section{Approach to defining appropriate hooks}
 
-In order to introduce the appropriate hooks for the various formatting commands two approaches were considered. One was to add images and special formatting via additional addcontents lines in the chapter definitions. This works well for items such as triggering the addition of a chapter precis, or images before chapter headings. The second approach was to add hooks withing the arguments to numberline and contentsline. This works well with fonts formatting and spacing commands but is difficult to achieve due to the information lying in more than one place. Another experimental approach is to save the values of the information only, so once you are reading the file you can feed it into a typesetter type of command. In my opinion this is the best way, it can work well with chapters and parts, but for sections it presents difficulties as we are touhing the kernel. I tried very hard not to modify any kernel commands. Class commands are ok to redefine within reason but the kernel should be left untouched.
+In order to introduce appropriate hooks for the various formatting commands two approaches were considered. One was to add images and special formatting via additional \cs{addcontents} lines in the chapter definitions. This works well for items such as triggering the addition of a chapter precis, or images before chapter headings. The second approach was to add hooks withing the arguments to numberline and contentsline. This works well with fonts formatting and spacing commands but is difficult to achieve due to the information lying in more than one place. Another experimental approach is to save the values of the information only, so once you are reading the file you can feed it into a typesetter type of command. In my opinion this is the best way, it can work well with chapters and parts, but for sections it presents difficulties as we are touching the kernel. I tried very hard not to modify any kernel commands. Class commands are ok to redefine within reason but the kernel should be left untouched.
 
 The approach save values for the following in a file.
 
@@ -389,7 +473,6 @@ while not eof do
 endwhile
 \end{lstlisting}
 
-Typesetting rules require consistency and therefore it is not all that hard.
 
 If special toc design DO NOT CALL l@section but call l@section@special
 

@@ -1,0 +1,378 @@
+\chapter{Futurelet}
+\precis{A discussion on one of the most esoteric commands of \protect\tex, with examples as to how to write macros with optional arguments.}
+\addtocimage{-12pt}{-20pt}{../images/tocblock-futurelet.jpg}
+\epigraph{Life can only be understood backwards; but it must be lived forwards.}{
+---S Kierkegaard}
+
+The \cmd{\futurelet} primitive deserves its own chapter, as most people have difficulty in understanding the command. The instruction allows the user to \textit{look ahead}. By look ahead we mean that \tex will look at a future token\footnote{remember that a token is either a single character or a macro command} without absorbing it, i.e, without removing that token from the token list. This operation allows the programmer to perform a test to check what token is 'coming'. You can read a couple of articles about it for example \citep{Eijkhout2001}, but generally they are difficult to follow. The information about the command is also very sparse in the TeXBook.  Another TUGboat article is \citep{bechto88}, which gives pretty much the same example as we describe below. 
+
+The token looked at through
+|\futurelet| will be removed later, typically as part
+of an argument of a later macro call as we will see
+shortly. It is not removed by the action of the
+|\futurelet| primitive.
+
+Let us be more precise now; the |\futurelet|
+instruction has the following format:
+
+
+\begin{teX}
+\futurelet (tokenl) (token2) (token3)
+\end{teX}
+
+
+\begin{enumerate}
+\item  \tex will execute a \cmd{\let}\meta{tokenl}=\meta{token3}.
+We therefore have generated a copy of (token3)
+stored under the name of (tokenl).\label{lettoken}
+
+
+\item  removes (tokenl) from the main token list.
+
+\item \tex expands (token2). This token is for all
+practical purposes a macro with the following
+properties:
+
+(a) The macro will use (tokenl), which is a
+copy of (token3), to find out what (token3)
+is, in other words what token is to be
+expected later.
+(b) It will cause another macro to be expanded
+which will ultimately absorb (token3).
+
+This other macro ordinarily depends on
+what $<token_l>$ is.
+
+\end{enumerate}
+
+The description above, is a bit of a mouthful and it is better to describe it with an example. In Example~\ref{futurelet} we will try and find if the next token is the opening square bracket `['. We then according to the definition in \ref{lettoken} this should be stored in \cs{tokenone}. We verify this by peeking at its meaning.
+
+\begin{texexample}{futurelet}{futurelet}
+\def\tokentwo#1{}
+\futurelet\tokenone\tokentwo[
+\meaning\tokenone
+\end{texexample}
+
+The second token \cs{tokentwo} we have defined it, so that it justs absorbs its next argument and does nothing for the time being. As you can see its meaning is \texttt{the character [}. Now what happens if there was a space between the \cs{tokentwo} and the `['?
+
+\begin{texexample}{futurelet second}{futurelet2}
+\def\tokentwo#1{}
+\futurelet\tokenone\tokentwo     [
+\meaning\tokenone
+\end{texexample}
+
+As you can see so far the spaces have been absorbed, but let us now change the definition of \cs{tokentwo}.
+
+\begin{texexample}{futurelet second}{futurelet2}
+\def\tokentwo#1{}
+\futurelet\tokenone\tokentwo     
+\meaning\tokenone
+\end{texexample}
+
+
+
+\begin{texexample}{futurelet}{futurelet}
+\def\tokentwo#1{%
+   \ifx\tokenone[ true [\else false\fi
+}
+\futurelet\tokenone\tokentwo[
+\meaning\tokenone
+\end{texexample}
+
+We try again with spaces,
+
+\emphasis{tokentwo,[}
+\begin{texexample}{futurelet}{futurelet}
+\def\tokentwo#1{%
+   \ifx\tokenone[ true [\else false\fi
+}
+\futurelet\tokenone\tokentwo     [
+\meaning\tokenone
+\end{texexample}
+
+As you can see from the examples we cannot capture the spaces. This might present a problem, if we enclose everything in other macros as \tex might leave extra spaces in the stream. Better to absorb them. We will see how later, using LaTeX. 
+
+
+\section{Applications}
+
+There are many applications of |\futurelet|.
+will here present only one example, although
+we will present it in quite some detail so the user
+will know how to apply |\futurelet| in different
+circumstances.
+
+\subsection{Using \textbackslash futurelet in Macros with Optional
+Arguments}
+
+A typical application of |\futurelet| is the handling
+of macros with optional arguments\cite{Becht1988} as they are used,
+for instance, in \latex. By "optional argument" we
+mean an argument which in most cases is omitted,
+and is provided only occasionally in macro calls.\footnote{See also the discussion at \url{http://tex.stackexchange.com/questions/4557/how-to-use-futurelet-to-define-optional-parameters}}
+
+\textbf{Defining the Problem}
+
+Let us give a specific example: we would like to
+define a macro \cmd{xx}, which can be called in two
+different ways:
+
+\begin{enumerate}
+\item With optional argument as in |\xx [opt]{arg}|
+where opt is the optional argument enclosed
+in square brackets and \meta{arg} is the mandatory argument
+argument.
+
+\item Without optional argument as in |\xx{arg}|
+where \meta{arg} is again the regular argument.
+
+\end{enumerate}
+
+
+Before we discuss how this can be done in \tex,
+observe that we do not really have to use an
+optional argument. We could simply define two
+different macros \cmd{xxwithoptions} for the case where an
+optional argument is given, and \cmd{xxnooptions} for the
+case where no optional argument is given:
+
+
+\begin{texexample}{two macros}{ex:twomacros}
+\def\xxWithOpt [#1]#2{...}
+\def\xxNoOpt #1{...}
+\def\xxWithOpt (#1)#2{\fbox{#2}}
+\xxWithOpt (box){Testing}
+\end{texexample}
+
+How we can use |\futurelet| to find out
+whether an optional argument was given or not?
+
+We will define a macro |\xx| whose only function is
+to check whether there is an opening square bracket
+(optional argument is present) or not (no optional
+argument). The |\xx| macro will, after this has been
+determined, cause the |\xxWithOpt| macro to be invoked
+when there is an optional argument, and the
+|\xxNoOpt| macro to be called if there is no opening
+bracket. In other words the macros |\xxWithOpt|
+and |\xxNoOpt| do the "real work while the only
+purpose of the |\xx| macro is to decide which of the
+two macros should be invoked.
+
+
+Here is the completely worked out example.
+
+
+\begin{teX}
+\def \xxWithOpt [#1] #2{...}
+\def\xxNoOpt #2{...}
+
+\def\xx {%
+\futurelet\xxLookedAtToken
+    \xxDecide
+}
+
+% (3) The \xxDecide macro, based on
+% the lookahead of \xx, calls
+% either \xxWithOpt or \xxNoOpt .
+\def\xxDecide {%
+ \ifx\xxLookedAtToken [%
+\let\next = \xxWithOpt
+\else
+ \let\next = \xxNoOpt
+ \fi
+\next
+}
+\end{teX}
+
+\section{Other Applications in the LaTeX kernel}
+
+\begin{teX}
+\def\elidebefore[#1]#2{[$\ldots$] #2}
+\def\elideafter#1{#1$\ldots$}
+
+\def\elide {%
+\futurelet\ifoptions
+    \choosemacro
+}
+
+\elide{Lorem Ipsum}
+
+\elide[b]{Lorem ipsum}
+\end{teX}
+
+\begin{comment}
+% The \choosemacro, based on
+% the lookahead of \elide, calls
+% either \elidebefore or \elideafter 
+\end{comment}
+
+\begin{teX}
+\def\choosemacro{%
+ \ifx\ifoptions [%
+     \let\choice = \elidebefore 
+ \else
+    \let\choice = \elideafter
+ \fi
+\choice
+}
+\end{teX}
+
+
+
+\begin{teX}
+\elide{Lorem Ipsum}
+
+\elide[b]{Lorem ipsum}
+
+\end{teX}
+
+\begin{teX}
+\def \xxWithOpt [#1] #2{...}
+\def\xxNoOpt #2{...}
+
+\def\xx {%
+\futurelet\xxLookedAtToken
+    \xxDecide
+}
+
+% (3) The \xxDecide macro, based on
+% the lookahead of \xx, calls
+% either \xxWithOpt or \xxNoOpt .
+\def\xxDecide {%
+ \ifx\xxLookedAtToken [%
+\let\next = \xxWithOpt
+\else
+ \let\next = \xxNoOpt
+ \fi
+\next
+}
+\end{teX}
+
+
+
+To build a command with any optional parameter, as you find in many of LaTeX's commands, you will need two things:
+
+\begin{itemize}
+\item a macro with delimited parameters
+
+\item a way to grab the first non-space token that follows the command
+\end{itemize}
+
+
+The first part is fairly easy using delimited argument macros, for example we can say
+
+\begin{verbatim}
+\def\test(#1)#2#3{#1, #2, #3}
+\end{verbatim}
+
+We can then call this macro as:
+
+\begin{verbatim}
+\test(a){b}{c}
+\end{verbatim}
+
+
+resulting in a,b,c
+
+To define the |()| as an optional parameter, we effectively need to define the macro as a conditional a sort of a "yes-no" switch. If \tex finds the "(" bracket the "yes-code" will be called and if it finds only the normal arguments the "no-code" will be executed.
+
+For this we can use the |\@ifnextchar| macro from the LaTeX kernel.
+You can say |@ifnextchar{char}{yes-code}{no-code}| to test for |(|. The result then will depend on the token that follows. If this token is the same as the first argument, then the "yes-code" is executed, otherwise the "no-code" is executed. The first argument should be a single token (for instance a character). Spaces are ignored. 
+
+As for example we can redefine the LaTeX code for `rule` to accept an optional parameter in round brackets, rather than the traditional square brackets.
+
+\begin{texexample}{Using ifnextchar}{}
+\makeatletter
+\def\Rule{\@ifnextchar(\@Rule%
+        {\@Rule(\z@)}}
+\def\@Rule(#1)#2#3{%
+ \leavevmode
+ \hbox{%
+ \setlength\@tempdima{#1}%
+ \setlength\@tempdimb{#2}%
+ \setlength\@tempdimc{#3}%
+ \advance\@tempdimc\@tempdima
+ \vrule\@width\@tempdimb\@height\@tempdimc\@depth-\@tempdima}}
+\makeatother
+
+A test \Rule(6.5pt){100pt}{1pt}
+
+Another test \Rule{100pt}{3pt}
+
+Not that difficult but you will need to , but why on earth do you need this?
+\end{texexample}
+
+
+
+
+\begin{comment}
+\def\elidebefore[#1]#2{[$\ldots$] #2}
+\def\elideafter#1{#1$\ldots$}
+
+\def\elide {%
+\futurelet\ifoptions
+    \choosemacro
+}
+
+% The \choosemacro, based on
+% the lookahead of \elide, calls
+% either \elidebefore or \elideafter 
+
+
+\def\choosemacro{%
+ \ifx\ifoptions [%
+     \let\choice = \elidebefore 
+ \else
+    \let\choice = \elideafter
+ \fi
+\choice
+}
+
+Testing \elide[b]{Lorem ipsum}
+
+\elide{Lorem Ipsum}
+
+\elide[b]{Lorem ipsum}
+
+\end{comment}
+
+
+\section{Using LaTeX \protect\textbackslash @ifnextchar}
+
+\latex defines the |\@ifnextchar| kernel command that is used effectively to
+determine the token that follows the command. It is used in the definitions
+of macros with optional arguments amongst other things.
+
+\begin{teXXX}
+\@ifnextchar]{true}{false}] 
+\@ifnextchar[{true}{false}[
+\end{teXXX}
+The result would both be true,
+
+\begin{texexample}{Example ifnextchar}{ifnextchar}
+\makeatletter
+\@ifnextchar]{true ]}{false} ] %notice ]
+\@ifnextchar[{true [}{false} [ %notice [
+\makeatother
+\end{texexample}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
