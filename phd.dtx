@@ -163,6 +163,7 @@ See http://www.latex-project.org/lppl.txt
 \usepackage{multido}
 \ifxetex
   %\usepackage{txfonts} %works for both
+  
   \usepackage[Tibetan,DominoTiles, MahjongTiles]{ucharclasses}
   
   \setTransitionTo{DominoTiles}{\fontspec{FreeSerif}}
@@ -189,7 +190,8 @@ See http://www.latex-project.org/lppl.txt
 {FreeSans}
    %\newfontfamily\syriacfont[Script=Syriac]{Serto Jerusalem}
    %\newfontfamily\hebrewfont[Script=Hebrew]{Ezra SIL}
-
+\newfontfamily\arial{Arial Unicode MS}
+\def\defaulttext{\arial }
 \linespread{1.05}
 \frenchspacing
 
@@ -5155,23 +5157,27 @@ ball was her favorite plaything.}%
 %
 %    \begin{macrocode}
 % Define a command for the head of the table
-\newcommand\htable@cx[1][U+"109A0]{%
-  \bgroup%
-  \ttfamily%
-  \def\fm##1{\makebox[2em]{##1}}%
-  \leavevmode\makebox[5em]{\texttt{#1}}\fm 0\fm1 \fm2 \fm3 \fm4\fm5 \fm 6 \fm 7 \fm 8 \fm 9\fm A\fm B\fm C\fm D\fm E\fm F
-\egroup%
-\par}%
+%\newcommand\htable@cx[1][U+"109A0]{%
+%  \bgroup%
+%  \ttfamily%
+%  \def\fm##1{\makebox[2em]{##1}}%
+%  \leavevmode\makebox[5em]{\texttt{#1}}\fm 0\fm1 \fm2 \fm3 \fm4\fm5 \fm 6 \fm 7 \fm 8 \fm 9\fm A\fm B\fm C\fm D\fm E\fm F
+%\egroup%
+%\par}%
 
+\def\putunicode#1{\makebox[5em]{\texttt{#1}}}
 \def\urow@cx#1{%
 \parindent0pt%
 \n=#1% 
-\makebox[5em]{\texttt{U+#1}}%
+\r=1%
+\putunicode{U+#1}%
 \loop%
-\makebox[2em]{\char\n}%   
-\advance\n by1%
 \ifnum\n<\numexpr#1+16\relax%
-\repeat}
+\makebox[2em]{\char\n$_{\the\r}$}%
+\advance\r by1%  
+\ifnum\r>16\r=1\relax\fi
+\advance\n by1%
+\repeat\par}
 
 
 
@@ -5184,11 +5190,21 @@ ball was her favorite plaything.}%
   \bgroup%
    \parindent0pt%
    \newcount\n%
+   \newcount\r%
+   \r=1%
    \raggedright%
    \@nameuse{#1}%
-   \htable@cx%
-   \typeseturows@cx{#2}%
-  \egroup%
+  %\htable@cx%
+\r=1%
+\putunicode{\hphantom{U+#1}}%
+\loop%
+\ifnum\r<17\relax%
+\makebox[2em]{\hfill\texttt{\the\r}\hfill}%
+\advance\r by1%  
+\repeat
+\par
+\typeseturows@cx{#2}%
+\egroup%
 }
 
 %    \end{macrocode}
