@@ -18,6 +18,7 @@ This file provides a phd for defining a class.
 
 
 
+
 ^^A \StopEventually{}
      \RequirePackage{mdframed}
 
