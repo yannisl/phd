@@ -26,11 +26,42 @@
 
 
 
-^^A \StopEventually{}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 \NeedsTeXFormat{LaTeX2e}
 [1994/12/01]%
 \ProvidesPackage{phd}[2013/2/26 v1.0 less preamble (YL)]%
 \RequirePackage{fixltx2e}[2006/03/24]
+
 \newcommand*{\savesymbol}[1]{%
   \expandafter\let\csname orig#1\expandafter\endcsname\csname#1\endcsname
   \expandafter\let\csname #1\endcsname\relax
@@ -85,9 +116,15 @@
    \footnotesize\texttt{\string#1}\hss}%
    \penalty10}
 
-\ifxetex\else
-\RequirePackage{etex}\fi
-\RequirePackage{pgf,pgfkeys}               % before onlyasmath
+\ifxetex
+   \else
+     \ifluatex
+     \RequirePackage{etex}
+     \else
+     \RequirePackage{etex}
+  \fi
+\fi
+\RequirePackage{pgf}               % before onlyasmath
 \def\cx@optionlist{}
 \def\cxuselibrary#1{\cxset{library/.cd,#1}}
 \def\cx@add@library#1#2{%
@@ -105,8 +142,12 @@
                     svgnames,x11names,table}}
 
 
-\ifxetex\else
-\RequirePackage{microtype}\fi
+\ifxetex
+\else
+   \ifluatex\else
+     \RequirePackage{microtype}%
+  \fi
+\fi
 \RequirePackage{graphicx}[1999/02/16]
 \DeclareGraphicsExtensions{jpg,JPG,jpeg,png,eps}
 \graphicspath{{graphics/}{graphics//}{../images/}{images//}{./images/}{./graphics/}{../graphics/}{./pic/}{../pic}}
@@ -152,8 +193,8 @@
 \newcommand{\done}{\cellcolor{teal}done}
 \newcommand{\partialdone}{\cellcolor{yellow}done}
 \newcommand{\hcyan}[1]{{\color{teal} #1}}
-\DeclareRobustCommand\thickrule{
-\leavevmode \leaders \hrule height 2pt \hfill \kern \z@}
+\DeclareRobustCommand\thickrule{%
+  \leavevmode \leaders \hrule height 2pt \hfill \kern \z@}
 \DeclareRobustCommand\thinrule{\rule{\textwidth}{0.4pt}}
 \DeclareRobustCommand\mediumrule{\rule{\textwidth}{0.8pt}}
 \DeclareRobustCommand\Rule{{\color{\tocchapternumberfill@cx}\rule[-4.1pt]{13cm}{0.4pt}}}
@@ -164,7 +205,7 @@
 \cxset{chapter rule color/.store in={\chapter@rule@color}}%
 \cxset{chapter rule color=thered}%
 \DeclareRobustCommand\tikzrule{%
-\tikz [color=\chapter@rule@color, very thick] \draw(0,0)--(\the\linewidth,0);
+  \tikz [color=\chapter@rule@color, very thick]     \draw(0,0)--(\the\linewidth,0);
 }
 
 \newif\ifLIPSUM
@@ -336,19 +377,17 @@ ball was her favorite plaything.}%
   {\havemultirowtrue\RequirePackage{multirow}}
   {}
 \RequirePackage{threeparttable}
-^^A \begin{center}
-^^A\begin{tabular}{|l::c:r|}\hline
-^^A A&B&C\\\hdashline
-^^A %AAA&BBB&CCC\\\cdashline{1-2}
-^^A %\multicolumn{2}{|l:}{AB}&C\\\hdashline\hdashline
-^^A %\end{tabular}
-^^A % \end{center}
 \RequirePackage{pdflscape}
 \ifxetex
   \def\new@mathgroup{\alloc@8\mathgroup\mathchardef\@cclvi}
   \patchcmd{\document@select@group}{\sixt@@n}{\@cclvi}{}{}
   \patchcmd{\select@group}{\sixt@@n}{\@cclvi}{}{}
 \if
+\ifluatex
+  \def\new@mathgroup{\alloc@8\mathgroup\mathchardef\@cclvi}
+  \patchcmd{\document@select@group}{\sixt@@n}{\@cclvi}{}{}
+  \patchcmd{\select@group}{\sixt@@n}{\@cclvi}{}{}
+\fi
 \newif\ifAMS
 \newcommand\AMS{\AmS\index{AMS=\AmS}}
 \IfStyFileExists{amssymb}
@@ -379,7 +418,7 @@ ball was her favorite plaything.}%
   }
 
 \newif\ifFontIsAvailable
-\def\testFontAvailability#1{
+\def\testFontAvailability#1{%
   \count255=\interactionmode
   \batchmode
   \let\preload=\nullfont
@@ -415,12 +454,12 @@ ball was her favorite plaything.}%
 \renewcommand\U[1]{{\texttt{U+#1}}(\char"#1)\xspace}
 
 \newif\ifYH
-\newcommand\YH{\pkgname{yhmath}}
+\newcommand\YH{yhmath}
 \IfStyFileExists{yhmath}
   {\YHtrue
    \let\origRequirePackage=\RequirePackage    % We don't want amsmath loaded.
    \def\RequirePackage##1{}
-   \usepackage{yhmath}
+   \RequirePackage{yhmath}
    \let\RequirePackage=\origRequirePackage
   }
   {}
@@ -871,7 +910,6 @@ ball was her favorite plaything.}%
 \fi
 \newif\ifUPGR
 \RequirePackage[Symbol]{upgreek}
-
 \newif\ifASCII
 \newcommand\ASCII{\pkgname{ascii}}
 \IfStyFileExists{ascii}
@@ -920,10 +958,148 @@ ball was her favorite plaything.}%
 \DeclareTextCommandDefault{\ltexttrademark}{\textsuperscript{TM}}
 \DeclareTextCommandDefault{\ltextordfeminine}{\textsuperscript{a}}
 \DeclareTextCommandDefault{\ltextordmasculine}{\textsuperscript{o}}
-\ifxetex\else
-\RequirePackage{textcomp}
-\PassOptionsToPackage{mathcomp}{rmdefault}
-\RequirePackage{mathcomp}\fi
+
+\DeclareTextSymbol{\textcentoldstyle}{TS1}{'213}
+\DeclareTextSymbolDefault{\textcentoldstyle}{TS1}
+\DeclareTextSymbol{\textdollaroldstyle}{TS1}{'212}
+\DeclareTextSymbolDefault{\textdollaroldstyle}{TS1}
+\DeclareTextSymbol{\textguarani}{TS1}{'220}
+\DeclareTextSymbolDefault{\textguarani}{TS1}
+
+\DeclareUTFcharacter[\UTFencname]{x3008}{\textlangle}
+\DeclareUTFcharacter[\UTFencname]{x3009}{\textrangle}
+\DeclareUTFcharacter[\UTFencname]{x301A}{\textlbrackdbl}
+\DeclareUTFcharacter[\UTFencname]{x301B}{\textrbrackdbl}
+
+
+\DeclareUTFcharacter[\UTFencname]{xFF10}{\textzerooldstyle}
+\DeclareUTFcharacter[\UTFencname]{xFF11}{\textoneoldstyle}
+\DeclareUTFcharacter[\UTFencname]{xFF12}{\texttwooldstyle}
+\DeclareUTFcharacter[\UTFencname]{xFF13}{\textthreeoldstyle}
+\DeclareUTFcharacter[\UTFencname]{xFF14}{\textfouroldstyle}
+\DeclareUTFcharacter[\UTFencname]{xFF15}{\textfiveoldstyle}
+\DeclareUTFcharacter[\UTFencname]{xFF16}{\textsixoldstyle}
+\DeclareUTFcharacter[\UTFencname]{xFF17}{\textsevenoldstyle}
+\DeclareUTFcharacter[\UTFencname]{xFF18}{\texteightoldstyle}
+\DeclareUTFcharacter[\UTFencname]{xFF19}{\textnineoldstyle}
+
+
+\DeclareEncodedCompositeCharacter{\UTFencname}{\textcircled}{20DD}{25EF}
+
+\DeclareUTFcomposite[\UTFencname]{x2460}{\textcircled}{1}
+\DeclareUTFcomposite[\UTFencname]{x2461}{\textcircled}{2}
+\DeclareUTFcomposite[\UTFencname]{x2462}{\textcircled}{3}
+\DeclareUTFcomposite[\UTFencname]{x2463}{\textcircled}{4}
+\DeclareUTFcomposite[\UTFencname]{x2464}{\textcircled}{5}
+\DeclareUTFcomposite[\UTFencname]{x2465}{\textcircled}{6}
+\DeclareUTFcomposite[\UTFencname]{x2466}{\textcircled}{7}
+\DeclareUTFcomposite[\UTFencname]{x2467}{\textcircled}{8}
+\DeclareUTFcomposite[\UTFencname]{x2468}{\textcircled}{9}
+\DeclareUTFcomposite[\UTFencname]{x2469}{\textcircled}{10}
+\DeclareUTFcomposite[\UTFencname]{x246A}{\textcircled}{11}
+\DeclareUTFcomposite[\UTFencname]{x246B}{\textcircled}{12}
+\DeclareUTFcomposite[\UTFencname]{x246C}{\textcircled}{13}
+\DeclareUTFcomposite[\UTFencname]{x246D}{\textcircled}{14}
+\DeclareUTFcomposite[\UTFencname]{x246E}{\textcircled}{15}
+\DeclareUTFcomposite[\UTFencname]{x246F}{\textcircled}{16}
+\DeclareUTFcomposite[\UTFencname]{x2470}{\textcircled}{17}
+\DeclareUTFcomposite[\UTFencname]{x2471}{\textcircled}{18}
+\DeclareUTFcomposite[\UTFencname]{x2472}{\textcircled}{19}
+\DeclareUTFcomposite[\UTFencname]{x2473}{\textcircled}{20}
+
+\DeclareUTFcomposite[\UTFencname]{x24B6}{\textcircled}{A}
+\DeclareUTFcomposite[\UTFencname]{x24B7}{\textcircled}{B}
+\DeclareUTFcomposite[\UTFencname]{x24B8}{\textcircled}{C}
+\DeclareUTFcomposite[\UTFencname]{x24B9}{\textcircled}{D}
+\DeclareUTFcomposite[\UTFencname]{x24BA}{\textcircled}{E}
+\DeclareUTFcomposite[\UTFencname]{x24BB}{\textcircled}{F}
+\DeclareUTFcomposite[\UTFencname]{x24BC}{\textcircled}{G}
+\DeclareUTFcomposite[\UTFencname]{x24BD}{\textcircled}{H}
+\DeclareUTFcomposite[\UTFencname]{x24BE}{\textcircled}{I}
+\DeclareUTFcomposite[\UTFencname]{x24BF}{\textcircled}{J}
+\DeclareUTFcomposite[\UTFencname]{x24C0}{\textcircled}{K}
+\DeclareUTFcomposite[\UTFencname]{x24C1}{\textcircled}{L}
+\DeclareUTFcomposite[\UTFencname]{x24C2}{\textcircled}{M}
+\DeclareUTFcomposite[\UTFencname]{x24C3}{\textcircled}{N}
+\DeclareUTFcomposite[\UTFencname]{x24C4}{\textcircled}{O}
+\DeclareUTFcomposite[\UTFencname]{x24C5}{\textcircled}{P}
+\DeclareUTFcomposite[\UTFencname]{x24C6}{\textcircled}{Q}
+\DeclareUTFcomposite[\UTFencname]{x24C7}{\textcircled}{R}
+\DeclareUTFcomposite[\UTFencname]{x24C8}{\textcircled}{S}
+\DeclareUTFcomposite[\UTFencname]{x24C9}{\textcircled}{T}
+\DeclareUTFcomposite[\UTFencname]{x24CA}{\textcircled}{U}
+\DeclareUTFcomposite[\UTFencname]{x24CB}{\textcircled}{V}
+\DeclareUTFcomposite[\UTFencname]{x24CC}{\textcircled}{W}
+\DeclareUTFcomposite[\UTFencname]{x24CD}{\textcircled}{X}
+\DeclareUTFcomposite[\UTFencname]{x24CE}{\textcircled}{Y}
+\DeclareUTFcomposite[\UTFencname]{x24CF}{\textcircled}{Z}
+\DeclareUTFcomposite[\UTFencname]{x24D0}{\textcircled}{a}
+\DeclareUTFcomposite[\UTFencname]{x24D1}{\textcircled}{b}
+\DeclareUTFcomposite[\UTFencname]{x24D2}{\textcircled}{c}
+\DeclareUTFcomposite[\UTFencname]{x24D3}{\textcircled}{d}
+\DeclareUTFcomposite[\UTFencname]{x24D4}{\textcircled}{e}
+\DeclareUTFcomposite[\UTFencname]{x24D5}{\textcircled}{f}
+\DeclareUTFcomposite[\UTFencname]{x24D6}{\textcircled}{g}
+\DeclareUTFcomposite[\UTFencname]{x24D7}{\textcircled}{h}
+\DeclareUTFcomposite[\UTFencname]{x24D8}{\textcircled}{i}
+\DeclareUTFcomposite[\UTFencname]{x24D9}{\textcircled}{j}
+\DeclareUTFcomposite[\UTFencname]{x24DA}{\textcircled}{k}
+\DeclareUTFcomposite[\UTFencname]{x24DB}{\textcircled}{l}
+\DeclareUTFcomposite[\UTFencname]{x24DC}{\textcircled}{m}
+\DeclareUTFcomposite[\UTFencname]{x24DD}{\textcircled}{n}
+\DeclareUTFcomposite[\UTFencname]{x24DE}{\textcircled}{o}
+\DeclareUTFcomposite[\UTFencname]{x24DF}{\textcircled}{p}
+\DeclareUTFcomposite[\UTFencname]{x24E0}{\textcircled}{q}
+\DeclareUTFcomposite[\UTFencname]{x24E1}{\textcircled}{r}
+\DeclareUTFcomposite[\UTFencname]{x24E2}{\textcircled}{s}
+\DeclareUTFcomposite[\UTFencname]{x24E3}{\textcircled}{t}
+\DeclareUTFcomposite[\UTFencname]{x24E4}{\textcircled}{u}
+\DeclareUTFcomposite[\UTFencname]{x24E5}{\textcircled}{v}
+\DeclareUTFcomposite[\UTFencname]{x24E6}{\textcircled}{w}
+\DeclareUTFcomposite[\UTFencname]{x24E7}{\textcircled}{x}
+\DeclareUTFcomposite[\UTFencname]{x24E8}{\textcircled}{y}
+\DeclareUTFcomposite[\UTFencname]{x24E9}{\textcircled}{z}
+\DeclareUTFcomposite[\UTFencname]{x24EA}{\textcircled}{0}
+
+\DeclareUTFcharacter[\UTFencname]{x25EF}{\textbigcircle}
+
+\DeclareUTFcomposite[\UTFencname]{x3251}{\textcircled}{21}
+\DeclareUTFcomposite[\UTFencname]{x3252}{\textcircled}{22}
+\DeclareUTFcomposite[\UTFencname]{x3253}{\textcircled}{23}
+\DeclareUTFcomposite[\UTFencname]{x3254}{\textcircled}{24}
+\DeclareUTFcomposite[\UTFencname]{x3255}{\textcircled}{25}
+\DeclareUTFcomposite[\UTFencname]{x3256}{\textcircled}{26}
+\DeclareUTFcomposite[\UTFencname]{x3257}{\textcircled}{27}
+\DeclareUTFcomposite[\UTFencname]{x3258}{\textcircled}{28}
+\DeclareUTFcomposite[\UTFencname]{x3259}{\textcircled}{29}
+\DeclareUTFcomposite[\UTFencname]{x325A}{\textcircled}{30}
+\DeclareUTFcomposite[\UTFencname]{x325B}{\textcircled}{31}
+\DeclareUTFcomposite[\UTFencname]{x325C}{\textcircled}{32}
+\DeclareUTFcomposite[\UTFencname]{x325D}{\textcircled}{33}
+\DeclareUTFcomposite[\UTFencname]{x325E}{\textcircled}{34}
+\DeclareUTFcomposite[\UTFencname]{x325F}{\textcircled}{35}
+
+\DeclareUTFcomposite[\UTFencname]{x32B1}{\textcircled}{36}
+\DeclareUTFcomposite[\UTFencname]{x32B2}{\textcircled}{37}
+\DeclareUTFcomposite[\UTFencname]{x32B3}{\textcircled}{38}
+\DeclareUTFcomposite[\UTFencname]{x32B4}{\textcircled}{39}
+\DeclareUTFcomposite[\UTFencname]{x32B5}{\textcircled}{40}
+\DeclareUTFcomposite[\UTFencname]{x32B6}{\textcircled}{41}
+\DeclareUTFcomposite[\UTFencname]{x32B7}{\textcircled}{42}
+\DeclareUTFcomposite[\UTFencname]{x32B8}{\textcircled}{43}
+\DeclareUTFcomposite[\UTFencname]{x32B9}{\textcircled}{44}
+\DeclareUTFcomposite[\UTFencname]{x32BA}{\textcircled}{45}
+\DeclareUTFcomposite[\UTFencname]{x32BB}{\textcircled}{46}
+\DeclareUTFcomposite[\UTFencname]{x32BC}{\textcircled}{47}
+\DeclareUTFcomposite[\UTFencname]{x32BD}{\textcircled}{48}
+\DeclareUTFcomposite[\UTFencname]{x32BE}{\textcircled}{49}
+\DeclareUTFcomposite[\UTFencname]{x32BF}{\textcircled}{50}
+\ifxetex\else\ifluatex\else
+  \RequirePackage{textcomp}
+  \PassOptionsToPackage{mathcomp}{rmdefault}
+  \RequirePackage{mathcomp}
+  \fi
+\fi
 \ifxetex\else
 \RequirePackage{exscale}
 \RequirePackage{relsize}\fi
@@ -1069,16 +1245,7 @@ ball was her favorite plaything.}%
 \IfStyFileExists{undertilde}
   {\UTILDtrue\RequirePackage{undertilde}}
   {}
-\@ifundefined{epigraph}{%
-   \RequirePackage{epigraph}
-   %% Set up the epigraph to be a bit wider
-  \setlength{\epigraphwidth}{8cm}
-  \setlength{\epigraphrule}{0pt}
-  \newcommand{\theepigraph}[2]{\epigraphhead[30]{\epigraph{#1}{\textit{#2}}}}
-}{\setlength{\epigraphwidth}{8cm}
-\setlength{\epigraphrule}{0pt}
-\newcommand{\theepigraph}[2]{\epigraphhead[30]{\epigraph{#1}{\textit{#2}}}}%
-}
+
 \RequirePackage{lettrine}
 \ifx\dropcap\undefined
   \def\dropcap#1#2{%
@@ -1092,13 +1259,15 @@ ball was her favorite plaything.}%
 \RequirePackage{filecontents}
 \RequirePackage{changepage}
 \RequirePackage{keyval}
+\usepackage{xkvview}
 \RequirePackage{ifmtarg}
 \RequirePackage{fp}
 \RequirePackage{ifthen}
 \RequirePackage{xspace}
 \RequirePackage{xstring}
+\RequirePackage{multido}
 \RequirePackage{etoolbox}
-\RequirePackage{upquote}
+\RequirePackage{parselines}
 \RequirePackage{calc}
 \RequirePackage{pict2e}
 \RequirePackage{picture}
@@ -1144,9 +1313,17 @@ ball was her favorite plaything.}%
 \usetikzlibrary{tikzmark}
 \RequirePackage{pgfplots}
 \RequirePackage{pgfplotstable}
-\RequirePackage{verse}
-\RequirePackage[listings,theorems, skins,
-      documentation, breakable]{tcolorbox}
+\newcommand*{\BeforeHyperrefHook}{%
+  \RequirePackage{float}%
+  \RequirePackage{verse}}
+\newcommand*{\AfterHyperrefHook}{%
+  \RequirePackage{algorithm2e}%
+  \RequirePackage{fancyhdr}}
+
+
+\RequirePackage[theorems, skins,
+                breakable,listings]{tcolorbox}
+
 \lstdefinelanguage{extras}{morekeywords={%
       poemtitle, poemtoc, versewidth,
       vin, poemlines,poemtitlefont,
@@ -1155,6 +1332,10 @@ ball was her favorite plaything.}%
       includegraphics, newarray,readarray,of
 }}
 \lstloadlanguages{[LaTeX]TeX, [primitive]TeX, extras}
+
+\newtcolorbox{scriptexample}[2][shavian]{colback=graphicbackground,
+boxrule=0pt,toprule=0pt,colframe=white}
+
 \lstset{language={[LaTeX]TeX},
        escapeinside={{(*@}{@*)}},
        numbers=left,
@@ -1177,11 +1358,12 @@ ball was her favorite plaything.}%
        belowskip=7pt plus1pt minus1pt,
        backgroundcolor=\color{theshade}
 }
+
 \lstnewenvironment{teX}[1][]
   {\lstset{language=[LaTeX]TeX}\lstset{%
       breaklines=true,
       framesep=5pt,
-      basicstyle=\normalsize\ttfamily,
+      basicstyle=\small\ttfamily,
       showstringspaces=false,
       keywordstyle=\ttfamily,
       stringstyle={\color{gray!90}\footnotesize},
@@ -1200,7 +1382,7 @@ ball was her favorite plaything.}%
   {\lstset{language=[LaTeX]TeX}\lstset{%
       breaklines=true,
       framesep=5pt,
-      basicstyle=\normalsize\ttfamily,
+      basicstyle=\small\ttfamily,
       showstringspaces=false,
       keywordstyle=\ttfamily\color{blue},
       stringstyle=\color{maroon},
@@ -1215,29 +1397,25 @@ ball was her favorite plaything.}%
 }}
 {}
 
-%% Emphasis
-\ifxetex\else
-\renewcommand{\ttdefault}{cmtt} % prefer old tt font
-\fi
 \newcommand\emphasis[2][teal]{\lstset{emph={write, writeln,#2},
-   emphstyle={\ttfamily\textcolor{#1}}}}%
+   emphstyle={\verbatimfont\textcolor{#1}}}}%
 \lstnewenvironment{teXXX}[1][]
   {\lstset{language=[LaTeX]TeX}\lstset{%
       escapeinside={{(*@}{@*)}},
       breaklines=true,
       framesep=5pt,
-      basicstyle=\ttfamily,
+      basicstyle=\verbatimfont,
       showstringspaces=false,
-      keywordstyle=\ttfamily\textcolor{blue},
+      keywordstyle=\verbatimfont\textcolor{blue},
       stringstyle=\color{orange},
- commentstyle=\color{black},
- rulecolor=\color{gray!10},
+   commentstyle=\color{black},
+   rulecolor=\color{gray!10},
       breakatwhitespace=true,
       showspaces=false,  % shows spacing symbol
- xleftmargin=0pt,
- xrightmargin=5pt,
- aboveskip=0pt, % compact the code looks ugly in type
- belowskip=0pt,  % user responsible to insert any skips
+   xleftmargin=0pt,
+   xrightmargin=5pt,
+   aboveskip=0pt, % compact the code looks ugly in type
+   belowskip=0pt,  % user responsible to insert any skips
       backgroundcolor=, #1
 }}
 {}
@@ -1247,10 +1425,10 @@ ball was her favorite plaything.}%
 \let\startnumberat\numberlineat
 \newif\ifALGORITHM
 \@ifpackageloaded{hyperref}{%
-  %%\RequirePackage{algorithms}
+    %%\RequirePackage{algorithms}
  }
  {\typeout{Algorithm loaded}}
-\RequirePackage{algorithm2e}
+  \RequirePackage{algorithm2e}
 \RequirePackage{multicol}
 \newif\ifRAGGEDTWOE
 \newif\ifEVERYSEL
@@ -1334,8 +1512,28 @@ ball was her favorite plaything.}%
 \newcommand{\seedocs}[1]{%
   See the #1 documentation for more information%
 }
-\def\tex{\TeX\xspace}
-\def\latex{\LaTeX\xspace}
+\RequirePackage{hologo}
+\RequirePackage{metalogo}
+\newcommand\TEX      {\TeX\xspace}
+\let\tex\TEX
+\newcommand\LUA      {Lua\xspace}
+\let\lua\LUA
+\newcommand\PDFTEX   {pdf\TeX\xspace}
+\let\pdftex\PDFTEX
+\newcommand\LUATEX   {Lua\TeX\xspace}
+\let\luatex\LUATEX
+\newcommand\XETEX    {\XeTeX\xspace}
+\let\xetex\XETEX
+\newcommand\LATEX    {\LaTeX\xspace}
+\let\latex\LATEX
+\newcommand\pdfLaTeX {pdf\latex}
+\newcommand\LUALATEX {Lua\LaTeX\xspace}
+\let\lualatex\LUALATEX
+\newcommand\CONTEXT  {Con\TeX t\xspace}
+\let\context\CONTEXT
+\newcommand\OpenType {\texttt{Open\kern-.25ex Type}\xspace}
+\let\opentype\OpenType
+
 \def\latexe{\LaTeX\xspace}
 \newcommand{\fontdefdtx}{\filename{fontdef.dtx}\xspace}
 \newcommand{\postscript}{PostScript\index{PostScript}\xspace}
@@ -1381,7 +1579,7 @@ ball was her favorite plaything.}%
 \RequirePackage{varwidth}
 \RequirePackage{comment}
 \RequirePackage{textcase}
-\RequirePackage{csquotes}
+\RequirePackage[autostyle=false]{csquotes}
 \RequirePackage{alltt}[1997/06/16]
 \RequirePackage{caption} % check
 \RequirePackage{currfile}
@@ -1484,9 +1682,9 @@ ball was her favorite plaything.}%
 \ifarchaic
 
 \newif\ifLINA
-\newcommand\LINA{\pkgname{linearA}}
-\IfStyFileExists{linearA}
-  {\LINAtrue\RequirePackage{linearA}}
+\newcommand\LINA{\pkgname{lineara}}
+\IfStyFileExists{lineara}
+  {\LINAtrue\RequirePackage{lineara}}
   {}
 
 \newif\ifLINB
@@ -1609,6 +1807,7 @@ ball was her favorite plaything.}%
   quotation parsep/.store in=\quotationparsep@cx,
   quotation font-size/.store in=\quotationfontsize@cx,
   quotation parindent/.store in=\quotationparindent@cx,
+  quotation font-name/.store in=\quotationfontname@cx,
  }
 \let\oquotation\quotation
 \def\setquotation#1{%
@@ -1620,7 +1819,7 @@ ball was her favorite plaything.}%
                         \itemindent    \listparindent
                         \rightmargin \quotationrightmargin@cx
                         \parsep=\quotationparsep@cx%
-                        \quotationfontsize@cx}%
+                        \quotationfontname@cx\quotationfontsize@cx}%
                 \item\relax\hskip-\listparindent}
                {\endlist}
 }
@@ -1631,6 +1830,7 @@ ball was her favorite plaything.}%
   quotation parsep=0pt,
   quotation font-size=\small,
   quotation parindent=12pt,
+  quotation font-name=,
 }
 \cxset{
   quote above/.store in=\quoteabove@cx,
@@ -1639,7 +1839,8 @@ ball was her favorite plaything.}%
   quote parsep/.store in=\quoteparsep@cx,
   quote font-size/.store in=\quotefontsize@cx,
   quote parindent/.store in=\quoteparindent@cx,
-}
+  quote font-name/.store in=\quotefontname@cx,
+ }
 
 \def\setquote#1{%
   \cxset{#1}
@@ -1650,7 +1851,7 @@ ball was her favorite plaything.}%
                         \itemindent  \listparindent
                         \rightmargin\leftmargin
                         \parsep=\quoteparsep@cx%
-                        \quotefontsize@cx}%
+                        \quotefontsize@cx\quotefontname@cx}%
                 \item\relax\hskip-\listparindent}
                {\endlist}
   }
@@ -1668,6 +1869,7 @@ ball was her favorite plaything.}%
   quote parsep=0pt,
   quote font-size=\small,
   quote parindent=12pt,
+  quote font-name=,
 }
 \newcommand{\marginbox@cx}[2][]{%
   \mbox{}\marginpar{\centering\scriptsize \color{teal}#2}%
@@ -1721,7 +1923,8 @@ ball was her favorite plaything.}%
 }
 
 
-
+\def\oarg#1{%
+  \colOpt{{\ttfamily[}\meta{#1}{\ttfamily]}}}
 \def\DescribeMacro{\leavevmode\@bsphack
    \begingroup\MakePrivateLetters\Describe@Macro}
 \def\Describe@Macro#1{\endgroup
@@ -1772,9 +1975,9 @@ ball was her favorite plaything.}%
 \newcommand{\cmdI}[2][]{%
   \def\first@arg{#1}%
   \ifx\first@arg\@empty
-    \texttt{\string#2}\indexcommand[#2]{#2}%
+    \texttt{\verbatimfont\string#2}\indexcommand[#2]{#2}%
   \else
-    \texttt{\string#2}\indexcommand[#1]{#2}%
+    \texttt{\verbatimfont\string#2}\indexcommand[#1]{#2}%
   \fi
 }
 \newcommand{\cmdX}[1]{\cmdI[$\string#1$]{#1}}
@@ -1784,7 +1987,7 @@ ball was her favorite plaything.}%
 \DeclareRobustCommand\CMDI[1]{%
 \bgroup
 \smallskip
-\noindent\color{thered}\texttt{\string#1}%
+\noindent\color{thered}\texttt{\verbatimfont\string#1}%
 \indexcommand{#1}
 \egroup%
 }
@@ -1803,15 +2006,15 @@ ball was her favorite plaything.}%
   \index{#1=\textsf{#1} (package)}%
   \index{packages>#1=\textsf{#1}}}
 
+\newcommand*{\Lpack}[1]{\textsf {#1}}
+
 \newcommand{\optname}[2]{%
   \textsf{#2}%
   \index{#2=\textsf{#2} (\textsf{#1} package option)}%
   \index{package options>#2=\textsf{#2} (\textsf{#1})}}
-
 \newcommand{\docfilename}[1]{%
-  \texttt{#1}%
+  \texttt{#1}
   \index{#1=\texttt{#1} (file)}}
-
 \newcommand{\docfileextension}[1]{%
   \texttt{#1}%
   \index{#1=\texttt{#1} (file extension)}}
@@ -1918,44 +2121,73 @@ ball was her favorite plaything.}%
   \fi
 }
 
+\newfontfamily\unicodenumberfam{Arial Unicode MS}
+\def\textU#1{{\unicodenumberfam #1}}
+\makeatletter
+\def\putunicode@label#1#2;{%
+\def\reformat@unicode@string##1{%
+   \textU{U+}%
+  \let\z\empty%
+  \expandafter\@tfor\expandafter\i\expandafter:\expandafter=#2;\do{%
+  \if\i;%
+    \textU{x}%
+  \else%
+    \textU{\z}%
+  \fi%
+  \edef\z{\i}%
+ }%
+}%
+  \makebox[5em]{\reformat@unicode@string{#2}\hfill}%
+}
 
-\def\putunicode#1{\makebox[5em]{\texttt{#1}}}
+\def\putchar@cx#1{%
+\let\oldactive@prefix\active@prefix
+\let\active@prefix\relax
+   \iffontchar\font\n
+     \char\the\n$_{\pgfmathparse{Hex(\the\r@cx)}\text{\pgfmathresult}}$%
+      %
+   \else
+     \graybox
+   \fi
+\let\active@prefix\oldactive@prefix
+ }
+
 \def\urow@cx#1{%
-\parindent0pt%
-\n=#1%
-\r=1%
-\putunicode{U+#1}%
-\loop%
-\ifnum\n<\numexpr#1+16\relax%
-\makebox[2.1em]{\char\n$_{\the\r}$}%
-\advance\r by1%
-\ifnum\r>16\r=1\relax\fi
-\advance\n by1%
-\repeat\par}
+    \n=#1%
+    \r@cx=0%
+    \expandafter\putunicode@label#1;%
+    \loop%
+        \ifnum\n<\numexpr#1+16\relax%
+        \makebox[2.1em]{\expandafter\putchar@cx{#1}}%
+        \advance\r@cx by1%
+        \ifnum\r@cx>16\r@cx=1\relax\else\fi
+        \advance\n by1%
+    \repeat
+    \par
+}
 
 \def\typeseturows@cx#1{%
 \@for\next:=#1\do{%
-\urow@cx\next\par}}
+  \urow@cx\next\vskip3pt}%
+}
 
+\newcount\r@cx%
+\newcount\n%
 \newcommand\unicodetable[2]{%
-  \bgroup%
-   \parindent0pt%
-   \newcount\n%
-   \newcount\r%
-   \r=1%
-   \raggedright%
+\bgroup
+  \par
+  \leavevmode%
+   \r@cx=0%
+   {\hbox to 5em{\ignorespaces}}%
+   \loop%
+    \ifnum\r@cx<16\ignorespaces
+    \makebox[2.1em]{\pgfmathparse{Hex(\the\r@cx)}\pgfmathresult}%
+    \advance\r@cx by\@ne%
+   \repeat
+   \vskip3pt\par
    \@nameuse{#1}%
-  %\htable@cx%
-\r=1%
-\putunicode{\hphantom{U+#1}}%
-\loop%
-\ifnum\r<17\relax%
-\makebox[2.1em]{\hfill\texttt{\the\r}\hfill}%
-\advance\r by1%
-\repeat
-\par
-\typeseturows@cx{#2}%
-\egroup%
+   \typeseturows@cx{#2}%
+\egroup
 }
 
 
@@ -2024,10 +2256,8 @@ ball was her favorite plaything.}%
 \newcommand\VIET{\pkgname{vietnam}}
 \newcounter{totalsymbols}
 \newcommand{\incsyms}{\addtocounter{totalsymbols}{1}}
-\IfStyFileExists*{color}
-  {\usepackage{color}
-   \newcommand*{\graybox}{\textcolor[gray]{0.7}{\rule[-\adp]{\awd}{\aht}}}}
-  {\newcommand*{\graybox}{\rule[-\adp]{\awd}{\aht}}}
+\newcommand*{\graybox}{\textcolor{gray!0.7}{\rule[-\adp]{\awd}{\aht}}}
+
 \newlength\awd
 \newlength\aht
 \newlength\adp
@@ -2189,7 +2419,7 @@ ball was her favorite plaything.}%
 
 \newcommand*{\displayverbfont}{\ttfamily}
 
-\renewcommand*{\verbatim@font}{\verbatimfont}
+\renewcommand*{\verbatim@font}{\verbatimfamily}
 
 \def\cmd#1{\cs{\expandafter\cmd@to@cs\string#1}}
   \def\cmd@to@cs#1#2{\char\number`#2\relax}
@@ -2454,8 +2684,8 @@ ball was her favorite plaything.}%
   \def\test{#2}%
   \ifx\test\empty%
     % aha.
-    \index{#1@\protect\texttt{#1} key}%
-    \index{\mypath#1@\protect\texttt{#1}}%
+    \index{#1=\protect\texttt{#1} key}%@=
+    \index{\mypath#1=\protect\texttt{#1}}%@
     \def\myname{#1}%
   \else%
     \iffirsttime
@@ -2472,8 +2702,8 @@ ball was her favorite plaything.}%
 \newenvironment{predefinednode}[1]{
   \begin{pgfmanualentry}
     \pgfmanualentryheadline{Predefined node {\ttfamily\declare{#1}}}%
-    \index{#1@\protect\texttt{#1} node}%
-    \index{Predefined node!#1@\protect\texttt{#1}}
+    \index{#1=\protect\texttt{#1} node}%=
+    \index{Predefined node!#1=\protect\texttt{#1}}=
     \pgfmanualbody
 }
 {
@@ -2522,8 +2752,8 @@ ball was her favorite plaything.}%
       \declare{\texttt{#2}}#3\ \textcolor{gray}{\dots\texttt{;}}}%
     \def\pgfmanualtest{#1}%
     \ifx\pgfmanualtest\@empty%
-      \index{#2@\protect\texttt{#2} path operation}%
-      \index{Path operations!#2@\protect\texttt{#2}}%
+      \index{#2=\protect\texttt{#2} path operation}%=
+      \index{Path operations!#2=\protect\texttt{#2}}%=
     \fi%
     \pgfmanualbody
 }
@@ -2922,8 +3152,11 @@ narrow/.style={width=6.9cm},
 \newcommand\WIPA{\pkgname{wipa}}
 \ifxetex
 \else
-  \TIPAtrue
-  \RequirePackage[tone,extra,safe]{tipa}
+  \ifluatex
+  \else
+    \TIPAtrue
+    \RequirePackage[tone,extra,safe]{tipa}
+  \fi
 \fi
 \cxset{ref sectionname/.store in =\refsectionname@cx,
        ref chaptername/.store in =\refchaptername@cx,
@@ -3010,11 +3243,19 @@ narrow/.style={width=6.9cm},
    {\def\PrintDescribeEnv#1{\strut \MacroFonts #1\ }}{\def\PrintDescribeEnv#1{\strut \MarginMacroFonts #1\ }}
 \@ifundefined{PrintEnvName}
    {\def\PrintEnvName#1{\strut \MarginMacroFonts #1\ }}{\def\PrintEnvName#1{\strut \MarginMacroFonts #1\ }}
-\def\MarginMacroFonts{\fontencoding\encodingdefault
+\ifxetex
+  \def\MarginMacroFonts{\color{thered}\ttfamily}
+\else
+  \ifluatex
+    \def\MarginMacroFonts{\color{thered}\ttfamily}
+  \else
+    \def\MarginMacroFonts{\fontencoding\encodingdefault
                    \fontfamily\ttdefault
                    \fontseries\mddefault
                    \fontshape\updefault
-                   \color{teal}\small}%
+                   \color{red}\small}%
+  \fi
+\fi
 
   \ifx\c@chapter\@undefined
     \newcounter{texexp}[section]
@@ -3023,6 +3264,7 @@ narrow/.style={width=6.9cm},
     \newcounter{texexp}[chapter]
     \@addtoreset{c@texexp}{c@chapter}
   \fi
+
 \def\thetexexp{\thesection.\arabic{texexp}}
 \tcbset{texexp/.style={%
       fonttitle=\small\sffamily\bfseries,
@@ -5056,6 +5298,17 @@ section numbering/Roman/.code={%
 }
 
 
+\@ifundefined{epigraph}{%
+   \RequirePackage{epigraph}
+   %% Set up the epigraph to be a bit wider
+  \setlength{\epigraphwidth}{8cm}
+  \setlength{\epigraphrule}{0pt}
+  \newcommand{\theepigraph}[2]{\epigraphhead[30]{\epigraph{#1}{\textit{#2}}}}
+}{\setlength{\epigraphwidth}{8cm}
+\setlength{\epigraphrule}{0pt}
+\newcommand{\theepigraph}[2]{\epigraphhead[30]{\epigraph{#1}{\textit{#2}}}}%
+}
+
 \cxset{
   epigraph width/.code={\setlength\epigraphwidth{#1}},
   epigraph font-size/.code={\renewcommand{\epigraphsize}{#1}},
@@ -5074,8 +5327,13 @@ section numbering/Roman/.code={%
   epigraph text align/right/.code={\renewcommand{\textflush}{flushright}},
   epigraph text align/center/.code={\renewcommand{\textflush}{center}},
   epigraph rule width/.code={\setlength\epigraphrule{#1}},
-  epigraph rule/.code={\renewcommand{\@epirule}{\color{teal}\rule[.5ex]{\epigraphwidth}{\epigraphrule}}},
+epigraph rule color/.store in = \epigraphrulecolor@cx,
+  epigraph rule/.code={
+ \renewcommand{\@epirule}{\color{\epigraphrulecolor@cx}\rule[.5ex]{\epigraphwidth}{\epigraphrule}}
+},
 }
+
+\cxset{}
 
 \cxset{epigraph width=0.5\linewidth,
     epigraph font-size=\small,
@@ -5083,6 +5341,7 @@ section numbering/Roman/.code={%
     epigraph align=right,
     epigraph source align=right,
     epigraph text align=right,
+    epigraph rule color=blue,
     epigraph rule}
 \newif\if@headertoprule
 \newif\if@headerbottomrule

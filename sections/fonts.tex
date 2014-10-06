@@ -36,7 +36,10 @@ in \latex.
 \section{Introduction}
 
 
-Selecting the right fonts for a book traditionally was the job of the book designer. Most \latex authors would get their hands dirty trying to play the book designer. A word of advice is that most of them make a royal mess of it. If you use only |pdfLaTeX| the range of fonts is rather limiting and I would highly recommend for any serious typesetting work to move onto |XeLaTeX| and the use of the package \pkg{fontspec} \citep{fontspec}.
+Selecting the right fonts for a book traditionally was the job of the book designer. Most \latex authors would get their hands dirty trying to play the book designer. A word of advice is that most of them make a royal mess of it. Irrespective of the \tex engine employed, being \tex, \latexe, \lualatex or \xelatex there are two issues in using fonts. How to select them and specify them and what fonts to use. We will dwell on the technical aspects of font selection in this Chapter.
+
+
+If you use only |pdfLaTeX| the range of fonts is rather limiting and I would highly recommend for any serious typesetting work to move onto |XeLaTeX| and the use of the package \pkg{fontspec} \citep{fontspec}. Another alternative is to use \lualatex. The latter is becoming more stable and is production ready to a large extend. It is expected to be the successor to pdfTeX.
 
 One of the things we wanted to achieve with the \pkgname{phd} was  to take care of different \tex engines, and to ensure that the package can be used irrespective of the \TeX\ engine used. 
 
@@ -52,17 +55,17 @@ Before we start outlining the scheme let us start, by demonstrating how to load 
 \fox
 \end{texexample}
 
-In the example we have used a number of convenience commands that
-are provided by the |phd| package.
+In the example we have used a number of convenience commands that are provided by the |phd| package.
 
 \CMDI{\alphabet} Typesets the letters of the English alphabet
+
 \CMDI{\fox} Typesets the fox passage
 
 The example  creates a convenience command to call the |computer modern typewriter| font and to print the alphabet.\footnote{The command \cs{alphabet} is provided by the \texttt{phd} package.} In this case we are asking \latex to load a font from the |cmtt| family. 
 
 To load a font two things are required the encoding scheme [|OT1|] in the example and the somewhat cryptic font family name [|cmtt|].
 
-\subsection{What’s a font?}
+\section{What’s a font?}
 
 As the |fontinst| manual says: ``Once upon a time, this question was easily answered: a font is a set of type
 in one size, style, etc. There used to be no ambiguity, because a font was a
@@ -231,7 +234,7 @@ LaTeX Font Warning: Font shape `EU1/cmr/m/sc' undefined
 \ttverb\th                \>T1    \>   \th              \>
 \end{tabbing}                        
 
-Do note that when you use the \pkgname{hyperref}, you will get a surprise, all the commands have been converted to "PU" encoding. This is mostly harmless and iss  done in order for |hyperref| to mark bookmarks\footnote{http://tex.stackexchange.com/questions/198810/why-does-the-hyperref-package-changes-encoding-of-font-commands} in a safe way.
+Do note that when you use the \pkgname{hyperref}, you will get a surprise, all the commands have been converted to "PU" encoding. This is mostly harmless and is  done in order for |hyperref| to mark bookmarks\footnote{http://tex.stackexchange.com/questions/198810/why-does-the-hyperref-package-changes-encoding-of-font-commands} in a safe way.
 
 \begin{texexample}{font encoding}{ex:encoding}
 \meaning\textasciitilde\\
@@ -272,7 +275,7 @@ Most of the difficulty in selecting and using fonts is figuring the encoding sch
 \begin{figure}[htbp]
 \centering
 
-\hspace*{-2cm}\includegraphics[width=\textwidth]{./images/testfont-output.pdf}
+^^A\hspace*{-2cm}\includegraphics[width=\textwidth]{./images/testfont-output.pdf}
 
 \caption{Output from testfont.tex for cmtt10 font}
 \label{fig:fonttest}
@@ -280,7 +283,7 @@ Most of the difficulty in selecting and using fonts is figuring the encoding sch
 
 
 
-\subsection{The postscript fonts}
+\subsection{The Postscript fonts}
 
 With Adobe reader a number of fonts come pre-packaged and these have been incorporated into \latex2e. These fonts can be found in all \tex distributions. The \textit{Times New Roman} is named |ptm|. 
 
@@ -305,9 +308,7 @@ different styles, standard on all PostScript printers}
 
 Using the |phd| package we can come closer to the |fontspec| or LuaTeX way of doing things and use longer font names as those found in the operating system.
 
-\begin{key}{/chapter/font name=\marg{Zapf Chancery Medium Italic}}
-This is how it is typeset
-\end{key}
+
 
 
 
@@ -316,10 +317,8 @@ will typeset the rest of the document with this typeface.
 
 \makeatletter
 \def\fontname@cx{}
-\makeatother
-
 \cxset{font name/.is choice,
-       font name/Zapf Chancery Medium Italic/.code={\fontfamily{pzc}\selectfont },
+       font name/Zapf Chancery Medium Italic/.code={\fontfamily{pzc}\selectfont},
 font name/courier/.code={\fontfamily{pcr}\selectfont},
 font name/Helvetica/.code={\fontfamily{phv}\selectfont},
 font name/helvetica/.code={\fontfamily{phv}\selectfont},
@@ -327,10 +326,16 @@ font name/Bookman Light/.code={\fontfamily{pbk}\selectfont},
 font name/bookman/.code={\fontfamily{pbk}\selectfont},
 font name/Utopia/.code={\fontfamily{put}\selectfont},
 font name/Palatino/.code={\fontfamily{put}\selectfont},
-font name/Old Standard/.code={\fontspec{OldStandard-Regular}\addfontfeature{StylisticSet=2}},
-font name/Junicode/.code={\fontspec{Junicode}\addfontfeature{StylisticSet=2}}
+font name/Old Standard/.store in=\fontname@cx,
+font name/Junicode/.code={
+\fontspec{Junicode}\addfontfeature{StylisticSet=2}}
 }
+\makeatother
 
+\begin{key}{/chapter/font name=\marg{Zapf Chancery Medium Italic}}
+\cxset{font name=Zapf Chancery Medium Italic}
+\bgroup \itshape This is how it is typeset\egroup
+\end{key}
 
 
 \begin{key}{/chapter/font name=\marg{Old Standard}}
@@ -338,7 +343,7 @@ Setting the key to \texttt{Old Standard} will typeset the next sample in \texttt
 
 \bgroup
 \parindent1em\itshape
-\cxset{font name=Old Standard}
+^^A\cxset{font name=Old Standard}
 
 \aliceii
 
@@ -368,7 +373,7 @@ Bookman Light or |bookman|
 
 \bgroup
 \cxset{font name=bookman}
-
+\small
 \aliceiii
 \egroup
 
@@ -396,7 +401,7 @@ comfortable in mountain areas. I don't recall Alice
 \renewcommand{\LettrineFontHook}{\fontfamily{phv}\fontseries{bx}}%
 
 
-%\cxset{font name=Helvetica}
+
 \par\leavevmode
 
 \lettrine[lines=5, lhang=0.1,lraise=0.28,findent=1pt]{g}{oats} are animals found in all sort of places. The paragraph has been set using the font family |utopia|. The comment about the goats was just to get the letter g.
@@ -410,14 +415,15 @@ comfortable in mountain areas. I don't recall Alice
 
 \medskip
 
-\cxset{font name=Zapf Chancery Medium Italic}
+
 
 \lettrine{G}{o}ats are among the earliest animals domesticated by humans. The most recent genetic analysis confirms the archaeological evidence that the wild Bezoar ibex of the Zagros Mountains are the likely origin of almost all domestic goats today. Neolithic farmers began to herd wild goats for easy access to milk and meat, primarily, as well as for their dung, which was used as fuel, and their bones, hair, and sinew for clothing, building, and tools. The earliest remnants of domesticated goats dating 10,000 years before present are found in Ganj Dareh in Iran. Goat remains have been found at archaeological sites in Jericho, Choga Mami Djeitun and Çay\"on\"u, dating the domestication of goats in Western Asia at between 8000 and 9000 years ago.\footnote{Text is from wikipedia's article for the domesticated goat.}
 
+\bgroup
 \cxset{font name=bookman}
 
 As you have observed we did not change the normal size of paragraphs, but the examples demonstrate that differences in font families also affect the visual size of the typeset text. |Helvetica| is normally scaled down to 0.95 and |Chancery| is scaled a little bit up or we use a larger font size.
-
+\egroup
 
 
 
@@ -563,20 +569,23 @@ The next two letters are reserved for the typeface name. The hundreds and hundre
 
 Depending on the fonts in your system, some features that are described here, might not be available.
 
-\begin{tcolorbox}
-\begin{lstlisting}
-\usepackage{ifxetex}
+\begin{texexample}{}{}
 \ifxetex
-  \usepackage{fontspec}
-  \defaultfontfeatures{Mapping=tex-text}
-  \setmainfont{Times New Roman}
-  \setsansfont{Myriad Pro}
+  %\usepackage{fontspec}
+  %\defaultfontfeatures{Mapping=tex-text}
+  %\setmainfont{Times New Roman}
+  %\setsansfont{Myriad Pro}
+  Running XeTeX
 \else
-  \usepackage{lmodern}
-  \usepackage[T1]{fontenc}
+  \ifluatex
+  %\usepackage{lmodern}
+  %\usepackage[T1]{fontenc}
+    Running LuaTeX
+  \else
+    Running pdfLaTeX
+  \fi
 \fi
-\end{lstlisting}
-\end{tcolorbox}
+\end{texexample}
 
 For free fonts there exist a few resources that can be used with \LaTeX.
 \url{http://tex.stackexchange.com/questions/53416/using-a-good-non-default-font}. Integrating them within a new document can be a nightmare but is the job of the class and book designer.
@@ -692,7 +701,7 @@ call, the feature options must still be parsed and processed.
 
 The \pkgname{fontspec} package enables the selection of font features during run-time; font features are items such as colors, proportional OldStyle numbers and other similar items. Some of the examples that follow have been extracted from the fontspec documentation.
 
-\ifxetex
+\ifxetex\else\if\luatex
 \begin{texexample}{}{}
 \fontspec[Numbers={Proportional,OldStyle}]
 {TeX Gyre Adventor}
@@ -705,7 +714,31 @@ miles in 56 boats.' \bigskip
 13 boats. In 1923, 111 people sailed 54
 miles in 56 boats.' \bigskip
 \end{texexample}
-\fi
+
+Accessing Raw Features explicitly is perhaps better suited to people that like to investigate under the hood and can also provide a clearer way to understand what is going on.
+ 
+\begin{texexample}{}{}
+\fontspec[RawFeature=+onum;+zero]{TeX Gyre Adventor}
+`In 1842, 999 people sailed 97 miles in
+13 boats. In 1923, 1110 people sailed 54
+miles in 56 boats.' \bigskip
+
+\fontspec[RawFeature=+tnum;+zero]{TeX Gyre Adventor}
+00001761 tabular figures \fox \bigskip
+
+\fontspec[RawFeature=+pnum;+zero]{TeX Gyre Adventor}
+00001761 proportional figures \bigskip
+
+\fontspec[RawFeature=+onum;+zero]{TeX Gyre Adventor}
+00001761 old numerals\bigskip
+
+\fontspec[RawFeature=+lnum;+zero]{TeX Gyre Adventor}
+00001761 lining figures\bigskip
+\end{texexample}
+
+Not all \OpenType\footnote{See \protect\url{https://www.microsoft.com/typography/otspec/featurelist.htm}} fonts provide all font features and some will only work in combination with others, for example the |onum| feature will only work with the |pnum| number features. Some experimentation and viewing the font features with a utility is essential.
+
+\fi\fi
 
 
 \section{The phd package interface.}
@@ -724,7 +757,7 @@ Note that the package will first check if is running under XeTeX. If it does it 
 \section{Viewing and selecting fonts}
 
 \subsection*{\textsf{\color{Headings}Typefaces that come with the
-standard \LaTeX\ distribution on the \TeX\ Live CD-ROM}}
+standard \LaTeX\ distribution}}
 {
 \raggedright
 \begin{tabular}{@{}>{\sffamily\bfseries}rl}
@@ -753,6 +786,8 @@ standard \LaTeX\ distribution on the \TeX\ Live CD-ROM}}
 
 
 Unfortunately, even with the best will loading fonts will always be a difficult task in TeX. Hopefully the interface provided will result in better separation of presentation from content and offers consistency in the styling of documents. Nothing prevents you from adding normal macros to styles. Each style can be treated as a package in many respects.
+
+
 
 \section{XeLaTeX and LuaLaTeX}
 
@@ -797,8 +832,16 @@ is available from CTAN. The package was developed by Peter Wilson and currently 
 The \cs{fonttable}\marg{font} takes the font file as an  argument and prints a nice table. 
 \end{macro}
  
-\ifxetex\else
-\fonttable{pzdr}\fi
+\ifxetex
+ \else
+  \fonttable{pzdr}
+\fi
+
+A great tool to inspect a font on the command line is \texttt{luaotfload-tool}:
+
+\begin{verbatim}
+  luaotfload-tool --find="Iwona" --inspect
+\end{verbatim}
 
 \section{ \texttt{.tfm } files}
 
@@ -832,6 +875,7 @@ in the preamble, to use a Far Eastern font as the initial default typeface.
 
 You can just enter Unicode text directly in the document: 你好. Don't use legacy \LaTeX\ packages such as \verb|inputenc| or \verb|CJK|, as \XeTeX\ reads the text as Unicode characters, not the separate byte codes of UTF-8 sequences, and passes them directly to the Unicode font. (Actually, it would probably be possible to use \verb|\XeTeXinputencoding "bytes"| and work with legacy \LaTeX\ input encoding support. But then you're pretty much committed to all the old encoding and font machinery, and there's not much point in using the \XeTeX\ engine at all.)
 
+\begin{comment}
 \setromanfont{Times New Roman}
 
 \subsection{A CJK environment}
@@ -846,69 +890,11 @@ Rather than selecting a CJK font as the main document typeface, you might want t
 \newenvironment{CJK}{\fontspec[Scale=0.9]{SimSun}}{}
 \newcommand{\cjk}[1]{{\fontspec[Scale=0.9]{SimSun}#1}}
 \end{verbatim}
-
-\section{Running text}
-
-The \XeTeX\ extension \verb|\XeTeXlinebreaklocale| is used to enable line-breaking without inter-word spaces (or hyphenation); we can use \verb|\XeTeXlinebreakskip = 0pt plus 1pt| to allow a little bit of intercharacter stretchability at each potential breakpoint, so that the lines can be justified. (An alternative is to leave \verb|\XeTeXlinebreakskip| at zero, but tell \LaTeX\ to use ragged-right setting.)\index{hyphenation>CJK scripts}
-
-This text is taken from the Japanese translation of "What is Unicode?", on the Unicode web site and the example is from the |XeTeX| documentation bundle.
-
-\begin{macro}{\XeTeXlinebreaklocale}
-|XeLaTeX| provides primitive commands to set hyphenation based on the concept of locale. 
-\end{macro}
-\setromanfont{SimSun}
-\XeTeXlinebreaklocale "ja" 
-\XeTeXlinebreakskip = 0pt plus 1pt 
-\XeTeXlinebreakpenalty = 100 
-
-コンピューターは、本質的には数字しか扱うことができません。コンピューターは、文字や記号などのそれぞれに番号を割り振ることによって扱えるようにします。ユニコードが出来るまでは、これらの番号を割り振る仕組みが何百種類も存在しました。どの一つをとっても、十分な文字を含んではいませんでした。例えば、欧州連合一つを見ても、そのすべての言語をカバーするためには、いくつかの異なる符号化の仕組みが必要でした。英語のような一つの言語に限っても、一つだけの符号化の仕組みでは、一般的に使われるすべての文字、句読点、技術的な記号などを扱うには不十分でした。
-
-
-これらの符号化の仕組みは、相互に矛盾するものでもありました。二つの異なる符号化の仕組みが、二つの異なる文字に同一の番号を付けることもできるし、同じ文字に異なる番号を付けることもできるのです。どのようなコンピューターも（特にサーバーは）多くの異なった符号化の仕組みをサポートする必要があります。たとえデータが異なる符号化の仕組みやプラットフォームを通過しても、いつどこでデータが乱れるか分からない危険を冒すことのなるのです。
-
-\setromanfont{Times New Roman}
-Now some Chinese, which works similarly to the Japanese. This time we'll make it \verb|\raggedright| and use the "monospaced" feature of the font, so that the characters remain on a consistent grid:
-
-{
-\raggedright
-\newfontfeature{Monospaced}{Text Spacing=Monospaced Text}
-\setromanfont[Monospaced]{SimSun}
-\setlength{\parskip}{0.5\baselineskip plus 0.5ex minus 0.2ex}
-\XeTeXlinebreaklocale "zh"
-\XeTeXlinebreakskip = 0pt ^^A no stretchability
-
-基本上，计算机只是处理数字。它们指定一个数字，来储存字母或其他字符。在创造Unicode之前，有数百种指定这些数字的编码系统。没有一个编码可以包含足够的字符：例如，单单欧州共同体就需要好几种不同的编码来包括所有的语言。即使是单一种语言，例如英语，也没有哪一个编码可以适用于所有的字母，标点符号，和常用的技术符号。
-
-
-这些编码系统也会互相冲突。也就是说，两种编码可能使用相同的数字代表两个不同的字符，或使用不同的数字代表相同的字符。任何一台特定的计算机(特别是服务器)都需要支持许多不同的编码，但是，不论什么时候数据通过不同的编码或平台之间，那些数据总会有损坏的危险。
-
-
-\newcommand\CJKnumber[1]{
-\ifcase#1\or
-一\or二\or三\or四\or五\or
-六\or七\or八\or九\or十\fi}
-
-The number 4 in Chinese is \CJKnumber{4}.
-}
+\end{comment}
 
 
 
 
 
-
-
-\setromanfont{Times New Roman}
-And here's an equivalent passage in Thai; by setting \verb|\XeTeXlinebreaklocale "th"| we get access to the Thai (dictionary-based) linebreak rules:
-
-
-
-\setromanfont{code2000.ttf}
-\XeTeXlinebreaklocale "th" % enable Thai (dictionary-based) line-breaking
-
-โดยพื้นฐานแล้ว, คอมพิวเตอร์จะเกี่ยวข้องกับเรื่องของตัวเลข. คอมพิวเตอร์จัดเก็บตัวอักษรและอักขระอื่นๆ โดยการกำหนดหมายเลขให้สำหรับแต่ละตัว. ก่อนหน้าที่๊ Unicode จะถูกสร้างขึ้น, ได้มีระบบ encoding อยู่หลายร้อยระบบสำหรับการกำหนดหมายเลขเหล่านี้. ไม่มี encoding ใดที่มีจำนวนตัวอักขระมากเพียงพอ: ยกตัวอย่างเช่น, เฉพาะในกลุ่มสหภาพยุโรปเพียงแห่งเดียว ก็ต้องการหลาย encoding ในการครอบคลุมทุกภาษาในกลุ่ม. หรือแม้แต่ในภาษาเดี่ยว เช่น ภาษาอังกฤษ ก็ไม่มี encoding ใดที่เพียงพอสำหรับทุกตัวอักษร, เครื่องหมายวรรคตอน และสัญลักษณ์ทางเทคนิคที่ใช้กันอยู่ทั่วไป.
-
-ระบบ encoding เหล่านี้ยังขัดแย้งซึ่งกันและกัน. นั่นก็คือ, ในสอง encoding สามารถใช้หมายเลขเดียวกันสำหรับตัวอักขระสองตัวที่แตกต่างกัน,หรือใช้หมายเลขต่างกันสำหรับอักขระตัวเดียวกัน. ในระบบคอมพิวเตอร์ (โดยเฉพาะเซิร์ฟเวอร์) ต้องมีการสนับสนุนหลาย encoding; และเมื่อข้อมูลที่ผ่านไปมาระหว่างการเข้ารหัสหรือแพล็ตฟอร์มที่ต่างกัน, ข้อมูลนั้นจะเสี่ยงต่อการผิดพลาดเสียหาย.
-
-\setmainfont[Ligatures=TeX]{Linux Libertine O}
 
 

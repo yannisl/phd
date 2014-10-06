@@ -186,6 +186,57 @@ normal    & doc \\
 
 This manual, was build using a large |ltxdoc| class and these problems appeared while I was developing it. As normal with such problems, they were very time consuming to debug. There are still issues in some parts and one day, I am hoping to come back and correct them. One needs at this point to query the need to use the |doc| and |docstrip| method of documenting macros and if it shouldn't have a pre-processor written in a higher language to ease development. 
 
+\section{Customization}\index{Indexing>customizing}
+
+When creating an index with \pkgname{makeindex} one can create a \docfile{sample.ist} file that can be used together with the makeidx program to customize the way the index will look.
+
+\begin{verbatim}
+heading_prefix "{\\bfseries\\hfil "
+heading_suffix "\\hfil}\\nopagebreak\n"
+headings_flag 1
+delim_0 "\\dotfill"
+delim_1 "\\dotfill"
+delim_2 "\\dotfill"
+\end{verbatim}
+
+This will write the first alphabet symbol in bold font, and uses dots as delimiters. This file is generally  used jointly with \texttt{makeindex} using
+
+\verb|makeindex -s sample.ist filename.idx|
+
+where |filename.idx| has been craeted by executing |latex| or one of the other engine commands such as |pdflatex| on |filename.tex|.
+
+
+According to \citep{gabora}, you may use
+
+\begin{verbatim}
+sort_rule "\." "\b\."
+sort_rule "\:" "\b\:"
+sort_rule "\," "\b\,"
+\end{verbatim}
+
+
+\section{Writing custom indexing commands}
+
+For complex documents it is easier to write a number of macros to assist with indexing and to also provide consistency. For example if you want to index the Devanagari alphabet we might need to get quite creative as to how to both index it as well as get the symbols in the index.
+
+\def\ta{ZZA}
+The command |\Z{\ta}| typesets the command in the document and also adds it to the index and typesets the symbol.
+
+\Z\cos
+
+\begin{verbatim}
+\def\Z#1{\incsyms%
+   \indexcommand[$\string#1$]{#1}
+   \ttfamily\string#1}
+\end{verbatim}
+
+\newfontfamily\tibetan{TibMachUni.ttf}
+\def\deva{{\protect\tibetan\symbol{"0F7C} xx ༃}}
+\Z\deva
+
+\index{{tibetan >astronomical signs>\protect\tibetan ༃}}
+\PrintIndex
+
 
 
 

@@ -70,6 +70,7 @@ __The package as it stands is not production stable.__
 %
 %<*TODO>
 add tcolorbox support fix pgf codeexample has issues with integration
+too 
 %</TODO>
 %<*internal>
 \fi
@@ -140,86 +141,131 @@ See http://www.latex-project.org/lppl.txt
 %<*driver>
 \listfiles
 
-\documentclass[oneside,12pt,a4paper]{ltxdoc}
+\documentclass[oneside,10pt,a4paper]{ltxdoc}
 \makeatletter
 \gdef\@notprerr{text command only in preamble} 
 %\def\@eha{}
 \makeatother
+%
 \usepackage{geometry}
-
 \newgeometry{left=3.5cm,right=3.5cm,top=2.0cm,bottom=1.5cm,
     marginparsep=5mm,marginparwidth=10mm,
-    %headheight=0mm,headsep=0cm,
+    headheight=10mm,headsep=5mm,
     footskip=1.5cm,includeheadfoot}
-
 \savegeometry{std}
 
 \setcounter{secnumdepth}{6}
-
-%\usepackage{libertine}
-%\renewcommand{\ttfamily}{\fontencoding{OT1}\fontfamily{cmtt}\selectfont}
 \usepackage{ifluatex}
-
-\usepackage{multido}
-\ifxetex
-  %\usepackage{txfonts} %works for both
-  
-  \usepackage[Tibetan,DominoTiles, MahjongTiles]{ucharclasses}
-  
-  \setTransitionTo{DominoTiles}{\fontspec{FreeSerif}}
-  \setTransitionTo{MahjongTiles}{\fontspec{FreeSerif}}
-  \setTransitionTo{Tibetan}{\fontspec[Language=Tibetan]{TibMachUni.ttf}}
+\ifluatex
   \usepackage[no-math]{fontspec}
-   %\defaultfontfeatures{Mapping=tex-text,Ligatures=TeX}
-   \setmainfont[Ligatures=TeX]{Linux Libertine O}
-   \usepackage{polyglossia}
-   %\usepackage{farsical}
-   \setmainlanguage[variant=british,ordinalmonthday=false]{english}
-   \setotherlanguages{armenian,italian,greek,russian,catalan}
-   \usepackage{metalogo}
-%% fontspec declarations:
-   \setsansfont{Linux Biolinum O}
-   \setmonofont[Scale=MatchLowercase]{DejaVu Sans Mono}
-   \newfontfamily\arabicfont[Script=Arabic]{Amiri}
-   \newfontfamily\arabicfonttt[Script=Arabic,Scale=.75]{DejaVu Sans Mono}
-\newfontfamily\gujarati[Scale=1.0]{code2000.ttf}
-\newfontfamily\bengal[Script=Bengali,Scale=1]{Shonar Bangla}
-   \newfontfamily\russianfonttt{DejaVu Sans Mono}
-\newfontfamily\russianfont[Script=Cyrillic,Scale=MatchLowercase]{Arial Unicode MS}
-\newfontfamily\armenianfont[Script=Armenian,Scale=MatchLowercase]
-{FreeSans}
-   %\newfontfamily\syriacfont[Script=Syriac]{Serto Jerusalem}
-   %\newfontfamily\hebrewfont[Script=Hebrew]{Ezra SIL}
-\newfontfamily\arial{Arial Unicode MS}
-\def\defaulttext{\arial }
-\linespread{1.05}
-\frenchspacing
+  \usepackage{polyglossia}
+  \setdefaultlanguage{english}
+  \setmainlanguage{english}
+  %\defaultfontfeatures{Ligatures=TeX}
+  \setmainfont{Linux Libertine O}
+  \setsansfont{Linux Biolinum O}
+  \setmonofont{Segoe UI}
+  \newfontfamily\verbatimfamily[Scale=0.90]{Segoe UI}
+  \let\ttfamily\verbatimfamily
+  \DeclareTextFontCommand{\texttt}{\verbatimfamily}
+%  \newfontfamily\arabicfont[Script=Arabic]{Amiri}
+%  \newfontfamily%
+%    \arabicfonttt[Script=Arabic,Scale=.75]{DejaVu   Sans Mono}
+%  \newfontfamily\telugufam{code2000.ttf}
+%  \newfontfamily\gujarati[Scale=1.0]{code2000.ttf}
+%  \newfontfamily\bengal[Script=Bengali,Scale=1]{Shonar Bangla}
+%  \newfontfamily\russianfonttt{DejaVu Sans Mono}
+%  \newfontfamily%
+%    \russianfont[Scale=MatchLowercase]{Arial Unicode MS}
+%  \newfontfamily%
+%    \armenianfont[Script=Armenian,Scale=MatchLowercase]
+%{FreeSans}
+  \newfontfamily\titus[Scale=1.05]{TITUSCBZ.ttf}
+  \newfontfamily\noto{NotoSerif-Regular.ttf}
+  \newfontfamily\brahmi{Noto Sans Brahmi}
+  \newfontfamily\arial{Arial Unicode MS}
+  \newfontfamily\pan{code2000.ttf}
+  \let\mongolian\pan
+  \newfontfamily\aegean{Aegean.ttf}
+  \newfontfamily\smallcps[Scale=0.8]{Arial Unicode MS}
+  % Thai font
+  \newfontfamily\thai[Scale=1.0,Script=Thai]{IrisUPC}
+  % balinese
+  %\newfontfamily\balinese{Aksara Bali}
+  \let\balinese\pan
+  % lao
+  %\newfontfamily\lao[Scale=1.1]{code2000.ttf}
+  \let\lao\pan
+  \let\indicative\pan
+  \def\defaulttext{\arial }
+  \linespread{1.05}
+  \frenchspacing
+\fi
 
- \fi
+\DeclareRobustCommand\unicodenumber[1]{{\smallcps #1\xspace}}
+
+\def\putdescription#1:{%
+  \parindent0pt 
+  \begin{minipage}[t]{4cm}
+  \bgroup\aegean
+  \hangindent20pt
+  #1\par
+  \egroup
+  \end{minipage} 
+}
 
 
-\usepackage{algorithm2e} %lmodern,
+\long\def\parsefields #1:#2\@@{%
+    \ifx\par#1
+    \else 
+        {\small\aegean U+#1}%
+         %%\iffontchar\font"#1 %
+          \makebox[2.1em]{\color{blue}\symbol{"#1}}% 
+          \expandafter\putdescription#2\vskip3pt
+        %%\else
+          %%{\aegean \makebox[2.1em]{} Unallocated\par}%
+        %%\fi
+    \fi  
+  }%
 
-%%\usepackage[toc,lof,lot]{multitoc}
-\usepackage{fancyhdr}
-%\usepackage{dateiliste}
+\newread\unicodefile
 
-\usepackage{phd}
-%\usepackage[listings,theorems]{tcolorbox}
-\tcbset{before={\par\medskip\pagebreak[0]\noindent},after={\par\medskip}}%
-%\usepackage{multicol}
-
-%
+% begin{macro}{\printunicodeblock}\marg{}\oarg{} The macro
+% prints a unicode table from a file of definitions. This is
+% printed in a two column environment by default. 
+% #1 filename and path
+% #2 font command
+\DeclareDocumentCommand{\printunicodeblock}{O{2} m m }{%
+  \bgroup
+  \leavevmode\parindent0pt\par
+  \begin{multicols}{#1}%
+  #3
+  \openin\unicodefile=#2
+  \loop\unless\ifeof\unicodefile
+    \read\unicodefile to\fileline %
+    \expandafter\parsefields \fileline:\@@ 
+  \repeat
+  \end{multicols}%
+  \immediate\closein\unicodefile
+  \egroup
+}
+\let\PrintUnicodeBlock\printunicodeblock
 \ifxetex
   \else
+  \ifluatex\else 
   \usepackage[dutch, german, main=english]{babel}
+  \fi
 \fi
-\makeatletter
-\let\l@addto@macro\undefined
-\usepackage{datetime,scrtime} %%scrtime
-\usepackage{datenumber}
-\makeatother
-\usepackage{xkvview}
+\ifxetex
+   \usepackage{morewrites} %problematic
+ \else
+     \ifluatex
+     \else
+       \usepackage{morewrites}
+     \fi
+\fi
+\usepackage{phd}
+\BeforeHyperrefHook
 \usepackage{hyperref}
 %% hyperdoc has a problem with tcolorboc documentation
 %% macros.
@@ -248,16 +294,32 @@ See http://www.latex-project.org/lppl.txt
   pdfkeywords={LaTeX package management, document design}
  }
 
-\usepackage{minitoc}
-% add pdfinfo  
+\AfterHyperrefHook
+
+
+%\usepackage[listings,theorems]{tcolorbox}
+\tcbset{before={\par\medskip\pagebreak[0]\noindent},after={\par\medskip}}%
+%\usepackage{multicol}
+
+%
+
+\makeatletter
+\let\l@addto@macro\undefined
+\usepackage{datetime,scrtime} %%scrtime
+\usepackage{datenumber}
+\makeatother
+
+
+
+%\mtcsetrules{minitoc}{off}
+%\dominitoc
 % 
 % 
 %\newcommand*{\file}[1]{\texttt{#1}}
 \newcommand*{\pkg}[1]{\texttt{#1}}
 %\usepackage[numbered]{hypdoc}
 
-\newcommand*{\Lpack}[1]{\textsf {#1}}  
-\let\package\Lpack
+
 \makeatletter
 % mock chapters where necessary
 \@ifundefined{c@chapter}{%  
@@ -265,172 +327,17 @@ See http://www.latex-project.org/lppl.txt
       \def\thechapter{}
 }{}
 
-\cxset{plain sections/.style={
- chapter name = CHAPTER,
- chapter toc = true,
- chapter color= thegray,
- chapter opening = right, 
- chapter numbering = arabic,
- chapter font-family= sffamily,
- chapter font-weight= bold,
- chapter font-size= LARGE,
- chapter before={\thinrule\vspace*{20pt}\par\hfill\hfill},
- chapter after={\vskip0pt\par},
- chapter spaceout = soul,
- number font-size= Large,
- number font-family= rmfamily,
- number font-weight= bfseries,
- number color=thegray,
- number before=\vspace*{5pt}\hfill\hfill,
- number dot=.,
- number after={\hspace*{7pt}\par},
- title beforeskip={\vspace*{10pt}},
- title afterskip={\vspace*{50pt}\par},
- title before={\hfill\hfill\raggedleft},
- title after={\par\thinrule},
- title font-family=\sffamily,
- title font-color= teal,
- title font-weight=\bfseries,
- title font-family=\sffamily,
- title font-size= Large,
- title font-shape= upshape,
- title spaceout= none,
- title beforeskip={\vspace*{10pt}},
- title afterskip={\vspace*{50pt}\par},
- title before={\hfill\hfill\raggedleft},
-%
-% numbers
-% number font-family=\sffamily,
-% number font-weight=\bfseries,
- number color=thelightgray,
- number before=\par\vspace*{5pt}\hfill\hfill,
- number dot=,
- number after={\hspace*{7pt}\par},
- number position=rightname,
- section color= thered,     
- section beforeskip=15pt,
- section afterskip=15pt,
- section indent=0pt,
- section font-family= sffamily,
- section font-size= LARGE,
- section font-weight= bfseries,
- section font-shape=,
- section align= centering,
- section numbering prefix =,%use \thechapter. for books or add as option
- section numbering= arabic,
- section spaceout=none,
- section number after=ooo,
- subsection color= thered,
-       subsection beforeskip=10pt,
-       subsection afterskip=10pt,
-       subsection indent=0pt,
-       subsection font-family= rmfamily,
-       subsection font-size= large,
-       subsection font-weight= bold,
-       subsection font-shape= upshape,
-       subsection align= centering,
-       subsection numbering prefix=\thesection.,%\S\hairsp,%add . 
-       subsection numbering custom =\@arabic\c@subsection,% \two@digits{\@arabic\c@subsection},%
-       subsubsection color= gray,
-       subsubsection beforeskip=5pt plus3pt minus 2pt,
-       subsubsection afterskip=5pt,
-       subsubsection indent=0pt,
-       subsubsection font-family= rmfamily,
-       subsubsection font-size= normalfont,
-       subsubsection font-weight= bold,
-       subsubsection font-shape= itshape,
-       subsubsection align= centering,
-       subsubsection numbering prefix =\thesubsection.\@arabic\c@subsubsection,
-       subsubsection numbering custom =, %\two@digits{\@arabic\c@subsubsection},
-       subsubsection number after =, 
-%
-       paragraph color= thegrey,
-       paragraph beforeskip=,
-       paragraph afterskip=-0.5em,
-       paragraph indent=0pt,
-       paragraph font-family= rmfamily,
-       paragraph font-size= large,
-       paragraph font-weight= bfseries,
-       paragraph font-shape=,
-       paragraph align= centering,
-       paragraph number after = 0pt,
-       paragraph numbering=numeric,
-       subparagraph color= thered,
-       subparagraph beforeskip=0pt,
-       subparagraph afterskip=-.5em,
-       subparagraph indent=0pt,
-       subparagraph font-family= sffamily,
-       subparagraph font-size= large,
-       subparagraph font-weight= normalfont,
-       subparagraph font-shape= slshape,
-       subparagraph align= RaggedRight,
-       subparagraph number after =, % can affect all needs checking
-       %subsubsection numbering prefix=\S\hairsp\thesection,%add . here if need be
-       subparagraph numbering=none,
-}
-}
-\cxset{plain sections}
-\cxset{style13/.style={
- name=CHAPTER,
- chapter spaceout = none,
- numbering=arabic,
- number font-size= HUGE,
- number font-family= sffamily,
- number font-weight= bfseries,
- number color= gray!50,
- number before=\par\vspace*{5pt}\hfill\hfill,
- number dot=,
- number after={\hspace*{7pt}\par},
- number position=rightname,
- chapter font-family= sffamily,
- chapter font-weight= bold,
- chapter font-size= LARGE,
- chapter before={\tikzrule\vspace*{20pt}\par\hfill\hfill},
- chapter color= black!50,
- title beforeskip={\vspace*{10pt}},
- title afterskip={\vspace*{50pt}\par},
- title before={\hfill\hfill\raggedleft},
- chapter rule color=teal,
- title after=\par\tikzrule,
- title font-family= sffamily,
- title font-color= teal,
- title font-weight= bfseries,
- title font-size= huge,
- section indent=-1em,
- section align= left,
- section numbering= arabic,
- section indent=0pt,
- section beforeskip=0pt,
- section afterskip= 10pt,
- section color=teal,
- subsection align= ,
- subsection font-family= sffamily,
- subsection font-weight= bfseries,
- subsection color = teal,
- subsection font-size= large,
- subsection font-shape=,
- subparagraph number after=,
- subsubsection align=,
-}
-}
 
-\def\oarg#1{%
-  \colOpt{{\ttfamily[}\meta{#1}{\ttfamily]}}}
+\input{defaultstyle}
 
-\cxset{style13}
-\makeatletter
-\renewparagraph
-\renewsection
-\renewsubsection
-\renewsubparagraph
-\renewsubsubsection
-\makeatother
+
+
+
  
 \usepackage[verbose]{backref}
 %\backrefsetup{verbose=false}
 \RequirePackage[round]{natbib}
 \bibliographystyle{apalike}
-
 \usepackage{bibentry}
 \bibpunct{(}{)}{;}{a}{,}{,}
 % gives error
@@ -438,14 +345,13 @@ See http://www.latex-project.org/lppl.txt
 %% PACKAGES AFTER HYPERREF
 %\usepackage{arydshln}
 %\usepackage{cleveref}
-\usepackage{float}
-\usepackage{expl3}
-\usepackage{xparse}
+%\usepackage{expl3}
+%\usepackage{xparse}
 %\usepackage{pagenote}
 %\usepackage{pkgindoc}
 
 \usepackage{subcaption}
-\usepackage[dutch,german,english]{xlayouts}
+%\usepackage[dutch,german,english]{xlayouts}
 \usedictionary{pages}
 %\usepackage{xfrac}
 %Fix overfful hboxes automatically
@@ -457,15 +363,10 @@ See http://www.latex-project.org/lppl.txt
 %\CodelineIndex
 \PageIndex
 \RecordChanges
-%\usepackage{bidi}
+
+\makeatother
 \begin{document}
-\mtcsetrules{minitoc}{off}
-\dominitoc
-
 \cxset{blank page text=}
-
-\def\file#1{\texttt{#1}}
-
 \DocInput{\jobname.dtx}
 \end{document}
 %
@@ -542,45 +443,31 @@ See http://www.latex-project.org/lppl.txt
 %  \newgeometry{left=3.8cm, right=2cm,top=2cm,bottom=3cm}
 %  \def\partname{Part}
 %  \let\sidenote\footnote
-% \ifluatex \input{./sections/luatex}\fi
-%  \input{./sections/fonts}
-%  \input{./sections/symbols}
-%  \input{./sections/xetex-notes}
-%  \input{./sections/languages}
-%  \input{south-asian-scripts}
-%  \input{./languages/languages-list}
-% 
-%  \input{./sections/document-divisions}
-% 
+% ^^A\ifluatex \input{./sections/luatex}\fi
 
-
-%  \part{Visualizations and Plotting}
-%  \input{./sections/pictureenvironment}
-%  \input{./sections/tikz}
-% 
-%  \input{./sections/introduction}
-
-
-
-%  \parindent1em
 %  \input{./sections/quotations}
 %  \input{./sections/quotationsandotherintrusions}
-%  \input{./sections/numbers}
+%  \input{./sections/epigraphschapter}
+%  \input{./sections/paragraphs}
+%  \input{./sections/verse}
 %  \input{./sections/acronyms}
-%  \input{./sections/generalsettings}
+%  \input{./sections/boxesandglue}
+%  \input{./sections/characters}
+% \end{document}
 
-%  \input{./sections/maths}
-% 
+%  \input{./sections/introduction}
+%  \input{./sections/languages}
+%  \input{./languages/ancient-and-historic-scripts}
+%  \input{./languages/middle-eastern-scripts}
+%  \input{./languages/modern-scripts}
+%  \input{./languages/south-east-asian-scripts}
+%  \input{south-asian-scripts}
+%  \input{./sections/fonts}
+%  \input{./sections/symbols}
 
-%  \input{./sections/rulesandleaders}
-%  \input{./sections/headersandfooters}
-%  \input{./sections/chapterdesign}
-%  \input{./sections/specialdesigns}
-%  \input{./sections/tableofcontents}
 
 %  \part{Graphics}
 %  \input{./sections/graphics}
-%  \input{./sections/floats}
 %  \input{./sections/wrapfig-02}
 %  \input{./sections/pericula}
 %  \input{./sections/subfigure}
@@ -593,33 +480,170 @@ See http://www.latex-project.org/lppl.txt
 %  \input{./sections/elgreco.tex}
 %  \input{./sections/captions}
 %  \input{./sections/captionsandothers}
-%
+%  \input{./sections/rulesandleaders}
+
 %  \input{./sections/macros}
 
+%  ^^A\input{./languages/east-asian-scripts}
+
+
+% \end{document}
+%  \input{./sections/chapterdesign}
+
+% \end{document}
+%  \input{./sections/specialdesigns}
+%
+
+
+%  \part{Graphics}
+%  \input{./sections/graphics}
+%  \input{./sections/wrapfig-02}
+%  \input{./sections/pericula}
+%  \input{./sections/subfigure}
+%  \input{./sections/long-figures}
+%  \input{./sections/sideways}
+%  \input{./sections/twowomenreverse}
+%  \input{./sections/twowomen}
+%  \input{./sections/kroll}
+%  \input{./sections/bache}
+%  \input{./sections/elgreco.tex}
+%  \input{./sections/captions}
+%  \input{./sections/captionsandothers}
+%  \input{./sections/rulesandleaders}
+%  \input{./sections/acronyms}
+%  \input{./sections/macros}
+%  \input{./sections/boxesandglue}
+%  \input{./sections/characters}
+%  ^^A\input{./sections/tables}
+% \end{document}
+
+%  \parindent1em
+%  \input{./sections/fonts}
+%  \input{./sections/luatex-fonts}
+
+%  \end{document}
+
+
+
+%  ^^A\input{./sections/headersandfooters}
+
+%  \input{./sections/tableofcontents}
+
+%  \input{./sections/xetex-notes}
+
+
+%  ^^A\input{./sections/symbols}
+
+
+% \iffalse
+
+
+
+
+%  \fi
+
+
+%  \input{./sections/floats}
+
+ 
+% \end{document}
+
+
+
+
+% \end{document}
+
+
+
+%  \input{./languages/european-alphabetic}
+% \end{document}
+
+
+%  
+
+% 
+
+
+
+
+
+%  ^^A
+
+
+% \end{document}
+
+
+% \end{document}
+
+
+
+
+
+
+
+
+
+%  \input{./languages/languages-list}
+
+%  \input{./sections/document-divisions}
+
+%  \part{Visualizations and Plotting}
+%  \input{./sections/pictureenvironment}
+%  \input{./sections/tikz}
+% 
+
+%  \end{document}
+%  ^^A
+%
+% ^^A 
+
+%  
+%  
+%  
+%  
+%  \end{document}
+% \iffalse
+% 
+%  
+
+
+
+% \end{document}
+%  
+%  
+% ^^A \input{./sections/numbers}
+
+% ^^A \input{./sections/generalsettings}
+
 %  \part{The Structural Elements of Documents}
+%
+%\end{document}
 
-
-%  \input{./sections/paragraphs}
-%  \input{./sections/verse}
 %  \input{./sections/pagenotes}
 %   \input{./sections/indices}
-
-%  \input{./sections/tables}
-%
-%  \input{./sections/epigraphschapter}
-%  \input{./sections/lowerlevelheadings}
 %  \input{./sections/docmacros}
+
+% \PrintIndex
+%\end{document}
+%  \input{./sections/maths}
+% 
+
+
+
+%
+
+%
+
+%  \input{./sections/lowerlevelheadings}
+
 %  \cxset{section color=teal}
 %  \input{./sections/lists}
 
-% \pagestyle{myheadings}
+% 
 %
 %  \part{THE TYPESETTING ENGINES}
 % 
-%  \input{./sections/boxesandglue}
 
-
-%  \input{./sections/characters}
 %  \input{./sections/charting01}
 %
 %  %  \part{Programming Topics}
@@ -651,7 +675,7 @@ See http://www.latex-project.org/lppl.txt
 %  \input{./sections/book.cls.tex}
 %  \input{./sections/pages}
 %  \input{./sections/bibliographies}
-
+% \fi
 
 %  
 %\iffalse
@@ -706,7 +730,7 @@ See http://www.latex-project.org/lppl.txt
 
 %
 % 
-^^A \StopEventually{}
+%^^A \StopEventually{}
 %
 %<*package>
 %
@@ -748,7 +772,7 @@ See http://www.latex-project.org/lppl.txt
 %
 % \begin{description}
 %
-%   \item[The Package Manager] This section is responsible 
+%  \item[The Package Manager] This section is responsible 
 %       for pre-loading a packages, resolving conflicts and 
 %       providing a number of interface commands.
 %
@@ -805,6 +829,10 @@ See http://www.latex-project.org/lppl.txt
 % 
 %    \begin{macrocode}
 \RequirePackage{fixltx2e}[2006/03/24]
+% We load the minitoc package and patch it to
+% work with LuaLaTeX it does not produce the bug
+% with other engines
+
 %    \end{macrocode}
 % 
 %
@@ -980,13 +1008,19 @@ See http://www.latex-project.org/lppl.txt
 % 
 % \begin{environment}{etex}
 %    \begin{macrocode}
-\ifxetex\else
-\RequirePackage{etex}\fi
+\ifxetex
+   \else
+     \ifluatex
+     \RequirePackage{etex}
+     \else
+     \RequirePackage{etex}
+  \fi
+\fi
 %    \end{macrocode}
 % \end{environment}
 %
 %    \begin{macrocode}
-\RequirePackage{pgf,pgfkeys}               % before onlyasmath
+\RequirePackage{pgf}               % before onlyasmath
 \def\cx@optionlist{}
 \def\cxuselibrary#1{\cxset{library/.cd,#1}}
 %
@@ -995,8 +1029,7 @@ See http://www.latex-project.org/lppl.txt
   \cxset{library/#1/.code={\@ifundefined{cxlibrary@#1@loaded}{\input #2}{}}}%
   \DeclareOption{#1}{\edef\cx@optionlist{\cx@optionlist,#1}}%
 }
-% We create a family for keys, unimaginatively named chapter. This might
-% change in the future.
+% We create a family for keys, unimaginatively named chapter. This might  change in the future.
 \pgfkeys{/chapter/.is family}
 \newcommand\cxset{\pgfqkeys{/chapter }} %Notice this is pgf q keys
 %
@@ -1046,8 +1079,12 @@ See http://www.latex-project.org/lppl.txt
 
 %\PassOptionsToPackage{\onlyamsmathkeys@cx}{onlyamsmath}
 %\RequirePackage{onlyamsmath} 
-\ifxetex\else
-\RequirePackage{microtype}\fi
+\ifxetex
+\else
+   \ifluatex\else
+     \RequirePackage{microtype}%
+  \fi
+\fi
 %    \end{macrocode}
 % \end{macro}
 %
@@ -1227,8 +1264,8 @@ See http://www.latex-project.org/lppl.txt
 %	We define a few here to simplify code later on.
 %
 %    \begin{macrocode}
-\DeclareRobustCommand\thickrule{
-\leavevmode \leaders \hrule height 2pt \hfill \kern \z@}
+\DeclareRobustCommand\thickrule{%
+  \leavevmode \leaders \hrule height 2pt \hfill \kern \z@}
 \DeclareRobustCommand\thinrule{\rule{\textwidth}{0.4pt}}
 \DeclareRobustCommand\mediumrule{\rule{\textwidth}{0.8pt}}
 %    Adjusted to get toc parameters in
@@ -1246,7 +1283,7 @@ See http://www.latex-project.org/lppl.txt
 \cxset{chapter rule color/.store in={\chapter@rule@color}}%
 \cxset{chapter rule color=thered}%
 \DeclareRobustCommand\tikzrule{%
-\tikz [color=\chapter@rule@color, very thick] \draw(0,0)--(\the\linewidth,0);
+  \tikz [color=\chapter@rule@color, very thick]     \draw(0,0)--(\the\linewidth,0);
 }
 
 %    \end{macrocode}
@@ -1577,13 +1614,13 @@ ball was her favorite plaything.}%
 % I do not have a normal use for it, personally but I have included it here for correct ordering in case there is a need for it. According to the package documentation, it has to be loaded after \pkg{array}, \pkg{longtable}, \pkg{colortab}, \pkg{colortbl}. Also according to the hyperref documentation it has to be loaded after hyperref as well. 
 %\end{macro}
 %
-^^A \begin{center}
-^^A\begin{tabular}{|l::c:r|}\hline
-^^A A&B&C\\\hdashline
-^^A %AAA&BBB&CCC\\\cdashline{1-2}
-^^A %\multicolumn{2}{|l:}{AB}&C\\\hdashline\hdashline
-^^A %\end{tabular}
-^^A % \end{center}
+%^^A \begin{center}
+%^^A\begin{tabular}{|l::c:r|}\hline
+%^^A A&B&C\\\hdashline
+%^^A %AAA&BBB&CCC\\\cdashline{1-2}
+%^^A %\multicolumn{2}{|l:}{AB}&C\\\hdashline\hdashline
+%^^A %\end{tabular}
+%^^A % \end{center}
 %  
 % \section{Landscape Pages}
 %
@@ -1626,6 +1663,11 @@ ball was her favorite plaything.}%
   \patchcmd{\document@select@group}{\sixt@@n}{\@cclvi}{}{}
   \patchcmd{\select@group}{\sixt@@n}{\@cclvi}{}{}
 \if
+\ifluatex
+  \def\new@mathgroup{\alloc@8\mathgroup\mathchardef\@cclvi}
+  \patchcmd{\document@select@group}{\sixt@@n}{\@cclvi}{}{}
+  \patchcmd{\select@group}{\sixt@@n}{\@cclvi}{}{}
+\fi
 %    \end{macrocode}
 %
 %
@@ -1679,7 +1721,7 @@ ball was her favorite plaything.}%
 
 
 \newif\ifFontIsAvailable
-\def\testFontAvailability#1{
+\def\testFontAvailability#1{%
   \count255=\interactionmode
   \batchmode
   \let\preload=\nullfont
@@ -1737,12 +1779,12 @@ ball was her favorite plaything.}%
 % Examples: \[\widering{ABCDEFG}\] 
 %    \begin{macrocode}
 \newif\ifYH
-\newcommand\YH{\pkgname{yhmath}}
+\newcommand\YH{yhmath}
 \IfStyFileExists{yhmath}
   {\YHtrue
    \let\origRequirePackage=\RequirePackage    % We don't want amsmath loaded.
    \def\RequirePackage##1{}
-   \usepackage{yhmath}
+   \RequirePackage{yhmath}
    \let\RequirePackage=\origRequirePackage
   }
   {}
@@ -2104,7 +2146,7 @@ ball was her favorite plaything.}%
 %\RequirePackage{stmaryrd}
 %    \end{macrocode}
 % 
-% The \package{amscd} is probably not useful at all as people are
+% The \pkgname{amscd} is probably not useful at all as people are
 % moving to graphical programs such as TikZ for their commutative
 % diagrams.
 %  
@@ -2443,8 +2485,6 @@ ball was her favorite plaything.}%
 % font. We only need some of its commands to print
 % the ASCI table from 1-32.
 %    \begin{macrocode}
-
-
 \newif\ifASCII
 \newcommand\ASCII{\pkgname{ascii}}
 \IfStyFileExists{ascii}
@@ -2517,7 +2557,7 @@ ball was her favorite plaything.}%
 % \begin{macro}{textcomp} 
 % \begin{macro}{mathcomp} The package |textcomp| is part of the \LaTeXe
 % distribution. The description of the package
-% on ctan can give the erroneous idea that it is obsolete; on the contracry 
+% on ctan can give the erroneous idea that it is obsolete; on the contrary 
 % is part of the original distribution.textcomp is not obsolete, it's just not distributed as extra package any more since it's distributed with the basic LaTeX distribution. The \pkg{mathcomp} package defines macros for using some of these text... symbols with math and the abbreviation tc...
 %
 %  The symbols are used by calling them by their name. E.g. \ifxetex\else\textleaf\fi:
@@ -2534,16 +2574,162 @@ ball was her favorite plaything.}%
 %    \begin{macrocode}
 % Redefine the LaTeX commands that are replaced by textcomp.
 % This was swiped right out of ltoutenc.dtx, but with "\text..."
-% changed to "\ltext...".
+% changed to "\ltext...". This also conflicts with fontspec
+% better to handle the errors 
 \DeclareTextCommandDefault{\ltextcopyright}{\textcircled{c}}
 \DeclareTextCommandDefault{\ltextregistered}{\textcircled{\scshape r}}
 \DeclareTextCommandDefault{\ltexttrademark}{\textsuperscript{TM}}
 \DeclareTextCommandDefault{\ltextordfeminine}{\textsuperscript{a}}
 \DeclareTextCommandDefault{\ltextordmasculine}{\textsuperscript{o}}
-\ifxetex\else
-\RequirePackage{textcomp}
-\PassOptionsToPackage{mathcomp}{rmdefault}
-\RequirePackage{mathcomp}\fi
+
+\DeclareTextSymbol{\textcentoldstyle}{TS1}{'213}
+\DeclareTextSymbolDefault{\textcentoldstyle}{TS1}
+\DeclareTextSymbol{\textdollaroldstyle}{TS1}{'212}
+\DeclareTextSymbolDefault{\textdollaroldstyle}{TS1}
+\DeclareTextSymbol{\textguarani}{TS1}{'220}
+\DeclareTextSymbolDefault{\textguarani}{TS1}
+% Not many fonts support these code-points yet.
+% So leave these undefined at present.  from fontspec
+
+
+\DeclareUTFcharacter[\UTFencname]{x3008}{\textlangle}
+\DeclareUTFcharacter[\UTFencname]{x3009}{\textrangle}
+\DeclareUTFcharacter[\UTFencname]{x301A}{\textlbrackdbl}
+\DeclareUTFcharacter[\UTFencname]{x301B}{\textrbrackdbl}
+
+% old-style numbers
+
+\DeclareUTFcharacter[\UTFencname]{xFF10}{\textzerooldstyle}
+\DeclareUTFcharacter[\UTFencname]{xFF11}{\textoneoldstyle}
+\DeclareUTFcharacter[\UTFencname]{xFF12}{\texttwooldstyle}
+\DeclareUTFcharacter[\UTFencname]{xFF13}{\textthreeoldstyle}
+\DeclareUTFcharacter[\UTFencname]{xFF14}{\textfouroldstyle}
+\DeclareUTFcharacter[\UTFencname]{xFF15}{\textfiveoldstyle}
+\DeclareUTFcharacter[\UTFencname]{xFF16}{\textsixoldstyle}
+\DeclareUTFcharacter[\UTFencname]{xFF17}{\textsevenoldstyle}
+\DeclareUTFcharacter[\UTFencname]{xFF18}{\texteightoldstyle}
+\DeclareUTFcharacter[\UTFencname]{xFF19}{\textnineoldstyle}
+
+% For circled letters and small numbers
+%
+
+\DeclareEncodedCompositeCharacter{\UTFencname}{\textcircled}{20DD}{25EF}
+
+\DeclareUTFcomposite[\UTFencname]{x2460}{\textcircled}{1}
+\DeclareUTFcomposite[\UTFencname]{x2461}{\textcircled}{2}
+\DeclareUTFcomposite[\UTFencname]{x2462}{\textcircled}{3}
+\DeclareUTFcomposite[\UTFencname]{x2463}{\textcircled}{4}
+\DeclareUTFcomposite[\UTFencname]{x2464}{\textcircled}{5}
+\DeclareUTFcomposite[\UTFencname]{x2465}{\textcircled}{6}
+\DeclareUTFcomposite[\UTFencname]{x2466}{\textcircled}{7}
+\DeclareUTFcomposite[\UTFencname]{x2467}{\textcircled}{8}
+\DeclareUTFcomposite[\UTFencname]{x2468}{\textcircled}{9}
+\DeclareUTFcomposite[\UTFencname]{x2469}{\textcircled}{10}
+\DeclareUTFcomposite[\UTFencname]{x246A}{\textcircled}{11}
+\DeclareUTFcomposite[\UTFencname]{x246B}{\textcircled}{12}
+\DeclareUTFcomposite[\UTFencname]{x246C}{\textcircled}{13}
+\DeclareUTFcomposite[\UTFencname]{x246D}{\textcircled}{14}
+\DeclareUTFcomposite[\UTFencname]{x246E}{\textcircled}{15}
+\DeclareUTFcomposite[\UTFencname]{x246F}{\textcircled}{16}
+\DeclareUTFcomposite[\UTFencname]{x2470}{\textcircled}{17}
+\DeclareUTFcomposite[\UTFencname]{x2471}{\textcircled}{18}
+\DeclareUTFcomposite[\UTFencname]{x2472}{\textcircled}{19}
+\DeclareUTFcomposite[\UTFencname]{x2473}{\textcircled}{20}
+
+
+\DeclareUTFcomposite[\UTFencname]{x24B6}{\textcircled}{A}
+\DeclareUTFcomposite[\UTFencname]{x24B7}{\textcircled}{B}
+\DeclareUTFcomposite[\UTFencname]{x24B8}{\textcircled}{C}
+\DeclareUTFcomposite[\UTFencname]{x24B9}{\textcircled}{D}
+\DeclareUTFcomposite[\UTFencname]{x24BA}{\textcircled}{E}
+\DeclareUTFcomposite[\UTFencname]{x24BB}{\textcircled}{F}
+\DeclareUTFcomposite[\UTFencname]{x24BC}{\textcircled}{G}
+\DeclareUTFcomposite[\UTFencname]{x24BD}{\textcircled}{H}
+\DeclareUTFcomposite[\UTFencname]{x24BE}{\textcircled}{I}
+\DeclareUTFcomposite[\UTFencname]{x24BF}{\textcircled}{J}
+\DeclareUTFcomposite[\UTFencname]{x24C0}{\textcircled}{K}
+\DeclareUTFcomposite[\UTFencname]{x24C1}{\textcircled}{L}
+\DeclareUTFcomposite[\UTFencname]{x24C2}{\textcircled}{M}
+\DeclareUTFcomposite[\UTFencname]{x24C3}{\textcircled}{N}
+\DeclareUTFcomposite[\UTFencname]{x24C4}{\textcircled}{O}
+\DeclareUTFcomposite[\UTFencname]{x24C5}{\textcircled}{P}
+\DeclareUTFcomposite[\UTFencname]{x24C6}{\textcircled}{Q}
+\DeclareUTFcomposite[\UTFencname]{x24C7}{\textcircled}{R}
+\DeclareUTFcomposite[\UTFencname]{x24C8}{\textcircled}{S}
+\DeclareUTFcomposite[\UTFencname]{x24C9}{\textcircled}{T}
+\DeclareUTFcomposite[\UTFencname]{x24CA}{\textcircled}{U}
+\DeclareUTFcomposite[\UTFencname]{x24CB}{\textcircled}{V}
+\DeclareUTFcomposite[\UTFencname]{x24CC}{\textcircled}{W}
+\DeclareUTFcomposite[\UTFencname]{x24CD}{\textcircled}{X}
+\DeclareUTFcomposite[\UTFencname]{x24CE}{\textcircled}{Y}
+\DeclareUTFcomposite[\UTFencname]{x24CF}{\textcircled}{Z}
+\DeclareUTFcomposite[\UTFencname]{x24D0}{\textcircled}{a}
+\DeclareUTFcomposite[\UTFencname]{x24D1}{\textcircled}{b}
+\DeclareUTFcomposite[\UTFencname]{x24D2}{\textcircled}{c}
+\DeclareUTFcomposite[\UTFencname]{x24D3}{\textcircled}{d}
+\DeclareUTFcomposite[\UTFencname]{x24D4}{\textcircled}{e}
+\DeclareUTFcomposite[\UTFencname]{x24D5}{\textcircled}{f}
+\DeclareUTFcomposite[\UTFencname]{x24D6}{\textcircled}{g}
+\DeclareUTFcomposite[\UTFencname]{x24D7}{\textcircled}{h}
+\DeclareUTFcomposite[\UTFencname]{x24D8}{\textcircled}{i}
+\DeclareUTFcomposite[\UTFencname]{x24D9}{\textcircled}{j}
+\DeclareUTFcomposite[\UTFencname]{x24DA}{\textcircled}{k}
+\DeclareUTFcomposite[\UTFencname]{x24DB}{\textcircled}{l}
+\DeclareUTFcomposite[\UTFencname]{x24DC}{\textcircled}{m}
+\DeclareUTFcomposite[\UTFencname]{x24DD}{\textcircled}{n}
+\DeclareUTFcomposite[\UTFencname]{x24DE}{\textcircled}{o}
+\DeclareUTFcomposite[\UTFencname]{x24DF}{\textcircled}{p}
+\DeclareUTFcomposite[\UTFencname]{x24E0}{\textcircled}{q}
+\DeclareUTFcomposite[\UTFencname]{x24E1}{\textcircled}{r}
+\DeclareUTFcomposite[\UTFencname]{x24E2}{\textcircled}{s}
+\DeclareUTFcomposite[\UTFencname]{x24E3}{\textcircled}{t}
+\DeclareUTFcomposite[\UTFencname]{x24E4}{\textcircled}{u}
+\DeclareUTFcomposite[\UTFencname]{x24E5}{\textcircled}{v}
+\DeclareUTFcomposite[\UTFencname]{x24E6}{\textcircled}{w}
+\DeclareUTFcomposite[\UTFencname]{x24E7}{\textcircled}{x}
+\DeclareUTFcomposite[\UTFencname]{x24E8}{\textcircled}{y}
+\DeclareUTFcomposite[\UTFencname]{x24E9}{\textcircled}{z}
+\DeclareUTFcomposite[\UTFencname]{x24EA}{\textcircled}{0}
+
+\DeclareUTFcharacter[\UTFencname]{x25EF}{\textbigcircle}
+
+\DeclareUTFcomposite[\UTFencname]{x3251}{\textcircled}{21}
+\DeclareUTFcomposite[\UTFencname]{x3252}{\textcircled}{22}
+\DeclareUTFcomposite[\UTFencname]{x3253}{\textcircled}{23}
+\DeclareUTFcomposite[\UTFencname]{x3254}{\textcircled}{24}
+\DeclareUTFcomposite[\UTFencname]{x3255}{\textcircled}{25}
+\DeclareUTFcomposite[\UTFencname]{x3256}{\textcircled}{26}
+\DeclareUTFcomposite[\UTFencname]{x3257}{\textcircled}{27}
+\DeclareUTFcomposite[\UTFencname]{x3258}{\textcircled}{28}
+\DeclareUTFcomposite[\UTFencname]{x3259}{\textcircled}{29}
+\DeclareUTFcomposite[\UTFencname]{x325A}{\textcircled}{30}
+\DeclareUTFcomposite[\UTFencname]{x325B}{\textcircled}{31}
+\DeclareUTFcomposite[\UTFencname]{x325C}{\textcircled}{32}
+\DeclareUTFcomposite[\UTFencname]{x325D}{\textcircled}{33}
+\DeclareUTFcomposite[\UTFencname]{x325E}{\textcircled}{34}
+\DeclareUTFcomposite[\UTFencname]{x325F}{\textcircled}{35}
+
+\DeclareUTFcomposite[\UTFencname]{x32B1}{\textcircled}{36}
+\DeclareUTFcomposite[\UTFencname]{x32B2}{\textcircled}{37}
+\DeclareUTFcomposite[\UTFencname]{x32B3}{\textcircled}{38}
+\DeclareUTFcomposite[\UTFencname]{x32B4}{\textcircled}{39}
+\DeclareUTFcomposite[\UTFencname]{x32B5}{\textcircled}{40}
+\DeclareUTFcomposite[\UTFencname]{x32B6}{\textcircled}{41}
+\DeclareUTFcomposite[\UTFencname]{x32B7}{\textcircled}{42}
+\DeclareUTFcomposite[\UTFencname]{x32B8}{\textcircled}{43}
+\DeclareUTFcomposite[\UTFencname]{x32B9}{\textcircled}{44}
+\DeclareUTFcomposite[\UTFencname]{x32BA}{\textcircled}{45}
+\DeclareUTFcomposite[\UTFencname]{x32BB}{\textcircled}{46}
+\DeclareUTFcomposite[\UTFencname]{x32BC}{\textcircled}{47}
+\DeclareUTFcomposite[\UTFencname]{x32BD}{\textcircled}{48}
+\DeclareUTFcomposite[\UTFencname]{x32BE}{\textcircled}{49}
+\DeclareUTFcomposite[\UTFencname]{x32BF}{\textcircled}{50}
+\ifxetex\else\ifluatex\else
+  \RequirePackage{textcomp}
+  \PassOptionsToPackage{mathcomp}{rmdefault}
+  \RequirePackage{mathcomp}
+  \fi
+\fi
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
@@ -2572,7 +2758,7 @@ ball was her favorite plaything.}%
 %
 % \section{textcomp}
 %
-% \begin{macro}{\tabitem} The \package{textcomp} 
+% \begin{macro}{\tabitem} The \pkgname{textcomp} 
 % provides a nice helper macro for typesetting symbols in normal, bold
 % and italics. I must think of a more semantic name than |tabitem|.
 %
@@ -3715,20 +3901,7 @@ ball was her favorite plaything.}%
 %    \end{macrocode}
 %
 %
-% \section{Epigraphs and quotations}
-% \subsection{Epigraphs}
-%    \begin{macrocode}
-\@ifundefined{epigraph}{%
-   \RequirePackage{epigraph}
-   %% Set up the epigraph to be a bit wider
-  \setlength{\epigraphwidth}{8cm} 
-  \setlength{\epigraphrule}{0pt}
-  \newcommand{\theepigraph}[2]{\epigraphhead[30]{\epigraph{#1}{\textit{#2}}}}
-}{\setlength{\epigraphwidth}{8cm} 
-\setlength{\epigraphrule}{0pt}
-\newcommand{\theepigraph}[2]{\epigraphhead[30]{\epigraph{#1}{\textit{#2}}}}%
-}
-%    \end{macrocode}
+
 %    
 % \subsection{Dropcaps} 
 %  
@@ -3778,17 +3951,20 @@ ball was her favorite plaything.}%
 %    \begin{macrocode}
 \RequirePackage{changepage}    
 \RequirePackage{keyval}
+\usepackage{xkvview}
 \RequirePackage{ifmtarg}
 \RequirePackage{fp}
 \RequirePackage{ifthen}
 \RequirePackage{xspace}
 \RequirePackage{xstring}
 % \RequirePackage{cool, coolstr} conflicts to be resolved.
+\RequirePackage{multido}
 \RequirePackage{etoolbox}
+\RequirePackage{parselines}
 % upquote needs to be loaded before listings? Must test
 % does not seem to matter actually...
-\RequirePackage{upquote}
-%\RequirePackage{remreset}
+%\RequirePackage{upquote}
+% \RequirePackage{remreset}
 \RequirePackage{calc}
 %    \end{macrocode}
 %
@@ -3856,9 +4032,19 @@ ball was her favorite plaything.}%
 %    some predefined environments for styling.
 % 	
 %    \begin{macrocode}
-\RequirePackage{verse}
-\RequirePackage[listings,theorems, skins, 
-      documentation, breakable]{tcolorbox}
+% in document
+\newcommand*{\BeforeHyperrefHook}{%
+  \RequirePackage{float}%
+  \RequirePackage{verse}}
+\newcommand*{\AfterHyperrefHook}{%
+  \RequirePackage{algorithm2e}%
+  \RequirePackage{fancyhdr}}
+
+%\usepackage{dateiliste}
+
+\RequirePackage[theorems, skins, 
+                breakable,listings]{tcolorbox}
+
 \lstdefinelanguage{extras}{morekeywords={%
       poemtitle, poemtoc, versewidth, 
       vin, poemlines,poemtitlefont, 
@@ -3878,6 +4064,10 @@ ball was her favorite plaything.}%
 % \pkg{tcolorbox} commands.
 % 
 %    \begin{macrocode}
+
+\newtcolorbox{scriptexample}[2][shavian]{colback=graphicbackground,
+boxrule=0pt,toprule=0pt,colframe=white}
+
 \lstset{language={[LaTeX]TeX},
        escapeinside={{(*@}{@*)}}, 
        numbers=left, 
@@ -3900,6 +4090,7 @@ ball was her favorite plaything.}%
        belowskip=7pt plus1pt minus1pt,  
        backgroundcolor=\color{theshade}
 }
+
 %    \end{macrocode}
 %	
 %	
@@ -3912,7 +4103,7 @@ ball was her favorite plaything.}%
   {\lstset{language=[LaTeX]TeX}\lstset{%
       breaklines=true,
       framesep=5pt,
-      basicstyle=\normalsize\ttfamily,
+      basicstyle=\small\ttfamily,
       showstringspaces=false,
       keywordstyle=\ttfamily,
       stringstyle={\color{gray!90}\footnotesize},
@@ -3932,7 +4123,7 @@ ball was her favorite plaything.}%
   {\lstset{language=[LaTeX]TeX}\lstset{%
       breaklines=true,
       framesep=5pt,
-      basicstyle=\normalsize\ttfamily,
+      basicstyle=\small\ttfamily,
       showstringspaces=false,
       keywordstyle=\ttfamily\color{blue},
       stringstyle=\color{maroon},
@@ -3947,29 +4138,26 @@ ball was her favorite plaything.}%
 }}
 {}
 
-%% Emphasis
-\ifxetex\else
-\renewcommand{\ttdefault}{cmtt}			% prefer old tt font
-\fi
+
 \newcommand\emphasis[2][teal]{\lstset{emph={write, writeln,#2},
-   emphstyle={\ttfamily\textcolor{#1}}}}%
+   emphstyle={\verbatimfont\textcolor{#1}}}}%
 \lstnewenvironment{teXXX}[1][]
   {\lstset{language=[LaTeX]TeX}\lstset{%
       escapeinside={{(*@}{@*)}},
       breaklines=true,
       framesep=5pt,
-      basicstyle=\ttfamily,
+      basicstyle=\verbatimfont,
       showstringspaces=false,
-      keywordstyle=\ttfamily\textcolor{blue},
+      keywordstyle=\verbatimfont\textcolor{blue},
       stringstyle=\color{orange},
-	 commentstyle=\color{black},
-	 rulecolor=\color{gray!10},
+	   commentstyle=\color{black},
+	   rulecolor=\color{gray!10},
       breakatwhitespace=true,
       showspaces=false,  % shows spacing symbol
-	 xleftmargin=0pt,
-	 xrightmargin=5pt,
-	 aboveskip=0pt, % compact the code looks ugly in type
-	 belowskip=0pt,  % user responsible to insert any skips
+	   xleftmargin=0pt,
+	   xrightmargin=5pt,
+	   aboveskip=0pt, % compact the code looks ugly in type
+	   belowskip=0pt,  % user responsible to insert any skips
       backgroundcolor=, #1
 }}
 {}
@@ -4001,10 +4189,10 @@ ball was her favorite plaything.}%
 %    \begin{macrocode} 
 \newif\ifALGORITHM
 \@ifpackageloaded{hyperref}{%
-  %%\RequirePackage{algorithms}
+    %%\RequirePackage{algorithms}
  }
  {\typeout{Algorithm loaded}}
-\RequirePackage{algorithm2e} 
+  \RequirePackage{algorithm2e} 
 %    \end{macrocode}
 %     
 % \section{Common packages for structuring documents}
@@ -4252,14 +4440,40 @@ ball was her favorite plaything.}%
 %
 %
 % \section{Logos and other common elements}
-% Here we define some of the most common logos, used
-% in documentatio
+%
+% Here we define some of the most commonly used logos. Different
+% authors preferences vary. Some like to type \cmd{\TeX}, others
+% myself included prefer all lowercase typing, e.g., \cmd{\tex}
+% and others uppercasing the commands. We provide as many variants
+% as possible.
+%
 %    \begin{macrocode}
 \newcommand{\seedocs}[1]{%
   See the #1 documentation for more information%
 }
-\def\tex{\TeX\xspace}
-\def\latex{\LaTeX\xspace}
+\RequirePackage{hologo}
+\RequirePackage{metalogo}
+\newcommand\TEX      {\TeX\xspace}
+\let\tex\TEX
+\newcommand\LUA      {Lua\xspace}
+\let\lua\LUA
+\newcommand\PDFTEX   {pdf\TeX\xspace}
+\let\pdftex\PDFTEX
+\newcommand\LUATEX   {Lua\TeX\xspace}
+\let\luatex\LUATEX
+\newcommand\XETEX    {\XeTeX\xspace}
+\let\xetex\XETEX
+\newcommand\LATEX    {\LaTeX\xspace}
+\let\latex\LATEX
+\newcommand\pdfLaTeX {pdf\latex}
+\newcommand\LUALATEX {Lua\LaTeX\xspace}
+\let\lualatex\LUALATEX
+\newcommand\CONTEXT  {Con\TeX t\xspace}
+\let\context\CONTEXT
+\newcommand\OpenType {\texttt{Open\kern-.25ex Type}\xspace}
+\let\opentype\OpenType
+
+
 \def\latexe{\LaTeX\xspace}
 \newcommand{\fontdefdtx}{\filename{fontdef.dtx}\xspace}
 \newcommand{\postscript}{PostScript\index{PostScript}\xspace}
@@ -4322,7 +4536,7 @@ ball was her favorite plaything.}%
 \RequirePackage{varwidth}
 \RequirePackage{comment}
 \RequirePackage{textcase}
-\RequirePackage{csquotes}
+\RequirePackage[autostyle=false]{csquotes}
 \RequirePackage{alltt}[1997/06/16]
 \RequirePackage{caption} % check
 \RequirePackage{currfile}
@@ -4471,9 +4685,9 @@ ball was her favorite plaything.}%
 
 %    \begin{macrocode}  
 \newif\ifLINA
-\newcommand\LINA{\pkgname{linearA}}
-\IfStyFileExists{linearA}
-  {\LINAtrue\RequirePackage{linearA}}
+\newcommand\LINA{\pkgname{lineara}}
+\IfStyFileExists{lineara}
+  {\LINAtrue\RequirePackage{lineara}}
   {}
 
 \newif\ifLINB
@@ -4596,9 +4810,9 @@ ball was her favorite plaything.}%
 %
 %	As you can see from below, it can now work anywhere. 
 % \maketitle
-% \makeatletter
+% 
 %  Test \@author and test \doctitle@cx \docauthor@cx,
-% \makeatother
+% 
 %
 % \begin{macro}{\ps@titlepage}
 %	 When a number of articles are concatenated into a
@@ -4739,6 +4953,7 @@ ball was her favorite plaything.}%
   quotation parsep/.store in=\quotationparsep@cx,
   quotation font-size/.store in=\quotationfontsize@cx,
   quotation parindent/.store in=\quotationparindent@cx,
+  quotation font-name/.store in=\quotationfontname@cx,
  }
 %    \end{macrocode}
 %
@@ -4755,7 +4970,7 @@ ball was her favorite plaything.}%
                         \itemindent    \listparindent
                         \rightmargin \quotationrightmargin@cx
                         \parsep=\quotationparsep@cx%
-                        \quotationfontsize@cx}%
+                        \quotationfontname@cx\quotationfontsize@cx}%
                 \item\relax\hskip-\listparindent}
                {\endlist}
 }
@@ -4769,7 +4984,8 @@ ball was her favorite plaything.}%
   quotation right margin=0pt,
   quotation parsep=0pt,
   quotation font-size=\small,
-  quotation parindent=12pt, 
+  quotation parindent=12pt,
+  quotation font-name=, 
 }
 %    \end{macrocode}
 %
@@ -4786,7 +5002,8 @@ ball was her favorite plaything.}%
   quote parsep/.store in=\quoteparsep@cx,
   quote font-size/.store in=\quotefontsize@cx,
   quote parindent/.store in=\quoteparindent@cx,
-}
+  quote font-name/.store in=\quotefontname@cx,
+ }
 
 \def\setquote#1{%
   \cxset{#1}
@@ -4797,7 +5014,7 @@ ball was her favorite plaything.}%
                         \itemindent  \listparindent
                         \rightmargin\leftmargin
                         \parsep=\quoteparsep@cx%
-                        \quotefontsize@cx}%
+                        \quotefontsize@cx\quotefontname@cx}%
                 \item\relax\hskip-\listparindent}
                {\endlist}
   }
@@ -4816,6 +5033,7 @@ ball was her favorite plaything.}%
   quote parsep=0pt,
   quote font-size=\small,
   quote parindent=12pt,
+  quote font-name=,
 }
 %    \end{macrocode}
 % \end{macro}
@@ -4923,7 +5141,8 @@ ball was her favorite plaything.}%
 % Define a table environment that's similar to symtable except that it
 % floats and it doesn't write an entry into the Table of Contents.  This
 % is used for tables that contain something other than symbol lists.
-
+\def\oarg#1{%
+  \colOpt{{\ttfamily[}\meta{#1}{\ttfamily]}}}
 \def\DescribeMacro{\leavevmode\@bsphack
    \begingroup\MakePrivateLetters\Describe@Macro}
 \def\Describe@Macro#1{\endgroup
@@ -4982,9 +5201,9 @@ ball was her favorite plaything.}%
 \newcommand{\cmdI}[2][]{%
   \def\first@arg{#1}%
   \ifx\first@arg\@empty
-    \texttt{\string#2}\indexcommand[#2]{#2}%
+    \texttt{\verbatimfont\string#2}\indexcommand[#2]{#2}%
   \else
-    \texttt{\string#2}\indexcommand[#1]{#2}%
+    \texttt{\verbatimfont\string#2}\indexcommand[#1]{#2}%
   \fi
 }
 \newcommand{\cmdX}[1]{\cmdI[$\string#1$]{#1}}
@@ -4999,7 +5218,7 @@ ball was her favorite plaything.}%
 \DeclareRobustCommand\CMDI[1]{%
 \bgroup
 \smallskip
-\noindent\color{thered}\texttt{\string#1}%
+\noindent\color{thered}\texttt{\verbatimfont\string#1}%
 \indexcommand{#1}
 \egroup%
 }
@@ -5024,15 +5243,27 @@ ball was her favorite plaything.}%
   \index{#1=\textsf{#1} (package)}%
   \index{packages>#1=\textsf{#1}}}
 
+\newcommand*{\Lpack}[1]{\textsf {#1}}  
+%\let\package\Lpack
+
 \newcommand{\optname}[2]{%
   \textsf{#2}%
   \index{#2=\textsf{#2} (\textsf{#1} package option)}%
   \index{package options>#2=\textsf{#2} (\textsf{#1})}}
-
+%    \end{macrocode}
+%
+% \begin{macro}{\docfilename}\marg{filename}
+% This macro and all similar macros starting from doc
+% typeset their argument and also add the argument to the 
+% index.
+%
+%    \begin{macrocode}
 \newcommand{\docfilename}[1]{%
-  \texttt{#1}%
+  \texttt{#1}
   \index{#1=\texttt{#1} (file)}}
-
+%    \end{macrocode}
+% \end{macro}
+%    \begin{macrocode}
 \newcommand{\docfileextension}[1]{%
   \texttt{#1}%
   \index{#1=\texttt{#1} (file extension)}}
@@ -5042,6 +5273,8 @@ ball was her favorite plaything.}%
   \index{#1 (font)}%
   \index{fonts>#1}%
 }
+%    \end{macrocode}
+%    \begin{macrocode}
 \DeclareRobustCommand{\person}[2]{#1\index{#2, #1} #2}
 \newcommand{\idxCTAN}{%
   \index{Comprehensive TeX Archive Network=Comprehensive \string\TeX{} Archive Network}}
@@ -5158,56 +5391,84 @@ ball was her favorite plaything.}%
 
 %\subsection{Unicode font tables}
 %
+% A small utility macro to typeset unicode tables
+% examples can be see in the chapters for scripts.
+%puts the unicode label (removes last char and adds x)
+%
+% \begin{macro}{\putunicode@label}\marg{unformatted string} 
+% This macro receives a number in hexadecimal, removes the last
+% 0 and replaces it with an x. It then prepends a U+ to fomat it
+% as a Unicode number e.g. U+0100x
 %    \begin{macrocode}
-% Define a command for the head of the table
-%\newcommand\htable@cx[1][U+"109A0]{%
-%  \bgroup%
-%  \ttfamily%
-%  \def\fm##1{\makebox[2em]{##1}}%
-%  \leavevmode\makebox[5em]{\texttt{#1}}\fm 0\fm1 \fm2 \fm3 \fm4\fm5 \fm 6 \fm 7 \fm 8 \fm 9\fm A\fm B\fm C\fm D\fm E\fm F
-%\egroup%
-%\par}%
+\newfontfamily\unicodenumberfam{Arial Unicode MS}
+\def\textU#1{{\unicodenumberfam #1}}
+\makeatletter
+\def\putunicode@label#1#2;{%
+\def\reformat@unicode@string##1{%
+   \textU{U+}%
+  \let\z\empty%
+  \expandafter\@tfor\expandafter\i\expandafter:\expandafter=#2;\do{%
+  \if\i;%
+    \textU{x}%
+  \else%
+    \textU{\z}%
+  \fi%
+  \edef\z{\i}%
+ }%
+}%
+  \makebox[5em]{\reformat@unicode@string{#2}\hfill}%
+}
 
-\def\putunicode#1{\makebox[5em]{\texttt{#1}}}
+% \end{macro}
+%    \begin{macrocode}
+\def\putchar@cx#1{%
+\let\oldactive@prefix\active@prefix
+\let\active@prefix\relax
+   \iffontchar\font\n
+     \char\the\n$_{\pgfmathparse{Hex(\the\r@cx)}\text{\pgfmathresult}}$%
+      %
+   \else
+     \graybox
+   \fi
+\let\active@prefix\oldactive@prefix
+ }
+
 \def\urow@cx#1{%
-\parindent0pt%
-\n=#1% 
-\r=1%
-\putunicode{U+#1}%
-\loop%
-\ifnum\n<\numexpr#1+16\relax%
-\makebox[2.1em]{\char\n$_{\the\r}$}%
-\advance\r by1%  
-\ifnum\r>16\r=1\relax\fi
-\advance\n by1%
-\repeat\par}
-
-
+    \n=#1% 
+    \r@cx=0%
+    \expandafter\putunicode@label#1;%
+    \loop%
+        \ifnum\n<\numexpr#1+16\relax%
+        \makebox[2.1em]{\expandafter\putchar@cx{#1}}%
+        \advance\r@cx by1%  
+        \ifnum\r@cx>16\r@cx=1\relax\else\fi
+        \advance\n by1%
+    \repeat
+    \par
+}
 
 \def\typeseturows@cx#1{%
 \@for\next:=#1\do{%
-\urow@cx\next\par}}
+  \urow@cx\next\vskip3pt}%
+}
 
-%#language #comma listfor ranges
+\newcount\r@cx%
+\newcount\n%
 \newcommand\unicodetable[2]{%
-  \bgroup%
-   \parindent0pt%
-   \newcount\n%
-   \newcount\r%
-   \r=1%
-   \raggedright%
+\bgroup
+  \par
+  \leavevmode%
+   \r@cx=0%
+   {\hbox to 5em{\ignorespaces}}%
+   \loop%
+    \ifnum\r@cx<16\ignorespaces 
+    \makebox[2.1em]{\pgfmathparse{Hex(\the\r@cx)}\pgfmathresult}%
+    \advance\r@cx by\@ne%  
+   \repeat
+   \vskip3pt\par
    \@nameuse{#1}%
-  %\htable@cx%
-\r=1%
-\putunicode{\hphantom{U+#1}}%
-\loop%
-\ifnum\r<17\relax%
-\makebox[2.1em]{\hfill\texttt{\the\r}\hfill}%
-\advance\r by1%  
-\repeat
-\par
-\typeseturows@cx{#2}%
-\egroup%
+   \typeseturows@cx{#2}%
+\egroup
 }
 
 %    \end{macrocode}
@@ -5215,9 +5476,6 @@ ball was her favorite plaything.}%
 
 %\subsection{Indexing macros}
 %
-% Index a symbol, which may or may not begin with a backslash.  (Is
-% there a better way to do this?)  Also, if symbol is given as an
-% optional argument is given, typeset that symbol in the index, as well.
 % We define a related macro for indexing accents.  In a previous version
 % of this file, \indexaccent additionally included "see also accents" in
 % the index.  This became distracting so I made \indexaccent a synonym
@@ -5238,7 +5496,11 @@ ball was her favorite plaything.}%
 }
 |endgroup
 %    \end{macrocode}
-% \begin{macro}{indexcommand}
+% \begin{macro}{\indexcommand}\oarg{}\marg{command} 
+% Index a symbol, which may or may not begin with a backslash.  (Is
+% there a better way to do this?)  Also, if symbol is given as an
+% optional argument is given, typeset that symbol in the index, as well
+%
 %    \begin{macrocode}
   \newcommand{\indexcommand}[2][]{%
     \edef\sanitized{\expandafter\sanitize\string#2!!!}%
@@ -5249,6 +5511,9 @@ ball was her favorite plaything.}%
       \expandafter\index\expandafter{\sanitized=\string\verb+\string#2+ (#1)}%
     \fi
   }
+%    \end{macrocode}
+% 
+%    \begin{macrocode}
   \let\indexaccent=\indexcommand
   \def\CLSLpipe{|}%
 %    \end{macrocode}
@@ -5310,12 +5575,10 @@ ball was her favorite plaything.}%
 %\newcommand\ABX{\pkgname{mathabx}}
 \newcounter{totalsymbols}
 \newcommand{\incsyms}{\addtocounter{totalsymbols}{1}}
-% If we have color.sty, use it to display accents atop gray boxes in the
+% If we have xcolor.sty, use it to display accents atop gray boxes in the
 % index.  (See below.)  If we don't have color.sty, use black boxes.
-\IfStyFileExists*{color}
-  {\usepackage{color}
-   \newcommand*{\graybox}{\textcolor[gray]{0.7}{\rule[-\adp]{\awd}{\aht}}}}
-  {\newcommand*{\graybox}{\rule[-\adp]{\awd}{\aht}}}
+\newcommand*{\graybox}{\textcolor{gray!0.7}{\rule[-\adp]{\awd}{\aht}}}
+ 
 % Define \blackacc to display an accented box, given an accent command.
 % Define \blackacchack to display an accented "a" and then black out
 % the "a".
@@ -5500,12 +5763,13 @@ ball was her favorite plaything.}%
 
 \newcommand*{\changeloglabelfont}{\bfseries}
 
+
 \newcommand*{\verbatimfont}{\ttfamily}
 
 
 \newcommand*{\displayverbfont}{\ttfamily}
 
-\renewcommand*{\verbatim@font}{\verbatimfont}
+\renewcommand*{\verbatim@font}{\verbatimfamily}
 
 \def\cmd#1{\cs{\expandafter\cmd@to@cs\string#1}}
   \def\cmd@to@cs#1#2{\char\number`#2\relax}
@@ -5823,8 +6087,8 @@ ball was her favorite plaything.}%
   \def\test{#2}%
   \ifx\test\empty%
     % aha.
-    \index{#1@\protect\texttt{#1} key}%
-    \index{\mypath#1@\protect\texttt{#1}}%
+    \index{#1=\protect\texttt{#1} key}%@=
+    \index{\mypath#1=\protect\texttt{#1}}%@
     \def\myname{#1}%
   \else%
     \iffirsttime
@@ -5842,8 +6106,8 @@ ball was her favorite plaything.}%
 \newenvironment{predefinednode}[1]{
   \begin{pgfmanualentry}
     \pgfmanualentryheadline{Predefined node {\ttfamily\declare{#1}}}%
-    \index{#1@\protect\texttt{#1} node}%
-    \index{Predefined node!#1@\protect\texttt{#1}}
+    \index{#1=\protect\texttt{#1} node}%=
+    \index{Predefined node!#1=\protect\texttt{#1}}=
     \pgfmanualbody
 }
 {
@@ -5893,8 +6157,8 @@ ball was her favorite plaything.}%
       \declare{\texttt{#2}}#3\ \textcolor{gray}{\dots\texttt{;}}}%
     \def\pgfmanualtest{#1}%
     \ifx\pgfmanualtest\@empty%
-      \index{#2@\protect\texttt{#2} path operation}%
-      \index{Path operations!#2@\protect\texttt{#2}}%
+      \index{#2=\protect\texttt{#2} path operation}%=
+      \index{Path operations!#2=\protect\texttt{#2}}%=
     \fi%
     \pgfmanualbody
 }
@@ -6338,8 +6602,11 @@ ball was her favorite plaything.}%
 \newcommand\WIPA{\pkgname{wipa}}
 \ifxetex
 \else
-  \TIPAtrue
-  \RequirePackage[tone,extra,safe]{tipa}
+  \ifluatex
+  \else
+    \TIPAtrue
+    \RequirePackage[tone,extra,safe]{tipa}
+  \fi
 \fi
 %    \end{macrocode}
 % 
@@ -6690,11 +6957,19 @@ ball was her favorite plaything.}%
 %	the margin macros separately.
 %	
 %    \begin{macrocode}
-\def\MarginMacroFonts{\fontencoding\encodingdefault
+\ifxetex
+  \def\MarginMacroFonts{\color{thered}\ttfamily}
+\else
+  \ifluatex
+    \def\MarginMacroFonts{\color{thered}\ttfamily}
+  \else
+    \def\MarginMacroFonts{\fontencoding\encodingdefault
                    \fontfamily\ttdefault
                    \fontseries\mddefault
                    \fontshape\updefault
-                   \color{teal}\small}%
+                   \color{red}\small}%
+  \fi
+\fi
 %    \end{macrocode}
 % \end{macro}
 %
@@ -6729,6 +7004,8 @@ ball was her favorite plaything.}%
 %
 %	
 %    \begin{macrocode}
+%\tcbset{listing utf8=latin1}% optional; ’latin1’ is the default.
+
 \def\thetexexp{\thesection.\arabic{texexp}}
 \tcbset{texexp/.style={%
       fonttitle=\small\sffamily\bfseries, 
@@ -9194,8 +9471,22 @@ section numbering/Roman/.code={%
 % \subsection{Epigraphs}
 %
 % This section deals with epigraphs.\index{epigraph}\index{epigraph!rule}
+% The memoir class defines the epigraph command.
+%    \begin{macrocode}
+\@ifundefined{epigraph}{%
+   \RequirePackage{epigraph}
+   %% Set up the epigraph to be a bit wider
+  \setlength{\epigraphwidth}{8cm} 
+  \setlength{\epigraphrule}{0pt}
+  \newcommand{\theepigraph}[2]{\epigraphhead[30]{\epigraph{#1}{\textit{#2}}}}
+}{\setlength{\epigraphwidth}{8cm} 
+\setlength{\epigraphrule}{0pt}
+\newcommand{\theepigraph}[2]{\epigraphhead[30]{\epigraph{#1}{\textit{#2}}}}%
+}
+%    \end{macrocode}
 %
 %    \begin{macrocode}
+
 \cxset{
   epigraph width/.code={\setlength\epigraphwidth{#1}},
   epigraph font-size/.code={\renewcommand{\epigraphsize}{#1}},
@@ -9214,8 +9505,14 @@ section numbering/Roman/.code={%
   epigraph text align/right/.code={\renewcommand{\textflush}{flushright}},
   epigraph text align/center/.code={\renewcommand{\textflush}{center}},
   epigraph rule width/.code={\setlength\epigraphrule{#1}},
-  epigraph rule/.code={\renewcommand{\@epirule}{\color{teal}\rule[.5ex]{\epigraphwidth}{\epigraphrule}}},
+epigraph rule color/.store in = \epigraphrulecolor@cx,
+  epigraph rule/.code={
+ \renewcommand{\@epirule}{\color{\epigraphrulecolor@cx}\rule[.5ex]{\epigraphwidth}{\epigraphrule}}
+},
 }
+
+
+\cxset{}
 
 \cxset{epigraph width=0.5\linewidth,
     epigraph font-size=\small,
@@ -9223,6 +9520,7 @@ section numbering/Roman/.code={%
     epigraph align=right,
     epigraph source align=right,
     epigraph text align=right,
+    epigraph rule color=blue,
     epigraph rule}
 \newif\if@headertoprule
 \newif\if@headerbottomrule
