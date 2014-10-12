@@ -13,55 +13,64 @@
 %% ----------------------------------------------------------------
 %% 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-\NeedsTeXFormat{LaTeX2e}
-[1994/12/01]%
+\NeedsTeXFormat{LaTeX2e}[1994/12/01]%
 \ProvidesPackage{phd}[2013/2/26 v1.0 less preamble (YL)]%
 \RequirePackage{fixltx2e}[2006/03/24]
-
+\@ifundefined{c@chapter}{%
+      \newcounter{chapter}
+      \def\thechapter{}
+}{}
+\RequirePackage{pgf}
+\def\pkgfamilyname{phd}
+\pgfkeys{/\pkgfamilyname/.is family}
+\newcommand\cxset{\pgfqkeys{/\pkgfamilyname}}
+\def\cxkeydef#1#2{%
+ \pgfkeyssetvalue{/\pkgfamilyname/#1}{#2}%
+}
+\def\cxvalueof#1{%
+ \expandafter\pgfkeysvalueof{/\pkgfamilyname/#1}%
+}
+\def\cx@optionlist{}
+\def\cxuselibrary#1{\cxset{library/.cd,#1}}
+\def\cx@add@library#1#2{%
+  \cxset{library/#1/.code={\@ifundefined{cxlibrary@#1@loaded}{\input #2}{}}}%
+  \DeclareOption{#1}{\edef\cx@optionlist{\cx@optionlist,#1}}%
+}
+\RequirePackage{ifluatex}
+\RequirePackage{ifxetex}
+\def\ifengine#1#2#3{
+  \ifxetex
+    #1%
+  \else
+    \ifluatex
+      #2%
+    \else
+      #3%
+    \fi
+\fi
+}
+\ifluatex
+  \RequirePackage{luacode}
+  %\RequirePackage{luatextra}
+\fi
+\def\defaultfontsxetexluatex{%
+  \RequirePackage[no-math]{fontspec}
+  \setmainfont{Linux Libertine O}
+  \setsansfont{Linux Biolinum O}
+  \setmonofont{Segoe UI}
+  \newfontfamily\verbatimfamily[Scale=0.90]{Segoe UI}
+  \let\ttfamily\verbatimfamily
+  \DeclareTextFontCommand{\texttt}{\verbatimfamily}
+  \newfontfamily\arial{Arial Unicode MS}
+  \let\pan\arial
+  \newfontfamily\smallcps[Scale=0.8]{Arial Unicode MS}
+}
+\ifengine{\defaultfontsxetexluatex}{\defaultfontsxetexluatex}{}
+\RequirePackage{fonttable}
+\ifengine{\RequirePackage{polyglossia}
+  \setdefaultlanguage{english}}{\RequirePackage{polyglossia}
+  \setdefaultlanguage{english}}{\RequirePackage[dutch, german, main=english]{babel}}
+  \usepackage[dutch,german,english]{xlayouts}
 \newcommand*{\savesymbol}[1]{%
   \expandafter\let\csname orig#1\expandafter\endcsname\csname#1\endcsname
   \expandafter\let\csname #1\endcsname\relax
@@ -76,7 +85,7 @@
 \newcommand*{\renamerobustsymbol}[2]{%
   \expandafter\let\expandafter\origrealcommand
     \csname #2\space\endcsname
-  \expandafter\global\expandafter\let\csname#1#2\endcsname=\origrealcommand
+    \expandafter\global\expandafter\let\csname#1#2\endcsname=\origrealcommand
 }
 \def\ifnotsavedsym@helper#1#2!{\expandafter\ifx\csname orig#2\endcsname\relax}
 \newcommand*{\ifnotsavedsym}[1]{%
@@ -107,7 +116,7 @@
 \newcommand{\IfStyFileExists}{%
   \@ifstar{\if@sty@file@exists@star}{\if@sty@file@exists}%
 }
-\def\symbols{\flushleft}
+\newcommand\symbols{\flushleft}
 \def\endsymbols{\endflushleft}
 \def\dosymbol#1{%
    \leavevmode\hbox to .33\textwidth{%
@@ -124,15 +133,6 @@
      \RequirePackage{etex}
   \fi
 \fi
-\RequirePackage{pgf}               % before onlyasmath
-\def\cx@optionlist{}
-\def\cxuselibrary#1{\cxset{library/.cd,#1}}
-\def\cx@add@library#1#2{%
-  \cxset{library/#1/.code={\@ifundefined{cxlibrary@#1@loaded}{\input #2}{}}}%
-  \DeclareOption{#1}{\edef\cx@optionlist{\cx@optionlist,#1}}%
-}
-\pgfkeys{/chapter/.is family}
-\newcommand\cxset{\pgfqkeys{/chapter }} %Notice this is pgf q keys
 
 \cxset{nag keys/.store in =\nagkeys@cx,
        onlyamsmath keys/.store in=\onlyamsmathkeys@cx,
@@ -140,14 +140,11 @@
 \input{settings} % experimental
 \cxset{xcolor keys={fixpdftex,usenames,dvipsnames,
                     svgnames,x11names,table}}
-
-
-\ifxetex
-\else
-   \ifluatex\else
-     \RequirePackage{microtype}%
-  \fi
-\fi
+%%\ifengine%
+%%  {\RequirePackage{microtype}}%
+%%  {\RequirePackage{microtype}}%
+%%  {\RequirePackage{microtype}}%
+%%
 \RequirePackage{graphicx}[1999/02/16]
 \DeclareGraphicsExtensions{jpg,JPG,jpeg,png,eps}
 \graphicspath{{graphics/}{graphics//}{../images/}{images//}{./images/}{./graphics/}{../graphics/}{./pic/}{../pic}}
@@ -236,7 +233,6 @@ forest and sat down by the side
 of the cool fountain, and when she was bored she
 took a golden ball, and threw it up on a high and caught it, and this
 ball was her favorite plaything. \par}%
-
 \newcommand\onepar{In olden times when wishing
 still helped one, there lived a
 king whose daughters were all
@@ -308,8 +304,8 @@ ball was her favorite plaything.}%
   his spectacles and looked anxiously round, to make out who
   was talking.\par}
 
-\newcommand{\ALPHABET}{A B C D E F G H I J K L M N O P Q R S T U V W X Y Z}
-\newcommand{\alphabet}{a b c d e f g h i j k l m n o p q r s t u v w x y z}
+\def\ALPHABET{A B C D E F G H I J K L M N O P Q R S T U V W X Y Z}
+\def\alphabet{a b c d e f g h i j k l m n o p q r s t u v w x y z}
 \newcommand{\punctuation}{! ? . / , : }
 \RequirePackage{booktabs}
 \newcounter{step}
@@ -382,7 +378,7 @@ ball was her favorite plaything.}%
   \def\new@mathgroup{\alloc@8\mathgroup\mathchardef\@cclvi}
   \patchcmd{\document@select@group}{\sixt@@n}{\@cclvi}{}{}
   \patchcmd{\select@group}{\sixt@@n}{\@cclvi}{}{}
-\if
+\fi
 \ifluatex
   \def\new@mathgroup{\alloc@8\mathgroup\mathchardef\@cclvi}
   \patchcmd{\document@select@group}{\sixt@@n}{\@cclvi}{}{}
@@ -486,6 +482,7 @@ ball was her favorite plaything.}%
   {\newcommand{\mathscr}[1]{\mbox{\usefont{U}{rsfs}{m}{n}##1}}}
   {}
 \def\TX{txfonts}
+
 \newif\ifABX
 \def\ABX{\pkgname{mathabx}}
 \let\origDeclareMathSymbol=\DeclareMathSymbol
@@ -705,10 +702,11 @@ ball was her favorite plaything.}%
 \RequirePackage{amsthm}[2002/01/22]
 \RequirePackage{amsopn}
 \RequirePackage{amscd}
-\IfStyFileExists{dsfont}
-  {\newcommand{\mathds}[1]{\mbox{\usefont{U}{dsrom}{m}{n}##1}}
-   \newcommand{\mathdsss}[1]{\mbox{\usefont{U}{dsss}{m}{n}##1}}}
-  {}
+\ifengine{}{}{%
+ \IfStyFileExists{dsfont}%
+   {\newcommand{\mathds}[1]{\mbox{\usefont{U}{dsrom}{m}{n}##1}}
+    \newcommand{\mathdsss}[1]{\mbox{\usefont{U}{dsss}{m}{n}##1}}}
+   {}}
 \RequirePackage{empheq}
 
 
@@ -837,14 +835,14 @@ ball was her favorite plaything.}%
    \let\RequirePackage=\origRequirePackage
   }
   {}
-
+\iffalse
 \newif\ifEU
 \IfStyFileExists{euscript}
   {\EUtrue\RequirePackage[mathcal]{euscript}
    \renewcommand{\mathcal}[1]{\mbox{\usefont{U}{eus}{m}{n}##1}}
   }
   {\let\CMcal\mathcal}
-
+\fi
 
 \newif\ifBM
 \IfStyFileExists{bm}
@@ -966,134 +964,132 @@ ball was her favorite plaything.}%
 \DeclareTextSymbol{\textguarani}{TS1}{'220}
 \DeclareTextSymbolDefault{\textguarani}{TS1}
 
-\DeclareUTFcharacter[\UTFencname]{x3008}{\textlangle}
-\DeclareUTFcharacter[\UTFencname]{x3009}{\textrangle}
-\DeclareUTFcharacter[\UTFencname]{x301A}{\textlbrackdbl}
-\DeclareUTFcharacter[\UTFencname]{x301B}{\textrbrackdbl}
+\def\UTFDeclarations{%
+  \DeclareUTFcharacter[\UTFencname]{x3008}{\textlangle}
+  \DeclareUTFcharacter[\UTFencname]{x3009}{\textrangle}
+  \DeclareUTFcharacter[\UTFencname]{x301A}{\textlbrackdbl}
+  \DeclareUTFcharacter[\UTFencname]{x301B}{\textrbrackdbl}
 
 
-\DeclareUTFcharacter[\UTFencname]{xFF10}{\textzerooldstyle}
-\DeclareUTFcharacter[\UTFencname]{xFF11}{\textoneoldstyle}
-\DeclareUTFcharacter[\UTFencname]{xFF12}{\texttwooldstyle}
-\DeclareUTFcharacter[\UTFencname]{xFF13}{\textthreeoldstyle}
-\DeclareUTFcharacter[\UTFencname]{xFF14}{\textfouroldstyle}
-\DeclareUTFcharacter[\UTFencname]{xFF15}{\textfiveoldstyle}
-\DeclareUTFcharacter[\UTFencname]{xFF16}{\textsixoldstyle}
-\DeclareUTFcharacter[\UTFencname]{xFF17}{\textsevenoldstyle}
-\DeclareUTFcharacter[\UTFencname]{xFF18}{\texteightoldstyle}
-\DeclareUTFcharacter[\UTFencname]{xFF19}{\textnineoldstyle}
+  \DeclareUTFcharacter[\UTFencname]{xFF10}{\textzerooldstyle}
+  \DeclareUTFcharacter[\UTFencname]{xFF11}{\textoneoldstyle}
+  \DeclareUTFcharacter[\UTFencname]{xFF12}{\texttwooldstyle}
+  \DeclareUTFcharacter[\UTFencname]{xFF13}{\textthreeoldstyle}
+  \DeclareUTFcharacter[\UTFencname]{xFF14}{\textfouroldstyle}
+  \DeclareUTFcharacter[\UTFencname]{xFF15}{\textfiveoldstyle}
+  \DeclareUTFcharacter[\UTFencname]{xFF16}{\textsixoldstyle}
+  \DeclareUTFcharacter[\UTFencname]{xFF17}{\textsevenoldstyle}
+  \DeclareUTFcharacter[\UTFencname]{xFF18}{\texteightoldstyle}
+  \DeclareUTFcharacter[\UTFencname]{xFF19}{\textnineoldstyle}
 
 
-\DeclareEncodedCompositeCharacter{\UTFencname}{\textcircled}{20DD}{25EF}
-
-\DeclareUTFcomposite[\UTFencname]{x2460}{\textcircled}{1}
-\DeclareUTFcomposite[\UTFencname]{x2461}{\textcircled}{2}
-\DeclareUTFcomposite[\UTFencname]{x2462}{\textcircled}{3}
-\DeclareUTFcomposite[\UTFencname]{x2463}{\textcircled}{4}
-\DeclareUTFcomposite[\UTFencname]{x2464}{\textcircled}{5}
-\DeclareUTFcomposite[\UTFencname]{x2465}{\textcircled}{6}
-\DeclareUTFcomposite[\UTFencname]{x2466}{\textcircled}{7}
-\DeclareUTFcomposite[\UTFencname]{x2467}{\textcircled}{8}
-\DeclareUTFcomposite[\UTFencname]{x2468}{\textcircled}{9}
-\DeclareUTFcomposite[\UTFencname]{x2469}{\textcircled}{10}
-\DeclareUTFcomposite[\UTFencname]{x246A}{\textcircled}{11}
-\DeclareUTFcomposite[\UTFencname]{x246B}{\textcircled}{12}
-\DeclareUTFcomposite[\UTFencname]{x246C}{\textcircled}{13}
-\DeclareUTFcomposite[\UTFencname]{x246D}{\textcircled}{14}
-\DeclareUTFcomposite[\UTFencname]{x246E}{\textcircled}{15}
-\DeclareUTFcomposite[\UTFencname]{x246F}{\textcircled}{16}
-\DeclareUTFcomposite[\UTFencname]{x2470}{\textcircled}{17}
-\DeclareUTFcomposite[\UTFencname]{x2471}{\textcircled}{18}
-\DeclareUTFcomposite[\UTFencname]{x2472}{\textcircled}{19}
-\DeclareUTFcomposite[\UTFencname]{x2473}{\textcircled}{20}
-
-\DeclareUTFcomposite[\UTFencname]{x24B6}{\textcircled}{A}
-\DeclareUTFcomposite[\UTFencname]{x24B7}{\textcircled}{B}
-\DeclareUTFcomposite[\UTFencname]{x24B8}{\textcircled}{C}
-\DeclareUTFcomposite[\UTFencname]{x24B9}{\textcircled}{D}
-\DeclareUTFcomposite[\UTFencname]{x24BA}{\textcircled}{E}
-\DeclareUTFcomposite[\UTFencname]{x24BB}{\textcircled}{F}
-\DeclareUTFcomposite[\UTFencname]{x24BC}{\textcircled}{G}
-\DeclareUTFcomposite[\UTFencname]{x24BD}{\textcircled}{H}
-\DeclareUTFcomposite[\UTFencname]{x24BE}{\textcircled}{I}
-\DeclareUTFcomposite[\UTFencname]{x24BF}{\textcircled}{J}
-\DeclareUTFcomposite[\UTFencname]{x24C0}{\textcircled}{K}
-\DeclareUTFcomposite[\UTFencname]{x24C1}{\textcircled}{L}
-\DeclareUTFcomposite[\UTFencname]{x24C2}{\textcircled}{M}
-\DeclareUTFcomposite[\UTFencname]{x24C3}{\textcircled}{N}
-\DeclareUTFcomposite[\UTFencname]{x24C4}{\textcircled}{O}
-\DeclareUTFcomposite[\UTFencname]{x24C5}{\textcircled}{P}
-\DeclareUTFcomposite[\UTFencname]{x24C6}{\textcircled}{Q}
-\DeclareUTFcomposite[\UTFencname]{x24C7}{\textcircled}{R}
-\DeclareUTFcomposite[\UTFencname]{x24C8}{\textcircled}{S}
-\DeclareUTFcomposite[\UTFencname]{x24C9}{\textcircled}{T}
-\DeclareUTFcomposite[\UTFencname]{x24CA}{\textcircled}{U}
-\DeclareUTFcomposite[\UTFencname]{x24CB}{\textcircled}{V}
-\DeclareUTFcomposite[\UTFencname]{x24CC}{\textcircled}{W}
-\DeclareUTFcomposite[\UTFencname]{x24CD}{\textcircled}{X}
-\DeclareUTFcomposite[\UTFencname]{x24CE}{\textcircled}{Y}
-\DeclareUTFcomposite[\UTFencname]{x24CF}{\textcircled}{Z}
-\DeclareUTFcomposite[\UTFencname]{x24D0}{\textcircled}{a}
-\DeclareUTFcomposite[\UTFencname]{x24D1}{\textcircled}{b}
-\DeclareUTFcomposite[\UTFencname]{x24D2}{\textcircled}{c}
-\DeclareUTFcomposite[\UTFencname]{x24D3}{\textcircled}{d}
-\DeclareUTFcomposite[\UTFencname]{x24D4}{\textcircled}{e}
-\DeclareUTFcomposite[\UTFencname]{x24D5}{\textcircled}{f}
-\DeclareUTFcomposite[\UTFencname]{x24D6}{\textcircled}{g}
-\DeclareUTFcomposite[\UTFencname]{x24D7}{\textcircled}{h}
-\DeclareUTFcomposite[\UTFencname]{x24D8}{\textcircled}{i}
-\DeclareUTFcomposite[\UTFencname]{x24D9}{\textcircled}{j}
-\DeclareUTFcomposite[\UTFencname]{x24DA}{\textcircled}{k}
-\DeclareUTFcomposite[\UTFencname]{x24DB}{\textcircled}{l}
-\DeclareUTFcomposite[\UTFencname]{x24DC}{\textcircled}{m}
-\DeclareUTFcomposite[\UTFencname]{x24DD}{\textcircled}{n}
-\DeclareUTFcomposite[\UTFencname]{x24DE}{\textcircled}{o}
-\DeclareUTFcomposite[\UTFencname]{x24DF}{\textcircled}{p}
-\DeclareUTFcomposite[\UTFencname]{x24E0}{\textcircled}{q}
-\DeclareUTFcomposite[\UTFencname]{x24E1}{\textcircled}{r}
-\DeclareUTFcomposite[\UTFencname]{x24E2}{\textcircled}{s}
-\DeclareUTFcomposite[\UTFencname]{x24E3}{\textcircled}{t}
-\DeclareUTFcomposite[\UTFencname]{x24E4}{\textcircled}{u}
-\DeclareUTFcomposite[\UTFencname]{x24E5}{\textcircled}{v}
-\DeclareUTFcomposite[\UTFencname]{x24E6}{\textcircled}{w}
-\DeclareUTFcomposite[\UTFencname]{x24E7}{\textcircled}{x}
-\DeclareUTFcomposite[\UTFencname]{x24E8}{\textcircled}{y}
-\DeclareUTFcomposite[\UTFencname]{x24E9}{\textcircled}{z}
-\DeclareUTFcomposite[\UTFencname]{x24EA}{\textcircled}{0}
-
-\DeclareUTFcharacter[\UTFencname]{x25EF}{\textbigcircle}
-
-\DeclareUTFcomposite[\UTFencname]{x3251}{\textcircled}{21}
-\DeclareUTFcomposite[\UTFencname]{x3252}{\textcircled}{22}
-\DeclareUTFcomposite[\UTFencname]{x3253}{\textcircled}{23}
-\DeclareUTFcomposite[\UTFencname]{x3254}{\textcircled}{24}
-\DeclareUTFcomposite[\UTFencname]{x3255}{\textcircled}{25}
-\DeclareUTFcomposite[\UTFencname]{x3256}{\textcircled}{26}
-\DeclareUTFcomposite[\UTFencname]{x3257}{\textcircled}{27}
-\DeclareUTFcomposite[\UTFencname]{x3258}{\textcircled}{28}
-\DeclareUTFcomposite[\UTFencname]{x3259}{\textcircled}{29}
-\DeclareUTFcomposite[\UTFencname]{x325A}{\textcircled}{30}
-\DeclareUTFcomposite[\UTFencname]{x325B}{\textcircled}{31}
-\DeclareUTFcomposite[\UTFencname]{x325C}{\textcircled}{32}
-\DeclareUTFcomposite[\UTFencname]{x325D}{\textcircled}{33}
-\DeclareUTFcomposite[\UTFencname]{x325E}{\textcircled}{34}
-\DeclareUTFcomposite[\UTFencname]{x325F}{\textcircled}{35}
-
-\DeclareUTFcomposite[\UTFencname]{x32B1}{\textcircled}{36}
-\DeclareUTFcomposite[\UTFencname]{x32B2}{\textcircled}{37}
-\DeclareUTFcomposite[\UTFencname]{x32B3}{\textcircled}{38}
-\DeclareUTFcomposite[\UTFencname]{x32B4}{\textcircled}{39}
-\DeclareUTFcomposite[\UTFencname]{x32B5}{\textcircled}{40}
-\DeclareUTFcomposite[\UTFencname]{x32B6}{\textcircled}{41}
-\DeclareUTFcomposite[\UTFencname]{x32B7}{\textcircled}{42}
-\DeclareUTFcomposite[\UTFencname]{x32B8}{\textcircled}{43}
-\DeclareUTFcomposite[\UTFencname]{x32B9}{\textcircled}{44}
-\DeclareUTFcomposite[\UTFencname]{x32BA}{\textcircled}{45}
-\DeclareUTFcomposite[\UTFencname]{x32BB}{\textcircled}{46}
-\DeclareUTFcomposite[\UTFencname]{x32BC}{\textcircled}{47}
-\DeclareUTFcomposite[\UTFencname]{x32BD}{\textcircled}{48}
-\DeclareUTFcomposite[\UTFencname]{x32BE}{\textcircled}{49}
-\DeclareUTFcomposite[\UTFencname]{x32BF}{\textcircled}{50}
+  \DeclareEncodedCompositeCharacter{\UTFencname}{\textcircled}{20DD}{25EF}
+  \DeclareUTFcomposite[\UTFencname]{x2460}{\textcircled}{1}
+  \DeclareUTFcomposite[\UTFencname]{x2461}{\textcircled}{2}
+  \DeclareUTFcomposite[\UTFencname]{x2462}{\textcircled}{3}
+  \DeclareUTFcomposite[\UTFencname]{x2463}{\textcircled}{4}
+  \DeclareUTFcomposite[\UTFencname]{x2464}{\textcircled}{5}
+  \DeclareUTFcomposite[\UTFencname]{x2465}{\textcircled}{6}
+  \DeclareUTFcomposite[\UTFencname]{x2466}{\textcircled}{7}
+  \DeclareUTFcomposite[\UTFencname]{x2467}{\textcircled}{8}
+  \DeclareUTFcomposite[\UTFencname]{x2468}{\textcircled}{9}
+  \DeclareUTFcomposite[\UTFencname]{x2469}{\textcircled}{10}
+  \DeclareUTFcomposite[\UTFencname]{x246A}{\textcircled}{11}
+  \DeclareUTFcomposite[\UTFencname]{x246B}{\textcircled}{12}
+  \DeclareUTFcomposite[\UTFencname]{x246C}{\textcircled}{13}
+  \DeclareUTFcomposite[\UTFencname]{x246D}{\textcircled}{14}
+  \DeclareUTFcomposite[\UTFencname]{x246E}{\textcircled}{15}
+  \DeclareUTFcomposite[\UTFencname]{x246F}{\textcircled}{16}
+  \DeclareUTFcomposite[\UTFencname]{x2470}{\textcircled}{17}
+  \DeclareUTFcomposite[\UTFencname]{x2471}{\textcircled}{18}
+  \DeclareUTFcomposite[\UTFencname]{x2472}{\textcircled}{19}
+  \DeclareUTFcomposite[\UTFencname]{x2473}{\textcircled}{20}
+  \DeclareUTFcomposite[\UTFencname]{x24B6}{\textcircled}{A}
+  \DeclareUTFcomposite[\UTFencname]{x24B7}{\textcircled}{B}
+  \DeclareUTFcomposite[\UTFencname]{x24B8}{\textcircled}{C}
+  \DeclareUTFcomposite[\UTFencname]{x24B9}{\textcircled}{D}
+  \DeclareUTFcomposite[\UTFencname]{x24BA}{\textcircled}{E}
+  \DeclareUTFcomposite[\UTFencname]{x24BB}{\textcircled}{F}
+  \DeclareUTFcomposite[\UTFencname]{x24BC}{\textcircled}{G}
+  \DeclareUTFcomposite[\UTFencname]{x24BD}{\textcircled}{H}
+  \DeclareUTFcomposite[\UTFencname]{x24BE}{\textcircled}{I}
+  \DeclareUTFcomposite[\UTFencname]{x24BF}{\textcircled}{J}
+  \DeclareUTFcomposite[\UTFencname]{x24C0}{\textcircled}{K}
+  \DeclareUTFcomposite[\UTFencname]{x24C1}{\textcircled}{L}
+  \DeclareUTFcomposite[\UTFencname]{x24C2}{\textcircled}{M}
+  \DeclareUTFcomposite[\UTFencname]{x24C3}{\textcircled}{N}
+  \DeclareUTFcomposite[\UTFencname]{x24C4}{\textcircled}{O}
+  \DeclareUTFcomposite[\UTFencname]{x24C5}{\textcircled}{P}
+  \DeclareUTFcomposite[\UTFencname]{x24C6}{\textcircled}{Q}
+  \DeclareUTFcomposite[\UTFencname]{x24C7}{\textcircled}{R}
+  \DeclareUTFcomposite[\UTFencname]{x24C8}{\textcircled}{S}
+  \DeclareUTFcomposite[\UTFencname]{x24C9}{\textcircled}{T}
+  \DeclareUTFcomposite[\UTFencname]{x24CA}{\textcircled}{U}
+  \DeclareUTFcomposite[\UTFencname]{x24CB}{\textcircled}{V}
+  \DeclareUTFcomposite[\UTFencname]{x24CC}{\textcircled}{W}
+  \DeclareUTFcomposite[\UTFencname]{x24CD}{\textcircled}{X}
+  \DeclareUTFcomposite[\UTFencname]{x24CE}{\textcircled}{Y}
+  \DeclareUTFcomposite[\UTFencname]{x24CF}{\textcircled}{Z}
+  \DeclareUTFcomposite[\UTFencname]{x24D0}{\textcircled}{a}
+  \DeclareUTFcomposite[\UTFencname]{x24D1}{\textcircled}{b}
+  \DeclareUTFcomposite[\UTFencname]{x24D2}{\textcircled}{c}
+  \DeclareUTFcomposite[\UTFencname]{x24D3}{\textcircled}{d}
+  \DeclareUTFcomposite[\UTFencname]{x24D4}{\textcircled}{e}
+  \DeclareUTFcomposite[\UTFencname]{x24D5}{\textcircled}{f}
+  \DeclareUTFcomposite[\UTFencname]{x24D6}{\textcircled}{g}
+  \DeclareUTFcomposite[\UTFencname]{x24D7}{\textcircled}{h}
+  \DeclareUTFcomposite[\UTFencname]{x24D8}{\textcircled}{i}
+  \DeclareUTFcomposite[\UTFencname]{x24D9}{\textcircled}{j}
+  \DeclareUTFcomposite[\UTFencname]{x24DA}{\textcircled}{k}
+  \DeclareUTFcomposite[\UTFencname]{x24DB}{\textcircled}{l}
+  \DeclareUTFcomposite[\UTFencname]{x24DC}{\textcircled}{m}
+  \DeclareUTFcomposite[\UTFencname]{x24DD}{\textcircled}{n}
+  \DeclareUTFcomposite[\UTFencname]{x24DE}{\textcircled}{o}
+  \DeclareUTFcomposite[\UTFencname]{x24DF}{\textcircled}{p}
+  \DeclareUTFcomposite[\UTFencname]{x24E0}{\textcircled}{q}
+  \DeclareUTFcomposite[\UTFencname]{x24E1}{\textcircled}{r}
+  \DeclareUTFcomposite[\UTFencname]{x24E2}{\textcircled}{s}
+  \DeclareUTFcomposite[\UTFencname]{x24E3}{\textcircled}{t}
+  \DeclareUTFcomposite[\UTFencname]{x24E4}{\textcircled}{u}
+  \DeclareUTFcomposite[\UTFencname]{x24E5}{\textcircled}{v}
+  \DeclareUTFcomposite[\UTFencname]{x24E6}{\textcircled}{w}
+  \DeclareUTFcomposite[\UTFencname]{x24E7}{\textcircled}{x}
+  \DeclareUTFcomposite[\UTFencname]{x24E8}{\textcircled}{y}
+  \DeclareUTFcomposite[\UTFencname]{x24E9}{\textcircled}{z}
+  \DeclareUTFcomposite[\UTFencname]{x24EA}{\textcircled}{0}
+  \DeclareUTFcharacter[\UTFencname]{x25EF}{\textbigcircle}
+  \DeclareUTFcomposite[\UTFencname]{x3251}{\textcircled}{21}
+  \DeclareUTFcomposite[\UTFencname]{x3252}{\textcircled}{22}
+  \DeclareUTFcomposite[\UTFencname]{x3253}{\textcircled}{23}
+  \DeclareUTFcomposite[\UTFencname]{x3254}{\textcircled}{24}
+  \DeclareUTFcomposite[\UTFencname]{x3255}{\textcircled}{25}
+  \DeclareUTFcomposite[\UTFencname]{x3256}{\textcircled}{26}
+  \DeclareUTFcomposite[\UTFencname]{x3257}{\textcircled}{27}
+  \DeclareUTFcomposite[\UTFencname]{x3258}{\textcircled}{28}
+  \DeclareUTFcomposite[\UTFencname]{x3259}{\textcircled}{29}
+  \DeclareUTFcomposite[\UTFencname]{x325A}{\textcircled}{30}
+  \DeclareUTFcomposite[\UTFencname]{x325B}{\textcircled}{31}
+  \DeclareUTFcomposite[\UTFencname]{x325C}{\textcircled}{32}
+  \DeclareUTFcomposite[\UTFencname]{x325D}{\textcircled}{33}
+  \DeclareUTFcomposite[\UTFencname]{x325E}{\textcircled}{34}
+  \DeclareUTFcomposite[\UTFencname]{x325F}{\textcircled}{35}
+  \DeclareUTFcomposite[\UTFencname]{x32B1}{\textcircled}{36}
+  \DeclareUTFcomposite[\UTFencname]{x32B2}{\textcircled}{37}
+  \DeclareUTFcomposite[\UTFencname]{x32B3}{\textcircled}{38}
+  \DeclareUTFcomposite[\UTFencname]{x32B4}{\textcircled}{39}
+  \DeclareUTFcomposite[\UTFencname]{x32B5}{\textcircled}{40}
+  \DeclareUTFcomposite[\UTFencname]{x32B6}{\textcircled}{41}
+  \DeclareUTFcomposite[\UTFencname]{x32B7}{\textcircled}{42}
+  \DeclareUTFcomposite[\UTFencname]{x32B8}{\textcircled}{43}
+  \DeclareUTFcomposite[\UTFencname]{x32B9}{\textcircled}{44}
+  \DeclareUTFcomposite[\UTFencname]{x32BA}{\textcircled}{45}
+  \DeclareUTFcomposite[\UTFencname]{x32BB}{\textcircled}{46}
+  \DeclareUTFcomposite[\UTFencname]{x32BC}{\textcircled}{47}
+  \DeclareUTFcomposite[\UTFencname]{x32BD}{\textcircled}{48}
+  \DeclareUTFcomposite[\UTFencname]{x32BE}{\textcircled}{49}
+  \DeclareUTFcomposite[\UTFencname]{x32BF}{\textcircled}{50}
+}
+\ifengine{\UTFDeclarations}{\UTFDeclarations}{}
 \ifxetex\else\ifluatex\else
   \RequirePackage{textcomp}
   \PassOptionsToPackage{mathcomp}{rmdefault}
@@ -1312,13 +1308,54 @@ ball was her favorite plaything.}%
 
 \usetikzlibrary{tikzmark}
 \RequirePackage{pgfplots}
+\pgfplotsset{compat=1.11}
 \RequirePackage{pgfplotstable}
 \newcommand*{\BeforeHyperrefHook}{%
   \RequirePackage{float}%
   \RequirePackage{verse}}
 \newcommand*{\AfterHyperrefHook}{%
   \RequirePackage{algorithm2e}%
-  \RequirePackage{fancyhdr}}
+  \RequirePackage{fancyhdr}
+  \RequirePackage{datetime} %%scrtime
+  \RequirePackage{scrtime}
+  \RequirePackage{datenumber}
+  \RequirePackage[round]{natbib}
+  \bibliographystyle{apalike}
+  \usepackage{bibentry}
+  \bibpunct{(}{)}{;}{a}{,}{,}
+}
+
+\def\sethyperref{%
+\BeforeHyperrefHook
+\RequirePackage{hyperref}
+%% hyperdoc has a problem with tcolorboc documentation
+%% macros.
+%%\usepackage{hypdoc}
+\hypersetup{
+  bookmarks,
+  raiselinks,
+  pageanchor,
+  hyperindex=true,
+  colorlinks,
+  allcolors=theblue,
+  linktocpage,
+  hyperfootnotes=true,
+  breaklinks=true,
+  anchorcolor= blue,
+  filecolor=blue,
+  hypertexnames=true,
+  backref,
+  backref=page,
+  pagebackref=true,
+  urlcolor= teal,
+  linkcolor= teal,
+  pdftitle={My Title},
+  pdfauthor={Yiannis Lazarides},
+  pdfsubject={The phd LaTeX package},
+  pdfkeywords={LaTeX package management, document design}
+ }
+\AfterHyperrefHook
+}
 
 
 \RequirePackage[theorems, skins,
@@ -1533,7 +1570,6 @@ boxrule=0pt,toprule=0pt,colframe=white}
 \let\context\CONTEXT
 \newcommand\OpenType {\texttt{Open\kern-.25ex Type}\xspace}
 \let\opentype\OpenType
-
 \def\latexe{\LaTeX\xspace}
 \newcommand{\fontdefdtx}{\filename{fontdef.dtx}\xspace}
 \newcommand{\postscript}{PostScript\index{PostScript}\xspace}
@@ -1559,7 +1595,7 @@ boxrule=0pt,toprule=0pt,colframe=white}
 \def\otr{OTR\xspace}
 \let\alltex\LaTeX
 \let\doccmd\cmd
-\def\texbook{TeXbook}
+\def\texbook{\TeX book\xspace}
 \def\alltex{(All\kern-.075em)\kern-.075em\TeX\xspace}
 \def\ams{American Mathematical Society\xspace}
 \def\AmS{$\mathcal{A}$\kern-.1667em\lower.5ex\hbox
@@ -1568,14 +1604,12 @@ boxrule=0pt,toprule=0pt,colframe=white}
 \def\amslatex{\AmS-\LaTeX\xspace}
 \def\amstex{\AmS-\TeX\xspace}
 \def\docpkg#1{\texttt{#1}}
-\RequirePackage{scalefnt}
-\RequirePackage{fonttable}
+\ifengine{}{}{\RequirePackage{scalefnt} }
 \RequirePackage{multienum}
 \RequirePackage{fourier-orns}
 \RequirePackage{eso-pic}
 \RequirePackage{alphalph}
 \RequirePackage{fmtcount}
-
 \RequirePackage{varwidth}
 \RequirePackage{comment}
 \RequirePackage{textcase}
@@ -1621,7 +1655,6 @@ boxrule=0pt,toprule=0pt,colframe=white}
    \fourierdef{\FOURpartial}{FML}{futmi}{m}{it}{64}
    \fourierdef{\varpartialdiff}{FML}{futmi}{m}{it}{130}
    \fourierdef{\FOURtexteuro}{TS1}{futx}{m}{n}{191}
-
    % Fake a math accent with text-mode commands.
    \DeclareRobustCommand{\FOURfakewidetopaccent}[5]{%
      \setbox0=\hbox{\ensuremath{##1}}%
@@ -1879,7 +1912,6 @@ boxrule=0pt,toprule=0pt,colframe=white}
   \bigskip\par\marginbox@cx[#1]{#2}%
 }
 
-
 \providecommand*{\linenottooshort}[1][4em]{%
   \@tempdima=\hsize
  \advance\@tempdima-#1
@@ -1904,13 +1936,11 @@ boxrule=0pt,toprule=0pt,colframe=white}
   \footnote{\protect\url{http://www.ctan.org/pkg/#1}}}
   \index{Packages>#1}%
 }
-
 \newlength\temp@cx
 \def\keyval{%
   \bgroup
   \catcode`|=11
   \@keyval}
-
 \def\@keyval#1#2#3{%
   \settowidth\temp@cx{#1}%
   \parindent-30pt
@@ -1921,7 +1951,6 @@ boxrule=0pt,toprule=0pt,colframe=white}
 \par\addvspace{1.5pt}%
 \egroup
 }
-
 
 \def\oarg#1{%
   \colOpt{{\ttfamily[}\meta{#1}{\ttfamily]}}}
@@ -1991,7 +2020,6 @@ boxrule=0pt,toprule=0pt,colframe=white}
 \indexcommand{#1}
 \egroup%
 }
-
 \newcommand{\utfviii}{\mbox{UTF-8}\index{UTF-8}\xspace}
 \newcommand{\idxboth}[2]{\mbox{}\index{#1 #2}\index{#2>#1}}
 \newcommand{\idxbothbegin}[2]{\mbox{}\index{#1 #2|(}\index{#2>#1|(}}
@@ -2005,6 +2033,7 @@ boxrule=0pt,toprule=0pt,colframe=white}
   \href{http://ctan.org/pkg/#1}{#1}%
   \index{#1=\textsf{#1} (package)}%
   \index{packages>#1=\textsf{#1}}}
+\let\pkg\pkgname
 
 \newcommand*{\Lpack}[1]{\textsf {#1}}
 
@@ -2090,6 +2119,7 @@ boxrule=0pt,toprule=0pt,colframe=white}
 }
 
 \def\fnum@table{\textsc{\tablename}~\thetable}
+
 \newenvironment{symtable}[2][true]{%
   \expandafter\global\expandafter\let%
     \expandafter\ifshowsymtable\csname if#1\endcsname
@@ -2123,7 +2153,6 @@ boxrule=0pt,toprule=0pt,colframe=white}
 
 \newfontfamily\unicodenumberfam{Arial Unicode MS}
 \def\textU#1{{\unicodenumberfam #1}}
-\makeatletter
 \def\putunicode@label#1#2;{%
 \def\reformat@unicode@string##1{%
    \textU{U+}%
@@ -2139,7 +2168,6 @@ boxrule=0pt,toprule=0pt,colframe=white}
 }%
   \makebox[5em]{\reformat@unicode@string{#2}\hfill}%
 }
-
 \def\putchar@cx#1{%
 \let\oldactive@prefix\active@prefix
 \let\active@prefix\relax
@@ -2189,6 +2217,49 @@ boxrule=0pt,toprule=0pt,colframe=white}
    \typeseturows@cx{#2}%
 \egroup
 }
+%%%%%%%%%%%%%%%%%%%%%% REVISIT THIS
+\DeclareRobustCommand\unicodenumber[1]{{\smallcps #1\xspace}}
+
+\def\putdescription#1:{%
+  \parindent0pt
+  \begin{minipage}[t]{4cm}
+  \bgroup\aegean
+  \hangindent20pt
+  #1\par
+  \egroup
+  \end{minipage}
+}
+
+\long\def\parsefields #1:#2\@@{%
+    \ifx\par#1
+    \else
+        {\small\aegean U+#1}%
+         %%\iffontchar\font"#1 %
+          \makebox[2.1em]{\color{blue}\symbol{"#1}}%
+          \expandafter\putdescription#2\vskip3pt
+        %%\else
+          %%{\aegean \makebox[2.1em]{} Unallocated\par}%
+        %%\fi
+    \fi
+  }%
+
+\newread\unicodefile
+
+\DeclareDocumentCommand{\printunicodeblock}{O{2} m m }{%
+  \bgroup
+  \leavevmode\parindent0pt\par
+  \begin{multicols}{#1}%
+  #3
+  \openin\unicodefile=#2
+  \loop\unless\ifeof\unicodefile
+    \read\unicodefile to\fileline %
+    \expandafter\parsefields \fileline:\@@
+  \repeat
+  \end{multicols}%
+  \immediate\closein\unicodefile
+  \egroup
+}
+\let\PrintUnicodeBlock\printunicodeblock
 
 
 \begingroup
@@ -2526,6 +2597,16 @@ boxrule=0pt,toprule=0pt,colframe=white}
   %%\index{\strippedat @\protect\myprintocmmand{\strippedat}}
 }
 
+\@ifundefined{environment}{
+\newenvironment{environment}[1]{
+  \begin{pgfmanualentry}
+    \extractenvironement#1\@@
+    \pgfmanualbody
+}
+{
+  \end{pgfmanualentry}
+}}{}%
+ %
 \renewenvironment{environment}[1]{
   \begin{pgfmanualentry}
     \extractenvironement#1\@@
@@ -2620,7 +2701,6 @@ boxrule=0pt,toprule=0pt,colframe=white}
 {
   \end{pgfmanualentry}
 }
-
 \def\extractkey#1\@nil{%
   \pgfutil@in@={#1}%
   \ifpgfutil@in@%
@@ -2924,6 +3004,7 @@ boxrule=0pt,toprule=0pt,colframe=white}
   not a good index.
   \bigskip
 }
+\@ifundefined{c@IndexColumns}{\newcount\c@IndexColumns}{}
 \c@IndexColumns=2
   \def\theindex{\@restonecoltrue
     \columnseprule \z@  \columnsep 29\p@
@@ -5001,7 +5082,7 @@ section numbering/Roman/.code={%
 }%This command formats the section number including the space following it.
 }
 \cxset{custom/.code=\gdef\customdesign@cx{%
-                     \csname#1\endcsname},
+                      \csname#1\endcsname},
        fill/.store in=\fill@cx}
       \def\printchaptername{%
         {%
@@ -5090,8 +5171,7 @@ section numbering/Roman/.code={%
   \global\@topnum\z@
   \@afterindentfalse
   \secdef\@chapter\@schapter}
-\newif\if@tocspecial
-\@tocfalse
+\newif\if@tocspecial  \@tocfalse
 \def\@chapter[#1]#2{%
     \ifnum \c@secnumdepth >\m@ne
         \if@mainmatter
@@ -5168,7 +5248,7 @@ section numbering/Roman/.code={%
           block color/.store in={\blockcolor@cx}}
 \cxset{rule color=blue, block color=teal}
 \cxset{steward/.style={
- custom = stewart,
+  custom = stewart,
   offsety/.store in=\soffsety,
   image/.store in=\image@cx,
   texti/.store in=\texti@cx,
@@ -5471,6 +5551,7 @@ epigraph rule color/.store in = \epigraphrulecolor@cx,
 \let\Yodd\Yeven
 
 \cxset{blank page text/.store in=\blankpagetext@cx{#1}}
+\cxset{blank page text={}}
 
 \def\cleardoublepage{\clearpage\if@twoside\ifodd\c@page\else
   \hbox{}

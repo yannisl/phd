@@ -1,0 +1,60 @@
+\documentclass{book}
+\usepackage{pgf}
+
+\usepackage{fontspec}
+\pgfkeys{/chapter/.is family}
+\newcommand\cxset{\pgfqkeys{/chapter }} %Notice this is pgf q keys
+%
+
+\begin{document}
+
+\makeatletter
+\newcommand\makefontfamily@cx[1]{%
+  \newfontfamily\ogham{#1}
+}
+
+% we keep track of all scripts we load
+\gdef\scriptsDB{}
+\def\scripts#1{\g@addto@macro\scriptsDB{#1,}}
+
+\cxset{ogham font/.code=\makefontfamily@cx{#1}}
+\cxset{ogham font/.default = code2000.ttf}
+\cxset{ogham font}
+\cxset{scripts/.code = \scripts{#1}}
+\cxset{scripts={tibetan,ogham}}
+
+\cxset{scripts={bopomofo,phoenician,syriac,cypriot,
+      cjk,hebrew,canadianaborigin}}
+\def\panunicode{Arial}
+
+
+\@for\next:=\scriptsDB\do{%
+   %store script name
+   \expandafter\expandafter\expandafter
+      \edef\csname\next @name%
+         \expandafter\expandafter\expandafter\expandafter\endcsname{\next}
+  %create if@scriptname and set to false
+   \expandafter\expandafter\expandafter
+      \newif\csname if@\next\endcsname
+  %default all scripts to code2000.ttf
+    \expandafter\newfontfamily\csname\next\endcsname{\panunicode}
+  % maketext commands
+  \expandafter\expandafter\expandafter
+      \edef\csname text\next\endcsname#1{\noexpand\csname\next\endcsname #1}
+}
+
+\expandafter\MakeUppercase\bopomofo@name\ \phoenician@name
+
+\if@bopomofo test\else false\fi
+
+\if@ogham ogham loaded \else not loaded\fi
+
+\char"1681
+
+\textogham{\char"1681 \char"1689  }
+
+\textcypriot{\char"1688\char"1681 \char"1689\char"16A0}
+
+\scriptsDB
+
+\end{document}

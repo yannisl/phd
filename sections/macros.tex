@@ -1,5 +1,7 @@
+\MakePercentComment
 \chapter{PROGRAMMING MACROS}
 \addtocimage{-10pt}{-40pt}{../graphics/harnett.jpg}
+%\minitoc
 \pagebreak
 \setlength\columnsep{1.5em}
 
@@ -104,6 +106,16 @@ As a simple example consider the following:\index{macros>delimited}
 
 Example~\ref{delimited} defines a macro with an undelimited first parameter, and a second parameter delimited by a
 semicolon.
+
+\subsection{Space, return, and the tab character as delimiters of parameters}
+
+A space can be used to delimit a parameter. The space character, return character and the tab character are all converted into space tokens by \tex. Here is an example,
+
+\begin{texexample}{Space delimiters}{ex:spacedelimiters}
+\def\tempmacro #1 #2 #3 {#1,#2,#3}
+\tempmacro 12 15 17 
+\end{texexample}
+
 
 \section{Format of a macro definition}
 
@@ -249,6 +261,40 @@ Another example of how \cmd{relax} can be used to indicate the end of a command 
 
 \verb+ \everypar{\hskip 0cm plus 1fil\relax}+
 
+\section{Spaces after macro calls}
+
+\CMDI{\ignorespaces}
+The primitive \cmd{\ignorespaces} allows the user to unify the calls of certain macros. Consider the following:
+
+\begin{codeexample}[]
+\bgroup
+\def\\{A}
+\def\xx{..}
+\def\yy{...}
+
+\\ABC
+\\ ABC
+\xx ABC
+\yy{1}ABC
+\yy{a} ABC
+\egroup
+\end{codeexample}
+
+As it can be observed from the example spaces after control\textit{symbols} like |\\| are \emph{not ignored}, and therefore the output from line 1 reads ``AABC" and the output from line 2 reads ``X ABC. To bring some uniformity to the treatment of spaces after macro calls (regardless of whether the macro has parameters or not, the \cmd{\ignorespaces} primitive can be used. Including this instruction as the \emph{last} token in the replacement text of a macro causes the space (or any number of space tokens) following the macro call to be ignored.
+
+%\begin{codeexample}[]
+\bgroup
+\def\\{A\ignorespaces}
+\def\yy{...\ignorespaces}
+
+\\ABC
+\yy{a}\ignorespaces ABC
+\egroup
+%\end{codeexample}
+
+Note that \cmd{\ignorespaces} does \emph{not} cause \tex to gobble up empty lines following the macro call because \tex converts empty lines into \cs{par}s. 
+
+\cmd{\ignorespaces} does nothing, if no space token or space tokens follow it.  However, it \emph{does} expand token follow it though to find out whether they contain space tokens or not.
 
 \section{Creating macros on the fly}
 
@@ -1874,6 +1920,7 @@ While developing a package, you should try and minimize the amount of new macros
 
 
 Here, we have used two macros from the kernel, |\@firstoftwo| and |\@secondoftwo|. Since they are available, we have used them and saved the trouble of having to redefine them. We have also used |\reserved@a| and |\reserved@b|, also from the kernel. Many programmers use them, but as the names imply they are reserved. It is best to rather define your own scratch macro names.
+\MakePercentIgnore
 
 
 
