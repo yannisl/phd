@@ -1,0 +1,224 @@
+\def\lstlua#1{\bgroup\noindent
+     \color{blue}
+     \textsf{#1}\par
+     \egroup}
+\chapter{TeX without TeX}
+
+Many developers that are programming LuaTeX routines have a preference to  build the output using Lua rather than commands such as |tex.print|. This is a much more difficult task than simply using \tex, but as it opens the internals of the \tex building procedures it is much more powerful.
+
+To successfully carry out such tasks, a good knowledge of \tex internals is necessary as well as a good understanding of Lua. It took me a while to become familiar with both, and a good way to start is to first visualize what is going on. TeX is building boxes all the time and it really does not care what is going inside them. All these boxes and boxes withing boxes as well as other information is stored in \textit{linked lists}, holding records. This type of data structures are very fast while processing them and was the standard way to program in Pascal or C. This approach when first used it appears as if we are using a sledge-hammer to crack a nut\footnote{\url{http://tug.org/TUGboat/tb33-1/tb103gundlach.pdf}}. The core concept of such programming is to create the fundamental data structures \tex uses internally for representing a glyph, a rule, a glue, a |whatsit| and all other items described in the \texbook. For example the digit `0' could be represented by a table with these entries:
+\bigskip
+
+\begin{center}
+\begin{tabular}{ll}
+\toprule
+entry & value\\
+\midrule
+id  &37\\
+char &47\\
+font &15\\
+lang &0\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+There are other optional entries in that table, but only the \textit{prev} and \textit{next} entries are required for building more complex data structures.
+
+\bigskip
+Patrick Gundlach has written a number of nice tutorials describing the use of nodes. We will start with a simple example.  We can visualize these nodes, in a very roundabout way, by using a utility that has been provided by Patrick Gundlach's\footnote{\protect\url{https://gist.github.com/pgundlach/556247/}} code and the GraphViz programme. For example  |\setbox0\hbox{a}|. If you are familiar with link lists, these will be familiar to you. 
+
+
+\begin{figure}[ht]
+\centering
+\includegraphics[scale=.6]{./images/single-node.pdf}
+\caption{A single node representation, holding a glyph.}
+\end{figure}
+
+To construct a horizontal box with a glyph a call to |node.hpack()| is sufficient:
+\begin{verbatim}
+ hbox = node.hpack(n)
+\end{verbatim}
+
+The above code is the same as if we have written |\hbox{0}| except that at this point it is kept in \tex's memory and is not typeset yet. It gets more complex if you want to put more than one item and place them in a box. We will need to create the nodes and chain them together. As you can observe from Figure every node has a |prev|  and a |next| table entries
+
+
+It might puzzle you as to why the language is shown, but \tex ships this information with every box while building a horizontal list. More information can also be gleaned from the package \pkgname{lua-visual-debug}, also developed by Patrick Gundlach. 
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.9\textwidth]{./images/Nodes_in_sample_paragraph.png}
+\caption{Nodes in a sample paragraph. From  \protect\href{http://wiki.luatex.org/images/Nodes_in_sample_paragraph.png}{luatex wiki}}
+\end{figure}
+
+
+
+\begin{texexample}{Building nodes programmatically}{}
+\begin{luacode*}
+local g = node.new("glyph")
+g.font = font.current()
+g.lang = tex.language
+g.char = 86 -- V
+
+local hbox = node.hpack(g)
+local vbox = node.vpack(hbox)
+
+node.write(vbox)
+\end{luacode*}
+\end{texexample}
+
+\begin{figure}[ht]
+\centering
+\includegraphics[scale=.6]{./images/double-node.pdf}
+\caption{A single node representation, holding a glyph.}
+\end{figure}
+
+
+If we want to put two glyphs in the horizontal list we can use the |next| and previous pointers to do it.
+
+\begin{texexample}{Building nodes programmatically}{}
+\begin{luacode*}
+local g1 = node.new("glyph")
+g1.font = font.current()
+g1.lang = tex.language
+g1.char = 86
+
+local g2 = node.new("glyph")
+g2.font = font.current()
+g2.lang = tex.language
+g2.char = 97
+
+g1.next = g2
+g2.prev = g1
+
+local hbox = node.hpack(g1)
+local vbox = node.vpack(hbox)
+
+node.write(vbox)
+\end{luacode*}
+\end{texexample}
+
+The glyphs $g1$ and $g2$ are chained together by setting the next and prev pointer to each other. If they were not connected, only glyph g1 gets into the |hbox|.
+
+If you take a close look at the PDF, you see that the two glyphs are too far away, a (negative) kern should be inserted. This can be done by inserting a kern-node manually or you can ask TeX to do that for you. The last lines of the example above should then read:
+
+Once the nodes were build they were appended onto \tex's \textit{current list}. Note that according to the LuaTeX manual these are deep copied and there is no error checking.
+
+\lstlua{node.write(n)}
+
+The nodes were created using:
+
+\lstlua{n = node.new(id)}
+
+The |id| is a number or it can be matched to a  string such as "glyph"
+
+\section{What type of nodes are available?}
+
+
+
+
+\tex's nodes are represented in \LUA as userdata object with a variable set of fields. In the following
+syntax tables, such the type of such a userdata object is represented as \meta{node}.
+
+The current return value of node.types() is: hlist (0), vlist (1), rule (2), ins (3), mark (4),
+adjust (5), disc (7), whatsit (8), math (9), glue (10), kern (11), penalty (12), unset (13), style
+(14), choice (15), noad (16), op (17), bin (18), rel (19), open (20), close (21), punct (22), inner
+(23), radical (24), fraction (25), under (26), over (27), accent (28), vcenter (29), fence (30),
+math\_char (31), sub\_box (32), sub\_mlist (33), math\_text\_char (34), delim (35), margin\_kern
+(36), glyph (37), align\_record (38), pseudo\_file (39), pseudo\_line (40), page\_insert (41),
+split\_insert (42), expr\_stack (43), nested\_list (44), span (45), attribute (46), glue\_spec
+(47), attribute\_list (48), action (49), temp (50), align\_stack (51), movement\_stack (52),
+if\_stack (53), unhyphenated (54), hyphenated (55), delta (56), passive (57), shape (58), fake
+(100),.
+
+NOTE: The |\lastnodetype| primitive is ε-\tex compliant. The valid range is still -1 .. 15 and glyph
+nodes have number 0 (used to be char node) and ligature nodes are mapped to 7. That way macro
+packages can use the same symbolic names as in traditional ε-TEX. Keep in mind that the internal node
+numbers are different and that there are more node types than 15.
+
+\setbox0=\hbox attr0 = 5 attr10 = 45 {contents}
+
+\directlua{
+  local attr = tex.box[0].attr.next
+  while attr do
+    texio.write_nl(attr.number .. " = " .. attr.value)
+    attr = attr.next
+  end
+}
+
+A very useful article on understanding how paragraphs are build is Paul Isambert's article \textit{What it takes to make a paragraph.}
+
+\luadirect{
+local GLYF = node.id("glyph")
+function show_nodes (head)
+    local nodes = ""
+    for item in node.traverse(head) do
+    local i = item.id
+if i == GLYF then
+   i = unicode.utf8.char(item.char)
+end
+nodes = nodes .. i .. "x "
+end
+tex.print(nodes)
+end
+}
+
+\begin{luacode*}
+local nodenew = node.new
+local nodecopy = node.copy
+local nodetail = node.tail
+local nodeinsertbefore = node.insert_before
+local nodeinsertafter = node.insert_after
+local noderemove = node.remove
+local nodeid = node.id
+local nodetraverseid = node.traverse_id
+local nodeslide = node.slide
+
+Hhead = nodeid("hhead")
+RULE = nodeid("rule")
+GLUE = nodeid("glue")
+WHAT = nodeid("whatsit")
+COL = node.subtype("pdf_colorstack")
+GLYPH = nodeid("glyph")
+color_push = nodenew(WHAT,COL)
+color_pop = nodenew(WHAT,COL)
+color_push.stack = 0
+color_pop.stack = 0
+color_push.command = 1
+color_pop.command = 2
+chicken_pagenumbers = true
+
+boustrophedon = function(head)
+  rot = node.new(8,8)
+  rot2 = node.new(8,8)
+  odd = true
+    for line in node.traverse_id(0,head) do
+      --if odd == false then
+        w = line.width/65536*0.99625 -- empirical correction factor (?)
+        rot.data  = "-1 0 0 1 "..w.." 0 cm"
+        rot2.data = "-1 0 0 1 "..-w.." 0 cm"
+        line.head = node.insert_before(line.head,line.head,nodecopy(rot))
+        nodeinsertafter(line.head,nodetail(line.head),nodecopy(rot2))
+        odd = true
+      --else
+        --odd = false
+      --end
+    end
+  return head
+end
+\end{luacode*}
+
+\def\boustrophedon{
+  \directlua{luatexbase.add_to_callback("post_linebreak_filter",boustrophedon,"boustrophedon")}}
+\def\unboustrophedon{
+  \directlua{luatexbase.remove_from_callback("post_linebreak_filter","boustrophedon")}}
+
+\boustrophedon
+
+\lipsum[1-2]
+
+\unboustrophedon
+
+\lorem
+
+
+ 

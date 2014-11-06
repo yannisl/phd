@@ -1,0 +1,157 @@
+\chapter{Lua i/o}
+\newfontfamily\hiero{NotoSansEgyptianHieroglyphs-Regular.ttf}
+
+In the sections of the documentation, where we describe
+the use of unicode for scripts, we provide files with almost
+all unicode blocks we describe. For example the file
+|hieroglyphics.txt| provides the details for the first
+hieroglyphic characters |U+13000-130FF|.
+
+This is parsed using \tex, but could equally well and perhaps easier and more robustly be parsed using Lua.  
+
+
+\begin{texexample}{Reading a file line by line}{}
+\begin{luacode*}
+filename = "./languages/hieroglyphics.txt"
+fp = io.open( filename, "r" )
+for line in fp:lines() do
+    tex.print(line..", ")
+   end
+fp:close()
+\end{luacode*}
+\end{texexample}
+
+In the second example, we start building our programme
+by defining functions to get a glyph using a particular font
+command and to typeset it.
+
+The function |getglyph()| takes two arguments, the first is the
+name of a command for example for the control sequence \cmd{\hiero} the argument is  ``hiero" and a unicode codepoint in hexadecimal digits (as a string).
+
+\begin{texexample}{Glyph functions}{}
+\begin{luacode*}
+function getglyph(cmd, codepoint)
+  local texstring = "\\Large\\"..cmd.." \\char".."\""..codepoint
+  return texstring
+end
+
+function printglyph(cmd, codepoint)
+  tex.print(getglyph(cmd,codepoint))
+end
+
+printglyph("hiero","13000")
+printglyph("hiero","13050")
+\end{luacode*}
+\end{texexample}
+
+You could of course argue, that this is easily be done so far using \tex programming, but soon we will get into areas of the parser that it would be difficult to achieve using \tex only. With Lua also it is easier to add error detection to make our parser more robust.
+
+Back to our parser and hieroglyphics another function we need to develop is a function that can take care of the writing direction. Hieroglyphics, like every written language,  needed conventions to keep writings consistent and readable. For instance English is always read left to right $\rightarrow$. 
+
+Hieroglyphic writing was written in columns or rows. Reading direction is determined by the direction that human and animal figures faced. Reading starts from the direction that figures face and continues in the opposite direction. If the figures look left the direction is left to right and vice versa.
+
+\begin{center}
+\bgroup
+$\rightarrow$
+
+\scalebox{2}[2]{\hiero\char"13000\char"13011\char"13020}
+
+$\leftarrow$
+
+\scalebox{-2}[2]{\hiero\char"13000\char"13011\char"13020}
+
+\scalebox{2}[2]{\hiero
+\char"13000
+\char"13011
+\char"13020}
+\egroup
+\end{center}
+
+Vertical texts were written from top to bottom, like the figure shown below. As these were composed from single hieroglyphs the direction the figures are facing is immaterial, other than for symmetry.
+
+\begin{center}
+{\hiero
+\makebox[3em]{\scalebox{-2}[2]{\hiero
+\char"13001}\hss}
+\vskip3pt
+\makebox[3em]{\scalebox{-2}[2]{\hiero
+\char"13006}\hss}
+\vskip3pt
+\makebox[3em]{\scalebox{-2}[2]{\hiero
+\char"13007}\hss}
+}
+\end{center}
+
+Columns were read down as we would read lines down a page. The Egyptians liked symmetry. If hieroglyphs were inscribed in a column, they would often inscribe the same text in the opposite column, except with the writing reversed. When written vertical they were accompanied by drawings to illustrate the words, pretty much like we do today in publications.
+
+\begin{figure}[hb]
+\centering
+\includegraphics[width=\textwidth]{./images/senet.jpg}
+\caption{Nefertari playing Senet. Painting in tomb of Egyptian Queen Nefertari (1295–1255 BC). \href{http://en.wikipedia.org/wiki/Senet}{Wikimedia}}
+\end{figure}
+
+
+
+\begin{macro}{\scalebox}
+It is much easier to use \tex to achieve the glyph rotation. The package \pkgname{graphicx} provides the command \cmd{\scalebox} which with suitable parameters can achieve this (\seedocs{graphicx}).
+\end{macro}
+
+In our Lua script we add the functions |getglyphRL()| and |printglyphRL()| to cater for direction. We can also add a helper function for top to bottom scripts:
+
+\begin{verbatim}
+function getglyphRL(cmd, codepoint)
+  local texstring = "\\scalebox{-5}[5]{\\"..cmd.." \\char".."\""..codepoint.."}"
+  return texstring
+end
+
+function printglyphRL(cmd, codepoint)
+  tex.print(getglyphRL(cmd,codepoint))
+end
+\end{verbatim}
+
+\section{Parsing transliteration strings}
+
+The input of hieroglyphic texts presents a challenge to computer science. One cannot make a keyboard of hundreds of characters and which in any case would be difficult to use. 
+Most Egyptologists tranliterate hieroglyphics, using a scheme that is described in more detail in the Chapter \textit{Egyptian Hieroglyphics}.
+
+A transliteration script consists at is basic form of alphanumeric numbers separated by a "-" to separate the glyphs. It uses the Gardiner classification for numbering the glyphs.
+
+\begin{center}
+\texttt{A1*-R2*-R3*-F1*!}
+\end{center}
+
+Other symbols such as ":,\^\_*!" are used to denote how the scripts are assembled etc.
+
+\begin{description}
+\item [dash]
+The dash (-) is used to indicate the end of a glyph. In reality many people in the field use a space which is a good as any symbol. 
+\item [Exclamation mark] The exclamation mark indicates a line break. Two exclamation marks(!!) indicate a page break.
+
+\item [Asterisk] an asterisk (*) indicates that the glyph is placed on the same row as the preceding one.
+
+\item[Colon] the colon (:) indicates that the glyph is stacked under the preceding one; glyphs will continue to be stacked under until a stopping command is found (- or ! or !!).
+
+\end{description}
+
+Getting the TeX side of things right is also important, as we may need to scale the glyphs. There are many ways to scale the glyphs; we can put them in boxes and use scalebox, perhaps the best option is to use font sizing commands.
+
+\begin{center}
+
+{\hiero\fontsize{2cm}{0.5em}\selectfont \char"13000}
+{\hiero\fontsize{1cm}{0.25em}\selectfont 
+\parbox[b]{1cm}{\hiero\char"13000\\ \char"13080}
+}
+{
+\hiero\fontsize{0.66cm}{0.5em}\selectfont 
+\fbox{\parbox[b]{1cm}{\hiero\char"13030\\ \char"13080\\ \char"133E5}}
+\hiero\fontsize{2cm}{0.5em}\selectfont \char"13000
+}
+
+
+
+\end{center}
+
+Once the font sizing commands are ready, it is a simple matter to use a stacking mechanism to stack them. If you recall from a parbox can be displayed inline--as far as \tex is concerned it is just another box to be typeset.  
+
+
+

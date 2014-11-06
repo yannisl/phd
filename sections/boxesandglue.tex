@@ -1,4 +1,4 @@
-
+\parindent1em
 
 \chapter{Boxes and glue in TeX}
 
@@ -29,12 +29,13 @@ typeset objects, such as text, mathematical displays, and pictures, and glue
 is flexible space that can stretch and/or shrink by amounts that are under
 user control.
 
-\topline
+\begin{figure}[h]
+\centering
+\hbox{\drawfontbox{Qwerty}\drawfontbox{fjord}}
+\caption{Everything is boxes.}
+\end{figure}
 
-Some example is placed her\\
-and
-
-\bottomline
+\printfontparams
 
 \section*{Boxes}
 
@@ -626,9 +627,10 @@ When horizontal boxes are added in the list, they are stuck on top of each other
 \vbox{\hsize=0.8cm\hbox{A} \hbox{AB}} 
 \end{teXXX}
 \columnbreak
-
+\bgroup
 \parindent0pt
 \fbox{\vbox{\hsize=3cm\fbox{\hbox{ABCDEFGH}} \fbox{\hbox{AB}}}}
+\egroup
 \end{multicols}
 
 \begin{multicols}{2}
@@ -1048,7 +1050,7 @@ Here is a short example. We define a `oneLineBox`, which is simply an hbox with 
 
 
 
-
+\parindent1em
 
 
 
@@ -1060,6 +1062,8 @@ different widths. The letters \texttt{d f h k l t} have ascenders, making them
 higher than the vowels \texttt{a e o u}, while the letters \texttt{f g j p q y} have descenders,
 giving them added depth below the vowels. Similarly, an \texttt{m} is wider than
 an \texttt{i}. 
+
+\drawfontbox{(fjord)}
 
 When \tex makes a normal horizontal box, the box width is the sum
 of the widths of the characters, and the fixed parts of any glue, contained
@@ -1085,58 +1089,44 @@ produces a box whose (invisible) outline looks like this:
 
 \hbox to 50pt {\vrule height 20pt depth 10pt width 0pt \it Great}
 
-\noindent\fbox{\vrule height 20pt depth 10pt width 0pt \it Great}
-
-
-
+\drawfontbox{\vrule height20pt depth 10pt width 1pt fjord}
 
 The
 three extents of the vertical rule can appear in any order, and any convenient
 units.
 
-\section{LaTeX Boxes}
 In order to see the otherwise-invisible box edges in that example, we
 used the \latex  built-in command \cs{fbox} to create a frame, and we eliminated
-the default margin inside the frame by setting \cs{fboxsep = 0pt}. Plain TEX
+the default margin inside the frame by setting \cs{fboxsep = 0pt}. Plain \tex
 does not have the \cs{fbox} command, but The TEXbook shows how to make
 something like it on pp. 223 and 321.
 
 One particular zero-width vertical rule is convenient for ensuring that
 separate boxes all get the same height and depth. It has the height and
-depth of parentheses in the normal prose font, and is given the macro name
-\doccmd{strut}. Its definition in the plain.tex file of macro definitions is roughly
+depth of parentheses in the normal prose font, and is given the macro name \cs{strut}.
+
+\CMDI{\strut}. 
+Its definition in the plain.tex file of macro definitions is roughly
 equivalent to this:
 
-\begin{comment}
-\begin{figure}[tbp]%
-   \includegraphics[width=\linewidth]{./graphics/ascender.jpg}
-   \caption{Boxes in \protect\TeX}
-   \label{fig:ascender}
-\end{figure}
-\end{comment}
-
- \def \strut {\vrule height 8.5pt depth 3.5pt width 0pt}
 \begin{teX}
   \def \strut {\vrule height 8.5pt depth 3.5pt width 0pt}
 \end{teX}
 
-Compare these two experiments with outlined boxes, first without struts,
-and then with struts:
+We insert a |\vrule| at the figure on the left below with a height of 20pt and a depth of 10pt. You can observe the difference on the right box, without the |\vrule|. The \textit{strut} is the blue line, which we gave a width of one point to make it visible. Real life struts, would have a width of 0pt and will not be visible. 
+
+\drawfontbox{\kern5pt{\color{blue}\vrule height20pt depth 10pt width 1pt} fjord}
+\drawfontbox{fjord}
 
 
-
-
-Notice the different vertical extents of the boxes in the first case, and how
-they have identical extents in the second case.
 
 \section{Horizontal alignment of boxes in TEX}
+\fboxsep0.4pt
 
 When horizontal boxes are set together, they are treated as separate words,
 and therefore spaced accordingly. The input
-
-\verb+ \fbox{one} \fbox{two} \fbox{three}\fbox{four}+  
-
-produces  \fbox{one} \fbox{two} \fbox{three}\fbox{four}. As the example shows, we can put spaces
+\verb+ \fbox{one} \fbox{two} \fbox{three} \fbox{four}  +
+produces  \fbox{one} \fbox{two} \fbox{three} \fbox{four}. As the example shows, we can put spaces
 between them, or run them together so that they fit tightly.
 
 
@@ -1236,12 +1226,55 @@ We can aslo center the text for both lines, by modifying the code slightly.
 
 \chapter{Boxes with \protect\LaTeXe}
 
-A  box of specified width is provided in \latex with the command:
+The \tex primitive commands have been abstracted by \latexe into more user friendly commands that are easier to use. One other reason for using these \LaTeX\ commands is that they are "color safe". Later on we will see other possibilities given by the \pkgname{color} or \pkgname{xcolor} package for drawing colored boxes, but we want to recall that the code for |\makebox| and the like has already a protection mechanism for colors, which the primitive commands do not have.
 
-\cs{makebox}\oarg{width}\oarg{position}\marg{contents}. 
+\begin{macro}{\framebox} 
+One useful box command provided by \latex2e is \cmd{\framebox}. This command builds a box with any material you want to provide it with. The contents of this box are unbreakable, and as far as \tex is concerned it is treated the same way as it would treat a letter. 
+\end{macro}
+\begin{macro}{\fboxsep}
+\begin{macro}{\fboxrule}
+Two associated lengths control the width of the rule and the space around the contents. We can change their default value by using |\setlength{\fboxsep}{0pt}| or just simply |\fboxsep=0pt| or even |\fboxsep0pt|. 
+\end{macro}
+\end{macro}
 
-The source2e manual states. If the width is missing, then position is also missing and obj  is put in an \cs{hbox} of its natural width. This is true as far as the looks are concerned, but not the behaviour, as you can see
-from the following example is not an unqualified hbox it is an hbox preceded by leavevmode.\footnote{\url{http://tex.stackexchange.com/questions/105585/latex2e-makebox-hbox}} This is of course good practice and brings consistency to the LaTeX kernel. I would recommend that you follow such practices in your own code. 
+Another interesting property is this: \emph{the contents of a box need not lie inside it}. You may have
+noticed that, given the contents as an argument, the
+|\framebox| command sets the dimensions of the box
+to those of the contents (in reality, to the ``sub-boxes"
+that compose the contents). But you can define the
+dimensions explicitly as well. For example,
+
+\begin{scriptexample}[]{}
+|\framebox[13em]{Some text}|
+
+\framebox[13em]{Some text}
+
+\end{scriptexample}
+
+The box as is shown in the example will not break and it occupies more space than its contents. A second optional command allows us to typeset the contents, left, center or right.
+
+\begin{codeexample}[vbox]
+\fboxrule1pt
+
+\framebox[13em][l]{Some text}\par
+
+\framebox[13em][r]{Some text}\par
+
+\framebox[13em][c]{Some text}\par
+
+\framebox[1em][l]{Some text}\par
+
+\framebox[1em][c]{Some text}\par
+
+\framebox[1em][r]{Some text}\par
+\end{codeexample}
+
+As you can observe \latexe has abstracted the |\hfill| and similar commands and allows boxes to be constructed with ease. We have started the discussion with |\framebox|, but most practical uses of boxes is when they remain invisible.
+
+\CMDI{\makebox}\oarg{width}\oarg{position}\marg{contents} is \latex's box workhorse.
+
+The |source2e| manual states. If the width is missing, then position is also missing and |obj|  is put in an \cs{hbox} of its natural width. This is true as far as the looks are concerned, but not the behaviour, as you can see
+from the following example is not an unqualified \cmd{\hbox} it is an hbox preceded by leavevmode.\footnote{\url{http://tex.stackexchange.com/questions/105585/latex2e-makebox-hbox}} This is of course good practice and brings consistency to the LaTeX kernel. I would recommend that you follow such practices in your own code. 
 
 \begin{texexample}{}{}
 \newbox\temp
@@ -1272,7 +1305,7 @@ A horizontal box of specified width is provided in \latex with the command
 \doccmd{makebox[width][position]\{contents\}}. Bracketed command arguments
 in \latex are always optional. 
 
-Here, the width is a TEX dimension,
+Here, the width is a \tex dimension,
 and defaults to the natural width of the contents if not given. The position
 is one of the letters \textbf{l} (flush left) or \textbf{r} (flush right); if it is omitted, the text
 is centered in the box. If the specified width is smaller than needed, the
@@ -1302,36 +1335,18 @@ Here are several examples of these three LATEX box commands:
 }
 
 
-The \cs{makebox} command has a framed companion, \cs{framebox}, with identical
-arguments. Like \cs{fbox}, \cs{framebox} creates a margin of width \cs{fboxsep}
-between the outline and the contents, but we continue with a zero value for
-that separation:
 
-
-
-\framebox{stuff} 
-
-\framebox[40pt][l]{stuff} 
-
-\framebox[40pt][r]{stuff}
-
-\framebox[0pt]{stuff} 
-
-\framebox[0pt][l]{stuff} 
-
-\framebox[0pt][r]{stuff}
-
-The last three examples show that the frame shrinks to a vertical bar when
-the box width is zero.
+\subsection{Positioning boxes}
 
 To help in positioning boxes within other objects, \latex provides the command
-\cs{raisebox} to raise and lower boxes:
+
+\CMDI{\raisebox} to raise and lower boxes:
 
 \begin{teX}
 \raisebox{raiselength}[height][depth]{contents}
 \end{teX}
 
-A negative first argument lowers the box. Here are some examples:
+A negative first argument lowers the box, where the \cmd{\lowerbox} will lower the box. Here are some examples:
 
 
 A \raisebox{10pt}{\fbox{upper}} A
@@ -1352,13 +1367,11 @@ lower
 
 \section{Paragraph Boxes}
 
-\begin{macro}{\parbox}
-For longer strings of text, \latex provides the paragraph box \cs{parbox}, which is
-defined like this: 
+\begin{macro}{\parbox}\oarg{position}\oarg{height}\oarg{innerpos}\marg{width}\marg{contents} 
+
+For longer strings of text, \latex provides the paragraph box \cs{parbox} 
 \end{macro}
-\medskip
-\cs{parbox}\oarg{position}\oarg{height}\oarg{innerpos}\marg{width}\marg{contents} 
-\medskip
+
 
 The optional position
 is a letter \textbf{b} for alignment of the bottomline with the current baseline,

@@ -1,0 +1,134 @@
+\documentclass{article}
+\usepackage{filecontents}
+\begin{filecontents*}{luatexinterchartoks.sty}
+% luatexinterchartoks.sty
+\newcount\XeTeXinterchartokenstate
+
+\newcount\charclasses
+\def\newXeTeXintercharclass#1%
+  {\global\advance\charclasses1\relax
+   \newcount#1
+   \global#1=\the\charclasses
+   }
+
+\newcount\cchone
+\newcount\cchtwo
+
+\def\dodoXeTeXcharclass
+    {\directlua{setcharclass(\the\cchone,\the\cchtwo)}}
+
+\def\doXeTeXcharclass%
+   {\afterassignment\dodoXeTeXcharclass\cchtwo }
+
+\def\XeTeXcharclass%
+   {\afterassignment\doXeTeXcharclass\cchone }
+
+\protected\def\XeTeXdointerchartoks%
+   {\directlua{setinterchartoks(\the\cchone,\the\cchtwo,\the\allocationnumber)}}
+
+\protected\def\dodoXeTeXinterchartoks%
+   {\newtoks\mytoks\afterassignment\XeTeXdointerchartoks\global\mytoks }
+
+\protected\def\doXeTeXinterchartoks%
+   {\afterassignment\dodoXeTeXinterchartoks\cchtwo }
+
+\def\XeTeXinterchartoks%
+   {\afterassignment\doXeTeXinterchartoks\cchone }
+
+\luatexdirectlua{require('luatexinterchartoks.lua')}
+
+\endinput
+\end{filecontents*}
+
+\begin{filecontents*}{luatexinterchartoks.lua}
+charclasses = charclasses or {}
+
+function setcharclass (a,b)
+   charclasses[a] = b
+end
+
+local i = 0
+while i < 65536 do
+  charclasses[i]  = 0
+  i = i + 1
+end
+
+interchartoks =  interchartoks or {}
+
+function setinterchartoks (a,b,c)
+   interchartoks[a] = interchartoks[a] or {}
+   interchartoks[a][b] = c
+end
+
+local nc, oc
+oc = 255
+
+function do_intertoks () 
+  local tok = token.get_next() 
+  if tex.count['XeTeXinterchartokenstate'] == 1 then
+      if tok[1] == 11 or  tok[1] == 12 then
+        nc = charclasses[tok[2]] 
+        newchar = tok[2]
+      else 
+        nc = 255
+        newchar = ''
+      end
+      local insert  = ''
+      if interchartoks[oc] and interchartoks[oc][nc] then
+          insert = interchartoks[oc][nc] 
+          local newtok = tok
+          if insert<100 then
+            local dec = math.floor(insert / 10) + 48;
+            local unit = math.floor(insert % 10) + 48;
+            newtok = {
+              -- \XeTeXinterchartokenstate=0 \the\toks<n> \XeTeXinterchartokenstate=1
+              token.create('XeTeXinterchartokenstate'),
+              token.create(string.byte('='),12),
+              token.create(string.byte('0'),12),
+              token.create(string.byte(' '),10),
+              token.create('the'),
+              token.create('toks'),
+              token.create(dec,12),
+              token.create(unit,12),
+              token.create(string.byte(' '),10),
+              token.create('XeTeXinterchartokenstate'),
+              token.create(string.byte('='),12),
+              token.create(string.byte('1'),12),
+              token.create(string.byte(' '),10),
+              {tok[1], tok[2], tok[3]}}               
+          end
+          tok = newtok
+      end
+      oc = nc
+  end
+  return tok
+end
+
+callback.register ('token_filter', do_intertoks)
+\end{filecontents*}
+\usepackage{luatexinterchartoks}
+\usepackage{xcolor}
+
+\begin{document}
+
+\newXeTeXintercharclass \mycharclassa
+\newXeTeXintercharclass \mycharclassA
+\newXeTeXintercharclass \mycharclassB
+\XeTeXcharclass `\a \mycharclassa
+\XeTeXcharclass `\A \mycharclassA
+\XeTeXcharclass `\B \mycharclassB
+% between "a" and "A":
+\XeTeXinterchartoks \mycharclassa \mycharclassA = {[\itshape}
+\XeTeXinterchartoks \mycharclassA \mycharclassa = {\upshape]}
+% between " " and "B":
+\XeTeXinterchartoks 255 \mycharclassB = {\bgroup\color{blue}}
+\XeTeXinterchartoks \mycharclassB 255 = {\egroup}
+% between "B" and "B":
+\XeTeXinterchartoks \mycharclassB \mycharclassB = {.}
+
+\begingroup
+\XeTeXinterchartokenstate = 1
+aAa A a B aBa BB
+\endgroup
+
+\end{document}

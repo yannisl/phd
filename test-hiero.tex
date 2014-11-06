@@ -1,0 +1,1154 @@
+
+\documentclass{article}
+\usepackage{fontspec}
+\usepackage{xlayouts,underscore,
+            amsmath,stackengine,luacode,xcolor,listings,
+            filecontents,lipsum,graphicx,listings}
+\begin{filecontents*}{input.txt}
+This is line 1
+This is line 2
+This is line 3
+This is line 4
+This is line 5
+This is line 6
+\textbf{test}
+\end{filecontents*}
+\begin{document}
+
+
+
+\newfontfamily\hiero{NotoSansEgyptianHieroglyphs-Regular.ttf}
+\newfontfamily\aegyptusi{NewGardiner.ttf}
+\newfontfamily\aegyptus{JSeshFont.ttf}
+\newfontfamily\arial{Arial Unicode MS}
+\parindent0pt
+
+\begin{luacode*}
+-- returns a tex string
+-- with a font command to print 
+-- hieroglyphics
+
+function getglyph(cmd, codepoint)
+  local texstring = "\\Large\\"..cmd.." \\char".."\""..codepoint
+  return texstring
+end
+
+function getglyphRL(cmd, codepoint)
+  local texstring = "\\scalebox{-5}[5]{\\"..cmd.." \\char".."\""..codepoint.."}"
+  return texstring
+end
+
+function printglyphRL(cmd, codepoint)
+  tex.print(getglyphRL(cmd,codepoint))
+end
+
+function texHuge()
+   local tmp = "\\huge"
+   return "\\huge"
+end
+
+function stackrelf(a,b,c)
+  local inlinemath = "$"
+  if c==true then inlinemath="$"
+  else
+     --inlinemath = " "
+  end
+  return ""..inlinemath.."\\stackrel{\\mbox{"..a.."}}{\\mbox{"..b.."}}"..inlinemath..""
+end
+
+--[[
+Write something here
+and here
+--]]
+local t={}
+local function f(codepoint, gardiner, 
+                 mnemonic,
+                 description, determinant)
+
+    local theglyph=""
+    local glyphslot
+	 if gardiner==nil or gardiner=="" then gardiner="empty" end
+    if mnemonic==nil or mnemonic=="" then mnemonic="\\phantom{z}" end
+    if description==nil then description="no description" end
+    
+
+     
+
+-- stackengine 
+ 
+  stackrel = stackrelf("\\color{blue}\\huge\\hiero\\char\""..codepoint.." ","\\footnotesize 0x"..codepoint)
+   stackrel = stackrelf(stackrel,"\\footnotesize"..tonumber(codepoint, 16))
+   stackrel = stackrelf(stackrel,"\\footnotesize \\arial ".. gardiner)
+stackrel = stackrelf(stackrel,"\\footnotesize \\arial ".. mnemonic)
+  
+theglyph = " \\hiero\\char\""..codepoint.."\\hskip0pt "
+  glyphslot = codepoint
+return {  fullblock = stackrel, 
+          unicode   = codepoint,
+          gardiner  = gardiner,
+          mnemonic  = mnemonic,
+          description = description,
+          theglyph  = theglyph,
+          glyphslot = codepoint}
+end
+
+-- The Gardiner classification table
+-- and mnemonics as per MdC1988 
+t ={
+	["A1"]  = f(13000,"A1","",
+               "kneeling man",
+               "Det.I (Masculine) (paeu)"),
+   ["A2"] = f(13001,"A2"),
+   ["A3"] = f(13002,"A3"),
+	["A4"] = f(13003,"A4"),
+   ["A5"]= f(13004,"A5"),  
+	["A5a"] = f(13005,"A5a"),
+	["A6"]= f(13006,"A6"),
+	["A6a"]= f(13007,"A6a"),
+	["A6b"]= f(13008,"A6b"),
+   ["A7"] = f(13009,"A7"),
+	["A8"] = f("1300A","A8"),
+	["A9"] = f("1300B","A9"),
+	["A10"] = f("1300C","A10"),
+	["A11"] = f("1300D","A11"),
+	["A12"] = f("1300E","A12","mSa"),
+	["A13"] = f("1300F","A13"),
+	["A14"] = f("13010","A14"),
+	["A14a"] = f("13011","A14a"),
+  	["A15"] = f(13012,"A15","xr"),
+  	["A16"] = f(13013,"A16"),
+  	["A17"] = f(13014,"A17","Xrd"),
+  	["A17a"] = f(13015,"A17a"),
+  	["A18"] = f(13016,"A18"),
+  	["A19"] = f(13017,"A19"),
+  	["A20"] = f(13018,"A20"),
+  	["A21"] = f("13019","A21","sr"),
+  	["A22"] = f("1301A","A22"),
+  	["A23"] = f("1301B","A23"),
+  	["A24"] = f("1301C","A24"),
+  	["A25"] = f("1301D","A25"),
+  	["A26"] = f("1301E","A26"),
+  	["A27"] = f("1301F","A27"),
+  	["A28"] = f("13020","A28"),
+  	["A29"] = f("13021","A29"),
+  	["A30"] = f("13022","A30"),
+  	["A31"] = f("13023","A31"),
+  	["A32"] = f("13024","A32"),
+ 	["A32a"] = f("13025","A32a"),
+  	["A33"] = f(13026,"A33","mniw"),
+	["A34"] = f("13027","A34"),
+	["A35"] = f("13028","A35"),
+	["A36"] = f("13029","A36"),
+	["A37"] = f("1302A","A37"),
+	["A38"] = f("1302B","A38","qiz"),
+	["A39"] = f("1302C","A39"),
+	["A40"] = f("1302D","A40"),
+	["A40a"] = f("1302E","A40a"),
+	["A41"] = f("1302F","A41"),
+	["A42"] = f("13030","A42"),
+	["A42a"] = f("13031","A42a"),
+	["A43"] = f("13032","A43"),
+	["A43a"] = f("13033","A43a"),
+	["A44"] = f("13034","A44"),
+	["A45"] = f("13035","A45"),
+	["A45a"] = f("13036","A45a"),
+	["A46"] = f("13037","A46"),
+  	["A47"] = f(13038,"A47","iry"),
+	["A48"] = f("13039","A48"),
+	["A49"] = f("1303A","A49"),
+  	["A50"] = f("1303B","A50","Sps"),
+  	["A51"] = f("1303C","Spsi"),
+	["A52"] = f("1303D","A52"),
+	["A53"] = f("1303E","A53"),
+	["A54"] = f("1303F","A54"),
+	["A55"] = f("13040","A55"),
+	["A56"] = f("13041","A56"),
+	["A57"] = f("13042","A57"),
+	["A58"] = f("13043","A58"),
+	["A59"] = f("13044","A59"),
+	["A60"] = f("13045","A60"),
+	["A61"] = f("13046","A61"),
+	["A62"] = f("13047","A62"),
+	["A63"] = f("13048","A63"),
+	["A64"] = f("13049","A64"),
+	["A65"] = f("1304A","A65"),
+	["A66"] = f("1304B","A66"),
+	["A67"] = f("1304C","A67"),
+	["A68"] = f("1304D","A68"),
+	["A69"] = f("1304E","A69"),
+	["A70"] = f("1304F","A70"),
+-- Woman and her occupations
+-- Unicode points 
+	["B1"] = f("13050","B1"),
+	["B2"] = f("13051","B2"),
+	["B3"] = f(13052,"msi"),
+	["B4"] = f("13053","B4"),
+	["B5"] = f("13054","B5"),
+	["B5a"] = f("13055","B5a"),
+	["B6"] = f("13056","B6"),
+	["B7"] = f("13057","B7"),
+	["B8"] = f("13058","B8"),
+	["B9"] = f("13059","B9"),
+-- C series
+	["C1"] = f("1305A","C1"),
+	["C2"] = f("1305B","C2"),
+	["C2a"] = f("1305C","C2a"),
+	["C2b"] = f("1305D","C2b"),
+	["C2c"] = f("1305E","C2c"),
+
+	["C3"] = f("1305F","DHwty"),
+
+	["C4"] = f(13060,"Xnmw"),
+	["C5"] = f(13061,"Xnmw"),
+	["C6"] = f(13062,"inpw"),
+	["C7"] = f(13063,"stX"),
+	["C8"] = f(13064,"mnw"),
+
+   ["C9"]  = f(13065,"C9"),  
+	["C10"] = f(13066,"mAat"),
+	["C10a"] = f(13067,"C10a"),
+
+	["C11"] = f(13068,"HH"),
+	["C12"] = f(13069,"C12"),
+	["C13"] = f("1306A","C13"),
+	["C14"] = f("1306B","C14"),
+	["C15"] = f("1306C","C15"),
+	["C16"] = f("1306D","C16"),
+	["C17"] = f("1306E","C17"),
+	["C18"] = f("1306F","C18"),
+	["C19"] = f(13070,"C19"),
+	["C20"] = f(13071,"C20"),
+	["C21"] = f(13072,"C21"),
+	["C22"] = f(13073,"C22"),
+	["C23"] = f(13074,"C23"),
+	["C24"] = f(13075,"C24"),
+
+-- D series Parts of the Human Body
+-- needs checking missed some
+
+	["D1"] = f(13076,"tp"),
+	["D2"] = f(13077,"Hr"),
+	["D3"] = f(13078,"Sny"),
+	["D4"] = f(13079,"ir"),
+	["D5"] = f("1307A","D5"),
+	["D6"] = f("1307B","D6"),
+	["D7"] = f("1307C","D7"),
+	["D8"] = f("1307D","D8"),
+	["D8a"] = f("1307E","D8a"),
+	["D9"] = f("1307F","rmi"),
+	["D10"] = f(13080,"wDAt"),
+	["D11"] = f(13081,"D11"),
+	["D12"] = f(13082,"D12"),
+	["D13"] = f(13083,"D13"),
+	["D14"] = f(13084,"D14"),
+	["D15"] = f(13085,"D15"),
+	["D16"] = f(13086,"D16"),
+	["D17"] = f(13087,"D17"),
+	["D18"] = f(13088,"D18"),
+	["D19"] = f(13089,"fnD"),
+	["D20"] = f("1308A","D20"),
+	["D21"] = f("1308B","r"),
+	["D22"] = f("1308C","D22"),
+	["D23"] = f("1308D","D23"),
+	["D24"] = f("1308E","spt"),
+	["D25"] = f("1308F","spty"),
+
+	["D26"] = f("13090","D26"),
+	["D27"] = f(13091,"mnD"),
+
+	["D27a"] = f(13092,"kA"),
+	["D28"] = f(13093,"D29"),
+	["D29"] = f(13094,"D30"),
+	["D30"] = f(13095,"D31"),
+	["D31"] = f(13096,"D32"),
+  
+	["D31a"] = f(13097,"D33"),
+	["D32"] = f(13098,"aHA"),
+	["D33"] = f(13099,"D34"),
+	["D34"] = f("1309A","aHA"),
+	["D34a"] = f("1309B","a"),
+	["D35"] = f("1309C","D35"),
+	["D36"] = f("1309D","D36"),
+	["D37"] = f("1309E","D37"),
+	["D38"] = f("1309F","D38"),
+	["D39"] = f("130A0","D39"),
+
+	["D40"] = f("130A1","Dsr"),
+	["D41"] = f("130A2","d"),
+	["D42"] = f("130A3","Dba"),
+	["D43"] = f("130A4","D43"),
+	["D44"] = f("130A5","D44"),
+	["D45"] = f("130A6","D45"),
+	["D46"] = f("130A7","D46"),
+	["D46a"] = f("130A8","D46a"),
+	["D47"] = f("130A9","D47"),
+	["D48"] = f("130AA","D48"),
+	["D48a"] = f("130AB","D48a"),
+	["D49"] = f("130AC","D49"),
+	["D50"] = f("130AD","D50"),
+	["D50a"] = f("130AE","D50a"),
+	["D50b"] = f("130AF","D50b"),
+	["D50c"] = f("130B0","D50c"),
+	["D50d"] = f("130B1","D50d"),
+	["D50e"] = f("130B2","D50e"),
+	["D50f"] = f("130B3","D50f"),
+	["D50g"] = f("130B4","D50g"),
+	["D50h"] = f("130B5","D50h"),
+	["D50i"] = f("130B6","D50i"),
+	["D51"] = f("130B7","D51"),
+	["D52"] = f("130B8","mt"),
+	["D52a"] = f("130B9","D52a"),
+	["D53"] = f("130BA","D53"),
+	["D54"] = f("130BB","D54"),
+	["D54a"] = f("130BC","D54a"),
+	["D55"] = f("130BD","D55"),
+	["D56"] = f("130BE","rd"),
+	["D57"] = f("130BF","D57"),
+	["D58"] = f("130C0","b"),
+	["D59"] = f("130C1","ab"),
+	["D60"] = f("130C2","wab"),
+	["D61"] = f("130C3","sAH"),
+	["D62"] = f("130C4","D62"),
+	["D63"] = f("130C5","D63"),
+	["D64"] = f("130C6","D64"),
+	["D65"] = f("130C7","D65"),
+	["D66"] = f("130C8","D66"),
+	["D67"] = f("130C9","D67"),
+	["D67a"] = f("130CA","D67a"),
+	["D67b"] = f("130CB","D67b"),
+	["D67c"] = f("130CC","D67c"),
+	["D67d"] = f("130CD","D67d"),
+	["D67e"] = f("130CE","D67e"),
+	["D67f"] = f("130CF","D67f"),
+	["D67g"] = f("130D0","D67g"),
+	["D67h"] = f("130D1","D67h"),
+-- E 
+   ["E1"] = f("130D2","E1"),
+   ["E2"] = f("130D3","E2"),
+   ["E3"] = f("130D4","E3"),
+   ["E4"] = f("130D5","E4"),
+   ["E5"] = f("130D6","E5"),
+	["E6"] = f("130D7","E6","zzmt"),
+   ["E7"] = f("130D8","E7"),
+   ["E8"] = f("130D9","E8"),
+   ["E8a"] = f("130DA","E8a"),
+   ["E9"] = f("130DB","E9"),
+   ["E9a"] = f("130DC","E9a"),
+   ["E10"] = f("130DD","E10"),
+["E11"] = f("130DE","E11"),
+["E12"] = f("130DF","E12"),
+["E13"] = f("130E0","E13"),
+["E14"] = f("130E1","E14"),
+["E15"] = f("130E2","E15"),
+["E16"] = f("130E3","E16"),
+["E16a"] = f("130E4","E16a"),
+["E17"] = f("130E5","E17","zAb"),
+["E17a"] = f("130E6","E17a",""),
+
+	["E18"] = f("130E7","E18",""),
+	["E19"] = f("130E8","E19",""),
+	["E20"] = f("130E9","E20"),
+	["E20a"] = f("130EA","E20a"),
+	["E21"] = f("130EB","E21",""),
+	["E22"] = f("130EC","E22","mAi"),
+	["E23"] = f("130ED","E23","l"),
+	["E24"] = f("130EE","E24","Aby"),
+	["E25"] = f("130EF","E25",""),
+	["E26"] = f("130F0","E26",""),
+	["E27"] = f("130F1","E27",""),
+	["E28"] = f("130F2","E28",""),
+	["E28a"] = f("130F3","E28a",""),
+	["E29"] = f("130F4","E29",""),
+	["E30"] = f("130F5","E30",""),
+	["E31"] = f("130F6","E31",""),
+	["E32"] = f("130F7","E32",""),
+	["E33"] = f("130F8","E33",""),
+
+	["E34"] = f("130F9","E34","wn"),
+	["E34a"] = f("130FA","E34a",""),
+	["E35"] = f("0000","E35","unused"), --http://www.rostau.org.uk/aegyptian-l/archives/week617.txt
+	["E36"] = f("130FB","E36",""),
+	["E37"] = f("130FC","E37",""),
+	["E38"] = f("130FD","E38",""),
+
+-- F series
+	["F1"] = f("130FF","F1",""),
+	["F2"] = f("13100","F2",""),
+	["F3"] = f("13101","F3",""),
+	["F4"] = f(13102,"F4","HAt"),
+	["F5"] = f(13103,"F5","SsA"),
+	["F6"] = f(13104,"F6",""),
+	["F7"] = f(13105,"F7",""),
+	["F8"] = f(13106,"F8",""),
+	["F9"] = f(13107,"F9",""),
+	["F10"] = f(13108,"F10",""),
+	["F11"] = f(13109,"F11",""),
+	["F12"] = f("1310A","F12","wsr"),
+	["F13"] = f("1310B","F13","wp"),
+	["F13a"] = f("1310C","F13a",""),
+	["F14"] = f("1310D","F14",""),
+	["F15"] = f("1310E","F15",""),
+	["F16"] = f("1310F","F16","db"),
+	["F17"] = f("13110","F17",""),
+
+	["F18"] = f(13111,"F18","Hw"),
+["F19"] = f(13112,"F19",""),
+["F20"] = f(13113,"F20","ns"),
+["F21"] = f(13114,"F21","sDm"),
+["F21a"] = f(13115,"F21a",""),
+["F22"] = f(13116,"F22","pH"),
+	-- ["F18"] = f(13000,"bH"),
+	--["F20"] = f(13000,"ns"),
+	--["F21"] = f(13000,"idn"),
+	--["F21"] = f(13000,"msDr"),
+	--["F21"] = f(13000,"sDm"),
+	--["F21"] = f(13000,"DrD"),
+	--["F22"] = f(13000,"pH"),
+	--["F22"] = f(13000,"kfA"),
+
+	["F23"] = f(13117,"F23","xpS"),
+	["F24"] = f(13118,"F24","xpS"),
+	["F25"] = f(13119,"F25","wHm"),
+	["F26"] = f("1311A","F26","Xn"),
+	["F27"] = f("1311B","F27",""),
+	["F28"] = f("1311C","F28",""),
+
+	["F29"] = f(13000,"sti"),
+	["F30"] = f(13000,"Sd"),
+	["F31"] = f(13000,"ms"),
+	["F32"] = f(13000,"X"),
+	["F33"] = f(13000,"sd"),
+	["F34"] = f(13000,"ib"),
+	["F35"] = f(13000,"nfr"),
+	["F36"] = f(13000,"zmA"),
+	["F39"] = f(13000,"imAx"),
+	["F40"] = f(13000,"Aw"),
+	["F42"] = f(13000,"spr"),
+	["F44"] = f(13000,"iwa"),
+	["F44"] = f(13000,"isw"),
+	["F46"] = f(13000,"pXr"),
+	["F46"] = f(13000,"qAb"),
+	["G1"] = f(13000,"A"),
+	["G2"] = f(13000,"AA"),
+	["G4"] = f(13000,"tyw"),
+	["G14"] = f(13000,"mwt"),
+	["G16"] = f(13000,"nbty"),
+	["G17"] = f(13000,"m"),
+	["G18"] = f(13000,"mm"),
+	["G21"] = f(13000,"nH"),
+	["G22"] = f(13000,"Db"),
+	["G23"] = f(13000,"rxyt"),
+	["G25"] = f(13000,"Ax"),
+	["G27"] = f(13000,"dSr"),	
+	["G28"] = f(13000,"gm"),
+	["G29"] = f(13000,"bA"),
+	["G32"] = f(13000,"baHi"),
+	["G35"] = f(13000,"aq"),
+	["G36"] = f(13000,"wr"),
+	["G38"] = f(13000,"gb"),
+	["G39"] = f(13000,"zA"),
+	["G40"] = f(13000,"pA"),
+	["G41"] = f(13000,"xn"),
+	["G42"] = f(13000,"wSA"),
+	["G43"] = f(13000,"w"),
+	["G44"] = f(13000,"ww"),
+	["G46"] = f(13000,"mAw"),
+	["G47"] = f(13000,"TA"),
+	["G54"] = f(13000,"snD"),
+	["H2"] = f(13000,"wSm"),
+	["H2"] = f(13000,"pq"),
+	["H3"] = f(13000,"pAq"),
+	["H4"] = f(13000,"nr"),
+	["H6"] = f(13000,"Sw"),
+	["I1"] = f(13000,"aSA"),
+	["I2"] = f(13000,"Styw"),
+	["I3"] = f(13000,"mzH"),
+	["I4"] = f(13000,"sbk"),
+	["I5"] = f(13000,"sAq"),
+	["I6"] = f(13000,"km"),
+	["I8"] = f(13000,"Hfn"),
+	["I9"] = f(13000,"f"),
+	["I10"] = f(13000,"D"),
+	["I11"] = f(13000,"DD"),
+	["K1"] = f(13000,"in"),
+	["K3"] = f(13000,"ad"),
+	["K4"] = f(13000,"XA"),
+	["K5"] = f(13000,"bz"),
+	["K6"] = f(13000,"nSmt"),
+	["L1"] = f(13000,"xpr"),
+	["L2"] = f(13000,"bit"),
+	["L7"] = f(13000,"srqt"),
+	["M1"] = f(13000,"iAm"),
+	["M2"] = f(13000,"Hn"),
+	["M3"] = f(13000,"xt"),
+	["M4"] = f(13000,"rnp"),
+	["M6"] = f(13000,"tr"),
+	["M8"] = f(13000,"SA"),
+	["M9"] = f(13000,"zSn"),
+	["M11"] = f(13000,"wdn"),
+	["M12"] = f(13000,"xA"),
+	["M13"] = f(13000,"wAD"),
+	["M16"] = f(13000,"HA"),
+	["M17"] = f(13000,"i"),
+	["M18"] = f(13000,"ii"),
+	["M20"] = f(13000,"sxt"),
+	["M21"] = f(13000,"sm"),
+	["M23"] = f(13000,"sw"),
+	["M24"] = f(13000,"rsw"),
+	["M26"] = f(13000,"Sma"),
+	["M29"] = f(13000,"nDm"),
+	["M30"] = f(13000,"bnr"),
+	["M34"] = f(13000,"bdt"),
+	["M36"] = f(13000,"Dr"),
+	["M40"] = f(13000,"iz"),
+	["N1"] = f(13000,"pt"),
+	["N4"] = f(13000,"iAdt"),
+	["N4"] = f(13000,"idt"),
+	["N5"] = f(13000,"ra"),
+	["N5"] = f(13000,"zw"),
+	["N5"] = f(13000,"hrw"),
+	["N8"] = f(13000,"Hnmmt"),
+	["N9"] = f(13000,"pzD"),
+	["N11"] = f(13000,"Abd"),
+	["N11"] = f(13000,"iaH"),
+	["N14"] = f(13000,"sbA"),
+	["N14"] = f(13000,"dwA"),
+	["N15"] = f(13000,"dwAt"),
+	["N16"] = f(13000,"tA"),
+	["N18"] = f(13000,"iw"),
+	["N20"] = f(13000,"wDb"),
+	["N24"] = f(13000,"spAt"),
+	["N25"] = f(13000,"xAst"),
+	["N26"] = f(13000,"Dw"),
+	["N27"] = f(13000,"Axt"),
+	["N28"] = f(13000,"xa"),
+	["N29"] = f(13000,"q"),
+	["N30"] = f(13000,"iAt"),
+	["N35"] = f(13000,"n"),
+	["N35a"] = f(13000,"mw"),
+	["N37"] = f(13000,"S"),
+	["N40"] = f(13000,"Sm"),
+	["N41"] = f(13000,"id"),
+	["O1"] = f(13000,"pr"),
+	["O4"] = f(13000,"h"),
+	["O6"] = f(13000,"Hwt"),
+	["O11"] = f(13000,"aH"),
+	["O15"] = f(13000,"wsxt"),
+	["O18"] = f(13000,"kAr"),
+	["O22"] = f(13000,"zH"),
+	["O25"] = f(13000,"txn"),
+	["O28"] = f(13000,"iwn"),
+	["O29"] = f(13000,"aA"),
+	["O30"] = f(13000,"zxnt"),
+	["O34"] = f(13000,"z"),
+	["O35"] = f(13000,"zb"),
+	["O36"] = f(13000,"inb"),
+	["O42"] = f(13000,"Szp"),
+	["O45"] = f(13000,"ipt"),
+	["O47"] = f(13000,"nxn"),
+	["O49"] = f(13000,"niwt"),
+	["O50"] = f(13000,"zp"),
+	["O51"] = f(13000,"Snwt"),
+	["P4"] = f(13000,"wHa"),
+	["P5"] = f(13000,"nfw"),
+	["P5"] = f(13000,"TAw"),
+	["P6"] = f(13000,"aHa"),
+	["P8"] = f(13000,"xrw"),
+	["Q1"] = f(13000,"st"),
+	["Q2"] = f(13000,"wz"),
+	["Q3"] = f(13000,"p"),
+	["Q6"] = f(13000,"qrsw"),
+	["R1"] = f(13000,"xAwt"),
+	["R1"] = f(13000,"xAt"),
+	["R4"] = f(13000,"Htp"),
+	["R5"] = f(13000,"kAp"),
+	["R5"] = f(13000,"kp"),
+	["R7"] = f("130A0","snTr"),
+	["R8"] = f(13000,"nTr"),
+	["R9"] = f(13000,"bd"),
+	["R11"] = f(13000,"dd"),
+	["R11"] = f(13000,"Dd"),
+	["R14"] = f(13000,"imnt"),
+	["R15"] = f(13000,"iAb"),
+	["R16"] = f(13000,"wx"),
+	["R22"] = f(13000,"xm"),
+	["S1"] = f(13000,"HDt"),
+	["S3"] = f(13000,"dSrt"),
+	["S3"] = f(13000,"N"),
+	["S6"] = f(13000,"sxmty"),
+	["S7"] = f(13000,"xprS"),
+	["S8"] = f(13000,"Atf"),
+	["S9"] = f(13000,"Swty"),
+	["S10"] = f(13000,"mDH"),
+	["S11"] = f(13000,"wsx"),
+	["S12"] = f(13000,"nbw"),
+	["S15"] = f(13000,"tHn"),
+	["S15"] = f(13000,"THn"),
+	["S18"] = f(13000,"mnit"),
+	["S19"] = f(13000,"sDAw"),
+	["S20"] = f(13000,"xtm"),
+	["S22"] = f(13000,"sT"),
+	["S23"] = f(13000,"dmD"),
+	["S24"] = f(13000,"Tz"),
+	["S26"] = f(13000,"Sndyt"),
+	["S27"] = f(13000,"mnxt"),
+	["S29"] = f(13000,"s"),
+	["S30"] = f(13000,"sf"),
+	["S32"] = f(13000,"siA"),
+	["S33"] = f(13000,"Tb"),
+	["S34"] = f(13000,"anx"),
+	["S35"] = f(13000,"Swt"),
+	["S37"] = f(13000,"xw"),
+	["S38"] = f(13000,"HqA"),
+	["S39"] = f(13000,"awt"),
+	["S40"] = f(13000,"wAs"),
+	["S41"] = f(13000,"Dam"),
+	["S42"] = f(13000,"abA"),
+	["S42"] = f(13000,"xrp"),
+	["S42"] = f(13000,"sxm"),
+	["S43"] = f(13000,"md"),
+	["S44"] = f(13000,"Ams"),
+	["S45"] = f(13000,"nxxw"),
+	["T3"] = f(13000,"HD"),
+	["T6"] = f(13000,"HDD"),
+	["T9"] = f(13000,"pd"),
+	["T10"] = f(13000,"pD"),
+	["T11"] = f(13000,"zin"),
+	["T11"] = f(13000,"zwn"),
+	["T11"] = f(13000,"sXr"),
+	["T12"] = f(13000,"Ai"),
+	["T12"] = f(13000,"Ar"),
+	["T12"] = f(13000,"rwd"),
+	["T12"] = f(13000,"rwD"),
+	["T13"] = f(13000,"rs"),
+	["T14"] = f(13000,"qmA"),
+	["T17"] = f(13000,"wrrt"),
+	["T18"] = f(13000,"Sms"),
+	["T19"] = f(13000,"qs"),
+	["T22"] = f(13000,"sn"),
+	["T24"] = f(13000,"iH"),
+	["T25"] = f(13000,"DbA"),
+	["T28"] = f(13000,"Xr"),
+	["T29"] = f(13000,"nmt"),
+	["T31"] = f(13000,"sSm"),
+	["T34"] = f(13000,"nm"),
+	["U1"] = f(13000,"mA"),
+	["U6"] = f(13000,"mr"),
+	["U10"] = f(13000,"it"),
+	["U11"] = f(13000,"HqAt"),
+	["U13"] = f(13000,"hb"),
+	["U13"] = f(13000,"Sna"),
+	["U15"] = f(13000,"tm"),
+	["U16"] = f(13000,"biA"),
+	["U17"] = f(13000,"grg"),
+	["U21"] = f(13000,"stp"),
+	["U22"] = f(13000,"mnx"),
+	["U23"] = f(13000,"Ab"),
+	["U24"] = f(13000,"Hmt"),
+	["U26"] = f(13000,"wbA"),
+	["U28"] = f(13000,"DA"),
+	["U31"] = f(13000,"rtH"),
+	["U32"] = f(13000,"zmn"),
+	["U33"] = f(13000,"ti"),
+	["U34"] = f(13000,"xsf"),
+	["U36"] = f(13000,"Hm"),
+	["U38"] = f(13000,"mxAt"),
+	["V1"] = f(13000,"100"),
+	["V2"] = f(13000,"sTA"),
+	["V3"] = f(13000,"sTAw"),
+	["V4"] = f(13000,"wA"),
+	["V5"] = f(13000,"snT"),
+	["V6"] = f(13000,"Ss"),
+	["V7"] = f(13000,"Sn"),
+	["V12"] = f(13000,"arq"),	
+	["V13"] = f(13000,"T"),
+	["V15"] = f(13000,"iTi"),
+	["V19"] = f(13000,"mDt"),
+	["V19"] = f(13000,"XAr"),
+	["V19"] = f(13000,"TmA"),
+	["V20"] = f(13000,"10"),
+	["V20"] = f(13000,"mD"),
+	["V22"] = f(13000,"mH"),
+	["V24"] = f(13000,"wD"),
+	["V26"] = f(13000,"aD"),
+	["V28"] = f(13000,"H"),
+	["V29"] = f(13000,"wAH"),
+	["V29"] = f(13000,"sk"),
+	["V30"] = f(13000,"nb"),
+	["V31"] = f(13000,"k"),
+	["V32"] = f(13000,"msn"),
+	["V33"] = f(13000,"sSr"),
+	["V37"] = f(13000,"idr"),
+	["W2"] = f(13000,"bAs"),
+	["W3"] = f(13000,"Hb"),
+	["W9"] = f(13000,"Xnm"),
+	["W10"] = f(13000,"iab"),
+	["W11"] = f(13000,"nzt"),
+	["W11"] = f(13000,"g"),
+	["W14"] = f(13000,"Hz"),
+	["W17"] = f(13000,"xnt"),
+	["W19"] = f(13000,"mi"),
+	["W22"] = f(13000,"Hnqt"),
+	["W24"] = f(13000,"nw"),
+	["W25"] = f(13000,"ini"),
+	["X1"] = f(13000,"t"),
+	["X8"] = f(13000,"rdi"),
+	["X8"] = f(13000,"di"),
+	["Y1"] = f(13000,"mDAt"),
+	["Y3"] = f(13000,"mnhd"),
+	["Y3"] = f(13000,"zS"),
+	["Y5"] = f(13000,"mn"),
+	["Y6"] = f(13000,"ibA"),
+	["Y8"] = f(13000,"zSSt"),
+	["Z4"] = f(13000,"y"),
+	["Z7"] = f(13000,"W"),
+	["Z11"] = f(13000,"imi"),
+	["Aa1"] = f(13000,"x"),
+	["Aa5"] = f(13000,"Hp"),
+	["Aa8"] = f(13000,"qn"),
+	["Aa11"] = f(13000,"mAa"),
+	["Aa13"] = f(13000,"im"),
+	["Aa13"] = f(13000,"gs"),
+	["Aa13"] = f(13000,"M"),
+	["Aa17"] = f(13000,"sA"),
+	["Aa20"] = f(13000,"apr"),
+	["Aa21"] = f(13000,"wDa"),
+	["Aa27"] = f(13000,"nD"),
+	["Aa28"] = f(13000,"qd"),
+	["Aa30"] = f(13000,"Xkr")
+}
+
+local man = "A1-A2-A3-A4-A5-A5a-A6-A6a-A6b-A7-A8-A9-A10-A11-A12-A13-A14-A14a-A15-A16-A17-A17a-A18-A19-A20-A21-A22-A23-A24-A25-A26-A27-A28-A29-A30-A31-A32-A32a-A33-A34-A35-A36-A37-A38-A39-A40-A40a-A41-A42-A42a-A43-A43a-A44-A45-A45a-A46-A47-A49-A50-A51-A52-A53-A54-A55-A56-A57-A58-A59-A60-A61-A62-A63-A64-A65-A66-A67-A68-A69-A70!"
+
+local women = "B1-B2-B3-B4-B5-B5a-B6-B7-B8-C1-C2-C2a-C2b-C2c-C3-C4-C5-C6-C7-C8-C9-C10-C10a C11-C12-C13-C14-C15-C16 C17-C18-C19 C20-C21-C22  C23 - C24!"
+
+local humanbodyparts = "D1-D2-D3-D4 D5 D6 D7-D8-D9-D10-D11-D12-D13-D14-D15-D16-D17-D18-D19-D20-D21-D22-D23-D24-D25-D26-D27-D28-D29-D30-D31-D31a-D32-D33-D34-D35-D36-D37-D38-D39-D40-D41-D42-D43-D44-D45-D46-D47-D48-D49-D50-D50a-D50b-D50c-D50d-D50e-D50f-D50g-D50h-D50i-D51-D52-D53-D54-D55-D56-D57-D58-D59-D60-D61-D62-D63-D64-D65-D66-D67-D67a-D67b-D67c-D67d-D67e-D67f-D67g-D67h!"
+
+-- complete
+local mammals= "E1-E2-E3-E4-E5-E6-E7-E8-E8a-E9-E9a-E10-E11-E12-E13-E14-E15-E16-E16a-E17-E17a-E18-E19-E20-E20a-E22-E23-E24-E25-E26-E27-E28-E28a-E29-E30-E31-E32-E33-E34-E34a-E35-E36-E37-E38!"
+
+local fseries ="F1-F2-F3-F4-F5-F6-F7-F8-F9-F10-F11-F12-F13-F14-F15-F16-F17-F18-F19-F20-F21-F21a-F22-F23-F24-F25-F25-F26-F27-F28!"
+
+-- we clean the string from double spaces
+-- and all spaces changes to (-)
+
+
+function cleanstring (s)
+  s = string.gsub(s,"-", " ")
+  return string.gsub(s, "%s+", "-")
+--str = string.gsub(str, "[\\n]", " ")
+  
+end
+
+-- enable hyphenation of the input string
+-- 
+local function printstring (s)
+  --s = string.gsub(s,"-", " ")
+			  return string.gsub(s, "-", "\\hskip1sp-\\hskip1sp")
+end
+
+local function flushbuffer(a)
+   if a~=nil then tex.print(a) end
+   return ""
+end
+
+-- add the glyphs together
+-- 
+local function addtobuffer(str,bf)
+  
+   return bf..str
+end
+
+local function addtobottom(str)
+
+end
+
+local function placenext(str)
+
+end
+
+local function exclamationmark(str)
+   
+end
+
+
+
+--[[
+This is the main parser. 
+@str = string formatted as per MoC 
+@opt = 
+The parsing occurs in two modes. Under normal mode
+it parses strings and collects them in a buffer. If an
+end of symbol is found, it flushes the buffer.
+
+In the second mode it stacks the symbols.
+--]]
+
+function parse (str, opt) 
+  local options = opt or {style=nil,
+                    switch=nil,
+                    echo=true,
+                    strings=true,
+                    heading="Man"}
+  if options.echo == true then tex.print("{\\ttfamily "..printstring(str).." }") end
+  if options.heading == nil then options.heading="mm" end
+  if options.style=="block" then  
+     tex.print("\\par "..options.heading.."\\par ") 
+  end
+  local buff = ""
+  local bufftop = "" 
+  local buffbottom
+  str = cleanstring(str)
+  local counttop = 1
+  local countbottom = 1
+  local stackon = false
+  local staron = false
+
+-- parsing loop
+  for i = 1, #str do
+    local c = string.sub(str,i,i) 
+    if c=="-" then 
+       if type(t[buff].theglyph~=nil) then
+         tex.print(t[buff].fullblock)
+       end
+       buff =""
+     elseif c== "!" then
+       tex.print(t[buff].fullblock,"\\par")
+     elseif c=="*" then -- just signs next to each other
+       staron = true
+       -- if star is completed in means previous symbol
+       -- is completed stack next to each other
+     elseif c==":" then
+         stackon = true
+         c="-" --ignore for the time being flush buffer
+		   --buff = flushbuffer(t[buff].fullblock)
+     else 
+       if type(t[buff]~=nil) then
+            buff = addtobuffer(c,buff)
+       else
+            buff = buff..c
+       end
+  end
+    -- end of line
+  end
+
+-- tex.print(t["A2"].code,t["A2"].description)
+-- tex.print(t["A2"].unicode)
+
+end
+
+-- 
+local options = {style="block",
+                 echo=true,
+                 heading="Man and his occupations",
+                 direction="LR"}
+parse (man, options)            -- man and his occupation
+parse (women, options)          -- woman and her occupation
+parse (humanbodyparts, options) -- human body parts
+
+options.heading="Mammals"
+parse (mammals, options)        -- mammals
+parse ("D42-D43-D43-D41!", options)
+
+options.heading="Parts of Mammals"
+parse (fseries,options)
+\end{luacode*}
+
+\def\hieroprint#1{{\large\luadirect{parse(#1)}}}
+
+The hieroglyph \hieroprint{"F2-F3!"} with the head of a bull is a determinative denoting anger. This {{\color{blue}\hiero \char"13100}}
+
+\begin{luacode*}
+local f = fontloader.open
+("c:/windows/fonts/NotoSansEgyptianHieroglyphs-Regular.ttf")
+fonttable = fontloader.to_table(f)
+
+fontloader.close(f)
+
+
+tex.print(fonttable.design_size*6553.6)
+
+tex.print(fonttable)
+local size=1
+size = size * tex.sp("10pt") / -1000
+tex.print(size)
+
+tf=fontloader.info("c:/windows/fonts/NotoSansEgyptianHieroglyphs-Regular.ttf")
+tex.print(tf.fontname,
+          tf.fullname,
+          tf.familyname,
+          tf.weight,
+          tf.version,
+          tf.italicangle
+         )
+
+function toHex(num)
+  local  num  = string.format("%x", num)
+         num  = string.upper(num)
+  return num
+end
+
+function prettyprint ()
+    tex.print("\\footnotesize")
+    f=fontloader.open("c:/windows/fonts/JSeshFont.ttf")
+    tex.print (f.fontname.."\\par")
+    local i = 3
+    local glyphname
+	while (i <f.glyphmax ) do -- use f.glyphmax 
+		local g = f.glyphs[i]
+		local uhex
+		if g then
+      		glyphname = string.sub(g.unicode,2) 
+ 	   		uhex = toHex(g.unicode)
+ 			tex.print(""..glyphname.."=U+"..toHex(g.unicode)..", ")
+ 			printglyphRL("aegyptus", uhex) -- texprints the glyph
+		end
+  		i = i + 1
+	end
+	fontloader.close(f)
+end
+
+prettyprint()
+
+local n = font.max()
+
+tex.print("highest font number",n)
+
+number, metrics=font.each()
+--for key,value in pairs(metrics) do tex.print(key,value) end
+
+tex.print(metrics)
+metrics = font.getfont(21)
+map = fonttable.map.map
+local glyph = fonttable.glyphs[map[78200]]
+
+tex.print("Glyph width",glyph.width)
+tex.print("Glyph name",glyph.name,"\\par")
+tex.print("Glyph unicode",glyph.unicode,"\\par")
+tex.print("Glyph boundingbox[1]",glyph.boundingbox[1],"\\par")
+tex.print("Glyph boundingbox[2]",glyph.boundingbox[2],"\\par")
+tex.print("Glyph boundingbox[3]",glyph.boundingbox[3],"\\par")
+tex.print("Glyph boundingbox[4]",glyph.boundingbox[4],"\\par")
+--tex.print("Glyph boundingbox[5]",glyph.boundingbox[5],"\\par")
+--tex.print("Glyph boundingbox[6]",glyph.boundingbox[6],"\\par")
+tex.print(font.current())
+
+local g = node.new("glyph")
+g.font = font.current()
+g.lang = tex.language
+g.char = 7824 -- U+13410
+
+local hbox = node.hpack(g)
+local vbox = node.vpack(hbox)
+
+node.write(vbox)
+\end{luacode*}
+\arial
+
+\aegyptus
+\par
+\begin{luacode*}
+local g = node.new("glyph")
+
+g.lang = tex.language
+g.char = 80 -- U+13410
+
+local hbox = node.hpack(g)
+local vbox = node.vpack(hbox)
+
+node.write(vbox)
+\end{luacode*}
+
+\aegyptus
+
+\char8890
+\end{document}
+% We provide some author commands to assist
+% with typesetting a hieroglyphics string 
+
+
+% Use as |\hieroprint{"D50-D50a-D50b-D50i!"}| to
+% print \hieroprint{"D50-D50a-D50b-D50i!"}
+
+% The string must be quoted, otherwise Lua will be
+% looking for a string variable. Some variables are build
+% for example \hieroprint{women} will print Gardiner's list
+% of `women and their occupations.'
+
+\resizebox{!}{2cm}{\hiero\char"13000}\\
+\resizebox{.6cm}{!}{\hiero\char"13000}\resizebox{.6cm}{!}{\hiero\char"13000}\resizebox{.6cm}{!}{\hiero\char"13000}
+
+\cxset{geometry units=mm}
+\drawfontbox{\resizebox{!}{2cm}{\hiero\char"130B3}}
+\drawfontbox{\resizebox{!}{1cm}{\hbox{\hiero\char"13000\char"13000}}}
+
+
+\drawfontbox{\resizebox{51.05pt}{!}{\hiero\char"13000\char"1306D\char"13000}}
+
+
+This is using \verb+\shortunderstack+
+
+abcde f \Shortunderstack[c]{{\hiero\char"13000} {\hiero\char"13001} {\hiero\char"13002\char"13006}} gyu\par
+
+abcde f \Shortstack[c]{{\hiero\char"13000} {\hiero\char"13001} {\hiero\char"13070\char"1308A\char"1308B}} gyu\par
+
+This is \resizebox{2.5em}{!}{\fbox{\Huge\hsize=1em\vbox{%
+\hiero\char"1308F\par
+\char"130BB
+}}}
+\resizebox{2.5em}{!}{\fbox{\Huge\hsize=1em\vbox{%
+\hiero\char"1309F\par
+\char"130BB
+}}}
+
+\Huge
+$$\stackrel{\mbox{\hiero\char"1309F}}{\mbox{\hiero\char"130BB}}    $$
+
+$$\mbox{\fontsize{3em}{1em}\selectfont\hiero \char"13005}\overset{\mbox{\hiero\char"13000\char"13000}}{\overset{\scalebox{-1}[1]{\hiero\char"1309F}}{\scalebox{-1}[1]{\hiero\char"13000}}}$$
+
+$$\mbox{\fontsize{3em}{1em}\selectfont\hiero \char"13005}\overset{\mbox{\hiero\char"13000\char"13000}}{\overset{\scalebox{-1}[1]{\hiero\char"1309F}}{\scalebox{-1}[1]{\hiero\char"13000}}}$$
+
+$$\mbox{\fontsize{3em}{1em}\selectfont\hiero \char"13005}\overset{\mbox{\hiero\char"13000\char"13000}}{\overset{\scalebox{-1}[1]{\hiero\char"1309F}}{\mbox{}}}$$
+
+\normalsize
+
+\arial
+\begin{luacode*}
+local g = node.new("glyph")
+g.font = font.current()
+g.lang = tex.language
+g.char = 7824 -- U+13410
+
+local hbox = node.hpack(g)
+local vbox = node.vpack(hbox)
+
+node.write(vbox)
+\end{luacode*}
+\end{document}
+
+
+{\Huge
+$$\text{\hiero\char"13000}\frac{\text{\hiero \char"13000\char"13001}}{\text{\hiero \char"130FE\char"130FF}}$$
+}
+
+
+$\stackrel{\hbox to 3em{\hiero\hfill\char"13001\hfill}}{\hbox to 3em{\hiero \hfill\char"130FE\char"130FF\hfill}}$
+
+\begin{lstlisting}[language={[5.2]Lua},
+basicstyle=\ttfamily\footnotesize,
+keywordstyle=\bfseries\color{blue},
+ stringstyle=\color{orange},
+ commentstyle=\color{green},
+]
+-- test
+local words = io.open('hyphens-' .. tex.jobname .. '.txt', 'w');
+local outchar = unicode.utf8.char
+local function dumphyphens (head)
+   local data = {}
+   for v in node.traverse(head) do
+       if v.id == node.id('glyph') then
+         data[#data+1] = outchar(v.char);
+       elseif v.id == node.id('disc') then
+          data[#data+1] = '-'
+       elseif v.id == node.id('glue') then
+         data[#data+1] = outchar(32)
+       elseif v.id == node.id('hlist') then
+         data[#data+1] = dumphyphens(v.list)
+       end
+   end
+   return table.concat(data)
+end
+callback.register ('hyphenate', function (head,tail)
+   lang.hyphenate(head, tail) 
+   words:write (dumphyphens(head) .. outchar(10))
+   end)
+\end{lstlisting}
+
+
+
+
+\end{document}
+\Large
+\scalebox{-2}[2]{\hiero\char"13000\char"13011\char"13020}
+
+\scalebox{2}[2]{\hiero\char"13000\char"13011\char"13020}
+\end{document}
+
+removing a specific number of lines
+
+\begin{luacode*}
+function remove( filename, starting_line, num_lines )
+    local fp = io.open( filename, "r" )
+    if fp == nil then return nil end
+ 
+    content = {}
+    i = 1;
+    for line in fp:lines() do
+        if i < starting_line or i >= starting_line + num_lines then
+	    content[#content+1] = line
+	end
+	i = i + 1
+    end
+ 
+    if i > starting_line and i < starting_line + num_lines then
+	print( "Warning: Tried to remove lines after EOF." )
+    end
+ 
+    fp:close()
+    fp = io.open( filename, "w+" )
+ 
+    for i = 1, #content do
+	 fp:write( string.format( "%s\n", content[i] ) )
+    end
+ 
+    fp:close()
+end
+remove("input.txt",3,2)
+
+filename = "./languages/hieroglyphics.txt"
+fp = io.open( filename, "r" )
+for line in fp:lines() do
+    tex.print(line.."\\par")
+end
+fp:close()
+
+--If the file opens with no problems, io.open will return a
+--handle to the file with methods attached.
+--If the file does not exist, io.open will return nil and
+--an error message.
+--assert will return the handle to the file if present, or
+--it will throw an error with the message returned second
+--by io.open.
+local file = assert(io.open(filename))
+--Without wrapping io.open in an assert, local file would be nil,
+--which would cause an 'attempt to index a nil value' error when
+--calling file:read.
+ 
+--file:read takes the number of bytes to read, or a string for
+--special cases, such as "*a" to read the entire file.
+local contents = file:read'*a'
+ 
+--If the file handle was local to the expression
+--(ie. "assert(io.open(filename)):read'a'"),
+--the file would remain open until its handle was
+--garbage collected.
+tex.sprint(contents)
+file:close()
+\end{luacode*}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\end{document}

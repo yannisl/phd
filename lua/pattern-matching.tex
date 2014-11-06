@@ -1,0 +1,81 @@
+\chapter{Pattern Matching}
+
+The |string| library of Lua, offers a number of pattern matching functions. Unlike many other languages it does not offer a full regular expression library. One can take this at first to be a disantvantage, but the reasons are explained in \textit{Programming in Lua} by Roberto Ierusalimschy, clearly:
+
+\begin{quote}
+Unlike several other scripting languages, Lua uses neither \texttt{POSIX} regex nor
+Perl regular expressions for pattern matching. The main reason for this decision
+is size: a typical implementation of \texttt{POSIX} regular expressions takes more than
+4000 lines of code. This is about the size of all Lua standard libraries together.
+In comparison, the implementation of pattern matching in Lua has less than
+600 lines. Of course, pattern matching in Lua cannot do all that a full POSIX
+implementation does. Nevertheless, pattern matching in Lua is a powerful tool,
+and includes some features that are difficult to match with standard POSIX
+implementations.
+\end{quote}
+
+\CMDI{string.find()}
+searches for a pattern inside a given subject string. The simplest form of a \textit{pattern} is a word, which matches only a copy of itself.
+
+For instance, the pattern ‘Lua’ will search for the substring “Lua” inside the
+subject string. When |find| finds its pattern, it returns two values: the \textit{index} where the match begins and the index where the match ends. If it does not find a match, it returns |nil|. Example~\ref{ex:patterns1} demonstrates the |find| function. We use the |luacode| environment to avoid dealing with catcodes and we format the results in maths mode.
+
+\begin{texexample}{Pattern Matching with find}{ex:patterns1}
+\begin{luacode*}
+s = "hello Lua world"
+i, j = string.find(s,"Lua")
+tex.print("indices $i="..i..",".."j="..j.."$")
+\end{luacode*}
+\end{texexample}
+
+\CMDI{string.sub}
+When a match succeeds, we can call string.sub with the values returned by
+string.find to get the part of the subject string that matched the pattern. For
+simple patterns, this is the pattern itself.
+The string.find function has an optional third parameter: an index that
+tells where in the subject string to start the search. This parameter is useful
+when we want to process all the indices where a given pattern appears: we
+search for a new match repeatedly, each time starting after the position where
+we found the previous one. As an example, the following code makes a table
+with the positions of all newlines in a string:
+
+We will see later a simpler way to write such loops, using the string.gmatch
+iterator.
+
+\begin{texexample}{Iterating over all matches}{}
+\edef\tempstring{\string\\par..is this is a is test \string\\par and is this another?}
+\begin{luacode}
+local s = "\tempstring".."This is is a string and this is another"
+local t = {}
+local i= 0
+while true do
+    i = string.find(s, "\\par", i+1)
+    if i == nil then break end
+    t[#t + 1] = i
+    tex.print(i)
+end
+   
+\end{luacode}
+\end{texexample}
+
+\section{Patterns}
+
+Patterns can be more useful with \textit{character classes}. 
+
+\begin{longtable}{>{\color{blue}}ll}
+. & all characters\\
+\%a & letters\\
+\%c &control characters\\
+\%d &digits\\ 
+\%g &printable characters except spaces\\
+\%l &lower-case letters\\
+\%p &punctuation characters\\
+\%s &space characters\\
+\%u  &upper-case letters\\
+\%w  &alphanumeric characters\\
+\%x  &hexadecimal digits\\
+\end{longtable}
+
+
+
+

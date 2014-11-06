@@ -1,4 +1,3 @@
-\MakePercentComment
 \chapter{LuaTeX}
 
 \section{What is LuaTeX}
@@ -26,9 +25,40 @@ and when this paper was written on \today, the release used was version \the\lua
 
 The choice of TeX engine should in a way be immaterial to you, if you are just thinking about typesetting normal books.
 
+\section{Embedding Lua in a TeX document}
+
+\begin{macro}{\directlua}
+Although it is recommended to put Lua code in Lua files, from time to time one may want or need to go Lua in the middle of a document. To this end, LuaTeX has two commands: \cmd{\directlua} and \cmd{\latelua}. They work the same, except \cmd{\latelua} is processed when the page where it appears is shipped out, whereas \cmd{\directlua} is processed at once; the distinction is immaterial here, and what is said of \cmd{\directlua} also applies to \cmd{\latelua}.
+\end{macro}
+
+\section{From Lua to TeX}
+
+Inside Lua code, one can pass strings to be processed by TeX with the functions |tex.print()|, |tex.sprint()| and |tex.tprint()|. All such calls are processed at the end of a \cmd{\directlua} call, even though they might happen in the middle of the code. This behavior is worth noting because it might be surprising in some cases, although it is generally harmless.
+
+The function can also can also take an optional number as its first argument; it is interpreted as referring to a catcode table (as defined by \cmd{\initcatcodetable} and \cmd{\savecatcodetable}), and each line is processed by TeX with that catcode regime. For instance (note that with such a minimal catcode table, braces don't even have their usual values):
+
+\begin{texexample}{catcodes}{}
+\directlua {tex.enableprimitives('',tex.extraprimitives()) }
+\bgroup
+\initcatcodetable1
+\catcode`\_=0
+\savecatcodetable1
+\egroup
+\directlua{tex.print(1, "_TeX")}
+\luadirect{tex.print(1, "_TeX")}
+\end{texexample}
+
+The string will be read with |_| as an escape character, and thus interpreted as the command commonly known as |\TeX|. The catcode regime holds only for the strings passed to |tex.print()| and the rest of the document isn't affected.
+
+If the optional number is -1, or points to an invalid (i.e. undefined) catcode table, then the strings are processed with the current catcodes, as if there was no optional argument. If it is -2, then the strings are read as if the result of \cmd{\detokenize}: all characters have catcode 12 (i.e. `other', characters that have no function beside representing themselves), except space, which has catcode 10 (as usual).
+
+\begin{scriptexample}[]{}
+Note the |\directlua {tex.enableprimitives('',tex.extraprimitives()) }|, without this directive the extra primitives are not loaded, and the example will produce errors. this is rather hidden in the documention in version \the\luatexversion running under \formatname
+\end{scriptexample}
+
 \section{Checking for LuaTeX}
 
-The first thing you will need to program, when developing a \LuaTeX\ package, is to check that the engine is in fact using \LuaTex. This can be done using the \cmd{\ifluatex} from the package \pkgname{ifluatex}. 
+The first thing you will need to program, when developing a \luatex\ package, is to check that the engine is in fact using \luatex. This can be done using the \cs{ifluatex} from the package \pkgname{ifluatex}. 
 
 \begin{texexample}{Checking for Lua}{}
 \ifxetex
@@ -91,8 +121,81 @@ end
 \caption{The partial sum $\sum_{k=1}^{30} \frac{\sin(kx)}{k}$ of the Fourier series  of $f(x)=(\pi-x)/2$ illustrating the Gibbs phenomenon.}\label{fig:Gibbs}
 \end{figure}
 
-
-\end{document}
+\begin{figure}[htp]
+\begin{scriptexample}[]{}
+\begin{luacode*}
+-- Fourier series
+function partial_sum(n,x)
+    partial = 0;
+    for k = 1, n, 1 do 
+        partial = partial + math.sin(k*x)/k 
+    end;
+    return partial
+end
+-- Code to write PGFplots data as coordinates
+function print_partial_sum(n,xMin,xMax,npoints,option)
+    local delta = (xMax-xMin)/(npoints-1)
+    local x = xMin
+    if option~=[[]] then
+        tex.sprint("\\addplot["..option.."] coordinates{")
+    else
+        tex.sprint("\\addplot coordinates{")
+    end
+    for i=1, npoints do
+        y = partial_sum(n,x)
+        tex.sprint("("..x..","..y..")")
+        x = x+delta
+    end
+    tex.sprint("}") -- We can write "};" and then it is not necessary to put ";" when used
+end
+\end{luacode*}
+\newcommand\addLUADEDplot[5][]{\directlua{print_partial_sum(#2,#3,#4,#5,[[#1]])}}
+\centering
+\pgfplotsset{width=15cm, height=7cm}  
+\begin{tikzpicture}\small
+\begin{axis}[xmin=-0.2, xmax=31.6, ymin=-1.85, ymax=1.85, 
+  xtick={0,5,10,15,20,25,30},
+  ytick={-1.5,-1.0,-0.5,0.5,1.0,1.5},
+  minor x tick num=4,
+  minor y tick num=4,
+  axis lines=middle,
+  axis line style={-}
+  ] 
+%%\addplot[color=red] {pi/2-x/2};
+% SYNTAX: Partial sum 30, from x = 0 to 10*pi, and sampled in 1000 points
+\addLUADEDplot[color=blue,smooth]{30}{0}{10*math.pi}{1000};
+\end{axis} 
+\end{tikzpicture}
+\begin{verbatim}
+\begin{luacode*}
+-- Fourier series
+function partial_sum(n,x)
+    partial = 0;
+    for k = 1, n, 1 do 
+        partial = partial + math.sin(k*x)/k 
+    end;
+    return partial
+end
+-- Code to write PGFplots data as coordinates
+function print_partial_sum(n,xMin,xMax,npoints,option)
+    local delta = (xMax-xMin)/(npoints-1)
+    local x = xMin
+    if option~=[[]] then
+        tex.sprint("\\addplot["..option.."] coordinates{")
+    else
+        tex.sprint("\\addplot coordinates{")
+    end
+    for i=1, npoints do
+        y = partial_sum(n,x)
+        tex.sprint("("..x..","..y..")")
+        x = x+delta
+    end
+    tex.sprint("}") -- We can write "};" and then it is not necessary to put ";" when used
+end
+\end{luacode*}
+\end{verbatim}
+\end{scriptexample}
+\end{figure}
 
 \section{Getting started}
 
@@ -315,14 +418,37 @@ for N = 1, 10 do
 
 \chapter{Functions}
 
-\begin{tcblisting}{}
+\cxset{epigraph width=0.6\textwidth,
+       epigraph text align=left}
+\epigraph{“A computer is like a violin. You can imagine a novice trying ﬁrst a phonograph and then a violin. The latter, he says, sounds terrible. That is the argument we have heard from our humanists and most of our computer scientists. Computer programs are good, they say, for particular purposes, but they aren’t ﬂexible. Neither is a violin, or a typewriter, until you learn how to use it.” }{Marvin Minsky}
+
+\section{What are functions}
+
+The main mechanism for abstraction of statements and expressions in Lua are \textit{functions}. Function carry out specific tasks. In other languages sometimes they are called a \textit{procedure} or a \textit{subroutine}. Functions are first class citizens in Lua. They can be used both as statements or as expressions.
+
+\begin{texexample}{Functions used in expressions}{ex:expressions}
+\begin{luacode}
+a = math.sin(2) + math.cos(10)
+tex.print(a)
+\end{luacode}
+\end{texexample}
+
+The arguments are enclosed in parenthese denoting a call. If the function does not have any arguments, we must still call it with an empty list () to denote the call.
+
+\section{Multiple Results}
+
+An unconventional, feature of Lua is that functions can return multiple results. Many predefined functions in Lua return multiple values. 
+
+Example \ref{ex:functions} has two parameters and returns the average of these numbers.
+
+\begin{texexample}{Functions}{ex:functions}
 \exec{
 function Average(Num1, Num2)
- return (Num1 + Num2) / 2
- end
- tex.print(Average(10,12))
+    return (Num1 + Num2) / 2
+end
+tex.print(Average(10,12))
 }
-\end{tcblisting}
+\end{texexample}
 
 Here is one that prints the Ackerman function. This is an interesting function as the value grows very quickly and can cause a stack overflow. It can also slow compilation quite a bit for higher values. ack(4,1) will cause a stack overflow. Whereas ack(3,11) compiles giving a value of 16381 ack(3,12) causes a stack overflow.  
 
@@ -589,7 +715,7 @@ If you need to create new environment you will have to use the \lstinline!\luaco
         end
     end
   end
-  local z="C:/test"
+  local z="C:/test/1.txt"
   attrdir (z)
 \end{luacode}
 \end{tcblisting}
@@ -608,8 +734,8 @@ everything is and if the various paths are correct. The snippet below does just 
 \begin{luacode}
   -- kpse.set_program_name("lualatex")
   -- uncomment if having problems
-  local file = "atest.tex"
-  local path = kpse.find_file(file, 'tex')
+  local file = "phd.dtx"
+  local path = kpse.find_file(file, 'dtx')
     if path==nil then
      tex.tprint({"\\color{red}"},{"File not found!"})
    else
@@ -653,8 +779,7 @@ Getting a uuid or a slight variant of it we use \lstinline!os.uuid()!
 
 \section{Reading from a file}
 
-
-\usepackage{luatextra}
+|\usepackage{luatextra}|
 
 
 \begin{filecontents}{testdata.dat}
@@ -677,7 +802,7 @@ Getting a uuid or a slight variant of it we use \lstinline!os.uuid()!
 \directlua{readtxt()}
 \end{texexample}
 
-\MakePercentIgnore
+
 
 
 
