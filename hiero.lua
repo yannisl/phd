@@ -3,11 +3,11 @@
 -- hieroglyphics
 
  local hiero 				= hiero or {}
- local inlinemath 		   = "$"
+ local inlinemath 		    = "$"
 
 
 
-function hiero.getglyph(cmd, codepoint)
+local function getglyph(cmd, codepoint)
   local texstring = "\\Large\\"..cmd.." \\char".."\""..codepoint
   return texstring
 end
@@ -87,10 +87,10 @@ local function f(codepoint, gardiner, mnemonic,
    local stackrel = stackrelf(hook.."\\char\""..codepoint.." ","\\footnotesize 0x"..codepoint)
    stackrel = stackrelf(stackrel,"\\footnotesize"..tonumber(codepoint, 16))
    stackrel = stackrelf(stackrel,"\\footnotesize \\arial ".. gardiner)
-stackrel = stackrelf(stackrel,"\\footnotesize \\arial ".. mnemonic)
+   stackrel = stackrelf(stackrel,"\\footnotesize \\arial ".. mnemonic)
   
-  theglyph = "\\scalebox{-1}[1]{\\hiero\\char\""..codepoint.."\\hskip0pt }"
-  glyphslot = codepoint
+   theglyph = "\\scalebox{-1}[1]{\\hiero\\char\""..codepoint.."\\hskip0pt }"
+   glyphslot = codepoint
 
 
 return {  fullblock     = "\\scalebox{1}[1]{"..stackrel.."}", 
@@ -1560,6 +1560,8 @@ end
 local printgardiner = function (t,options) 
    local ts = {} -- table to hold the cat keys
    local tmp = {}
+   local hcmd = ""
+   local str = ''
    for k,v in pairs (cat) do
       table.insert(ts,k)
    end
@@ -1567,7 +1569,10 @@ local printgardiner = function (t,options)
 
    for k,v in pairs (ts) do
       tmp = cat[ts[k]]
-      if tmp.heading then tex.print("{\\bigskip\\section{"..tmp.heading.."}}\\par") end
+      if (options.headings and tmp.heading) then
+          hcmd = "\\"..options.headings --TODO improve on interface 
+          tex.print(hcmd.." {"..tmp.heading.."}")
+      end 
       if tmp.label then tex.print("\\label{"..tmp.label.."}") end
       tex.print("\\par\\noindent",parseMdC(tmp[1],options))
    end
@@ -1582,5 +1587,5 @@ end
 return {printhierochar = printhierochar,
         printgardiner  = printgardiner,
         printgardinercat   = printgardinercat,
-        parseMdC = parseMdC}, parseMdC
+        parseMdC = parseMdC}
 

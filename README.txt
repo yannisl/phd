@@ -9,6 +9,4 @@ This file provides a phd for defining a class.
 
 
 
-     \RequirePackage{mdframed}
-
 

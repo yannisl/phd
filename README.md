@@ -55,6 +55,4 @@ __The package as it stands is not production stable.__
 
 
 
-     \RequirePackage{mdframed}
-
 

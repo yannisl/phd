@@ -178,7 +178,7 @@ In some dialects of the MdC relative positioning has been extended by the use of
 }
 \end{center}
 
-This is only a partial solution and to automate it via kerning tables, will require hundreds of tables. It will also need constant modifications as researchers discover new combinations. A better approach and which is easily applied to \tex based systems would be to adopt Nederhof's method of creating a new command |insert[bs](I10,X1)|. 
+This is only a partial solution and to automate it via kerning tables, will require hundreds of entries in the kerning tables. It will also need constant modifications as researchers discover new combinations. A better approach and which is easily applied to \tex based systems would be to adopt Nederhof's method of creating a new command |insert[bs](I10,X1)|. 
 
 In \tex one could simply define a command \cmd{\insert} with one optional argument to handle the positioning. The positioning uses the letters [b,t,s,e] to position the glyph. the letters s and e stand for start and end, whereas b,t for bottom and top respectively. When there are only two symbols involved, this is not such a difficult operation, but when three or more symbols are to be grouped and kerned together, inserting with some form of scaling is necessary.
 
@@ -247,6 +247,111 @@ There is some overlap between these two systems.
 If you writing a document with a lot of hieroglyphics inputting of hieroglyphics can be problematic. Most researchers in the field will use special keyboards or editors. They also use MS/Word or OpenOffice. They can both be coerced to produce reasonable documents, but with \tex obviously better results can be achieved. One such editor is \href{http://jsesh.qenherkhopeshef.org/}{jsesh}. 
 
 
+\begin{luacode*}
+    local h = {}
+          h = dofile("hiero.lua")
+    local options = {style="block",
+                     echo=true,
+                     direction="RL",
+                     size = "\\Huge",
+                     color = "green",
+                     headings = "captionof{figure}"  -- section/tablecaption/figurecaption
+                     }
+   -- prints full symbol list
+   h.printgardiner(t,options)
+
+   tex.print("\\par")
+   local options = {style="block",
+                     echo=true,
+                     heading="\\par",
+                     direction="RL",
+                     color = "teal",
+                     scale = 8}
+
+   h.printhierochar("hiero","1317D",options)
+   h.printhierochar("hiero","13000",{direction="RL",
+                                        color = "teal",
+                                        scale = 8})
+   h.printhierochar("hiero","13003",{direction="LR",
+                                        color = "teal",
+                                        scale = 1})
+   h.parseMdC([[M23-X1-R4-X8-Q2-D4-W17-R14-G4-R8-O29-
+               V30-U23-N26-D58-O49-Z1-F13-N31-V30-N16-
+               N21-Z1-D45-N25!]])
+
+   tex.print("\\par")
+   h.printgardinercat("B")
+
+\end{luacode*}
+
+\newcommand\hierochar[2][direction = "LR",
+                         color     = "teal",
+                         scale     = 1]{% 
+               \luaexec{
+                h = h or {}
+                h = require("hiero.lua")  
+                h.parseMdC(#2,{#1})}}
+               
+\newcommand\printhierochar[3][direction = "LR",
+                              color     = "teal",
+                              scale     = 4]{% 
+               \luaexec{
+                h = h or {}
+                h = require("hiero.lua")  
+                h.printhierochar(#2,#3,{#1})}}
+
+This file just tests the various commands available for manipulating hieroglyphics. We tried to 
+generalize the commands, so they can be re-used for other type of hieroglyphics.
+
+\hierochar{"A1-A2-A3!"}
+
+\centering 
+
+\def\options{direction = "LR",
+             color     = "teal",
+             scale     = 7}
+
+\def\fontname{"hiero"}
+
+\def\hierochar#1{\printhierochar[\options]{\fontname}{#1}}
+
+
+
+\begin{scriptexample}[]{Some Example}
+Sometimes kerning might be required, especially if the
+glyphs are scaled.This is easily achieved with a \cmd{\kern}
+command and a suitable skip dimension.
+\medskip
+
+\fboxsep=0pt\fboxsep.4pt
+\def\options{direction = "RL",
+             color     = "black!95",
+             scale     = 5}
+\centering
+\color{teal}
+\fbox{\hierochar{"13051"}}
+\kern-4mm
+\hierochar{"13003"}
+\def\options{direction = "LR",
+             color     = "black!95",
+             scale     = 5}
+\fbox{\hierochar{"13003"}}\color{red}
+\kern-4mm
+\hierochar{"13051"}
+\color{black!95}
+\begin{verbatim}
+\centering
+\hierochar{"13051"}
+\kern-4mm
+\hierochar{"13003"}
+\def\options{direction = "RL",
+             color     = "black!95",
+             scale     = 5}
+\hierochar{"13003"}
+\kern-4mm
+\hierochar{"13051"}
+\end{verbatim}
+\end{scriptexample}
 
 
 
