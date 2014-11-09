@@ -1,0 +1,115 @@
+\newfontfamily\hiero{NotoSansEgyptianHieroglyphs-Regular.ttf}
+
+\chapter{Lua Modules}
+
+\section{The require Function}
+
+In Lua the require function treats a module as any code that defines some values, such as table or functions. 
+
+To load  a module, we simply call require"modulename". The first step of the require function is to check in table package.loaded whether the module is already loaded.
+
+If the module is not loaded Lua will then search for a file name with the module name. If it finds it, it loads it with |loadfile|. 
+
+
+\begin{texexample}{Findind a module}{ex:modulesearch}
+\begin{luacode*}
+s = string.gsub(package.cpath,"\\", "\\textbackslash ")
+s = string.gsub(s,";", ";\\par ")
+
+tex.print(s)
+\end{luacode*}
+\end{texexample}
+
+In the example we use the |string.gsub| to replace windows \textbackslash to a harmless version, so we do not need to worry about catcodes, a quick and dirty solution. 
+
+\section{Writing Modules in Lua}
+
+The simplest way to create a module in Lua is really very simple: create a table and put all functions you want to export inside it, and return this table.
+
+\begin{texexample}{Writing a Module}{ex:wmodule}
+\begin{filecontents*}{chicken.lua}
+local M = {}
+
+function M.chicken ()
+  return "chicken"
+end
+
+function M.chickens ()
+  return "many chickens" 
+end
+
+function M.ancient_chickens ()
+  return "\\bgroup\\hiero\\char\"13171 \\egroup"
+end
+
+return M
+\end{filecontents*}
+
+\begin{luacode*}
+local c = require "chicken"
+      tex.print(c.chicken(), c.chickens(), c.ancient_chickens())
+\end{luacode*}
+\end{texexample}
+
+A second and in my opinion much better way is to return the list of functions you want to export. This way\footnote{This is very similar to Javascript modules.} your code will be much more cleaner and easier to maintain. We rewrite our module |chicken|  to |chickens|
+
+\begin{texexample}{Writing a Module}{ex:wmodule}
+\begin{filecontents*}{chickens.lua}
+local M = {}
+
+function M.chicken ()
+  return "chicken"
+end
+
+function M.chickens ()
+  return "many chickens" 
+end
+
+function M.ancient_chickens ()
+  return "\\bgroup\\hiero\\HUGE\\char\"13171 \\egroup"
+end
+
+return {chicken           = chicken,
+        chickens          = chickens,
+        ancient_chickens  = ancient_chickens}
+\end{filecontents*}
+
+\begin{luacode*}
+   local c = require "chicken"
+   tex.print(c.chicken(), c.chickens(),"\\par","ancient chickens", "{\\Huge" .. c.ancient_chickens() .. "}")
+\end{luacode*}
+\end{texexample}
+
+
+
+The Lua Manual also describes a way of eliminating the return statement, by assigning it directly into |package.loaded|:
+
+\begin{verbatim}
+local M = {}
+package.loaded[...] = M
+\end{verbatim}
+
+writing the final return always results in clearer code and is preferable.
+
+\section{Using Environments}
+
+One drawback of those basic methods for creating modules is that it is all too easy to pollute the global name space, for instance by forgetting a local in a private declaration.
+
+\section{Submodules and Packages}
+Lua allows module names to be hierarchical, using a dot to separate name levels. For instance, a module named |mod.sub| is a \textit{submodule} of |mod|. A \textit{package} is a complete tree of modules; it is the unit of distribution in Lua. 
+
+From the point of view of Lua, submodules in the same package have no explicit relationship. requiring a module a does not automatically load any of its submodules; similarly, requiring |a.b| does not automatically load |a|. Of course, the package author can create these links as she wants. For example, a particular module may start by explicitly requiring one or all of its submodules.
+
+ 
+
+
+
+
+
+
+
+
+
+
+
+ 

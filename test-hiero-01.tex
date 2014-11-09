@@ -1,6 +1,6 @@
 \documentclass{article}
 \usepackage{fontspec}
-\usepackage{amsmath,stackengine,luacode,xcolor,listings,
+\usepackage{underscore,amsmath,stackengine,luacode,xcolor,listings,
             filecontents,lipsum,graphicx,listings,caption}
 \begin{document}
 \newfontfamily\hiero{NotoSansEgyptianHieroglyphs-Regular.ttf}
@@ -46,6 +46,8 @@
    tex.print("\\par")
    h.printgardinercat("B")
 
+   tex.sprint()
+
 \end{luacode*}
 
 \newcommand\hierochar[2][direction = "LR",
@@ -84,18 +86,48 @@ generalize the commands, so they can be re-used for other type of hieroglyphics.
 \hierochar{"13003"}
 
 
-\end{document}
-
-
-
-
 \begin{luacode*}
-local f = fontloader.open
-("c:/windows/fonts/NotoSansEgyptianHieroglyphs-Regular.ttf")
-fonttable = fontloader.to_table(f)
+local fontpath = kpse.show_path("opentype fonts")
 
-fontloader.close(f)
+tex.print("\\begin{verbatim}",fontpath,"\\end{verbatim}")
 
+
+database = {}
+local storeinfo
+
+function explorefonts (dir)
+   if not lfs.isdir(dir) then
+      return
+   end
+   for name in lfs.dir(dir) do
+   if name~="." and name ~=".." then
+      local file = dir .."/"..name
+      local attr = lfs.attributes(file)
+      if attr then
+      if attr.mode == "file" and
+        name:lower():match("/.[to]tf$") then 
+          storeinfo(file, name)
+          tex.print(file)
+      elseif attr.mode == directory then
+          tex.print(file)
+      end
+    end
+   end
+end
+end
+
+fontpath = fontpath:match(":")
+           and fontpath:explode(":")
+           or fontpath:explode(";")
+
+for _,dir in ipairs(fontpath) do
+     dir = dir:gsub("^!!","")
+     explorefonts(dir)
+end
+
+
+local f = fontloader.open("c:/windows/fonts/NotoSansEgyptianHieroglyphs-Regular.ttf")
+    fonttable = fontloader.to_table(f)
 
 tex.print(fonttable.design_size*6553.6)
 
@@ -103,15 +135,109 @@ tex.print(fonttable)
 local size=1
 size = size * tex.sp("10pt") / -1000
 tex.print(size)
+\end{luacode*}
 
-tf=fontloader.info("c:/windows/fonts/NotoSansEgyptianHieroglyphs-Regular.ttf")
-tex.print("\\par",tf.fontname,"\\par",
-          tf.fullname,"\\par",
-          tf.familyname,"\\par")
+\raggedright
+
+We first load the table and convert the info to a Lua table. We use a font provide with
+an article by Paul called TestLibertine.otf. 
+
+\begin{luacode*}
+local z={}
+tf=fontloader.to_table(fontloader.open("c:/windows/fonts/TestLibertine.otf"))
+for k,v in pairs (tf) do
+   --tex.print(k.."\\par")
+   table.insert(z, k)
+end
+table.sort(z)
+for k,v in pairs (z) do
+  tex.print(z[k],"\\par")
+end
 
 
+tex.print("Units per em",tf.units_per_em,"\\par",
+          "version", tf.version,"\\par",
+          "glyph count", tf.glyphcnt,"\\par",
+          "design size", tf.design_size,"\\par",
+           tf.fontstyle_id,tf.copyright,"\\par",
+           tf.glyphs[5].unicode,"\\par", "uwidth",tf.uwidth,"\\par")
+
+-- print the glyp
+for k,v in pairs (tf.glyphs[6]) do
+    if (type(tf.glyphs[6].v)) then tex.print("\\par",k,type(tf.glyphs[6].v),tf.glyphs[6].name,"\\par")  end
+end
+
+local rep, write = string.rep, tex.print
+function ExploreTable (tab, offset)
+    offset = offset or ""
+    for k, v in pairs (tab) do
+        local newoffset = offset .. "   "
+        if type(v) == "table" then
+           write(k .. "{")
+           write(newoffset .. "}")
+         else
+            write(k .. tostring(v))
+         end
+      end
+end
+
+x = {t["A1"],t["A2"],"c","d"}
+
+ExploreTable(x)
 
 
+-- Sort the Hieroglyphics database per unicode symbol
+-- we will use this later to insert the metrics
+
+H  = H or {}
+Hs = Hs or {}
+local j=0
+
+for k,v in pairs (t) do
+    local index = tostring(t[k].unicode)                -- sanity check if some unicode are numbers
+    local info  = info or {}                            -- table will hold general info
+    metrics     = metrics or {}                         -- will add the metrics later for specific font
+    info        = {unicode     = tostring(t[k].unicode),
+                   gardiner    = t[k].gardiner,
+                   mnemonic    = t[k].mnemonic,
+                   phonetic    = '',
+                   description = '',}
+    H[index]    = {info        = info, 
+                   metrics     = metrics}
+    tex.print("\\arial ", H[index].info.gardiner)
+end
+
+table.sort(H)
+
+for k,v in pairs (H) do
+   table.insert(Hs,k)
+   -- tex.print("\\arial ",H[k], k, "\\par")
+end
+
+table.sort(Hs)
+
+for k,v in pairs (Hs) do
+    tex.print("\\arial ",Hs[k],"\\hiero","\\char\"" .. Hs[k],"\\arial")
+end
+
+for n in pairs(_G) do tex.print(n) end
+
+
+s = string.gsub(package.cpath,"\\", "\\textbackslash ")
+s = string.gsub(s,";", ";\\par ")
+
+tex.print(s)
+\end{luacode*}
+
+\end{document}
+
+\raggedright
+
+While letters like é exist "on their own", they can also be written as the sequence [e´]. Intelligent fonts can actually either reposition the accent, so that the combination looks like an é, or they can perform a "ligature" substittion and replace the two characters [e]+[´] with the single character [é].
+
+
+\end{document}
+\begin{luacode*}
 function toHex(num)
   local  num  = string.format("%x", num)
          num  = string.upper(num)
@@ -119,22 +245,25 @@ function toHex(num)
 end
 
 function prettyprint ()
+    f = {}
     tex.print("\\footnotesize")
-    f=fontloader.open("c:/windows/fonts/JSeshFont.ttf")
-    tex.print (f.fontname.."\\par")
+    f = fontloader.to_table(fontloader.open("c:/windows/fonts/Cambriai.ttf"))
     
-	
+
     local i = 3
     local glyphname
-	while (i <f.glyphmax ) do -- use f.glyphmax 
+    local ts = {}
+    
+   
+	while (i+41 <f.glyphmax ) do -- use f.glyphmax 
 		local g = f.glyphs[i]
 		local uhex
-       
-		if g then
-      		glyphname = string.sub(g.unicode,2) 
- 	   		uhex = toHex(g.unicode)
- 			tex.print(""..glyphname.."=U+"..toHex(g.unicode)..", ")
- 			printglyphRL("aegyptus", uhex) -- texprints the glyph
+    	if g then
+      		glyphname = g.name     --string.sub(g.unicode,2) 
+ 	   		--- uhex = toHex(g.unicode)
+ 			---tex.print(""..glyphname.."=U+"..toHex(g.unicode)..", ")
+ 			---- printglyphRL("aegyptus", uhex) -- texprints the glyph
+            tex.print("\\par",i, glyphname , g.unicode,  "\\par")
 		end
   		i = i + 1
 	end

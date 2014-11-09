@@ -67,7 +67,10 @@ We define a local table to hold data for glyphs
 @t : table
 --]]
 
-local t = t or {}
+ t = t or {}
+
+
+
 
 --- returns a number of transformations and data
 -- to the table holding codepoints for Gardiner lists
