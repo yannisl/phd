@@ -303,6 +303,7 @@ If you writing a document with a lot of hieroglyphics inputting of hieroglyphics
 This file just tests the various commands available for manipulating hieroglyphics. We tried to 
 generalize the commands, so they can be re-used for other type of hieroglyphics.
 
+{
 \hierochar{"A1-A2-A3!"}
 
 \centering 
@@ -314,20 +315,23 @@ generalize the commands, so they can be re-used for other type of hieroglyphics.
 \def\fontname{"hiero"}
 
 \def\hierochar#1{\printhierochar[\options]{\fontname}{#1}}
-
+}
 
 
 \begin{scriptexample}[]{Some Example}
 Sometimes kerning might be required, especially if the
 glyphs are scaled.This is easily achieved with a \cmd{\kern}
 command and a suitable skip dimension.
+
 \medskip
 
+\bgroup
 \fboxsep=0pt\fboxsep.4pt
 \def\options{direction = "RL",
              color     = "black!95",
              scale     = 5}
 \centering
+
 \color{teal}
 \fbox{\hierochar{"13051"}}
 \kern-4mm
@@ -339,6 +343,7 @@ command and a suitable skip dimension.
 \kern-4mm
 \hierochar{"13051"}
 \color{black!95}
+\egroup
 \begin{verbatim}
 \centering
 \hierochar{"13051"}
@@ -352,6 +357,144 @@ command and a suitable skip dimension.
 \hierochar{"13051"}
 \end{verbatim}
 \end{scriptexample}
+
+A bit of a diversion is appropriate at this point. Our attempt after the historical overview, is to provide some routines for the capturing and display of hieroglyphic texts using LuaTeX. This involves getting low level information from the system regarding fonts. 
+
+\begin{figure}[ht]
+\begin{minipage}{0.45\textwidth}
+\centering
+\includegraphics[width=0.6\textwidth]{./images/fontforge.jpg}
+\end{minipage}
+\begin{minipage}[t]{0.45\textwidth}
+\caption{Viewing font information with fontforge.}
+\end{minipage}
+\end{figure}
+
+For each glyph, we are interested to get its unicode number, the position in the font table, its name and most importantly the font metrics. The font metrics are a set of parameters that are used to measure the bounding box, any ascenders or descenders and similar information. Using fontforge, these parameters can easily be viewed. However, we are not interested to make any modifications manually; what we are interested is to programmatically obtain this information using Lua. Lua's philosophy and a mantra repeated often by the developers, is that it provides the tools and not the solutions. What this means to the LuaTeX programmer, is that we need to reach very low level  to get this information, which is a road with many bumps. Luckily the tools have been provided by the LuaTeX developers. This comes with a lot of benefits as we can also do our own on the fly mapping, such as creating an index table holding all the Gardiner numbers. 
+
+The |fontloader.open| function loads a font, but it's not usable by itself; the result should be turned into a table with
+\textbf{fontloader.to\_table}, as follows:
+
+\begin{verbatim}
+  local f = fontloader.open
+     ("c:/windows/fonts/NotSansEgyptianHieroglyphics-
+       Regulat.ttf")
+  fonttable = fontloader.to_table(f)
+  fontloader.close(f)
+\end{verbatim}
+
+We will use the Google No Tofu Egyptian Hieroglyphic font to experiment with our hieroglyphics. I have used a full path to load the font, which resides on my windows machine in the fonts folder. Once we load all the information in the |fonttable| we use |fontloader.close| to discard the userdata from which the table is extracted. 
+
+What makes OpenType fonts special is that they describe every aspect that you might be able to think of when you think of putting letters together to form words. In addition to the obvious "this is what letters look like" information, OpenType fonts also specify things like the name of each letter that is available in the font, how much of the Unicode standard the font implements, which horizontal and vertical metrics apply to which letters, exactly how the letters are arranged inside the font so that they can quickly be read out, what kind of font classifications apply (is it a fantasy font? is it bold face? is it fixed width? etc), what kind of memory allocation a printer needs to perform in order to be able to even load the font, etc. etc. etc. All these are stored in tables upon tables, similat to a collection of Russian dolls.
+
+To view the values in the fonttable, we will first iterate over the \textbf{fonttable} and extract all the first level keys.
+
+\begin{texexample}{Iterating through a font table}{}
+\begin{luacode*}
+local z={}
+tf=fontloader.to_table(fontloader.open("c:/windows/fonts/NotoSansEgyptianHieroglyphs-Regular.ttf"))
+
+-- we sort the keys to create a table
+-- important keys to us are tf.glyphs
+
+for k,v in pairs (tf) do
+   --tex.print(k.."\\par")
+   table.insert(z, k)
+end
+
+table.sort(z)
+tex.print("\\begin{multicols}{3}\\raggedright")
+for k,v in pairs (z) do
+   z[k] = string.gsub(z[k],"%_","\\textunderscore ")
+   local s = tf[v]
+   tex.print("\\textbullet\\hskip3pt\\hangindent2em " .. z[k].." [\\textit{"..type(s).."}] ","\\par")
+end
+tex.print("\\end{multicols}")
+\end{luacode*}
+\end{texexample}
+
+We iterate through the \textbf{fonttable} using the Lua  "pair" iterator and we simply print all the keys and the type of the values in a human readable form as shown in the example. Note the use of |\textunderscore| that replaces all underscores in the fields with its text equivalent to sanitize the output. This is a quick and dirty way to avoid the use of catcodes. Many of the keys, bear intuitive names and are not difficult to discern: \textit{version}, \textit{copyright} and the like. Getting the type of Lua variables is important in order to use them for error trapping. When you attempt for example to print a nil value an error will occur.
+
+Now that we have peeked under the font we will iterate and capture the information of interest, which we will put into another table with two keys \textbf{info}  and \textbf{metrics}. In the metrics file we will get the bounding box related metrics of each and every glyph in the font and save it, into our own table. 
+
+\begin{texexample}{More Metrics}{}
+  \begin{luacode*}
+   tex.print("units per em = ", tf.units_per_em,"\\par")
+   for i,j in ipairs (tf.glyphs[6].boundingbox) do
+      tex.print("bounding box["..i.."]".." = ", j,"\\par")
+   end 
+   local w = (tf.glyphs[6].boundingbox[3]-tf.glyphs[6].boundingbox[1])/tf.units_per_em
+   local h = tf.glyphs[6].boundingbox[4]/tf.units_per_em
+   tex.print("glyph width = ", w,"em\\par")
+   tex.print("glyph height = ", h,"em\\par")
+
+-- presents a nicely typeset table 
+
+local rep, write = string.rep, tex.print
+function ExploreTable (tab, offset)
+    offset = offset or ""
+    for k, v in pairs (tab) do
+        local newoffset = offset .. "\\mbox{.}"
+        if type(v) == "table" then
+           -- if k == "boundingbox" then write("BB") end
+           write(offset..k .. " = \\{\\par ")
+           ExploreTable(v, newoffset)
+           write(offset..newoffset .. "\\}\\par")
+         else
+           write(offset..k .. " = "..tostring(v),"\\par")
+         end
+      end
+end
+
+write("\\par{\\ttfamily ")
+ExploreTable(tf.glyphs[38],"\\mbox{.}")
+write("}")
+  \end{luacode*}
+\end{texexample}
+
+The OpenType fonts standard, provides for so much information that we will ignore most of the items and focus on only a few tables and fields. A small utility after Paul Isambert's article is necessary to enable us to view tables easily within this book,
+
+
+\begin{texexample}{ExploreTable utility}{}
+\begin{luacode*}
+-- presents a nicely typeset table 
+
+local rep, write = string.rep, tex.print
+function ExploreTable (tab, offset)
+    offset = offset or ""
+    for k, v in pairs (tab) do
+        local newoffset = offset .. "\\mbox{.}"
+        if type(v) == "table" then
+           -- if k == "boundingbox" then write("BB") end
+           write(offset..k .. " = \\{\\par ")
+           ExploreTable(v, newoffset)
+           write(offset..newoffset .. "\\}\\par")
+         else
+           write(offset..k .. " = "..tostring(v),"\\par")
+         end
+      end
+end
+
+write("\\par{\\ttfamily ")
+ExploreTable(tf.glyphs[38],"\\mbox{.}")
+write("}")
+  \end{luacode*}
+\end{texexample}
+
+A good utility also is |TTX| that will convert an OTF font to XML and back. This requires that you have python installed.\footnote{See some good guidelines as to how to install it at \url{http://www.glyphrstudio.com/ttx/}.} The utility uses python to do the conversion. The archive can be downloaded from \url{http://sourceforge.net/projects/fonttools/files/latest/download}. This is a three prong attack. You need to have python install, the numpy library and then the TTX package. The |TTX| program was written by the font designer Just van Rossum, brother of the creator of the Python language, Guido van Rossum. The tool converts TrueType into human-readable |XML| format. The most attractive feature of this tool is that it also perform the opposite operation that is create a TruType font from an |XML| file. The |XML| format makes the hierarchy of the format clearer. Since SVG fonts are also described in |XML| it becomes an easier task to convert an |SVG| font to a TrueType font. To convert |bar.ttf| into |bar.ttx| you simply write:
+
+\begin{verbatim}
+ttx bar.ttf
+\end{verbatim}
+
+Similarly for the opposite conversion, from |.ttx| to |.ttf|
+
+\begin{verbatim}
+ttx bar.ttx
+\end{verbatim}
+
+The generated ttx file is approximately ten times larger than the original |.ttf| file. The files generated are huge affairs and difficult to manage.The command line option |-l| prints a list of the tables in the font. |TTX| is indispensable in the ``humanization'' of TrueType fonts. The details of the tables and what each field represents are eloquently described in that indispensable book by Yannis Haralambous \textit{Fonts \& Encodings.} Although the book is now somewhat dated, it is still the best source of information on many esoteric topics related to fonts. 
+
 
 
 

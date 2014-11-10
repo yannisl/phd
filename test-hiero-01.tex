@@ -142,48 +142,79 @@ tex.print(size)
 We first load the table and convert the info to a Lua table. We use a font provide with
 an article by Paul called TestLibertine.otf. 
 
+\includegraphics[width=0.6\textwidth]{./images/fontforge.jpg}
+
 \begin{luacode*}
 local z={}
-tf=fontloader.to_table(fontloader.open("c:/windows/fonts/TestLibertine.otf"))
+tf=fontloader.to_table(fontloader.open("c:/windows/fonts/andlso.ttf"))
+
+-- we sort the keys to create a table
+-- important keys to us are tf.glyphs
+
 for k,v in pairs (tf) do
-   --tex.print(k.."\\par")
+   tex.print(k,type(v),"\\par")
    table.insert(z, k)
 end
 table.sort(z)
 for k,v in pairs (z) do
-  tex.print(z[k],"\\par")
+   local s = tf[v]
+   tex.print(z[k],type(s),"\\par")
 end
 
+for k,v in pairs (tf.map) do
+   tex.print(k,tf.map.enc_name,type(tf.map.enc),"\\par ")
+end
+
+-- the encoding
+for k,v in pairs (tf.map.enc) do
+   tex.print(k,type(k),v, "\\par ")
+end
 
 tex.print("Units per em",tf.units_per_em,"\\par",
           "version", tf.version,"\\par",
           "glyph count", tf.glyphcnt,"\\par",
           "design size", tf.design_size,"\\par",
            tf.fontstyle_id,tf.copyright,"\\par",
-           tf.glyphs[5].unicode,"\\par", "uwidth",tf.uwidth,"\\par")
+           tf.glyphs[5].unicode,"\\par", 
+          "uwidth",tf.uwidth,"\\par")
 
--- print the glyp
+-- print the glyph
 for k,v in pairs (tf.glyphs[6]) do
-    if (type(tf.glyphs[6].v)) then tex.print("\\par",k,type(tf.glyphs[6].v),tf.glyphs[6].name,"\\par")  end
+    tex.print(v,"zz ")
+    if (type(tf.glyphs[6].v)) then tex.print("\\par",k,tf.glyphs[6].name,tf.glyphs[6].boundingbox[1],"!!!\\par")  
+      for i,j in ipairs (tf.glyphs[6].boundingbox) do
+        tex.print("bounding box["..i.."]".." = ", j,"\\par")
+      end 
+    end
 end
+
+
+
+
+-- presents nicely a table 
 
 local rep, write = string.rep, tex.print
 function ExploreTable (tab, offset)
     offset = offset or ""
     for k, v in pairs (tab) do
-        local newoffset = offset .. "   "
+        local newoffset = offset .. "\\mbox{.}"
         if type(v) == "table" then
-           write(k .. "{")
-           write(newoffset .. "}")
+           -- if k == "boundingbox" then write("BB") end
+           write(offset..k .. " = \\{\\par ")
+           ExploreTable(v, newoffset)
+           write(offset..newoffset .. "\\}\\par")
          else
-            write(k .. tostring(v))
+           write(offset..k .. " = "..tostring(v),"\\par")
          end
       end
 end
 
-x = {t["A1"],t["A2"],"c","d"}
+write("\\fboxrule0pt\\par{\\ttfamily ")
+ ExploreTable(tf.glyphs[38],"\\mbox{.}")
+write("}")
 
-ExploreTable(x)
+\end{luacode*}
+\end{document}
 
 
 -- Sort the Hieroglyphics database per unicode symbol
@@ -206,6 +237,44 @@ for k,v in pairs (t) do
                    metrics     = metrics}
     tex.print("\\arial ", H[index].info.gardiner)
 end
+
+-- get metrics
+
+function toHex(num)
+if  num>-1 then  
+         num  = string.format("%x", num)
+         num  = string.upper(num) 
+         return num 
+  else 
+      num = "ERROR"
+  end
+  return nil
+end
+
+tex.print("FETCH AND INSERT METRICS FROM FONT ")
+
+local i=0
+while (i <tf.glyphcnt ) do -- use f.glyphmax 
+		local g = tf.glyphs[i]
+        local bb = {}
+              bb[1] = tf.glyphs[i].boundingbox[1]
+			  bb[2] = tf.glyphs[i].boundingbox[2]
+              bb[3] = tf.glyphs[i].boundingbox[3]
+              bb[4] = tf.glyphs[i].boundingbox[4]
+        local idx = toHex(g.unicode)
+        if H[idx] ~=nil then
+           local boundingbox = boundingbox or {}
+           H[idx].metrics.boundingbox = {bb[1],bb[2],bb[3],bb[4]}
+           tex.print("\\arial", H[idx].info.unicode, 
+                                H[idx].metrics.boundingbox[1],
+                                H[idx].metrics.boundingbox[2],
+								H[idx].metrics.boundingbox[3],
+								H[idx].metrics.boundingbox[4],
+                                "\\hiero\\char\""..H[idx].info.unicode.."\\par\\arial")
+        end
+  		i = i + 1
+end
+
 
 table.sort(H)
 
