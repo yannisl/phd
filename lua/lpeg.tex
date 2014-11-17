@@ -1,0 +1,69 @@
+\chapter{Lua LPeg}
+
+\section{Pattern Matching}
+
+LPeg is a powerful notation for matching text data, which is more capable than Lua string patterns and standard regular expressions. However, like any language you need to know the basic words and how to combine them. These patterns like their ugly cousins regular expressions in languages like Perl or Javascript have a steep learning curve, so this Chapter is rather long. 
+
+\begin{texexample}{Matching Patterns lpeg.P}{}
+\begin{luacode}
+   local match = lpeg.match
+   local P = lpeg.P -- match a string literally
+   tex.print(match(P'Za', 'Zaza'))
+   if match(P'za', 'Zaza') then tex.print(match(P'za', 'Zaza')) else tex.print('nil') end
+\end{luacode}
+\end{texexample}
+
+The \luacmd{lpeg.P} is an operator and operates on the string, whereas \luacmd{lpeg.match} is a function. The LPeg patterns are first class objects. These patterns are regular Lua values (represented by userdata). In the example above the match matches a string exactly. One thing that striked me, was the verbosity of the patterns, but they are composable. All the operators are represented by single letters.  The above pattern matches at the beginning of the string and returns the end position of the string. 
+
+To capture ranges i.e, ['a-z'] we have to use lpeg.R
+
+\begin{texexample}{Matching Patterns lpeg.P}{}
+\begin{luacode}
+   local match = lpeg.match
+   local R = lpeg.R -- match a range
+   tex.print(match(R'az'^1 * -1, 'abcdefgi'))
+   if match(R'az', 'Zaza') then tex.print(match(R'az', 'Zaza')) else tex.print('nil') end
+\end{luacode}
+\end{texexample}
+
+\section{Basic Captures}
+
+Getting the index after a match is all very well, and you can then use \luacmd{string.sub} to extract the strings. But there are ways of explicitly asking for captures:
+
+\begin{verbatim}
+> C = lpeg.C  -- captures a match
+> Ct = lpeg.Ct -- a table with all captures from the pattern
+\end{verbatim}
+
+The first is equivalent to how '(...)' is used in Lua patterns or '(...)' in regular expressions.
+
+\begin{texexample}{Matching Patterns lpeg.P}{}
+\begin{luacode}
+ local C = lpeg.C
+ Ct = lpeg.Ct
+ digit = lpeg.R'09'  --  anything from '0' to '9'
+ digits = digit^1    --  a sequence of at least one digit
+ cdigits= C(digits)  --  capture digits
+ tex.print(cdigits:match '1239AAAA')
+\end{luacode}
+\end{texexample}
+
+
+\section{Built in patterns}
+
+The following is an extract from the ConTeXt guide. The example captures all words in square brackets. 
+
+\begin{texexample}{Matching Patterns lpeg.P}{}
+\begin{luacode}
+local P, R, C, Ct = lpeg.P, lpeg.R, lpeg.C, lpeg.Ct
+local pattern = Ct((P("[") * C(R("az")^0) * P(']') + P(1))^0)
+local words = lpeg.match(pattern,"a [first] and [second] word, some utf [third]")
+local utils = require("phd-utils")
+utils.inspect(words)
+\end{luacode}
+\end{texexample}
+
+
+
+
+\footnote{\protect\url{http://www.inf.puc-rio.br/~roberto/lpeg/lpeg.html\#intro}}
