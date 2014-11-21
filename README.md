@@ -52,11 +52,7 @@ improvements in the special designs.
 __The package as it stands is not production stable.__
 
 
-
-
-
-
-
+ %     \input{./lua/strings}
 
 
 

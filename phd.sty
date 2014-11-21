@@ -13,11 +13,7 @@
 %% ----------------------------------------------------------------
 %% 
 
-
-
-
-
-
+ %     \input{./lua/strings}
 
 
 \NeedsTeXFormat{LaTeX2e}[1994/12/01]%
@@ -73,8 +69,17 @@
   \newfontfamily\arial{Arial}
   \let\pan\arial
   \newfontfamily\smallcps[Scale=0.8]{Arial}
+
 }
 \ifengine{\defaultfontsxetexluatex}{\defaultfontsxetexluatex}{}
+\ifluatex
+   \RequirePackage{luaotfload}
+   \let\TeXXeTstate\@gobble
+   \def\setRTL{\luatextextdir TRT}%\pardir TRT\textdir TRT}
+   \def\endLTR{\luatextextdir TLT}%{\pardir TLT\textdir TLT}
+   \let\beginR\setRTL
+   \let\endR\endLTR
+\fi
 \RequirePackage{fonttable}
 \ifengine{\RequirePackage{polyglossia}
   \setdefaultlanguage{english}}{\RequirePackage{polyglossia}
@@ -390,35 +395,6 @@ ball was her favorite plaything.}%
   \patchcmd{\document@select@group}{\sixt@@n}{\@cclvi}{}{}
   \patchcmd{\select@group}{\sixt@@n}{\@cclvi}{}{}
 \fi
-\newif\ifAMS
-\newcommand\AMS{\AmS\index{AMS=\AmS}}
-\IfStyFileExists{amssymb}
-  {\AMStrue
-   \savesymbol{angle} \savesymbol{rightleftharpoons}
-   \savesymbol{leftharpoondown} \savesymbol{rightharpoonup}
-   \savesymbol{iint} \savesymbol{iiint}
-   \savesymbol{iiiint} \savesymbol{idotsint}
-   \let\orig@ifstar=\@ifstar
-   \let\overleftrightarrow \undefined%CHECK
-   \let\underleftarrow\undefined
-    \let\underrightarrow\undefined
-    \let\underleftrightarrow\undefined
-   \RequirePackage{amsmath}
-   \RequirePackage{amssymb}
-   \let\@ifstar=\orig@ifstar
-   \restoresymbol{AMS}{angle} \restoresymbol{AMS}{rightleftharpoons}
-   \restoresymbol{AMS}{lefthapoondown} \restoresymbol{AMS}{rightharpoonup}
-   \restoresymbol{AMS}{iint} \restoresymbol{AMS}{iiint}
-   \restoresymbol{AMS}{iiiint} \restoresymbol{AMS}{idotsint}
-  }
-  {
-    % The following was modified from amsmath.sty.
-    \newcommand{\AmSfont}{%
-      \usefont{OMS}{cmsy}{m}{n}}
-    \providecommand{\AmS}{{\protect\AmSfont
-      A\kern-.1667em\lower.5ex\hbox{M}\kern-.125emS}}
-  }
-
 \newif\ifFontIsAvailable
 \def\testFontAvailability#1{%
   \count255=\interactionmode
@@ -1256,7 +1232,7 @@ boxrule=0pt,toprule=0pt,colframe=white}
 }}
 {}
 
-\newcommand\emphasis[2][teal]{\lstset{emph={write, writeln,#2},
+\newcommand\emphasis[2][teal]{\lstset{emph={write, writeln,#2},escapeinside={(*@}{@*)},
    emphstyle={\verbatimfont\textcolor{#1}}}}%
 
 \lstnewenvironment{teXXX}[1][]

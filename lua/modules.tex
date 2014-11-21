@@ -9,7 +9,9 @@
 
 \section{Modularity}
 
-Modularity is a fundamental requirement for any computer language, as it enables the development of programs using sound software engineering principles, but most importantly it allows different people to work on the codebase simultaneously. Lua is no exception. Luas modules are easy to develop and when they are all related, they are disributed as a package \textit{package}.
+Modularity is a fundamental requirement for any computer language, as it enables the development of programs using sound software engineering principles, but most importantly it allows different people to work on the codebase simultaneously. Lua is no exception. Luas modules are easy to develop and when they are all related, they are disributed as a package \textit{package}. They are normally distributed in one folder with submodules in subdirectories. 
+
+For the ecosystem to survive it requires an easy method to load the packages, a place where everything is stored and easily found by loaders and some form of standardization in defining the modules. 
 
 \section{The require Function}
 
@@ -31,9 +33,9 @@ tex.print(s)
 
 In the example we use the |string.gsub| to replace windows \textbackslash to a harmless version, so we do not need to worry about catcodes, a quick and dirty solution. 
 
-\section{Writing Modules in Lua}
+\section{The Basic Approach for Writing Modules in Lua}
 
-The simplest way to create a module in Lua is really very simple: create a table and put all functions you want to export inside it, and return this table.
+The simplest way to create a module is to create a table and put all functions you want to export inside it, and return this table.
 
 \begin{texexample}{Writing a Module}{ex:wmodule}
 \begin{filecontents*}{chicken.lua}
@@ -57,6 +59,11 @@ return M
 \begin{luacode*}
 local c = require "chicken"
       tex.print(c.chicken(), c.chickens(), c.ancient_chickens())
+      
+      tex.print(-2, package.config)
+      
+      package.preload ["foo"] = function () tex.print "loading foo" end
+require "foo"  --> loading foo
 \end{luacode*}
 \end{texexample}
 
@@ -98,7 +105,7 @@ local M = {}
 package.loaded[...] = M
 \end{verbatim}
 
-writing the final return always results in clearer code and is preferable.
+Remember that \luacmd{require} calls the loader passing the module name as the first argument.
 
 \section{Using Environments}
 

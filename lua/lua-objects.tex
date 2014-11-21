@@ -1,0 +1,164 @@
+\chapter{Lua Objects}
+
+
+\section{Class-like tables}
+Lua is similar to JavaScript in that the concept of class is not directly supported by the language. In fact, Lua has a very general mechanism for extending the behaviour of tables which makes it straightforward to implement classes. A table’s behaviour is controlled by its metatable. If that metatable has a \cmd{__index} function or table, this will handle looking up anything which is not found in the original table. A class is just a table with an \cmd{__index} key pointing to itself. Creating an object involves making a table and setting its metatable to the class; then when handling obj.fun, Lua first looks up fun in the table obj, and if not found it looks it up in the class. obj:fun(a) is just short for obj.fun(obj,a). So with the metatable mechanism and this bit of syntactic sugar, it is straightforward to implement classic object orientation.
+
+Lua doesn't have any built-in mechanism for classes. They are created through the use of tables
+and metatables. A class works as a mold for the creation of objects. Most object-oriented languages
+offer the concept of class. In such languages, each object is an instance
+of a specific class. Lua does not have the concept of class; each object defines
+its own behavior and has a shape of its own. Nevertheless, it is not difficult to
+emulate classes in Lua, following the lead from prototype-based languages like
+Self and NewtonScript. In these languages, objects have no classes. Instead,
+each object may have a prototype, which is a regular object where the first object
+looks up any operation that it does not know about. To represent a class in
+such languages, we simply create an object to be used exclusively as a prototype
+for other objects (its instances). Both classes and prototypes work as a place to
+put behavior to be shared by several objects
+\emphasis{Animal}
+\begin{texexample}{Class-like}{}
+\begin{luacode}
+local Animal = {}                                      -- 1.
+
+function Animal:new()                      -- 2.
+  newObj = {sound = 'woof'}                -- 3.
+  self.__index = self                      -- 4.
+  return setmetatable(newObj, self)        -- 5.
+end
+
+function Animal:makeSound()                   -- 6.
+  tex.print('I say ' .. self.sound)
+end
+
+Dog = Animal:new()                          -- 7.
+Dog:makeSound()  -- 'I say woof'         -- 8.
+
+function Dog:makesound()
+  s = self.sound .. ' '
+  tex.print(s .. s .. s )
+end
+
+Dog:makesound()
+  
+\end{luacode}
+\end{texexample}
+
+Unsurprisingly Lua uses tables to create class-like objects. In the example we will create a class Animal and then an instance of a Dog. The function \luacmd{tablename:fn()} is the same as \luacmd{tablename.fn(self,...)}. The ‘:’ just adds a first argument to the function called \textit{self}.  The \luacmd{newObj} will be an instance of class \textbf{Animal}. The self = Animal, but inheritance ca change it. 
+
+
+If needed, a subclass's new() is like the bases's:
+
+\begin{verbatim}
+function LoudDog:new()
+  newObj = {}
+  -- set up newObj
+  self.__index = self
+  return setmetatable(newObj, self)
+end
+\end{verbatim}
+
+\begin{texexample}{A shapes librayy}{}
+\begin{luacode}
+-- Meta class
+
+Shape = {area = 0}
+-- Base class method new
+
+function Shape:new (o, side)
+  o = o or {}
+  setmetatable(o, self)
+  self.__index = self
+  side = side or 0
+  self.area = side*side;
+  return o
+end
+
+-- Base class method printArea
+function Shape:printArea ()
+  tex.print("The area is ", self.area)
+end
+
+-- We can extend the shape to a square class as shown below.
+
+Square = Shape:new()
+-- Derived class method new
+
+function Square:new (o,side)
+  o = o or Shape:new(o,side)
+  setmetatable(o, self)
+  self.__index = self
+  return o
+end
+
+local square = Square:new(nil, 8)
+square:printArea()
+\end{luacode}
+\end{texexample}
+
+A common error when calling  methods is to forget to call them with (:) syntax. 
+
+\section{Naming conventions and style}
+
+Classes have names that start with a capital letter. Methods should be preferably all lower case. 
+
+\section{Using a library}
+
+Many libraries, such as penlight offer convenient modules to create classes and avoid developing them from scratch. The example that follows is from its documentation.
+
+\begin{texexample}{Using penlight}{}
+\begin{luacode}
+
+-- animal.lua
+
+class = require 'pl.class'
+
+class.Animal()
+
+function Animal:_init(name)
+    self.name = name
+end
+
+function Animal:__tostring()
+  return self.name..': '..self:speak()
+end
+
+class.Dog(Animal)
+
+function Dog:speak()
+  return 'bark'
+end
+
+class.Cat(Animal)
+
+function Cat:_init(name,breed)
+    self:super(name)  -- must init base!
+    self.breed = breed
+end
+
+function Cat:speak()
+  return 'meow'
+end
+
+class.Lion(Cat)
+
+function Lion:speak()
+  return 'roar'
+end
+
+fido = Dog('Fido')
+felix = Cat('Felix','Tabby')
+leo = Lion('Leo','African')
+
+tex.print(fido:speak(), leo.breed, fido.name)
+\end{luacode}
+\end{texexample}
+
+
+
+
+
+
+
+
+

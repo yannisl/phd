@@ -235,32 +235,42 @@ font name. Alternatively, double quotes serve the same purpose.
 \section{Below the Hood}
 
 Most \tex users like to have full control and are curious to understand how things work. Using |luaotfload| we can have a look at the |otf| tables, and although a bit error prone can 
-see how the fonts store information. The first example we will examine is a short programme to print the glyph names 
+see how the fonts store information. The first example we will examine is a short programme to print 50 of the glyph names. In Example \ref{ex:symbola}, we use the built-in  \luacmd{fontloader} function. Many font symbolic names have underscores or other problematic characters. We change the underscore using \luacmd{string.gsub} from the |strings| module, which is loaded automatically with LuaTeX.
 
-\begin{texexample}{Getting the name of Glyphs}{}
-\begin{luacode*}
+\newfontfamily{\symbola}{Symbola.ttf}
+
+\begin{texexample}{Getting the name of Glyphs}{ex:symbola}
+\bgroup
+\begin{luacode}
 tex.print("\\footnotesize")
 f=fontloader.open("c:/windows/fonts/Symbola.ttf")
-tex.print (f.fontname)
-local i = 100
-while (i <200 ) do --f.glyphmax
+tex.print (f.fontname,'\\par\\symbola')
+local i = 65
+while (i < 200) do  
 local g = f.glyphs[i]
 if g then
-  tex.print(g.name..",")
+  local s = string.gsub(g.name, '%_', '\\textunderscore  ')
+  tex.print(s .. "(\\symbola\\char" .. g.unicode ..")" )
 end
   i = i + 1
 end
 fontloader.close(f)
-\end{luacode*}
+\end{luacode}
+\egroup
 \end{texexample}
 
+If you are compiling this document in Windows, the above example would probably find your fonts. However, this is not a very good way to search for fonts. The TeX world has settled over many years on two principles when distributing files. The TeX Directory Structure (TDS) which is a directory hierarchy for macros, fonts, and the other implementation-independent TeX system files and the kpathsea utility for locating these files and for running the many scripts that are necessary while typesetting.
 
+\begin{texexample}{Getting the name of Glyphs}{}
+\begin{luacode}
+local filename = "Symbola.ttf"
+local fullname = kpse.find_file(filename, 'truetype fonts') 
+if fullname then tex.print(fullname) else tex.print("font ".. filename .. " not found") end
+\end{luacode}
+\end{texexample}
 
-
-
-
-
-
+The various fontloader programs go at great lengths to ensure that all possible directory paths are searched and the main reason, why when using a font for the first time it takes so long to process. With Lua once the
+ file is located, we can read it and manipulate the data in any way we want.
 
 
 
