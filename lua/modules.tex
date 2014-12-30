@@ -31,7 +31,7 @@ tex.print(s)
 \end{luacode*}
 \end{texexample}
 
-In the example we use the |string.gsub| to replace windows \textbackslash to a harmless version, so we do not need to worry about catcodes, a quick and dirty solution. 
+In the example we use the \luacmd{string.gsub} to replace windows \textbackslash to a harmless version, so we do not need to worry about catcodes, a quick and dirty solution.  Of course we could have used a catcode table as well.
 
 \section{The Basic Approach for Writing Modules in Lua}
 
@@ -67,38 +67,38 @@ require "foo"  --> loading foo
 \end{luacode*}
 \end{texexample}
 
-A second and in my opinion much better way is to return the list of functions you want to export. This way\footnote{This is very similar to Javascript modules.} your code will be much more cleaner and easier to maintain. We rewrite our module |chicken|  to |chickens|
+A second and in my opinion much better way is to return the list of functions you want to export. This way\footnote{This is very similar to Javascript modules.} your code will be much more cleaner and easier to maintain. We rewrite our module |chicken|  to |chickens|. Again the module is saved in a file with the module name and saved in a place where the module loader can find it. 
 
 \begin{texexample}{Writing a Module}{ex:wmodule}
-\begin{filecontents*}{chickens.lua}
+\begin{filecontents*}{manychickens.lua}
 local M = {}
 
-function M.chicken ()
+local chicken = function ()
   return "chicken"
 end
 
-function M.chickens ()
+local chickens = function ()
   return "many chickens" 
 end
 
-function M.ancient_chickens ()
-  return "\\bgroup\\hiero\\HUGE\\char\"13171 \\egroup"
+local ancient_chickens = function ()
+  return "\\bgroup\\hiero\\HUGE\\char\"13171 \\char\"13173\\egroup"
 end
 
-return {chicken           = chicken,
-        chickens          = chickens,
-        ancient_chickens  = ancient_chickens}
+return {chicken                = chicken,
+            chickens              = chickens,
+            ancient_chickens  = ancient_chickens}
 \end{filecontents*}
 
 \begin{luacode*}
-   local c = require "chicken"
+   local c = require "manychickens"
    tex.print(c.chicken(), c.chickens(),"\\par","ancient chickens", "{\\Huge" .. c.ancient_chickens() .. "}")
 \end{luacode*}
 \end{texexample}
 
 
 
-The Lua Manual also describes a way of eliminating the return statement, by assigning it directly into |package.loaded|:
+The Lua Manual also describes a way of eliminating the return statement, by assigning it directly into |package.loaded| table:
 
 \begin{verbatim}
 local M = {}
@@ -115,7 +115,7 @@ One drawback of those basic methods for creating modules is that it is all too e
 
 Lua allows module names to be hierarchical, using a dot to separate name levels. For instance, a module named |mod.sub| is a \textit{submodule} of |mod|. A \textit{package} is a complete tree of modules; it is the unit of distribution in Lua. 
 
-From the point of view of Lua, submodules in the same package have no explicit relationship. requiring a module a does not automatically load any of its submodules; similarly, requiring |a.b| does not automatically load |a|. Of course, the package author can create these links as she wants. For example, a particular module may start by explicitly requiring one or all of its submodules.
+From the point of view of Lua, submodules in the same package have no explicit relationship. Requiring a module a does not automatically load any of its submodules; similarly, requiring |a.b| does not automatically load |a|. Of course, the package author can create these links as she wants. For example, a particular module may start by explicitly requiring one or all of its submodules.
 
 In LuaTeX things are much simpler if everything falls into place and the LuaTeX searchers find the modules. I experimented a bit, before getting the paths right on a MikTeX installation. Normal modules need to be located in a place where 
 
@@ -133,7 +133,7 @@ In LuaTeX things are much simpler if everything falls into place and the LuaTeX 
   -- readconfig.lua
   
 local config       = require 'pl.config'
-local t              = config.read 'test.config'
+local t               = config.read 'test.config'
 
 tex.print("read time out = " .. t.write_timeout, "\\par",
             "ports = " .. "ports" .. "\\par")
@@ -168,7 +168,7 @@ tex.print(r)
 
 
 
-LuaTeX uses the kpse library to search for files and naturally it is at home, when the files are located somewhere wher kpse can find them. In the example below, I have downloaded the penlight library into the scripts folder. The Map file can be found in:
+LuaTeX uses the |kpse| library to search for files and naturally it is at home, when the files are located somewhere wher kpse can find them. In the example below, I have downloaded the penlight library into the scripts folder. The Map file can be found in:
 
 \begin{texexample}{lookup for files}{}
 \begin{luacode}
@@ -194,7 +194,7 @@ complex option system, and does some identification and version checking. The pr
 doesn’t try to provide anything for options, but implements a system for identification and
 version checking similar to LATEX’s system.
 
-It is important to note that Lua’s unction module() is deprecated in Lua 5.2 and should be
+It is important to note that Lua’s function \luacmd{module()} is deprecated in Lua 5.2 and should be
 avoided. For examples of good practices for creating modules, see section 1.4. Chapter 15 of
 Programming in Lua, 3rd ed. discusses various methods for managing package
 
@@ -208,12 +208,12 @@ which can be used as a replacement to \luacmd{require()}. The only difference be
 \begin{texexample}{luatexbase module}{}
 \begin{filecontents*}{dice.lua}
 local err, warn, info, log = luatexbase.provides_module({
-     name      = 'dice',
-     date       = '2014/11/01',
-     version   = '0.0',
-     description = 'simulating a die',
-     author      = 'Y Lazarides',
-     license      =  'LPPL v1.3+' ,
+     _name      = 'dice',
+     _date       = '2014/11/01',
+     _version   = '0.0',
+     _description = 'simulating a die',
+     _author      = 'Y Lazarides',
+     _license      =  'LPPL v1.3+' ,
 })
 
 local dice =  {}    -- is this better to be local?
@@ -240,7 +240,7 @@ load the files and develop them individually. However, it is prone with errors e
 The penlight package can provides some very useful routines and we will use it as an example
 to understand the module system.
 
-The easiest way to get the package is to use git, as the package can be found at Github. Use |git clone https|  to clone the directory into |C:/Program Files/MikTeX 2.9/scripts/|. The |scripts| folder is used for normal packages, whereas a similar path exists for |.dlls|, which are placed in a bin directory. The path system is a bit of a mess and it requires a few attempts before everything falls into place. 
+The easiest way to get the package is to use git, as the package can be found at Github. Use |git clone https|  to clone the directory into |C:/Program Files/MikTeX 2.9/scripts/|. The |scripts| folder is used for normal packages, whereas a similar path exists for |.dlls|, which are placed in a |bin| directory. The path system is a bit of a mess and it requires a few attempts before everything falls into place. 
 
 \begin{texexample}{Using the penlight library}{}
 \begin{luacode}
@@ -439,7 +439,13 @@ local utils = require("phd-utils")
 local inspect = utils.inspect
 
 inspect({a="b", c={d="man", e ="woman"}})
+
+local cmd = require("cmd")
+
+
 \end{luacode}
+
+\test
 \end{texexample}
 
 

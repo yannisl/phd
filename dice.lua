@@ -1,16 +1,26 @@
-local err, warn, info, log = luatexbase.provides_module({
-     name      = 'dice',
-     date       = '2014/11/01',
-     version   = '0.0',
-     description = 'simulating a die',
-     author      = 'Y Lazarides',
-     license      =  'LPPL v1.3+' ,
-})
+-- presents nicely a table
 
-local dice =  {}    -- is this better to be local?
+local M = M or {}
 
-function dice.txprint()
-    return 'dice'
+local rep, write = string.rep, tex.print
+
+function M.inspect (tab, offset)
+   local openbracket, closebracket, par = "\\{", "\\mbox{..}\\}", "\\par"
+
+    offset = offset or ""
+    for k, v in pairs (tab) do
+        local newoffset = offset .. "\\mbox{~~}"
+        if type(v) == "table" then
+           write(offset .. k .. " = " .. openbracket .. par)
+           M.inspect(v, newoffset)
+           write(offset .. closebracket .. par)
+        else
+         if k~="data" then write(offset..k.." =  ".. tostring(v), "\\par")
+           else
+                 write(offset.."k = char data ")
+           end
+       end
+    end
 end
 
-return dice         -- return the table returns {}
+return M

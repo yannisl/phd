@@ -13,7 +13,22 @@
 %% ----------------------------------------------------------------
 %% 
 
- %     \input{./lua/strings}
+
+ %    \input{./lua/luaio}}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 \NeedsTeXFormat{LaTeX2e}[1994/12/01]%
@@ -62,7 +77,8 @@
   %\setmainfont{Arial Unicode MS}
   %\setsansfont{Linux Biolinum O}
   \setsansfont{Segoe UI}
-  \setmonofont[Scale=0.87]{DejaVu Sans Mono}
+  %\setmonofont[Scale=0.87]{DejaVu Sans Mono}
+  \setmonofont[Scale=0.87]{SourceCodePro-Regular.ttf}
   \newfontfamily\verbatimfamily[Scale=0.87]{DejaVu Sans Mono}
   \let\ttfamily\verbatimfamily
   \DeclareTextFontCommand{\texttt}{\verbatimfamily}
@@ -156,7 +172,7 @@
 
 %%
 \RequirePackage{graphicx}[1999/02/16]
-\DeclareGraphicsExtensions{jpg,JPG,jpeg,png,eps}
+\DeclareGraphicsExtensions{jpg, JPG, jpeg, png, eps}
 \graphicspath{{graphics/}{graphics//}{../images/}{images//}{./images/}{./graphics/}{../graphics/}{./pic/}{../pic}}
 \RequirePackage{wrapfig}
 \RequirePackage[quiet]{rotating}
@@ -324,6 +340,7 @@ ball was her favorite plaything.}%
 \RequirePackage{tabularx}
 \RequirePackage{array}
 \RequirePackage{dcolumn}
+\RequirePackage{rccol}
  \RequirePackage{longtable}
 \let\origLT@array=\LT@array
 \let\origLT@start=\LT@start
@@ -1006,6 +1023,10 @@ ball was her favorite plaything.}%
 
 \newif\ifESV\ESVfalse
 \newcommand\ESV{\pkgname{esvect}}
+
+  \RequirePackage{mhchem}
+  \RequirePackage{chemfig}
+
 \newif\ifMAN
 \newcommand\MAN{\pkgname{manfnt}}
 \IfStyFileExists{manfnt}
@@ -1155,6 +1176,28 @@ ball was her favorite plaything.}%
 \AfterHyperrefHook
 }
 
+\ifluatex
+\newcommand\printtime[5][0]{%
+   \luadirect{
+      local m =require("i18n.datetime")
+      m:printDayTime(#2, #3, #4, #5, #1)
+    }%
+ }%
+
+\newcommand\datetimetodecimal[4]{%
+   \luadirect{
+      local m =require("i18n.datetime")
+      m:dayTimeToDecimal(#1, #2, #3, #4)
+    }%
+ }%
+   \newcommand\datetimetofractional[2][0]{%
+   \luadirect{
+      local m =require("i18n.datetime")
+      m:dayTimeToFractional(#2,#1)
+    }}
+
+\fi
+
 
 \RequirePackage[theorems, skins,
                 breakable,listings]{tcolorbox}
@@ -1167,8 +1210,13 @@ ball was her favorite plaything.}%
       includegraphics, newarray,readarray,of
 }}
 \lstloadlanguages{[LaTeX]TeX, [primitive]TeX, extras}
+\newcommand\emphasis[2][black!80]{\lstset{emph={write, writeln,#2},escapeinside={(*@}{@*)},
+   emphstyle={\verbatimfont\bfseries\textcolor{#1}}}}%changed to textbf
 
 \newtcolorbox{scriptexample}[2][shavian]{colback=graphicbackground,
+boxrule=0pt,toprule=0pt,colframe=white}
+
+\newtcolorbox{commands}[2][shavian]{colback=graphicbackground,
 boxrule=0pt,toprule=0pt,colframe=white}
 
 \lstset{language={[LaTeX]TeX},
@@ -1191,7 +1239,7 @@ boxrule=0pt,toprule=0pt,colframe=white}
        xrightmargin=10pt,
        aboveskip=3pt plus1pt minus1pt,
        belowskip=7pt plus1pt minus1pt,
-       backgroundcolor=\color{theshade}
+       backgroundcolor=\color{theshade},
 }
 
 \lstnewenvironment{teX}[1][]
@@ -1209,7 +1257,7 @@ boxrule=0pt,toprule=0pt,colframe=white}
   xrightmargin=5pt,
   aboveskip=\medskipamount,
   belowskip=\medskipamount,
-      backgroundcolor=\color{gray!3}, #1
+        backgroundcolor=\color{graphicbackground}, #1
 }}
 {}
 
@@ -1231,9 +1279,6 @@ boxrule=0pt,toprule=0pt,colframe=white}
       backgroundcolor=\color{gray!10}, #1
 }}
 {}
-
-\newcommand\emphasis[2][teal]{\lstset{emph={write, writeln,#2},escapeinside={(*@}{@*)},
-   emphstyle={\verbatimfont\textcolor{#1}}}}%
 
 \lstnewenvironment{teXXX}[1][]
   {\lstset{language=[LaTeX]TeX}\lstset{%
@@ -3195,6 +3240,7 @@ narrow/.style={width=6.9cm},
       fonttitle=\small\sffamily\bfseries,
       fontupper=\small,
       fontlower=\small},
+      listing options = {belowskip=0pt, escapeinside={(*@}{@*)}} ,% added for better control
       arc=0pt,
       outer arc=0pt,
       example1/.code 2 args={\refstepcounter{texexp}\label{#2}}%
@@ -5410,9 +5456,9 @@ section numbering/Roman/.code={%
 \@ifundefined{coverpage}{%
   \newcommand\coverpage[3]{%
   \vbox{%
-      \vspace*{-1\baselineskip}
-      \hskip-4cm\includegraphics[width=\paperwidth]{hine02.jpg}\par
-      \vspace*{3\baselineskip}
+      \vspace*{-8\baselineskip} %-1
+      \hskip-4cm\includegraphics[width=\paperwidth]{zha.jpg}\par %hine-02
+      \vspace*{1\baselineskip} %3
       \hbox to \hsize{%
          \Huge \hfill\hfill{\MakeUppercase{\bfseries
          \textsf{ A NEW LOOK AT  }}}}
@@ -5426,7 +5472,7 @@ section numbering/Roman/.code={%
 }}{}
 \newcommand\secondpage{\clearpage\null\vfill\vfill
   \begin{minipage}[b]{0.9\textwidth}
-  \includegraphics[width=3cm]{./images/hine02.jpg}\par
+  \includegraphics[width=3cm]{./images/zha.jpg}\par
   \raggedright
   \textit{Cover image: }
     The cover image shows Jo Bodeon, a back-roper in the mule room at

@@ -138,9 +138,199 @@ the text within a column. In \emph{normal}, single column setting,
 it will also take a value corresponding to the current text
 width. However, any valid expression of a dimension, as defined by \tex, is suitable.
 
+\section{Revisiting the table specifiers}
+
+As you recall the table specifiers are the part that controls the final output of a table. The most common ones, which are easy to memorize and are used often are \textbf{l, c, r, p}. Table~\ref{tab:opt} lists all the specifiers, using a fairly new distribution of \latexe. As we will see later on, the tabular environments of \latexe also provide a mechanism to define your own specifiers.  
+
+ \begin{table}[thp]
+ \begin{scriptexample}{}{}
+ \begin{center}
+    \setlength{\extrarowheight}{3pt}
+    \begin{tabular}{>{\tt}c m{9cm} }
+     \toprule 
+       l             &  Left adjusted column. \\
+       c             &  Centered adjusted column. \\
+       r             &  Right adjusted column. \\
+       p\{width\}    &  Equivalent to =parbox[t]{width}=. \\
+       @\{decl.\}    &  Suppresses inter-column space and inserts
+                        \texttt{decl.}\ instead. \\
+       \midrule
+       m\{width\}    &  Defines a column of width \texttt{width}.
+                        Every entry will be centered in proportion to
+                        the rest of the line. It is somewhat like
+                        \cmd{\parbox}\meta{width}. \\
+       \midrule
+       b\{width\}    &  Coincides with =|\parbox|[b]\meta{width}=. \\
+       \midrule
+       >\{decl.\}    &  Can be used before an \texttt{l}, \texttt{r},
+                        \texttt{c}, \texttt{p}, \texttt{m} or a
+                        \texttt{b} option. It inserts \texttt{decl.}\
+                        directly in front of the entry of the column.
+                        \\
+       \midrule
+       <\{decl.\}    &  Can be used after an \texttt{l}, \texttt{r},
+                        \texttt{c}, =p{..}=, =m{..}= or a =b{..}=
+                        option.  It inserts \texttt{decl.}\ right
+                        after the entry of the column.  \\
+       \midrule
+       \textbar             &  Inserts a vertical line. The distance between
+                        two columns will be enlarged by the width of
+                        the line
+                        in contrast to the original definition of
+                        \LaTeX.  \\
+       \midrule
+       !\{decl.\}    &  Can be used anywhere and corresponds with the
+                        \texttt{\textbar} option. The difference is that
+                        \texttt{decl.} is inserted instead of a
+                        vertical line, so this option doesn't
+                        suppress the normally inserted space between
+                        columns in contrast to =@{...}=.\\
+      \bottomrule
+    \end{tabular}
+ \end{center}
+ 
+ \caption{The  preamble options (from the \textit{A new implementation of LATEX’s tabular and array
+environment.} )}
+ \label{tab:opt}
+ \end{scriptexample}
+ \end{table}
+
+The most interesting part is the \textbf{m} and \textbf{b} specifiers that can be used to center their content vertically or align at the bottom.
+\medskip
+
+\begin{tabular}{>{\bfseries}p{1.2cm} m{4.5cm}}
+one & \lorem\\
+two  & \lorem\\
+\end{tabular}
+\begin{tabular}{>{\bfseries}p{2cm} m{5cm}}
+three & \lorem\\
+four  & \lorem\\
+\end{tabular}
+
+The table was typeset using:
+|\begin{tabular}{>{\bfseries}p{1.2cm} m{4.5cm}}|
+
+The |>{\bfseries}| was inserted in front of the |p{1.2cm}| specifier to tell TeX that every cell in this column, has to be typeset using bold  font series (|\bfseries|). The |m{4.5cm}|, specifier triggers the centering of the columns. This is rather unituitive as one would think that this should have been the specifier of the preceding cell. Experiment using a MWE, until you fill comfortable.
+
+ \subsection{Defining new column specifiers}
+
+ \bgroup
+
+ \DescribeMacro{\newcolumntype}
+ Whilst it is handy to be able to type
+ \begin{quote}
+   |>{|\meta{some declarations}|}{c}<{|\meta{some more
+   declarations}|}|
+ \end{quote}
+ if you have a one-off column in a table, it is rather inconvenient
+ if you often use columns of this form. The new version allows you
+ to define a new column specifier, say \texttt{x}, which will expand to
+ the primitives column specifiers.\footnote{This command was named
+ \texttt{\textbackslash{}newcolumn} in the \texttt{newarray.sty}.
+ At the moment \texttt{\textbackslash{}newcolumn} is still supported
+ (but gives a warning). In later releases it will vanish.} Thus we
+ may define
+ \begin{quote}
+   |\newcolumntype{x}{>{|\meta{some declarations}|}{c}<{|\meta{some
+   more declarations}|}}|  \cmd{\hspace}*{-3cm} 
+   
+   A no overfull from this line
+ \end{quote}
+ One can then use the \texttt{x} column specifier in the preamble
+ arguments of all \texttt{array} or \texttt{tabular} environments in
+ which you want columns of this form.
+
+ It is common  to need math-mode and LR-mode columns in the same
+ alignment. If we define:
+ 
+ \makeatletter
+ \preto{\@verbatim}{\topsep=10pt \partopsep=0pt }
+ \makeatother
+  \begin{verbatim}
+   \newcolumntype{C}{>{$}c<{$}} 
+   \newcolumntype{L}{>{$}l<{$}} 
+   \newcolumntype{R}{>{$}r<{$}}
+ \end{verbatim}  
+  
+ 
+ Then we can use \texttt{C} to get centred LR-mode in an
+ \texttt{array}, or centred math-mode in a \texttt{tabular}.
+
+ The example given above for `centred decimal points' could be
+ assigned to a \texttt{d} specifier with the following command.
+ \begin{quote}
+ |\newcolumntype{d}{>{\centerdots}c<{\endcenterdots}}|
+ \end{quote}
+
+ The above solution always centres the dot in the
+ column. This does not look too good if the column consists of large
+ numbers, but to only a few decimal places. An alternative definition
+ of a \texttt{d} column is
+ \begin{quote}
+   |\newcolumntype{d}[1]{>{\rightdots{#1}}r<{\endrightdots}}|
+ \end{quote}
+ where the appropriate macros in this case are:\footnote{The package
+ \texttt{dcolumn.sty} contains more robust macros based on these
+ ideas.}
+ 
+ \makeatletter
+ \preto{\@verbatim}{\topsep=10pt \partopsep=0pt }
+ \makeatother
+ \begin{verbatim}
+   \def\coldot{.}     % Or if you prefer, \def\coldot{\cdot}
+   {\catcode`\.=\active
+     \gdef.{$\egroup\setbox2=\hbox to \dimen0 \bgroup$\coldot}}
+   \def\rightdots#1{%
+     \setbox0=\hbox{$1$}\dimen0=#1\wd0
+     \setbox0=\hbox{$\coldot$}\advance\dimen0 \wd0
+     \setbox2=\hbox to \dimen0 {}%
+     \setbox0=\hbox\bgroup\mathcode`\.="8000 $}
+   \def\endrightdots{$\hfil\egroup\box0\box2}
+\end{verbatim}
+ Note that |\newcolumntype| takes the same optional argument as
+|\newcommand| which declares the number of arguments of the column
+ specifier being defined. Now we can specify "d{2}" in our preamble
+ for a column of figures to at most two decimal places.
+
+ A rather different use of the |\newcolumntype| system takes
+ advantage of the fact that the replacement text in the
+ |\newcolumntype| command may refer to more than one column. Suppose
+ that a document contains a lot of \texttt{tabular} environments that
+ require the same preamble, but you wish to experiment with different
+ preambles. Lamport's original definition allowed you to do the
+ following (although it was probably a mis-use of the system).
+ \begin{quote}
+   |\newcommand{\X}{clr}|
+   |\begin{tabular}{\X}| \ldots
+ \end{quote}
+ \texttt{array.sty} takes great care \textbf{not} to expand the
+ preamble, and so the above does not work with the new scheme. With
+ the new version this functionality is returned:
+ 
+ \begin{scriptexample}{}{}
+ \begin{quote}
+ |\newcolumntype{X}{clr}|\\
+ |\begin{tabular}{X}| \ldots
+ \end{quote}
+ \end{scriptexample}
+
+ The replacement text in a |\newcolumntype| command may refer to any of
+ the primitives of \texttt{array.sty} see table \ref{tab:opt} on page
+ \pageref{tab:opt}, or to any new letters defined in other
+|\newcolumntype| commands.
 
 
-\section{More tabular esoterica}
+ \DescribeMacro{\showcols}A list of all the currently active
+|\newcolumntype| definitions is sent to the terminal and log file if
+ the |\showcols| command is given.
+
+\egroup
+
+
+
+
+
+
 
 \textbf{Aligning at a decimal point.}\quad One recurrent theme with tables is the desire to align numerical
 information on the decimal point. This is quite easily
@@ -151,9 +341,11 @@ is normally added between adjacent column entries. In this
 context the suppression of space is `a good thing'. We can
 specify the column formats like this:
 
-\begin{teXXX}
+\begin{quote}
+\begin{teX}
 \begin{tabular}{r@{.}lr@{.}l}
-\end{teXXX}
+\end{teX}
+\end{quote}
 
 to create two pairs of columns (that is, four columns in all).
 Each pair is really a column aligned on a decimal point. We
@@ -178,6 +370,66 @@ is to introduce extra columns. This means that we have to
 be careful in specifying the column headings (or stubs), since
 they should span two columns\footnote{This is a source of endless edits and mistakes in documents.}.
 
+\subsection{The dcolumn package}
+Cumbersome, is an understatement to describe the above method in aligning columns. A better approach is to
+use the \pkgname{dcolumn} or the \pkgname{siunitx} with both offering methods to align the decimals. The \pkgname{phd} package loads both packages by default, so we will describe both methods.
+
+The dcolumn package defines \textbf{D} to be a column specifier with three arguments.
+
+\begin{quote}
+|D|\marg{separator}\marg{sep.dvi}\marg{decimal places}
+\end{quote}
+
+First the dcolumn package is used to define three specifiers \textbf{d . ,}  using the |newcolumntype|
+to define these.
+
+
+\begin{scriptexample}{}{}
+\begin{verbatim}
+\newcolumntype{d}[1]{D{.}{\cdot}{#1}}
+\newcolumntype{.}{D{.}{.}{-1}}
+\newcolumntype{,}{D{,}{,}{2}}
+
+\begin{tabular}{|d{-1}|d{2}|.|,|d{3}|d{4}|d{-1}|}
+ 1.2     	& 1.2   		&1.2    		&1,2    	&1.2    	&1.2	&1.2     \\
+ 1.23   	& 1.23  		&12.5   		&300,2  &12.5   	&300.2	&300.2   \\
+ 1121.2	& 1121.2	&861.20 	&674,29&861.20 &674.29&674.29  \\
+ 184    	& 184   		&10     		&69     	&10     	&69	&69      \\
+ .4      	& .4    		&       		&,4     	&       	&.4 	&.4     \\
+         	&       		&.4     		&		&.4     	&		& 
+ \end{tabular}        	
+\end{verbatim}         	
+
+\newcolumntype{d}[1]{D{.}{\cdot}{#1}}
+\newcolumntype{.}{D{.}{.}{-1}}
+\newcolumntype{,}{D{,}{,}{2}}
+
+\begin{tabular}{|d{-1}|d{2}|.|,|d{3}|d{4}|d{1}|}
+ 1.2     	& 1.2   		&1.2    		&1,2    	&1.2    	&1.2	&1.2     \\
+ 1.23   	& 1.23  		&12.5   		&300,2  &12.5   	&300.2	&300.2   \\
+ 1121.2	& 1121.2	&861.20 	&674,29&861.20 &674.29&674.29  \\
+ 184    	& 184   		&10     		&69     	&10     	&69	&69      \\
+ .4      	& .4    		&       		&,4     	&       	&.4 	&.4     \\
+         	&       		&.4     		&		&.4     	&		& 
+\end{tabular}
+\end{scriptexample}
+
+\subsection{siunitx package}
+
+The siunitsx package developed by offers two new column types [\textbf{s, S}] that can be used to typeset materials. The package also detects number separators and fixes them where appropriate.
+
+\begin{tabular}{|S |S |S |S |S |S |S|}
+ 1.2     	& 1.2   		&1.2    		&1,2    	&1.2    	&1.2	&1.2     \\
+ 1.23   	& 1.23  		&12.5   		&300,2  &12.5   	&300.2	&300.2   \\
+ 1121.2	& 1121.2	&861.20 	&6429000  &861.20 &674.29&674.29  \\
+ 184    	& 184   		&10     		&69     	&10     	&69	&69      \\
+ .4      	& .4    		&       		&,4     	&       	&.4 	&.4     \\
+         	&       		&.4     		&		&.4     	&		& 
+\end{tabular}
+
+Both packages center the decimal separator. This can produce uneven spacing in a table as is illustrated with the last example, where I have inserted a large number in the fourth column. Since the contents of the cell is centered a large amount of space is allowed at the right to compensate for the left side. This is one limitation, where the package can improve. 
+ 
+Gregorio\footnote{\url{http://profs.sci.univr.it/~gregorio/breveguida.pdf}} describes a method to use Babel to distinguish between a comma and a dot separator.
 
 \section{Multicolumn cells.}
 
@@ -314,7 +566,7 @@ one & \lipsum[1] &three\\
 
 
 
-The arguments of |tabularx| are essentially the same as those of the standard
+The arguments of \pkgname{tabularx} are essentially the same as those of the standard
 |tabular*| environment. However rather than adding space between the columns
 to achieve the desired width, it adjusts the widths of some of the columns. The
 columns which are affected by the |tabularx| environment should be denoted with
@@ -327,11 +579,11 @@ the occassional difficult table.
 
 \section{Long Tables}
 
-Long tables offer problems if you are using \latex\. The package 
-\pkg{longtable} offers macros to help with long tables. The table below shows such an example.
+Tables that span page breaks require special treatment in  \latexe\. The package 
+\pkgname{longtable} offers macros to help with long tables. 
 
 To use the |longtable| package, just include it normally as any other package. In lieu of typing
-|\begin{table} ... \end{table}|, you just type begin{longtable} ... {longtable}. The package has numerous other useful commands, including command that break the page across pages horizontally. I would not recommend you do this. Such tables are virtually unreadable.
+|\begin{table} ... \end{table}|, you just type |\begin{longtable} ... {longtable}|. The package has numerous other useful commands, including command that break the page across pages horizontally. I would not recommend you do this. Such tables are virtually unreadable. \seedocs{longtable}
 
 \section{Using maths in tabular environments}
 
@@ -339,24 +591,38 @@ To use the |longtable| package, just include it normally as any other package. I
 Sometimes the material to be displayed especially if it is of a mathematical nature can best be displayed using one of the maths environments available. Consider \fref{fig:align}. This is from a question and answers assignment. We need to align all the numbers including the numbers 9,8 and 7 in the last three rows.
 To do this we use the following code:
 \medskip
+\begin{scriptexample}{}{}
 \emphasis{Z,begin,end,align,*}
-\begin{teXXX}
+
+\begin{teX}
 \begin{align*}
-  1 +  12 &= 13\\
+  1 +  12 &= 13\\ 
   2 +  11 &= 13\\
   3 +  10 &= 13\\
-  4 + \Z9 &= 13\\
+  4 + \Z9 &= 13\\   (*@\label{zet}{@*)
   5 + \Z8 &= 13\\
   6 + \Z7 &= 13
 \end{align*}
-\end{teXXX}
-\medskip
+\end{teX}
+\end{scriptexample}
 
-Notice the use of |\Z|, which we will define below. This is used as a |\phantom|
+Notice the use of |\Z|,  in line \ref{zet} which we will define below. This is used as a |\phantom|
 command to push the numeral to the right. The use of the |align*| environment, is in many respects much more easier than use of the normal tabular environment.
 
-    
-
+\begin{scriptexample}{}{}
+\emphasis{phantom, TmpLen}
+\begin{teX}
+\newcommand\Z{\phantom{0}}
+\newcommand\ZZ{\phantom{00}}
+\newcommand\ZZZ{\phantom{000}}
+\newcommand\ZZZZ{\phantom{0000}}
+\newcommand\E{\mathrel{\phantom{=}}}
+\end{teX}
+\end{scriptexample} 
+     
+The |Z| commands are described in the phd package and are always  available. 
+                   
+\begin{scriptexample}{}{}
 \begin{align*}
 1 +  12 &= 13\\
 2 +  11 &= 13\\
@@ -368,7 +634,7 @@ command to push the numeral to the right. The use of the |align*| environment, i
 \captionof{table}{Equations displayed using the \textbackslash align* environment.}
 \label{fig:align}
 \medskip
-
+\end{scriptexample}
 
 \section{Using the array package.} Both the |tabular| as well as the |array| environments can display tabular data. The latter should be used for tables that are predominantly requiring mathmode.
 
@@ -454,16 +720,6 @@ There are many more settings and ways to generalize the code, however for the ti
 
 
 \parindent1em
-Before we call on this code we need to build some new utility commands 
-
-\emphasis{phantom, TmpLen}
-\begin{teXXX}
-\newcommand\Z{\phantom{0}}
-\newcommand\ZZ{\phantom{00}}
-\newcommand\ZZZ{\phantom{000}}
-\newcommand\ZZZZ{\phantom{0000}}
-\newcommand\E{\mathrel{\phantom{=}}}
-\end{teXXX}
 
 
 The |\Z| commands are used to add some phantom space.\cmd{\phantom} Any phantom object will occupy exactly the same space as if it were normally there, but it will not be typeset. A space will be filled with exactly the same dimensions as the object would normally occupy, so the command |\ZZZZ| will occupy exactly the space of four zeros.
@@ -472,39 +728,40 @@ The |\Z| commands are used to add some phantom space.\cmd{\phantom} Any phantom 
 Using Leaders is another technique that you can use to improve the readability of text in tables, although a bit dated. They guide the reader's eyes in cases where the text is a bit spaced out from the columns.
 
 
-\begin{texexample}{Leaders in tables}{}
-\normalfont\normalsize\centering Table XIII, Comparison of Weights
-\index{Comparison of English weights}
-\index{Weights, comparison of English}
-\begin{tabular}{p{3cm}l@{\qquad}l@{\qquad}c}
-\toprule
-\multicolumn{1}{c}{\textit{Kind}}&\multicolumn{1}{c@{\qquad}}{\textit{Pound}}
- &\multicolumn{1}{c@{\qquad}}{\textit{Ounce}}&\multicolumn{1}{c}{\textit{Grain}}\\
-\midrule
-Avoirdupois\dotfill   &  7000 gr. & $437\frac{1}{2}$           gr. & 1\\
-Apothecaries'\dotfill &  5760 gr. & 480\phantom{$\frac{1}{2}$} gr. & 1\\
-Troy\dotfill          &  5760 gr. & 480\phantom{$\frac{1}{2}$} gr. & 1\\
-\bottomrule
-\end{tabular}
-\end{texexample}
 
-\medskip
+%\begin{texexample}{Leaders in tables}{}
+%\normalfont\normalsize\centering Table XIII, Comparison of Weights
+%\index{Comparison of English weights}
+%\index{Weights, comparison of English}
+%\begin{tabular}{p{3cm}l @{\qquad}l @{\qquad}c}
+%\toprule
+%\multicolumn{1}{c}{\textit{Kind}}&\multicolumn{1}{c@{\qquad}}{\textit{Pound}}
+% &\multicolumn{1}{c@{\qquad}}{\textit{Ounce}}&\multicolumn{1}{c}{\textit{Grain}}\\
+%\midrule
+%Avoirdupois\dotfill   &  7000 gr. & $437\frac{1}{2}$           gr. & 1\\
+%Apothecaries'\dotfill &  5760 gr. & 480\phantom{$\frac{1}{2}$} gr. & 1\\
+%Troy\dotfill          &  5760 gr. & 480\phantom{$\frac{1}{2}$} gr. & 1\\
+%\bottomrule
+%\end{tabular}
+%\end{texexample}
+%
+%\medskip
 
-
-\emphasis{begin,end,tabular,\dotfill}
-\begin{teXXX}
-\begin{tabular}{p{9em}l@{\qquad}l@{\qquad}c}
-    \multicolumn{1}{c}{\textit{Kind}}
-   &\multicolumn{1}{c@{\qquad}}{\textit{Pound}}
-   &\multicolumn{1}{c@{\qquad}}{\textit{Ounce}}
-   &\multicolumn{1}{c}{\textit{Grain}}\\
-Avoirdupois\dotfill   &  7000 gr. & $437\frac{1}{2}$           gr. & 1\\
-Apothecaries\dotfill  &  5760 gr. & 480\phantom{$\frac{1}{2}$} gr. & 1\\
-Troy\dotfill          &  5760 gr. & 480\phantom{$\frac{1}{2}$} gr. & 1
-\end{tabular}
-\end{teXXX}
-\medskip
-
+%\begin{comment}
+%\emphasis{begin,end,tabular,\dotfill}
+%\begin{teXXX}
+%\begin{tabular}{p{9em}l@{\qquad}l@{\qquad}c}
+%    \multicolumn{1}{c}{\textit{Kind}}
+%   &\multicolumn{1}{c@{\qquad}}{\textit{Pound}}
+%   &\multicolumn{1}{c@{\qquad}}{\textit{Ounce}}
+%   &\multicolumn{1}{c}{\textit{Grain}}\\
+%Avoirdupois\dotfill   &  7000 gr. & $437\frac{1}{2}$           gr. & 1\\
+%Apothecaries\dotfill  &  5760 gr. & 480\phantom{$\frac{1}{2}$} gr. & 1\\
+%Troy\dotfill          &  5760 gr. & 480\phantom{$\frac{1}{2}$} gr. & 1
+%\end{tabular}
+%\end{teXXX}
+%\medskip
+%\end{comment}
 
 The only new command here is the \cmd{dotfill}, used to provide the leaders after the text in the {\it boxhead}.
 You can redefine dotfill for better semantics on longer tables as \cmd{DotRow}. This is easier to do by
@@ -756,7 +1013,18 @@ We can specify different types of rules, using the \pkg{booktabs} package. In th
 
 The last table that is shown in \ref{frau}, shows usage of the |*| parameter command in tabular.
 
-
+\begin{scriptexample}{}{}
+\begin{verbatim}
+\centering
+     \captionof{table}{Mehrspaltiger Reihensatz}
+    \label{tab:mehrspaltig}
+    \begin{tabular}{*{4}{l}}
+      die Frau & der Frau   & der Frau  & die Frau \\
+      der Mann & des Mannes & dem Manne & den Mann \\
+      das Kind & des Kindes & dem Kinde & das Kind
+    \end{tabular}
+  \label{frau}
+\end{verbatim}
 {    \centering
      \captionof{table}{Mehrspaltiger Reihensatz}
     \label{tab:mehrspaltig}
@@ -766,7 +1034,10 @@ The last table that is shown in \ref{frau}, shows usage of the |*| parameter com
       das Kind & des Kindes & dem Kinde & das Kind
     \end{tabular}
   \label{frau}
+  
  }
+
+\end{scriptexample}
 
 \begin{teX}
    \begin{tabular}{*{4}{l}}
@@ -787,7 +1058,7 @@ The last table that is shown in \ref{frau}, shows usage of the |*| parameter com
     \end{tabular}
 } 
 
-\section{Threepart table}
+\section{Adding notes to tables}
 See \ref{threeparttable}
 
 \begin{texexample}{Threepart Table}{}
@@ -929,7 +1200,7 @@ slashbox &create 2D tables with the first cell containing a description for both
 
 \clearpage
 
-\section{ADDING EXTRA HEIGHT TO ROWS}
+\section{Adding extra height to rows}
 
 You can add extra height to a row as follows:
 
@@ -945,13 +1216,22 @@ You can add extra height to a row as follows:
 
 \bigskip
 
+{
 \setlength\extrarowheight{2pt}
 \begin{tabular}{|l|r|c|p{1.75cm}|}\hline
 Left & Right & Center & Box\\\hline
 \rowcolor{cyan!40}
 l & r & c & p\{1.75cm\}\\\hline
 \end{tabular}
-
+}
+{
+\setlength\extrarowheight{0pt}
+\begin{tabular}{|l|r|c|p{1.75cm}|}\hline
+Left & Right & Center & Box\\\hline
+\rowcolor{cyan!40}
+l & r & c & p\{1.75cm\}\\\hline
+\end{tabular}
+}
 
 \section{Full width tables in multicolumn text}
 
@@ -1130,8 +1410,11 @@ $$\vbox{\offinterlineskip
 \onelineheader{Aligning vertical material \textbackslash valign}
 
 
-Just as |\halign| creates an alignment by specifying a prototype row, |\valign| creates an alignment by specifying a prototype column. Inside a |\valign|, |&| specifies the end of a row in a column, and |\cr| means ``end-of-column"; each cell and column is typeset in (internal) vertical mode and the whole alignment is then passed to the paragraph builder (in horizontal mode).  An example from David Bausum's book
+Just as \cmd{\halign} creates an alignment by specifying a prototype row, \cmd{\valign} creates an alignment by specifying a prototype column. Inside a \cmd{\valign}, \cmd{\textand} specifies the end of a row in a column, and \cmd{\cr} means end-of-column; each cell and column is typeset in (internal) vertical mode and the whole alignment is then passed to the paragraph builder (in horizontal mode).  An example from David Bausums book
+
 \medskip
+
+
 
 \begin{teXXX}
 \valign{&\hbox to 1in{\vrule height9pt depth3pt width0pt#\hfil}\vfil\cr
@@ -1250,21 +1533,21 @@ application ensure that there is no trailing space or comma. In Example~\ref{ex:
 to write the |csv| file to disk. The table is generated with the
 package \pkg{pgfplotstable}.
 
-\begin{texexample}{csvtable}{ex:csvtable}
-\begin{filecontents*}{csvtable.csv}
-Jan,Feb,Mar,Apr,May,Jun,Jul,Aug,Sept,Oct,Nov,Dec
-1,2,3,{1000000},{2000000},{10000},{20000},{10000},{20000},{20000},{20000},{20000}
-2,4,6,{2000000},{2000000},{10000},{20000},{10000},{20000},{20000},{20000},{20000}
-3,6,9,{2000000},{2000000},{10000},{20000},{10000},{20000},{20000},{20000},{20000}
-4,8,12,{2000000},{2000000},{10000},{20000},{10000},{20000},{20000},{20000},{20000}
-5,10,15,{2000000},{2000000},{10000},{20000},{10000},{20000},{20000},{20000},{20000}
-6,12,18,{2000000},{2000000},{10000},{20000},{10000},{20000},{20000},{20000},{20000}
-7,14,21,{2000000},{2000000},{10000},{20000},{10000},{20000},{20000},{20000},{20000}
-8,16,24,{2000000},{2000000},{10000},{20000},{10000},{20000},{20000},{20000},{20000}
-9,18,27,{2000000},{2000000},{10000},{20000},{10000},{20000},{20000},{20000},{20000}
-10, ,30,{2000000},{2000000},{10000},{20000},{10000},{20000},{20000},{20000},{20000}
-\end{filecontents*}
+%\begin{filecontents*}{csvtable.csv}
+%Jan,Feb,Mar,Apr,May,Jun,Jul,Aug,Sept,Oct,Nov,Dec
+%1,2,3,{1000000},{2000000},{10000},{20000},{10000},{20000},{20000},{20000},{20000}
+%2,4,6,{2000000},{2000000},{10000},{20000},{10000},{20000},{20000},{20000},{20000}
+%3,6,9,{2000000},{2000000},{10000},{20000},{10000},{20000},{20000},{20000},{20000}
+%4,8,12,{2000000},{2000000},{10000},{20000},{10000},{20000},{20000},{20000},{20000}
+%5,10,15,{2000000},{2000000},{10000},{20000},{10000},{20000},{20000},{20000},{20000}
+%6,12,18,{2000000},{2000000},{10000},{20000},{10000},{20000},{20000},{20000},{20000}
+%7,14,21,{2000000},{2000000},{10000},{20000},{10000},{20000},{20000},{20000},{20000}
+%8,16,24,{2000000},{2000000},{10000},{20000},{10000},{20000},{20000},{20000},{20000}
+%9,18,27,{2000000},{2000000},{10000},{20000},{10000},{20000},{20000},{20000},{20000}
+%10, ,30,{2000000},{2000000},{10000},{20000},{10000},{20000},{20000},{20000},{20000}
+%\end{filecontents*}
 
+\begin{texexample}{csvtable}{ex:csvtable}
 \pgfkeys{/pgf/number format/.cd,
 fixed, use period}
 
@@ -1335,13 +1618,101 @@ a b c
 
 
 
+\section{Methods of marking tables}
+
+The golden rule in programming (and marking-up a document) can be considered as programming is to separate
+as far as possible the data or program from the presentation. Over the years table mark-up has evolved from system to system. You might be familiar with markdown, extended markdown or html and xml tables. Each one strives to find a solution that is intuitive to use and also minimizes the commands required. Some such as html and xml go as far as to provide another language for transforming the text before presentation in a browser for example.
+
+\subsection{Github flavoured Markdown}
+
+This is a version of standard Markdown (SM) which is used across all Github sites\footnote{ \url{https://help.github.com/articles/github-flavored-markdown/}}. 
+
+\begin{scriptexample}{}{}
+\begin{verbatim}
+First Header  | Second Header
+------------- | -------------
+Content Cell  | Content Cell
+Content Cell  | Content Cell
+\end{verbatim}
+\end{scriptexample}
+
+For aesthetic purposes, you can also add extra pipes on the ends
+
+\begin{verbatim}
+| First Header  | Second Header |
+| ------------- | ------------- |
+| Content Cell  | Content Cell  |
+| Content Cell  | Content Cell  |
+\end{verbatim}
+
+Finally, by including colons : within the header row, you can define text to be left-aligned, right-aligned, or center-aligned:
+
+\begin{verbatim}
+| Left-Aligned  | Center Aligned  | Right Aligned |
+| :------------ |:---------------:| -----:|
+| col 3 is      | some wordy text | $1600 |
+| col 2 is      | centered        |   $12 |
+| zebra stripes | are neat        |    $1 |
+\end{verbatim}
 
 
+\subsection{wiki mark-up}
+
+On the wiki markup tables at the wikimedia you can read a discussion as to how hard it is to mark up in a 
+universally acceptable method. The wiki method is shown below.
+
+One of the advantages of lua is that in essence Lua is a data description language and for people that take time
+to familiarize themselves with it, the possibility exists to use it directly to produce complex tables.
+
+If the table consists of well defined rows we can use any of the above, it becomes difficult, when rows are mixed with multirows and the like.
+
+\arrayrulecolor{thegray}
+\begin{scriptexample}{}{}
+\begin{verbatim}
+\begin{luacode}
+require("tabular.cells")
+local s = [[
+ Heading 1 ^ Heading 2  ^Heading 3|
+ Item 1    | Item 2 | Item 3 |
+ Item 4    | Item 5 | Item 6 |
+]]
+wiki_to_table(s)
+\end{luacode}
+\end{verbatim}
+\begin{luacode}
+require("tabular.cells")
+local s = [[
+Heading 1 ^ Heading 2  ^Heading 3|
+ Item 1    | Item 2 | Item 3 |
+ Item 4    | Item 5 | Item 6 |    
+]]
+wiki_to_table(s)
+\end{luacode}
+\end{scriptexample}
+
+The parser function for the above example, is a simple function in Lua saved as a module. It is far from complete and suffers from not checking properly for utf string issues. The only advantage of parsing input such as this
+with Lua is that a more complete parser can preprocess text and do all the substitutions before passing it back to TeX again for further processing. 
+
+\subsection{Using Lua}
+
+Tabular data is mostly generated with applications external to TeX, such as databases, matlab, spreadsheets and the like. However, useful |pgfplotstable| is,  it becomes very cumbersome to remember all the styles and commands. Also escaping characters in files which come from such applications becomes cumbersome. For simpler applications, such as the ones in the examples outlined here, can easily be written as .csv files using the filecontents package. Very soon though the dreaded TeX error message would appear `no space for another write’. With Lua you can open and close as many files as you need.  
+
+The Lua module csv can be used. This has been modified from lua-csv. Writing the data, is simpler. It takes any string and writes it to the directory of your choice. For larger projects it is prudent to save all csv files in a |data| directory. This data can then be imported for tabular or for graphical presentation.
 
 
-
-
-
+\begin{scriptexample}{}{}
+\begin{tabular}{cR[.][.]{5}{3}}
+\toprule
+Expression & \multicolumn{1}{c}{Value} \\
+\midrule
+$\pi $ & 3.1416 \\
+\midrule
+$\pi ^{\pi}$ & 36.46 \\
+\midrule
+$\pi ^{\pi ^{\pi }}$ & 80662.7 \\
+\bottomrule
+\end{tabular}
+\end{scriptexample}
 
 
 
