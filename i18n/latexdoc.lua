@@ -648,6 +648,6 @@ print_on_output_escape(output, ...)
 
 
 
-local x = DocumentParser.include("calendar.lua")
+local x = DocumentParser.include("latexdoc.lua")
 
 --- print_on_output_escape(test, testing, other, 'test','test_under')
