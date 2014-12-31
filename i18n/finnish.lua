@@ -1,0 +1,47 @@
+local strings = strings or {}
+
+strings.finnish = {
+  abstract          = "Tiivistelmä",
+  partname          = "Osa",
+  chaptername       = "Luku",
+  sectionname       = "",
+  subsectionname    = "",
+  subsubsectionname = "",
+  paragraphname     = "",
+  appendixname      = "Liite", 
+  bibliographyname  = "",
+  indexname         = "Hakemisto",
+  glossaryname      = "Sanasto",
+  tablename         = "",
+  figurename        = "", 
+  pagename          = "Sivu",
+  seename           = "katso",
+  equationname      = "",
+  contentsname      = "Sisältö",
+  prefacename       = "",
+  listfigurename    = "Kuvat",
+  listtablename     = "Taulukot",
+  alsoname          = "katso myös",
+  proofname         = "Todistus",
+  refname           = "Kirjallisuutta",
+  leftname          = "",
+  rightname         = "",
+  bindingcorrectionname = "",
+  finnishname         = "",
+  months              = {
+      "tammikuuta", 
+      "helmikuuta",
+      "maaliskuuta",
+      "huhtikuuta",
+      "toukokuuta",
+      "kesäkuuta",
+      "heinäkuuta",
+      "elokuuta",
+      "syyskuuta", 
+      "lokakuuta",
+      "marraskuuta",
+      "joulukuuta",
+    }
+  }
+  
+  return strings

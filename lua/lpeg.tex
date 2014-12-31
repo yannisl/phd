@@ -48,14 +48,14 @@ local print = tex.print
        
 local either_ab = (P'a' + P'b')^1
         tex.print(match(either_ab,  'ababcdefg'))
-     str = "Fetchez la vache!"
+     str = "Fetchez; la vache!"
 print(lpeg.anywhere("a" ):match(str))
 print(lpeg.anywhere("la"):match(str))
 print(lpeg.anywhere("ac"):match(str))  
 
 
 
- str = "aaababaaba"
+ str = "aaababaaba;"
 rep1 = {
     { "a",  "\\textcolor{red}{x}" },
     { "aa", "y" },
@@ -64,6 +64,7 @@ rep1 = {
 rep2 = {
     { "aa", "\\textcolor{blue}{y}" },
     { "a",  "x" },
+    {lpeg.patterns.semicolon, "\\textcolor{purple}{;}"}
 }
 
 print(lpeg.replacer(rep1):match(str),'\\par')
@@ -74,7 +75,7 @@ print(lpeg.match(lpeg.patterns.sign, str))
 \end{luacode}
 \end{texexample}
 
-The matching function. It attempts to match the given pattern against the subject string. If the match succeeds, returns the index in the subject of the first character \emph{after} the match, or the values of captured values (if the pattern captured any value).
+It attempts to match the given pattern against the subject string. If the match succeeds, returns the index in the subject of the first character \emph{after} the match, or the values of captured values (if the pattern captured any value).
 
 An optional numeric argument init makes the match starts at that position in the subject string. As usual in Lua libraries, a negative value counts from the end.
 
@@ -87,25 +88,7 @@ The lualibs library which we load by default when LuaLaTeX is detected comes wit
 lpeg.replacer(table) Accepts a list of pairs and returns a pattern that substitutes any first elements of a given pair by its second element. The latter can be a string, a hashtable, or a function (whatever is permissible with |lpegs.Cs|).
 The order of the elements of a table is important, as lpeg's match the leftmost element of a disjunction first.
 
-\begin{luacode}
-local print = tex.print
-function show_patterns (p, super)
-    for i,j in pairs(p) do
-        i = super and super..":"..i or i
-        print("=== " .. i )
-        if type(j) == "userdata" then
-            j:print()
-        else -- descend into next level
-            show_patterns(j, i)
-        end 
-    end 
-end
 
-local p = lpeg.patterns
-
-show_patterns(p)
-
-\end{luacode}
 
 \section{Basic Captures}
 

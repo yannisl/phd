@@ -7,8 +7,6 @@ See http://www.latex-project.org/lppl.txt
 This file provides a phd for defining a class.
 
 
- %    \input{./lua/luaio}}
-
 
 
 

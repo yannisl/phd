@@ -1,0 +1,41 @@
+\chapter{Metatables and Metamethods}
+
+\def\textdblunderscore#1{{\bfseries \textunderscore\hskip1pt\textunderscore#1}}
+
+Every language has its own peculiarities and Lua is no exception with its metatables and metamethods. Lua’s metatables allow us to change the behaviour of a value when confronted with an undefined operation. For example when using metatables, we can define how lua computes the expression a+b, where a and b are tables. Whenever Lua tries to add two tables, it checks whether either of them has a \emph{metatable} and whether ths metatable has an \textdblunderscore{add} field. If Lua finds this field, it calls the corresponding value---the so-called \emph{metamethod}, which should be a function---to compute the sum.
+
+Lua by default always creates new tables without metatables. We can use \luacmd{setmetatable} to set or change the metatable of any table.
+
+\begin{texexample}{Metatable}{}
+\begin{luacode}
+require"lualibs-dir"
+local t, t1 = {}, {}
+        print = tex.print
+setmetatable (t, t1)
+-- print(getmetatable(t)==t1)
+
+local result = dir.found("./lua/")
+
+if result then tex.print(-2, result) else tex.print('not found')  end
+
+local image_fixed = img.scan({filename = "./images/museum.jpg"})
+
+local image     = img.copy(image_fixed)
+local halfimage = img.copy(image_fixed)
+
+halfimage.height = halfimage.height *0.3
+halfimage.width  = halfimage.width  *0.3
+
+--node.write(img.node(image))
+
+
+local h=node.hpack(img.node(halfimage), img.node(halfimage))
+
+node.write(h)
+
+tex.print(halfimage.width/65000,'pt')
+
+\end{luacode}
+\end{texexample}
+\includegraphics[decodearray={0.2 0.2 1 0 1 0.8 1 0}]{./images/dream.jpg}
+From Lua we can access the metatables only of tables; for any other values we must use C code. 

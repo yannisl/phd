@@ -1,0 +1,148 @@
+\documentclass{ltxdoc}
+\usepackage{phd}
+\usepackage{hyperref}
+\makeatletter
+
+\def\includeluadocumentationof#1{
+  \directlua{require 'pgf.manual.DocumentParser'}
+  \directlua{pgf.manual.DocumentParser.include '#1'}
+}
+
+\newenvironment{luageneric}[4]{
+  \pgfmanualentry
+    \pgfmanualentryheadline{#4 \texttt{#1\declare{#2}}#3}
+    \index{#2@\protect\texttt{#2} (Lua)}%
+    \def\temp{#1}
+    \ifx\temp\pgfutil@empty\else
+      \index{#1@\protect\texttt{#1}!#2@\protect\texttt{#2} (Lua)}%
+    \fi
+  \pgfmanualbody
+}{\endpgfmanualentry}
+
+\newenvironment{luatable}[3]{
+  \medskip
+  \luageneric{#1}{#2}{ (declared in \texttt{#3})}{\textbf{Lua table}}
+}{\endluageneric}
+
+\newenvironment{luafield}[1]{
+  \pgfmanualentry
+    \pgfmanualentryheadline{Field \texttt{\declare{#1}}}
+  \pgfmanualbody
+}{\endpgfmanualentry}
+
+
+\newenvironment{lualibrary}[1]{
+  \pgfmanualentry
+  \pgfmanualentryheadline{%
+    \pgfmanualpdflabel{#1}{}%
+    \textbf{Graph Drawing Library} \texttt{\declare{#1}}%
+  }
+    \index{#1@\protect\texttt{#1} graph drawing library}%
+    \index{Libraries!#1@\protect\texttt{#1}}%
+    \index{Graph drawing libraries!#1@\protect\texttt{#1}}%
+    \vskip.25em
+    {\ttfamily\char`\\usegdlibrary\char`\{\declare{#1}\char`\}\space\space \char`\%\space\space  \LaTeX\space and plain \TeX}\\
+    {\ttfamily\char`\\usegdlibrary[\declare{#1}]\space \char`\%\space\space Con\TeX t}\smallskip\par
+    \pgfmanualbody
+}{\endpgfmanualentry}
+
+\newenvironment{luadeclare}[4]{
+  \pgfmanualentry
+  \def\manual@temp@default{#3}%
+  \def\manual@temp@initial{#4}%
+  \def\manual@temp@{#3#4}%
+  \pgfmanualentryheadline{%
+    \pgfmanualpdflabel{#1}{}%
+    {\ttfamily/graph
+      drawing/\declare{#1}\opt{=}}\opt{#2}\hfill%
+    \ifx\manual@temp@\pgfutil@empty\else%
+    (\ifx\manual@temp@default\pgfutil@empty\else%
+    default {\ttfamily #3}\ifx\manual@temp@initial\pgfutil@empty\else, \fi%
+    \fi%
+    \ifx\manual@temp@initial\pgfutil@empty\else%
+    initially {\ttfamily #4}%
+    \fi%
+    )\fi%
+  }%
+  \index{#1@\protect\texttt{#1} key}%
+  \pgfmanualbody
+  \gdef\myname{#1}%
+%  \keyalias{tikz}
+%  \keyalias{tikz/graphs}
+}{\endpgfmanualentry}
+
+\newenvironment{luadeclarestyle}[4]{
+  \pgfmanualentry
+  \def\manual@temp@para{#2}%
+  \def\manual@temp@default{#3}%
+  \def\manual@temp@initial{#4}%
+  \def\manual@temp@{#3#4}%
+  \pgfmanualentryheadline{%
+    \pgfmanualpdflabel{#1}{}%
+    {\ttfamily/graph drawing/\declare{#1}}\ifx\manual@temp@para\pgfutil@empty\else\opt{\texttt=}\opt{#2}\fi\hfill%
+    (style\ifx\manual@temp@\pgfutil@empty\else, %
+    \ifx\manual@temp@default\pgfutil@empty\else%
+    default {\ttfamily #3}\ifx\manual@temp@initial\pgfutil@empty\else, \fi%
+    \fi%
+    \ifx\manual@temp@initial\pgfutil@empty\else%
+    initially {\ttfamily #4}%
+    \fi%
+    \fi)%
+  }%
+  \index{#1@\protect\texttt{#1} key}%
+  \pgfmanualbody%
+  \gdef\myname{#1}%
+%  \keyalias{tikz}
+%  \keyalias{tikz/graphs}
+}{\endpgfmanualentry}
+
+\newenvironment{luanamespace}[2]{
+  \luageneric{#1}{#2}{}{\textbf{Lua namespace}}
+}{\endluageneric}
+
+\newenvironment{luafiledescription}[1]{}{}
+
+\newenvironment{luacommand}[4]{
+  \hypertarget{pgf/lua/#1}{\luageneric{#2}{#3}{\texttt{(#4)}}{\texttt{function}}}
+}{\endluageneric}
+
+\newenvironment{luaparameters}{\par\emph{Parameters:}%
+  \parametercount=0\relax%
+  \let\item=\parameteritem%
+  \let\list=\restorelist%
+}
+{\par
+}
+
+\newenvironment{luareturns}{\par\emph{Returns:}%
+  \parametercount=0\relax%
+  \let\item=\parameteritem%
+  \let\list=\restorelist%
+}
+{\par
+}
+
+\newcount\parametercount
+
+\newenvironment{parameterdescription}{\unskip%
+  \parametercount=0\relax%
+  \let\item=\parameteritem%
+  \let\list=\restorelist%
+}
+{\par
+}
+\let\saveditemcommand=\item
+\let\savedlistcommand=\list
+\def\denselist#1#2{\savedlistcommand{#1}{#2}\parskip0pt\itemsep0pt}
+\def\restorelist{\let\item=\saveditemcommand\denselist}
+\def\parameteritem{\pgfutil@ifnextchar[\parameteritem@{}}%}
+\def\parameteritem@[#1]{\advance\parametercount by1\relax\hskip0.15em plus 1em\emph{\the\parametercount.}\kern1ex\def\test{#1}\ifx\test\pgfutil@empty\else#1\kern.5em\fi}
+
+\begin{document}
+\chapter{Test}
+\begin{luacommand}{m}
+{julianDay}{  year, month, Day, julian}{}
+function m.julianDay(year, month, Day, julian)
+\end{luacommand}
+
+\end{document}

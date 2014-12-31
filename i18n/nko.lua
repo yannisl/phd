@@ -1,0 +1,47 @@
+local strings = strings or {}
+
+strings.nko = {
+  abstract          = "",
+  partname          = "",
+  chaptername       = "",
+  sectionname       = "",
+  subsectionname    = "",
+  subsubsectionname = "",
+  paragraphname     = "",
+  appendixname      = "", 
+  bibliographyname  = "",
+  indexname         = "",
+  glossaryname      = "",
+  tablename         = "",
+  figurename        = "", 
+  pagename          = "",
+  seename           = "",
+  equationname      = "",
+  contentsname      = "",
+  prefacename       = "",
+  listfigurename    = "",
+  listtablename     = "",
+  alsoname          = "",
+  proofname         = "",
+  refname           = "",
+  leftname          = "",
+  rightname         = "",
+  bindingcorrectionname = "",
+  name              = "Nko",
+  months              = {
+   "ߓߌ߲ߠߊߥߎߟߋ߲",
+    "ߞߏ߲ߞߏߜߍ",
+    "ߕߙߊߓߊ",
+    "ߞߏ߲ߞߏߘߌ߬ߓߌ",
+    "ߘߓߊ߬ߕߊ",
+    "ߥߊ߬ߛߌߥߊ߬ߙߊ",
+    "ߞߊ߬ߙߌߝߐ߭",
+    "ߘߓߊ߬ߓߌߟߊ",
+    "ߕߎߟߊߝߌ߲",
+    "ߞߏ߲ߓߌߕߌ߮",
+    "ߣߍߣߍߓߊ",
+    "ߞߏ߬ߟߌ߲߬ߞߏߟߌ߲",
+    }
+  }
+  
+  return strings

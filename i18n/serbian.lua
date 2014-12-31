@@ -1,0 +1,47 @@
+local strings = strings or {}
+
+strings.serbian = {
+  abstract          = "",
+  partname          = "",
+  chaptername       = "",
+  sectionname       = "",
+  subsectionname    = "",
+  subsubsectionname = "",
+  paragraphname     = "",
+  appendixname      = "", 
+  bibliographyname  = "",
+  indexname         = "",
+  glossaryname      = "",
+  tablename         = "",
+  figurename        = "", 
+  pagename          = "",
+  seename           = "",
+  equationname      = "",
+  contentsname      = "",
+  prefacename       = "",
+  listfigurename    = "",
+  listtablename     = "",
+  alsoname          = "",
+  proofname         = "",
+  refname           = "",
+  leftname          = "",
+  rightname         = "",
+  bindingcorrectionname = "",
+  russianname         = "serbian",
+  months              = {
+     "januar",
+     "februar",
+     "mart",
+     "april",
+     "maj",
+     "jun", 
+     "jul",
+     "avgust",
+     "septembar",
+     "oktobar",
+     "novembar",
+     "decembar",
+    }
+  }
+  
+  return strings

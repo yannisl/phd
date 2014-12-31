@@ -1,0 +1,243 @@
+\chapter{Working with Lua Tables}
+
+This section explores Lua's data type called a table. It's a data structure, which means that it lets
+you combine other values. Because of its flexibility, it is Lua’s only data structure. (It is possible to
+create other, special-purpose data structures in C.) We will first outline the general concepts for creating tables and then examine the use of the library |table| and also some extra utilities available in distributions. The |phd| package also provides some additional help with the module \textbf{phd.util.tablex}.
+
+\section{Table Construction}
+
+Tables in Lua are objects. 
+
+\begin{texexample}{}{}
+\begin{luacode}
+hash = {}
+hash[ 'key-1' ] = "val1"
+hash[ 'key-2' ] = 1
+hash[ 'key-3' ] = {}
+tex.sprint(hash['key-2'])
+\end{luacode}
+\end{texexample}
+
+For example we can declare tables within tables, font holding tables and even whole databases.
+
+\begin{texexample}{Defining tables}{}
+\begin{luacode}
+local t = {
+    document_type = {'article'},
+    geometry = {
+       paper = 'a4'
+     }
+} 
+tex.print(t.geometry.paper)
+\end{luacode}
+\end{texexample}
+
+One trick that we will be using early on, is to load some utilities. These take the form of modules which we describe in more detail later on. 
+
+\emphasis{type}
+\begin{texexample}{Defining tables}{}
+\begin{luacode}
+if type(tex) == 'table' then print = tex.print end
+local t = {
+    document_type = {'article'},
+    geometry = {
+       paper = 'a4'
+     }
+} 
+print(t.geometry.paper)
+\end{luacode}
+\end{texexample}
+
+As you can see from the example, |tex.print()| function is also stored in a table. Tables are versatile enough especially when combined with metatables and metamethods that they can be used in defining classes, objects,  stacks, lists, tuples or any other data structure you can imagine. 
+
+One useful construct is to detect if we are running in LuaTeX or another Lua binary. This enables us to use the normal Lua function |print|  enabling our Lua programs to run under normal Lua binaries as well as LuaTeX. This can speed up development and also enable debugging using test environments.
+
+\begin{scriptexample}{}{}
+\begin{teX}
+  if type(tex) == 'table' then print = tex.print end
+\end{teX}
+\end{scriptexample}
+
+To test we have used the Lua function |type()|, which returns the type of the variable, in this case a 'table'. Other types are |number|, |string|, |userdata| and |nil|. 
+
+\section{Accessing keys and values}
+
+You can access any key using the dot notation, as we have used in the above example or using square brackets. The former is considered better programming style than the latter.
+
+\emphasis{type}
+\begin{texexample}{Defining tables}{}
+\begin{luacode}
+if type(tex) == 'table' then print = tex.print end
+local t = {
+    document_type = {'article'},
+    geometry = {
+       paper = 'a4'
+     }
+  } 
+ print(t.geometry['paper'])
+\end{luacode}
+\end{texexample}
+
+\section{Iterate over the keys of a table}
+
+\begin{texexample}{Defining tables}{}
+\begin{luacode}
+if type(tex) == 'table' then print = tex.print end
+local paper = {'a4', 'a3', 'a2', 'a1', 'a5', 'a0' }
+for k,v in pairs(paper) do
+   print(v)
+end
+\end{luacode}
+\end{texexample}
+
+
+\section{The Table Library}
+The Lua |table| library comprises auxiliary functions to manipulate tables as arrays.
+It provides functions to insert and remove elements from lists, to sort the elements
+
+of an array, and to concatenate all strings in an array.
+\subsection{Sorting}
+
+\emphasis{table, sort}
+\begin{texexample}{Sorting tables}{}
+\begin{luacode}
+if type(tex) == 'table' then print = tex.print end
+local paper = {'a4', 'a3', 'a2', 'a1', 'a5', 'a0' }
+table.sort(paper)
+for k,v in pairs(paper) do
+   print(v)
+end
+\end{luacode}
+\end{texexample}
+
+One caveat, is that tables that contain |nil| values cannot be sorted reliably. The table library provides a function |table.sort|, which receives a table and sort its elements. Such functions normally provide an optional parameter that provides variations in the sorting order, such as \emph{ascending} or \emph{descending}, numeric or alphabetical. Instead of trying to provide all kinds of options |sort| provides a single optional parameter, which is the \emph{order function}: a function that receives two elements and returns whether the first must come before the second in the 
+sorted list. Suppose we have a table of records such as this:
+
+\begin{quote}
+\begin{verbatim}
+local students = {
+  {name = 'John', avg = '80',
+  {name = 'Mary', avg = '66',
+  {name = 'David', avg = '99', 
+  {name = 'Patel', avg ='98',
+}
+\end{verbatim}
+\end{quote}
+
+If we want to sort the table by the field name, in reverse alphabetical order, we
+just call the |table.sort|  funcion with an optional sorting function.
+
+\begin{texexample}{Sorting tables}{}
+\begin{luacode}
+if type(tex) == 'table' then print = tex.print end
+local students = {
+  {name = 'John', avg = '80'},
+  {name = 'Mary', avg = '66'},
+  {name = 'David', avg = '99'}, 
+  {name = 'Patel', avg ='98'},
+  {name = 'Anne', avg = '52'},
+}
+table.sort(students, function (a, b) return (a.name < b.name) end)
+for k, v in pairs(students) do
+  print(v.name)
+end
+\end{luacode}
+\end{texexample}
+
+Of course typing the function is not always necessary, as we can define two variables to hold the functions:
+
+\begin{scriptexample}{}{}
+\begin{verbatim}
+local descending = function (a, b) return (a.name > b.name) end
+local ascending = function (a, b) return (a.name < b.name) end
+\end{verbatim}
+\end{scriptexample}
+
+We can sort by marks as well or any other key. In the next example we just change the sorting function to achieve this.
+
+\begin{scriptexample}{}{}
+\begin{teX}
+\begin{luacode}
+if type(tex) == 'table' then print = tex.print end
+local students = {
+  {name = 'Peter', avg = '52'},  (*@\label{peter}  @*)
+  {name = 'John', avg = '80'},
+  {name = 'Mary', avg = '66'},
+  {name = 'David', avg = '99'}, 
+  {name = 'Patel', avg ='98'},
+  {name = 'Anne', avg = '52'},
+  {name = 'An', avg = '52'},
+  {name = 'Zavier', avg = '87'} 
+}
+
+local descending = function (a, b) return (a.avg > b.avg) end
+local ascending = function (a, b) return (a.avg < b.avg) end
+
+table.sort(students, descending)   
+
+print('\\begin{tabular}{ll}')
+for _, v in pairs(students) do
+   print(v.name ..'&'..  v.avg .. '\\\\')
+end
+print('\\end{tabular}')
+\end{luacode}
+\end{teX}
+\end{scriptexample}
+
+What just happened, not only we have sorted the table, but we have also managed to typeset it using LaTeX tabular environment. Using the function \emph{descending} we first sorted the table and then used an iterator to print the table.
+
+One note in the Lua manual states that the sort function is not stable (see line \ref{peter}). That does not mean that the sort algorithm is still under development. This is a computer science term that means that given two equal marks in our example the order of the sort for these marks might be different that the one entered. This is better understood by the image, which is from the relevant wikipedia article. To achieve stable sorting one has to implement \emph{radix} sorting.\footnote{See \url{https://github.com/kennyledet/Algorithm-Implementations/blob/master/Radix_Sort/Lua/Yonaba/radix_sort.lua} for an implementation.}
+
+\begin{figure}[htbp]
+\centering
+
+\includegraphics[width=0.4\textwidth]{./images/stable-sort.png}
+\caption{Differences between stable and unstable sorts.}
+\end{figure}
+
+\begin{scriptexample}{}{}
+To summarize. A Lua table always contains an unordered set of key-value pairs. Lua provides the tools but you always you need to provide the batteries.
+\end{scriptexample}
+
+\subsection{Inserting and removing elements}
+
+The table.insert function inserts an element in a given position of an array,
+moving up other elements to open space. For instance, if t is the array
+{10,20,30}, after the call table.insert(t,1,15) t will be {15,10,20,30}. As
+a special (and frequent) case, if we call insert without a position, it inserts the
+element in the last position of the array (and, therefore, moves no elements).
+
+\emphasis{insert}
+
+\begin{texexample}{Inserting and Deleting}{}
+\begin{luacode}
+if type(tex) == 'table' then print = tex.print end
+local students = {
+  {name = 'Peter', avg = '52'}, 
+  {name = 'John', avg = '80'},
+  {name = 'Mary', avg = '66'},
+  {name = 'David', avg = '99'}, 
+  {name = 'Patel', avg ='98'},
+  {name = 'Anne', avg = '52'},
+  {name = 'An', avg = '52'},
+  {name = 'Zavier', avg = '87'} 
+}
+
+table.insert(students, {name='Annabel', avg='52'})
+
+local descending = function (a, b) return (a.avg > b.avg) end
+local ascending = function (a, b) return (a.avg < b.avg) end
+
+--table.sort(students, descending)   
+
+print('\\begin{tabular}{ll}')
+for _, v in pairs(students) do
+   print(v.name ..'&'..  v.avg .. '\\\\')
+end
+print('\\end{tabular}')
+\end{luacode}
+
+\end{texexample}
+
+The |insert| function takes another argument to specify the position we want the element to be inserted in the array |table.insert(students, 5, {name='Annabel', avg='52'})|. If it is left out it will insert it at the head of the list.
+

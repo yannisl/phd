@@ -1,0 +1,47 @@
+local strings = strings or {}
+
+strings.turkish = {
+  abstract          = "Résumé",
+  partname          = "",
+  chaptername       = "",
+  sectionname       = "",
+  subsectionname    = "",
+  subsubsectionname = "",
+  paragraphname     = "",
+  appendixname      = "", 
+  bibliographyname  = "",
+  indexname         = "",
+  glossaryname      = "",
+  tablename         = "",
+  figurename        = "", 
+  pagename          = "",
+  seename           = "",
+  equationname      = "",
+  contentsname      = "Table des matières",
+  prefacename       = "",
+  listfigurename    = "",
+  listtablename     = "",
+  alsoname          = "",
+  proofname         = "",
+  refname           = "",
+  leftname          = "",
+  rightname         = "",
+  bindingcorrectionname = "",
+  turkishname         = "turkish",
+  months              = {
+     "Ocak",
+     "Şubat",
+     "Mart",
+     "Nisan",
+     "Mayıs",
+     "Haziran",
+     "Temmuz",
+     "Ağustos",
+     "Eylül",
+     "Ekim",
+     "Kasım",
+     "Aralık",
+    }
+  }
+  
+  return strings

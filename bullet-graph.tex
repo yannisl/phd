@@ -1,0 +1,328 @@
+\documentclass[border=5mm,twocolumn]{report}
+%\usepackage{fontspec, lipsum,booktabs,textcomp}
+\usepackage{phd}
+
+\input{defaultstyle}
+%\newfontfamily{\arial}{Arial}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.11}
+\usepackage{pgfplotstable,luacode,amsmath}
+\makeatletter
+\newenvironment {bulletgraph} {\luacode@begin\luacode@table@soft} {}
+\makeatother
+
+\pgfplotscreateplotcyclelist{bullet}{
+{fill=color1, draw=none},
+{fill=color2, draw=none},
+{fill=color3, draw=none},
+}
+
+\pgfplotstableread[col sep=semicolon]{
+Label;  Sublabel;   Measure;    CompMeasure; Range1; Range2; Range3
+Cumulative Claim 2005 YTD;   USD;    280;    240;150;250;450
+}\datatable
+
+\pgfplotsset{mark options/.style={color=black!80}}
+\pgfplotsset{barwidth/.style= {bar width=1.2ex} }
+\pgfplotsset{chartheight/.style ={height=#1}}
+
+\providecommand{\bulletgauge}[4][]{
+    \begin{tikzpicture}[scale=0.8, font=\arial]
+    \begin{axis}[
+       width=8cm,
+       chartheight = 60pt,
+      % height=60pt,
+       %y=2ex,
+       xtick pos=left, 
+       xtick = {0,50,...,400, 450},
+       ytick=\empty,
+       xmin=50, xmax=450,
+        %enlarge y limits={abs=0ex},
+        tick align=outside,
+        axis on top,
+        every axis title/.style={
+            at={(rel axis cs:0,0.5)},
+            anchor=east,
+            align=right,
+            xshift=-0.5em
+        },
+        #1
+    ]
+    \pgfplotsinvokeforeach{#4}{
+        \pgfplotsset{cycle list name=bullet}
+        \addplot +[xbar, bar width=7ex ] coordinates {(##1,0)};
+    }
+    \addplot [fill= barcolour, xbar, barwidth ] coordinates {(#2,0)};    
+    \addplot [mark=|, mark options={very thick}, mark size=2ex, ] coordinates {(#3,0)}; 
+    \end{axis}
+    \end{tikzpicture}
+}
+
+%\luadirect{z = require("i18n.bulletgraph")
+%z:makecommand()
+%}
+
+\begin{document}
+
+\arial
+
+\section{Financial}
+\subsection{Turnover}
+
+We expected to close the year at 170 million and the target has been met. 
+
+\parindent0pt
+ 
+\begin{bulletgraph}
+local  bgraph = require("i18n.bulletgraph")
+ local data = {
+     title = 'Valuation (Jan)',
+     ranges = {230,300,500},
+     bar = 200,
+     marker = 220}
+     local options = {
+        barcolour = 'red!90'
+   } 
+  bgraph:render(data,options)        
+\end{bulletgraph}
+
+
+
+\medskip
+
+\begin{bulletgraph}
+   m = require("i18n.bulletgraph")
+   local data = {
+      title = 'Valuation (Apr)',
+      ranges = {200,300,500},
+      bar = 250,
+      marker = 300}
+   
+   m:render(data,options)           
+\end{bulletgraph}
+
+
+
+%\bulletgauge[title={\bfseries{Valuation (Dec)}\\175.0 mil AED}]{175}{180}{450,250,150}
+
+\medskip
+
+%\bulletgauge[title={\bfseries{Valuation (Jan)}\\195.0 mil AED}]{200}{200}{450,250,150}
+
+\medskip
+
+%\bulletgauge[title={\bfseries{Valuation (Feb)}\\225.0 mil AED}]{225}{195}{450,250,150}
+
+\section{Progress}
+
+Progress of works has been satisfactory, without any complaints from Client, Consultant or Main Contractor other than sporadic events. Difficulties have been experienced in closing out areas and shafts in St Regis and other areas.
+
+\section{Cost Containment}
+
+\subsection{Labour}
+
+Costs are currently (other than areas where budget uplifts, have been provided) projected that they will be within budget, with the only major risk being the higher costs of hired labour. This is estimated to impact costs between 7-12 million depending on the time frame required to employ JV labour directly from India and the level of accuracy in the calculations and estimates. In this respect it was agreed by the BOD that funding of costs for recruitment, travel and other associated areas be funded by the JV. Funding is expected to be obtained via discounting of certificates.
+
+Costs for the comparison between in-house labour and hired, has been estimated as follows:
+\directlua{a1 = 11
+a2=14
+t= (a2-a1)*260
+tex.sprint(t , "\par")
+t1=1100*t
+
+tex.print("Cost Difference per month = ", t1 )}
+
+\begin{description}
+\small
+\item [Based on normal site productivity]
+\end{description}
+Cost Difference \par
+       per month/labour = \directlua{tex.print(((13.95-11)*260))} AED 
+
+
+
+
+\begin{description}
+\item[Based on 30\% lower productivity]
+\end{description}
+Cost Difference \par
+       per month/labour = \directlua{tex.print(((13.95-11)*260)/0.5)} AED 
+
+Total Difference\par
+       per month    =  
+       \begin{luacode}
+       local t = 1250*260*(14-11)/0.7
+       
+       tex.sprint('$\\text{',string.format('%10.2f',t),'}$')
+       \end{luacode} 
+       AED
+       
+       
+       
+\medskip
+\begin{table}[h]
+\centering
+\begin{tabular}{lrr}
+\toprule
+ 	&
+
+Description 	 &Amount (AED) \\
+\midrule
+        &\textbf{Current Contract Value}\hfill\hfill\hfill &407,616,160.00    \\ 
+	    &\textbf{Anticipated Contract Value} 	&412,971,608.58\\
+  	   &Original Contract Value 	&\fbox{402,616,160.00}\\
+  	   &Variations Approved 	&5,000,000.00\\
+  	   &Claims Approved 	&0.00\\
+  	   &Provisional Sums 	&Included\\
+\midrule
+  	 &Expected Negative Variations 	&0.00\\
+  	 &Expected Variations 	&5,355,448.58\\
+\bottomrule
+\end{tabular}
+\end{table}
+\medskip
+			
+	
+\section{Provisional Sums}
+The total amount of Provisional Sums and a detailed breakdown is shown in Appendix A. There are two amounts which currently our outside our scope of works, but originally included. We expect that this will lower the value by approximately 5,000,000 AED.
+
+\section{Major Expected Variations}
+
+Expected variations are outlined in table~5. 
+
+\subsection{Omission of PODS}
+A major variation is the PODs which were excluded at Tender stage. We expect these to be in region of 13,000,000.00.
+
+\subsection{Theatre Works}
+
+The extend of the theatre works at this stage is unknown. We expect to be appointed for the works, excluding ELV services, which apparently HLG wish to execute on their own. We expect the variation in terms of this part of the works to exceed 
+20,000,000  AED.
+
+\section{Current Values}
+\pgfplotsset{
+tick label style={font=\small},
+label style={font={\small\sffamily}},
+legend style={font={\footnotesize\sffamily}}
+}
+\begin{figure*}
+\begin{tikzpicture}
+\begin{axis}[
+   title={Monthly Turnover -- Planned vs Actual},
+   width=1\textwidth,
+   height=5cm,
+   bar width=6pt,
+   minor y tick num=2,
+   xmajorgrids = false,
+   yminorgrids=false,
+   ylabel shift= -.5,
+	ybar,
+	enlargelimits=0.0,
+	legend style={at={(0.2,0.9)},anchor=north,
+	anchor=north,legend columns=-1},
+	ylabel={AED},
+   ytick = {0,10000000,20000000,30000000,40000000},
+   scaled ticks = false,
+   y tick label style={
+        /pgf/number format/.cd,
+            1000 sep={\,},
+            fixed,
+            fixed zerofill,
+            precision=0,
+                   /tikz/.cd
+    },
+	symbolic x coords={Aug-13,Sep-13,Nov-13,Dec-13,
+                      Jan-14,Feb-14,Mar-14,Apr-14,
+                      May-14,Jun-14,Jul-14,Aug-14,
+                      Sep-14,Oct-14,Nov-14,Dec-14,
+                      Jan-15,Feb-15,Mar-15,Apr-15,
+                      May-15,Jun-15,Jul-15,Aug-15,
+                      Sep-15,Oct-15,Nov-15,Dec-15},
+	xtick = data,
+   x tick label style={rotate=60,anchor=east},
+   ] 
+	%nodes near coords,
+	nodes near coords align={vertical},
+]
+\addplot[fill=black!30] coordinates {(Aug-13, 29275) 
+                      (Sep-13, 1118506) 
+                      (Nov-13, 4118404) 
+                      (Dec-13, 1744492)
+                      (Jan-14, 1929106)
+                      (Feb-14, 2071614)
+                      (Mar-14, 2291612)
+                      (Apr-14, 5280597)
+                      (May-14, 14826470)
+                      (Jun-14, 23178070)
+                      (Jul-14, 28436550)
+                      (Aug-14, 34928860)
+                      (Sep-14, 42203710)
+                      (Oct-14, 34092590)
+                      (Nov-14, 31064640)
+                      (Dec-14, 27368860)
+                      (Jan-15, 27539670)
+                      (Feb-15, 23631860)
+                      (Mar-15, 17713270)
+                      (Apr-15, 14334710)
+                      (May-15, 12238960)
+                      (Jun-15, 11169200)
+                      (Jul-15, 7822311)
+                      (Aug-15, 7654239)
+                      (Sep-15, 6298405)
+                      (Oct-15,6069190)
+                      (Nov-15,5292039)
+                      (Dec-15,5310467) 
+         };
+\addplot[fill=orange] coordinates {(Aug-13, 0) 
+                      (Sep-13, 0) 
+                      (Nov-13, 0)
+                      (Dec-13, 8330874)
+                      (Jan-14, 1835372) 
+                      (Feb-14, 2116680)
+                      (Mar-14, 2284853)
+                      (Apr-14, 2860646)
+                      (May-14, 9301770) 
+                      (Jun-14, 11000000)
+                      (Jul-14, 12000000)
+                      (Aug-14, 13000000)
+                      (Sep-14, 20000000)
+                      (Oct-14,25000000)
+                      (Nov-14,25000000)
+                      (Dec-14,30000000)
+};
+
+\legend{Planned, Monthly Actual}
+\end{axis}
+\end{tikzpicture}
+\caption{Monthly Turnover vs Actual.}
+\label{barchart}
+\end{figure*}
+
+The Gross Payment versus the Actual Claim values are shown in figure~\ref{barchart}. The total billings at the end of May were against a forecasted figure of 30,000,000 million. Slippages in the program and a number of other factors have affected the site works to progress at a faster rate. 
+
+\subsection{Materials}
+
+
+\section{Human Resources}
+
+\subsection{Staff}
+
+Commissioning Manager and small Team needs to be allocated to site. QA/QC personnel shortages need to be addressed.
+
+\subsection{Technicians}
+
+The current level of technicians is 2700 with an average absentee ration of 8.8\%. We have been unable to reduce absenteesm which is similar to the levels of the hired manpower. 
+
+\subsection{Engineering}
+
+\subsection{Construction}
+
+\subsection{Safety}
+
+The safety Manager has been replaced with Mr Shaji Fernandez.
+
+\section{Risks}
+
+
+
+\lipsum
+\end{document}

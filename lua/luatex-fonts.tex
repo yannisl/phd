@@ -1,0 +1,278 @@
+
+\let \handlegroupnormalbefore \relax
+\let \handlegroupnormalafter  \relax
+
+\protected \def \handlegroupnormal #1#2{^^A
+  \bgroup
+  \def \handlegroupbefore {#1}^^A
+  \def \handlegroupafter  {#2}^^A
+  \afterassignment \handlegroupnormalbefore
+  \let \next =^^A
+}
+
+\def \handlegroupnormalbefore {^^A
+  \bgroup 
+  \handlegroupbefore
+  \bgroup 
+  \aftergroup \handlegroupnormalafter%
+}
+
+\def \handlegroupnormalafter {%
+  \handlegroupafter
+  \egroup 
+  \egroup 
+}
+
+\let \groupedcommand \handlegroupnormal 
+
+\def \definehighlight [#1][#2]{%
+  \ifcsname #1\endcsname\else
+    \expandafter\def\csname #1\endcsname{%
+      \leavevmode
+      \groupedcommand {#2}\empty%
+    }
+  \fi%
+}
+
+
+
+\def\restoreunderscore{\catcode`\_=12\relax}
+
+\definehighlight         [fileent][\ttfamily\restoreunderscore]         %% files, dirs
+\definehighlight        [texmacro][\sffamily\itshape\textbackslash]     %% cs
+\definehighlight     [luafunction][\sffamily\itshape\restoreunderscore] %% lua identifiers
+\definehighlight      [identifier][\sffamily]                           %% names
+\definehighlight          [abbrev][\rmfamily\scshape]                   %% acronyms
+\definehighlight        [emphasis][\rmfamily\slshape]                   %% level 1 emph
+
+\definehighlight       [Largefont][\Large]                              %% font size
+\definehighlight       [smallcaps][\sc]                                 %% font feature
+\definehighlight [nonproportional][\tt]                                 %% font switch
+%\let \inlinecode \lstinline
+\protected \def \inlinecode {\lstinline}
+
+\chapter{LuaTeX and Fonts}
+\label{c:luatexfonts}
+
+
+\section{Introduction}
+With \LuaTeX/\LuaLaTeX a completely different mechanism to that of \XeLaTeX or \pdfLaTeX is used to load fonts.
+
+Font management and installation has always been painful with \tex.  A
+lot of files are needed for one font ({tfm},{pfb},
+{map}, {fd}, {vf}), and due to the 8-Bit encoding
+each font is limited to 256 characters.
+
+But the font world has evolved since the original \tex, and new
+typographic systems have appeared, most notably the so called
+\emph{smart font} technologies like \OpenType fonts ({otf}).
+
+These fonts can contain many more characters than \tex fonts, as well
+as additional functionality like ligatures, old-style numbers, small
+capitals, etc., and support more complex writing systems like Arabic
+and Indic
+  Unfortunately, \pkgname{luaotfload} doesn‘t support many Indic
+  scripts right now.
+scripts.
+
+In \identifier{luaotfload}, the canonical syntax for font requests
+requires a \emphasis{prefix}:
+%
+\begin{quote}
+  \nonproportional{\string\font\string\fontname\space= }%
+  \meta{prefix}%
+  \nonproportional{:}%
+  \meta{fontname}%
+  \dots
+\end{quote}
+%
+where \meta{prefix} is either \inlinecode{file:} or \inlinecode {name:}.
+  The development version also knows two further prefixes,
+  \inlinecode {kpse:} and \inlinecode {my:}.
+  %
+  A \inlinecode {kpse} lookup is restricted to files that can be found by
+  \identifier{kpathsea} and
+  will not attempt to locate system fonts.
+  %
+  This behavior can be of value when an extra degree of encapsulation is
+  needed, for instance when supplying a customized tex distribution.
+
+  The \inlinecode {my} lookup takes this a step further: it lets you define
+  a custom resolver function and hook it into the 
+
+   \verb+\luafunction{resolve_font}+
+
+  callback.
+  %
+  This ensures full control over how a file is located.
+  %
+  For a working example see the
+  \url {https://bitbucket.org/phg/lua-la-tex-tests/src/5f6a535d/pln-lookup-callback-1.tex}.
+
+%
+It determines whether the font loader should interpret the request as
+a \emphasis{file name} or
+  \emphasis{font name}, respectively,
+which again influences how it will attempt to locate the font.
+%
+Examples for font names are
+            “Latin Modern Italic”,
+            “GFS Bodoni Rg”, and
+            “PT Serif Caption”
+-- they are the human readable identifiers
+usually listed in drop-down menus and the like.\footnote{%
+  Font names may appear like a great choice at first because they
+  offer seemingly more intuitive identifiers in comparison to arguably
+  cryptic file names:
+  %
+  “PT Sans Bold” is a lot more descriptive than \fileent{PTS75F.ttf}.
+  On the other hand, font names are quite arbitrary and there is no
+  universal method to determine their meaning.
+  %
+  While \identifier{luaotfload} provides fairly sophisticated heuristic
+  to figure out a matching font style, weight, and optical size, it
+  cannot be relied upon to work satisfactorily for all font files.
+  %
+  For an in-depth analysis of the situation and how broken font names
+  are, please refer to
+  \hyperlink [this post]{http://www.ntg.nl/pipermail/ntg-context/2013/073889.html}
+  by Hans Hagen, the author of the font loader.
+  %
+  If in doubt, use filenames.
+  %
+  \fileent{luaotfload-tool} can perform the matching for you with the
+  option \inlinecode {--find=<name>}, and you can use the file name it returns
+  in your font definition.}
+
+%
+
+\subsection {Compatibility Layer}
+
+In addition to the regular prefixed requests, \identifier{luaotfload}
+accepts loading fonts the \XETEX way.
+%
+There are again two modes: bracketed and unbracketed.
+A bracketed request looks as follows.
+
+\begin{quote}
+  \nonproportional{\string\font\string\fontname\space = [}%
+  \meta{/path/to/file}%
+  \nonproportional{]}
+\end{quote}
+
+\noindent
+Inside the square brackets, every character except for a closing
+bracket is permitted, allowing for specifying paths to a font file.
+%
+Naturally, path-less file names are equally valid and processed the
+same way as an ordinary \inlinecode {file:} lookup.
+
+\begin{quote}
+  \nonproportional{\string\font\string\fontname\space= }%
+  \meta{font name}
+  \ldots
+\end{quote}
+
+Unbracketed (or, for lack of a better word: \emphasis{anonymous})
+font requests resemble the conventional \TEX syntax.
+%
+However, they have a broader spectrum of possible interpretations:
+before anything else, \identifier{luaotfload} attempts to load a
+traditional \TEX Font Metric (\abbrev{tfm} or \abbrev{ofm}).
+%
+If this fails, it performs a \inlinecode {name:} lookup, which itself will
+fall back to a \inlinecode {file:} lookup if no database entry matches
+\meta{font name}.
+
+Furthermore, \identifier{luaotfload} supports the slashed (shorthand)
+font style notation from \XETEX.
+
+\begin{quote}
+  \nonproportional{\string\font\string\fontname\space= }%
+  \meta{font name}%
+  \nonproportional{/}%
+  \meta{modifier}
+  \dots
+\end{quote}
+
+
+
+
+
+\texttt{OpenType} fonts are widely deployed and available for all modern
+operating systems.
+
+As of 2014 they have become the de facto standard for advanced text
+layout.
+
+However, until recently the only way to use them directly in the \tex
+world was with the \XeTeX engine.
+
+Unlike \XeTeX, \LUATEX has no built-in support for \OpenType or
+technologies other than the original \tex fonts.
+
+Instead, it provides hooks for executing LUA code during the TEX run
+that allow implementing extensions for loading fonts and manipulating
+how input text is processed without modifying the underlying engine.
+
+This is where \pkgname{luaotfload} comes into play:
+Based on code from \CONTEXT, it extends \LUATEX with functionality necessary
+for handling \OpenType fonts.
+
+Additionally, it provides means for accessing fonts known to the operating system conveniently by indexing the metadata. The |luaotfload| package is an adaptation of the \CONTEXT font loading system, allowing for loading \OpenType fonts with an extended syntax and adds support for a variety of font features. With current developments of moving \xetex to \luatex it is the expected way of \latex to evolve.
+
+\section{Loading Fonts}
+
+|luaotfload| supports an extended syntax for font loading, similar to that used by \xetex.
+
+
+
+\CMDI{\font}=\meta{prefix}:\meta{font name}:\meta{font features}\meta{\tex features}
+
+The curly brackets are optional and escape the spaces in the enclosed
+font name. Alternatively, double quotes serve the same purpose.
+
+\section{Below the Hood}
+
+Most \tex users like to have full control and are curious to understand how things work. Using |luaotfload| we can have a look at the |otf| tables, and although a bit error prone can 
+see how the fonts store information. The first example we will examine is a short programme to print 50 of the glyph names. In Example \ref{ex:symbola}, we use the built-in  \luacmd{fontloader} function. Many font symbolic names have underscores or other problematic characters. We change the underscore using \luacmd{string.gsub} from the |strings| module, which is loaded automatically with LuaTeX.
+
+\newfontfamily{\symbola}{Symbola.ttf}
+
+\begin{texexample}{Getting the name of Glyphs}{ex:symbola}
+\bgroup
+\begin{luacode}
+tex.print("\\footnotesize")
+f=fontloader.open("c:/windows/fonts/Symbola.ttf")
+tex.print (f.fontname,'\\par\\symbola')
+local i = 65
+while (i < 200) do  
+local g = f.glyphs[i]
+if g then
+  local s = string.gsub(g.name, '%_', '\\textunderscore  ')
+  tex.print(s .. "(\\symbola\\char" .. g.unicode ..")" )
+end
+  i = i + 1
+end
+fontloader.close(f)
+\end{luacode}
+\egroup
+\end{texexample}
+
+If you are compiling this document in Windows, the above example would probably find your fonts. However, this is not a very good way to search for fonts. The TeX world has settled over many years on two principles when distributing files. The TeX Directory Structure (TDS) which is a directory hierarchy for macros, fonts, and the other implementation-independent TeX system files and the kpathsea utility for locating these files and for running the many scripts that are necessary while typesetting.
+
+\begin{texexample}{Getting the name of Glyphs}{}
+\begin{luacode}
+local filename = "Symbola.ttf"
+local fullname = kpse.find_file(filename, 'truetype fonts') 
+if fullname then tex.print(fullname) else tex.print("font ".. filename .. " not found") end
+\end{luacode}
+\end{texexample}
+
+The various fontloader programs go at great lengths to ensure that all possible directory paths are searched and the main reason, why when using a font for the first time it takes so long to process. With Lua once the
+ file is located, we can read it and manipulate the data in any way we want.
+
+
+
+
+
