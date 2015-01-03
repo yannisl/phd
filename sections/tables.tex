@@ -1099,16 +1099,86 @@ Sometime tables can be very wide. In this case we can use the |rotate| package o
 
 
 The \pkg{multirow} package was developed by Jerry Leichter.   The package automates the procedure of constructing tables with several rows merged into one. It does so by defining a command \cmd{\multirow}. You can fine-tune the command by specifying optional parameters. The full format for the command is as follows:
+\makeatletter
+\def\bsbs{\cs{\char`\\}}
 
-\emphasis{multirow}
-\begin{teXXX}
-\multirow{nrow}[njot]{width}[vmove]{contents}
-\end{teXXX}
+% \cmdinvoke\cs<argument sequence>
+% \cs typeset as above
+% <argument sequence> may consist of optional or mandatory arguments;
+%
+% the `arguments' are simply typesett \texttt, as yet -- if something
+% fancier is needed, there's a bunch of code needs rewriting here...
+\DeclareRobustCommand\cmdinvoke{\@ifstar
+  {\let\@tempa\emph\@scmdinvoke}%
+  {\let\@tempa\relax\@scmdinvoke}%
+}
+\def\@scmdinvoke#1{\texttt{\symbol{92}#1}%
+  \futurelet\@let@token\@cmdinvoke
+}
+\def\@cmdinvoke{\ifx\@let@token\bgroup
+    \let\@tempb\@cmdinvoke@lbrace
+  \else
+    \ifx\@let@token[% ]
+      \let\@tempb\@cmdinvoke@lbrack
+    \else
+      \ifx\@let@token(% )
+        \let\@tempb\@cmdinvoke@lparen
+      \else
+        \let\@tempb\@empty
+      \fi
+    \fi
+  \fi
+  \@tempb
+}
+\def\@cmdinvoke@lbrace#1{\penalty0\hskip0pt\relax
+  \texttt{\symbol{123}\@tempa{#1}\symbol{125}}%
+  \futurelet\@let@token\@cmdinvoke
+}
+\def\@cmdinvoke@lbrack[#1]{\penalty-150\hskip0pt\relax
+  \texttt{[\@tempa{#1}]}%
+  \futurelet\@let@token\@cmdinvoke
+}
+\def\@cmdinvoke@lparen(#1){\penalty-150\hskip0pt\relax
+  \texttt{(\@tempa{#1})}%
+  \futurelet\@let@token\@cmdinvoke
+}
+\makeatother
 
+\begin{scriptexample}{}{}
+\begin{verbatim}
+\multirow{rows}[njot]{width}[vmove]{contents}
+\end{verbatim}
+\end{scriptexample}
+where
 
+\begin{description}
+\item[\emph{rows}] is the number of rows to span.  It's up to you to
+  leave the other rows empty, or the stuff created by \cs{multirow}
+  will over-write it. With a positive value of \emph{nrows} the
+  spanned columns are this row and (\emph{nrows}-1) rows below
+  it. With a negative value of \emph{nrows} they are this row and
+  (1-\emph{nrows}) above it. 
+\item[\emph{bigstruts}] is mainly used if you've used the
+  \pkgname{bigstrut}.  In that case it is the total number of uses of
+  \cs{bigstrut} within the rows being spanned.  Count 2 uses for each
+  \cs{bigstrut}, 1 for each \cmdinvoke*{bigstrut}[x] where \emph{x} is
+  either \texttt{t} or \texttt{b}.  The default is 0.
+\item[\emph{width}] is the width to which the text is to be set, or
+  \texttt{*} to indicate that the text argument's natural width is to
+  be used.
+\item[\emph{text}] is the actual text of the construct.  If the width
+  was set explicitly, the text will be set in a \cs{parbox} of that
+  width; you can use \bsbs{} to force linebreaks where you like.
+
+  If the width was given as \texttt{*} the text will be set in LR
+  mode.  If you want a multiline entry in this case you should use a
+  \texttt{tabular} or \texttt{array} environment in the text
+  parameter.
+\item[\emph{fixup}] is a length used for fine tuning: the text will be
+  raised (or lowered, if \emph{fixup} is negative) by that length
+  above (below) wherever it would otherwise have gone.
+\end{description}
 In some instances vertical centering might not come out as desired. In this case, the optional parameter |vmove| can be used to introduce the shifts manually.
-
-
 \index{Tables!vertical alignment}
 \index{Tables!multirow package}
 \index{Tables!merge}
@@ -1261,7 +1331,7 @@ l & r & c & p\{1.75cm\}\\\hline
 \end{teXX}
 \clearpage
 
-\onelineheader{Using \TeX\ for Tables}
+\section{Using \TeX\ for Tables}
   
 We have covered a lot of ground with \latex tables, without mentioning \tex's way of handling tables. This was done on purpose, as many people consider the usage of |\halign|, as difficult. In my opinion it is only difficult, as the packages are not always available, but the greatest difficulty is the provision of rules. This normally clutters the table and hides the data and of course with so many alternatives around, why would one use Plain \tex?
 
@@ -1697,7 +1767,8 @@ with Lua is that a more complete parser can preprocess text and do all the subst
 
 Tabular data is mostly generated with applications external to TeX, such as databases, matlab, spreadsheets and the like. However, useful |pgfplotstable| is,  it becomes very cumbersome to remember all the styles and commands. Also escaping characters in files which come from such applications becomes cumbersome. For simpler applications, such as the ones in the examples outlined here, can easily be written as .csv files using the filecontents package. Very soon though the dreaded TeX error message would appear `no space for another write’. With Lua you can open and close as many files as you need.  
 
-The Lua module csv can be used. This has been modified from lua-csv. Writing the data, is simpler. It takes any string and writes it to the directory of your choice. For larger projects it is prudent to save all csv files in a |data| directory. This data can then be imported for tabular or for graphical presentation.
+The Lua module csv can be used. This has been modified from |lua-csv|. Writing the data, is simpler. It takes any string and writes it to the directory of your choice. For larger projects it is prudent to save all |csv| files in a |data| directory. This data can then be imported for tabular or for graphical presentation.
+
 
 
 \begin{scriptexample}{}{}
@@ -1714,8 +1785,66 @@ $\pi ^{\pi ^{\pi }}$ & 80662.7 \\
 \end{tabular}
 \end{scriptexample}
 
+The following example |test-color-rule-table.tex| creates a midrule for tables. This concludes the chapter on tables with all its bells and whistles.
+
+\begin{scriptexample}{}{}
+\begin{teX}
+\tikzset{midrule/.style = {line width=2.5pt, color=teal, draw, inner sep=0pt}}
+
+{\scriptsize
+\begin{tabular}[\textwidth]{@{}l r r r r r r r>{\bfseries\color{black!80}}r >{\bfseries\color{black!80}}r >{\bfseries\color{black!80}}r@{}}  (*@\label{lin:specs} @*)
+& 2006/07 &2007/08 &2008/09 &2009/10 &2010/11 &2011/12 &2012/13 &2013/14 &2013/14 &2013/14\\
+& Actual &Actual &Actual &Actual &Actual &Actual &Actual &Actual* &Actual** &Target\\
+\begin{tikzpicture}[remember picture, overlay]
+\path [midrule] (0,0) -- (\the\linewidth,0) node {};
+\end{tikzpicture}\\ \\[-1pt]
+A   &92.9\% &91.7\% &93.6\% &94.3\% &99.1\% &84.9\% &85.2\% &77.4\% &99.6\% &90\%\\
+
+B  &94.7\% &93.8\% &94.9\% &95.3\% &94.7\% &94.7\% &77.9\% &89.0\% &98.5\% &90\%\\
+
+C  &93.6\% &92.5\% &94.1\% &94.9\% &98.0\% &91.9\% &83.5\% &86.4\% &99.4\% &90\%\\
+\end{tabular}
+}
+\end{teX}
+\end{scriptexample}
+
+The typing of the table preamble is shown in line \ref{lin:specs}. The code does not provide any column definitions and the |tikz| code is inserted directly into the table. This will produce a table that takes the full width of the
+text area. 
+\bigskip
+\parindent 0pt
+
+\tikzset{midrule/.style = {line width=2.5pt, color=teal, draw, inner sep=0pt}}
+
+\newfontfamily\UI{Segoe UI}
+{\UI\footnotesize
+\begin{tabular}[\textwidth]{@{}l r r r r r r r>{\bfseries\color{black!80}}r >{\bfseries\color{black!80}}r >{\bfseries\color{black!80}}r@{}} 
+& 2006/07 &2007/08 &2008/09 &2009/10 &2010/11 &2011/12 &2012/13 &2013/14 &2013/14 &2013/14\\
+& Actual &Actual &Actual &Actual &Actual &Actual &Actual &Actual* &Actual** &Target\\
+\begin{tikzpicture}[remember picture, overlay]
+\path [midrule] (0,0) -- (\the\linewidth,0) node {};
+\end{tikzpicture}\\ \\[-1pt]
+A   &92.9\% &91.7\% &93.6\% &94.3\% &99.1\% &84.9\% &85.2\% &77.4\% &99.6\% &90\%\\
+
+B  &94.7\% &93.8\% &94.9\% &95.3\% &94.7\% &94.7\% &77.9\% &89.0\% &98.5\% &90\%\\
+
+C  &93.6\% &92.5\% &94.1\% &94.9\% &98.0\% &91.9\% &83.5\% &86.4\% &99.4\% &90\%\\
+\end{tabular}
+\medskip
+
+A \% of applications for up to £15,000 processed in six weeks or less (£10,000 prior to 1 July 2013)\\
+B \% of applications for £15,001 and above processed in 12 weeks or less (£10,000 prior to 1 July 2013)\\
+C Overall \% of applications processed within target time\\
+* Grant thresholds of £10,000 and under, and £10,001 and over\\
+** Grant thresholds of £15,000 and under, and £15,001 and over\\
+
+} % end scriptsize
+
+The example is from the annual report of the Arts Council of the UK for the years 2013-2014.\footnote{\protect\url{http://www.artscouncil.org.uk/media/uploads/pdf/ACE_Annual_Report_2013_14_Interactive.pdf}}. I changed the rule to a diferent color as well as reduced the table by two columns.  The report also provides---what I think a nice style in general---for business financial data. Tables, like paragraphs of text have a much better appearance
+when they are full width. One problem is that the font size needs to be smaller (I have used \cmd{\footnotesize}) and a font that appears well in tiny text, such as |Segoe UI|. Another font that works well for tables is |Calibri|.
 
 
+\begin{figure}[htbp]
+\includegraphics[width=\textwidth]{./images/bar-table.jpg}
+\end{figure}
 
-
-
+Aligning a table with a graph, needs tikZ ninja skills. This we will leave for the chapter on charting. 

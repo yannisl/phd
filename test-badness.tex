@@ -1,0 +1,108 @@
+\documentclass{article}
+\overfullrule1.5pt
+\usepackage{xcolor}
+\makeatletter
+
+\newbox\trialbox
+\newbox\linebox
+\newcount\maxbad
+\newcount\linebad
+\newcount\bestbad
+\newcount\worstbad
+\newcount\overfulls
+\newcount\currenthbadness
+
+
+\def\trypar#1\par{%
+  \showtrybox{\linewidth}{#1\par}%
+}
+
+\newcommand\showtrybox[2]{%
+  \currenthbadness=\hbadness
+  \maxbad=0\relax
+  \setbox\trialbox=\vbox{%
+    \hsize#1\relax#2%
+    \hbadness=10000000\relax
+    \eatlines
+  }%
+  \hbadness=10000000\relax
+  \setbox\trialbox=\vbox{%
+    \hsize#1\relax#2%
+    \printlines
+  }%
+  \noindent\usebox\trialbox\par
+  \hbadness=\currenthbadness
+}
+
+\newcommand\trybox[2]{%
+  \currenthbadness=\hbadness
+  \maxbad=0\relax
+  \setbox\trialbox=\vbox{%
+    \hsize#1\relax#2\par
+    \hbadness=10000000\relax
+    \eatlines
+  }%
+  \hbadness=\currenthbadness
+}
+
+\def\eatlines{%
+  \begingroup
+  \setbox\linebox=\lastbox
+  \setbox0=\hbox to \hsize{\unhcopy\linebox\hss}%
+  \linebad=\the\badness\relax
+  \ifnum\linebad>\maxbad\relax \global\maxbad=\linebad\relax \fi
+  \ifvoid\linebox\else
+    \unskip\unpenalty\eatlines
+  \fi
+  \endgroup
+}
+
+\def\printlines{%
+  \begingroup
+  \setbox\linebox=\lastbox
+  \setbox0=\hbox to \hsize{\unhcopy\linebox}%
+  \linebad=\the\badness\relax
+  \ifvoid\linebox\else
+    \unskip\unpenalty\printlines
+    \ifhmode\newline\fi\noindent\box\linebox\showbadness
+  \fi
+  \endgroup
+}
+
+\def\showbadness{%
+  \makebox[0pt][l]{%
+    \ifnum\currenthbadness<\linebad\relax
+      \ifnum\linebad=1000000\relax\expandafter\@gobble\fi
+      {\quad\color{red}\rule{\overfullrule}{\overfullrule}~{\footnotesize\sffamily(\the\linebad)}}%
+    \fi
+  }%
+}
+
+\makeatother
+\begin{document}
+
+\hbadness=-1 
+\begin{minipage}[t]{3.5cm}
+\mbox{}
+\trypar\hyphenpenalty=-500\looseness=1
+In olden times when wishing
+still helped one, there lived a
+king whose daughters were all
+beautiful, but the youngest was so
+beautiful that the sun itself,
+which has seen so much, was
+astonished whenever it shone in
+her face. Close by the king's
+castle lay a great dark forest,
+and under an old lime-tree in the
+forest was a well, and when
+the day was very warm, the
+king's child went out into the 
+forest and sat down by the side
+of the cool fountain, and when she was bored she
+took a golden ball, and threw it up on a high and caught it, and this
+ball was her favorite plaything. \par
+\end{minipage}
+
+
+\end{document}

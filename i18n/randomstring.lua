@@ -25,5 +25,5 @@ function generate_random_string(len, charset)
   end
   return concat(t)
 end
-
-print(generate_random_string(150,{'a','b','c',';','d','e',',','f'}))
+os.execute('dir')
+print(generate_random_string(150,{'a','b','c',';','d','e',',','f.'}))

@@ -1,16 +1,49 @@
+\fancypagestyle{fancybook}{%
+    \fancyhf{}%
+    % Note the ## here. It's required because \fancypagestyle is making a macro (\ps@fancybook).
+    % If we just wrote #1, TeX would think that it's the argument to \ps@fancybook, but
+    % \ps@fancybook doesn't take any arguments, so TeX would complain with an error message.
+    % You are not expected to understand this.
+    \renewcommand*{\sectionmark}[1]{ \markright{Section \thesection\ ##1} }%
+    \renewcommand*{\chaptermark}[1]{ \markboth{\chaptername\ \thechapter: ##1}{} }%
+    % Increase the length of the header such that the folios
+    % (typography jargon for page numbers) move into the margin
+    \fancyhfoffset[LE]{6mm}% slightly less than 0.25in
+    \fancyhfoffset[RO]{6mm}%
+    % Put some space and a vertical bar between the folio and the rest of the header
+    \fancyhead[LE]{\thepage\hskip3mm\vrule\hskip3mm\leftmark}%
+    \fancyhead[RO]{\rightmark\hskip3mm\vrule\hskip3mm \thepage}%
+    \fancyfoot[LO,CE]{From: K. Grant}
+   \fancyfoot[CO,RE]{To: Dean A. Smith}
+   \renewcommand{\headrulewidth}{0.4pt}
+   \renewcommand{\footrulewidth}{0.4pt}
+}
+
+
+
+
 \clearpage
 
 \chapter{Headers and Footers}
 
-\thispagestyle{myheadings}
+\thispagestyle{fancybook}
+\pagestyle{fancybook}
+
+\section{Introduction}
+
+Publications would normally have headers and footers which orientate the user as to where the page is in relation to the rest of the publication. Running heads, as they are normally called by typographers include document properties and page properties, such as the page number, the title or short title of a book, author name and in business reports, one can find logos and dates. The difficulty with TeX is its asynchronous nature where page numbers and other marks such as chapter or section numbers can only be determined in the output routine.
 
 \section{What LateX provides}
 
+\begin{macro}{\pagestyle}
+\begin{macro}{\thispagestyle}
 Headers and footers in \latex are controlled by |\pagestyle|\marg{style}. These refer not to page dimensions, but to the running headers and footers of a document. These headers typically contain document titles, chapter or section numbers/names, and page numbers.
+\end{macro}
+\end{macro}
 
 \subsection{Standard page styles}
 
-The possibilities of changing the headers in plain Latex are actually quite limited. There are two commands available: |\pagestyle{style}| will apply the specified style to the current and all subsequent pages, and |\thispagestyle{style}| will only affect the current page. The possible styles are:
+The possibilities of changing the headers in plain Latex are  limited. There are two commands available: |\pagestyle{style}| will apply the specified style to the current and all subsequent pages, and |\thispagestyle{style}| will only affect the current page. The possible styles are:
 
 \begin{description}
 \item[empty]	Both header and footer are cleared
@@ -22,28 +55,53 @@ plain	Header is clear, but the footer contains the page number in the center.
 This page has been styled using the |\thispagestyle|\marg{myheadings} and as you can see has a small page number at top right. This is not normal for chapter opening pages, but I have included it to demonstrate the |\thispagestyle{}|
 
 \begin{macro}{\markright}
-With \meta{myheadings}, the commands |\markright| (in the standard document classes, book, report and article) and \markboth (only in the book class) are used to control the headings. The following commands placed at the beginning of an article document will set the header of all pages to contain "John Smith" top left, "On page styles" centered and the page number top right:
+With \meta{myheadings}, the commands |\markright| (in the standard document classes, |book|, |report| and |article|) and \markboth (only in the book class) are used to control the headings. The following commands placed at the beginning of an article document will set the header of all pages to contain "John Smith" top left, "On page styles" centered and the page number top right:
 \end{macro}
 
+\begin{scriptexample}{}{}
+\begin{teX}
 \pagestyle{myheadings}
 \markright{John Smith\hfill On page styles\hfill}
-\markboth{John Smith\hfill On page styles\hfill}{John Smith\hfill On page styles\hfill}
-
+\markboth{John Smith\hfill On page styles\hfill}{\hfill  John Smith\hfill On page styles\hfill}
+\end{teX}
+\end{scriptexample}
 
 \section{Using the fancyvrb package}
 
 Most LaTeX users, when redesigning running headers or footers will use the |fancyhdr| package. This well established package by Piet van
-Oostrum, allows easy customization of page headers and footers. The default page style provided by fancyhdr is named fancy. It should be activated via
+Oostrum, allows easy customization of page headers and footers. The default page style provided by fancyhdr is named |fancy|.  It should be activated via
 \lstinline{\pagestyle} after any changes to textwidth are made, as fancyhdr initializes
 the header and footer widths using the current value of this length.
 
 The look and feel of the fancy page style is determined by six declarations that define the material that will appear on the left, center, and right of the header
-and footer areas. For example, lhead specifies what should show up on the left
-in the header area, while cfoot defines what will appear in the center of the
+and footer areas. For example, \cmd{lhead} specifies what should show up on the left
+in the header area, while \cmd{cfoot} defines what will appear in the center of the
 footer area. The results of all six declarations are shown in the next example.
 
+\begin{scriptexample}{}{}
+\begin{teX}
+\lhead[<even output>]{<odd output>}
+\chead[<even output>]{<odd output>}
+\rhead[<even output>]{<odd output>}
 
-\begin{comment}
+\lfoot[<even output>]{<odd output>}
+\cfoot[<even output>]{<odd output>}
+\rfoot[<even output>]{<odd output>}
+\end{teX}
+\end{scriptexample}
+
+\begin{tabular}{ll}
+E  &Even page\\
+O &Odd page\\
+L  &Left field\\
+C &Center field\\
+R &Right field\\
+H &Header\\
+F  &Footer\\
+\end{tabular}
+
+\lipsum
+
 \section{Header and footer options of the chaptersx package}
 
 To keep a consistent and familiar interface, the package uses the
@@ -88,7 +146,7 @@ oddhead\par
 }}
 
 The LaTeX engine as previously described allows for an oddhead and evenhead macros to hold the typesetting information. The typesetting information is obtained asynchrnously,
-
+\begin{comment}
 The chaptermark assembles and stores
 
 \fbox{\fbox{chapter name}$\rightarrow$\fbox{chapter number}$\rightarrow$\fbox{chapter title}}
