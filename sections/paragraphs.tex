@@ -1,4 +1,8 @@
 \parindent1em
+\cxset{name=Chapter,
+          chapter rule color=spot!50,
+          title font-color=spot!50}
+          
 \chapter{Paragraphs and Lists}
 
 \epigraph{The paragraph is essentially a unit of thought, not a length}{H.W.Fowler (1858-1933)}
@@ -937,15 +941,19 @@ is to put the words in a narrow minipage (much quicker and visual rather than ex
 \begin{minipage}{1.3cm}
 \hyphenpenalty=-2000
 photographer and hyphenation. \par
+potographer and hyphenation. \par
+unhelpful\par
 \end{minipage}}
 \end{texexample}
+
+
 
 The \cs{hyphenpenalty} can be used to adjust the hyphenation of paragraphs. 
 This example typesets a paragraph with three different values of \cs{hyphenpenalty}. 
 
 There is no difference in using the Plain TeX value of 50 and using 0. 
 Increasing |\hyphenpenalty| to 200 eliminates all hyphenated words in the paragraph. 
-Decreaseing |\hyphenpenalty|  to -2000 results in two addition hyphenated words.
+Decreasing |\hyphenpenalty|  to -2000 results in two addition hyphenated words.
 
 \begin{texexample}{}{}
 \hsize2.5in
@@ -1323,23 +1331,58 @@ ball was her favorite plaything. \par
 
 
 
-\section{The line breaking problem}
+\chapter{The line breaking problem}
+
+\epigraph{Psychologically bad breaks are not easy to define; we just know they are bad. When
+the eye journeys from the end of one line to the beginning of another, in the presence
+of a bad break, the second word often seems like an anticlimax, or isolated from
+its context. Imagine turning the page between the words ‘Chapter’ and ‘8’ in some
+sentence; you might well think that the compositor of the book you are reading should
+not have broken the text at such an illogical place}{Donald Knuth}
+
+In the days of typewriters once the end of line was reached a bell rung to tell the author that the end of the line was reached. The author then had the choice to press the carriage return to start a new line or to extend the line by a couple of characters.
+
+Consider the following short text, 
+
+\begin{scriptexample}{}{}
+In olden times when wishing
+\end{scriptexample}
+
+ \newlength\myl
+ \settowidth\myl{In olden times when wishing}
+The natural width of the above string of text is \the\myl. Consider again the same string but this time all white space removed.
+\begin{scriptexample}{}{}
+Inoldentimeswhenwishing
+\end{scriptexample}
+\settowidth\myl{Inoldentimeswhenwishing}
+\the\myl 
+
+
+If the paragraph was to be constrained at a width $<\the\myl$ one could distribute less white space between the words of the line. If the width of the paragraph was less than limit there would be no choice but to move a word to the line below it. TeX optimizes the justification of a full paragraph rather than optimize the looks of a single line in order to produce high quality typesetting.
+
 
 Breaking a paragraph into lines consists of selecting the break points in a paragraph. To determine how much space a line takes, each character (or rather glyph) in the paragraph is modelled as a box with a specific width, height and elevation from the baseline. These properties are determined by the font being used and the font size.
 
-\scalebox{2}{efficient}
 
-\scalebox{2}{efficient}
-
-Sometimes a broken line may not completely fit into the available space between the left and the right margin. To make it fir, space may be distributed among the spaces in the line, or some whitespace may be taken out, if the text exceeds the 
+Sometimes a broken line may not completely fit into the available space between the left and the right margin. To make it fit, space may be distributed among the spaces in the line, or some whitespace may be taken out, if the text exceeds the 
 line width. We assume that there is a single target width for the complete paragraph and the paragraph is adjusted. 
 An indent that aplies to the line of the paragraph can be modeled using a fixed width unbreakable space (possibly with a negative value).
 
+\subsection{Formalizing the problem}
+
 Now that we have a good idea of the problem we can formalize it. A paragraph $p$ is a sequence of $n>0$ characters $c_i$,  $i\leq i_i \leq n$.
-A \textit{breakpoint candidate}\index{paragraph!breakpoint candidate} in $p$ is an index of a character in $p$ for which it is allowed to break a line. Typical break point canditates are space and hyphen characters and hyphenation point sin words.
+A \textit{breakpoint candidate}\index{paragraph!breakpoint candidate} in $p$ is an index of a character in $p$ for which it is allowed to break a line. Typical break point candidates are space and hyphen characters and hyphenation points in words.
 
-The \textit{line breaking problem} for a paragraph $p$ for a desired \textit{text width} and \textit{indent} is finding a set of break points of $p$ that look `nice'. We will consider a fixed \textit{text width}, $t_w$, with the exception of the first line which can possibly have a negative indent $in$.
+The \textit{line breaking problem} for a paragraph $p$ for a desired \textit{text width} and \textit{indent} is finding a set of break points of $p$ that look `nice'. We will consider a fixed \textit{text width}, $t_w$, with the exception of the first line which can possibly have a negative indent $in$. What looks nice is obviously a subjective term. Another typographing term is the grayness of the paragraph. 
 
+\section{Greedy algorithm}
+
+An easy way to break a paragraph into lines is to use the greedy algorithm. This algorithm basically puts as many 
+words on the line as it can contain, repeating the process for each line until there are no more words in the paragraph. The greedy algorithm is a line-by-line process. During the execution of the algorithm each line is handled independently. (\citep{elyaakoubi})
+
+
+
+\section{Knuth Pratt algorithm}
 \tex's line breaking algorithm optimizes line breaks on the level of a paragraph. \tex determines character widths taking kerning and ligatures in account and uses a three phased process. 
 
 \begin{description}
@@ -1351,22 +1394,24 @@ where
 
 $nlw{sj} = \text{the natural width}$
 
+Why this penaly function is a power of three was never explained properly, obviously is to use a penalty function which is non-linear. 
 
-Depending on the value of $b_j$, the line is classified as \textit{tight}, \textit{loose} or  \textit{very loose}. If none of the line's badness exceed a \textit{pretolerance}  limit the paragraph is accepted. 
+Depending on the value of $b_j$, the line is classified as \textit{tight}, \textit{loose} or  \textit{very loose}. If none of the line's badness exceed a \textit{pretolerance}  limit the paragraph is accepted and no further processing takes place.
 
-\item[Phase 2] In phase 2 the hyphenation canditate are caluclated for the paargraph and a new set of breakpoints is calculated. If all of the line's badness is below a a tolerance level  (which differes from the pretolerance level) a \textit{demerit} for the paragraph is calculated as a combination of line badness, roughly as
+\item[Phase 2] In phase 2 the hyphenation points are calculated for the paragraph and a new set of breakpoints  determined. If all of the line's badness is below a a tolerance level  (which differs from the pretolerance level) a \textit{demerit} for the paragraph is calculated as a combination of line badness, roughly as
 
 \begin{equation}
 \sum_{j=1}^{n}  \left(c+b_j \right)^{2} + p \cdot \vert p\vert 
 \end{equation}
 
-where $c$ is a constant line penalty and $p$ a penalty term. a tight or loose line increases the penalty $p$. If two consecutive lines are hyphenated or if the last line is hyphenated, the penalty is increased. A paragraph with a demerit
-below a threshold is accepted.
+where $c$ is a constant line penalty and $p$ a penalty term. a tight or loose line increases the penalty $p$. If two consecutive lines are hyphenated or if the last line is hyphenated, the penalty is increased. A paragraph with a demerit below a threshold is accepted.
 
 \item[Phase 3] In phase 3 the steps in phase 2 are repeated but now with an \textit{emergency stretch} that allows lines to shrink or expand more. If this last phase does not succeed, \tex outputs overly long lines, due to the thresholds in the algorithm.
-
-
 \end{description}
+
+The description above is very broad, as Knuth introduced more variables that control for example, what makes a good hyphenation point and what it doesn’t.
+
+There are also rules as to spacing after punctuation, how kerning and similar aspects are considered.  For mathematical typesetting a different algorithm is used. 
 
 
 \section{Patents and other research}

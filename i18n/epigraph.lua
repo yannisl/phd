@@ -68,6 +68,27 @@ tx.hash = {
   
 }  
 
+local ltx = {}
+ltx.hash = {
+  nameuse = [[\@nameuse]],
+  cons = [[\@cons]],
+  cdr = [[\@cdr]],
+  carcube = [[\@carcube]],
+  makeatletter = {[[\@makeatletter]],
+     [[Make control sequences accessible or inaccessible, by setting the \catcode to 11. ]]
+   },
+  makeatother = {[[\makeatother]],
+    [[Make control sequence unavailable. (catcode 12)]]},
+  -- counters
+  z0 = [[\z@]], -- all from plain TeX and also in LaTeX
+  one = [[\@ne]],
+  mone = [[\m@one]],
+  two  = [[\tw@]],
+  sixteen = [[]],
+  m     = [[]],
+  MM    = [[]]
+  
+}  
 
 --- horizontal boxes
 --  @param w the width of the horizontal box

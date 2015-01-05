@@ -1333,11 +1333,108 @@ l & r & c & p\{1.75cm\}\\\hline
 
 \section{Using \TeX\ for Tables}
   
-We have covered a lot of ground with \latex tables, without mentioning \tex's way of handling tables. This was done on purpose, as many people consider the usage of |\halign|, as difficult. In my opinion it is only difficult, as the packages are not always available, but the greatest difficulty is the provision of rules. This normally clutters the table and hides the data and of course with so many alternatives around, why would one use Plain \tex?
+We have covered a lot of ground with \latex tables, without mentioning \tex's way of handling tables. This was done on purpose, as many people consider the usage of TeX directly to typeset tables with |\halign|, as difficult. In my opinion it is only difficult, as the packages are not always available, but the greatest difficulty is the provision of rules. This normally clutters the table and hides the data and of course with so many alternatives around, why would one use Plain \tex?
 
 \parindent1em
 
 Use LaTeX tables first, before you move on to typesetting them using only TeX commands is preferred. The time though has come to discuss them in more detail.
+
+Before you start with |\halign| is best to think of how a template would look. 
+
+\begin{verbatim}
+         \halign{
+           .. # .. & ..#.. & ..#.. & ..#..  & ..#.. \cr
+           .....   & .... & .... & ....  & .... \cr
+         }
+\end{verbatim}
+
+The material in braces after the \cmd{\halign} control sequence is divided into rows, each terminated by a |\cr|; table column entries are separated by ambersands |&|. The first row of the |\halign| is special, like the one in |tabular| in |LaTeX|.
+This is called the preamble and it defines how the table is to be typeset. 
+
+Notice that the preamble contains sharp signs |#|, alternating with the ampersand signs.
+
+\begin{scriptexample}{}{}
+\begin{verbatim}
+\halign{
+     # & #& #& \cr
+     variable &type &value\cr
+     x           &real  &213.0\cr 
+     y           &int    &22    \cr
+     z           &byte  &2     \cr
+}
+\end{verbatim}
+\halign{
+     # & #& #& \cr
+     variable &type &value\cr
+     x           &real  &213.0\cr 
+     y           &int    &22    \cr
+     z           &byte  &2     \cr
+}
+\end{scriptexample}
+
+The three templates (remember there is one template for every column) consist at this stage of nothing but the sharp symbol |#|. Of course the table does not look nice at all, it is best to do some formatting.
+
+\begin{scriptexample}{}{}
+\begin{verbatim}
+\halign{
+     \hfill\bf#\hfill  & #& #& #\cr
+     variable &type &value\cr
+     x           &real  &213.0\cr 
+     y           &int    &22    \cr
+     z           &byte  &2     \cr
+}
+\end{verbatim}
+\halign{
+     \hfill\bf#\hfill  & #& #& #\cr
+     variable &type &value\cr
+     x           &real  &213.0\cr 
+     y           &int    &22    \cr
+     z           &byte  &2     \cr
+}
+\end{scriptexample}
+
+By adding |\hfil\bf#\hfill &| we defining the first column template to typeset the text in bold font and by adding an equal amount of glue before and after the column fields they will be centered. Compared to LaTeX this is more verbose, as in a tabular we would use a \texbf{c}, as a column specifier. However, if you were to to be typesetting from another program such as python, the speed of printing a table with TeX is much faster. All you have to do to run the example would be:
+
+\begin{verbatim}
+\halign{
+     \hfill\bf#\hfill  & #& #& #\cr
+     variable &type &value\cr
+     x           &real  &213.0\cr 
+     y           &int    &22    \cr
+     z           &byte  &2     \cr
+}
+\bye
+\end{verbatim}
+
+The real interesting part now follows. What happens if we want to insert a rule, which of course shouldn’t be treated as a
+column? Knuth’s solution was to define a control sequence |\noalign| which would tell TeX to treat this as a normal line. 
+
+\begin{scriptexample}{}{}
+\emphasis{\noalign}
+\begin{teX}
+\halign{
+     \hfill\bf#\hfill  & #& #& #\cr
+     \noalign{\smallskip\hrule\smallskip}
+     variable &type &value\cr
+     \noalign{\smallskip\hrule\smallskip}
+     x           &real  &213.0\cr 
+     y           &int    &22    \cr
+     z           &byte  &2     \cr
+}
+\end{teX}
+\halign{
+     \hfill\bf#\hfill  & #& #& #\cr
+     \noalign{\smallskip\hrule\smallskip}
+     variable &type &value\cr
+     \noalign{\smallskip\hrule\smallskip}
+     x           &real  &213.0\cr 
+     y           &int    &22    \cr
+     z           &byte  &2     \cr
+}
+\end{scriptexample}
+
+The |smallskip| is necessary because TeX does not allow any glue before or after a rule. 
+
 
 \textbf{The \textbackslash halign command.}\quad Tables in \tex are typeset using mainly the commands \cmd{halign},\cmd{omit} and \cmd{span}. The TeX command for horizontal alignment is |\halign|. It must be followed by a group of commands enclosed by braces. This block contains all rows of the table with the cells separated by the character "\&" and the rows separated by |\cr|. The rows containing the text actually to be printed are preceded by a special one called the preamble. It is a template into which the content of the table cells are put before being typeset. "\#" characters serve as placeholders for the cell entries. (Inside macro definitions, "\#\#" is used to avoid confusion with the macro arguments denoted by |#1|, |#2| etc.) One |#| must occur between every two |&|s. 
 \url{http://www.volkerschatz.com/tex/halign.html}
@@ -1349,7 +1446,7 @@ Use LaTeX tables first, before you move on to typesetting them using only TeX co
 1.5 cl & orang-utan soup \cr}
 \end{texexample}
 
-The text in the first column is printed in italics (\cmd{it}) and aligned right. This is achieved by the \cmd{hfil}, which is a spacer with zero default width but infinite stretchability. Whenever something is aligned right, left or centred, this is achieved with such fillers. (They come in three powers: |\hfil|, |\hfill|, and |\hfilll|. Each is infinitely more stretchable than its predecessor. The last one is not predefined in LaTeX, but can be emulated by writing |\hskip 0pt plus 1filll|.) Likewise, the second column is aligned left. This fairly simple way blews into complexity, once one decides to employ frames:
+The text in the first column is printed in italics (\cmd{\it}) and aligned right. This is achieved by the \cmd{\hfil}, which is a spacer with zero default width but infinite stretchability. Whenever something is aligned right, left or centred, this is achieved with such fillers. (They come in three powers: |\hfil|, |\hfill|, and |\hfilll|. Each is infinitely more stretchable than its predecessor. The last one is not predefined in LaTeX, but can be emulated by writing |\hskip 0pt plus 1filll|.) Likewise, the second column is aligned left. This fairly simple way blews into complexity, once one decides to employ frames:
 
 \begin{teXXX}
 {

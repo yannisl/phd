@@ -1,0 +1,206 @@
+\documentclass{book}
+\usepackage{phd,microtype}
+\setmainfont{code2000.ttf}
+
+%\overfullrule.4pt
+\usepackage{xcolor}
+\luadirect{sum=0
+line=0}
+\makeatletter
+
+\newbox\trialbox
+\newbox\linebox
+\newcount\maxbad
+\newcount\linebad
+\newcount\bestbad
+\newcount\worstbad
+\newcount\overfulls
+\newcount\currenthbadness
+
+
+\def\trypar#1\par{%
+  \showtrybox{\linewidth}{#1\par}%
+}
+
+\newcommand\showtrybox[2]{%
+  \currenthbadness=\hbadness
+  \maxbad=0\relax
+  \setbox\trialbox=\vbox{%
+    \hsize#1\relax#2%
+    \hbadness=10000000\relax
+    \eatlines
+  }%
+  \hbadness=10000000\relax
+  \setbox\trialbox=\vbox{%
+    \hsize#1\relax#2%
+    \printlines
+  }%
+  \noindent\usebox\trialbox\par
+  \hbadness=\currenthbadness
+}
+
+\newcommand\trybox[2]{%
+  \currenthbadness=\hbadness
+  \maxbad=0\relax
+  \setbox\trialbox=\vbox{%
+    \hsize#1\relax#2\par
+    \hbadness=10000000\relax
+    \eatlines
+  }%
+  \hbadness=\currenthbadness
+}
+
+\def\eatlines{%
+  \begingroup
+  \setbox\linebox=\lastbox
+  \setbox0=\hbox to \hsize{\unhcopy\linebox\hss}%
+  \linebad=\the\badness\relax
+  \ifnum\linebad>\maxbad\relax \global\maxbad=\linebad\relax \fi
+  \ifvoid\linebox\else
+    \unskip\unpenalty\eatlines
+  \fi
+  \endgroup
+}
+
+\def\printlines{%
+  \begingroup
+  \setbox\linebox=\lastbox
+  \setbox0=\hbox to \hsize{\unhcopy\linebox}%
+   \linebad=\the\badness\relax
+  \ifvoid\linebox\else
+     \unskip\unpenalty\printlines 
+    \ifhmode\newline\fi
+    % print line number at left
+    \makebox[15pt][r]{%
+        \color{thegray!80}%
+       \luadirect{
+           line = line +1
+           tex.print(line)}%
+           \makebox[3.5pt]{}%
+           }%
+    \noindent\box\linebox\showbadness
+  \fi
+  \endgroup
+}
+
+\def\showbadness{%
+  \makebox[0pt][l]{\color{red}
+    \footnotesize\sffamily
+    \ifnum\currenthbadness<\linebad\relax 
+      \ifnum\linebad=1000000\relax\expandafter\@gobble\fi 
+         \space
+          \space%\the\linebad
+      		\luadirect{
+               sum=sum+\the\linebad
+       	  local tmp=\the\linebad
+              tex.print('badness = ', \the\linebad, ',  sum = ', sum )
+         }
+     \fi
+  }%
+}
+
+\makeatother
+\begin{document}
+
+\hbadness=-1 
+
+\microtypesetup{activate=true}
+\begin{minipage}[t]{.15\textwidth}
+\mbox{}
+\trypar\hyphenpenalty= 500
+In olden times when wishing
+still helped one, there lived a
+king whose daughters were all
+beautiful, but the youngest was so
+beautiful that the sun itself,
+$a+b +c = 12$
+ \par
+ \end{minipage}
+ 
+ \luadirect{tex.print('total badness = ', sum)}
+
+\tikzrule
+
+
+\luadirect{sum=0  line=0}
+\microtypesetup{activate=true}
+\begin{minipage}[t]{.3\textwidth}
+\mbox{}
+\trypar\hyphenpenalty= 500
+In olden times when wishing
+still helped one, there lived a
+king whose daughters were all
+beautiful, but the youngest was so
+beautiful that the sun itself,
+$a+b +c = 12$
+ \par
+  \luadirect{tex.print('total badness = ', sum)}
+ \end{minipage}
+
+\tikzrule
+
+
+% reset
+\microtypesetup{activate=true}
+
+\luadirect{sum=0  line=0}
+
+\begin{minipage}[t]{.6\textwidth}
+\mbox{}
+\trypar\hyphenpenalty=-500
+In olden times when wishing
+still helped one, there lived a
+king whose daughters were all
+beautiful, but the youngest was so
+beautiful that the sun itself,
+$a+b +c = 12$
+ \par
+ \luadirect{tex.print('total badness = ', sum)}
+\end{minipage}
+\medskip
+
+
+
+
+\tikzrule
+
+% reset
+\luadirect{sum=0  line=0}
+
+\microtypesetup{activate = true}
+\begin{minipage}[t]{\linewidth}
+\mbox{}
+\trypar\hyphenpenalty=-500
+In olden times when wishing
+still helped one, there lived a
+king whose daughters were all
+beautiful, but the youngest was so
+beautiful that the sun itself\ldots
+\par
+ \luadirect{tex.print('total badness = ', sum)}
+\end{minipage}
+
+\tikzrule 
+%find natural w
+\newlength{\myl}
+\def\K{\kern3.549805pt}
+\settowidth\myl{repeated repeated repeated repeated}
+\the\myl   
+
+\begin{luacode}               
+ for _,v in ipairs(arg) do
+     local b, m, f, t
+     b = string.explode(v, "/")
+     b = b[#b]
+     m = collectgarbage("count")
+     f = fontloader.open(v)
+     if f then
+         t = fontloader.to_table(f)
+         fontloader.close(f)
+         tex.print(math.floor(collectgarbage("count") - m), b)
+         t = nil
+         collectgarbage('collect')
+     end
+ end
+ \end{luacode}
+\end{document}
