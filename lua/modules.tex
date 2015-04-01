@@ -37,25 +37,25 @@ In the example we use the \luacmd{string.gsub} to replace windows \textbackslash
 
 The simplest way to create a module is to create a table and put all functions you want to export inside it, and return this table.
 
+%\begin{filecontents*}{chicken.lua}
+%local M = {}
+%
+%function M.chicken ()
+%  return "chicken"
+%end
+%
+%function M.chickens ()
+%  return "many chickens" 
+%end
+%
+%function M.ancient_chickens ()
+%  return "\\bgroup\\hiero\\char\"13171 \\egroup"
+%end
+%
+%return M
+%\end{filecontents*}
+
 \begin{texexample}{Writing a Module}{ex:wmodule}
-\begin{filecontents*}{chicken.lua}
-local M = {}
-
-function M.chicken ()
-  return "chicken"
-end
-
-function M.chickens ()
-  return "many chickens" 
-end
-
-function M.ancient_chickens ()
-  return "\\bgroup\\hiero\\char\"13171 \\egroup"
-end
-
-return M
-\end{filecontents*}
-
 \begin{luacode*}
 local c = require "chicken"
       tex.print(c.chicken(), c.chickens(), c.ancient_chickens())
@@ -69,27 +69,27 @@ require "foo"  --> loading foo
 
 A second and in my opinion much better way is to return the list of functions you want to export. This way\footnote{This is very similar to Javascript modules.} your code will be much more cleaner and easier to maintain. We rewrite our module |chicken|  to |chickens|. Again the module is saved in a file with the module name and saved in a place where the module loader can find it. 
 
+%\begin{filecontents*}{manychickens.lua}
+%local M = {}
+%
+%local chicken = function ()
+%  return "chicken"
+%end
+%
+%local chickens = function ()
+%  return "many chickens" 
+%end
+%
+%local ancient_chickens = function ()
+%  return "\\bgroup\\hiero\\HUGE\\char\"13171 \\char\"13173\\egroup"
+%end
+%
+%return {chicken                = chicken,
+%            chickens              = chickens,
+%            ancient_chickens  = ancient_chickens}
+%\end{filecontents*}
+
 \begin{texexample}{Writing a Module}{ex:wmodule}
-\begin{filecontents*}{manychickens.lua}
-local M = {}
-
-local chicken = function ()
-  return "chicken"
-end
-
-local chickens = function ()
-  return "many chickens" 
-end
-
-local ancient_chickens = function ()
-  return "\\bgroup\\hiero\\HUGE\\char\"13171 \\char\"13173\\egroup"
-end
-
-return {chicken                = chicken,
-            chickens              = chickens,
-            ancient_chickens  = ancient_chickens}
-\end{filecontents*}
-
 \begin{luacode*}
    local c = require "manychickens"
    tex.print(c.chicken(), c.chickens(),"\\par","ancient chickens", "{\\Huge" .. c.ancient_chickens() .. "}")
@@ -119,16 +119,18 @@ From the point of view of Lua, submodules in the same package have no explicit r
 
 In LuaTeX things are much simpler if everything falls into place and the LuaTeX searchers find the modules. I experimented a bit, before getting the paths right on a MikTeX installation. Normal modules need to be located in a place where 
 
+%\begin{filecontents*}{test.config}
+%    # test.config
+%    # Read timeout in seconds
+%    read.timeout=10
+%    # Write timeout in seconds
+%    write.timeout=5
+%   #acceptable ports
+%   ports = 1002, 1003, 1004
+%\end{filecontents*}
+
 \begin{texexample}{Lua Modules and Paths}{}
-\begin{filecontents*}{test.config}
-    # test.config
-    # Read timeout in seconds
-    read.timeout=10
-    # Write timeout in seconds
-    write.timeout=5
-   #acceptable ports
-   ports = 1002, 1003, 1004
-\end{filecontents*}
+
 \begin{luacode}
   -- readconfig.lua
   
@@ -205,25 +207,26 @@ provides the function
 
 which can be used as a replacement to \luacmd{require()}. The only difference between them being that the luatexbase.require()  will check that the module properly identifies itself.
 
+
+%\begin{filecontents*}{dice.lua}
+%local err, warn, info, log = luatexbase.provides_module({
+%     _name      = 'dice',
+%     _date       = '2014/11/01',
+%     _version   = '0.0',
+%     _description = 'simulating a die',
+%     _author      = 'Y Lazarides',
+%     _license      =  'LPPL v1.3+' ,
+%})
+%
+%local dice =  {}    -- is this better to be local?
+%
+%function dice.txprint()
+%    return 'dice'
+%end    
+%
+%return dice         -- return the table returns {} 
+%\end{filecontents*} 
 \begin{texexample}{luatexbase module}{}
-\begin{filecontents*}{dice.lua}
-local err, warn, info, log = luatexbase.provides_module({
-     _name      = 'dice',
-     _date       = '2014/11/01',
-     _version   = '0.0',
-     _description = 'simulating a die',
-     _author      = 'Y Lazarides',
-     _license      =  'LPPL v1.3+' ,
-})
-
-local dice =  {}    -- is this better to be local?
-
-function dice.txprint()
-    return 'dice'
-end    
-
-return dice         -- return the table returns {} 
-\end{filecontents*} 
 
 \begin{luacode}   
 local  f = require("dice")           
@@ -400,34 +403,34 @@ tex.print(os.which("ps2pdf"))}
 
 \function{os.where()} This is an alias for \textbf{os.which()}
 
-\begin{filecontents*}{phd-utils.lua}
--- presents nicely a table 
-
-local M = M or {}
-
-local rep, write = string.rep, tex.print
-
-function M.inspect (tab, offset)
-   local openbracket, closebracket, par = "\\{", "\\mbox{..}\\}", "\\par"
-   
-    offset = offset or ""
-    for k, v in pairs (tab) do
-        local newoffset = offset .. "\\mbox{~~}"
-        if type(v) == "table" then
-           write(offset .. k .. " = " .. openbracket .. par)
-           M.inspect(v, newoffset)
-           write(offset .. closebracket .. par)
-        else
-         if k~="data" then write(offset..k.." =  ".. tostring(v), "\\par") 
-           else
-                 write(offset.."k = char data ")
-           end
-       end
-    end
-end
-
-return M
-\end{filecontents*}
+%\begin{filecontents*}{phd-utils.lua}
+%-- presents nicely a table 
+%
+%local M = M or {}
+%
+%local rep, write = string.rep, tex.print
+%
+%function M.inspect (tab, offset)
+%   local openbracket, closebracket, par = "\\{", "\\mbox{..}\\}", "\\par"
+%   
+%    offset = offset or ""
+%    for k, v in pairs (tab) do
+%        local newoffset = offset .. "\\mbox{~~}"
+%        if type(v) == "table" then
+%           write(offset .. k .. " = " .. openbracket .. par)
+%           M.inspect(v, newoffset)
+%           write(offset .. closebracket .. par)
+%        else
+%         if k~="data" then write(offset..k.." =  ".. tostring(v), "\\par") 
+%           else
+%                 write(offset.."k = char data ")
+%           end
+%       end
+%    end
+%end
+%
+%return M
+%\end{filecontents*}
 
 \section{phd package utilities}
 

@@ -4,7 +4,7 @@
 \index{LaTeX kernel classes!File n  ltlength.dtx}
 \section{File n, lengths and the ltlength.dtx}
 
-This class defines a number of user commands for manipulating lengths. the code is straightforward. The |\newlength| command allocates a new internal skip register using the |\newskip| command from the allocations class.
+This class defines a number of user commands for manipulating lengths. the code is straightforward. The |\newlength| command allocates a new internal skip register using the \CMDI{\newskip} command from the allocations class.
 
 \let\bs\textbackslash
 \index{\bs newlength}\index{\bs setlength}\index{\bs addtolength}\index{\bs settowidth}\index{\bs settoheight}
@@ -22,36 +22,50 @@ This class defines a number of user commands for manipulating lengths. the code 
 \end{tabular}
 \medskip
 
+\startlineat{3}
+\begin{macro}{\newlength} 
+\begin{macro}{\setlength}
+\begin{macro}{\addtolength}
+The \CMDI{\newlength} is just syntactic sugar for PlainTeX’s \CMDI{\newskip}. The |\@ifdefinable| will produce an
+error message if the command has already been set.
+
 \begin{teX}
-3 \def\newlength#1{\@ifdefinable#1{\newskip#1}}
-4 \def\setlength#1#2{#1#2\relax}
-5 \def\addtolength#1#2{\advance#1 #2\relax}
+  \def\newlength#1{\@ifdefinable#1{\newskip#1}}
+  \def\setlength#1#2{#1#2\relax}
+  \def\addtolength#1#2{\advance#1 #2\relax}
 \end{teX}
+\end{macro}
+\end{macro}
+\end{macro}
 \medskip
 
-The |setto| commands use a temporary box to store the contents and then measure them using the internal macro |\@settodim|,
+The |\setto| commands use a temporary box \CMDI{\@tempboxa} to store the contents and then 
+measure them using the internal macro |\@settodim|,
 
 \medskip
+\startlineat{6}
 \begin{teX}
-6 \def\@settodim#1#2#3{\setbox\@tempboxa\hbox{{#3}}#2#1\@tempboxa
+  \def\@settodim#1#2#3{\setbox\@tempboxa\hbox{{#3}}#2#1\@tempboxa
 %  Clear the memory afterwards (which might be a lot).
-7       \setbox\@tempboxa\box\voidb@x}
-8 \def\settoheight{\@settodim\ht}
-9 \def\settodepth {\@settodim\dp}
-10 \def\settowidth {\@settodim\wd}
+        \setbox\@tempboxa\box\voidb@x}
+  \def\settoheight{\@settodim\ht}
+  \def\settodepth {\@settodim\dp}
+  \def\settowidth {\@settodim\wd}
 \end{teX}
 \medskip
 
-|{\@settopoint}\marg{skip register}|
-
-The |\@settopoint| macro takes the contents of the skip register that is supplied as its argument
+\begin{macro}{\@settopoint}
+The \CMDI{\@settopoint}\marg{skip register}
+ macro takes the contents of the skip register that is supplied as its argument
 and removes the fractional part to make it a whole number of points. This can be
 used in class files to avoid values like 45.455pt when calulating a dimension. The method of
 rounding is interesting. Also it is interesting that this macro, is not used in the kernel at all, but is defined
 here for use with the standard classes (it is used to round off dimensions for page calculations).
+\end{macro}
 
-\medskip
-\begin{texexample}{settopoint}{}
+\startlineat{100}
+\begin{texexample}{Rounding dimensions}{ex:settopoint}
+\bgroup 
   \makeatletter
   \def\@settopoint#1{\divide#1\p@\multiply#1\p@}
   \newlength\@test
@@ -59,7 +73,31 @@ here for use with the standard classes (it is used to round off dimensions for p
   \@settopoint{\@test}
   \the\@test
   \makeatother
+\egroup  
 \end{texexample}
+
+\section{Redefinitions and Extensions by Packages}
+
+The commands \cmd{\settolength} and \cmd{\addtolength}, \cmd{\@settodim} have been reimplemented by the \pkgname{calc} to enable infix calculations \cite{calc}. The package also implements a number of other useful
+commands which are described below. 
+
+\medskip
+\begin{tabular}{ll}
+\verb+\newlength+  &  Declare \#1 to be a new length command.\\
+\verb+\setlength+    &  Set the length command, \#1, to the value \#2.\\
+|\addtolength| & Increase the value of the length command, \#1, by the value \#2.\\
+|\settowidth|   & Set the length, \#1 to the width of a box containing \#2. \\
+|\settoheight|  & Set the length, \#1 to the height of a box containing \#2.\\
+|\settodepth|   & Set the length, \#1 to the depth of a box containing \#2.\\
+|\widthof|\marg{text} & Gets the natural width of \meta{text}.\\
+|\heightof|\marg{text} & \\
+\CMDI{\depthof}\marg{text} &\\
+ |\maxof|  & Select a maximum of two dimension expressions.\\
+ |\minof| & Select the minimum of two dimension expressions.\\
+|\@settodim|   & internal macro\\
+|\@settopoint| & internal macro\\
+\end{tabular}
+\medskip
 
 
 

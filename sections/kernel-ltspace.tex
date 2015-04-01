@@ -5,16 +5,16 @@
 
  \section{Spacing}
 
- This section deals with spacing, and line- and page-breaking.
+ This section of the \latexe kernel deals with spacing, line and page-breaking.
 
 \subsection{User Commands}
  
-\begin{macro}{\nopagebreak} The command\cs{nopagebreak}\oarg{i} : \meta{i} = 0,...,4 attempts to stop the page breaking at this point, by inserting an appropriate amount of penalty. It also takes care to avoid introducing redundant spaces. It does not
-always work as advertized.
+\begin{macro}{\nopagebreak} The command\cs{nopagebreak}\oarg{i} : \meta{i} = 0,...,4 attempts to stop the page breaking at this point, by inserting an appropriate amount of penalty. It also takes care to avoid introducing redundant spaces. It does not always work as advertized.
 \end{macro}
 
  Default argument = 4.  Puts a penalty into the vertical list
  output as follows:\\
+ 
                    0 : penalty = 0\\
                    1 : penalty = |\@lowpenalty|\\
                    2 : penalty = |\@medpenalty|\\
@@ -273,10 +273,12 @@ an equal negative amount of kern. An |\enspace| is a .5em kern.
 %
 % 
  \subsection{The code}
+ 
 The code follows the sequence and commentary of the original source to a large
 extend. I have added additional commentary where necessary to provide
 additional explanatory comments and to cross-reference code to algorithms
 and other sections.
+ 
  
     \begin{teX}
 \message{spacing,}
@@ -285,7 +287,7 @@ and other sections.
 In the definition of |\pagebrak| and |\nopagebreak| observe the
 use of |\@testopt|. This macro is defined in |ltdefns.dtx| and encapsulates
 the most common call to |\@ifnextchar|. It takes two arguments. There is
-also a robust version available \cs{protected@testopt}.
+also a robust version available \CMDI{\protected@testopt}.
 
   \begin{macro}{\pagebreak}
   \begin{macro}{\nopagebreak}
@@ -313,16 +315,16 @@ horizontal mode. The command |\@getpen| is defined on Line~\ref{getpen}.
   \end{macro}
 
 %
-%  \begin{macro}{\linebreak}
-%  \begin{macro}{\nolinebreak}
-%    \begin{teX}
+  \begin{macro}{\linebreak}
+  \begin{macro}{\nolinebreak}
+    \begin{teX}
 \def\linebreak{\@testopt{\@no@lnbk-}4}
 \def\nolinebreak{\@testopt\@no@lnbk4}
-%    \end{teX}
-%  \end{macro}
-%  \end{macro}
-%  \begin{macro}{\@no@lnbk}
-%    \begin{teX}
+    \end{teX}
+  \end{macro}
+  \end{macro}
+  \begin{macro}{\@no@lnbk}
+    \begin{teX}
 \def\@no@lnbk #1[#2]{%
   \ifvmode
     \@nolnerr
@@ -335,11 +337,14 @@ horizontal mode. The command |\@getpen| is defined on Line~\ref{getpen}.
       \ignorespaces
     \fi
   \fi}
-%    \end{teX}
-%  \end{macro}
+    \end{teX}
+  \end{macro}
+
 %
-%  \begin{macro}{\samepage}
-%    \begin{teX}
+  \begin{macro}{\samepage}
+  The macro \CMDI{\samepage} is a versatile macro that can be used in many different environments to 
+  set penalties, in such a way as to discourage page breaking. All penalties are set to \CMDI{\@M}
+    \begin{teX}
 \def\samepage{\interlinepenalty\@M
    \postdisplaypenalty\@M
    \interdisplaylinepenalty\@M
@@ -348,20 +353,20 @@ horizontal mode. The command |\@getpen| is defined on Line~\ref{getpen}.
    \@itempenalty\@M
    \@secpenalty\@M
    \interfootnotelinepenalty\@M}
-%    \end{teX}
-%  \end{macro}
+    \end{teX}
+  \end{macro}
 %
 %
-%  \begin{macro}{\\}
-% It appears to be safe to use |\reserved@e| and |\reserved@f| here
-% (other reserved macros are somewhat disastrous).
-%
-% These changes made |\newline| even less robust than it had been,
-% so now it is explicitly robust, like |\\|.
-%
-%  \begin{macro}{\@normalcr}
-% The internal definition of the `normal' definition of |\\|.
-%    \begin{teX}
+  \begin{macro}{\\}
+ It appears to be safe to use |\reserved@e| and |\reserved@f| here
+ (other reserved macros are somewhat disastrous).
+
+ These changes made |\newline| even less robust than it had been,
+ so now it is explicitly robust, like |\\|.
+
+  \begin{macro}{\@normalcr}
+ The internal definition of the `normal' definition of |\\|.
+\begin{teX}
 \DeclareRobustCommand\\{%
   \let \reserved@e \relax
   \let \reserved@f \relax
@@ -370,59 +375,63 @@ horizontal mode. The command |\@getpen| is defined on Line~\ref{getpen}.
           \@xnewline}
 \expandafter\let\expandafter\@normalcr
      \csname\expandafter\@gobble\string\\ \endcsname
-%    \end{teX}
-%  \end{macro}
-%  \end{macro}
-%  \begin{macro}{\newline}
-% A simple form of the `normal' definition of |\\|.
-%    \begin{teX}
-\DeclareRobustCommand\newline{\@normalcr\relax}
-%    \end{teX}
-%  \end{macro}
+\end{teX}
+  \end{macro}
+  \end{macro}
 %
-%  \begin{macro}{\@xnewline}
-%    \begin{teX}
+%
+\begin{macro}{\newline}\index{LaTeX kernel>spacing>\string\newline}
+ The \CMDI{\newline} provides syntactic sugar to a simple form of the \CMDI{\@normalcr} definition of |\\|.
+    \begin{teX}
+\DeclareRobustCommand\newline{\@normalcr\relax}
+    \end{teX}
+  \end{macro}
+  
+
+
+  \begin{macro}{\@xnewline}
+    \begin{teX}
 \def\@xnewline{\@ifnextchar[% ] bracket matching for Emacs!
                   \@newline
                  {\@gnewline\relax}}
-%    \end{teX}
-%  \end{macro}
-%
-%  \begin{macro}{\@newline}
-%    \begin{teX}
+    \end{teX}
+  \end{macro}
+
+  \begin{macro}{\@newline}
+    \begin{teX}
 \def\@newline[#1]{\let \reserved@e \vadjust
                    \@gnewline {\vskip #1}}
-%    \end{teX}
-%  \end{macro}
+    \end{teX}
+  \end{macro}
 %
-%  \begin{macro}{\@gnewline}
-% The |\nobreak| added to prevent null lines when |\\|
-% ends an overfull line.  Change made 24 May 89 as suggested by
-% Frank Mittelbach and Rainer Sch\"opf
-% \changes{v1.2h}{1995/07/05}{Use \cs{break}}
-%    \begin{teX}
+  \begin{macro}{\@gnewline}
+ The |\nobreak| added to prevent null lines when |\\|
+ ends an overfull line.  Change made 24 May 89 as suggested by
+ Frank Mittelbach and Rainer Sch\"opf
+
+    \begin{teX}
 \def\@gnewline #1{%
   \ifvmode
     \@nolnerr
   \else 
     \unskip \reserved@e {\reserved@f#1}\nobreak \hfil \break
   \fi}
-%    \end{teX}
-%  \end{macro}
-%
-%  
-% \begin{macro}{\@getpen}
-The command |\@getpen| is a helper command to allocate penalties. This has
+    \end{teX}
+  \end{macro}
+
+  
+ \begin{macro}{\@getpen}
+The command \CMDI{\@getpen} is a helper command to allocate penalties. This has
 been abstracted to make it easier for classes to insert penalties that
 they predefine.
-%    \begin{teX}
+\begin{teX}
 \def\@getpen#1{\ifcase #1 \z@ \or \@lowpenalty\or
          \@medpenalty \or \@highpenalty (*@\label{getpen}@*)
          \else \@M \fi}
-%    \end{teX}
-%  \end{macro}
-%
-%
+\end{teX}
+\end{macro}
+
+\endinput
 % \begin{macro}{\if@nobreak}
 % \changes{v1.2p}{1996/07/26}{put \cs{global} inside definition}
 % Switch used to avoid page breaks caused by |\label| after a
@@ -441,15 +450,15 @@ they predefine.
 %
 %
 %
-% \begin{macro}{\@savsk}
-% \begin{macro}{\@savsf}
-% Registers used to save the space factor and last skip.
-%    \begin{teX}
+ \begin{macro}{\@savsk}
+ \begin{macro}{\@savsf}
+ The registers \CMDI{\@savsk} and \CMDI{\@savsf} used to save the space factor and last skip.
+    \begin{teX}
 \newdimen\@savsk
 \newcount\@savsf
-%    \end{teX}
-% \end{macro}
-% \end{macro}
+    \end{teX}
+ \end{macro}
+ \end{macro}
 %
 %
 %

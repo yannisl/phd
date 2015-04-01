@@ -1,5 +1,8 @@
+\cxset{section color=spot!50,
+          section afterindent=false}
+
 \chapter{Page Breaking and The Output Routine (OTR)}
-\precis{In this chapter we outline a number of experimental keys that been defined to handle Table of Contents (ToC) formatting. These keys are currently experimental.}
+\precis{In this chapter we discuss one of the most mysterious aspects of \TeX\ the output routine.}
 \addtocimage{-12pt}{-20pt}{../images/tocblock-flower.jpg}
 
 
@@ -361,8 +364,33 @@ box that places the title:
    \noindent}
 \end{teXXX}
 \end{multicols}
+%%%%%%%%%%%% macro to put TeX references in right margin %%%%%%%% 
+\newdimen\theight 
+\def \TeXref#1{% 
+             \vadjust{\setbox0=\hbox{\sevenrm\quad\quad\TeX book: #1}% 
+             \theight=\ht0 
+             \advance\theight by \dp0    \advance\theight by \lineskip 
+             \kern -\theight \vbox to \theight{\rightline{\rlap{\box0}}% 
+             \vss}% 
+             }}% 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+ 
+However, useful these marks, sometimes an output routine (such as those found in \latexe needs to know why it was invoked. Knuth discusses in the \TeXref{396}  another method
+that involves the value of the |\outputpenalty|. 
+By testing for this value, it is possible to see what penalty occurred at a breakpoint;
+any penalty of −10000, −10001, −10002, or less, forces the output routine to
+act, hence different penalty values can be used to pass different messages. (When
+the output routine puts material back on the list of contributions, it need not restore
+the penalty at the breakpoint.) If output has been forced by a highly negative value
+of |\outputpenalty|, the output routine can use |\vbox{\unvcopy255}| to discover how
+full the page-so-far actually is. Underfull and overfull boxes are not reported when
+|\box255| is packaged for use by the output routine, so there’s no harm in ejecting a
+page prematurely if you want to pass a signal. (Set |\holdinginserts| positive to pass
+a signal when the contents of |\box255| will be sent back through the page builder again,
+if any insertions are present.)
 
-
+Knuth also suggested another method that he called the \emph{dirtiest trick of all} that uses the depth 
+of |\box255|. 
 
 \section{Insertions}
 Insertions are considered one of  the most  com- 
@@ -1067,12 +1095,83 @@ The package reminds in some sense
 
 
 
-Also in some sense \Lpack{everypage} can be related to package
- \Lpack{everyshi} by Martin Schroeder \cite{everyshi}, but it differs radically from
+Also in some sense \pkgname{everypage} can be related to package
+ \pkgname{everyshi} by Martin Schr\"oeder \cite{everyshi}, but it differs radically from
  it in the implementation. In fact,\Lpack{everypage} operates by
  manipulation of the |\@begindvi| macro, rather than at the
  lower level |shipout| macro.
 
+\section{hooking at shipout}
+
+\begin{macro}{\EveryShipout}
+\begin{macro}{AtNextShipout}
+This package provides the hooks \cs{EveryShipout} and 
+  \cs{AtNextShipout} whose arguments are executed after the output 
+  routine has constructed \cs{box255}, and before \cs{shipout} is 
+  called.
+\end{macro}
+\end{macro}
+
+An example application for this package would be a package for
+ adding text to the bottom of each page.
+ The  \docpkg{prelim2e} package adopts this method \citep{prelim2e}.
+
+The solution  uses is based on code developed in  \textsf{quire.tex} by
+ Marcel R.~van der Goot.  It is based upon \cs{afterassignment} and \cs{aftergroup}.
+
+The pkgname{prelim2e}  intercepts and modifies the |\box255|. 
+
+\begin{teX}
+44 \newcommand{\@Prelim@EveryShipout}{%
+45 \bgroup
+First we save the dimensions of \box255: height, width and depth; and calculate
+the total height of \box255.
+46 \dimen\z@=\wd\@cclv
+47 \dimen\@ne=\ht\@cclv
+48 \dimen\tw@=\dp\@cclv
+49 \dimen\thr@@=\dimen1
+50 \advance\dimen\thr@@ by \dimen\tw@
+Then we set \box255: A \vbox to the total height of \box255. In this a \hbox to
+the width of \box255 is included, in which \box255 is set.
+51 \global\setbox\@cclv\vbox to \dimen\thr@@{%
+52 \hb@xt@\dimen\z@{%
+53 \box\@cclv%
+54 \hss
+55 }%
+\end{teX}
+To this we append the text produced by |\PrelimText|. It is put in a |\vbox to 0pt|
+in which a |\hbox| to the width of |\box255| is included, in which |\PrelimText| is set.
+We have to reset |\protect| because it is set to |\noexpand| by the output routine.
+
+\begin{teX}
+56 \vbox to \z@{%
+57 \hb@xt@\dimen\z@{%
+58 \let\protect\relax
+59 \hfill\PrelimText\hfill
+60 }%
+61 \vss
+62 }%
+63 \vss
+64 }%
+\end{teX}
+
+Finally we set the dimensions of |\box255| to the values they had before |\@Prelim@EveryShipout|.
+
+\begin{teX}
+65 \wd\@cclv=\dimen\z@
+66 \ht\@cclv=\dimen\@ne
+67 \dp\@cclv=\dimen\tw@
+68 \egroup
+69}
+\end{teX}
+
+Once the command is defined, it is hooked into the system via |\EveryShipout| when it is in draft mode. 
+
+\begin{teX}
+70 \if@prelim@draft
+71 \EveryShipout{\@Prelim@EveryShipout}
+72 \fi
+\end{teX}
 
 \section{How to place a background image}
 
@@ -1095,6 +1194,7 @@ First we define some utility macros:
 
 A new command is then developed to describe the background material
 
+\begin{scriptexample}{}{}
 \begin{teX}
 \newcommand\bg@material{%
    \begin{tikzpicture}[remember picture,overlay]
@@ -1103,32 +1203,22 @@ A new command is then developed to describe the background material
    at (\bg@position) [\bg@anchor] {\bg@contents};
   \end{tikzpicture}}%
 \end{teX}
+\end{scriptexample}
 
-Once the background material has been defined we can place it on the page by simply calling
+Once the background material has been defined we can place it on the page by simply calling:
 
-\begin{teXXX}
+\begin{scriptexample}{}{}
+\begin{teX}
    \newcommand\BgThispage{\AddThispageHook{\bg@material}}
-\end{teXXX}
+\end{teX}
+\end{scriptexample}
 
-The background package has capitalized on two good packages the TikZ and the everypage. Similarly you can use your own ingenuity to design whatever you want
-
-
-
-
-\section{hooking at shipout}
+The background package has capitalized on two good packages the TikZ and the everypage. Most of modern
+\tex programming works with |pdf| files and macro developers prefer to use the tikz methods for hooking directly into the pdf and thus avoid a trip into the output routine. If it is required then it hooks via the dvi or shipout commands.
 
 
-This package provides the hooks \cs{EveryShipout} and 
-  \cs{AtNextShipout} whose arguments are executed after the output 
-  routine has constructed \cs{box255}, and before \cs{shipout} is 
-  called.
 
-  An example application for this package would be a package for
-  adding text to the bottom of each page.
- The  \docpkg{prelim2e} package adopts this method \citep{prelim2e}.
 
-The solution  uses is based on code developed in  \textsf{quire.tex} by
- Marcel R.~van der Goot.  It is based upon \cs{afterassignment} and \cs{aftergroup}.
 
 
 

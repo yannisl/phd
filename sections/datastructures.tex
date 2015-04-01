@@ -1,14 +1,26 @@
-\chapter{Data Structures}
+\cxset{chapter opening=any,
+          chapter color=thelightgray,
+          chapter font-family=sffamily,
+          chapter font-size=LARGE,
+          number font-size=LARGE,
+          number display=inline,
+          chapter display=block,
+          chapter float=right,
+          chapter title align=right,
+          chapter title text-align=right}
+\chapter[Datat Structures]{Data Structures $a^2$}
 
-\newthought{\tex has only one type of data structure: the token list}. There are 256 token list\footnote{See also etex for a more modern version.} registers that are
-available to the user, and \tex has some special token lists: the |\every|... variables, |\errhelp|,
-and |\output|. \latex has many more, but these are discussed the Chapter, analyzing the \latex kernel.
+\newthought{In computer science, a data structure} is a particular way of organizing data in a computer so that it can be
+used efficiently. \tex has only one type of data structure: the \emph{token list}, although one can consider a macro storing only contents as another primitive data structure. The original \tex had only 256 token list\footnote{See also etex for a more modern version.} registers that are
+available to the user.\tex also offers some special token lists: the |\every|... variables, |\errhelp|,
+and |\output|. Lamport in \latex developed additional data structures, using \tex’s primitive commands and  these are discussed in the chapters discussing the \latex kernel. In addition the \latex3 team is busy developing more familiar data structures and associated manipulation routines that one can truly say that the \tex programmer has now a full kit to program any complicated piece of code.
+
+
 
 \begin{description}
 \item [toks] Prefix for a token list register.
 \item [toksdef]  Define a control sequence to be a synonym for a |\toks| register.
 \item [newtoks] Macro that allocates a token list register in |plain.tex|.
-
 \end{description}
 
 
@@ -17,22 +29,22 @@ find occasion for their use, but format designers and other macro writers can fi
 applications. Following are some examples of the sorts of things that can be done with token lists.
 
 The number of primitive operations available for token lists is rather limited: assignment\index{token lists!assignment} and
-unpacking\index{token lists!unpacking}. However, these are sufficient to implement other operations such as appending\index{token list!appending}.
+unpacking\index{token lists>unpacking}. However, these are sufficient to implement other operations such as appending\index{token list>appending}.
 
 \section{How to allocate to a token register}
 
 \begin{macro}{\newtoks}
-Let us say we have allocated a token register, which we can do with the \cmd{newtoks}.
+Let us say we have allocated a token register, which we can define with the \cmd{\newtoks} command.
 \end{macro}
 
 
 \begin{texexample}{Token List Allocation}{}
-\newtoks\alist
+\newtoks\alist 
 \alist={token1 token2 token3}
 \the\alist
 \end{texexample}
 
-As you can see from the example we can view the contents of the token register with the \cs{the} command,
+As you can see from the example we can typeset the contents of the token register with the \cs{the} command,
 
 \begin{texexample}{Token List with macros}{}
 \begingroup
@@ -57,17 +69,55 @@ As you can see from the example we can view the contents of the token register w
 
 New token lists can be created, by either using the \cmd{\newtoks} or the \cmd{\toks}\meta{number}. Where |\toks0| defines the zero register etc. It is always better to use \cmd{\newtoks} in order not to affect existing token registers used by the system or other packages.
 
-Token register can store anything for example they can store \cmd{\vfil} or \cmd{\hfill}.
+Token register can store anything for example they can store \cmd{\vfil} or \cmd{\hfill}. \latexe uses them for example to store flush glue \cmd{\@temptoken}.
 
-\begin{codeexample}[vbox]
-\toks0={abc}   \the\toks0\par
-|\toks1=\toks0|     \toks1=\toks0  \the\toks1\par
+\section{Operations}
+\subsection{copying}
 
-\newtoks\ToksOne 
-\ToksOne={Test \textbackslash hfill \textbackslash hfill\hfil\hfill Test\par}      
-\newtoks\ToksTwo \ToksTwo=\ToksOne \the\ToksTwo
-\noindent |>|\texttt{\the\ToksOne } 
-\end{codeexample}
+You can copy the contents of one token register to another by assignment. The copying is carried out \emph{without expansion}.
+
+\begin{texexample}{}{}
+\makeatletter
+\newtoks\@exampletoksa
+\newtoks\@exampletoksb
+\@exampletoksa = {first token list}
+\@exampletoksb=\@exampletoksa
+\the\@exampletoksb
+\makeatother
+\end{texexample}
+
+\section{Collecting Information with Token Registers}
+
+One important use of token registers is to store information. Normally the package will provide some commands to add tokens, remove comments etc.
+
+\begin{teXXX}
+\def\addinfo #1{%
+    \expandafter\expandafter\expandafter\collecttokens\expandafter{%
+          \the\collecttokens #1}
+}
+\end{teXXX}
+
+
+\begin{texexample}{Adding to a token list}{}
+\bgroup
+\makeatletter
+\def\addinfo #1{
+    \expandafter\expandafter\expandafter\@temptokena\expandafter{%
+          \the\@temptokena #1}
+}
+
+\addinfo{\hfill}
+\addinfo{CHAPTER}
+\addinfo{\kern0.5em}
+\addinfo{\thechapter}
+\the\@temptokena
+\makeatother
+\egroup
+\end{texexample}
+
+
+As you can observe from the example we can also add glue, which it gets preserved until the contents are typeset. This is an importance difference between storing in a token and storing using \cmd{\edef} or a macro, although there are ways and means to by-pass this limitation.
+
 
 \begin{teXXX}
 % 1. Vereinigung zweier token register

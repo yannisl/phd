@@ -138,7 +138,26 @@ end
 local content = [[\lipsum]]
 print(tx.minipage('.8\\textwidth','2cm', tx.bgroup()..content..tx.egroup() ))
 
-print(tostring(11,438))
+
+
+function nth_root(num, root)
+  return num^(1/root)
+end  
+
+print('r', nth_root((49-0.5)/100,3))
+
+
+function nthroot()
+  
+end
+
+
+
+
+
+
+
+
 
 --[[
 \hbox to \textwidth{\hfill

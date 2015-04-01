@@ -42,7 +42,7 @@
 \DeclareOption{a5paper}{\@latexerr{Option not supported}%
    {}}
 \DeclareOption*{%
-    \PassOptionsToClass  {\CurrentOption}{article}}
+    \PassOptionsToClass  {\CurrentOption}{book}} %modified YL
 \InputIfFileExists{ltxdoc.cfg}
            {\typeout{*************************************^^J%
                      * Local config file ltxdoc.cfg used^^J%

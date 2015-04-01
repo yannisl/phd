@@ -1,0 +1,208 @@
+\chapter{Creating Book Designs}
+
+\section{First Steps}
+
+In this chapter we will develop a full book template from scratch. Before we delve into it further, I would like to emphasize that the |phd| system is a bit different from classes. A |phd|  style includes all the information necessary for the typesetting of a document. I have called this a style template. It is slightly different from a class system where generic commands might be included that can develop a totally different look. An identical design with perhaps different colors and fonts and other minor changes, is termed a \textit{theme}. 
+
+Unlike book designers who would first focus on fonts, we will first give our attention to the structural elements of the book. I will be using as an example the \textit{Linear Algebra}. 
+
+\begin{figure}[htbp]
+\includegraphics[width=\textwidth]{linear-chapter}
+\caption{The opening chapter can leave a blank page. }
+\label{fig:linear1}
+\end{figure}
+
+Figure~\ref{fig:linear1} shows the chapter head design. This is an interesting and challenging design that we will not
+easily make with the |phd| standard chapter head routines. The chapter starts with a full line and a structural element that is called \emph{Introductory Example}. The heading of this also goes to the Table of Contents. So the chapter opening page starts with a rule and end with a rule. The ending rule in Figure~\ref{fig:linear2} can be seen in the next figure. 
+
+\subsection{Chapter Opening}
+
+One of the first things you will need to take care of, is to design if the style template should cater for opening at right or if it is to open at any place. Another decision you will need to make, is what to do with blank pages. Personally I dislike them and suggest, if you are going to have them to either introduce epigraphs or full page images.
+
+\begin{figure}[htbp]
+\includegraphics[width=\textwidth]{./images/intentionally-blank.jpg}
+\caption{The opening chapter can leave a blank page. }
+\label{fig:linear2}
+\end{figure}
+
+\subsection{The User Commands}
+
+It is always best to start thinking about the user commands, as we go along in order to provide a user friendly
+interface, without the introduction of too many keys. We also need to name our template. We will name it \emph{andrea} in honour of the Designer of the book, who was Andrea Nix. Andrea designed many of the Pearson books that were mostly textbooks and has a unique distinctive design style that can make a mathematics book fun to read.
+
+\begin{verbatim}
+\cxset{chapter template = andrea,
+          chapter opening = right}
+\end{verbatim}
+
+\bgroup
+\color{spot!50}
+\makeatletter
+\setlength\@tempdima\oddsidemargin
+\advance \@tempdima by 1in
+
+\hspace*{-1in}\rule{\pdfpagewidth}{3pt} 
+
+
+\par\noindent
+
+\the\pdfpagewidth \par
+\the\@tempdima\par
+\the\oddsidemargin\ oddsidemargin
+\makeatother
+\lorem
+
+\lorem
+
+\makeatletter
+\newcommand\print@finalparams@cx{%
+  \parindent0pt
+  \par\noindent
+   Final page layout dimensions and booleans
+  
+  \string\paperwidth\space\space\the\paperwidth\\%
+  \string\paperheight\space\space\the\paperheight\\%
+  \string\textwidth\space\space\the\textwidth\\%
+  \string\textheight\space\space\the\textheight\\%
+  \string\oddsidemargin\space\space\the\oddsidemargin\\%
+  \string\evensidemargin\space\space\the\evensidemargin\\%
+  \string\topmargin\space\space\the\topmargin\\%
+  \string\headheight\space\space\the\headheight\\%
+  \string\headsep\space\space\the\headsep\\%
+  \string\footskip\space\space\the\footskip\\%
+  \string\marginparwidth\space\space\the\marginparwidth\\%
+  \string\marginparsep\space\space\the\marginparsep\\%
+  \string\columnsep\space\space\the\columnsep\\%
+  \string\columnseprule\space\space\the\columnseprule\\%
+  \string\skip\string\footins\space\space\the\footins\\%
+  \string\hoffset\space\space\the\hoffset\\%
+  \string\voffset\space\space\the\voffset\\%
+  \string\mag\space\space\the\mag\\%
+  \if@twocolumn\string\@twocolumntrue\space\fi%
+  
+  \if@twoside\string\@twosidetrue\space\fi%
+  
+  \if@mparswitch\string\@mparswitchtrue\space\fi%
+  
+  \if@reversemargin\string\@reversemargintrue\space\fi%
+  
+}%
+
+\print@finalparams@cx
+\par
+
+As we will not be sure our calculations are right or wrong (the rules can disappear at the edge of the page) I have
+taken 5pt out from the left or right parameters to see that we have done the calculations properly.
+
+\ifoddpage
+
+\else
+\color{blue}
+\llap{\mbox{\rule{\oddsidemargin+1in-5pt}{2pt}}}\mbox{\color{magenta}\rule{\textwidth}{2pt}}%
+\mbox{\color{green}\rule{\marginparwidth}{2pt}}%
+\mbox{\color{red!50}\rule{\marginparsep}{2pt}}%
+\mbox{\color{red!20}\rule{.2in-2pt}{2pt}}%
+\fi
+\makeatother
+
+
+\egroup
+
+\thispagestyle{grid}
+
+\newpage
+\makeatletter
+
+
+\thispagestyle{grid}
+
+\ifoddpage
+\color{blue}
+\llap{\mbox{\rule{\oddsidemargin+1in-5pt}{2pt}}}\mbox{\color{magenta}\rule{\textwidth}{2pt}}%
+\mbox{\color{green}\rule{\marginparwidth}{2pt}}%
+\mbox{\color{red!50}\rule{\marginparsep}{2pt}}%
+\mbox{\color{red!20}\rule{.2in-2pt}{2pt}}%
+\else
+  \color{blue}
+  \llap{\mbox{\rule{\oddsidemargin+1in-5pt}{2pt}}}\mbox{\color{magenta}\rule{\textwidth}{2pt}}%
+  \mbox{\color{green}\rule{\marginparwidth}{2pt}}%
+  \mbox{\color{red!50}\rule{\marginparsep}{2pt}}%
+  \mbox{\color{red!20}\rule{.2in-2pt}{2pt}}%
+\fi
+
+\color{black!90} % reset document colour
+
+We also need to check on oddside pages as well. Remember the switch \cmd{\@mparswitchfalse} will set the margin pars to be on the same size. This layout only has them on the right pages. We need to set it to false.
+
+\makeatother
+
+Another decision we need to make is if we going to draw the layout using TeX commands or one of the graphic units. Using TikZ, can be much easier, but we need to ensure we know where we are on the page. Alternatively we can use the remember picture, overlay hack to accomplish it. We will first give it a try with rules and boxes.
+
+Now we have the dimensions of the left margin and right margin width right we can continue with the layout.
+
+The next item we will draw is the corner frame.
+
+\makebox[0pt]{\rule{2pt}{3cm}}%
+
+\makebox[0pt]{\rule{3cm}{2pt}}%
+
+\section{Sections}
+
+The sections follow a very similar style to that of the chapter heading with rules and similar colours. 
+
+\begin{figure}[htbp]
+\includegraphics[width=\textwidth]{./images/linear-section.jpg}
+\caption{The opening chapter can leave a blank page. }
+\end{figure}
+
+The book does not use subsection. As a matter of fact most books don’t consider that numbering of subsections offers an advantage to the reader. 
+
+\begin{figure}[htbp]
+\includegraphics[width=\textwidth]{./images/linear-theorem.jpg}
+\caption{The opening chapter can leave a blank page. }
+\end{figure}
+
+
+\section{Examples and Solutions}
+
+The examples are straight forward typesetting and numbering. The specification should be that they be numbered consequently with the example and solution in capital letters to be distinguished by the type size. The colour is to be identical. The example heading is inlined with about a quadd of space between it and the text that follow. The solution is on its own line and it is followed normally by a list which is numbered alphabetically. In other cases it is in-lined see the page at the left. We can perhaps handle this with a starred command, one for stand alone heading and another for an inlined. I will come back with some suggestions for this before, we delve into codin.
+
+\begin{figure}[htbp]
+\includegraphics[width=\textwidth]{./images/linear-example.jpg}
+\caption{The book will have a lot of examples and their solutions. }
+\end{figure}
+
+\section{Exercises}
+
+These are modelled after sections and are also numbered. They are numbered in a different counter from that of sections and are reset at every chapter. 
+
+\begin{figure}[htbp]
+\includegraphics[width=\textwidth]{./images/linear-exercises.jpg}
+\caption{The book will have a lot of examples and their solutions. }
+\end{figure}
+
+\begin{figure}[htbp]
+\includegraphics[width=\textwidth]{./images/linear-supplementary.jpg}
+\caption{The book will have a lot of examples and their solutions. }
+\end{figure}
+
+\section{Figures and diagrams}
+
+\begin{figure}[htbp]
+\includegraphics[width=\textwidth]{./images/linear-figures.jpg}
+\caption{The book will have a lot of examples and their solutions. }
+\end{figure}
+
+The user commands should also be minimized and would follow normal LaTeX conventions, with the exception we will redefine an environment \cmd{\begin}\meta{marginfigure}\ldots. The margin figures are both numbered as well as unumbered, so we will use normal LaTeX conventions to both define them as well as for author commands. 
+
+
+
+\section{Geometry}
+
+Although we spend a good part of the Chapter on page design, reviewing historical typographical paper sizes, modern book production of text books is not bound with tradition but economics. High speed printing technology uses rolls and pages can be printed up to 64 pages at a time. We will follow the books dimensions which are 7.75x10.25in. The text area occupies approximately 0.67 of the textwidth and is particularly well balanced. Many mathematical text books come out too dense and are difficult to be used by students. 
+
+
+
+
+
+

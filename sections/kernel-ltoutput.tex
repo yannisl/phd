@@ -45,10 +45,10 @@ the figure as well as the table environments. It is instructive to start the dis
 A float specifier is made of two parts the float type, which is a power of two--e.g., figures in the case of the book class are type 1 and tables type 2 and the \textit{placement specification} describing where the float can be placed.  The type is defined in powers of two due to the way the specifiers are represented using a binary representation internally.
 
 \begin{figure}[h]
-
+\centering
 \begin{tabular}{rl}
-{\fboxsep2pt \LARGE  \fbox{1} \fbox{1} \fbox{0} \fbox{0} \fbox{1} \fbox{0}} &= 50\\
-{\fboxsep2pt\LARGE \fbox{1} \fbox{0} \fbox{1} \fbox{0} \fbox{0} \fbox{1} \fbox{0}} &= 82
+{\fboxsep2pt   \fbox{1} \fbox{1} \fbox{0} \fbox{0} \fbox{1} \fbox{0}} &= 50\\
+{\fboxsep2pt \fbox{1} \fbox{0} \fbox{1} \fbox{0} \fbox{0} \fbox{1} \fbox{0}} &= 82
 \end{tabular}
 
 \caption{Binary representation of float specifiers. Top is for figure with [t] option and the bottom is for table with the [t] option.}
@@ -439,19 +439,20 @@ This solves two special problems:
 
 \begin{macro}{\@opcol}
  \cs{@opcol} Outputs a column whose text is in box \cs{@outputbox}
-
-\begin{algorithm}
- \cs{\@opcol}==\Begin{%    
-\eIf{@twocolumn = false}{\cs{@outputpage}\\
-  \cs{@colht} :=G \cs{textheight}\\
-  \cs{@floatplacement}}{\eIf{@firstcolumn = true}{puts box \cs{@outputbox}
-      into \cs{@leftcolumn}\\
-      @firstcolumn :=G false.}{puts out the current two-column page\\
-      any possible two-column float pages,\\
-      determine \cs{@dbltoplist} for the next page.}}
-}
-\end{algorithm}
 \end{macro}
+%
+%\begin{algorithm}
+% \cs{@opcol}==\Begin{%    
+%\eIf{@twocolumn = false}{\cs{@outputpage}\\
+%  \cs{@colht} :=G \cs{textheight}\\
+%  \cs{@floatplacement}}{\eIf{@firstcolumn = true}{puts box \cs{@outputbox}
+%      into \cs{@leftcolumn}\\
+%      @firstcolumn :=G false.}{puts out the current two-column page\\
+%      any possible two-column float pages,\\
+%      determine \cs{@dbltoplist} for the next page.}}
+%}
+%\end{algorithm}
+
 
 
 \section{User commands  that call  affect the output routine}
@@ -608,7 +609,10 @@ A negative float specifier is used to indicate a marginal note.
 
 \section{Box lists for float-placement algorithms}
 
-
+The \pkgname{fixltx2e} and the now redundant package---as it was incorporated into the fixes
+provided by |fixltx2e|--- modify the output routine to correct a problem with synchronizing floats in double column texts with those in single column \cite{fix2col,fixltx2e}. Here we will describe the normal behaviour.
+Additional commentary on the changes is discussed later on.
+ 
 \begin{tabular}{p{3cm}p{6cm}}
     |\@freelist|     & List of empty boxes for placing new floats.\\
     |\@toplist|      & List of floats to go at top of current column.\\
@@ -690,61 +694,61 @@ A negative float specifier is used to indicate a marginal note.
 \end{macro}
 
 
-\begin{algorithm}
-  \cs{@addmarginpar} ==\\
-   \Begin{
-     \eIf{\cs{@currlist} nonempty}{
-        remove \cs{@marbox} from \cs{@currlist}\\
-        add \cs{@marbox} and \cs{@currbox} to \cs{@freelist}\\
-         NOTE: \cs{@currbox} = left box}{
-         LaTeX error: ?  \\
-     }
-     \cs{@tempcnta} := 1\\     %% 1 = right, -1 = left
-     \eIf{@twocolumn = true}{
-       then if @firstcolumn = true
-              then \cs{@tempcnta} := -1
-            fi}{
-            \eIf{@mparswitch = true}{
-               \If{count0 odd}{}{
-                   \cs{@tempcnta} := -1
-               }
-            }
-            \If{@reversemargin = true}{
-               \cs{@tempcnta} := -\cs{@tempcnta}
-            }
-     }
-
-     \If{\cs{@tempcnta} < 0}{\cs{box}\cs{@marbox} :=G \cs{box}\cs{@currbox}}
-     
-     \cs{@tempdima}   :=L maximum(\cs{@mparbottom} - \cs{@pageht}
-                                           + ht of \cs{@marbox}, 0)\\
-
-     \If{\cs{@tempdima} > 0}{LaTeX warning: 'marginpar moved'}
-
-     \cs{@mparbottom} :=G \cs{@pageht} + \cs{@tempdima} + depth of \@cs{marbox}
-                          + \cs{marginparpush}\\
-
-     \cs{@tempdima}   :=L \cs{@tempdima} - ht of \@cs{marbox}\\
-
-     \cs{box}\cs{@marbox} :=G \cs{box}\cs{@currbox}\\
-                                \cs{vbox}\{ \cs{vskip}\cs{@tempdima}\\
-                                        \cs{box}\cs{@marbox}\\
-                                       \}\\
-     height of \cs{@marbox} :=G depth of \cs{@marbox} :=G 0\\
-     \cs{kern} -\cs{@pagedp}\\
-     \cs{nointerlineskip}\\
-     
-     hbox\{\eIf{@tempcnta > 0}{hskip columnwidth\\
-                              hskip marginparsep}{
-                             hskip -marginparsep\\
-                             hskip -marginparwidth}
-             \cs{box}\cs{@marbox}\cs{hss}
-          \}\\
-     \cs{nobreak}\\
-     \cs{nointerlineskip}\\
-     \cs{hbox}\{\cs{vrule} height=0 width=0 depth=\cs{@pagedp}\}
-  }
-\end{algorithm}
+%\begin{algorithm}
+%  \cs{@addmarginpar} ==\\
+%   \Begin{
+%     \eIf{\cs{@currlist} nonempty}{
+%        remove \cs{@marbox} from \cs{@currlist}\\
+%        add \cs{@marbox} and \cs{@currbox} to \cs{@freelist}\\
+%         NOTE: \cs{@currbox} = left box}{
+%         LaTeX error: ?  \\
+%     }
+%     \cs{@tempcnta} := 1\\     %% 1 = right, -1 = left
+%     \eIf{@twocolumn = true}{
+%       then if @firstcolumn = true
+%              then \cs{@tempcnta} := -1
+%            fi}{
+%            \eIf{@mparswitch = true}{
+%               \If{count0 odd}{}{
+%                   \cs{@tempcnta} := -1
+%               }
+%            }
+%            \If{@reversemargin = true}{
+%               \cs{@tempcnta} := -\cs{@tempcnta}
+%            }
+%     }
+%
+%     \If{\cs{@tempcnta} < 0}{\cs{box}\cs{@marbox} :=G \cs{box}\cs{@currbox}}
+%     
+%     \cs{@tempdima}   :=L maximum(\cs{@mparbottom} - \cs{@pageht}
+%                                           + ht of \cs{@marbox}, 0)\\
+%
+%     \If{\cs{@tempdima} > 0}{LaTeX warning: 'marginpar moved'}
+%
+%     \cs{@mparbottom} :=G \cs{@pageht} + \cs{@tempdima} + depth of \@cs{marbox}
+%                          + \cs{marginparpush}\\
+%
+%     \cs{@tempdima}   :=L \cs{@tempdima} - ht of \@cs{marbox}\\
+%
+%     \cs{box}\cs{@marbox} :=G \cs{box}\cs{@currbox}\\
+%                                \cs{vbox}\{ \cs{vskip}\cs{@tempdima}\\
+%                                        \cs{box}\cs{@marbox}\\
+%                                       \}\\
+%     height of \cs{@marbox} :=G depth of \cs{@marbox} :=G 0\\
+%     \cs{kern} -\cs{@pagedp}\\
+%     \cs{nointerlineskip}\\
+%     
+%     hbox\{\eIf{@tempcnta > 0}{hskip columnwidth\\
+%                              hskip marginparsep}{
+%                             hskip -marginparsep\\
+%                             hskip -marginparwidth}
+%             \cs{box}\cs{@marbox}\cs{hss}
+%          \}\\
+%     \cs{nobreak}\\
+%     \cs{nointerlineskip}\\
+%     \cs{hbox}\{\cs{vrule} height=0 width=0 depth=\cs{@pagedp}\}
+%  }
+%\end{algorithm}
 
  Floats and marginpars add a lot of dead cycles.
 
@@ -766,34 +770,36 @@ A negative float specifier is used to indicate a marginal note.
     \end{teX}
 
 
-%    \begin{teX}
+    \begin{teX}
 \def\@testfalse{\global\let\if@test\iffalse}
 \def\@testtrue {\global\let\if@test\iftrue}
 \@testfalse
-%    \end{teX}
+    \end{teX}
 %
 % \changes{v1.1v}{1996/07/26}{remove \cs{global} before \cs{@test...}}
-%    \begin{teX}
+    \begin{teX}
 \def\@bitor#1#2{\@testfalse {\let\@elt\@xbitor
    \@tempcnta #1\relax #2}}
-%    \end{teX}
+    \end{teX}
 %    RmS 91/11/22: Added test for |\count#1 = 0|.
 %                  Suggested by Chris Rowley.
 %
 %
 % \changes{v1.1v}{1996/07/26}{remove \cs{global} before \cs{@test...}}
-%    \begin{teX}
+    \begin{teX}
 \def\@xbitor #1{\@tempcntb \count#1
    \ifnum \@tempcnta =\z@
    \else
      \divide\@tempcntb\@tempcnta
      \ifodd\@tempcntb \@testtrue\fi
    \fi}
-%    \end{teX}
+    \end{teX}
 %
 \section{Definition of Float Boxes}
+
 All boxes are defined using |\newinsert|.  A total of eighteen boxes are defined here
 and later on inserted in the freelist (See line \ref{freelist}).
+
     \begin{teX}
 \newinsert\bx@A
 \newinsert\bx@B
@@ -1112,18 +1118,18 @@ as a document always starts at an odd number.
     Added size test and warning message; perhaps we should use
     an error message.
 
-%    \begin{teX}
+    \begin{teX}
   \ifdim \ht\@currbox>\textheight
     \ht\@currbox \textheight
   \fi
-%    \end{teX}
+    \end{teX}
 %
 %    This next line is not essential but it is more robust to make this
 %    value non-zero, in case of weird errors.
 %
 %    This next bit is what is needed from |\@addtodblcol|, plus some
 %    extra checks for error trapping.
-%    \begin{teX}
+    \begin{teX}
   \global \count\@currbox \tw@
   \@tempdima -\ht\@currbox
   \advance \@tempdima -\dbltextfloatsep
@@ -1134,15 +1140,15 @@ as a document always starts at an odd number.
     \let \@dbltoplist \@empty
   \fi
   \@cons \@dbltoplist \@currbox
-%    \end{teX}
+    \end{teX}
 %    This setting of |\@dbltopnum| is used only to change the
 %    typesetting in\\ |\@combinedblfloats|.
-%    \begin{teX}
+    \begin{teX}
   \global \@dbltopnum \m@ne
 %<*trace>
     \tr@ce{dbltopnum set to -1 (= \the \@dbltopnum) (topnewpage)}%
 %</trace>
-%    \end{teX}
+    \end{teX}
 
     At points such as this we need to check that there is still a
     minimal amount of room left on the page; this uses an arbitrary
@@ -1154,7 +1160,7 @@ as a document always starts at an odd number.
     column may be produced by |\output|, in which case an extra,
     misleading, warning will be generated, OK?  (This happens only
     when there is too little room left on the page for any float.)
-    Otherwise (\ie if the size is such that it is allowed as a normal
+    Otherwise (ie if the size is such that it is allowed as a normal
     float) the extra |\@emptycol| will be invoked in the second
     column by the conditional code guarded by the |\if@firstcolumn|
     test.
@@ -1188,12 +1194,14 @@ as a document always starts at an odd number.
   \end{macro}
   \end{macro}
 
+\section{The \textbackslash output routine}
 
   \begin{macro}{\output}
     This needs some small adjustments.  We cannot
     guarantee that the float mechanism will interact correctly with
     this stuff, but that mechanism does not always work properly
     with footnotes already.
+    
     The reset of |\par| to the output routine.
     This avoids problems when the output routine is
     called within a list where |\par| may be a no-op.
@@ -1230,7 +1238,8 @@ as a document always starts at an odd number.
 \end{macro}
 
 \begin{macro}{\@specialoutput}
-%    \begin{teX}
+ \end{macro}
+    \begin{teX}
 \gdef\@specialoutput{%
    \ifnum \outputpenalty>-\@Mii
      \@doclearpage
@@ -1239,7 +1248,7 @@ as a document always starts at an odd number.
        \ifnum \outputpenalty<-\@MM \deadcycles \z@ \fi
        \global \setbox\@holdpg \vbox {\unvbox\@cclv}%
      \else
-%    \end{teX}
+    \end{teX}
 %
 %    Note that |\boxmaxdepth| should not be set here since we wish to
 %    record the natural depth of the holdpg box.
@@ -1257,30 +1266,30 @@ as a document always starts at an odd number.
 %    double-penalty mechanism.  The |\unskip| then removes the
 %    |\topskip| which is put there since the box is the first on the
 %    page.
-%    \begin{teX}
+    \begin{teX}
        \global \setbox\@holdpg \vbox{%
                       \unvbox\@holdpg
                       \unvbox\@cclv
-%    \end{teX}
+    \end{teX}
 %    We must now remove the box added by the float mechanism and the
 %    |\topskip| glue therefore added above it by \TeX.
-%    \begin{teX}
+    \begin{teX}
                       \setbox\@tempboxa \lastbox
                       \unskip
                                      }%
-%    \end{teX}
+    \end{teX}
 %    These two are needed as separate dimensions only by
 %    |\@addmarginpar|; for other purposes we put the whole size into
 %    |\@pageht| (see below).
-%    \begin{teX}
+    \begin{teX}
        \@pagedp \dp\@holdpg
        \@pageht \ht\@holdpg
        \unvbox \@holdpg
        \@next\@currbox\@currlist{%
          \ifnum \count\@currbox>\z@
-%    \end{teX}
+    \end{teX}
 %    Putting the whole size into |\@pageht| (see above).
-%    \begin{teX}
+    \begin{teX}
            \advance \@pageht \@pagedp
            \ifvoid\footins \else
              \advance \@pageht \ht\footins
@@ -1288,22 +1297,22 @@ as a document always starts at an odd number.
              \advance \@pageht \dp\footins
            \fi
            \ifvbox \@kludgeins
-%    \end{teX}
+    \end{teX}
 %    We want to make the adjustment due to this insert only if the
 %    non-star form is used.  The *-form will probably not work with
 %    floats, but maybe it still could make some adjustment here even
 %    so?
-%    \begin{teX}
+    \begin{teX}
              \ifdim \wd\@kludgeins=\z@
                \advance \@pageht \ht\@kludgeins
              \fi
            \fi
-%    \end{teX}
+    \end{teX}
 %    This version puts the inserts back just before the additional
 %    material; it could be moved earlier, before unboxing the
 %    page-so-far.  Neither is guaranteed not to put things on the wrong
 %    page.  This version is similar to the original version.
-%    \begin{teX}
+    \begin{teX}
            \@reinserts
            \@addtocurcol
          \else
@@ -1311,7 +1320,7 @@ as a document always starts at an odd number.
            \@addmarginpar
          \fi
          }\@latexbug
-%    \end{teX}
+    \end{teX}
 %    A 2e change: use |\addpenalty| instead of |\penalty| here.  Some 
 %    penalty is needed to create a potential break-point immediately
 %    after the reinserts (or the marginal).  Otherwise there can be no
@@ -1319,7 +1328,7 @@ as a document always starts at an odd number.
 %    marginal to appear on the next page (which is often incorrect).
 %    However, if the nobreak flag is true, a |\nobreak| must be
 %    correct.
-%    \begin{teX}
+    \begin{teX}
        \ifnum \outputpenalty<\z@
          \if@nobreak
            \nobreak
@@ -1330,8 +1339,8 @@ as a document always starts at an odd number.
      \fi
    \fi
 }
-%    \end{teX}
-%  \end{macro}
+    \end{teX}
+ 
 
 
   \begin{macro}{\@doclearpage}
@@ -1353,7 +1362,7 @@ as a document always starts at an odd number.
 %    It should perhaps be applied to one page of cleared floats, but
 %    who cares?  The whole of this stuff needs completely redoing for
 %    many such reasons.
-%    \begin{teX}
+    \begin{teX}
        \ifvbox\@kludgeins
          {\setbox \@tempboxa \box \@kludgeins}%
        \fi 
@@ -1416,20 +1425,21 @@ as a document always starts at an odd number.
   \end{macro}
 %
 %
-%  \begin{macro}{\@makecol}
-%    We must rewrite this macro to alllow for variations in page-makeup
-%    required by changes in page-length.
-%     
-%    This uses a different macro if a special-length column is being
-%    produced.
-%
-%    \begin{teX}
+  \begin{macro}{\@makecol}
+
+    We must rewrite this macro to alllow for variations in page-makeup
+    required by changes in page-length.
+     
+    This uses a different macro if a special-length column is being
+    produced.
+
+    \begin{teX}
 \gdef \@makecol {%
    \ifvoid\footins
      \setbox\@outputbox \box\@cclv
    \else
      \setbox\@outputbox \vbox {%
-%    \end{teX}
+    \end{teX}
 %    This |\boxmaxdepth| setting is to ensure that  deep footnotes
 %    do not overwrite the footer (on account of the negative skip
 %    added later): it should use |\@maxdepth| otherwise the change is
@@ -1438,7 +1448,7 @@ as a document always starts at an odd number.
 %    below the bottom floats.}
 %
 %    But see also its use when combining floats.
-%    \begin{teX}
+    \begin{teX}
        \boxmaxdepth \@maxdepth                   
        \unvbox \@cclv
        \vskip \skip\footins
@@ -1449,24 +1459,24 @@ as a document always starts at an odd number.
        \color@endgroup
        }%
    \fi
-%    \end{teX}
+    \end{teX}
 %    The h floats have now been finally committed to this page so we
 %    can reset their list.  The top and bottom floats are then added
 %    to the page.
 %
-%    \begin{teX}
+    \begin{teX}
    \let\@elt\relax
    \xdef\@freelist{\@freelist\@midlist}%
    \global \let \@midlist \@empty
    \@combinefloats
-%    \end{teX}
+    \end{teX}
 %    The variations start here in case |\enlargethispage| has
 %    been used.
-%    \begin{teX}
+    \begin{teX}
    \ifvbox\@kludgeins
      \@makespecialcolbox
    \else
-%    \end{teX}
+    \end{teX}
 %    This extra reboxing is only needed to add the
 %    |\@texttop| and |\@textbotttom| but this could be done earlier,
 %    when the floats are added.
@@ -1494,7 +1504,7 @@ as a document always starts at an odd number.
 %    Also, the |\boxmaxdepth| setting here affects what happens wthin
 %    |\@texttop| and |\@textbottom|, should it?  Is it needed at all? 
 %    
-%    \begin{teX}
+    \begin{teX}
      \setbox\@outputbox \vbox to\@colht {%
        \@texttop
        \dimen@ \dp\@outputbox
@@ -1505,9 +1515,9 @@ as a document always starts at an odd number.
    \fi
    \global \maxdepth \@maxdepth
 }
-%    \end{teX}
-%  \end{macro}
-%
+    \end{teX}
+  \end{macro}
+
   \begin{macro}{\@reinserts}
     This is the code which reinserts the inserts.  It puts them all
     in one place; this can make some of them come out on the wrong
@@ -1580,6 +1590,7 @@ as a document always starts at an odd number.
        \@textbottom
        }%
     \end{teX}
+    
     For the unstarred version, the final size of the page is
     precisely specified.  Therefore, at least for the flush-bottom
     case, we need to ensure that, visually, it has this size exactly.
@@ -1591,6 +1602,7 @@ as a document always starts at an odd number.
    \else
      \advance \@tempdima -\ht\@kludgeins
     \end{teX}
+    
     This type of final packaging could be done always; this may
     simplify all of this page-makeup.
 
@@ -1690,6 +1702,9 @@ bottom glue on all pages. They are hardly used by anyone.\footnote{http://tex.st
 
     A lot of this code has been in-lined tp prevent mis-use of
     internal commands as hooks.
+\end{macro}
+        
+    \startlineat{472}
     \begin{teX}
 \def\@outputpage{%
 \begingroup           % the \endgroup is put in by \aftergroup
@@ -1699,9 +1714,9 @@ bottom glue on all pages. They are hardly used by anyone.\footnote{http://tex.st
     First the stuff for the writes.
     
     From here \ldots\ was in the command |\@writesetup|. 
-    \begin{teX}
+    \begin{teXX}
   \let \protect \noexpand
-    \end{teX}
+    \end{teXX}
 
     RmS 93/08/19: Redefined accents to allow changes in font encoding; 
     but exactly why was this needed?
@@ -1717,25 +1732,25 @@ bottom glue on all pages. They are hardly used by anyone.\footnote{http://tex.st
     \begin{teX}
   \@resetactivechars
     \end{teX}
-%    If a page break happens between the start of a list and its first
-%    item the |@newlist| will be true and this will mess up any list
-%    that is used in the header or footer of the page. So we have to
-%    reset that flag.
-%    \begin{teX}
+    If a page break happens between the start of a list and its first
+    item the |@newlist| will be true and this will mess up any list
+    that is used in the header or footer of the page. So we have to
+    reset that flag.
+    \begin{teX}
   \global\let\@@if@newlist\if@newlist
   \global\@newlistfalse
-%    \end{teX}
-%     with the new encoding setup they can use \cs{let}.
-%     It could also use the new internal commands?}
-%    This next hook replaces the following:
-%    \begin{verbatim}
-%      \let\-\@dischyph
-%      \let\'\@acci\let\`\@accii\let\=\@acciii
-%      \let\\\@normalcr
-%      \let\par\@@par %% 15 Sep 87 (this was once inside the box)
-%    \end{verbatim}
+    \end{teX}
+     with the new encoding setup they can use \cs{let}.
+     It could also use the new internal commands?
+    This next hook replaces the following:
+    \begin{verbatim}
+      \let\-\@dischyph
+      \let\'\@acci\let\`\@accii\let\=\@acciii
+      \let\\\@normalcr
+      \let\par\@@par %% 15 Sep 87 (this was once inside the box)
+    \end{verbatim}
 %    and it does more than they did; in particular it sets:
-%    \begin{verbatim}
+    \begin{verbatim}
 %      \parindent\z@
 %      \parskip\z@skip
 %      \everypar{}%
@@ -1745,20 +1760,25 @@ bottom glue on all pages. They are hardly used by anyone.\footnote{http://tex.st
 %      \lineskip\normallineskip
 %      \baselineskip\normalbaselineskip
 %      \sloppy
-%    \end{verbatim}
+    \end{verbatim}
 %    
-%    \begin{teX}
+    \begin{teX}
   \@parboxrestore
-%    \end{teX}
+    \end{teX}
 %    \ldots\ to here was in the command |\@writesetup|. 
-%    \begin{teX}
+\section{Shipout}
+
+Finally we are ready to \CMDI{\shipout} the box.
+
+\startlineat{479}
+    \begin{teX}
   \shipout \vbox{%
     \set@typeset@protect
     \aftergroup \endgroup
     \aftergroup \set@typeset@protect
                                 % correct? or just restore by ending
                                 % the group?
-%    \end{teX}
+    \end{teX}
 %    This first bit has been moved inside the shipped out box.
 %    
     Now the setup inside the shipped out box; this should conatin all 
@@ -1847,21 +1867,24 @@ bottom glue on all pages. They are hardly used by anyone.\footnote{http://tex.st
 %    van Oostrum.  It is needed because a float page is made without
 %    using TeX's page-builder; thus the output routine is never called
 %    so the marks are not updated.
-%    \begin{teX}
+    \begin{teX}
   \let\firstmark\botmark
 }
-%    \end{teX}
+    \end{teX}
 %  \end{macro}
 
 %
  \begin{macro}{\@begindvi}
+ 
     This unboxes stuff that must appear before anything else in the
     |.dvi| file, then returns that box register to the free list and
     cancels itself.
 
     The stuff in the box should not add any typeset material to the
     page.  Provided that you inserting material which is absolutely
-    positioned, this is a good place to hook-in.
+    positioned, this is a good place to hook-in. 
+
+\startlineat{528}        
     \begin{teX}
 \def \@begindvi{%
   \unvbox \@begindvibox
@@ -1871,21 +1894,23 @@ bottom glue on all pages. They are hardly used by anyone.\footnote{http://tex.st
  \end{macro}
 
 
-% \begin{macro}{\@combinefloats}
-% \begin{macro}{\@cflb}
-%    The |\boxmaxdepth| setting here was not made local to
-%    a box so was dangerous.  It is needed only within the box made
-%    by |\@cflt| (and not normally even there), so it has been
-%    moved there; this also agrees with the original pseudcode.
-%
-%    \begin{teX}
+ \begin{macro}{\@combinefloats}
+ \begin{macro}{\@cflb}
+ 
+    The |\boxmaxdepth| setting here was not made local to
+    a box so was dangerous.  It is needed only within the box made
+    by |\@cflt| (and not normally even there), so it has been
+    moved there; this also agrees with the original pseudcode.
+    
+\startlineat{532}
+       \begin{teX}
 \def \@combinefloats {%
     \ifx \@toplist\@empty \else \@cflt \fi
     \ifx \@botlist\@empty \else \@cflb \fi
 }
-%    \end{teX}
+       \end{teX}
 %  
-%    \begin{teX}
+       \begin{teX}
 \def \@cflt{%
     \let \@elt \@comflelt
     \setbox\@tempboxa \vbox{}%
@@ -1902,9 +1927,9 @@ bottom glue on all pages. They are hardly used by anyone.\footnote{http://tex.st
     \xdef\@freelist{\@freelist\@toplist}%
     \global\let\@toplist\@empty
 }
-%    \end{teX}
+       \end{teX}
 %
-%    \begin{teX}
+       \begin{teX}
 \def \@cflb {%
     \let\@elt\@comflelt
     \setbox\@tempboxa \vbox{}%
@@ -1920,25 +1945,25 @@ bottom glue on all pages. They are hardly used by anyone.\footnote{http://tex.st
     \xdef\@freelist{\@freelist\@botlist}%
     \global \let \@botlist\@empty
 }
-%    \end{teX}
-%  \end{macro}
-%  \end{macro}
+       \end{teX}
+  \end{macro}
+  \end{macro}
 %
-% \begin{macro}{\@comflelt}
-% \begin{macro}{\@comdblflelt}
-% \begin{macro}{\@combinedblfloats}
+ \begin{macro}{\@comflelt}
+ \begin{macro}{\@comdblflelt}
+ \begin{macro}{\@combinedblfloats}
 % 
-%    \begin{teX}
+       \begin{teX}
 \def\@comflelt#1{\setbox\@tempboxa
       \vbox{\unvbox\@tempboxa\box #1\vskip\floatsep}}
-%    \end{teX}
+       \end{teX}
 %
-%    \begin{teX}
+       \begin{teX}
 \def\@comdblflelt#1{\setbox\@tempboxa
       \vbox{\unvbox\@tempboxa\box #1\vskip\dblfloatsep}}
-%    \end{teX}
+       \end{teX}
 %
-%    \begin{teX}
+       \begin{teX}
 \def \@combinedblfloats{%
   \ifx \@dbltoplist \@empty
   \else
@@ -1949,20 +1974,20 @@ bottom glue on all pages. They are hardly used by anyone.\footnote{http://tex.st
     \xdef \@freelist {\@freelist\@dbltoplist}%
     \global\let \@dbltoplist \@empty
     \setbox\@outputbox \vbox to\textheight
-%    \end{teX}
+       \end{teX}
 %
 %    The setting of |\boxmaxdepth| here has no effect since the
 %    |\@outputbox| should already have depth zero.  Even so, it would
 %    have no effect on the layout of the page.
 % \changes{v1.0l}{1994/03/15}{Removed boxmaxdepth setting.}
-%    \begin{teX}
+       \begin{teX}
       {%\boxmaxdepth\maxdepth   %% probably not needed, CAR
        \unvbox\@tempboxa\vskip-\dblfloatsep
-%    \end{teX}
+       \end{teX}
 %    Here we need different typesetting if the top float comes from
 %    |\@topnewpage|. 
 % \changes{v1.0n}{1994/04/30}{Removed rule in topnewpage case}
-%    \begin{teX}
+       \begin{teX}
        \ifnum \@dbltopnum>\m@ne
          \dblfigrule
        \fi
@@ -1971,22 +1996,22 @@ bottom glue on all pages. They are hardly used by anyone.\footnote{http://tex.st
        }%
   \fi
 }
-%    \end{teX}
-%  \end{macro}
-%  \end{macro}
-%  \end{macro}
+       \end{teX}
+  \end{macro}
+  \end{macro}
+  \end{macro}
 %
 %
-%  \begin{macro}{\@startcolumn}
+  \begin{macro}{\@startcolumn}
 % 
-%    We could combine (most of) these two into |\@startcol <list>|.
-%   This is not quite
-%    as efficient but it now has the same structure as
-%    |\@startdblcolumn|.
+    We could combine (most of) these two into |\@startcol <list>|.
+   This is not quite
+    as efficient but it now has the same structure as
+    |\@startdblcolumn|.
 %
-%    The empty-list test has been moved to |\@tryfcolumn|.
+    The empty-list test has been moved to |\@tryfcolumn|.
 %
-%    \begin{teX}
+    \begin{teX}
 \def \@startcolumn {%
   \global \@colroom \@colht
   \@tryfcolumn \@deferlist
@@ -1996,9 +2021,9 @@ bottom glue on all pages. They are hardly used by anyone.\footnote{http://tex.st
                 completed}%
 %</trace>
   \else
-%    \end{teX}
+    \end{teX}
 % \changes{v1.0h}{1993/12/12}{defs changed to lets}
-%    \begin{teX}
+    \begin{teX}
     \begingroup
       \let \reserved@b \@deferlist
       \global \let \@deferlist \@empty
@@ -2007,15 +2032,15 @@ bottom glue on all pages. They are hardly used by anyone.\footnote{http://tex.st
     \endgroup
   \fi
 }
-%    \end{teX}
+    \end{teX}
 %
 %    This one does not need to set |\@colht|.
 %
-%    \begin{teX}
+    \begin{teX}
 \def \@startdblcolumn {%
-%    \end{teX}
+    \end{teX}
 % Not needed since this always comes after |\@outputpage|:
-%    \begin{teX}
+    \begin{teX}
 % \global \@colht \textheight
   \@tryfcolumn \@dbldeferlist
   \if@fcolmade
@@ -2023,9 +2048,9 @@ bottom glue on all pages. They are hardly used by anyone.\footnote{http://tex.st
     \tr@ce{PAGE: double float page completed}%
 %</trace>
   \else
-%    \end{teX}
+    \end{teX}
 % \changes{v1.0h}{1993/12/12}{defs changed to lets}
-%    \begin{teX}
+    \begin{teX}
     \begingroup
       \let \reserved@b \@dbldeferlist
       \global \let \@dbldeferlist \@empty
@@ -2034,14 +2059,15 @@ bottom glue on all pages. They are hardly used by anyone.\footnote{http://tex.st
     \endgroup
   \fi
 }
-%    \end{teX}
-%  \end{macro}
+    \end{teX}
+  \end{macro}
 
 %
-%  \begin{macro}{\@tryfcolumn} 
-%    Now tests if its list is empty before any further exertion.
+  \begin{macro}{\@tryfcolumn} 
+
+  Now tests if its list is empty before any further exertion.
 %
-%    \begin{teX}
+    \begin{teX}
 \def \@tryfcolumn #1{%   
   \global \@fcolmadefalse  (*@ \label{tryfcolumn}  @*)
   \ifx #1\@empty
@@ -2051,9 +2077,9 @@ bottom glue on all pages. They are hardly used by anyone.\footnote{http://tex.st
                   ---\string #1}%
      \tr@ce{----- \string #1: #1}%
 %</trace>
-%    \end{teX}
+    \end{teX}
 % \changes{v1.0h}{1993/12/12}{defs changed to lets}
-%    \begin{teX}
+    \begin{teX}
     \xdef\@trylist{#1}%
     \global \let \@failedlist \@empty
     \begingroup
@@ -2064,25 +2090,25 @@ bottom glue on all pages. They are hardly used by anyone.\footnote{http://tex.st
     \fi
   \fi
 }
-%    \end{teX}
+    \end{teX}
 %
-%  \end{macro}
+  \end{macro}
 %
 %
-% \begin{macro}{\@scolelt}
-%    \begin{teX}
+ \begin{macro}{\@scolelt}
+    \begin{teX}
 \def\@scolelt#1{\def\@currbox{#1}\@addtonextcol}
-%    \end{teX}
-% \end{macro}
+    \end{teX}
+ \end{macro}
 %
-% \begin{macro}{\@sdblcolelt}
-%    \begin{teX}
+ \begin{macro}{\@sdblcolelt}
+    \begin{teX}
 \def\@sdblcolelt#1{\def\@currbox{#1}\@addtodblcol}
-%    \end{teX}
-% \end{macro}
+    \end{teX}
+ \end{macro}
 %
-% \begin{macro}{\@vtryfc}
-%    \begin{teX}
+ \begin{macro}{\@vtryfc}
+    \begin{teX}
 \def\@vtryfc #1{%
   \global\setbox\@outputbox\vbox{}%
   \let\@elt\@wtryfc
@@ -2095,21 +2121,21 @@ bottom glue on all pages. They are hardly used by anyone.\footnote{http://tex.st
   \let\@elt\relax
   \xdef #1{\@failedlist\@flfail}%
   \xdef\@freelist{\@freelist\@flsucceed}}
-%    \end{teX}
-% \end{macro}
+    \end{teX}
+ \end{macro}
 %
-% \begin{macro}{\@wtryfc}
-%    \begin{teX}
+ \begin{macro}{\@wtryfc}
+    \begin{teX}
 \def\@wtryfc #1{%
   \global\setbox\@outputbox\vbox{%
     \unvbox\@outputbox
     \vskip\@fpsep
     \box #1}}
-%    \end{teX}
-% \end{macro}
+    \end{teX}
+ \end{macro}
 %
-% \begin{macro}{\@xtryfc}
-%    \begin{teX}
+ \begin{macro}{\@xtryfc}
+    \begin{teX}
 \def\@xtryfc #1{%
   \@next\reserved@a\@trylist{}{}%
   \@currtype \count #1%
@@ -2125,11 +2151,11 @@ bottom glue on all pages. They are hardly used by anyone.\footnote{http://tex.st
   \else
     \@ytryfc #1%
   \fi}
-%    \end{teX}
-% \end{macro}
+    \end{teX}
+ \end{macro}
 %
-% \begin{macro}{\@ytryfc}
-%    \begin{teX}
+ \begin{macro}{\@ytryfc}
+    \begin{teX}
 \def\@ytryfc #1{%
   \begingroup
     \gdef\@flsucceed{\@elt #1}%
@@ -2146,11 +2172,11 @@ bottom glue on all pages. They are hardly used by anyone.\footnote{http://tex.st
   \if@fcolmade
     \let\@elt\@gobble
   \fi}
-%    \end{teX}
-% \end{macro}
+    \end{teX}
+ \end{macro}
 %
-% \begin{macro}{\@ztryfc}
-%    \begin{teX}
+ \begin{macro}{\@ztryfc}
+    \begin{teX}
 \def\@ztryfc #1{%
   \@tempcnta \count#1%
   \divide\@tempcnta\@xxxii
@@ -2169,17 +2195,17 @@ bottom glue on all pages. They are hardly used by anyone.\footnote{http://tex.st
     \@cons\@flsucceed #1%
     \@tempdima\@tempdimb
   \fi}
-%    \end{teX}
-% \end{macro}
+    \end{teX}
+ \end{macro}
 %
 %
 % The major changes for float suppression and the changes to the float
 % mechanism to make it conform to the documentation are in these next
 % macros.
 %
-%  \begin{macro}{\@addtobot}
+  \begin{macro}{\@addtobot}
 %
-%    \begin{teX}
+    \begin{teX}
 %<*2ekernel|autoload|fltrace>
 \def \@addtobot {%
    \@getfpsbit 4\relax
@@ -2189,11 +2215,13 @@ bottom glue on all pages. They are hardly used by anyone.\footnote{http://tex.st
        \@tempswafalse
        \@flcheckspace \@botroom \@botlist
        \if@tempswa
-%    \end{teX}
+    \end{teX}
+
 %    This next line means that this page is produced with box 255 
 %    having depth zero, rather than the normal maxdepth: is this
 %    needed, useful? 
-%    \begin{teX}
+
+        \begin{teX}
          \global \maxdepth \z@
          \@flupdates \@botnum \@botroom \@botlist
          \@inserttrue
@@ -2209,13 +2237,13 @@ bottom glue on all pages. They are hardly used by anyone.\footnote{http://tex.st
      \fi
    \fi
 }
-%    \end{teX}
-%  \end{macro}
+    \end{teX}
+  \end{macro}
 %
-%  \begin{macro}{\@addtotoporbot}
+  \begin{macro}{\@addtotoporbot}
 %    Lots of changes.
 %
-%    \begin{teX}
+    \begin{teX}
 \def \@addtotoporbot {%
 %<*trace>
    \tr@ce{***Start addtotoporbot}%
@@ -2270,8 +2298,8 @@ bottom glue on all pages. They are hardly used by anyone.\footnote{http://tex.st
    \fi
 }
 %</2ekernel|autoload|fltrace>
-%    \end{teX}
-%  \end{macro}
+    \end{teX}
+  \end{macro}
 %
 %  \begin{macro}{\@addtocurcol}
 % \changes{v1.0f}{1993/12/05}{Command changed}
@@ -2279,7 +2307,7 @@ bottom glue on all pages. They are hardly used by anyone.\footnote{http://tex.st
 % \task{CAR}{Investigate pagebreak option possibilities}
 %    Lots of changes.
 %
-%    \begin{teX}
+    \begin{teX}
 %<*2ekernel|autoload|fltrace|flafter>
 \def \@addtocurcol {%
 %<*trace>
@@ -2298,22 +2326,22 @@ bottom glue on all pages. They are hardly used by anyone.\footnote{http://tex.st
 %</trace>
      \else
        \@flsettextmin
-%    \end{teX}
+  \end{teX}
 % This is a new adjustment which is quite a major change in
 % functionality; but it implements the documentation.
 % Note that |\@reqcolroom| will include the whole of the
 % page-so-far, and hence includes |\@textfloatsheight| of floats,
 % so before comparing it with |\@textmin|, we add this to
 % |\@textmin| also.
-%    \begin{teX}
+       \begin{teX}
 %<*trace>
        \tr@ce{textfloatsheight (before) = \the \@textfloatsheight}%
 %</trace>
        \advance \@textmin \@textfloatsheight
        \@reqcolroom \@pageht
-%    \end{teX}
+       \end{teX}
 % This line must be removed since |\@specialoutput| changed.
-%    \begin{teX}
+       \begin{teX}
 %       \advance \@reqcolroom \@pagedp
 %<*trace>
        \tr@ce{textmin + textfloatsheight: \the \@textmin}%
@@ -2362,9 +2390,9 @@ bottom glue on all pages. They are hardly used by anyone.\footnote{http://tex.st
                  \ifdim \@colroom>\@reqcolroom
                    \global \advance \@colnum \m@ne
                    \global \advance \@textfloatsheight \ht\@currbox
-%    \end{teX}
+       \end{teX}
 % This may sometimes give an overestimate.
-%    \begin{teX}
+       \begin{teX}
                    \global \advance \@textfloatsheight 2\intextsep
                    \@cons \@midlist \@currbox
 %<*trace>
@@ -2373,7 +2401,7 @@ bottom glue on all pages. They are hardly used by anyone.\footnote{http://tex.st
                         \the \@textfloatsheight}%
                    \tr@ce{colnum (after-here) = \the \@colnum}%
 %</trace>
-%    \end{teX}
+       \end{teX}
 % 
 % CHANGE TO |\@addtocurcol|:
 % 
@@ -2404,7 +2432,7 @@ bottom glue on all pages. They are hardly used by anyone.\footnote{http://tex.st
 % \changes{v1.1z}{1996/10/24}{Added \cs{nobreak}, etc as appropriate}
 % 
 % Typesetting starts here (we are in vertical mode).
-%    \begin{teX}
+       \begin{teX}
                    \if@nobreak
                      \nobreak
                      \@nobreakfalse
@@ -2417,9 +2445,9 @@ bottom glue on all pages. They are hardly used by anyone.\footnote{http://tex.st
                    \penalty\interlinepenalty
                    \vskip\intextsep
                    \ifnum\outputpenalty <-\@Mii \vskip -\parskip\fi
-%    \end{teX}
+       \end{teX}
 % Typesetting ends here.
-%    \begin{teX}
+       \begin{teX}
                    \outputpenalty \z@
                    \@inserttrue
 %<*trace>
@@ -2476,14 +2504,14 @@ bottom glue on all pages. They are hardly used by anyone.\footnote{http://tex.st
    \fi
 }
 %</2ekernel|autoload|fltrace|flafter>
-%    \end{teX}
+       \end{teX}
 %  \end{macro}
 %
 %  \begin{macro}{\@addtonextcol}
 % \changes{v1.0f}{1993/12/05}{Command changed}
 %    Lots of changes.
 %
-%    \begin{teX}
+       \begin{teX}
 %<*2ekernel|autoload|fltrace>
 \def\@addtonextcol{%
   \begingroup
@@ -2561,14 +2589,14 @@ bottom glue on all pages. They are hardly used by anyone.\footnote{http://tex.st
   \tr@ce{col: \the \@colnum. top: \the \@topnum. bot: \the \@botnum.}%
 %</trace>
 }
-%    \end{teX}
+       \end{teX}
 %  \end{macro}
 %
 %  \begin{macro}{\@addtodblcol}
 % \changes{v1.0f}{1993/12/05}{Command changed}
 %    Lots of changes.
 %
-%    \begin{teX}
+       \begin{teX}
 \def\@addtodblcol{%
   \begingroup
 %<*trace>
@@ -2602,10 +2630,10 @@ bottom glue on all pages. They are hardly used by anyone.\footnote{http://tex.st
            \tr@ce{\@spaces \@dbltoproom = \the \@dbltoproom.
                            Ht float: \the \ht \@currbox-BANG}%
 %</trace>
-%    \end{teX}
+       \end{teX}
 % Need to check that there is room on the page, using the local value
 % of |\@textmin| to make the necessary adjustment to |\@dbltoproom|.
-%    \begin{teX}
+       \begin{teX}
            \advance \@dbltoproom \@textmin
 %<*trace>
            \tr@ce{Local value of texmin: \the\@textmin}%
@@ -2690,13 +2718,13 @@ bottom glue on all pages. They are hardly used by anyone.\footnote{http://tex.st
 %</trace>
 }
 %</2ekernel|autoload|fltrace>
-%    \end{teX}
+       \end{teX}
 %  \end{macro}
 %
 %
 %
 % \begin{macro}{\@addmarginpar}
-%    \begin{teX}
+       \begin{teX}
 %<*2ekernel|autoload>
 \def\@addmarginpar{\@next\@marbox\@currlist{\@cons\@freelist\@marbox
     \@cons\@freelist\@currbox}\@latexbug\@tempcnta\@ne
@@ -2722,18 +2750,18 @@ bottom glue on all pages. They are hardly used by anyone.\footnote{http://tex.st
     \global\advance\@mparbottom\dp\@marbox
     \global\advance\@mparbottom\marginparpush
     \advance\@tempdima -\ht\@marbox
-%    \end{teX}
+       \end{teX}
 % Putting box movement inside the `marbox':
-%    \begin{teX}
+       \begin{teX}
     \global\setbox \@marbox
                    \vbox {\vskip \@tempdima
                           \box \@marbox}%
     \global \ht\@marbox \z@
     \global \dp\@marbox \z@
-%    \end{teX}
+       \end{teX}
 % Sticking (rather than gluing:-) the `marbox' to the line above,
 % changed vskip to kern:
-%    \begin{teX}
+       \begin{teX}
     \kern -\@pagedp
     \nointerlineskip
     \hb@xt@\columnwidth
@@ -2743,17 +2771,17 @@ bottom glue on all pages. They are hardly used by anyone.\footnote{http://tex.st
           \hskip -\marginparsep \hskip -\marginparwidth
        \fi
        \box\@marbox \hss}%
-%    \end{teX}
+       \end{teX}
 %    For this reason the following code can vanish:
 %\begin{verbatim}
 %    \nobreak             %% No longer needed.  CAR92/12
 %    \vskip -\@tempdima   %% No longer needed.  CAR92/12
 %\end{verbatim}
-%    \begin{teX}
+       \begin{teX}
     \nointerlineskip
     \hbox{\vrule \@height\z@ \@width\z@ \@depth\@pagedp}}
 %</2ekernel|autoload>
-%    \end{teX}
+       \end{teX}
 % \end{macro}
 %
 % \subsubsection{Kludgeins}
@@ -2793,13 +2821,13 @@ bottom glue on all pages. They are hardly used by anyone.\footnote{http://tex.st
 %    The insert which makes \TeX{} do a lot of the necessary work.
 %    All we need to put into it is the amount by which the pagegoal
 %    should be changed.
-%    \begin{teX}
+       \begin{teX}
 %<*2ekernel|def1>
 \newinsert \@kludgeins
 \global\dimen\@kludgeins \maxdimen
 \global\count\@kludgeins 1000
 %</2ekernel|def1>
-%    \end{teX}
+       \end{teX}
 %  \end{macro}
 %
 %
@@ -2807,7 +2835,7 @@ bottom glue on all pages. They are hardly used by anyone.\footnote{http://tex.st
 %  \begin{macro}{\enlargethispage*}
 % \changes{v0.1c}{1993/11/23}{Commands added}
 %    The user command.
-%    \begin{teX}
+       \begin{teX}
 %<*2ekernel|def1>
 \gdef \enlargethispage {%
    \@ifstar
@@ -2826,7 +2854,7 @@ bottom glue on all pages. They are hardly used by anyone.\footnote{http://tex.st
 %<*autoload>
 \def\enlargethispage{\@autoload{out1}\enlargethispage}
 %</autoload>
-%    \end{teX}
+       \end{teX}
 %  \end{macro}
 %  \end{macro}
 %
@@ -2835,7 +2863,7 @@ bottom glue on all pages. They are hardly used by anyone.\footnote{http://tex.st
 % \changes{v0.1c}{1993/11/23}{Command added}
 %    This actually inserts the insert, after checking for extreme
 %    values of the change.
-%    \begin{teX}
+       \begin{teX}
 %<*2ekernel|def1>
 \gdef\@enlargepage#1#2{%
 %<*trace>
@@ -2854,9 +2882,9 @@ bottom glue on all pages. They are hardly used by anyone.\footnote{http://tex.st
        \@bsphack
          \insert\@kludgeins{#1\vskip-\@tempskipa}%
        \@esphack
-%    \end{teX}
+       \end{teX}
 %    This next bit is for tracing only:
-%    \begin{teX}
+       \begin{teX}
 %<*trace>
        \ifvmode \par
          \tr@ce {Kludgeins added--pagegoal after: \the \pagegoal}%
@@ -2869,7 +2897,7 @@ bottom glue on all pages. They are hardly used by anyone.\footnote{http://tex.st
    \fi
 }
 %</2ekernel|def1>
-%    \end{teX}
+       \end{teX}
 %  \end{macro}
 %
 % \subsubsection{Float control}
@@ -2928,7 +2956,7 @@ bottom glue on all pages. They are hardly used by anyone.\footnote{http://tex.st
 %   {Do not add to kernel unless `trace' specified}
 % \task{???}{Make proper tracing module}
 %
-%    \begin{teX}
+       \begin{teX}
 %<*trace>
 \def \@tracemessage #1{\typeout{LaTeX2e: #1}}
 \def \tracefloats{\let \tr@ce \@tracemessage}
@@ -2953,7 +2981,7 @@ bottom glue on all pages. They are hardly used by anyone.\footnote{http://tex.st
 %<*flafter>
 \providecommand\tr@ce[1]{}
 %</flafter>
-%    \end{teX}
+       \end{teX}
 %  \end{macro}
 %  \end{macro}
 %  \end{macro}
@@ -3008,11 +3036,11 @@ bottom glue on all pages. They are hardly used by anyone.\footnote{http://tex.st
 % nevertheless, a bug fix.
 % It is not local and therefore cannot be a temporary register.
 %
-%    \begin{teX}
+       \begin{teX}
 \newcount \@fpstype
 \newdimen \@reqcolroom
 \newdimen \@textfloatsheight
-%    \end{teX}
+       \end{teX}
 %  \end{macro}
 %  \end{macro}
 %  \end{macro}
@@ -3032,7 +3060,7 @@ bottom glue on all pages. They are hardly used by anyone.\footnote{http://tex.st
 %}
 % \end{verbatim}
 %
-%    \begin{teX}
+       \begin{teX}
 %<*2ekernel|autoload|fltrace>
 \def \@fpsadddefault {%
 %<*trace>
@@ -3043,7 +3071,7 @@ bottom glue on all pages. They are hardly used by anyone.\footnote{http://tex.st
      No positions in optional float specifier.\MessageBreak
      Default added (so using `\@fps')}%
 }
-%    \end{teX}
+       \end{teX}
 %  \end{macro}
 %
 %  \begin{macro}{\@setfloattypecounts}
@@ -3051,7 +3079,7 @@ bottom glue on all pages. They are hardly used by anyone.\footnote{http://tex.st
 %
 % BANG $==$ bit4 of $|\count\@currbox| = 0$.
 %
-%    \begin{teX}
+       \begin{teX}
 \def \@setfloattypecounts {%
   \@currtype \count\@currbox
   \@fpstype \count\@currbox
@@ -3080,7 +3108,7 @@ bottom glue on all pages. They are hardly used by anyone.\footnote{http://tex.st
   \fi
 %</trace>
 }
-%    \end{teX}
+       \end{teX}
 %  \end{macro}
 %
 % Macros for getting, testing and setting bits of the fps.
@@ -3125,7 +3153,7 @@ bottom glue on all pages. They are hardly used by anyone.\footnote{http://tex.st
 % \changes{v1.0f}{1993/12/05}{Command added}
 % Sets required bit of |\@tempcnta| (to 1).
 %
-%    \begin{teX}
+       \begin{teX}
 \def \@setfpsbit #1{%
    \@tempcntb \@tempcnta
    \divide \@tempcntb #1\relax
@@ -3134,7 +3162,7 @@ bottom glue on all pages. They are hardly used by anyone.\footnote{http://tex.st
      \advance \@tempcnta #1\relax
    \fi
 }
-%    \end{teX}
+       \end{teX}
 %  \end{macro}
 %
 %
@@ -3182,7 +3210,7 @@ bottom glue on all pages. They are hardly used by anyone.\footnote{http://tex.st
 % considerations pertain to |\@addtodblcol|.  There may be more
 % efficient ways to handle this, but the group seems to be the simplest.
 %
-%    \begin{teX}
+       \begin{teX}
 \def \@flsetnum #1{%
 %<*trace>
    \tr@ce{fpstype: \the \@fpstype (flsetnum \string#1)}%
@@ -3199,14 +3227,14 @@ bottom glue on all pages. They are hardly used by anyone.\footnote{http://tex.st
    \tr@ce{#1 (before) = \the #1}%
 %</trace>
 }
-%    \end{teX}
+       \end{teX}
 %  \end{macro}
 %
 %
 %  \begin{macro}{\@flsettextmin}
 % This ignores |\textfraction| space restriction in case BANG.
 %
-%    \begin{teX}
+       \begin{teX}
 \def \@flsettextmin {%
 %<*trace>
    \tr@ce{fpstype: \the \@fpstype (flsettextmin)}%
@@ -3223,7 +3251,7 @@ bottom glue on all pages. They are hardly used by anyone.\footnote{http://tex.st
 %</trace>
    \fi
 }
-%    \end{teX}
+       \end{teX}
 %  \end{macro}
 %
 %
@@ -3233,7 +3261,7 @@ bottom glue on all pages. They are hardly used by anyone.\footnote{http://tex.st
 % no text in the column then |\textfloatsep| is not needed.
 % Sets |@tempswa| true if there is room for |\@currbox|.
 %
-%    \begin{teX}
+       \begin{teX}
 \def \@flcheckspace #1#2{%
    \advance \@reqcolroom
      \ifx #2\@empty \textfloatsep \else \floatsep \fi
@@ -3278,14 +3306,14 @@ bottom glue on all pages. They are hardly used by anyone.\footnote{http://tex.st
 %</trace>
    \fi
 }
-%    \end{teX}
+       \end{teX}
 %  \end{macro}
 %
 %
 %  \begin{macro}{\@flupdates}
 %    This updates everything when a float is placed.
 %
-%    \begin{teX}
+       \begin{teX}
 \def \@flupdates #1#2#3{%
    \global \advance #1\m@ne
    \global \advance \@colnum \m@ne
@@ -3296,7 +3324,7 @@ bottom glue on all pages. They are hardly used by anyone.\footnote{http://tex.st
    \global \advance \@colroom \@tempdima
    \@cons #3\@currbox
 }
-%    \end{teX}
+       \end{teX}
 %  \end{macro}
 %
 %
@@ -3304,44 +3332,45 @@ bottom glue on all pages. They are hardly used by anyone.\footnote{http://tex.st
  with a summary of various features, some unresolved:
 
  \begin{enumerate}
-%   \item  The value |\textfraction| does not affect the processing
-%     of doublecol floats: this seems sensible, but should be
-%     documented.
-%   \item |\twocolumn| floatplacement was wrong: dbl not needed, ord
-%     needed.
-%   \item |\@floatplacement| was not called after |\@startdblcol|
-%     or |\@topnewpage|.  This has been changed; it is clearly a bug
-%     fix.
-%   \item The use |\@topnewpage| when |\dblfigrule| is non-trivial
-%   produced a rule in the wrong place.  This has been fixed by not
-%   using |\dblfigrule| when processing the `float' from
-%   |\@topnewpage|. 
-%   \item  If the specifier was just h and the float could not be put
-%     here, it went on the deferlist and stayed there until a clearpage.
-%     It now gets changed to a `th': this is only an error-recovery
-%     action, putting just h or !h should be deprecated.   
-%   \item |\@dblmaxsep| was `the maximum of |\dblfloatsep| and
-%     |\dbltexfloatsep|'. But it was never used!  Now gone completely,
-%     like |\@maxsep|.
-%   \item After an h float is put on a page, it was counted as text when
-%     applying the |\textfraction| test; this is possibly too big a
-%     change although it is a bug fix?
-%   \item  Two consecutive h floats are separated by twice |\intextsep|:
-%     this could be changed to one by use of |\addvspace|, OK?
-%     Note that it would also mean that less space is put in if an h
-%     float  immediaiely follows other spaces.  This is also possibly
-%     too big a change, at least for compatibility mode?
-%     Or it may be simply wrong!  It has not been changed.
-%   \item Now |\@addtocurcol| checks first for just p fps.  I think
-%     that this is an increase in efficiency, but maybe the coding
-%     should be made even more efficient.
-%   \item |\@tryfcolumn| now tests if the list is empty first, otherwise
-%     lots of wasted time!  Thus this test has been removed from
-%     |\@startcolumn|.
-%     As Frank pointed out, this makes |\@startcolumn| less
-%     efficient. But it is now the same as |\@startdblcolumn|: I can
-%     see no reason why they should be different, but which is best?
-%   \item Why is |\@colroom| set in |\@doclearpage|?
+   \item  The value |\textfraction| does not affect the processing
+     of doublecol floats: this seems sensible, but should be
+     documented.
+   \item |\twocolumn| floatplacement was wrong: dbl not needed, ord
+     needed.
+   \item |\@floatplacement| was not called after |\@startdblcol|
+     or |\@topnewpage|.  This has been changed; it is clearly a bug
+     fix.
+   \item The use |\@topnewpage| when |\dblfigrule| is non-trivial
+   produced a rule in the wrong place.  This has been fixed by not
+   using |\dblfigrule| when processing the `float' from
+   |\@topnewpage|. 
+   \item  If the specifier was just h and the float could not be put
+     here, it went on the deferlist and stayed there until a clearpage.
+     It now gets changed to a `th': this is only an error-recovery
+     action, putting just h or !h should be deprecated.   
+   \item |\@dblmaxsep| was `the maximum of |\dblfloatsep| and
+     |\dbltexfloatsep|'. But it was never used!  Now gone completely,
+     like |\@maxsep|.
+   \item After an h float is put on a page, it was counted as text when
+     applying the |\textfraction| test; this is possibly too big a
+     change although it is a bug fix?
+   \item  Two consecutive h floats are separated by twice |\intextsep|:
+     this could be changed to one by use of |\addvspace|, OK?
+     Note that it would also mean that less space is put in if an h
+     float  immediaiely follows other spaces.  This is also possibly
+     too big a change, at least for compatibility mode?
+     Or it may be simply wrong!  It has not been changed.
+   \item Now |\@addtocurcol| checks first for just p fps.  I think
+     that this is an increase in efficiency, but maybe the coding
+     should be made even more efficient.
+   \item |\@tryfcolumn| now tests if the list is empty first, otherwise
+     lots of wasted time!  Thus this test has been removed from
+     |\@startcolumn|.
+     As Frank pointed out, this makes |\@startcolumn| less
+     efficient. But it is now the same as |\@startdblcolumn|: I can
+     see no reason why they should be different, but which is best?
+     
+   \item Why is |\@colroom| set in |\@doclearpage|?
 %   \item  Footnotes. Check what |\clearpage| does when footnotes are
 %     left over.  Footnotes are not put on float pages and, also,
 %     |\@addtonextcol| ignores the existence of held-over footnotes
@@ -3404,10 +3433,10 @@ bottom glue on all pages. They are hardly used by anyone.\footnote{http://tex.st
 %     unique in being read before the local settings for the box group
 %     are reset; all other parameter settings which affect the box
 %     construction use their values outside the box group.
-%   \item  Should |\@maxdepth| store the setting of |\maxdepth| from
-%     lplain?  Or should we provide a proper interface to class files
-%     for setting these? 
-% \end{enumerate}
+   \item  Should |\@maxdepth| store the setting of |\maxdepth| from
+     lplain?  Or should we provide a proper interface to class files
+     for setting these? 
+ \end{enumerate}
 %
 % An analysis of various other macros.
 %
@@ -3429,7 +3458,7 @@ bottom glue on all pages. They are hardly used by anyone.\footnote{http://tex.st
 %
 % Only tracing has been added to these.
 %
-%    \begin{teX}
+       \begin{teX}
 \def\@makefcolumn #1{%
   \begingroup
     \@fpmin \z@
@@ -3437,7 +3466,7 @@ bottom glue on all pages. They are hardly used by anyone.\footnote{http://tex.st
     \@tryfcolumn #1%
   \endgroup
 }
-%    \end{teX}
+       \end{teX}
 % This will line up the last baselines in the two
 % columns provided they are constructed in the normal way: \ie ending
 % in a skip of minus the original depth, with |\@textbottom| adding
@@ -3445,7 +3474,7 @@ bottom glue on all pages. They are hardly used by anyone.\footnote{http://tex.st
 %
 % Thus again it is essential for |\@textbottom| to have depth 0pt.
 % \changes{1.2g}{2000/07/12}{Ensure that rule is in \cs{normalcolor}}
-%    \begin{teX}
+       \begin{teX}
 \def\@outputdblcol{%
   \if@firstcolumn
     \global \@firstcolumnfalse
@@ -3477,10 +3506,10 @@ bottom glue on all pages. They are hardly used by anyone.\footnote{http://tex.st
     \begingroup
       \@dblfloatplacement
       \@startdblcolumn
-%    \end{teX}
+       \end{teX}
 %    This loop could be replaced by an |\expandafter| tail
 %    recursion in\\ |\@startdblcolumn|.
-%    \begin{teX}
+       \begin{teX}
       \@whilesw\if@fcolmade \fi
         {\@outputpage
 %<*trace>
@@ -3491,20 +3520,19 @@ bottom glue on all pages. They are hardly used by anyone.\footnote{http://tex.st
   \fi
 }
 
-%    \end{teX}
+       \end{teX}
 %
  \subsubsection{Float placement parameters}
-
 
  The main purpose of this section is to ensure that all the
  float-placement parameters which need to be set in a class file or
  package have been declared.  It also describes their use and sets
- values for them which are reasonable for typical douments using
+ values for them which are reasonable for typical documents using
  US letter or A4 sized paper. Unlike many other parameters that
 \LaTeXe\ leaves to be determined by the classes default values are
 entered here. 
  
- \paragraph{Limits for the placement of floating objects}
+ \subsubsection{Limits for the placement of floating objects}
 
  \begin{macro}{\c@topnumber}
     This counter holds the maximum number of
@@ -3598,7 +3626,7 @@ entered here.
     \end{teX}
  \end{macro}
 
- \paragraph{Floats on a text page}
+ \subsection{Floats on a text page}
 
  \begin{macro}{\floatsep}
  \begin{macro}{\textfloatsep}
@@ -3649,9 +3677,10 @@ entered here.
  \end{macro}
  \end{macro}
 
- \paragraph{Floats on their own page or column}
-    When floating objects are placed on a seperate page or column,
-    called a `float page', the layout of the page is controlled by
+ \subsection{Floats on their own page or column}
+ 
+    When floating objects are placed on a seperate page or column this
+    is called a `float page', the layout of the page is controlled by
     these parameters, which are rubber lengths.
     
  \begin{macro}{\@fptop}

@@ -1,0 +1,235 @@
+\restoregeometry
+
+\cxset{style62/.style={
+ name=CHAPTER,
+ numbering=arabic,
+ number font-size=Large,
+ number before=\kern0.5em\relax,
+ number after=\hfill\hfill\par\vspace*{5pt},
+ number dot=.,
+ number position=rightname,
+ number font-weight=\normalfont,
+ number color=black,
+ chapter color=black,
+ chapter font-size=Large,
+ chapter font-weight=normalfont,
+ chapter before=\hfill,
+ chapter after=,
+ chapter margin left=0pt,
+ title font-family=sffamily,
+ title font-color=black,
+ title font-weight=bold,
+ title font-size=HUGE,
+ title font-shape=upshape,
+ chapter title align=centering,
+ chapter title width=0.8\textwidth,
+ chapter afterindent=true,
+ title before=\centerline{\rule{2cm}{0.4pt}}\offinterlineskip%
+                    \addvspace{10pt},
+ title after=\par\offinterlineskip\addvspace{10pt}\centerline{\rule{3cm}{0.4pt}}
+                 \par,
+ title margin top=1sp,
+ title margin bottom=30pt,
+ header style=empty}}
+
+\cxset{style62}
+
+\chapter{Measuring Capacity}
+
+In the previous style (style 61) we developed a simple heading based on the 
+book \emph{The Use and Abuse of Colours and Mediums in Oil Painting}, H.C. Savage. Here we have simply transformed the template, and gave it a more modern look, just by changing the fonts to sans serif and increased their size. I left the two rules at different lengths, but you can experiment to see if you would prefer them to be of an equal size.
+
+\begin{verbatim}
+\cxset{style62,
+          chapter name=SECTION,
+          chapter title hyphenation=on,
+          title font-family=sans,
+          title font-size=HUGE,
+          title font weight=bold}
+\end{verbatim}
+
+
+
+This is also an appropriate point to discuss the templating model we have used so far for predominantly headings that consist only of textual elements. In the next chapters that follow we will see how to totally transform our method to use special designs using graphical elements.
+
+\section{Box the chapter name and the number}
+\clearpage
+
+\newpage
+
+\makeatletter
+\parindent0pt\fboxsep1.5pt\fboxrule0pt
+\newlength\templength
+\newlength\tempdepth
+\newsavebox\chapterblock
+
+\savebox\chapterblock{%
+       \colorbox{black}{%
+       \fbox{\color{white}% 
+          \sffamily\bfseries\large
+          \hspace*{1.5cm}\chaptername\space\thechapter\space%
+       }%
+   }%
+}
+
+\setlength\templength{\the\wd\chapterblock}
+\setlength\tempdepth{\the\dp\chapterblock}
+
+
+\usebox\chapterblock%
+\lower\dimexpr(\tempdepth-.2pt-1pt)\hbox{%
+\vrule width\dimexpr(\columnwidth-\templength) height0.2pt depth1pt}\par
+\vspace*{6.5pt}
+
+\addtolength{\templength}{-1.5cm}
+\hspace*{\templength}{\Huge\bfseries\arial Measuring Capacity}\par
+\vspace*{36pt}
+\includegraphics[width=\templength]{./images/book}\raisebox{10pt}{\rule{\textwidth-\templength}{0.4pt}}\vskip-3pt
+\hspace*{\templength}{\bfseries \LARGE\sffamily After reading this chapter you will be able to:}
+\bigskip
+
+
+\hspace*{\dimexpr(\templength-20pt)\relax}\begin{minipage}{\textwidth-\templength}
+\begin{itemize}\arial
+\item Understand how boxes can be used to measure dimensions of typeset material.
+\item Incorporate calculations into templates.
+\item Provide an API for your template.
+\item Adjust existing designs.
+\end{itemize}
+\vspace*{24pt}
+\end{minipage}
+\chapterafterheading@cx
+\arial
+
+\cxset{section align=left,
+          section font-size=LARGE,
+          section font-weight=bold,
+          section numbering=none,
+          section numbering prefix=,
+          section font-family=arial}
+
+\parindent2em
+\section{Defining the Template Requirements}
+
+Before we start with any development work we should first identify some of the major features of the template. The most prominent features include the boxing of the chapter name and the use of rules and an image. As a rule, if the template can be developed from \tex commands we would avoid the use of \tikzname\ and reserve the latter only for more complicated layouts. The template is inspired from \emph{Essentials of Capacity Management}
+by Reginald Tomas Yu-Lee. 
+
+\begin{figure}[ht]
+\centering
+\fboxrule1pt
+\fbox{%
+\includegraphics[width=0.4\textwidth]{measuring-capacity}%
+\includegraphics[width=0.4\textwidth]{capacity}}
+\caption{Style 62 Example pages.}
+\end{figure}
+
+As we need to have an accurate left alignment for the headings we need to measure the dimensions of the 
+typeset chapter block. We define a \cmd{\newsavebox} and the necessary temporary length registers.
+
+\begin{scriptexample}{}{}
+\begin{verbatim}
+\newlength\tempdepth
+\newsavebox\chapterblock
+
+\savebox\chapterblock{%
+       \colorbox{black}{%
+       \fbox{\color{white}% 
+          \sffamily\bfseries\large
+          \hspace*{1.5cm}\chaptername\space\thechapter\space%
+       }%
+   }%
+}
+\end{verbatim}
+\end{scriptexample}
+
+If you notice we used the \cmd{\fbox}  to be able to provide an easy way to set padding in the box. The
+\cmd{\colorbox} is used to color the block. 
+
+\section{Putting everything in a macro}
+
+The template mechanism provided by the |phd| package accepts a macro with any name, but with two parameters.
+
+\newcommand{\blockchapter}[2][]{%
+  \makeatletter
+\parindent0pt\fboxsep1.5pt\fboxrule0pt
+%\newlength\templength
+%\newlength\tempdepth
+%\newsavebox\chapterblock
+
+\savebox\chapterblock{%
+       \colorbox{black}{%
+       \fbox{\color{white}% 
+          \sffamily\bfseries\large
+          \hspace*{1.5cm}\chaptername\space\thechapter\space%
+       }%
+   }%
+}
+
+\setlength\templength{\the\wd\chapterblock}
+\setlength\tempdepth{\the\dp\chapterblock}
+
+
+\usebox\chapterblock%
+\lower\dimexpr(\tempdepth-.2pt-1pt)\hbox{%
+\vrule width\dimexpr(\columnwidth-\templength) height0.2pt depth1pt}\par
+\vspace*{6.5pt}
+
+\addtolength{\templength}{-1.5cm}
+\hspace*{\templength}{\Huge\bfseries\arial #2}\par
+\vspace*{36pt}
+\includegraphics[width=\templength]{./images/book}\raisebox{10pt}{\rule{\textwidth-\templength}{0.4pt}}\vskip-3pt
+\hspace*{\templength}{\bfseries \LARGE\sffamily After reading this chapter you will be able to:}
+\bigskip
+
+
+\hspace*{\dimexpr(\templength-20pt)\relax}\begin{minipage}{\textwidth-\templength}
+\begin{itemize}\arial
+\item Understand how boxes can be used to measure dimensions of typeset material.
+\item Incorporate calculations into templates.
+\item Provide an API for your template.
+\item Adjust existing designs.
+\end{itemize}
+\vspace*{24pt}
+\end{minipage}
+\chapterafterheading@cx
+\arial 
+\makeatother
+}
+
+\section{Summary}
+
+We have formatted a block of text to represent the chapter and then set it to point to a template. We can call the template simply by setting:
+
+\begin{verbatim}
+\cxset{custom=blockchapter,
+          chapter opening=anywhere}
+\chapter{First Chapter Special}
+\end{verbatim}
+
+The chapter heading is called using the normal \latexe command \cmd{\chapter}. There is no need to provide a starred version of the command, as firstly the template would not look nice with a number and second, if we do not want it to be entered into the ToC, we can simply use the key setting:
+
+\begin{verbatim}
+chapter toc=false,
+\end{verbatim}
+
+Trying it out we get,
+
+\cxset{custom=blockchapter,
+          chapter opening=any}
+
+
+\chapter{First Chapter Special}
+
+\makeatletter
+\@specialfalse
+\makeatother
+
+The design outlined in this template is widely used by many book designers. In the next chapter we will vary it to 
+give an additional example.
+
+
+
+
+
+
+

@@ -23,16 +23,75 @@ their properties}
 \cxset{chapter opening=left,
           header style=empty}
 
-\chapter{Setting headers and footers}
+\chapter{Running Titles and Paging}
 
-\section{Setting Headers and Footers}
+Early printed books had no running title or paging figures. The first attempt to supply this need of the reader was to repeat the number of the chapter at the head of each page.\footnote{De Vinne, pg 142.}  As books and styles evolved, if the words of the running title or chapter began appearing together with the page number. Practical considerations regarding the wearing of plates, school-books and all works that were printed frequently had running titles in capitals of light-faced antique. 
 
-One of the first tasks of any \LaTeXe\ class is to redefine the headers and footers. The format of the running headers or footers in \LaTeX\ terminology is called the \textit{page style}. Each different format is given names like \textit{empty} or \textit{plain} to make it easier to select and remember.
+\begin{figure}[htp]
+\includegraphics[width=\textwidth]{./images/beauty-and-art-spread.jpg}
+\end{figure}
 
+Almost every type of design has been adopted by typographers and book designers; sometimes the text is centered and in other cases it is set lush up to the inner or outer margin of the facing pages. The book chapter and the section of the book is sometimes specified in the running title, the chapter name on the left and the section on the right. When the running title consists of the name of the book, it was sometimes divided so that one half only of this name would appear on one page and the other half on the facing page. De Vrinde was highly critical of such practices and remarked `Nor is this a commendable fashion, for a line of many words can seldom be evenly divided; if it is not so divided, one heading will be longer than the other.’  Some modern books that follow in a similar fashion would place the chapter name and number at the left and the chapter title on the right. 
 
+I am unsure if repeating the name of the book in its running title has any benefits to the reader, especially if the name of the book is well known to the reader. This title is most useful when it explains or to some extend defines the matter on the page, and this explanation should refer not to the first but to the last paragraph on that page.  Many authors prefer to not have sections in chapters and in such cases running the book name in the header rather than having left and right headers that just repeat the chapter name is preferable. An example of this is Tufte’s \textit{Beautiful Evidence}.  Tufte’s book does not have any footer material.  Many specialist scientific books have multi-authors, sometimes the running head includes the authors name (See figure from ). This particular illustration also shows the use of rules. Traditionally the rules were applied to protect the top of the block from mechanical wear during printing. 
+
+\begin{figure}[hb]
+\includegraphics[width=\textwidth]{./images/headers/header-humidification-odd.jpg}
+\includegraphics[width=\textwidth]{./images/headers/header-humidification-even.jpg}
+\end{figure}
+
+As a rule,  paging with arabic figures begins with the text of the book. The matter before the text (as the title, preface, introduction, etc., which are printed last of all) is paged with roman lower-case numerals. Appendices, indices and all additions to the text take arabi figures for paging, but publisher’s advertisements at the end of the book should receive their special paging in a figure of a different face. Maps, portraits, and illustrations made on separate pages never receive printed paging, although they may be reckoned as pages in the table of contents or the index. 
+
+\section{The Requirements}
+
+The brief discussion above and the examples from various publications can help in definind the final requirements of what we are about to program. The header or the footer for that matter as they are very similar needs to communicate with the page that is currently being processed to obtain the page number and any other marks that need to go into the running head.
+
+\begin{tabular}{>{\raggedright}p{5cm}l}
+Access to the page number & \\
+Build up string from sections, chapters, titles or subtitles &\\
+Distingusih between left and right numbers &\\
+Add user data  &\\
+Provide an intuitive user interface&\\
+\end{tabular}
+
+A more modern approach would be to offer a small templating language to deal with the headers and footers. This is for example, now common in web applications where variables are sent by the server to the web page being build and transformed in templates.
+
+Another approach is to use a graphical language, such as metapost.
+
+Since we have to deal with odd and even pages and a header and or a footer, the minimum variables needed to hold this information is four. 
+
+A graphicablock can also happily contain the necessary information.
+
+The algorithm is described below:
+
+\begin{enumerate}
+\item Set the variable headerleft and headerright to indicate one page or two page printing.
+\item Define text block templates as macros to set the typesetting to a named style. Each header style
+         will have its own name. Standardize parameters to enable easy redefinition of commands. As a 
+         final fully flexible approach the key header = custom will provide full capabilities for any user
+         defined design.
+\item Distinguish how headers and footers will be typeset on title pages, chapter openings, bibliographies, 
+         automatically generated pages, such as float pages etc.
+\item Hook into LaTeX’s output routine to obtain information about the top and bottom inserts and other marks.         
+\item Inherit properties, such as language and directionality.
+\item Provide less intrusive ways to define different styles by the user.
+\item define block commands to mark start of different headings for example |\mainmatter|. This will define
+         the start of the main text of the publication and issue a command to process the pages that follow.
+\end{enumerate}
+
+A special type of header is something that will be repeated on every page, say a watermark of some sorts. These are dealt as backgrounds.
+ 
 \section{Traditional LaTeX page style commands}
+  
+One of the first tasks of any \LaTeXe\ class is to redefine the headers and footers. The format of the running headers or footers in \LaTeX\ terminology is called the \textit{page style}. Each different format is given names like \textit{empty} or \textit{plain} to make it easier to select and remember. 
 
-The LaTeX kernel\footnote{In File J \file{ltpage.dtx}, page 311.} defines two commands for selecting the running heads:
+\begin{figure}[hbt]
+\includegraphics[width=\textwidth]{./images/headers/Running-heads-lace.png}
+\caption{This last example shows what kind of atmosphere you can create with running heads. Here a bit of lace texture has been softened and graduated, creating a kind of gentle, suggestive frame around these pages. I’ve also used line drawings, logos, and other graphic elements to dress up running heads like these. From the \protect\href{bookk  }{bookdesigner.com}}
+\end{figure}
+
+
+The LaTeX kernel\footnote{In File J file{ltpage.dtx}, page 311.} defines two commands for selecting the running heads:
 
 \begin{lstlisting}
 \pagestyle{<style>} : sets the page style of the current and succeeding pages to style
@@ -220,9 +279,14 @@ The key value interface provides a number of mechanisms to tap into the page sty
 
 
 
-\subsection{Example usage}
+\subsection{Using the headings as hooks}
 
-We will now show an example using the key value interface to illustrate the concepts and the usage. We will change the watermark text, color and font on this page. If you notice at the right bottom of the page the word \textsc{PRE-PRINTED} has been printed in blue.
+Since the headings are added to the page during processing of the output routine, they are sometimes used
+to insert material on the page at places other than the head, through the use of a zero width box. For example we
+can use this approach to add a watermark on a page. Other approaches to position material at absolute positions
+on a page, is to hook at \emph{shipout}. Some packages such as TikZ can also be used through the |remember picture, overlay |  key settings. 
+
+The |phd| package has a predefined style, named samplepage that can be used to typeset some text at the outer margin of a page. The text is configurable and you can set it for example to typeset “PRE-PRINT” rather than the “SAMPLE PAGE” string. 
 
 \begin{tcolorbox}
 \begin{lstlisting}
@@ -234,9 +298,14 @@ We will now show an example using the key value interface to illustrate the conc
 \end{lstlisting}
 \end{tcolorbox}
 
-\thispagestyle{samplepage}
+\makeatletter
+\cxset{watermark text/.code =\watermarktext }
+\makeatother
 
-\clearpage
+\watermarktext{PRE-PRINT}
+   
+\pagestyle{samplepage}
+
 
 \section{Adding marks}
 

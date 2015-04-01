@@ -6,7 +6,7 @@
   offsety=0cm,
   image={./images/hine03.jpg},
   texti={When Lamport designed the original \LaTeX\ sectioning commands, limitations of computer power forced him to restrict the abstraction of complicated chapter layouts. With current tools available improvements are much easier to program.},
-  textii={In this chapter we discuss a method that allows the production of fancy sectionr headings and formatting, based on a set of key values. Central  to this process is the separation of content from presentation.
+  textii={In this chapter we discuss a method that allows the production of fancy section headings and formatting, based on a set of key values. Central  to this process is the separation of content from presentation.
 We also discuss the basic formatting tools that are available and how one can modify them to mould new book designs.
  }
  }
@@ -18,7 +18,7 @@ We also discuss the basic formatting tools that are available and how one can mo
 
 \section{Introduction}
 
-Good book design dictates that sectioning styles follow that of the general book design and theme. An academic publication for example might have chapters and section numbered in arabic numerals, whereas a high school textbook might have sections marked in colored boxes.
+Good book design dictates that sectioning styles follow that the general book design and theme. An academic publication for example might have chapters and section numbered in arabic numerals, whereas a high school textbook might have sections marked in colored boxes.
 
 Similarly to the chapter key value interface, the package offers a key value interface to adjust sectioning command parameters.
 
@@ -35,8 +35,29 @@ In a similar fashion to the chapter commands the following keys are provided.
 
 Font and numeral keys are shown below.
 \medskip
+\begin{key}{/phd/section font-size= \marg{sizing commands}} The font-size command takes arguments
+of the  type |Large|, |large| both as commands or without the backslash, which is the recommended way
+of setting styles with the |phd| package. 
+\end{key}
 
-  \keyval{section font-size}{\marg{cmd}}{Font size command such as \cs{large.}}
+\begin{key}{/phd/section font size= \marg{sizing commands}} All the font commands, come in two flavours,
+with a hyphen or without, in order to present a user interface that is similar to |pgf/TikZ| conventions for those
+that have a good LaTeX background and another for those familiar with CSS.
+\end{key}
+
+\begin{key}{/phd/section font-family= \marg{sizing commands}} The font-family key, accepts normal LateX values
+related to families, but if LuaTeX or XeLaTeX are present it can also accept commands created with |\newfontfamily| 
+command of the |fontspec| package, which is loaded automatically by the |phd| package. The package has a database of a number of human friendly names for fonts and commands. If one of these are detected the
+family is created at run-time to avoid overloading too many fonts at start-up. 
+\begin{verbatim}
+\cxset{section font-family = Arial}
+\cxset{section font-family = sffamily}
+\cxset{section font-family = ttfamily}
+\end{verbatim}
+The family command family name (if undeined by the user), defaults to the human friendly version name but without the spaces. 
+\end{key}
+
+
   \keyval{section font-weight}{\marg{cmd}}{Font weight command such as \cs{bfseries.}}
   \keyval{section font-family}{\marg{cmd}}{Font family command such as \cs{sffamily.}}
   \keyval{section font-shape}{\marg{cmd}}{Font shape command such as \cs{itshape}}
@@ -86,6 +107,7 @@ Hooks for adding material are shown in the following sketch.
 
 \section{Example usage}
 
+In our first example we will use a predefined style for the chapter headings, so we do not need to clutter the example with the chapter commands that we have previously discussed. Our first example will number the section in lower roman, enclosed in brackets and center it.
 
 \@specialfalse
 \cxset{
@@ -147,12 +169,12 @@ Hooks for adding material are shown in the following sketch.
 
 
 
-\begin{texexample}{Adjusting section parameters}{}
+\begin{texexample}{Adjusting section parameters}{ex:section1}
 \cxset{ section font-size= LARGE,
  section font-weight= bold,
  section font-family= sffamily,
- section align= centering,
- section numbering=(roman),
+ section font-shape=upshape,
+ section numbering=(roman), 
  section indent=0em,
  section align= centering,
  section beforeskip=20pt,
@@ -160,10 +182,12 @@ Hooks for adding material are shown in the following sketch.
 \chapter{A First Look at the Sectioning Keys}
 \section{First section}
 \lorem
+  % adjust counter number so it does not affect the
+  % rest of the document
+\addtocounter{section}{-1}
 \end{texexample}
 
-
-
+The keys are mostly self-explanatory. We have used a |beforeskip| and |afterskip| without any glue. The numbering is just a continuation of the document sections. 
 
 One notable thing to keep in mind is that the numbering of the chapter is independent of that for the section, so if you need to have strange combinations rather define a section numbering custom.\index{section formatting!vertical space}
 
@@ -172,7 +196,7 @@ One notable thing to keep in mind is that the numbering of the chapter is indepe
 
 Perhaps the most important issues we need to consider is the adjusting of vertical spaces; example~\ref{ex:latex}, that follows illustrates settings from the Octavo class and compare them with those of standard the \LaTeXe\ book class. The Octavo class through settings that are based on baselineskip fractions and multiples endeavours to achieve a grid layout. The class also tones down the `loudness' of some of the headings compared to those of the book class.
 
-
+\makeatletter
 \cxset{octavo/.style={
  section font-size=large,
  section font-weight=,
@@ -182,6 +206,7 @@ Perhaps the most important issues we need to consider is the adjusting of vertic
  section align=\centering,
  section beforeskip=-1.666\baselineskip\@minus -2\p@,
  section afterskip=0.835\baselineskip \@minus 2\p@,
+ section after indent = false,
  subsection numbering=none,
  subsection font-family= rmfamily,
  subsection font-size=,
@@ -191,9 +216,13 @@ Perhaps the most important issues we need to consider is the adjusting of vertic
  subsection align=RaggedRight,
  subsection beforeskip=-0.666\baselineskip\@minus -2\p@,
  subsection afterskip=0.333\baselineskip \@minus 2\p@,
+ subsection color=spot!50,
+ subsubsection color=spot!50,
  }}
 
-
+\renewsection
+\renewsubsection
+\renewsubsubsection
 
 
 \cxset{book/.style={
@@ -205,8 +234,8 @@ Perhaps the most important issues we need to consider is the adjusting of vertic
  section align= RaggedRight,
  subsection font-size= large,
  section indent=0em,
- section beforeskip=-3.5ex \@plus -1ex\@minus -0.2ex,
- section afterskip=2.3ex\@plus.2ex,
+ section beforeskip=-3.5ex plus -1ex minus -0.2ex,
+ section afterskip=2.3ex plus 0.2ex,
  subsection font-size= large,
  subsection font-weight= bfseries,
  subsection numbering=arabic,
@@ -216,17 +245,21 @@ Perhaps the most important issues we need to consider is the adjusting of vertic
 }}
 
 \cxset{octavo headings/.style={
- section numbering=none,section font-size=large,
-section font-weight=,
+ section numbering=none,
+ section font-size=Large,
+ section font-weight=,
  section font-family=rmfamily, section font-shape= scshape,
- section indent=0em, section align=centering, 
-section beforeskip=-1.666\baselineskip\@minus -2\p@,
+ section indent=0em, 
+ section align=centering, 
+ section afterindent=off,
+ section beforeskip=-1.666\baselineskip\@minus -2\p@,
  section afterskip=0.835\baselineskip \@minus 2\p@, 
-subsection numbering=none,
+ %
+ subsection numbering=none,
  subsection font-family=\rmfamily, 
-subsection font-size=, subsection font-shape=scshape,
+ subsection font-size=, subsection font-shape=scshape,
  subsection font-weight=, subsection indent=1em, 
-subsection align= RaggedRight,
+ subsection align= RaggedRight,
  subsection beforeskip=-0.666\baselineskip\@minus -2\p@,
  subsection afterskip=0.333\baselineskip \@minus 2\p@,
  subsubsection numbering=none,
@@ -234,69 +267,97 @@ subsection align= RaggedRight,
  subsubsection font-size=,
  subsubsection font-shape= itshape,
  subsubsection font-weight=,
- subsubsection indent=1em,
+ subsubsection indent = 0em,
  subsubsection align= raggedright,
  subsubsection beforeskip=-0.666\baselineskip\@minus -2\p@,
  subsubsection afterskip=0.333\baselineskip \@minus 2\p@,
+ subsubsection color=spot!50,
  paragraph numbering=none,
  paragraph font-family= rmfamily,
  paragraph font-size=,
- paragraph font-shape=,
+ paragraph font-shape=itfamily,
  paragraph font-weight=,
- paragraph indent=-1em,
+ paragraph color = spot!50,
+ paragraph indent=0em,
  paragraph align= RaggedRight,
- paragraph beforeskip=0pt,
- paragraph afterskip=0pt,
+ paragraph beforeskip=10pt,
+ paragraph afterskip=1em,
 }}
 
+\renewsection \renewsubsection \renewsubsubsection \renewparagraph
 
 \cxset{octavo headings}
 
 
-\begin{texexample}{Octavo class headings, settings}{}
-\cxset{octavo headings/.style={
- section numbering=none,section font-size=large,
-section font-weight=,
- section font-family=rmfamily, section font-shape=scshape,
- section indent=0em, 
- paragraph numbering=none,
- paragraph font-family=rmfamily,
- paragraph font-size=,
- paragraph font-shape=,
- paragraph font-weight=,
- paragraph indent=-1em,
- paragraph align=raggedright,
- paragraph beforeskip= 0pt,
- paragraph afterskip=0pt,
-}}
+%\begin{texexample}{Octavo class headings, settings}{}
+%\cxset{octavo headings/.style={
+% section numbering=none,section font-size=large,
+%section font-weight=,
+% section font-family=rmfamily, section font-shape=scshape,
+% section indent=0em, 
+% paragraph numbering=none,
+% paragraph font-family=rmfamily,
+% paragraph font-size=,
+% paragraph font-shape=,
+% paragraph font-weight=,
+% paragraph indent=-1em,
+% paragraph align=raggedright,
+% paragraph beforeskip= 0pt,
+% paragraph afterskip=0pt,
+%}}
+%
+%\cxset{octavo headings}
+%\renewsection\renewsubsection\renewsubsubsection
+%\section{Octavo Class Heading}
+%\lorem
+%\subsection{Octavo subsection}
+%This is some text short text\par
+%\subsubsection{Octavo sub-subsection}
+%\lorem
+%\paragraph{paragraph heading} This is some short text.
+%\makeatother
+%\end{texexample}
 
-\cxset{octavo headings}
-\renewsection\renewsubsection\renewsubsubsection
-\section{Octavo Class Heading}
+
+The following example was set using the |style| |\cxset{Octavo headings}| with some minor adaptations to enable us to show it inline with the rest of the material on this page\footnote{We set it using \cs{cxset}\marg{chapter opening = anywhere}}. We kept the use of a typical colour throughout the text, whereas the Octavo class, does not allow the use of color.
+
+\cxset{chapter opening = anywhere,
+          chapter color = spot!50,
+          title font-color = spot!50,
+          chapter name={},
+          chapter numbering = none,
+          chapter before = \addvspace{\baselineskip},
+          chapter after = ,
+          title spaceout=soul,
+          title before =,
+          title afterskip=\bigskip\bigskip,
+          number before=,
+          number after=,
+          }
+          
+\bgroup
+\parindent=0pt
+\par
+
+\chapter{Octavo Chapter Heading}
 \lorem
+
+\section{Octavo Class Heading (Section) }
+\lorem
+
 \subsection{Octavo subsection}
-This is some text short text\par
+\lorem
+
 \subsubsection{Octavo sub-subsection}
 \lorem
-\paragraph{paragraph heading} This is some short text.
-\makeatother
-\end{texexample}
 
+\paragraph{Paragraph heading} This is some short text.
+\lorem
 
-
-
-\section{Octavo Class Heading}
-\lorem
-\subsection{Octavo subsection}
-\lorem
-\subsubsection{Octavo sub-subsection}
-\lorem
-\paragraph{paragraph heading} This is some short text.
-\lorem
 \paragraph{paragraph heading} This is some short text.
 \lorem
 
-
+\egroup
 
 
 \begin{texexample}{\LaTeXe\ book class headings settings}{ex:latex}
@@ -403,6 +464,7 @@ The standard LaTeX classes, book report and article have sections showing dot le
 \index{macros!\textbackslash @seccntformat}
 
 \subsection{Indexing of Lower Section Headings}
+
 \LaTeXe\ offers two pathways in redefining section commands, the first one is @startsection and the second is \cs{@seccntformat} \index{sectioning macros}. It also uses the macro \cs{secdef} to create the starred and unstarred versions of the sectioning commands.
 
 \begin{tcolorbox}{}
@@ -484,11 +546,12 @@ As our aim is to be able to have all the classes used a common denominator we ca
 \end{tcolorbox}
 
 
-
-The \cs{@starredsection} macro is one of those locomotive type of commands. It takes 7 required arguments and 2 optional ones and hidden within it are two booleans. The full set looks like this:
+\begin{command}{\@startsection}
+The \cs{@startdsection} macro is one of those locomotive type of commands. It takes 7 required arguments and 2 optional ones and hidden within it are two booleans. The full set looks like this:
 
 \cs{@startsection} \marg{name} \marg{level} \marg{indent} \marg{beforeskip} \marg{afterskip} \marg{style}[*]
   [\marg{altheading}]\marg{heading}.
+\end{command}
 
 \begin{marglist}
 \item[name] The name of the level command.
@@ -505,12 +568,12 @@ The \cs{@starredsection} macro is one of those locomotive type of commands. It t
 \begin{texexample}{Example formatting run-in section}{}
 \makeatletter
 \bgroup
-\renewcommand\section{%
-    \@startsection{section}%
-    {1}%
-    {0em}%
-    {-0.8em}%
-    {-0.5em}%
+\renewcommand\section{
+    \@startsection{section}
+    {1}
+    {0em}
+    {-0.8em}
+    {-0.5em}
     {\large\normalfont\scshape}}
 \makeatother
 \section[]{test}
@@ -545,41 +608,38 @@ See section \ref{sec:ok}.
 
 
 
-The definition of \cs{@seccntformat} applies to all headings
-defined with the \cs{@startsection} command (which is described in the next
-section). Therefore, if you wish to use different definitions of \cs{@seccntformat}
-for different headings, you must put the appropriate code into every heading
-definition.
-
-\begin{tcolorbox}
-\begin{lstlisting}
-\def\@seccntformat##1{\csname the##1\endcsname{}}
-\end{lstlisting}
-\end{tcolorbox}
-
+\cxset{section color=spot!50,
+          subsection color = spot!50 }
+          
 \section{Custom headings}
 
-It is also possible to define section headings without resorting to any of the above. To do this.
+\begin{macro}{\@secdef}
+So far we have used the |phd|’s keys to set keys that are affecting the standard commands used by
+\latexe to set headings. Another way to achieve this,  is to use the macro
+ \cs{@secdef}. Therefore, if you wish to use different definitions of \cs{@seccntformat}
+for different headings, you must put the appropriate code into every heading
+definition.
+\end{macro}
 
-\begin{tcolorbox}
-\begin{lstlisting}
-\newcommand\part{\secdef\cmda\cmdb}
-\end{lstlisting}
-\end{tcolorbox}
 
-the part and chapter and sometimes appendix are defined this way, but nothing stops us from doing the same for other sections. A generic section command can be defined as follows:
+
+\begin{verbatim}
+\newcommand\part{\secdef\starcmd\unstarcmd}
+\end{verbatim}
+
+The |part| and |chapter| and sometimes |appendix| are defined this way, but nothing stops us from doing the same for other sectioning commands. What the \cs{secdef} command does it will produce the definitions required for a star or unstarred version of the sectioning command, such as |\section|.\footnote{See \ttfamily File F: ltsect.dtx Date: 2014/09/29 Version v1.0z 360} 
 
 \begin{texexample}{}{}
 \bgroup
-\renewcommand\section[2] [?]{
-\refstepcounter{section}
-\addcontentsline{toc}{appendix}
-{\protect\numberline{section-\thesection}#1}
-{\raggedright\large\bfseries SECTION-\thesection\par \centering#2\par}
-\sectionmark{#1}
-\@afterheading 
-\addvspace{\baselineskip}
-}
+\renewcommand\section[2] [?]{%
+    \refstepcounter{section}
+    \addcontentsline{toc}{section}
+    {\protect\numberline{section-\thesection}#1}
+    {\raggedright\large\bfseries SECTION-\thesection\par \centering#2\par}
+    \sectionmark{#1}
+    \@afterheading 
+   \addvspace{\baselineskip}
+ }%
 \section[test]{Section Heading}
 \lorem
 \egroup
@@ -587,6 +647,9 @@ the part and chapter and sometimes appendix are defined this way, but nothing st
 
 Many other strategies can also be implemented that are perhaps easier to grasp.
 
+\begin{teX}
+\def\@seccntformat##1{\csname the##1\endcsname{}}
+\end{teX}
 
 
 \begin{texexample}{}{}
@@ -649,3 +712,430 @@ I am aware that some people have no choice but have some sections underlined as 
 \url{http://tex.stackexchange.com/questions/52998/change-title-to-small-caps-but-not-in-toc}
 
 
+\makeatletter
+\gdef\sectionopen{}
+\def\@sectionsuffix{}
+\def\@sectionprefix{\sectionname\space}
+\newif\if@sectioncase \@sectioncasefalse
+
+\cxset{
+  section special/.code =\def\specialsection@cx{#1},
+  section xcolor/.store in = \sectionxcolor@cx,
+  section opening/.is choice,
+  section opening/openany/.code=\gdef\sectionopen{\clearpage},
+  section opening/right/.code = \gdef\sectionopen{\cleardoublepage},
+  section opening/none/.code = \gdef\sectionopen{},
+  section top rule/.is choice, 
+  section top rule/true/.code =\DeclareRobustCommand\sectiontoprule{%
+        \leavevmode\par\noindent\rule{\textwidth}{1pt}\vskip3.5pt},
+  section top rule/true/.code=\def\sectiontoprule{\leavevmode\par\noindent\tikzrule},      
+  section top rule/false/.code=\gdef\sectiontoprule{},
+  % bottom rule
+  section bottom rule/.is choice, 
+  section bottom rule/true/.code =\DeclareRobustCommand\sectionbottomrule{%
+        \leavevmode\par\noindent\rule{\textwidth}{1pt}\vskip.5pt},
+  section bottom rule/true/.code=\def\sectionbottomrule{\vskip-0.5\baselineskip\rlap{\tikzrule}},      
+  section bottom rule/false/.code=\gdef\sectionbottomrule{},
+  % upper and lower case - TODO in lua
+  section case/.is choice,
+  section case/lower/.code=\def\sectioncase@cx{\@sectioncasetrue
+                             \if@sectioncase\expandafter\MakeTextLowercase\fi},
+  section  case/upper/.code=\def\sectioncase@cx{\@sectioncasefalse
+                    \if@sectioncase\else\expandafter\MakeTextUppercase \fi},
+  section  case/none/.code=\def\sectioncase@cx{\@empty},
+}
+\cxset{
+          section special = sectionspecialruled@cx,
+          section xcolor=spot!50,
+          section afterindent=false,
+          section opening=right,
+          section top rule=true,
+          section bottom rule=true,
+          section afterskip=20pt,
+          section case=lower,
+          section font-family=aegean
+          }
+
+
+%\def\specialsection@cx{sectionspecialruled@cx}
+\def\secdef#1#2{\@ifstar{\@dblarg{#2}}{\@dblarg{#1}}}
+%
+\newcommand\sectionx{%
+  \par  
+  \sectionopen   %determines if it is to be treated like a chapter
+  \addpenalty\@secpenalty\nobreak
+  \secdef\sectionspecialruled@cx\@ssection
+   } 
+  
+
+% The macro sectionspecial@cx is a more generic macro that typesets the block of tex
+% for the section heading.
+% 
+\def\sectionspecialruled@cx[#1]#2{%
+   \sectiontoprule
+  \ifnum\c@secnumdepth>0\relax
+     \refstepcounter{section}%
+     \addcontentsline{toc}{section}{%
+      \@sectionprefix\thesection\@sectionsuffix
+       \texorpdfstring{\quad}{ }#1}%
+  \else
+     \addcontentsline{toc}{section}{#1}%
+  \fi
+  {% start the title
+    \color{\sectionxcolor@cx}%
+    \noindent\centering\interlinepenalty\@M
+   \setfont@cx{\sectionfontweight@cx}%
+       {\sectionfontfamily@cx}{\sectionfontsize@cx}{\sectionfontshape@cx}%
+     \ifnum\c@secnumdepth>0\relax
+        \@sectionprefix\thesection\@sectionsuffix
+        \quad\sectioncase@cx{#2}%
+    \else %
+       \sectioncase@cx{#2}
+      % \luadirect{tex.print(string.upper(#2))}%
+   \fi%
+   \sectionbottomrule
+   %\expandafter\addvspace\sectionafterskip@cx\relax%
+%   \tikzrule 
+   %\rule{\textwidth}{3pt}%
+   \afterindent@cx
+   \nobreak\par}}
+
+
+\def\@ssection[#1]#2{%
+  \phantomsection
+  \addcontentsline{toc}{section}{#1}%
+  {\noindent\centering\interlinepenalty\@M
+   \color{\sectioncolor@cx}
+     \setfont@cx{\sectionfontweight@cx}%
+       {\sectionfontfamily@cx}{\sectionfontsize@cx}{\sectionfontshape@cx}%
+       \sectiontoprule
+       
+        \sectioncase@cx{#2}%
+        \sectionbottomrule
+       %\expandafter \addvspace\sectionafterskip@cx \relax
+      \afterindent@cx
+   \nobreak\par}}
+\makeatother
+
+\let\section\sectionx
+
+\section{Special Sections}
+
+When we described the usage of the chapter setting keys, we extended the system to describe commands
+for specially constructed chapter heads that do not follow the normal style of \latexe.
+This section describes how to design and program, sectioning styles that go a little bit more than those that
+can be defined so far and that they will require you to have a bit more knowledge of \tex and \latexe programming skills.
+
+For example, the heading of this section started on a new page and has rules above and below the title and section number. In addition the title was capitalized automatically, despite having been typed as:
+
+\begin{verbatim}
+\section{Special Sections}
+\end{verbatim}
+
+By setting the key and calling the section again, we can typeset it on the same page
+
+\begin{verbatim}
+   \cxset{section opening=none}
+   \section{Another example}
+\end{verbatim}
+
+\cxset{section opening=none,
+          section case=upper,
+          section top rule=false,
+          section bottom rule=true}
+          
+\section{Another example}
+
+Special sections have their own user provided macros, that have been pre-defined by the user and are invoked using the key |section special|. In the example below we have predefined a macro |\sectionsspecialruled@cx|.
+Do not use a command in the value just the literal name of the command as shown below,
+
+\begin{verbatim}
+\cxset{section special = ruled,}
+\end{verbatim}
+
+\cxset{section opening=none,
+          section case=none,
+          section top rule=true,
+          section bottom rule=false}
+          
+The star section of the command omits the section number from the heading. It will still insert an entry into the toc. If it is provided with an optional argument it will insert the optional text into the toc.
+
+Check the Table of Contents to see the rendering.
+
+\begin{verbatim}
+\section*{No number test}
+\section*[Short Title]{No number test}
+\end{verbatim}
+
+\section*{No number test}
+\lorem
+
+\cxset{section bottom rule=true,
+         section afterindent=false,
+         section font-family=agean}
+
+\section*[Short Title]{No number test}
+
+\lorem
+
+\cxset{chapter opening=any,
+          chapter toc=true,
+          chapter numbering=arabic}
+
+One can extend these \emph{specials} to much more complicated sections (which can resemble) chapter openings.
+\makeatletter 
+\newif\if@debug \@debugtrue
+\bgroup
+\leftskip-3cm \rightskip2cm
+\def\hook{\node[right=5pt, yshift=-12pt] at (0,-3) {\HUGE\color{purple} This is the  Title}; }
+\def\hook{}
+
+\cxset{chapter name = CHAPTER}
+%\expandafter\ifnum\thechapter=0\stepcounter{chapter}\else\fi
+
+\hspace*{-2cm}\begin{tikzpicture}
+\if@debug\draw [help lines] (0,0) grid (18,-13);\else\fi
+\draw[fill=red]  (0,0) circle (1.5pt) ;
+\node[rectangle,draw, right, baseline] (x) at (0,1) {\LARGE\color{black!30}{before}\relax};
+\draw[fill=red]  (0,1) circle (1.5pt) ;
+\node[rectangle,draw, right=1sp] at (0,0) {\LARGE\color{black!20} \so\chaptername\relax};
+
+\node[rectangle,draw, color=white, below right, fill=blue!50, text=white] at +(\textwidth,0) {\scalebox{2}{\HUGE \thechapter}};
+\draw[fill=red]  (0,-3) circle (1.5pt) ;
+% The title of the block
+\node[rectangle, draw, text width=9cm,below right, yshift=-1pt] at (0,-3) {%
+         \sffamily
+         \HUGE Title Format\vskip1sp \medskip\Large Blue colors in jeans, dresses skirts\\ and hats.\\
+         How to dress in stylish blues. \\Getting your partner to get\\ into LaTeX. }; 
+\node at (12.5,-9) {\includegraphics[width=7cm]{./images/fashion.jpg}};
+\hook
+\end{tikzpicture}
+\makeatother
+\tikzrule 
+\egroup 
+
+For such complex layouts, it is always best to start from a piece of paper where you roughly outline
+the design of the template. I call such layouts templates, because we will insert a number of variables
+to parameterize them. All the typesetting commands will need to be inserted in a macro, which you
+should give it a unique name. We will name the above template \emph{fashion} and we will later on define
+a macro \cmd{\fashion}. The sectioning mechanism provided by the \pkgname{phd} will enable the
+setting of such layouts to be carried out as:
+
+\begin{verbatim}
+\cxset{section custom = fashion}
+\end{verbatim}
+
+Everytime we call the above in our document settings, in the preamble or elswehere or subsequent sections will
+be typeset using this format. 
+
+Also before you get into too much detail in programming you should define the \emph{new} parameters
+that may have to be introduced. In the example above most of the fields are already defined either
+using the |phd|  key value interface or by LaTeX itself. What is new here is only the introduction of an image
+and perhaps some rules as to its exact location. For example you can establish a rule that if half the width of
+the image is less than the right margin then it should be centered at the right side of the textblock, alternatively it should be lined at the end of the page. We will see how to achieve this a bit later on.
+
+It is also best to start with a MWE and to first achieve the layout you want without any parameters being introduced. We assume that we will be using TikZ to position the text and the image exactly where we 
+want them, although nothing stops us from using either plain TeX boxes or the picture environment.
+Since we are loading the TikZ package it is best though to use it for the graphical layout.
+
+Introduce a |debug| boolean to help you with switching grid lines on and off. Depending on what you are trying to accomplish you may want to also add some hooks into the definitions. Start from the layout first.
+
+\begin{verbatim}
+\begin{tikzpicture}
+\if@debug
+   \draw [help lines] (0,0) grid (18,-13);
+\else
+\fi
+...
+\fashionposthook
+\end{tikzpicture}
+\end{verbatim}
+
+We draw a grid of $18\times13$ cells which just happens to suit this particular layout well; The command 
+\cmd{\fashionposthook} was just added to provide any further tikz instructions at runtime.
+
+We then draw the layout first as best as we can and without too much consideration for parameterizing the layout.
+
+\emphasis{if@debug,else,fi}
+\begin{scriptexample}{}{}
+\begin{teX}
+\begin{tikzpicture}
+\if@debug
+  \draw [help lines] (0,0) grid (18,-13);
+  \draw[fill=red]  (0,0) circle (1.5pt) ;
+  \draw[fill=red]  (0,-3) circle (1.5pt) ;
+\else
+\fi
+% draw debug rectangles
+\node[rectangle,draw, right, baseline] (x) at (0,1) {\LARGE\color{black!30}{before}\relax};
+\draw[fill=red]  (0,1) circle (1.5pt) ;
+\node[rectangle,draw, right=1sp] at (0,0) {\LARGE\color{black!20} \so\chaptername\relax};
+
+\node[rectangle,draw, color=white, below right, fill=blue!50, text=white] at +(\textwidth,0) {\scalebox{2}{\HUGE \thechapter}};
+
+% The title of the block
+\node[rectangle, draw, text width=9cm,below right, yshift=-1pt] at (0,-3) {%
+         \sffamily
+         \HUGE Title Format\vskip1sp \medskip\Large Blue colors in jeans, dresses skirts\\ and hats.\\
+         How to dress in stylish blues. \\Getting your partner to get\\ into LaTeX. }; 
+   \IfFileExists{\fashionimage@cx}%   
+         {\node at (12.5,-9) {\includegraphics[width=7cm]{fashion}};}
+         { \node at (12.5,-9) {\includegraphics[width=7cm]{fashion}};}
+\hook
+\end{tikzpicture}
+\end{teX}
+\end{scriptexample}
+
+As I mentioned earlier, adding parameters increases the complexity of the layout and it might onfuse you
+at first, but we do need to go back and iterate to improve the template.
+
+\begin{description}
+\item [odd or even pages]  Most opening layouts such as this one, might be redrawn differently for left or right pages. We need to check for this.
+\item [fonts] You should never restrict your template to fixed size fonts or families. Here we can use all the |phd|
+keys that are available.
+\item [fine tuning positioning] This can be done by defining new keys.
+\item [image] Some form of key for the image is required as well as checking, if the image is available or not. If the user forgot to type it in, we will just show a message  and typeset our standard template image.
+\makeatletter
+
+\begin{teXX}
+\cxset{fashion image/.store in = \fashionimage@cx} (*@\label{fashionimage}@*)
+\cxset{fashion image = {./images/fashion.jpg}}
+\IfFileExists{\fashionimage@cx}{Found image file code}{Image File not found code}
+\end{teXX}
+
+
+
+%\IfFileExists{\fashionimage@cx}{image found code}{image not found code}
+
+
+The line \ref{fashionimage} simply stores the image path and filename in the \cmd{\fashionimage@cx}. We then immediately set it to a default value, to ensure that it is always available. We could just also use a draft
+key when we load the image. We will revisit this, once we get ready to test the template. Make sure that you add the \% at the end of the curly brackets when you testing, otherwise you may get weird errors. This is due to the TiKz’s parser. 
+
+\end{description}
+\makeatletter
+\cxset{fashion image/.code = \gdef\fashionimage@cx{#1}}
+\cxset{fashion image = shock.jpg}
+
+\cxset{subtitle font-color/.store in=\subtitlefontcolor@cx}
+\cxset{subtitle font-color=black!35}
+%default value for the image width
+\def\imagewidth@cx{5cm}
+\def\fashionnumberbg@cx{gray!30}
+\if@debug
+   \tikzset{fashion/.style = rectangle, draw}
+\else   
+\fi
+\@debugfalse
+\long\gdef\fashion{%
+\begin{tikzpicture}
+
+\if@debug
+  \draw [help lines] (0,0) grid (18,-13);
+  \draw[fill=red]  (0,0) circle (1.5pt) ;
+  \draw[fill=red]  (0,-3) circle (1.5pt) ;
+\else
+\fi
+% draw debug rectangles
+\node[fashion, right, baseline] (x) at (0,1) {\LARGE\color{black!30}{before}\relax};
+\draw[fill=red]  (0,1) circle (1.5pt) ;
+\node[fashion, right=1sp] at (0,0) {\LARGE\color{black!20} \so\chaptername\relax};
+
+\node[rectangle,draw, color=white, below right, fill=\fashionnumberbg@cx, text=white] at +(13,0) {\scalebox{2}{\HUGE \thechapter}};
+
+% The title of the block
+\node[fashion, text width=9cm,below right, yshift=-1pt] at (0,-3) {%
+         \sffamily
+         \Huge\color{\titlefontcolor@cx}Title Format\vskip1sp \medskip\Large% 
+         \color{\subtitlefontcolor@cx}Blue colors in jeans, dresses skirts\\ and hats.\\
+         How to dress in stylish blues. \\Getting your partner to get\\ into LaTeX. }; 
+        \IfFileExists{\fashionimage@cx}%   
+           {\node at (12.5,-9) {\includegraphics[width=\imagewidth@cx]{\fashionimage@cx}};}%
+           { \node at (12.5,-9) {\includegraphics[width=7cm]{shock.jpg}};}%
+\end{tikzpicture}
+}
+
+At this point let us try the new code and see the small improvements we have done.
+
+\cxset{title font-color=spot!50}
+\cxset{subtitle font-color/.store in=\subtitlefontcolor@cx}
+\cxset{subtitle font-color=black!35}
+\cxset{fashion image=shock.jpg}
+
+% Image needs debugging, something is not capturing it.
+\fashion
+
+We have also used a different image and as you can observe with shock, our layout has lost its appeal, will
+probably offend some people and the color scheme seems messed up. What we will probably have to do
+is add a few more parameters, as well as measure the image’s dimension and implement different rules for
+different aspect ratios. Try at this stage and use your own code to modify the layout.
+
+\long\def\storyi{
+         In antiquity men and women saw each other as different; 
+         accordingly, they developed
+        complex taxonomies (philosophical explanations) 
+        for understanding anatomical,
+        physiological, emotional, and rational differences. \par
+
+Some of these differences seem
+profoundly odd to us moderns. Modern discussions about erotic art have often concerned the place of women: to what
+extent are they objects of social manipulation, to what extent can they be subjects?
+}
+\long\gdef\fashion#1{%
+\begin{tikzpicture}
+
+\if@debug
+  \draw [help lines] (0,0) grid (18,-13);
+  \draw[fill=red]  (0,0) circle (1.5pt) ;
+  \draw[fill=red]  (0,-3) circle (1.5pt) ;
+\else
+\fi
+% draw debug rectangles
+\node[fashion, right, baseline] (x) at (0,1) {\LARGE\color{black!30}{before}\relax};
+\draw[fill=red]  (0,1) circle (1.5pt) ;
+\node[fashion, right=1sp] at (0,0) {\LARGE\color{black!20} \so\chaptername\relax};
+
+\node[rectangle,draw, color=white, below right, fill=\fashionnumberbg@cx, text=white] at +(12,0) {\scalebox{2}{\HUGE \thechapter}};
+
+% The title of the block
+\node[fashion, text width=9cm,below right, yshift=-1pt] at (0,-3) {%
+        { \sffamily\raggedleft
+        \Huge\bfseries\color{\titlefontcolor@cx}#1\par}
+         \bigskip
+         \Large% 
+         \centering
+         \color{\subtitlefontcolor@cx}%
+         \raggedleft
+        \storyi\par}; 
+        \IfFileExists{\fashionimage@cx}%   
+           {\node at (12.5,-9) {\includegraphics[width=\imagewidth@cx]{\fashionimage@cx}};}%
+           { \node at (12.5,-9) {\includegraphics[width=7cm]{shock.jpg}};}%
+\end{tikzpicture}
+}
+
+\fashion{SEXUALITY IN ANCIENT GREECE}
+\makeatother
+\bigskip
+
+Using your document as a User Interface is like programming in a hostile environment. As mentioned
+earlier, try pen and paper, it s the quickest way to get a layout right. Adding and removing text, in layouts such
+as the one we have been developing is an essential part in getting the layout to get the layout aesthetics right.
+Of course different people have different tastes and what you like would probably be distateful to other persons.
+This is a common lament of Graphic Designers, who always complain about the value systems of their Clients.
+
+\subsection{Hooking onto LaTeX}
+
+I think the layout is now much better and it has evolved to transform itself from a modern and colorful template to a more serious one, perhaps more appropriate for scientific work.
+
+We have now won half the battle, the next battle is to hook into the |\section| or |\chapter| command using |\secdef|. As you might have noticed, the chapter number has not been incremented. We will need to also
+add it to the Table of Contents and also get the indentation after the heading to work correctly. We do not want our users to have to worry about this and adding |\noindent|’s all over the place. At this point we will also 
+add functions to add the chapter number and title to the Table of Contents. 
+
+
+\input{defaultstyle}
+\makeatletter\@specialtrue\makeatother
+\cxset{custom=fashion,
+         fashion image=otr.jpg,
+          chapter name=}
+          
+          
+          

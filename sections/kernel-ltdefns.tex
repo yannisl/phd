@@ -1,0 +1,1396 @@
+ \chapter{Definitions}
+\label{definitions}
+
+ This section contains a number of commands used in defining other macros, as well as some useseful commands,
+ that can be used by package authors. Some of these commands such as \cmd{\@height} were defined to
+ save tokens and hence memory tokens and by now they do not add much value to a modern \latexe installation.
+ However, removing them would break backward compatibility, but perhaps in your own packages you may choose
+ to improve the program readability by not using them.
+\medskip
+
+ \begin{tabular}{ll}
+ |\two@digits| & prefix a number less than 10 with `0’\\
+ |\typeout|   & display something on the terminal\\
+ |\newlinechar| & newline character\\
+ |\@height| & height\\
+ |\@width|  & width\\
+ |\@depth|  &depth\\
+ \end{tabular}
+
+  \medskip  
+\subsection{Introduction}
+
+\begin{macro}{\two@digits}
+
+Prefix a number less than 10 with `0'.
+
+\begin{teX}
+\def\two@digits#1{\ifnum#1<10 0\fi\number#1}
+\end{teX}
+\end{macro}
+
+
+  \begin{macro}{\typeout}
+    Display something on the terminal.
+\begin{teX}
+\def\typeout#1{\begingroup\set@display@protect
+    \immediate\write\@unused{#1}\endgroup}
+\end{teX}
+  \end{macro}
+
+  \begin{macro}{\newlinechar}
+    A char to be used as new-line in output to files.
+\begin{teX}
+\newlinechar`\^^J
+\end{teX}
+  \end{macro}
+
+ \subsection{Saved versions of \TeX{} primitives}
+
+  The TeX primitive |\foo| is saved as |\@@foo|.
+  The following primitives are handled in this way:
+\begin{macro}{\@@par}
+\begin{teX}
+\let\@@par=\par
+\let\@@input=\input    %%% moved earlier
+\let\@@end=\end        %%%
+\end{teX}
+  \end{macro}
+
+\begin{macro}{\@@hyph}
+\begin{macro}{\-}
+  The following comment was added when these commands were first set
+  up, 19 April 1986:
+  the |\-| command is redefined to allow it to work in the |\ttfamily|
+  type style, where automatic hyphenation is suppressed by setting
+  |\hyphenchar| to~$-1$. The original primitive \TeX{} definition is
+  saved as |\@@hyph| just in case anyone needs it.
+
+  There is a need for a robust command for a discretionary hyphen
+  since its exact representation depends on the glyphs available in
+  the current font.  For example, with suitable fonts and the
+  \texttt{T1} font encoding it is possible to use hanging hyphens.
+
+  A suitable robust definition that allows for many possible types of
+  font and encoding may be as follows:
+  \begin{verbatim}
+  \DeclareRobustCommand {\-}{%
+    \discretionary {%
+      \char \ifnum\hyphenchar\font<\z@
+              \defaulthyphenchar
+            \else
+              \hyphenchar\font
+            \fi
+                    }{}{}%
+  }
+  \end{verbatim}
+
+  The redefinition (via |\let|) of |\-| within tabbing also makes the
+  use of a robust command advisable since then any redefinition
+  of |\-| via |\DeclareRobustCommand| will not cause a conflict.
+
+  Therefore, macro writers should be hereby warned that
+  these internals will probably change! It is likely that a future
+  release of \LaTeX{} will make |\-| effectively an encoding specific
+  text command.
+
+\begin{teX}
+\let\@@hyph=\-        % Save original primitive definition
+\def\-{\discretionary{-}{}{}}
+\end{teX}
+\end{macro}
+\end{macro}
+%
+\begin{macro}{\@dischyph}
+
+%         {Define \cs{@dischyph}, was previously in ltboxes.dtx}
+\begin{teX}
+\let\@dischyph=\-
+\end{teX}
+\end{macro}
+%
+  \begin{macro}{\@@italiccorr}
+ Save the original italic correction.
+\begin{teX}
+\let\@@italiccorr=\/
+\end{teX}
+  \end{macro}
+%
+\begin{macro}{\@height}
+\begin{macro}{\@depth}
+\begin{macro}{\@width}
+\begin{macro}{\@minus}
+
+\begin{macro}{\@plus}
+
+
+The following definitions save token space  e.g., using
+|\@height| instead of height saves 5 tokens at the cost in time
+of one macro expansion.
+    
+\begin{teX}
+\def\@height{height} \def\@depth{depth} \def\@width{width}
+\def\@minus{minus}
+\def\@plus{plus}
+\end{teX}
+\begin{macro}{\hb@xt@}
+
+The next one is another 100 tokens worth.
+
+\begin{teX}
+\def\hb@xt@{\hbox to}
+\end{teX}
+\end{macro}
+\end{macro}
+\end{macro}
+\end{macro}
+\end{macro}
+\end{macro}
+
+\begin{teX}
+\message{hacks,}
+\end{teX}
+
+ \subsection{Command definitions}
+
+ This section defines the following commands:
+
+ \DescribeMacro
+  {\@namedef}\marg{NAME}\\ Expands to |\def\|\marg{NAME},
+   except name can contain any characters.
+
+ \DescribeMacro
+  {\@nameuse}\marg{NAME}\\
+   Expands to |\|\marg{NAME}.
+
+ \DescribeMacro
+  {\@ifnextchar} X\marg{YES}\marg{NO}\\
+    Expands to \meta{YES} if next character is an `X',
+          and to \meta{NO} otherwise.
+          (Uses |\reserved@a|--|\reserved@c|.)
+          NOTE: GOBBLES ANY SPACE FOLLOWING IT.
+
+ \DescribeMacro
+  {\@ifstar}\marg{YES}\marg{NO}\\
+          Gobbles following spaces and then tests if next the
+          character is a '*'.  If it is, then it gobbles the
+   `*' and expands to \meta{YES}, otherwise it expands to \meta{NO}.
+
+ \DescribeMacro
+  {\@dblarg}\marg{CMD}\marg{ARG}\\
+     Expands to |\|\marg{CMD}\oarg{ARG}\marg{ARG}.  Use
+          |\@dblarg\CS| when |\CS| takes arguments |[ARG1]{ARG2}|,
+          where default is| ARG1| = |ARG2|.
+
+ \DescribeMacro
+  {\@ifundefined}\marg{NAME}\marg{YES}\marg{NO}\\
+          : If \cs{NAME} is undefined then it executes \meta{YES},
+            otherwise it executes \meta{NO}.  More precisely,
+            true if \cs{NAME} either undefined or = |\relax|.
+
+ \DescribeMacro
+  {\@ifdefinable}|\NAME|\marg{YES}
+       Executes \meta{YES} if the user is allowed to define |\NAME|,
+            otherwise it gives an error.  The user can define |\NAME|
+            if |\@ifundefined{NAME}| is true, '|NAME|' $\neq$ '|relax|'
+            and the first three letters of '|NAME|' are not
+           '|end|', and if |\endNAME| is not defined.
+
+ \DescribeMacro
+  \newcommand|*|\marg{\cs{FOO}}\oarg{i}\marg{TEXT}\\
+         User command to define |\FOO| to be a macro with
+            i arguments (i = 0 if missing) having the definition
+            \meta{TEXT}.  Produces an error if |\FOO| already
+            defined.
+
+            Normally the command is defined to be |\long| (ie it may
+            take multiple paragraphs in its argument). In the
+            star-form, the command is not defined as |\long| and a
+            blank line in any argument to the command would generate
+            an error.
+
+ \DescribeMacro
+  \renewcommand|*|\marg{\cs{FOO}}\oarg{i}\marg{TEXT}\\
+  Same as |\newcommand|, except it checks if |\FOO| already defined.
+
+ \DescribeMacro
+  \newenvironment|*|\marg{FOO}\oarg{i}\marg{DEF1}\marg{DEF2}\\
+         equivalent to:\\
+         |\newcommand{\FOO}[i]{DEF1}| |\def{\endFOO}{DEF2}|\\
+ (or the appropriate star forms).
+
+ \DescribeMacro
+  \renewenvironment\\ Obvious companion to |\newenvironment|.
+
+
+ \DescribeMacro
+  \@cons : See description of |\output| routine.
+
+ \DescribeMacro{\@car}
+  |\@car T1 T2 ... Tn\@nil| == |T1|  (unexpanded)
+
+ \DescribeMacro{\@cdr}
+  |\@cdr T1 T2 ... Tn\@ni|l == |T2 ... Tn|     (unexpanded)
+
+ \DescribeMacro
+  \typeout\marg{message}\\ Produces a warning message on the terminal.
+
+ \DescribeMacro
+  \typein\marg{message}\\
+        Types message, asks the user to type in a command, then
+            executes it
+
+ \DescribeMacro
+  \typein\oarg{\cs{CS}}\marg{MSG}\\
+  Same as above, except defines |\CS| to be the input
+                      instead of executing it.
+
+ \changes{LaTeX209}{1992/03/18}
+  {(RMS) changed input channel from 0 to \cs{@inputcheck} to avoid
+     conflicts with other channels allocated by \cs{newread}}
+
+\begin{macro}{\typein}
+
+\begin{teX}
+\def\typein{%
+  \let\@typein\relax
+  \@testopt\@xtypein\@typein}
+\end{teX}
+
+\begin{teX}
+\def\@xtypein[#1]#2{%
+  \typeout{#2}%
+  \advance\endlinechar\@M
+  \read\@inputcheck to#1%
+  \advance\endlinechar-\@M
+  \@typein}
+\end{teX}
+\end{macro}
+
+\subsection{csname abstractions }
+
+\begin{macro}{\@namedef}
+\begin{macro}{\@nameuse}
+The \CMDI{\@namedef} and \CMDI{\@nameuse} are used to define or use \cs{csname}. You need to watch
+that the arguments are \emph{names} i.e, they are not preceded by a backslash or other active character.
+(See example~\ref{ex:namedef}).
+
+\begin{teX}
+\def\@namedef#1{\expandafter\def\csname #1\endcsname}
+\def\@nameuse#1{\csname #1\endcsname}
+\end{teX}
+\end{macro}
+\end{macro}
+
+\begin{texexample}{Using \string\@namedef}{ex:namedef}
+\makeatletter
+\@namedef{test1}{This is the first test}
+\@nameuse{test1}
+\makeatother
+\end{texexample}
+
+\section{List helper macros}
+
+\begin{macro}{\@cons} The command \cmd{\@cons} is used for the construction of lists. Its unique
+characteristic being that it constsructs \emph{elt} lists. What this means is that each entry in the list is
+preceded by another as yet undefined command |\@elt|. This can be later used to grub the element as
+its argument and do something about it.
+
+\begin{teX}
+\def\@cons#1#2{\begingroup\let\@elt\relax\xdef#1{#1\@elt #2}\endgroup}
+\end{teX}
+\end{macro}
+
+Assume we have a list \cmd{\mylist} which has been defined as |\mylist{\@elt one \@elt two ...}|.
+We can use |\@cons| to append more elements as shown in the next example,
+
+\begin{texexample}{Usage of cons}{ex:cons}
+\makeatletter
+\def\mylist{}
+\@cons\mylist{one}
+\@cons\mylist{two}
+\def\@elt{\space}
+\mylist
+\makeatother
+\end{texexample}
+
+
+\begin{macro}{\@car}
+\begin{macro}{\@cdr}
+The next two macros \cmd{\@car} and \cmd{\@cdr} capture either the first element of a list or the rest of the elements
+except the first. They are both delimited by |\@nil|.
+
+\begin{teX}
+\def\@car#1#2\@nil{#1}
+\def\@cdr#1#2\@nil{#2}
+\end{teX}
+\end{macro}
+\end{macro}
+
+\begin{macro}{\@carcube}
+
+Given a list $T_1\dots T_n$ \cmd{\@carcube} will grub $T_1 T_2 T_3$ for |T1| |T2| |T3| , $n > 3$. If you are familiar with
+lisp |car|, |cdr| and |cons| are fundamental functions. The |cons|  function is used to construct lists, and the |car|
+ and |cdr| functions are used to take them apart.\footnote{The name of the cons function is not unreasonable: it is an abbreviation of the word `construct'. The origins of the names for |car| and |cdr|, on the other hand, are esoteric: |car| is an acronym from 
+ the phrase `Contents of the Address part of the Register'; and cdr (pronounced `could-er') is an acronym from the phrase 
+ `Contents of the Decrement part of the Register'. These phrases refer to specific pieces of hardware on 
+ the very early computer on which the original Lisp was developed. Besides being obsolete, the phrases have been completely irrelevant for more than 35 years to anyone thinking about Lisp. Nonetheless, although a few brave scholars have begun to 
+ use more reasonable names for these functions, the old terms are still in use. In particular, since the terms 
+ are still used in the Emacs Lisp source code.}
+
+\begin{teX}
+\def\@carcube#1#2#3#4\@nil{#1#2#3}
+\end{teX}
+\end{macro}
+
+
+\begin{macro}{\@onlypreamble}
+\begin{macro}{\@preamblecmds}
+    This macro adds its argument to the list of commands stored in
+    |\@preamblecmds| to be
+    disabled after |\begin{document}|. These commands are redefined
+    to generate |\@notprerr| at this point.
+    
+\begin{teX}
+\def\@preamblecmds{}
+\def\@onlypreamble#1{%
+  \expandafter\gdef\expandafter\@preamblecmds\expandafter{%
+       \@preamblecmds\do#1}}
+\@onlypreamble\@onlypreamble
+\@onlypreamble\@preamblecmds
+\end{teX}
+\end{macro}
+\end{macro}
+
+\section{Command Building}
+
+\begin{macro}{\@star@or@long}
+
+\begin{teX}
+\def\@star@or@long#1{%
+  \@ifstar
+   {\let\l@ngrel@x\relax#1}%
+   {\let\l@ngrel@x\long#1}}
+\end{teX}
+\end{macro}
+%
+
+\begin{macro}{\l@ngrel@x}
+% This is either |\relax| or |\long| depending on whether the |*|-form
+% of a definition command is being executed.
+\begin{teX}
+\let\l@ngrel@x\relax
+\end{teX}
+\end{macro}
+%
+\begin{macro}{\newcommand}
+% \changes{LaTeX2e}{1993/11/23}{Macro reimplemented and extended}
+%    User level |\newcommand|.%
+\begin{teX}
+\def\newcommand{\@star@or@long\new@command}
+\end{teX}
+%
+\begin{macro}{\new@command}
+% \changes{v1.2u}{1995/10/16}{(DPC) Use \cs{@testopt} /1911}
+\begin{teX}
+\def\new@command#1{%
+  \@testopt{\@newcommand#1}0}
+\end{teX}
+\end{macro}
+\end{macro}
+%
+%
+\begin{macro}{\@newcommand}
+% \changes{LaTeX2e}{1993/11/23}{Macro added}
+\begin{macro}{\@argdef}
+% \changes{LaTeX2e}{1993/11/23}{Macro added}
+\begin{macro}{\@xargdef}
+% \changes{LaTeX2e}{1993/11/23}{Macro interface changed}
+% \changes{v1.1g}{2004/01/23}{Use kernel version of
+%                             \cs{@ifnextchar} (pr/3501)}
+%    Handling arguments for |\newcommand|.
+\begin{teX}
+\def\@newcommand#1[#2]{%
+  \kernel@ifnextchar [{\@xargdef#1[#2]}%
+                {\@argdef#1[#2]}}
+\end{teX}
+%    Define |#1| if it is definable.
+%
+%    Both here and in |\@xargdef| the replacement text is absorbed as
+%    an argument because if we are not allowed to make the definition
+%    we have to get rid of it completely.
+\begin{teX}
+\long\def\@argdef#1[#2]#3{%
+   \@ifdefinable #1{\@yargdef#1\@ne{#2}{#3}}}
+\end{teX}
+%
+% \changes{v1.2q}{1995/10/02}
+%     {New implementation, using \cs{@test@opt}}
+%    Handle the second optional argument.
+\begin{teX}
+\long\def\@xargdef#1[#2][#3]#4{%
+  \@ifdefinable#1{%
+\end{teX}
+
+    Define the actual command to be:\\
+    |\def\foo{\@protected@testopt\foo\\foo{default}}|\\
+    where |\\foo| is a csname generated from applying |\csname| and
+    |\string| to |\foo|, ie the actual name contains a backslash and
+    therefore can't clash easily with existing command names.
+    ``Default'' is the contents of the second optional argument of
+    |(re)newcommand|.
+
+% The |\aut@global| command below is only used in the autoload
+% format. If it is |\global| then a global definition will be made.
+% \changes{v1.2q}{1995/10/02}
+%     {Add \cs{aut@global} in autoload version}
+% \changes{v1.2z2}{1998/03/04}
+%     {Unnecessary \cs{expandafter} removed: pr/2758}
+\begin{teX}
+%<autoload>\aut@global
+     \expandafter\def\expandafter#1\expandafter{%
+          \expandafter
+          \@protected@testopt
+          \expandafter
+          #1%
+          \csname\string#1\endcsname
+          {#3}}%
+\end{teX}
+%    Now we define the internal macro ie |\\foo| which is supposed to
+%    pick up all arguments (optional and mandatory).
+\begin{teX}
+       \expandafter\@yargdef
+          \csname\string#1\endcsname
+           \tw@
+           {#2}%
+           {#4}}}
+\end{teX}
+\end{macro}
+\end{macro}
+\end{macro}
+%
+\begin{macro}{\@testopt}
+
+ This macro encapsulates the most common call to |\@ifnextchar|, saving
+ several tokens each time it is used in the definition of a command
+ with an optional argument.
+ 
+ |#1| The code to execute in the case that there is a |[| need not be
+ a single token but can be any sequence of commands that `expects' to
+ be followed by |[|. If this command were only used in |\newcommand|
+ definitions then |#1| would be a single token and the braces could
+ be omitted from |{#1}| in the definition below, saving a bit of
+ memory.
+
+\begin{teX}
+\long\def\@testopt#1#2{%
+  \kernel@ifnextchar[{#1}{#1[{#2}]}}
+\end{teX}
+\end{macro}
+
+\begin{macro}{\@protected@testopt}
+ Robust version of |\@testopt|. The extra argument (|#1|) must be a
+ single token. If protection is needed the call expands to |\protect|
+ applied to this token, and the 2nd and 3rd arguments are
+ discarded (by |\@x@protect|). Otherwise |\@testopt| is called on
+ the 2nd and 3rd arguments.
+
+ This method of making commands robust avoids the need for using up
+ two csnames per command, the price is the extra expansion time
+ for the |\ifx| test.
+ 
+\begin{teX}
+\def\@protected@testopt#1{%%
+  \ifx\protect\@typeset@protect
+    \expandafter\@testopt
+  \else
+    \@x@protect#1%
+  \fi}
+\end{teX}
+\end{macro}
+%
+\begin{macro}{\@yargdef}
+\begin{macro}{\@yargd@f}
+
+
+    These generate a primitive argument specification, from a
+    \LaTeX\ |[|\meta{digit}|]| form; in fact \meta{digit} can be
+    anything such that |\number|~\meta{digit} is single digit.
+
+    Reorganised slightly so that |\renewcommand{\reserved@a}[1]{foo}|
+    works.  I am not sure this is worth it, as a following
+    |\newcommand| would over-write the definition of |\reserved@a|.
+
+    Recall that \LaTeX2.09 goes into an infinite loop with
+    |\renewcommand[1]{\@tempa}{foo}| (DPC 6 October 93).
+
+    Reorganised again (DPC 1999). Rather than make a loop to
+    construct the argument spec by counting, just extract the
+    required argument spec by using a delimited argument (delimited
+    by the digit).  This is faster and uses less tokens. The coding
+    is slightly odd to preserve the old interface (using |#2| =
+    |\tw@| as the flag to surround the first argument with |[]|.  But
+    the new method did not allow for the number of arguments |#3| not
+    being given as an explicit digit; hence (further expansion of
+    this argument and use of) |\number| was added later in 1999.
+
+    It is not clear why these are still |\long|.
+
+\begin{teX}
+\long \def \@yargdef #1#2#3{%
+  \ifx#2\tw@
+    \def\reserved@b##11{[####1]}%
+  \else
+    \let\reserved@b\@gobble
+  \fi
+  \expandafter
+    \@yargd@f \expandafter{\number #3}#1%
+}
+\end{teX}
+%
+% The |\aut@global| command below is only used in the autoload
+% format. If it is |\global| then a global definition will be made.
+% \changes{v1.2q}{1995/10/02}
+%     {Add \cs{aut@global} in autoload version}
+\begin{teX}
+\long \def \@yargd@f#1#2{%
+  \def \reserved@a ##1#1##2##{%
+%<autoload>\aut@global
+    \expandafter\def\expandafter#2\reserved@b ##1#1%
+    }%
+  \l@ngrel@x \reserved@a 0##1##2##3##4##5##6##7##8##9###1%
+}
+\end{teX}
+%
+\end{macro}
+\end{macro}
+%
+\begin{macro}{\@reargdef}
+%  \changes{LaTeX2e}{1993/12/20}
+%                {Kept old version of \cs{@reargdef}, for array.sty}
+% \changes{v1.0b}{1994/03/12}{New defn, in terms of \cs{@yargdef}}
+%  \changes{v1.2y}{1996/07/26}{third arg picked up by \cs{@yargdef}}
+\begin{teX}
+\long\def\@reargdef#1[#2]{%
+  \@yargdef#1\@ne{#2}}
+\end{teX}
+\end{macro}
+%
+\begin{macro}{\renewcommand}
+%    Check the command name is already used.  If not give an error
+%    message. Then temporarily
+%    disable |\@ifdefinable| then call |\newcommand|. (Previous
+%    version |\let#1=\relax| but this does not work too well if |#1|
+%    is |\@temp|\emph{a--e}.)
+% \changes{LaTeX2e}{1993/11/23}{Macro reimplemented and extended}
+% \changes{v1.1f}{1994/05/2}{Removed surplus \cs{space} in error}
+\begin{teX}
+\def\renewcommand{\@star@or@long\renew@command}
+\end{teX}
+%
+\begin{macro}{\renew@command}
+%  \changes{v1.2y}{1996/07/26}{use \cs{relax} in place of empty arg}
+%  \changes{v1.2y}{1996/07/26}{use \cs{noexpand} instead of \cs{string}}
+% \changes{v1.2z1}{1997/10/21}{Use \cs{begingroup}/\cs{endgroup} rather
+%    than braces for grouping, to avoid generating empty math atom.}
+\begin{teX}
+\def\renew@command#1{%
+  \begingroup \escapechar\m@ne\xdef\@gtempa{{\string#1}}\endgroup
+  \expandafter\@ifundefined\@gtempa
+     {\@latex@error{\noexpand#1undefined}\@ehc}%
+     \relax
+  \let\@ifdefinable\@rc@ifdefinable
+  \new@command#1}
+\end{teX}
+\end{macro}
+\end{macro}
+
+
+\subsection{Checking if a command is definable}
+
+\begin{macro}{\@ifdefinable}
+\begin{macro}{\@@ifdefinable}
+\begin{macro}{\@rc@ifdefinable}
+%    Test if user is allowed to define a command.
+
+\begin{teX}
+\long\def\@ifdefinable #1#2{%
+      \edef\reserved@a{\expandafter\@gobble\string #1}%
+     \@ifundefined\reserved@a
+         {\edef\reserved@b{\expandafter\@carcube \reserved@a xxx\@nil}%
+          \ifx \reserved@b\@qend \@notdefinable\else
+            \ifx \reserved@a\@qrelax \@notdefinable\else
+              #2%
+            \fi
+          \fi}%
+         \@notdefinable}
+\end{teX}
+%    Saved definition of |\@ifdefinable|.
+
+\begin{teX}
+\let\@@ifdefinable\@ifdefinable
+\end{teX}
+
+%    Version of |\@ifdefinable| for use with |\renewcommand|.  Does
+%    not do the check this time, but restores the normal definition.
+
+\begin{teX}
+\long\def\@rc@ifdefinable#1#2{%
+  \let\@ifdefinable\@@ifdefinable
+  #2}
+\end{teX}
+\end{macro}
+\end{macro}
+\end{macro}
+
+This command is not a general command for package builders but it has its uses. If the command
+has been defined then it issues an error message via \CMDI{\@notdefinable}. In the example
+below we save the \cmd{\@notdefinable} in order to redirect the error message to the example.
+We check if the counter |c@chapter| can be defined, since it has it will activate the |\@notdefinable| and
+print an error. We then restore the command to its previous meaning.
+
+\begin{texexample}{ifdefinable}{ex:ifdefinable}
+\makeatletter
+\let\save@notdefinable\@notdefinable
+\def\@notdefinable{Not definable}
+\@ifdefinable{c@chapter}{true}
+\let\@notdefinable\save@notdefinable
+\makeatother
+\end{texexample}
+
+\section{Environment Building commands}
+
+\begin{macro}{\newenvironment}
+
+    Define a new user environment.
+    |#1| is the environment name. |#2#| Grabs all the tokens up to
+    the first |{|. These will be any optional arguments. They are not
+    parsed at this point, but are just passed to |\@newenv| which
+    will eventually call |\newcommand|. Any optional arguments will
+    then be parsed by |\newcommand| as it defines the command that
+    executes the `begin code' of the environment.
+
+    This |#2#| trick removed with version 1.2i as it fails if a |{|
+    occurs in the optional argument. Now use |\@ifnextchar| directly.
+\begin{teX}
+\def\newenvironment{\@star@or@long\new@environment}
+\end{teX}
+%
+\begin{macro}{\new@environment}
+
+\begin{teX}
+\def\new@environment#1{%
+  \@testopt{\@newenva#1}0}
+\end{teX}
+%
+\begin{macro}{\@newenva}
+
+\begin{teX}
+\def\@newenva#1[#2]{%
+   \kernel@ifnextchar [{\@newenvb#1[#2]}{\@newenv{#1}{[#2]}}}
+\end{teX}
+\end{macro}
+%
+\begin{macro}{\@newenvb}
+
+\begin{teX}
+\def\@newenvb#1[#2][#3]{\@newenv{#1}{[#2][{#3}]}}
+\end{teX}
+\end{macro}
+\end{macro}
+\end{macro}
+%
+%
+\begin{macro}{\renewenvironment}
+    Redefine an environment.
+    For |\renewenvironment| disable |\@ifdefinable| and then call
+    |\newenvironment|.  It is OK to |\let| the argument to |\relax|
+    here as there should not be a |@temp|\ldots\ environment.
+
+\begin{teX}
+\def\renewenvironment{\@star@or@long\renew@environment}
+\end{teX}
+
+\begin{macro}{\renew@environment}
+
+\begin{teX}
+\def\renew@environment#1{%
+  \@ifundefined{#1}%
+     {\@latex@error{Environment #1 undefined}\@ehc
+     }\relax
+  \expandafter\let\csname#1\endcsname\relax
+  \expandafter\let\csname end#1\endcsname\relax
+  \new@environment{#1}}
+\end{teX}
+\end{macro}
+\end{macro}
+
+
+\begin{macro}{\@newenv}
+
+    The internal version of |\newenvironment|.
+
+    Call |\newcommand| to define the \meta{begin-code} for the
+    environment.  |\def| is used for the \meta{end-code} as it does
+    not take arguments. (but may contain |\par|s)
+
+ Make sure that an attempt to define a `graf' or `group' environment
+ fails.
+\begin{teX}
+\long\def\@newenv#1#2#3#4{%
+  \@ifundefined{#1}%
+    {\expandafter\let\csname#1\expandafter\endcsname
+                         \csname end#1\endcsname}%
+    \relax
+  \expandafter\new@command
+     \csname #1\endcsname#2{#3}%
+\end{teX}
+
+%     {Add \cs{aut@global} in autoload version}
+\begin{teX}
+%<autoload>\aut@global
+     \l@ngrel@x\expandafter\def\csname end#1\endcsname{#4}}
+\end{teX}
+\end{macro}
+
+\section{newif}
+
+\begin{macro}{\newif}
+This is as the notes in the kernel mention a different type of allocation. A macro
+to define boolean switches
+
+ For example,
+ |\newif\iffoo| creates |\footrue|, |\foofalse| to go with |\iffoo|.
+ 
+ Before we describe how this is achieved we make a small digression to test a not so widely
+ known trick to get the \cmd{\string} not to print the backslash, by setting the |\escapechar|
+ to -1. This is really an esoteric trick.
+ 
+ \begin{texexample}{escapechar}{ex:escapechar}
+ \bgroup
+ \def\test{This is a test}
+ \makeatletter
+ \escapechar\m@ne
+ \test
+ 
+ \string\test
+ \makeatother
+ \egroup
+ \end{texexample}
+ 
+The \cmd{\newif} is defined in a very clever way.  At line [\ref{atif}] it receives two arguments
+the |\iftest| and |\iffalse|
+
+\begin{teX}
+\def\newif#1{%  \iftest 
+  \count@\escapechar \escapechar\m@ne
+    \let#1\iffalse
+    \@if#1\iftrue
+    \@if#1\iffalse
+  \escapechar\count@}
+\end{teX}
+
+\begin{macro}{\@if}
+The auxiliary macro for the |\newif| command.
+
+\begin{teX}
+\def\@if#1#2{% (*@\label{atif} @*)
+  \expandafter\def\csname\expandafter\@gobbletwo\string#1%
+                    \expandafter\@gobbletwo\string#2\endcsname
+                       {\let#1#2}}
+\end{teX}
+\end{macro}
+\end{macro}
+
+This is a mind twisting way to define the |\newif| and it would get I am sure would be applauded by every Byzantine
+General. It also resolved a long standing query in my head as to why there was never a |@gobblethree| command in the
+kernel  (see \autoref{gobble}).
+
+\section{Provide version of commands}
+
+\begin{macro}{\providecommand}
+
+ |\providecommand| takes the same arguments as |\newcommand|, but
+ discards them if |#1| is already defined, Otherwise it just acts like
+ |\newcommand|. This implementation currently leaves any discarded
+ definition in |\reserved@a| (and possibly |\\reserved@a|) this
+ wastes a bit of space, but it will be reclaimed as soon as these
+ scratch macros are redefined.
+
+
+\begin{teX}
+\def\providecommand{\@star@or@long\provide@command}
+\end{teX}
+
+\begin{macro}{\provide@command}
+
+\begin{teX}
+\def\provide@command#1{%
+  \begingroup
+    \escapechar\m@ne\xdef\@gtempa{{\string#1}}%
+  \endgroup
+  \expandafter\@ifundefined\@gtempa
+    {\def\reserved@a{\new@command#1}}%
+    {\def\reserved@a{\renew@command\reserved@a}}%
+   \reserved@a}%
+\end{teX}
+\end{macro}
+\end{macro}
+
+\begin{macro}{\CheckCommand}
+
+    |\CheckCommand| takes the same arguments as |\newcommand|. If
+    the command already exists, with the same definition, then
+    nothing happens, otherwise a warning is issued. Useful for
+    checking the current state befor a macro package starts
+    redefining things.  Currently two macros are considered to have
+    the same definition if they are the same except for different
+    default arguments.  That is, if the old definition was:
+    |\newcommand\xxx[2][a]{(#1)(#2)}| then
+    |\CheckCommand\xxx[2][b]{(#1)(#2)}| would \emph{not} generate a
+    warning, but, for instance |\CheckCommand\xxx[2]{(#1)(#2)}|
+    would.
+\begin{teX}
+\def\CheckCommand{\@star@or@long\check@command}
+\end{teX}
+    |\CheckCommand| is only available in the preamble part of the
+    document.
+\begin{teX}
+\@onlypreamble\CheckCommand
+\end{teX}
+
+\begin{macro}{\check@command}
+\begin{teX}
+\def\check@command#1#2#{\@check@c#1{#2}}
+\@onlypreamble\check@command
+\end{teX}
+\end{macro}
+\end{macro}
+
+\begin{macro}{\@check@c}
+    |\CheckCommand| itself just grabs all the arguments we need,
+    without actually looking for |[| optional argument forms.  Now
+    define |\reserved@a|. If |\\reserved@a| is then defined, compare it
+    with the ``|\#1|' otherwise compare |\reserved@a| with |#1|.
+\begin{teX}
+\long\def\@check@c#1#2#3{%
+  \expandafter\let\csname\string\reserved@a\endcsname\relax
+  \renew@command\reserved@a#2{#3}%
+  \@ifundefined{\string\reserved@a}%
+   {\@check@eq#1\reserved@a}%
+   {\expandafter\@check@eq
+           \csname\string#1\expandafter\endcsname
+           \csname\string\reserved@a\endcsname}}
+\@onlypreamble\@check@c
+\end{teX}
+\end{macro}
+%
+\begin{macro}{\@check@eq}
+     Complain if |#1| and |#2| are not |\ifx| equal.
+\begin{teX}
+\def\@check@eq#1#2{%
+  \ifx#1#2\else
+     \@latex@warning@no@line
+               {Command \noexpand#1 has
+                changed.\MessageBreak
+                Check if current package is valid}%
+  \fi}
+\@onlypreamble\@check@eq
+\end{teX}
+\end{macro}
+
+\subsection{Argument gobbling command utilities}
+\label{gobble}
+
+\begin{macro}{\@gobble}
+\begin{macro}{\@gobbletwo}
+\begin{macro}{\@gobblefour}
+
+    The |\@gobble| macro is used to get rid of its argument.
+\begin{teX}
+\long\def \@gobble #1{}
+\long\def \@gobbletwo #1#2{}
+\long\def \@gobblefour #1#2#3#4{}
+\end{teX}
+\end{macro}
+\end{macro}
+\end{macro}
+
+\section{Other argument grabbers}
+
+\begin{macro}{\@firstofone}
+\begin{macro}{\@firstoftwo}
+\begin{macro}{\@secondoftwo}
+%    Some argument-grabbers.
+\begin{teX}
+\long\def\@firstofone#1{#1}
+\long\def\@firstoftwo#1#2{#1}
+\long\def\@secondoftwo#1#2{#2}
+\end{teX}
+
+\begin{macro}{\@iden}
+    |\@iden| is another name for |\@firstofone| for
+    compatibility reasons.
+\begin{teX}
+\let\@iden\@firstofone
+\end{teX}
+\end{macro}
+\end{macro}
+\end{macro}
+\end{macro}
+%
+\begin{macro}{\@thirdofthree}
+%    Another grabber now used in the encoding specific
+%    section.
+
+\begin{teX}
+\long\def\@thirdofthree#1#2#3{#3}
+\end{teX}
+\end{macro}
+%
+%
+\begin{macro}{\@expandtwoargs}
+ A macro to totally expand two arguments to another macro
+   
+\begin{teX}
+\def\@expandtwoargs#1#2#3{%
+\edef\reserved@a{\noexpand#1{#2}{#3}}\reserved@a}
+\end{teX}
+\end{macro}
+
+\begin{macro}{\@backslashchar}
+    A category code 12 backslash.
+\begin{teX}
+\edef\@backslashchar{\expandafter\@gobble\string\\}
+\end{teX}
+\end{macro}
+
+Added logging message to
+    \cs{DeclareProtectedCommand}.
+
+ \section{Robust commands and protect}
+
+ Fragile and robust commands are one of the thornier issues in
+ \LaTeX's commands.  Whilst typesetting documents, \LaTeX{} makes use
+ of many of \TeX's features, such as arithmetic, defining macros, and
+ setting variables.  However, there are (at least) three different
+ occasions when these commands are not safe.  These are called
+ `moving arguments' by \LaTeX, and consist of:
+ \begin{itemize}
+ \item writing information to a file, such as indexes or tables of
+    contents.
+ \item writing information to the screen.
+ \item inside an |\edef|, |\message|, |\mark|, or other command which
+    evaluates its argument fully.
+ \end{itemize}
+ The method \LaTeX{} uses for making fragile commands robust is to
+ precede them with |\protect|.  This can have one of five possible
+ values:
+ 
+ \begin{itemize}
+ \item |\relax|, for normal typesetting.  So |\protect\foo| will
+    execute |\foo|.
+ \item |\string|, for writing to the screen.  So |\protect\foo| will
+    write |\foo|.
+ \item |\noexpand|, for writing to a file.  So |\protect\foo| will
+    write |\foo| followed by a space.
+ \item |\@unexpandable@protect|, for writing a moving argument to a
+    file.  So |\protect\foo| will write |\protect\foo| followed by a
+    space.  This value is also used inside |\edef|s, |\mark|s and
+    other commands which evaluate their arguments fully.
+ \item |\@unexpandable@noexpand|, for performing a deferred write
+    inside an |\edef|.  So |\protect\foo| will write |\foo| followed
+    by a space.  If you want |\protect\foo| to be written, you should
+    use |\@unexpandable@protect|. (Removed as never used).
+ \end{itemize}
+
+\begin{macro}{\@unexpandable@protect}
+\begin{macro}{\@unexpandable@noexpand}
+
+%    These commands are used for setting |\protect| inside |\edef|s.
+\begin{teX}
+\def\@unexpandable@protect{\noexpand\protect\noexpand}
+%\def\@unexpandable@noexpand{\noexpand\noexpand\noexpand}
+\end{teX}
+\end{macro}
+\end{macro}
+%
+% \changes{v1.2e}{1994/11/04}{Rewrote protected short commands
+%    using \cs{x@protect}. ASAJ.}
+%
+\begin{macro}{\DeclareRobustCommand}
+\begin{macro}{\declare@robustcommand}
+    This is a package-writers command, which has the same syntax as
+    |\newcommand|, but which declares a protected command.  It does
+    this by having\\
+    |\DeclareRobustCommand\foo|\\
+    define |\foo| to be
+    |\protect\foo<space>|,\\
+    and then use |\newcommand\foo<space>|.\\
+    Since the internal command is |\foo<space>|, when it is written
+    to an auxiliary file, it will appear as |\foo|.
+
+    We have to be a
+    bit cleverer if we're defining a short command, such as |\_|, in
+    order to make sure that the auxiliary file does not include a
+    space after the command, since |\_ a| and |\_a| aren't the same.
+    In this case we define |\_| to be:
+\begin{verbatim}
+    \x@protect\_\protect\_<space>
+\end{verbatim}
+    which expands to:
+\begin{verbatim}
+    \ifx\protect\@typeset@protect\else
+       \@x@protect@\_
+    \fi
+    \protect\_<space>
+\end{verbatim}
+    Then if |\protect| is |\@typeset@protect| (normally |\relax|)
+    then we just perform |\_<space>|, and otherwise
+    |\@x@protect@| gobbles everything up and expands to
+    |\protect\_|.
+
+    \emph{Note}: setting |\protect| to any value other than |\relax|
+    whilst in `typesetting' mode will cause commands to go into an
+    infinite loop!  In particular, setting |\relax| to |\@empty| will
+    cause |\_| to loop forever.  It will also break lots of other
+    things, such as protected |\ifmmode|s inside |\halign|s.  If you
+    really really have to do such a thing, then please set
+    |\@typeset@protect| to be |\@empty| as well.  (This is what the
+    code for |\patterns| does, for example.)
+
+    More fun with |\expandafter| and |\csname|.
+\begin{teX}
+\def\DeclareRobustCommand{\@star@or@long\declare@robustcommand}
+\end{teX}
+%
+\begin{teX}
+\def\declare@robustcommand#1{%
+   \ifx#1\@undefined\else\ifx#1\relax\else
+      \@latex@info{Redefining \string#1}%
+   \fi\fi
+   \edef\reserved@a{\string#1}%
+   \def\reserved@b{#1}%
+   \edef\reserved@b{\expandafter\strip@prefix\meaning\reserved@b}%
+\end{teX}
+% \changes{v1.2s}{1995/10/06}
+%     {Add \cs{aut@global} in autoload version}
+\begin{teX}
+%<autoload>\aut@global
+   \edef#1{%
+      \ifx\reserved@a\reserved@b
+         \noexpand\x@protect
+         \noexpand#1%
+      \fi
+      \noexpand\protect
+      \expandafter\noexpand\csname
+         \expandafter\@gobble\string#1 \endcsname
+   }%
+   \let\@ifdefinable\@rc@ifdefinable
+   \expandafter\new@command\csname
+      \expandafter\@gobble\string#1 \endcsname
+}
+\end{teX}
+\end{macro}
+\end{macro}
+%
+%
+\begin{macro}{\@x@protect}
+\begin{macro}{\x@protect}
+%
+\begin{teX}
+\def\x@protect#1{%
+   \ifx\protect\@typeset@protect\else
+      \@x@protect#1%
+   \fi
+}
+\def\@x@protect#1\fi#2#3{%
+   \fi\protect#1%
+}
+\end{teX}
+\end{macro}
+\end{macro}
+%
+\begin{macro}{\@typeset@protect}
+%
+\begin{teX}
+\let\@typeset@protect\relax
+\end{teX}
+\end{macro}
+%
+% \changes{v1.2e}{1994/11/04}{Added commands for setting and restoring
+%    \cs{protect}.  ASAJ.}
+%
+\begin{macro}{\set@display@protect}
+\begin{macro}{\set@typeset@protect}
+%    These macros set |\protect| appropriately for typesetting or
+%    displaying.
+% \changes{v1.2o}{1995/07/03}{Use \cs{@typeset@protect} for init}
+\begin{teX}
+\def\set@display@protect{\let\protect\string}
+\def\set@typeset@protect{\let\protect\@typeset@protect}
+\end{teX}
+\end{macro}
+\end{macro}
+%
+\begin{macro}{\protected@edef}
+\begin{macro}{\protected@xdef}
+\begin{macro}{\unrestored@protected@xdef}
+\begin{macro}{\restore@protect}
+    The commands |\protected@edef| and |\protected@xdef| perform
+    `safe' |\edef|s and |\xdef|s, saving and restoring |\protect|
+    appropriately.  For cases where restoring |\protect| doesn't
+    matter, there's an `unsafe' |\unrestored@protected@xdef|, useful
+    if you know what you're doing!
+    
+\begin{teX}
+\def\protected@edef{%
+   \let\@@protect\protect
+   \let\protect\@unexpandable@protect
+   \afterassignment\restore@protect
+   \edef
+}
+\def\protected@xdef{%
+   \let\@@protect\protect
+   \let\protect\@unexpandable@protect
+   \afterassignment\restore@protect
+   \xdef
+}
+\def\unrestored@protected@xdef{%
+   \let\protect\@unexpandable@protect
+   \xdef
+}
+\def\restore@protect{\let\protect\@@protect}
+\end{teX}
+\end{macro}
+\end{macro}
+\end{macro}
+\end{macro}
+%
+%
+\begin{macro}{\protect}
+%    The normal meaning of |\protect|
+% \changes{v1.2j}{1995/04/29}{Init \cs{protect} here}
+\begin{teX}
+\set@typeset@protect
+\end{teX}
+\end{macro}
+%
+\subsection{Internal defining commands}
+%
+% These commands are used internally to define other \LaTeX{}
+% commands.
+\begin{macro}{\@ifundefined}
+% \changes{LaTeX2e}{1993/11/23}{Redefined to remove a trailing \cs{fi}}
+%    Check if first arg is undefined or \cs{relax} and execute second or
+%    third arg depending,
+\begin{teX}
+\def\@ifundefined#1{%
+  \expandafter\ifx\csname#1\endcsname\relax
+    \expandafter\@firstoftwo
+  \else
+    \expandafter\@secondoftwo
+  \fi}
+\end{teX}
+\end{macro}
+%
+%
+\begin{macro}{\@qend}
+\begin{macro}{\@qrelax}
+% The following define |\@qend| and |\@qrelax| to be the strings
+% `|end|' and `|relax|' with the characters |\catcode|d 12.
+\begin{teX}
+\edef\@qend{\expandafter\@cdr\string\end\@nil}
+\edef\@qrelax{\expandafter\@cdr\string\relax\@nil}
+\end{teX}
+\end{macro}
+\end{macro}
+
+
+\begin{macro}{\@ifnextchar}
+
+  |\@ifnextchar| peeks at the following character and compares it
+  with its first argument. If both are the same it executes its
+  second argument, otherwise its third.
+\begin{teX}
+\long\def\@ifnextchar#1#2#3{%
+  \let\reserved@d=#1%
+  \def\reserved@a{#2}%
+  \def\reserved@b{#3}%
+  \futurelet\@let@token\@ifnch}
+\end{teX}
+\end{macro}
+
+\begin{macro}{\kernel@ifnextchar}
+
+    This macro is the kernel version of |\@ifnextchar| which is used
+    in a couple of places to prevent the AMS variant from being used
+    since in some places this produced chaos (for example
+    if an \texttt{fd} file
+    is loaded in a random place then the optional argument to
+    |\ProvidesFile| could get printed there instead of being written
+    only in the log file.  This happened
+    when there was a space or a newline between the mandatory and
+    optional arguments! It should really be fixed in the
+    \texttt{amsmath} package one day, but\ldots
+
+    Note that there may be other places in the kernel where this version
+    should be used rather than the original, but variable, version.
+
+\begin{teX}
+\let\kernel@ifnextchar\@ifnextchar
+\end{teX}
+\end{macro}
+%
+%
+\begin{macro}{\@ifnch}
+    |\@ifnch| is a tricky macro to skip any space tokens that may
+    appear before the character in question. If it encounters a space
+    token, it calls |\@xifnch|.\footnote{There is an error in the kernel at this point in the documentation, as the
+    verbatim guards have been omitted.}
+
+\begin{teX}
+\def\@ifnch{%
+  \ifx\@let@token\@sptoken
+    \let\reserved@c\@xifnch
+  \else
+    \ifx\@let@token\reserved@d
+      \let\reserved@c\reserved@a
+    \else
+      \let\reserved@c\reserved@b
+    \fi
+  \fi
+  \reserved@c}
+\end{teX}
+\end{macro}
+%
+\begin{macro}{\@sptoken}
+    The following code makes |\@sptoken| a space token. It is
+    important here that the control sequence |\:| consists of
+    a non-letter only, so that the following whitespace is
+    significant. Together with the fact that the equal sign
+    in a |\let| may be followed by only one optional space
+    the desired effect is achieved.
+    NOTE: the following hacking must precede the definition of |\:|
+    as math medium space.
+\begin{teX}
+\def\:{\let\@sptoken= } \:  % this makes \@sptoken a space token
+\end{teX}
+\end{macro}
+%
+\begin{macro}{\@xifnch}
+    In the following definition of |\@xifnch|, |\:| is again used
+    to get a space token as delimiter into the definition.
+\begin{teX}
+\def\:{\@xifnch} \expandafter\def\: {\futurelet\@let@token\@ifnch}
+\end{teX}
+\end{macro}
+
+% \changes{v1.0n}{1994/05/10}{Added \cs{makeatletter} and
+%           \cs{makeatother} ASAJ.}
+%
+\begin{macro}{\makeatletter}
+\begin{macro}{\makeatother}
+    Make internal control sequences accessible or inaccessible.
+\begin{teX}
+\def\makeatletter{\catcode`\@11\relax}
+\def\makeatother{\catcode`\@12\relax}
+\end{teX}
+\end{macro}
+\end{macro}
+
+
+\begin{macro}{\@ifstar}
+
+ The new implementation below avoids passing the \meta{true code}
+ Through one more |\def| than the \meta{false code}, which previously
+ meant that |#| had to be written as |####| in one argument, but |##|
+ in the other. The |*| is gobbled by |\@firstoftwo|.
+\begin{teX}
+\def\@ifstar#1{\@ifnextchar *{\@firstoftwo{#1}}}
+\end{teX}
+\end{macro}
+
+\begin{macro}{\@dblarg}
+\begin{macro}{\@xdblarg}
+
+\begin{teX}
+\long\def\@dblarg#1{\kernel@ifnextchar[{#1}{\@xdblarg{#1}}}
+\long\def\@xdblarg#1#2{#1[{#2}]{#2}}
+\end{teX}
+\end{macro}
+\end{macro}
+%
+\begin{macro}{\@sanitize}
+
+ The command |\@sanitize| changes the catcode of all special characters
+ except for braces to `other'.  It can be used for commands like
+ |\index| that want to write their arguments verbatim.  Needless to
+ say, this command should only be executed within a group, or chaos
+ will ensue.
+
+\begin{teX}
+\def\@sanitize{\@makeother\ \@makeother\\\@makeother\$\@makeother\&%
+\@makeother\#\@makeother\^\@makeother\_\@makeother\%\@makeother\~}
+\end{teX}
+\end{macro}
+%
+\begin{macro}{\@onelevel@sanitize}
+% \changes{v1.2c}{1994/10/30}{Macro added}
+
+    This makes the whole ``meaning'' of |#1| (its one-level
+    expansion) into catcode 12 tokens: it could be used in
+    |\DeclareRobustCommand|.
+
+    If it is to be used on default float specifiers, this should be
+    done when they are defined.
+\begin{teX}
+\def \@onelevel@sanitize #1{%
+  \edef #1{\expandafter\strip@prefix
+           \meaning #1}%
+}
+\end{teX}
+\end{macro}
+
+ \subsection{Commands for Autoloading}
+
+
+\begin{macro}{\aut@global}
+% \changes{v1.2q}{1995/10/02}
+%     {Macro added}
+% This command is only defined in the `autoload' format. It is
+% normally |\relax| but may be set to |\global|, in which case
+% |\newif| and the commands based on |\newcommand| will all make
+% global definitions.
+\begin{teX}
+\let\aut@global\relax
+\end{teX}
+\end{macro}
+%
+\begin{macro}{\@autoload}
+
+Use \cs{@@input} not \cs{input} to save string space and
+      stops autoload files appearing in \cs{listfiles}
+
+ This macro is only defined in the `autoload' format. It inputs a
+ package `|auto#1.sty|' within a local group, and with normalised
+ catcodes. |\aut@global| is set to |\global| so that |\newif|
+ |\newcommand| and related commands make global definitions.
+\begin{teX}
+\def\@autoload#1{%
+  \begingroup
+  \makeatletter
+  \let\aut@global\global
+  \nfss@catcodes
+  \catcode`\ =10
+  \let\@latex@e@error\@gobble
+  \@@input auto#1.sty\relax
+  \endgroup}
+\end{teX}
+\end{macro}
+
+This been a rather long discussion, but this is almost the heart of the kernel commands taht are most useful
+for package writers. Spend time to understand this section well, as many of the hacks described here are useful
+and are used in most of the other sections of the kernel.
+
+

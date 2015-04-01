@@ -1,10 +1,17 @@
 
 \chapter{Floats}
 \index{floats}
-\index{floats!tables}
-\index{floats!figures}
+\index{floats>tables}
+\index{floats>figures}
+\index{floats>typography}
 
-Good typography dictates to place images on certain portions of the page. Automating the placement of images is one of the fundamental benefits of using \latex2e. It ensures that pages are not left with large empty portions and that images do not overfill a page.
+Good typography places images and tabels only on certain portions of the page, normally at the top or bottom of the page or at special pages that only hold images or tables. Automating the placement of images is one of the fundamental benefits of using \latex2e. It ensures that pages are not left with large empty portions and that images do not overfill a page. We will start with an explanation of the difficulties of designing algorithms for the automatic placement of figures and some of the limitations and solutions offered by \latexe. Remember that this computer science problem is a sub-problem of the page breaking algorithm, so we will focus here to discuss some layouts that are difficult to be automated. 
+
+\begin{figure}[htb]
+\includegraphics[width=\textwidth]{./images/floats/postmodernism-01.jpg}
+\caption{Verso and recto pages, from \textit{Postmodernism}. This book has a particular style and we will use it as an example to start building some specifications for new float types.}
+\label{fig:postmodern1}
+\end{figure}
 
 Most publications contain a lot of figures and tables. There are instances where
 a table can be broken across pages (for example using the package |longtable|), but this is unacceptable for figures. For this reason
@@ -21,6 +28,11 @@ are written the same way; they differ only in the text that is prepended in the
 caption. Moreover, there are two environments that can be used in double column documents
 to generate floats that may occupy both columns: the \cs{figure*} and the \cs{table*}
 environments. Here is how we can begin a table or a figure:
+
+\begin{figure}[hb]
+\includegraphics[width=\textwidth]{./images/floats/evolution-of-insects.jpg}
+\caption{Two page spread from \textit{Evolution of Insects. What makes this particular layout interesting is the full page figure at the left page, which was placed on a two column layout but with columns of different width. The right page carries images, which could easily be handled by \latexe.   }}
+\end{figure}
 
 \begin{environment}{table}
 \begin{environment}{table*}
@@ -56,9 +68,150 @@ forces \latex to actually ignore most of the internal parameters related to floa
 \latex also provides the command \cs{suppressfloats},which prevents \latex from putting the float on another page, unless there is really no space left.
 
 
-\section{The float package}
+\section{Full page floats}
 
-The \docpkg{float} package provides a friendly interface to define new float objects. Moreover, the package
+\begin{figure}[hbt]
+\includegraphics[width=\textwidth]{./images/floats/victorian-england.jpg}
+\caption{Full page image float, but with the caption in the margin on the next page}
+\label{fig:victorian}
+\end{figure}
+
+In many respects it is easier to deal with full page floats. The difficulties for layouts that are a bit out of the ordinary can mostly be handled within the current capabilities of the \latexe output and page breaking routines. However, it does break the author’s train of thought to stop and handle the sizing of pages, zero with boxes and the like. For example to design an algorithm for figure~\ref{fig:victorian}, the following steps need to take place:
+
+\begin{enumerate}
+\item  A float is defined as $\Phi \colon \in \{f_i\dots f_n \}$, which we denote as a list containing all float types available. 
+\item Determine the type of figure style that we want to implement. Let us denote it as 
+         $f = \{h_i,w_i,p_p, f(z)\}$, where f is a function that determines the positioning and resizing of the image.
+\item Start a new page box.
+\item Measure the width $w_i$  and height of the image $h_i$. If the width $w_i>P_t$ then when the image is placed on the page it needs to be shifted into the left margin by $(P_t-w_i)/2$. We would prefer to shift the image, rather than changing the page geometry to avoid some of the problems of the paging algorithm of \tex. 
+\item Insert the image.
+\item Insert any footer or header. 
+\item Position caption on next page.          
+\end{enumerate}
+
+All but the last can be taken care by the current \latexe routines. 
+
+\begin{figure}[htbp]
+\includegraphics[width=\textwidth]{./images/floats/visual-confections.jpg}
+\caption{From Visual Explanations}
+\end{figure}
+
+
+\section{Towards automating design}
+\index{float>create,new}
+
+Provided algorithms can be developed, it is up to the imagination of the programmer as to how to capture different styles in a book. However, hard it appears to us now, as we limited in the options offered by the programming language, it is possible that some form of graphic AI can be build into the typesetting of books.
+
+\begin{figure}[htbp]
+\includegraphics[width=\textwidth]{./images/floats/nude-photography.jpg}
+\caption{}
+\label{fig:nude01}
+\end{figure}
+
+I apologize, if my choice of examples are from a book that might offend the sensitivities of some readers, but this particular book, had some good examples, illustrating the importnace of size and positioning of floats. In Figure~\ref{fig:nude01} there are two identical images, the first one positioned at the left outer margin and the other one at the right page is positioned on top and is lined with the outer margin.
+
+
+\lipsum[1-5]
+
+It is instructive at this point in time to remind ourselves that images are just boxes.
+\begin{figure}[!b]
+\expandafter\ifodd\thepage\relax
+  \hbox to \textwidth{\includegraphics[height=5cm]{./images/amato.jpg}\hfill}
+\else
+  \hbox to \textwidth{\hfill \includegraphics[height=10cm]{./images/amato.jpg}}
+\fi
+\end{figure}
+
+If we add some code then it will float on the next page, but first let us refresh how we can measure the height and width of the image.
+\newbox\imgbox
+\begin{scriptexample}{}{}
+\begin{verbatim}
+\newbox\imgbox
+\setbox\imgbox= \hbox{\includegraphics[height=2cm]{./images/amato.jpg}}%
+
+Width of image is \the\wd\imgbox and the height is \the\ht\imgbox
+\end{verbatim}
+\end{scriptexample}
+
+This will result in:
+
+\begin{scriptexample}{}{}
+\setbox\imgbox= \hbox{\includegraphics[height=2cm]{./images/amato.jpg}}%
+Width of image is \the\wd\imgbox\ and the height is \the\ht\imgbox  
+\end{scriptexample}
+
+This simple procedure will be used fairly often, we will place material in a box and then measure its width and height in order to have TeX calculate its dimensions, which can be used later to do more intelligent things with images. 
+
+\begin{figure}[tb]
+\ifoddpage
+  \hbox to \textwidth{\includegraphics[height=3cm]{./images/amato.jpg}\hfill}%
+\else
+  \hbox to \textwidth{\hfill \includegraphics[height=4cm]{./images/amato.jpg}}%
+\fi
+\end{figure}
+
+
+\section{Customizing Float Placement}
+
+The automatic placement of figures by \latexe are controlled by a set of counters and macros. These counters do not affect float pages. Specifying [!] in the float placement option causes \latex to ignore these parameters. The values of these counters are set with the \cs{setcounter} command. For example,
+
+\begin{verbatim}
+\setcounter{topnumber}{4}
+\end{verbatim}
+
+\begin{table}[htbp]
+\caption{Float Placement Counters}
+\centering
+\begin{tabularx}{0.8\textwidth}{|l|X|}
+\hline
+|topnumber| & The maximum number of floats allowed at the top of a text page (the default is 2).\\
+\hline
+|bottomnumber| &The maximum number of floats allowed at the bottom of a text
+page (the default is 1).\\
+\hline
+|totalnumber| &The maximum number of floats allowed on any one text page
+(the default is 3)\\
+\hline
+\end{tabularx}
+\end{table}
+
+\reversemarginpar
+
+\section{Placement Fraction Guidelines}
+
+\begin{macro}{\textfaction}
+    Setting \textfraction smaller than 0.15 is discouraged as it produces hardto-read
+    pages. If a figure’s height is more than 85\% of \cmd{\textheight}, it almost
+    certainly looks better by itself on a float page than squeezed on a text page
+    with a couple of lines of text below it.
+    
+    Setting \cmd{\textfraction} to zero as permits a text page to have
+   no text, which confuses \latex and leads to badly-formatted pages.
+\end{macro}
+%
+\begin{macro}{\topfraction}
+Never set \cmd{\topfraction} larger than 1 - \cmd{\textfraction}, as that causes contradictions
+in the float-placing algorithm.
+\end{macro}
+
+\begin{quote}
+\begin{verbatim}
+\renewcommand{\topfraction}{.85}
+\renewcommand{\bottomfraction}{.7} % .3 in kernel.
+\renewcommand{\textfraction}{.15}
+\renewcommand{\floatpagefraction}{.7}
+\renewcommand{\dbltopfraction}{.66}
+\renewcommand{\dblfloatpagefraction}{.66}
+\setcounter{topnumber}{9}
+\setcounter{bottomnumber}{9}
+\setcounter{totalnumber}{20}
+\setcounter{dbltopnumber}{9}
+\end{verbatim}
+\end{quote}
+
+\section{The float package}
+ 
+The \docpkg{float} package provides a friendly interface to define image new float objects. Moreover, the package
 defines certain \emph{float styles} that can be used to define new floating objects.  It
 was designed by Anselm Lingnau. New float objects can be defined with the command.\index{floats>float styles}
 
@@ -142,207 +295,14 @@ command takes only one argument, which is the name of a ‘‘float style’’:
 \caption{. . . caption . . . }
 \end{Photo}
 
-\newlength{\egwidth}\setlength{\egwidth}{0.48\textwidth}
 
-\newenvironment{ega}%
-{\begin{list}{}{\setlength{\leftmargin}{0.02\textwidth}%
-\setlength{\rightmargin}{\leftmargin}}\item[]\footnotesize}%
-{\end{list}}
-
-\newenvironment{egbox}%
-{\begin{minipage}[t]{\egwidth}}%
-{\end{minipage}}
-
-\newcommand{\egstart}{\begin{ega}\begin{egbox}}
-\newcommand{\egmid}{\end{egbox}\hfill\begin{egbox}}
-\newcommand{\egend}{\end{egbox}\end{ega}}
-
-% one or two other commands
-
-\newcommand{\fn}[1]{\hbox{\tt #1}}
-\newcommand{\llo}[1]{(see line #1)}
-\newcommand{\lls}[1]{(see lines #1)}
+                                             
+\begin{plate}[h]
+\caption{This is a plate}
+ \end{plate}                                             
 
 
-\egstart
-\begin{verbatim}
-Here is some advice to remember:
-\begin{quotation}
-Environments for making
-...other things as well.
-
-Many problems
-...environments.
-\end{quotation}
-\end{verbatim}
-\egmid%
-Here is some advice to remember:
-\begin{quotation}
-Environments for making quotations
-can be used for other things as well.
-
-Many problems can be solved by
-novel applications of existing
-environments.
-\end{quotation}
-\egend
-
-The \cs{tabbing} environment overcomes this problem. Within it you set
-tabstops and tab to them much like you do on a typewriter.  Tabstops are
-set with the |\=| command, and the |\>| command moves to the
-next stop.  The
-|\\| command is used to separate each line.  A line that ends |\kill|
-produces no output, and can be used to set tabstops:
-
-
-\begin{teX}
-\begin{tabbing}
- Income \=Expenditure \= \kill
- Income \>Expenditure \>Result\\
- 20s 0d  \>19s 11d \>Happiness\\
- 20s 0d  \>20s 1d  \>Misery \\
-\end{tabbing}
-\end{teX}
-
-\smallskip
-
-\begin{tabbing}
-Income \=Expenditure \=    \kill
-Income \>Expenditure \>Result \\
-20s 0d \>19s 11d \>Happiness   \\
-20s 0d \>20s 1d  \>Misery    \\
-\end{tabbing}
-
-
-Unlike a typewriter's tab key, the |\>| command always moves to the next
-tabstop in sequence, even if this means moving to the left.  This can cause
-text to be overwritten if the gap between two tabstops is too small.
-
-
-
-\section{Environment}
-
-\begin{teX}
-\def\beginstory{
-  \vskip 0.5in                 % Skip down 1/2 before story
-   \begingroup                  % Start of formatting properties
-   \leftskip 1in\rightskip 1in  % Wider margins for narrower text
-   \itshape                     % Italic font
-   \noindent{.\dotfill{}.\par}  % Make dotted line
-	% Text after close of \beginstory will be story formatted
-}
-
-\def\endstory{
-  \par\noindent{.\dotfill{}.\par}  % Make dotted line
-  \endgroup                        % End of formatting properties
-  \vskip 0.5in                    % Skip final 1/2 inch
-}
-
-\beginstory 
-
-  Just a short story 
-
-\endstory
-
-\end{teX}
-
-
-
-Here's a story about the formative era of personal computing. I
-originally wrote it in 1999, but the point it makes is still valid.
-Hope you like it.
-
-
-
-\subsection*{The \protect\latex way}
-LaTeX implements macros |\begin| and |\end|. These are a generic pair whose argument determines the environment that's being begun or ended.
-
-LaTeX makes it much easier to code environments. Here's a generic environment definition:
-
-|\newenvironment{environment_name}{stuff to do before text}{stuff to do after text}|
-
-That's it -- the \cs{newenvironment} macro takes three arguments:
-The name of the environment being created
-The stuff to do before the text being assigned that environment
-The stuff to do after the text being assigned that environment
-
-The resemblance to \tex paired macros is obvious, but \latex  environments make it generic across all environments, and place the beginning and ending code in one place. Not only that, but because the environment has one name instead of two different names, it's very easy for a front end like LyX to assign environments to highlighted stretches of text.
-
-The |\newenvironment|  macro works only when the environment name is undefined. If there's already an environment with that name, use|\renewenvironment|  instead. If you don't know, there are ways to test.
-
-The following is a LaTeX version of the |\beginstory| \ldots | \endstory| example, with the two macros folded into the definition of one environment called story.
-
-
-Lamport, cleverly defined macros that automatically, create the necessary \tex \cs{begingroup} and \cs{endgroup} commands. You can find the code in the |source2e| file and which is shown below:\footnote{You can find the full code in \texttt{File y, for ltmiscen.dtx}}
-
-\begin{teX}
-\def\begin#1{%
-  \@ifundefined{#1}%
-  {\def\reserved@a{\@latex@error{Environment #1 undefined}\@eha}}%
-  {\def\reserved@a{\def\@currenvir{#1}%
-  \edef\@currenvline{\on@line}%
-  \csname #1\endcsname}}%
-  \@ignorefalse
-  \begingroup\@endpefalse\reserved@a}
-
-
-\def\end#1{%
-  \csname end#1\endcsname\@checkend{#1}%
-  \expandafter\endgroup\if@endpe\@doendpe\fi
-  \if@ignore\@ignorefalse\ignorespaces\fi}
-\end{teX}
-
-In \latex environments are defined as 
-|\begin{foo}| and |\end{foo}| which are are used to delimit environment |foo|.
-|\begin{foo}| starts a group and calls |\foo| if it is defined, otherwise it does
-nothing.
-
-|\end{foo}| checks to see that it matches the corresponding |\begin| and if so,
-it calls |\endfoo| and does an |\endgroup|. Otherwise, |\end{foo}| does nothing.
-If |\end{foo}| needs to ignore blanks after it, then |\endfoo| should globally set
-the |@ignore| switch true with |\@ignoretrue| (this will automatically be global).
-
-NOTE: |\@@end| is defined to be the |\end| command of TEX82.
-|\enddocument| is the user's command for ending the manuscript file.
-|\stop| is a panic button to end \tex in the middle.
-
-
-\section*{Checking the environment}
-
-This is interesting in that we can use \cs{@currenvir} to check if a command is within a particular environment. The following code will be used to typeout the environment.
-
-\begin{teX}
-\begin{enumerate}
-   \item Check environment with |@currenvir|
-   \makeatletter
-   \item The current environment is \@currenvir
-   \makeatother
-\end{enumerate} 
-\end{teX}
-
-\begin{enumerate}
-\item Check environment with |@currenvir|
-\makeatletter
- \item The current environment is \@currenvir
-\makeatother
-\end{enumerate}
-
-The \cs{@checkend} \index{Latex kernel=@checkend} uses the \cs{@currenvir}\index{Latex kernel=@currenvir} to see if there is a matching
-begin environment and if it cannot find it produces an error.
-
-\begin{teX}
-\def\@checkend#1{%
-   \def\reserved@a{#1}
-   \ifx\reserved@a\@currenvir 
-   \else
-     \@badend{#1}
-   \fi
-}
-\end{teX}
-
-It is a pity that there is no real guide for explaining the \latex macros, other than just reading through them. Lamport and later his associates managed to produce code that offers the user a friendly API. Besides the scenes of this API, it also offers the package writers hundreds of useful commands.
-
-
-
-
+\begin{painting}[h]
+\caption{This is a plate}
+ \end{painting} 
 

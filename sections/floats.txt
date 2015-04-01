@@ -1,0 +1,381 @@
+==zzchapter{Floats}
+==zzindex{floats}
+==zzindex{floats!tables}
+==zzindex{floats!figures}
+
+Good typography places images and tabels only on certain portions of the page, normally at the top or bottom of the page or at special pages that only hold images or tables. Automating the placement of images is one of the fundamental benefits of using ==zzlatex2e. It ensures that pages are not left with large empty portions and that images do not overfill a page. We will start with an explanation of the difficulties of designing algorithms for the automatic placement of figures and some of the limitations and solutions offered by ==zzlatexe. Remember that this computer science problem is a sub-problem of the page breaking algorithm, so we will focus here to discuss some layouts that are difficult to be automated. 
+
+==zzbegin{figure}[htb]
+==zzincludegraphics[width===zztextwidth]{./images/floats/postmodernism-01.jpg}
+==zzcaption{Verso and recto pages, from ==zztextit{Postmodernism}. This book has a particular style and we will use it as an example to start building some specifications for new float types.}
+==zzlabel{fig:postmodern1}
+==zzend{figure}
+
+Most publications contain a lot of figures and tables. There are instances where
+a table can be broken across pages (for example using the package |longtable|), but this is unacceptable for figures. For this reason
+figures and short tables need special treatment. The rather naıve method of treating these
+objects is to start a new page every time a floating object is too large to fit on the present
+page. 
+
+A more sophisticated method to tackle this problem is to ==zzemph{float} any object that
+does not fit on the current page to a later page while filling the current page with text.
+
+This is why these objects are called floating objects. ==zzlatex2e provides two environments
+that are treated as floating objects: the |figure| and the |table| environments. Both environments
+are written the same way; they differ only in the text that is prepended in the
+caption. Moreover, there are two environments that can be used in double column documents
+to generate floats that may occupy both columns: the ==zzcs{figure*} and the ==zzcs{table*}
+environments. Here is how we can begin a table or a figure:
+
+==zzbegin{figure}[hb]
+==zzincludegraphics[width===zztextwidth]{./images/floats/evolution-of-insects.jpg}
+==zzcaption{Two page spread from ==zztextit{Evolution of Insects. What makes this particular layout interesting is the full page figure at the left page, which was placed on a two column layout but with columns of different width. The right page carries images, which could easily be handled by ==zzlatexe.   }}
+==zzend{figure}
+
+==zzbegin{environment}{table}
+==zzbegin{environment}{table*}
+ The table environment 
+==zzcs{begin}==zzmarg{table}[placement specifier ]
+==zzend{environment}
+==zzend{environment}
+
+An optional placement specifier is used to tell ==zzlatex2e where the float is allowed to be
+moved to. The placement specifier consists of a sequence of float placing permissions:
+
+==zzbegin{table}[htbp]
+==zzcentering
+==zzbegin{tabular}{lp{3.5cm}}
+==zztoprule
+Placement   & position==zz==zz
+==zzmidrule
+h                 & here==zz==zz
+t                  & top==zz==zz
+b                 & bottom==zz==zz
+p                 & on a special page containing only floats==zz==zz
+==zzbottomrule
+==zzend{tabular}
+
+==zzcaption{The ==zzlatex2e table position specifiers}
+==zzend{table}
+
+
+
+
+Apart from the float placing permissions above there exists a fifth one, namely (!), which
+forces ==zzlatex to actually ignore most of the internal parameters related to float placement.
+==zzlatex also provides the command ==zzcs{suppressfloats},which prevents ==zzlatex from putting the float on another page, unless there is really no space left.
+
+
+==zzsection{Full page floats}
+
+==zzbegin{figure}[hbt]
+==zzincludegraphics[width===zztextwidth]{./images/floats/victorian-england.jpg}
+==zzcaption{Full page image float, but with the caption in the margin on the next page}
+==zzlabel{fig:victorian}
+==zzend{figure}
+
+In many respects it is easier to deal with full page floats. The difficulties for layouts that are a bit out of the ordinary can mostly be handled within the current capabilities of the ==zzlatexe output and page breaking routines. However, it does break the author’s train of thought to stop and handle the sizing of pages, zero with boxes and the like. For example to design an algorithm for figure~==zzref{fig:victorian}, the following steps need to take place:
+
+==zzbegin{enumerate}
+==zzitem  A float is defined as $==zzPhi ==zzcolon ==zzin ==zz{f_i==zzdots f_n ==zz}$, which we denote as a list containing all float types available. 
+==zzitem Determine the type of figure style that we want to implement. Let us denote it as 
+         $f = ==zz{h_i,w_i,p_p, f(z)==zz}$, where f is a function that determines the positioning and resizing of the image.
+==zzitem Start a new page box.
+==zzitem Measure the width $w_i$  and height of the image $h_i$. If the width $w_i>P_t$ then when the image is placed on the page it needs to be shifted into the left margin by $(P_t-w_i)/2$. We would prefer to shift the image, rather than changing the page geometry to avoid some of the problems of the paging algorithm of ==zztex. 
+==zzitem Insert the image.
+==zzitem Insert any footer or header. 
+==zzitem Position caption on next page.          
+==zzend{enumerate}
+
+All but the last can be taken care by the current ==zzlatexe routines. 
+
+==zzsection{The float package}
+ 
+The ==zzdocpkg{float} package provides a friendly interface to define image new float objects. Moreover, the package
+defines certain ==zzemph{float styles} that can be used to define new floating objects.  It
+was designed by Anselm Lingnau. New float objects can be defined with the command.==zzindex{floats>float styles}
+
+==zzbegin{verbatim}
+==zznewfloat{type}{placement}{ext }[within]
+==zzend{verbatim}
+
+
+
+Here type is the ==zzemph{type}  of the new class of floats (e.g., program, diagram, photo, etc.),
+placement gives the default placement specifier, and |ext| is the filename extension
+for the file that will keep the captions in cases where we want to have a list of programs,
+list of diagrams, or other lists. The optional argument within is used to number float
+objects within some sectioning unit (e.g.,chapter, section). Here is a complete example:
+
+==zzbegin{teXXX}
+==zzfloatstyle{plain}
+==zznewfloat{Photo}{htbp}{fot}[section]
+==zzend{teXXX}
+
+
+
+
+==zzfloatstyle{plain}
+==zznewfloat{Photo}{htbp}{fot}
+
+==zzbegin{Photo}
+ ==zzcentering
+ ==zzincludegraphics[width=0.80==zzlinewidth]{./images/china-05.jpg}
+==zzcaption[a short caption]{If the caption is very long it is formatted as a paragraph, which is flushleft. If it is short it will be centered. }
+==zzend{Photo}
+
+
+==zzbegin{Photo}
+ ==zzcentering
+ ==zzincludegraphics[width=0.80==zzlinewidth]{./images/china-06.jpg}
+==zzcaption{. . . caption . . . }
+==zzend{Photo}
+
+==zzbegin{Photo}
+ ==zzcentering
+ ==zzincludegraphics[width=0.65==zzlinewidth]{./images/yaleartschool.png}
+==zzcaption{. . . caption . . . }
+==zzend{Photo}
+
+
+
+Note that after each such definition, a new 
+environment will be available. Naturally,
+its name depends on the `type' (e.g., the example code above will create the program
+environment). The `float style' can be specified with the ==zzcs{floatstyle} command. The
+command takes only one argument, which is the name of a ‘‘float style’’:
+
+==zzbegin{teXXX}
+==zzbegin{Example}
+     First verbatim line.
+     Second verbatim line.
+     Third verbatim line.
+==zzend{Example}
+==zzend{teXXX}
+
+
+
+==zzfloatstyle{ruled}
+==zznewfloat{Example}{htbp}{loe}[chapter]
+
+ ==zzbegin{Example}
+ ==zzbegin{verbatim}
+   ==zzbegin{Photo}
+      ==zzcentering
+      ==zzincludegraphics[width=0.65==zzlinewidth]{./graphics/level3.jpg}
+      ==zzcaption{. . . caption . . . }
+   ==zzend{Photo}
+==zzend{verbatim}
+==zzcaption{Example using verbatim code}
+ ==zzend{Example}
+
+==zzbegin{Photo}
+ ==zzcentering
+ ==zzincludegraphics[width=0.85==zzlinewidth]{./images/old-timer-structural-worker.jpg}
+==zzcaption{. . . caption . . . }
+==zzend{Photo}
+
+==zznewlength{==zzegwidth}==zzsetlength{==zzegwidth}{0.48==zztextwidth}
+
+==zznewenvironment{ega}%
+{==zzbegin{list}{}{==zzsetlength{==zzleftmargin}{0.02==zztextwidth}%
+==zzsetlength{==zzrightmargin}{==zzleftmargin}}==zzitem[]==zzfootnotesize}%
+{==zzend{list}}
+
+==zznewenvironment{egbox}%
+{==zzbegin{minipage}[t]{==zzegwidth}}%
+{==zzend{minipage}}
+
+==zznewcommand{==zzegstart}{==zzbegin{ega}==zzbegin{egbox}}
+==zznewcommand{==zzegmid}{==zzend{egbox}==zzhfill==zzbegin{egbox}}
+==zznewcommand{==zzegend}{==zzend{egbox}==zzend{ega}}
+
+% one or two other commands
+
+==zznewcommand{==zzfn}[1]{==zzhbox{==zztt #1}}
+==zznewcommand{==zzllo}[1]{(see line #1)}
+==zznewcommand{==zzlls}[1]{(see lines #1)}
+
+
+==zzegstart
+==zzbegin{verbatim}
+Here is some advice to remember:
+==zzbegin{quotation}
+Environments for making
+...other things as well.
+
+Many problems
+...environments.
+==zzend{quotation}
+==zzend{verbatim}
+==zzegmid%
+Here is some advice to remember:
+==zzbegin{quotation}
+Environments for making quotations
+can be used for other things as well.
+
+Many problems can be solved by
+novel applications of existing
+environments.
+==zzend{quotation}
+==zzegend
+
+The ==zzcs{tabbing} environment overcomes this problem. Within it you set
+tabstops and tab to them much like you do on a typewriter.  Tabstops are
+set with the |==zz=| command, and the |==zz>| command moves to the
+next stop.  The
+|==zz==zz| command is used to separate each line.  A line that ends |==zzkill|
+produces no output, and can be used to set tabstops:
+
+
+==zzbegin{teX}
+==zzbegin{tabbing}
+ Income ==zz=Expenditure ==zz= ==zzkill
+ Income ==zz>Expenditure ==zz>Result==zz==zz
+ 20s 0d  ==zz>19s 11d ==zz>Happiness==zz==zz
+ 20s 0d  ==zz>20s 1d  ==zz>Misery ==zz==zz
+==zzend{tabbing}
+==zzend{teX}
+
+==zzsmallskip
+
+==zzbegin{tabbing}
+Income ==zz=Expenditure ==zz=    ==zzkill
+Income ==zz>Expenditure ==zz>Result ==zz==zz
+20s 0d ==zz>19s 11d ==zz>Happiness   ==zz==zz
+20s 0d ==zz>20s 1d  ==zz>Misery    ==zz==zz
+==zzend{tabbing}
+
+
+Unlike a typewriter's tab key, the |==zz>| command always moves to the next
+tabstop in sequence, even if this means moving to the left.  This can cause
+text to be overwritten if the gap between two tabstops is too small.
+
+
+
+==zzsection{Environment}
+
+==zzbegin{teX}
+==zzdef==zzbeginstory{
+  ==zzvskip 0.5in                 % Skip down 1/2 before story
+   ==zzbegingroup                  % Start of formatting properties
+   ==zzleftskip 1in==zzrightskip 1in  % Wider margins for narrower text
+   ==zzitshape                     % Italic font
+   ==zznoindent{.==zzdotfill{}.==zzpar}  % Make dotted line
+	% Text after close of ==zzbeginstory will be story formatted
+}
+
+==zzdef==zzendstory{
+  ==zzpar==zznoindent{.==zzdotfill{}.==zzpar}  % Make dotted line
+  ==zzendgroup                        % End of formatting properties
+  ==zzvskip 0.5in                    % Skip final 1/2 inch
+}
+
+==zzbeginstory 
+
+  Just a short story 
+
+==zzendstory
+
+==zzend{teX}
+
+
+
+Here's a story about the formative era of personal computing. I
+originally wrote it in 1999, but the point it makes is still valid.
+Hope you like it.
+
+
+
+==zzsubsection*{The ==zzprotect==zzlatex way}
+LaTeX implements macros |==zzbegin| and |==zzend|. These are a generic pair whose argument determines the environment that's being begun or ended.
+
+LaTeX makes it much easier to code environments. Here's a generic environment definition:
+
+|==zznewenvironment{environment_name}{stuff to do before text}{stuff to do after text}|
+
+That's it -- the ==zzcs{newenvironment} macro takes three arguments:
+The name of the environment being created
+The stuff to do before the text being assigned that environment
+The stuff to do after the text being assigned that environment
+
+The resemblance to ==zztex paired macros is obvious, but ==zzlatex  environments make it generic across all environments, and place the beginning and ending code in one place. Not only that, but because the environment has one name instead of two different names, it's very easy for a front end like LyX to assign environments to highlighted stretches of text.
+
+The |==zznewenvironment|  macro works only when the environment name is undefined. If there's already an environment with that name, use|==zzrenewenvironment|  instead. If you don't know, there are ways to test.
+
+The following is a LaTeX version of the |==zzbeginstory| ==zzldots | ==zzendstory| example, with the two macros folded into the definition of one environment called story.
+
+
+Lamport, cleverly defined macros that automatically, create the necessary ==zztex ==zzcs{begingroup} and ==zzcs{endgroup} commands. You can find the code in the |source2e| file and which is shown below:==zzfootnote{You can find the full code in ==zztexttt{File y, for ltmiscen.dtx}}
+
+==zzbegin{teX}
+==zzdef==zzbegin#1{%
+  ==zz@ifundefined{#1}%
+  {==zzdef==zzreserved@a{==zz@latex@error{Environment #1 undefined}==zz@eha}}%
+  {==zzdef==zzreserved@a{==zzdef==zz@currenvir{#1}%
+  ==zzedef==zz@currenvline{==zzon@line}%
+  ==zzcsname #1==zzendcsname}}%
+  ==zz@ignorefalse
+  ==zzbegingroup==zz@endpefalse==zzreserved@a}
+
+
+==zzdef==zzend#1{%
+  ==zzcsname end#1==zzendcsname==zz@checkend{#1}%
+  ==zzexpandafter==zzendgroup==zzif@endpe==zz@doendpe==zzfi
+  ==zzif@ignore==zz@ignorefalse==zzignorespaces==zzfi}
+==zzend{teX}
+
+In ==zzlatex environments are defined as 
+|==zzbegin{foo}| and |==zzend{foo}| which are are used to delimit environment |foo|.
+|==zzbegin{foo}| starts a group and calls |==zzfoo| if it is defined, otherwise it does
+nothing.
+
+|==zzend{foo}| checks to see that it matches the corresponding |==zzbegin| and if so,
+it calls |==zzendfoo| and does an |==zzendgroup|. Otherwise, |==zzend{foo}| does nothing.
+If |==zzend{foo}| needs to ignore blanks after it, then |==zzendfoo| should globally set
+the |@ignore| switch true with |==zz@ignoretrue| (this will automatically be global).
+
+NOTE: |==zz@@end| is defined to be the |==zzend| command of TEX82.
+|==zzenddocument| is the user's command for ending the manuscript file.
+|==zzstop| is a panic button to end ==zztex in the middle.
+
+
+==zzsection*{Checking the environment}
+
+This is interesting in that we can use ==zzcs{@currenvir} to check if a command is within a particular environment. The following code will be used to typeout the environment.
+
+==zzbegin{teX}
+==zzbegin{enumerate}
+   ==zzitem Check environment with |@currenvir|
+   ==zzmakeatletter
+   ==zzitem The current environment is ==zz@currenvir
+   ==zzmakeatother
+==zzend{enumerate} 
+==zzend{teX}
+
+==zzbegin{enumerate}
+==zzitem Check environment with |@currenvir|
+==zzmakeatletter
+ ==zzitem The current environment is ==zz@currenvir
+==zzmakeatother
+==zzend{enumerate}
+
+The ==zzcs{@checkend} ==zzindex{Latex kernel=@checkend} uses the ==zzcs{@currenvir}==zzindex{Latex kernel=@currenvir} to see if there is a matching
+begin environment and if it cannot find it produces an error.
+
+==zzbegin{teX}
+==zzdef==zz@checkend#1{%
+   ==zzdef==zzreserved@a{#1}
+   ==zzifx==zzreserved@a==zz@currenvir 
+   ==zzelse
+     ==zz@badend{#1}
+   ==zzfi
+}
+==zzend{teX}
+
+It is a pity that there is no real guide for explaining the ==zzlatex macros, other than just reading through them. Lamport and later his associates managed to produce code that offers the user a friendly API. Besides the scenes of this API, it also offers the package writers hundreds of useful commands.
+
+
+
+
+

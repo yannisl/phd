@@ -16,8 +16,11 @@
 \ProvidesPackage{xlayouts}[2012/26/03 v1.0 Overlays page geometry in a document]
 
 
-\IfFileExists{color.sty}{%
-    \RequirePackage{color}%
+
+\global\let\tikz@ensure@dollar@catcode=\relax %supress error with verbatim
+
+\IfFileExists{xcolor.sty}{%
+    \RequirePackage{xcolor}%
     \let\needscolor@cx\@empty
 }{}
 \RequirePackage{fp}
@@ -25,9 +28,9 @@
 
 \RequirePackage{changepage}
 \RequirePackage{pgf}
-\RequirePackage{pgfpages}
 \RequirePackage{tikz}
 \RequirePackage{amsmath}
+\RequirePackage{pgfpages}
 \RequirePackage{fancyhdr}
 
 
@@ -35,8 +38,7 @@
 \IfFileExists{translator.sty}
       {\RequirePackage{translator}\typeout{Translator package loaded.}}{}
 }%
-{
-\RequirePackage[french,dutch,german,italian,main=Italian]{babel}
+{\RequirePackage[french,dutch,italian,english]{babel}
 \IfFileExists{translator.sty}
       {\RequirePackage{translator}\typeout{Translator package loaded.}}{}}
 
@@ -141,9 +143,8 @@
 \newcommand\labelit@cx[1]{\ttfamily\CS{\string#1} \convert@cx{#1}}
 
 \@ifundefined{cxset}{%
-\newcommand\cxset{\pgfqkeys{/phd}}}{}
-
- %Notice this is pgf q keys
+   \newcommand\cxset{\pgfqkeys{/phd}
+}}{} %Notice this is pgf q keys
 \cxset{geometry units/.code=\printinunitsof@cx{#1},
           geometry grid color/.store in=\geometrygridcolor@cx,
           geometry lines color/.store in=\geometrylinescolor@cx,
@@ -197,7 +198,7 @@
   \fi
  \calcshift@cx
  \begin{scope}[xshift=-\shiftx@cx, yshift=-\shifty@cx]
-  \draw [grid,xstep=\PW/\xsteps@cx,ystep=\PH/\ysteps@cx]
+  \draw [grid, xstep=\PW/\xsteps@cx,ystep=\PH/\ysteps@cx]
             (current page.south west) grid ++(\PW,\PH);
 
  \draw [driver] (1in,0) -- (1in,\PH);
@@ -436,11 +437,9 @@
 \end{scope}
 \end{tikzpicture}
 }
-\@ifundefined{alphabet}{%
 \def\alphabet{%
   \normalfont\selectfont\raggedleft%
-   abcdefghijklmnopqrstuvwxyz}}{}
-
+   abcdefghijklmnopqrstuvwxyz}
 \newcommand\charactersperline{%
   \settowidth{\@tempdima}{\alphabet}
   \pgfmathparse{\textwidth/\@tempdima*26}
@@ -479,14 +478,16 @@
 \newcommand\numbertextlines{%
    \pgfmathparse{(\textheight-\topskip)/(12)-1}\pgfmathresult
 }
+\edef\tempbaseline{\the\baselineskip}
 \def\printreadability{%
 \begin{tabular}{lr}
   Characters per line &\charactersperline\\
   Alphabets per line &\alphabetsperline\\
   Alphabet length &\alphabetlength\\
-  Baselineskip & \the\baselineskip\\
+  Baselineskip & \tempbaseline\\
   Number of text lines &\numbertextlines\\
 \end{tabular}}
+
 \newlength\trypaperwidth@cx
 \newlength\trypaperheight@cx
 \newlength\trytextheight@cx

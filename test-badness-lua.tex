@@ -1,7 +1,7 @@
-\documentclass{book}
+\documentclass[9pt]{book}
 \usepackage{phd,microtype}
 \setmainfont{code2000.ttf}
-
+\luadirect{tex.vsize=3000}
 %\overfullrule.4pt
 \usepackage{xcolor}
 \luadirect{sum=0
@@ -103,7 +103,7 @@ line=0}
 \begin{document}
 
 \hbadness=-1 
-
+\looseness=-3
 \microtypesetup{activate=true}
 \begin{minipage}[t]{.15\textwidth}
 \mbox{}
@@ -121,10 +121,10 @@ $a+b +c = 12$
 
 \tikzrule
 
-
+\looseness=1
 \luadirect{sum=0  line=0}
 \microtypesetup{activate=true}
-\begin{minipage}[t]{.3\textwidth}
+\begin{minipage}[t]{\textwidth}
 \mbox{}
 \trypar\hyphenpenalty= 500
 In olden times when wishing
@@ -134,7 +134,18 @@ beautiful, but the youngest was so
 beautiful that the sun itself,
 $a+b +c = 12$
  \par
-  \luadirect{tex.print('total badness = ', sum)}
+ \begin{luacode}
+    tex.set('global', 'pageheight', '200pt')
+    tex.print('$\\sum\\beta_i =' .. sum ..'$')
+    tex.print('looseness',tex.box[0].width, tex.get('lefthyphenmin'), tex.get('righthyphenmin'),tex.get('lastpenalty'),
+   'pretolerance', tex.get('pretolerance') 
+    )
+    
+    local t = tex.primitives()
+    for k,v in pairs(t) do
+      tex.print(k..', ')
+    end  
+  \end{luacode}
  \end{minipage}
 
 \tikzrule
@@ -166,16 +177,36 @@ $a+b +c = 12$
 
 % reset
 \luadirect{sum=0  line=0}
-
+\looseness=1
 \microtypesetup{activate = true}
-\begin{minipage}[t]{\linewidth}
-\mbox{}
-\trypar\hyphenpenalty=-500
-In olden times when wishing
-still helped one, there lived a
-king whose daughters were all
-beautiful, but the youngest was so
-beautiful that the sun itself\ldots
+\begin{minipage}[t]{29pc}
+\mbox{}\arial
+\trypar\hyphenpenalty=5000
+In olden times when
+wishing still helped
+one, there lived a king
+whose daughters were all beautiful; and the
+youngest was so beautiful
+that the sun itself,
+which has seen so
+much, was astonished
+whenever it shone in
+her face. Close by
+the king’s castle lay a
+great dark forest, and
+under an old lime-tree
+in the forest was a well, and when the
+day was very warm,
+the king’s child went
+out into the forest
+and sat down by
+the side of the cool
+fountain; and when
+she was bored she
+took a golden ball,
+and threw it up on high and caught it;
+and this ball was her
+favorite plaything.
 \par
  \luadirect{tex.print('total badness = ', sum)}
 \end{minipage}
@@ -184,23 +215,33 @@ beautiful that the sun itself\ldots
 %find natural w
 \newlength{\myl}
 \def\K{\kern3.549805pt}
-\settowidth\myl{repeated repeated repeated repeated}
+\settowidth\myl{In olden times when wishing still helped one, there}
 \the\myl   
 
-\begin{luacode}               
- for _,v in ipairs(arg) do
-     local b, m, f, t
-     b = string.explode(v, "/")
-     b = b[#b]
-     m = collectgarbage("count")
-     f = fontloader.open(v)
-     if f then
-         t = fontloader.to_table(f)
-         fontloader.close(f)
-         tex.print(math.floor(collectgarbage("count") - m), b)
-         t = nil
-         collectgarbage('collect')
-     end
- end
- \end{luacode}
+$$\vbox{ 
+ 
+\halign{ 
+\strut \hfil\tt # & \quad # \hfil\cr 
+\bf \TeX{} input & \bf \TeX{} output \cr 
+\noalign{\hrule} \noalign{\smallskip} 
+\\`a la mode          & \`a la mode \cr 
+r\\'esum\\'e          & r\'esum\'e  \cr 
+No\\"el               & No\"el      \cr 
+} 
+}
+$$
+
+\def\pip{\vrule height 4 true pt } 
+ 
+ $$ \hbox{1 inch: } \hbox to 1 true in{\pip\hrulefill\pip}$$ 
+$$ \hbox{1 centimeter: }\hbox to 1 true cm{\pip\hrulefill\pip}$$ 
+$$ \hbox{20 points: }\hbox to 20 true pt{\pip\hrulefill\pip}$$ 
+$$ \hbox{1 pica: } \hbox to 1 true pc{\pip\hrulefill\pip}$$ 
+
+
+\moveright 2in
+\hbox{test}
+
+\hbox to 5 in{Getting started\hrulefill 1}
+
 \end{document}

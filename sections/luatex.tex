@@ -6,7 +6,7 @@ Although \tex and \latex can be used to program complex commands, and the proof 
 in other programming languages, they are extrememely complicated or very slow when done with \tex. Due tothis limitation many auxiliary programs have been developed to assist in common tasks, such as |bibtex| or |biber| that are used to build bibliographies and |makeindex| or |xindex| to generate indexes. In both cases, sorting a list alphabetically is a relatively easy task, but very complicated using \tex.
 
 
-Another limitation is \tex's math capabilities. One can just marvel at the efforts of \tex macro authors in achieving what they have achieved. A cursory look at the code in the \pkgname{fp} can give you an idea of the difficulties involved.
+Another limitation is \tex's math capabilities. One can just marvel at the efforts of \tex macro authors in achieving what they have achieved. A cursory look at the code in the \pkgname{fp} package \cite{fp} can give you an idea of the difficulties and complexities involved.
 
 To address the need to do more complex functions within \TeX, an extension of \TeX{} called Lua\TeX{} was begun a few years ago.  
 (The leaders of the project and main developers are Taco Hoekwater, Hartmut Henkel and Hans Hagen.) The idea was to enhance \TeX{} with a previously existing general purpose programming language. After a careful evaluation of possible candidates, the language chosen was Lua (see \href{http://www.lua.org/}{lua.org}), a powerful, fast, lightweight, embeddable scripting language that has,  of course, a free license suitable to be used with \TeX.
@@ -37,7 +37,7 @@ Inside Lua code, one can pass strings to be processed by TeX with the functions 
 
 The function can also can also take an optional number as its first argument; it is interpreted as referring to a catcode table (as defined by \cmd{\initcatcodetable} and \cmd{\savecatcodetable}), and each line is processed by TeX with that catcode regime. For instance (note that with such a minimal catcode table, braces don't even have their usual values):
 
-\begin{texexample}{catcodes}{}
+\begin{texexample}{catcodes}{lua:catcodes}
 \directlua {tex.enableprimitives('',tex.extraprimitives()) }
 \bgroup
 \initcatcodetable1
@@ -52,9 +52,9 @@ The string will be read with |_| as an escape character, and thus interpreted as
 
 If the optional number is -1, or points to an invalid (i.e. undefined) catcode table, then the strings are processed with the current catcodes, as if there was no optional argument. If it is -2, then the strings are read as if the result of \cmd{\detokenize}: all characters have catcode 12 (i.e. `other', characters that have no function beside representing themselves), except space, which has catcode 10 (as usual).
 
-\begin{scriptexample}[]{}
-Note the |\directlua {tex.enableprimitives('',tex.extraprimitives()) }|, without this directive the extra primitives are not loaded, and the example will produce errors. this is rather hidden in the documention in version \the\luatexversion running under \formatname
-\end{scriptexample}
+
+Note the |\directlua {tex.enableprimitives('',tex.extraprimitives()) }|, without this directive the extra primitives are not loaded, and the example will produce errors. this is rather hidden in the documention in version \the\luatexversion running under \formatname.
+
 
 \section{Checking for LuaTeX}
 
@@ -98,7 +98,8 @@ function print_partial_sum(n,xMin,xMax,npoints,option)
         tex.sprint("("..x..","..y..")")
         x = x+delta
     end
-    tex.sprint("}") -- We can write "};" and then it is not necessary to put ";" when used
+    -- We can write "};" and then it is not necessary to put ";" when used
+    tex.sprint("}") 
 end
 \end{luacode*}
 \newcommand\addLUADEDplot[5][]{\directlua{print_partial_sum(#2,#3,#4,#5,[[#1]])}}
@@ -215,17 +216,17 @@ To print you can use the Lua command \lstinline{tex.print}.
 Lua can handle subtraction, negative numbers, numbers with decimal points, multiplication (using *),
 division (using /), exponentiation (using \texttt{\^} ), and combinations of these. Here are some examples:
 \emphasis{directlua, tex,print}
-\begin{tcblisting}{}
+\begin{texexample}{The tex.print function}{lua:texprint}
 \directlua{tex.print(2+2^3)}
-\end{tcblisting}
+\end{texexample}
 
 \subsection{Scientific notation}
 
 You can also write numbers using the \textit{scientific notation}, where the aprt before the upper multiplied by 10 to the power after $\textup{e}$
 
-\begin{tcblisting}{}
+\begin{texexample}{Numbers scientific notation}{}
 \directlua{tex.print(1.2193263111264E17 / 987654321)}
-\end{tcblisting}
+\end{texexample}
 
 \subsection{Hexadecimal numbers}
 Lua also understands hexadecimal (base 16) numbers, using the letters
@@ -283,24 +284,24 @@ The double quote characters (") mark the beginning and end of the string. Markin
 end is all they do; they are not actually part of the string, which is why print doesn't print them, as in
 this example:
 
-\begin{tcblisting}{}
+\begin{texexample}{Strings}{lua:strings}
 \directlua{
  tex.sprint("This is a string")
 }
-\end{tcblisting}
+\end{texexample}
 
 Like numbers, strings are values, which means they can be assigned to variables. Here's an example
 
-\begin{tcblisting}{}
+\begin{texexample}{Strings are values}{lua:svalues}
 \directlua{
   Name, Phone = "Jane X. Doe", "248-555-5898"
   tex.sprint(Name, Phone)
 }
-\end{tcblisting}
+\end{texexample}
 
 \subsection{Quoting Strings with Square Brackets}
 
-\begin{tcblisting}{}
+\begin{texexample}{Multiline strings}{lua:multilinestrings}
 \directlua{
  tex.sprint([[
     There are some 
@@ -308,7 +309,7 @@ Like numbers, strings are values, which means they can be assigned to variables.
     string. 
 ]])
 }
-\end{tcblisting}
+\end{texexample}
 
 Now what do you do if you want to print to square brackets together?
 
@@ -517,20 +518,23 @@ tex.print(Fact(10))
 \end{tcblisting}
 
 \subsection{Anonymous Functions}
-\begin{tcblisting}{}
+
+Anonymous functions do not have a function name and can be assigned to a variable. 
+
+\begin{texexample}{Anonymous Functions}{ex:anonymous}
 \exec{
 (function(A, B)
    tex.print(A + B^2)
  end)(2, 3)
 }
-\end{tcblisting}
+\end{texexample}
 
 \chapter{Working with Lua Tables}
 
 This section explores a new data type called a table. It's a data structure, which means that it lets
 you combine other values. Because of its flexibility, it is Lua’s only data structure. (It is possible to
 create other, special-purpose data structures in C.)
-\begin{tcblisting}{}
+\begin{verbatim}
 \begin{filecontents*}{test.lua}
 hash = {}
 hash[ "key-1" ] = "val1"
@@ -539,34 +543,34 @@ hash[ "key-3" ] = {}
 tex.sprint(hash["key-2"])
 \end{filecontents*}
 \directlua{dofile("test.lua")}
-\end{tcblisting}
+\end{verbatim}
 
 
 \section{Using dofile}
 
 Although using \lstinline{directlua} has been a useful function so far, this is limiting in many respects.
+
+\begin{verbatim}
 \begin{filecontents*}{test.lua}
  function test(N)
   return N
 end
 tex.print(test(5))
 \end{filecontents*}
+\end{verbatim}
 
 \begin{texexample}{Working with lua file}{ex:dofile}
-\begin{filecontents*}{test.lua}
  function test(N)
    return N
  end
  tex.print(test(5))
-\end{filecontents*}
-\directlua{dofile("test.lua")}
 \end{texexample}
 
 As we want to keep ourselves within a document, rather than a separate file, we
 use the \verb+filecontents+ package to save a lua file on disc and then use it with
 \lstinline{dofile}.
 
-\begin{tcblisting}{}
+\begin{verbatim}
 \begin{filecontents*}{test.lua}
 hash = {}
 hash[ "key-1" ] = "val1"
@@ -574,60 +578,63 @@ hash[ "key-2" ] = 1
 hash[ "key-3" ] = {}
 \end{filecontents*}
 \directlua{dofile("test.lua")}
-\end{tcblisting}
+\end{verbatim}
 
 
-\begin{tcblisting}{}
-\begin{filecontents*}{test.lua}
-Squares = {} -- A table constructor can be empty.
- for I = 1, 5 do
-   Squares[I] = I ^ 2
- end
- for I = 1, 5 do
-   tex.sprint(I .. " squared is " .. Squares[I].."\\\\")
- end
-\end{filecontents*}
-\directlua{dofile("test.lua")}
-\end{tcblisting}
+%\begin{tcblisting}{}
+%\begin{filecontents*}{test.lua}
+%Squares = {} -- A table constructor can be empty.
+% for I = 1, 5 do
+%   Squares[I] = I ^ 2
+% end
+% for I = 1, 5 do
+%   tex.sprint(I .. " squared is " .. Squares[I].."\\\\")
+% end
+%\end{filecontents*}
+%\directlua{dofile("test.lua")}
+%\end{tcblisting}
+%
+%
+%\begin{tcblisting}{}
+%\begin{filecontents*}{test01.lua}
+% NameToInstr = {John = "rhythm guitar",
+% Paul = "bass guitar",
+% George = "lead guitar",
+% Ringo = "drumkit"}
+% for Name, Instr in ipairs(NameToInstr) do
+%   tex.sprint(Name)
+% end
+%\end{filecontents*}
+%\directlua{dofile("test01.lua")}
+%\end{tcblisting}
 
 
-\begin{tcblisting}{}
-\begin{filecontents*}{test01.lua}
- NameToInstr = {John = "rhythm guitar",
- Paul = "bass guitar",
- George = "lead guitar",
- Ringo = "drumkit"}
- for Name, Instr in ipairs(NameToInstr) do
-   tex.sprint(Name)
- end
-\end{filecontents*}
-\directlua{dofile("test01.lua")}
-\end{tcblisting}
-
-\clearpage
 Using tables that contain functions is a handy way to organize functions, and Lua keeps many of its
 built-in functions in tables, indexed by strings. For example, the table found in the global variable table
 contains functions useful for working with tables. If you assign another value to table, or to one of the
 other global variables used to store built-in functions, the functions won’t be available anymore unless
 you put them somewhere else beforehand. If you do this accidentally, just restart the interpreter
 
+
+
 \subsection{table.sort}
-\begin{tcblisting}{}
-\begin{filecontents*}{test.lua}
+\begin{texexample}{Sorting}{lua:sort}
+\begin{luacode}
 Names = {"Scarlatti", "Telemann", "Corelli", "Purcell",
    "Vivaldi", "Handel", "Bach","Yiannis"}
 table.sort(Names)
  for I, Name in ipairs(Names) do
    tex.sprint(I.." ".. Name.."\\par")
  end
-\end{filecontents*}
-\directlua{dofile("test.lua")}
-\end{tcblisting}
+ \end{luacode}
+\end{texexample}
+
+\endinput
 
 \subsection{table.concat}
 \subsection{table.sort}
-\begin{tcblisting}{}
-\begin{filecontents*}{test.lua}
+\begin{texexample}{Lua Sort}{}
+\begin{luacode}
 require "lualibs"
 -- require "luasql.mysql"
 -- commas (and spaces):
@@ -649,10 +656,9 @@ end
 else
    io.write("Error opening ", FileStr, " for writing\n")
 end
-\end{filecontents*}
+\end{texexample}
 
-\directlua{dofile("test.lua")}
-\end{tcblisting}
+
 
 \chapter{Packages}
 The luacode package provides commands to make entering of code from a teX
