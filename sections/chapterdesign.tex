@@ -1,9 +1,10 @@
-\MakePercentComment
+
 \makeatletter
 \cxset{toc image=\@empty,
-       chapter toc=true}
+       chapter toc=true,
+       title beforeskip=1pt}
 
-\@specialtrue
+\@specialfalse
 
 
 \renewcommand\stewart[2][]{%
@@ -70,7 +71,7 @@ We also discuss the basic formatting tools that are available and how one can mo
  }
 }
 
-
+\input{./styles/style87a}
 \chapter{Designing Chapter Headings}
 \addtocimage{-12pt}{-20pt}{./images/tocblock-man-01.jpg}
 
@@ -84,26 +85,72 @@ A crowded first page is as unsightly as a crowded title page, so wrote De Vinne 
 
 To use the package include it just like any other package:
 
-
-\begin{teX}
+\begin{phdverbatim}
 \documentclass{book}
 \usepackage{phd}
 \cxset{style13}
 \begin{document}
 \chapter{Introduction}
 \end{document}
-\end{teX}
+\end{phdverbatim}
 
 The command \cs{cxset} sets the default style for the example to the style defined as \marg{style13}. The package currently offers  100 templates and numerous keys to manipulate them further. Styles are similar to \enquote{themes} used in web programming; they are a collection of keys that resemble in many ways \texttt{css}. Styles can have any names and I am sure as package usage increases and evolve,they will get better names. 
 
+\section{Background}
+
+Before describing in detail how to specify a new layout for headings, we offer an overview of how the task can be accomplished and the design philosophy behind the approach. 
+
+Irrespective of the technique and tools used, the creation of new layouts can always be divided into the following three tasks: constructing a document from “layout bricks”, which we can term as “blocks” or “elements”; establishing the layout semantics of each block; and finally, creating a layout engine supporting any document constructed from such blocks.
+
+\begin{description}
+\item [Canned Layouts] At one end of the spectrum, the most accessible approach consists of picking, a canned layout, such as LaTeX itself and perhaps only provide rudimentary macros to manipulate it.
+\item [Constraints] Constraints offer a middle ground between canned layouts and handwritten layout engines. Constraints are arguably the most widespread and successful layout programming technique. For, instance, the foundations of \tex are laid upon constraint. CSS, the ubiquitous web template language, also relies on constraints, although in a more restricted and indirect manner.
+\end{description}
+
+\subsection{Blocks and Elements}
+
+We define an \emph{element} as a document block, that cannot be subdivided further. For example the chapter title element, is composed of the text of the chapter title. 
+
+A \emph{block} on the other hand is can contain other blocks and or numerous elements. We can consider the chapter headings as \emph{blocks}, composed of three blocks the chapter, number and title. Each block is then composed of elements. Each element has properties and traits. One of these mandary properties is the name. 
+
+Blocks are either \emph{configured} (all constraints are mandatory), or flexible (there are optional/alternative constraints). By bundling optional constraints, flexible blocks make their specification customizable by non-technical users. 
+
+\subsection{Language semantics}
+
+One of the aims of the syntax of the templates was to offer familiar terminology and to remove the use
+of \tex macros as far as possible from templates. 
+\medskip
+
+{\parindent0pt
+
+ \textit{section}| font-family=serif,|\\
+ \textit{section}| font-size=LARGE,|\\
+ \textit{section}| font-weight=bold,|\\
+}
+
+The restriction I imposed is problematic when dealing with fractions of linewidths and textwidths. So
+at present we allow for example |title text-width=0.5\texwidth| or |title text-width=10cm| or any other valid units. Ideas for improvements can only come from user feedback in the future.
+
+Some experimental ideas incorporated are:
+
+\begin{verbatim}
+title text-width = 0.5 text-width,
+title text-width = 1.2 text-width,
+\end{verbatim}
+
+A better parser will need to be programmed for dimensions, which are all currently handled as etex |dimexpr|. 
+
+The syntax must allows both for microtypography as well as macro-typographical features. The former would deal with mostly fonts, spacing and text justification, where the latter deals with layouts, borders shapes and the positioning of elements on the page and also reletively to other elements or blocks.
+
+An advantage of this approach is that it also opens the possibility of parsing the text with a language other than \tex and translating the document to another format, such as |HTML| or |XML| either fully or partially. Next we will describe both the syntax as well as the usage of the settings.
 
 \section{Chapter opening page}
 
-The standard LaTeX classes offer only two options to either open a chapter on an odd page or at any page. This package offers five alternatives:
+The standard \latexe classes offer only two options to either open a chapter on an odd page or at any page. This package offers five alternatives:
 
-\begin{key}{/phd/ chapter opening = \marg{any, left, right, anywhere, ifafter}}
+\begin{docKey}[phd]{chapter opening}{=\marg{any,left,right,anywhere,ifafter}}{default none, initial=any}
 For documents that are primarily to be read on the web, use |any| for normal books, use |right|. Some templates that we provide use |any| and the examples use |anywhere| to enable us to display the heading at any position on the page.
-\end{key}
+\end{docKey}
 
 \begin{marglist}
 \item [any] Opens a chapter at any page, either \textit{verso} or \textit{recto}.
@@ -124,19 +171,20 @@ To change a setting you just modify the value of the key \option{chapter opening
 \end{lstlisting}
 \end{tcolorbox}
 
-
+\makeatletter
 \@specialfalse
-
+\makeatother
 
 \cxset{chapter toc=false}
 \begin{texexample}{title=Inline Chapter Example}{ex:anywhere}
-\cxset{chapter opening=anywhere, chapter before=\bigskip, chapter font-family=\sffamily,title font-family=\sffamily}
-
-\lipsum[2]
+\cxset{chapter opening=anywhere, 
+          chapter font-family=sffamily,
+          title font-family=sffamily}
+\lorem
 \chapter{Chapter Example}
-\lipsum[3]
+\lorem
 \chapter{Another Chapter Example}
-\lipsum[4]
+\lorem
 \end{texexample}
 
 \addtocounter{chapter}{-1}
@@ -187,13 +235,449 @@ The last one refers to a \lstinline!\thispagestyle{plain}!.
 
 A chapter heading can be considered of being constructed of several parts, the \textit{chapter number}, the chapter name typically \textit{chapter} and the \textit{title}. Predefined keys handle all the elements of formatting. Additional keys are defined to handle other elements such as inclusion of images or producing complicated examples with graphics constructed with \texttt{TikZ} and other similar packages.
 
+
+\bigskip\bigskip\bigskip\bigskip
+\let\oldrefkey\refKey
+\let\refKey\texttt
+\makeatletter
+\long\def\demobox#1#2{%
+\par\bigskip\bigskip\bigskip
+\begin{tcolorbox}[enhanced,left=0pt, top=0pt, bottom=0pt,width=\textwidth,
+  enlarge top initially by=1cm,enlarge bottom finally by=1cm,left skip=1cm,right skip=1cm,
+  colframe=white,colback=white,
+  colbacktitle=red!30!white,colupper=black!7!white,
+  code={\appto\kvtcb@shadow{%
+    \path[fill=white,draw=yellow!50!black,dashed,line width=0.4pt]
+      ([xshift=-1cm,yshift=-1cm]frame.south west) rectangle
+      ([xshift=1cm,yshift=1cm]frame.north east);
+     \path[fill=blue!20!white, 
+              opacity=0.3, draw=yellow!50!black,solid,line width=1pt]
+      ([xshift=-2cm,yshift=-2cm]frame.south west) rectangle
+      ([xshift=2cm,yshift=2cm]frame.north east);  
+    }},
+  finish={
+  \draw[thick,<->] ([yshift=-1.3cm]frame.north west)-- node[below]{\texttt{#1 width}}
+    ([yshift=-1.3cm]frame.north east);
+  \draw[thick,<->] ([xshift=-15mm]frame.north east)-- node[above]{\refKey{#1 height}}
+    ([xshift=-15mm]frame.south east);
+  \draw[thick,<->] (frame.north)-- node[right]{\refKey{#1 padding-top}} +(0,1);
+  \draw[thick,<->] ([yshift=1cm]frame.north)-- node[right]{\refKey{#1 margin-top}} +(0,1);
+  \draw[thick,<->] (frame.south)-- node[right, align=left]{\refKey{#1 padding-bottom}}+(0,-1);
+  %left padding
+  \draw[thick,<->] (frame.west)-- node[below right,align=center]{\refKey{#1 padding-left }}+(-1,0);
+  %left margin
+  \draw[thick,<->] ([xshift=-1cm,yshift=-0.9cm]frame.west)-- node[below right,xshift=-1,align=left]{\refKey{#1 margin-left }\\\refKey{#1 grow to left by}}+(-1,0);
+  %right padding
+  \draw[thick,<->] (frame.east)-- node[below left,align=center]{\refKey{#1 padding-right}}+(1,0);
+ %right margin
+  \draw[thick,<->] ([xshift=1cm,yshift=-0.9cm]frame.east)-- node[below left,xshift=1, align=right]{\refKey{#1 margin-right}\\\refKey{#1 grow to right by}}+(1,0);
+ \draw[thick,<->] ([yshift=-2cm]frame.south)-- node[right, align=left]{\refKey{#1 margin-bottom},\\ \refKey{#1 after skip}}+(0,1);
+  }
+    ]
+#2%
+%\hrule width0pt height4.5cm depth0pt\relax% \vspace*{4.5cm}% \lipsum[1]
+\end{tcolorbox}\par
+\bigskip\bigskip\bigskip}
+\makeatother
+
+\demobox{chapter}{\scalebox{1.17}{\HHHUGE Chapter}}
+
+The number box is again drawn in a box similar to a chapter with all properties generalized.
+
+\demobox{number}{\scalebox{1.15}{\HHHUGE Thirteen}}
+
+
+
+All parameters shown in the diagram can be set using the command \cs{cxset}. The property names follow conventions similar to those of |css|, rather than typical conventions of \tikzname that are more widely known to the programming community. The prefix to these properties (in the example \textit{chapter}) can be thought of
+as similar to a |class| or |id| name in |css|.  
+
+\begin{docCommand}{cxset}{\marg{options}}
+  Sets options for every following \refEnv{tcolorbox} inside the current \TeX\ group.
+  By default, this does not apply to nested boxes, see \Vref{subsec:everybox}.\par
+  For example, the colors of the boxes may be defined for the whole document by this:
+\begin{dispListing}
+\tcbset{colback=red!5!white,colframe=red!75!black}
+\end{dispListing}
+\end{docCommand}
+
+\begin{docKey}[]{chapter padding-top}{=\meta{dimension}}{no default, initial value 0pt}
+All padding keys take one argument, which is a dimension. The length is also stored in a register
+\cmd{\chapterpaddingtop}. In this chapter it was set at \the\chapterpaddingtop.
+\end{docKey}
+
+\begin{docKey}[]{chapter padding-right}{=\meta{dimension}}{no default, initial value 0pt}
+All padding keys take one argument, which is a dimension. The length is also stored in a register
+\cmd{\chapterpaddingright}.  In this chapter it was set at \the\chapterpaddingright.
+\end{docKey}
+
+\begin{docKey}[]{chapter padding-bottom}{=\meta{dimension}}{no default, initial value 0pt}
+All padding keys take one argument, which is a dimension. The length is also stored in a register
+\cmd{\chapterpaddingbottom}.  In this chapter it was set at \the\chapterpaddingbottom.
+\end{docKey}
+
+\begin{docKey}[]{chapter padding-left}{=\meta{dimension}}{no default, initial value 0pt}
+All padding keys take one argument, which is a dimension. The length is also stored in a register
+\cmd{\chapterpaddingleft}.  In this chapter it was set at \the\chapterpaddingleft.
+\end{docKey}
+
+%% margin
+
+\begin{docKey}[]{chapter margin-top}{=\meta{dimension}}{no default, initial value 0pt}
+All padding keys take one argument, which is a dimension. The length is also stored in a register
+\cmd{\chaptermargintop}. In this chapter it was set at .
+\end{docKey}
+
+\begin{docKey}[]{chapter margin-right}{=\meta{dimension}}{no default, initial value 0pt}
+All padding keys take one argument, which is a dimension. The length is also stored in a register
+\cmd{\chapterpaddingright}.  In this chapter it was set at \the\chapterpaddingright.
+\end{docKey}
+
+\begin{docKey}[]{chapter margin-bottom}{=\meta{dimension}}{no default, initial value 0pt}
+All padding keys take one argument, which is a dimension. The length is also stored in a register
+\cmd{\chapterpaddingbottom}.  In this chapter it was set at \the\chapterpaddingbottom.
+\end{docKey}
+
+\begin{docKey}[]{chapter margin-left}{=\meta{dimension}}{no default, initial value 0pt}
+All padding keys take one argument, which is a dimension. The length is also stored in a register
+\cmd{\chaptermarginleft}.  In this chapter it was set at \the\chaptermarginleft.
+\end{docKey}
+
+\subsection{Borders}
+
+Border have three properties \emph{width, color} and \emph{style}. They can set individually for
+each side of the box or using the shorter key .
+
+\begin{docKey}[]{chapter border-top-width}{=\meta{dimension}}{no default, initial value 0pt}
+All border keys take one argument, which is a dimension.
+\end{docKey}
+
+\begin{docKey}[]{chapter border-right-width}{=\meta{dimension}}{no default, initial value 0pt}
+All border keys take one argument, which is a dimension.
+\end{docKey}
+
+\begin{docKey}[]{chapter border-bottom-width}{=\meta{dimension}}{no default, initial value 0pt}
+All border keys take one argument, which is a dimension.
+\end{docKey}
+
+\begin{docKey}[]{chapter border-left-width}{=\meta{dimension}}{no default, initial value 0pt}
+All border keys take one argument, which is a dimension.
+\end{docKey}
+
+\subsubsection{Border Colors}
+
+The colors follow the same pattern for |border-width| and again they can be set individually or using
+a shorter key to set all of them in one color. 
+
+\begin{docKey}[]{chapter border-top-color}{=\meta{color name}}{no default, initial value black}
+All border keys take one argument, which is a dimension.
+\end{docKey}
+
+\begin{docKey}[]{chapter border-right-color}{=\meta{color name}}{no default, initial value black}
+All border keys take one argument, which is a dimension.
+\end{docKey}
+
+\begin{docKey}[]{chapter border-bottom-color}{=\meta{color name}}{no default, initial value black}
+All border keys take one argument, which is a dimension.
+\end{docKey}
+
+\begin{docKey}[]{chapter border-left-color}{=\meta{color name}}{no default, initial value black}
+This key is stored in \cmd{\chapterborderrightcolor} and the value in this chapter is \texttt{\chapterborderrightcolor}.
+\end{docKey}
+
+\subsubsection{Border Styles}
+
+Standard |css|  offers four styles \emph{dotted, solid, double, dashed}. We offer almost an unlimited set of styles.
+
+\begin{docKey}[]{chapter border-top-style}{=\meta{style name}}{no default, initial value \texttt{none}}
+The |border-style| properties take a value, which can be |solid, double, dotted, dashed, asterisk|.
+\end{docKey}
+
+\begin{docKey}[]{chapter border-right-style}{=\meta{style name}}{no default, initial value \texttt{none}}
+The |border-style| properties take a value, which can be |solid, double, dotted, dashed, asterisk|.
+\end{docKey}
+
+\begin{docKey}[]{chapter border-bottom-style}{=\meta{style name}}{no default, initial value \texttt{none}}
+The |border-style| properties take a value, which can be |solid, double, dotted, dashed, asterisk|.
+\end{docKey}
+
+\begin{docKey}[]{chapter border-left-style}{=\meta{style name}}{no default, initial value \texttt{none}}
+The |border-style| properties take a value, which can be |solid, double, dotted, dashed, asterisk|.
+\end{docKey}
+
+\begin{docKey}[phd]{chapter border-style}{=\meta{style name}}{no default, initial value \texttt{none}}
+This key sets all chapter-border-\meta{top,right,bottom,left}-style to a single value.
+\end{docKey}
+
+\subsubsection{Fonts and colors}
+
+All font parameters can be set using individual keys. The naming scheme in general follows |css| conventions.
+
+\begin{docKey}[phd]{chapter color}{=\meta{color name}}{no default, initial value \texttt{black}}
+This key sets the color for the \textit{chapter element}. The color name is stored in \cmd{\chaptercolor@cx}.
+The value in this chapter is \makeatletter\texttt{\chaptercolor@cx}\makeatother.
+\end{docKey}
+
+\begin{docKey}[phd]{chapter font-size}{=\meta{Huge, Large}}{no default, initial value \texttt{Huge}}
+This sets the size for rendering the \textit{chapter element}. Use one of the following predefined values.
+Note that you can either use a command i.e, |chapter font-size=|\cmd{\huge} 
+or the command name i.e., |chapter font-size=huge|. The latter is the recommended method.
+\end{docKey}
+
+\begin{marglist}
+\item [tiny] renders as {\tiny tiny}.
+\item[footnotesize] renders as {\footnotesize footnotesize}
+\item [small] Opens a chapter on an even page
+\item [large] Opens a chapter on a right page.
+\item [LARGE] Opens a chapter at the point where the \cs{chapter} is typed.
+\item [huge] Alias for \marg{anywhere}.
+\item [Huge] Opens a chapter at the next page if the page has material that does not exceed a certain portion of
+ \cs{textheight}.
+ \item[HUGE] renders as {\HUGE HUGE}.
+ \item[HHUGE] renders as {\HHUGE HUGE}.
+\end{marglist}
+
+\begin{texexample}{Sizing settings}{}
+\cxset{chapter font-size=footnotesize,
+          number font-size=footnotesize,
+          title font-size=footnotesize,
+          chapter border-width=0pt,
+          chapter padding=0pt,
+          title margin-top=3pt,
+          }
+\chapter{Setting font-sizes}          
+\lorem
+
+\end{texexample}
+
+\begin{docKey}{chapter font-family}{=\meta{sffamily, rmfamily etc.}}{no default, initial value \texttt{sffamily}}
+The |font-family| key accepts \latexe conventional family names or |css| names such as |serif| and |non-serif|. The
+value is stored in \cmd{\chapterfontfamily@cx}, in this chapter it is set as \makeatletter\chapterfontfamily@cx\makeatother
+\end{docKey}
+
+\begin{marglist}
+\item [sffamily] The \emph{chapter element} is rendered in the document default \cmd{\sffamily}.
+\item [rmfamily] The \emph{chapter element} is rendered in the document default \cmd{\rmfamily}.
+\end{marglist}
+
+%% Font weights
+\begin{docKey}[]{chapter font-weight}{=\meta{mdseries,bfseries,etc.}}{no default, initial value \texttt{bfseries}}
+The |font-weight| key accepts \latexe conventional family names or |css| names such as |bold| and |bfseries|. The
+value is stored in \cmd{\chapterfontweight@cx}, in this chapter it is set as \makeatletter\chapterfontweight@cx\makeatother
+
+\begin{texexample}{Setting chapter element font-weights}{fontweight}
+\cxset{chapter font-weight=normal}
+\chapter{Font-weight is normal}
+\cxset{chapter font-weight=\bfseries}
+\chapter{Font-weight is bfseries}
+\lorem
+\end{texexample}
+\end{docKey}
+
+\begin{marglist}
+\item [normal] The \emph{chapter element} is rendered in the document default \cmd{\sffamily}.
+\item [bold] The \emph{chapter element} is rendered in the document default \cmd{\rmfamily}.
+\item[bfseries] Renders as bold.
+\item[mdseries] renders as medium series.
+\item[light] This is an alias for normal.
+\item[\upshape\ttfamily\string\bfseries] The command version of the setting.
+\item[\upshape\ttfamily\string\mdseries] The command version of the setting.
+\end{marglist}
+
+\begin{docKey}[]{chapter font-shape}{=\meta{itshape,upshape,etc.}}{no default, initial value \texttt{upshape}}
+The |font-weight| key accepts \latexe conventional family names or |css| names such as |bold| and |bfseries|. The
+value is stored in \cmd{\chapterfontweight@cx}, in this chapter it is set as  \makeatletter\texttt{\chapterfontweight@cx}\makeatother.
+\end{docKey}
+
+In |css| the |font-shape| is named as |font-style| so we alias it as well. 
+
+\begin{marglist}
+\item[normal] normal font-style, defaults to |upshape|.
+\item[upshape] normal font-style, defaults to |upshape|. 
+\item[italic] italic shape, renders as {\itshape italic}. For some fonts it might not be available.
+\item[itshape] italic shape, alias of |italic|.
+\item[oblique] oblique font, in \latexe is equivalent to \cmd{\slshape} and renders as {\slshape slshape}, which might be slightly different than {\itshape italic}.
+\end{marglist}
+
+
+\begin{texexample}{Setting up Fonts}{chapterfonts}
+\cxset{chapter opening=anywhere,
+          chapter font-weight=normal,
+          chapter font-shape=upshape,
+          chapter border-width=0pt,
+          chapter border-style=none,
+          chapter padding=0pt,
+          chapter font-size=large,
+          number font-size=large,
+          number color=black,
+          title font-size=large,}
+\chapter[fonts]{Test Font Weights}
+\lorem
+\cxset{chapter font-style=itshape}
+\chapter{Test Italic Shape}
+\lorem
+\cxset{chapter font-style=normal}
+\chapter{Test normal font-shape}
+\lorem
+\cxset{chapter font-style=oblique, chapter float=none}
+\chapter{Test Oblique Shape}
+\lorem
+\cxset{chapter font-shape=scshape, chapter float=none, chapter spaceout=none}
+\chapter{Test Smallcaps}
+\lorem
+\end{texexample}
+
+The specification of font families is somewhat problematic. In the web the |css| allows |font-family|  to hold several font names as a “fallback” system. If the browser does not support the first font, it tries the next font.
+
+There are two types of font family names:
+
+\begin{description}
+\item[family-name] The name of a font-family, like “times”, “courier”, “arial”, etc.
+\item[generic-family] The name of a generic family, like “serif”, “sans-serif”, “cursive”, “fantasy”, “monospace”.
+\end{description}
+
+Generally in the \tex community leaving the choice of font  open to what is available on a user’s computer is frowned upon. Knuth’s original aim to render consistently documents, irrespective of a user’s computer installation has served the community well, and it is possible three decades later to produce documents identical in all respects to the original. 
+
+If this is still a valid requirement for documents is debatable. Current document processing requirements are focusing more in the preservation of content and document structure rather than form. Typeset documents in soft copy are now widely preserved in |pdf| or |postcript|  formats. One can archive the |.tex| file as well as the |pdf| file.  Back to the provision of keys, a key defined in a 
+similar fashion to those of |css| could help, but there is also the issue of slow compilation. If a font cannot be
+found, with the current code, it can slow down compilation tremendously. I am leaving the choice where it belongs to the user and the package writer. It makes no harm if a more flexible definition is provided. The user can then decide to only provide one or many fonts. 
+
+This avoids complicated and almost unintelligible commands such as:
+
+\begin{verbatim}
+\setkomafont{subsection}{\usefont{T1}{fvm}{m}{n}}
+\setkomafont{section}{\usefont{T1}{fvs}{b}{n}\Large}
+\end{verbatim}
+
+Here are some examples. 
+
+\begin{texexample}{Serif and non-serif}{ex:fontfamily}
+\cxset{chapter font-family=serif, chapter opening=anywhere}
+\chapter{Serif font}
+\lorem
+\cxset{chapter font-family=sans-serif}
+\chapter{Sans-serif heading}
+\lorem
+\cxset{chapter font-family=monospace}
+\chapter{ttfamily heading}
+\lorem
+\cxset{chapter font-family=aegean, title font-family=aegean}
+\chapter{arial heading}
+\lorem
+\end{texexample}
+
+
+\subsubsection{Floating and Alignment} 
+
+This particular key bothered me, as the term \emph{float} has a different meaning in \latexe. However, to
+be consistent with |css| terminology I have yielded to the temptation and included it.
+
+\begin{docKey}[]{chapter float}{=\meta{left,center,right,none}}{no default, initial value \texttt{none}}
+Key that controls the horizontal alignment of the \emph{chapter element}. I order for the
+element to float, its |display| property must be set to |inline|.
+\end{docKey}
+
+\begin{texexample}{Floating}{chapter:float}
+\cxset{chapter opening=anywhere, chapter float=center}
+\chapter{Centered Chapter}
+\lorem
+\cxset{chapter float=left}
+\chapter{Left Aligned}
+\lorem
+\cxset{chapter float=right}
+\chapter{Right Aligned}
+\lorem
+\end{texexample}
+
+\subsection{The display property}
+
+Both the |css| box model as well as the TeX layout engine provide numerous complex algorithms in managing the floating of elements. This is normally controlled using two properties |display| and |float|.
+
+\newpage
+\makeatletter
+
+\begin{docKey}[]{position}{=\meta{absolute, relative}}{no default, initial value black}
+This positioning directive instructs the engine to position the element at an exact position.
+\end{docKey}
+
+
+
+\tcbox[nobeforeafter]{$box_1$}\tcbox[nobeforeafter]{$box_2$}\tcbox[nobeforeafter]{$box_3$}\dotfill\tcbox[nobeforeafter]{$box_n$}
+\tcbox[before skip=0.2cm, after skip=0pt, width=1cm, enlarge left by=10cm,width=5cm,enhanced,show bounding box]{title before element}
+\tcbox[before skip=0pt, width=1cm, enlarge left by=10cm,width=5cm,enhanced,show bounding box]{
+\tcbox{tb}\tcbox{title}\tcbox[nobeforeafter, width=1cm,]{tb}}
+\tcbox[before skip=0pt, after skip=12pt, width=1cm, enlarge left by=10cm,width=5cm,enhanced,show bounding box]{\emph{title after} element\phd@fbox{some}}
+\makeatother
+
+\begin{docKey}[]{chapter float}{=\meta{left,center,right,none}}{no default, initial value \texttt{none}}
+Key that controls the horizontal alignment of the \emph{chapter element}. I order for the
+element to float, its |display| property must be set to |inline|.
+\end{docKey}
+In document preparation systems or web page development the layout is user generated, i.e., the user is expected to type the html and the |css| will then specify as to how the page will be rendered by the browser. In our case for documents we can specify how we want the headings to look. The layout manager for each element, creates other associated elements, as shown for the title here. This way most layouts can be accomplished with the declarative visual language of the \pkgname{phd} package. 
+
+\subsubsection{In-line elements}
+
+When an element is specified as |inline| the rendering algorithm places the boxes after each other. This is widely used in |chapter elements| to render the number inline with the chapter name.
+\medskip
+\bgroup
+
+\noindent
+\tcbox[nobeforeafter,width=3cm, height=1cm]{Chapter}\tcbox[nobeforeafter]{twelve}
+ 
+When the property is set as |block| the elements are stacked below each other.
 \medskip
 
-\begin{key}{/phd/  numbering font-size = \oarg{sizing commands}}
-\end{key}
+\tcbox{chapter  display=block   CHAPTER}
+\tcbox{number display=block    TWELVE}
 
-\begin{key}{/phd/ chapter numbering font-family = \oarg{sizing commands}}
-\end{key}
+The elements can be considered to be enclosed in a \emph{ghost} element. If the property is set to float we
+\begin{figure}[htbp]
+\makeatletter
+\parindent0pt\fboxsep0pt
+\phd@fbox{\vbox to 0pt{\hbox to \dimexpr(\textwidth)\relax{{\hss\tcbox[capture=minipage,width=5cm, height=2cm, top=0pt]{\raggedright number display=block\\ number float=right }}%
+}%
+}%
+}\par
+\vspace*{2cm}
+\makeatother
+\end{figure}
+signalling to the layout engine that the element must be placed to the right of the page, as shown in the figure. 
+
+\begin{figure}[htbp]
+\makeatletter
+\parindent0pt\fboxsep0pt
+\phd@fbox{\vbox to 0pt{\hbox to \dimexpr(\textwidth+2cm)\relax{{\hss\tcbox[capture=minipage,width=5cm, height=2cm, top=0pt]{\raggedright number display=block\\ \emph{element} float=right }
+\tcbox[capture=minipage,width=5cm, height=2cm, top=0pt]{\raggedright \emph{element} display=block\\ \emph{element} float=right }
+}%
+}%
+}%
+}\par
+\vspace*{2cm}
+\makeatother
+\end{figure}
+
+\subsection{Absolute positioning}
+
+Absolute positioning mode, will place an element at an exact position on the page. They are more difficult to
+achieve and inflexible. 
+
+\begin{docKey}{position}{=\meta{absolute},\meta{relative}}{no default, initial none}{}
+
+\end{docKey}
+
+
+
+This positioning directive instructs the engine to position the element at an exact position.
+
+
+\begin{docKey}[]{chapter float}{=\meta{left,center,right,none}}{no default, initial value \texttt{none}}
+Key that controls the horizontal alignment of the \emph{chapter element}. I order for the
+element to float, its |display| property must be set to |inline|.
+\end{docKey}
+\egroup
+
+
+\section{Number Element Keys}
+
 
 \subsection{Keys for numbering}
 
@@ -201,14 +685,10 @@ Chapter numbering follows that of the standard \LaTeX\ classes and is extended t
 
 Note that the package uses Heiko Oberdiek's package \pkgname{alphalph} to allow for alphabetic numbering that extends beyond the normal 26 letters of the alphabet. Examples for numbering can be seen in \ref{ex:romannumbering}
 
-\medskip
 
-\begin{key}{/phd/ number numbering = \oarg{alph,Alph,roman,Roman,none,WORDS,words,none}}
-
+\begin{docKey}{number numbering}{= \oarg{alph,Alph,roman,Roman,none,WORDS,words,none}}{default arabic}
 Style of numbering.
-\end{key}
-
-\medskip
+\end{docKey}
 
 \begin{marglist}
 \item [arabic] Despite that the Arabs call what the West calls Arabic numbers Indian numbers, we provide the value arabic to have normal numbers printed.
@@ -219,53 +699,113 @@ Style of numbering.
 \item [words] The number is in lowercase words.
 \item [WORDS] The number is in uppercase literal numerals.
 \item [Words] Prints the number in words and capitalizes the first letter, for example the number 21 will be printed as `Twenty One'\footnote{Currently limited to the first hundred numbers}.
+\item [ordinals] Prints the number as ordinal.
+\item [Ordinals] Prints the number as Ordinal.
+\item [ORDINALS] Prinst the number as ORDINALS.
 \item [none] This is equivalent to using the star version of the command. It does not print any number and does not increment the chapter counter.\footnote{I am ambivalent about this, perhaps it will be better to increment it, as it can give a more general approach.}
 \end{marglist}
 
-\cxset{chapter opening=anywhere, numbering=Roman}
+\cxset{chapter opening=anywhere, numbering=Roman, number font-shape=upshape}
 \index{chapter design>numbering>roman}
 
-%\begin{texexample}{Setting up keys for numbering}{ex:romannumberingx}
-%\bgroup
-%\cxset{numbering=Roman}
-%
-%\chapter{Roman numbering}
-%
-%\egroup
-%\end{texexample}
+\begin{texexample}{Setting up keys for numbering}{ex:romannumberingx}
+\bgroup
+\cxset{numbering=Roman}
+\chapter{Roman numbering}
+\lorem
+\egroup
+\end{texexample}
+
 
 
 \index{chapter design>numbering>words}
 
-%\begin{texexample}{Literal Numbering}{ex:literal}
-%\cxset{numbering=WORDS} 
-%\chapter{Literal numbering}
-%\cxset{numbering=words,chapter name=chapter}
-%\chapter{Literal numbering} TODO
-%\end{texexample}
+\begin{texexample}{Literal Numbering}{ex:literal}
+\cxset{numbering=WORDS} 
+\chapter{Literal numbering}
+\lorem
+\cxset{chapter numbering=words,chapter name=chapter}
+\chapter{Literal numbering} 
+\lorem
+\end{texexample}
 
 
 \cxset{numbering=arabic}
-\subsection{Setting font information}
-\subsection{Letter spacing}
 
-Chapter letter spacing can be achieved using the soul package in a combination with the key |spaceout|.
+\subsection{Fonts and colors}
+\begin{docKey}[phd]{number color}{=\meta{color name}}{no default, initial value \texttt{black}}
+This key sets the color for the \textit{number element}. The color name is stored in \cmd{\numbercolor@cx}.
+The value in this chapter is \makeatletter\texttt{\numbercolor@cx}\makeatother.
+\end{docKey}
 
+\begin{docKey}[phd]{number font-size}{=\meta{Huge, Large}}{no default, initial value \texttt{Huge}}
+This sets the size for rendering the \textit{number element}. Use one of the predefined values, as described
+in the section for the \emph{chapter} element.
+Note that you can either use a command i.e, |number font-size=|\cmd{\huge} 
+or the command name i.e., |number font-size=huge|. The latter is the recommended method.
+\end{docKey}
 
+Letter spacing can be achieved using the soul package in a combination with the key |spaceout|.
 The following examples illustrate the usage.
 
 \begin{texexample}{Letter Spacing}{ex:letterspacing}
 \cxset{numbering=Roman,
-         chapter spaceout=none,
+         number letter-spacing=soul,
+         chapter spaceout=soul,
          title spaceout=soul,
          title font-size=Large,
          title font-family=rmfamily,
          title font-shape=scshape}
 \chapter{Letter Spacing}
+
+\lorem
+\end{texexample}
+
+\begin{docKey}[phd]{number letter-spacing}{=\meta{none, true, etc.}}{no default, initial value \texttt{none}}.
+\end{docKey}
+
+\begin{marglist}
+\item[none] Default value no tracking is used and the letters are spaced as per the basic font information.
+\item[inherit] Inherits the letter-spacing settings from the \emph{chapter} element.
+\item[true] Letter spacing is employed, using the |soul| package.
+\item[false] Alias for |none|.
+\item[soul] The \pkgname{soul} package is used for letter-spacing.
+\item[microtype] The \pkgname{microtype} package is used for letter-spacing. When the microtype package is used more fine tuning of parameters is available.
+\end{marglist}
+
+The example that follows, explains how the features offered by the \pkgname{microtype} package can be used to
+set different tracking options.
+
+\begin{texexample}{Microtypography}{micro}
+\bgroup
+
+\SetTracking
+ [ no ligatures = {f},
+ spacing = {600*,-100*, },
+ outer spacing = {450,250,150},
+ outer kerning = {*,*} ]
+ { encoding = * }
+ { 100 }
+
+{\huge \textls{Chapter Twenty}}
+
+\SetTracking
+ [ no ligatures = {f},
+ spacing = {600*,-100*, },
+ outer spacing = {450,250,150},
+ outer kerning = {*,*} ]
+ { encoding = * }
+ { 200 }
+ 
+{\huge \textls{Chapter Twenty}}
+
+\egroup
 \end{texexample}
 
 
+\hbox{\drawfontbox{\huge Chapter Twenty}}
 
+\hbox{\drawfontbox{\huge \textls{Chapter Twenty}}}
 
 
 \section{Styling the chapter title}
@@ -276,17 +816,29 @@ Similarly to the number and chapter styling keys exist for styling the chapter t
 \begin{texexample}{Styling the Title}{ex:title} 
 \cxset{chapter spaceout=soul,numbering=arabic, title spaceout=soul}
 \chapter{Chapter title}
+\lorem
 \end{texexample}
 
 
-\begin{key}{/phd/  title font-family = \marg{family}}Selects a predefined font family
-\end{key}
+\begin{docKey}[phd]{title font-family}{=\marg{family}}{no default, initial inherit document font}
+Selects a predefined font family
+\end{docKey}
+
+\begin{texexample}{Title element font styling}{}
+\cxset{title font-family=sffamily}
+\chapter{Title font family settings}
+\lorem
+\cxset{title font-shape=itshape}
+\chapter{Title font-style settings}
+\lorem
+\end{texexample}
 
 \begin{key}{/phd/ chapter title font-weight = \marg{\cs{bfseries},\cs{normalseries}}} Font weight.
 \end{key}
 
-\begin{key}{/phd/ chapter title font-size = \marg{\cs{large},\cs{Large},\cs{huge},\cs{Huge},\cs{HUGE},\cs{HHuge}}}Font sizing commands or their names. Both \cmd{\HUGE} and HUGE are allowed to be used as values for the key.
-\end{key}
+\begin{docKey}[phd]{chapter title font-size}{= \marg{\cs{large},\cs{Large},\cs{huge},\cs{Huge},\cs{HUGE},\cs{HHuge}}}{}
+Font sizing commands or their names. Both \cmd{\HUGE} and HUGE are allowed to be used as values for the key.
+\end{docKey}
 
 \begin{key}{/phd/ chapter title font-color = \marg{color}}
 The color of the chapter title letters. This takes any predefined color name. 
@@ -297,24 +849,60 @@ The color of the chapter title letters. This takes any predefined color name.
  This key will space out the title. 
 \end{key}
 
-\begin{texexample}{}{}
+\begin{texexample}{Title element spacing}{}
 \cxset{chapter name=,
           numbering=none,
           chapter title align=center,
           title font-size=Large,
           title font-color=black,
           chapter title width=0.6\textwidth,
-          title spaceout=soul}
-\chapter{The Prehistoric Period in South-East Asia: 2300 BC--AD 400}          
+          title spaceout=soul,
+          title beforeskip=20pt}
+\chapter{The Prehistoric Period in South-East Asia: 2300 BC--AD 400}        
+\lorem 
+    
 \end{texexample}
 
-\begin{key}{/phd/ chapter title before = \marg{soul,none}}
-Sets the font color of the title.
-\end{key}
+\subsection{Adding content before and after the title element}
 
-\begin{key}{/phd/ chapter title after = \marg{soul,none}}
-Hook to add items after the title block.
-\end{key}
+Like all the other elements, the title element can be decorated with additional content,
+before and after the text. There are two different forms. 
+
+\begin{docKey}[phd]{title before}{=\marg{code}}{default none}
+Contents before the title (vertical material)
+\end{docKey}
+
+\begin{docKey}[phd]{title after}{=\marg{code}}{default none}
+Contents after the title (vertical material)
+\end{docKey}
+
+\begin{docKey}[phd]{title content before}{=\marg{code}}{default none}
+Contents before the title (horizontal material)
+\end{docKey}
+
+\begin{docKey}[phd]{title content after}{=\marg{code}}{default none}
+Contents after the title (horizontal material)
+\end{docKey}
+
+The difference between the two type of settings, consider the following situation. Assume you have a title that has a rule at the top and bottom and the text is surrounded by two ornaments. The surrounding ornaments will be inserted using the |title before content|, and the rules using the |title before| form. The |title before| is a full fledged element on its own. 
+
+{
+\hrule
+\centering
+*** Introduction ***
+\par
+\hrule
+}
+
+{
+\MakePercentComment
+\startlineat{200}
+\lstinputlisting{./styles/style13.tex}
+\MakePercentIgnore
+}
+
+
+
  
 \begin{key}{/phd/ chapter title before skip = \marg{soul,none}}
 Before title string skip.
@@ -402,4 +990,4 @@ To keep our search for semantic commands and true separation of contents it is p
 Notice the use of a new command \cmd{\forewardname} to allow for internationlization using Babel or other methods. One is tempted to let the English name, but a better approach perhaps is to define both.
 
 \makeatletter
-\MakePercentIgnore
+

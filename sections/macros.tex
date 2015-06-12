@@ -1,7 +1,7 @@
-\MakePercentComment
 \chapter{PROGRAMMING MACROS}
+
 \addtocimage{-10pt}{-40pt}{../graphics/harnett.jpg}
-%\minitoc
+
 \pagebreak
 \setlength\columnsep{1.5em}
 
@@ -21,20 +21,28 @@
 \begin{multicols}{2}
 \lettrine{P}{rogramming} with \alltex is done through macros. \tex has a macro programming language,
 which allows features to be added. The best known
-and most widely used \tex macro package is \latex.
+and most widely used collection of \tex macros is \latex.
 (This is not quite accurate. Although originally
 \latex used \tex, since 2003 it by default uses
-e-TEX, which is an extension of TEX. Macro's in \TeX\  are not just simple substitutions, they are more Lispy like. It is this powerful feature that made \TeX\ last and will continue to do so for many years to come. This program that started as a typesetting program, programmed in a variant of what is now an ancient computer language Pascal is a manifest to good programming and a reminder to the programming priesthood that the tool is not important, but what you do with it is. A macro is a sequence of tokens that has been abbreviated into a control sequence. Statement starting with among others
+e-TEX, which is an extension of TEX. Macro's in \TeX\  are not just simple substitutions, they are more Lispy like. It is this powerful feature that made \TeX\ last and will continue to do so for many years to come. This program that started as a typesetting program, programmed in a variant of what is now an ancient computer language Pascal is testimony to good programming 
+practices and a reminder to the programming priesthood that the tool is not important, but what you do with it is. 
+
+A \emph{macro} is a sequence of tokens that has been abbreviated into a control sequence. Statement starting with among others
 \cmd{def} are called \textit{macro definitions}. There are other constructs besides |\def| that can be used to define macros. \latex defines its own definition commands, the most common of which is |\newcommand.| The way \tex's macro language is build, you can also define your own. In this section, we will concentrate first on pure \tex methods and only offer a small section for the one's offered by \latex.
 
 \end{multicols}
 \clearpage
 
-\section{Simple substitution macros}
+\section{How to define macros}
 
-\begin{macro}{\def}
+Most of \tex programming is learning how to work with macros and control sequences. The workhorse behind all these is a three letter control sequence that can be used to define macros |\def|.
+There are other macro defining primitives available, but we will first focus on |\def|. Depending on the way the arguments of the command are specified these are normally divided into two general categories: \emph{delimited macros} and \emph{undelimited}.
+ 
+\subsection{Simple substitution macros}
+
+\begin{docCommand*}{def} { \meta{macro name}\meta{parameter text}} {\marg{replacement text}}
 Simple substitution macros, during expansion replace their name with the contents enclosed between the braces. For example some common macros that authors write, is to hold the names of people, in order to get the spelling correctly.
-\end{macro}
+\end{docCommand*}
 
 \begin{teX}
 \documentclass{article}
@@ -45,11 +53,10 @@ Simple substitution macros, during expansion replace their name with the content
 \end{teX}
 
 
+In the above we defined a macro named, |\myshortcut|, will print the name \texttt{Anthony van der Merwe}, every time it is invoked as |\myshortcut|. You will notice, that the macro definition is placed in the preamble. This is not necessary, but it is good practice. Macros can be placed anywhere in the document, in packages and or classes.
 
 
-In the above we are defining a macro named, |\myshortcut|, will print the name \texttt{Anthony van der Merwe}, every time it is invoked as |\myshortcut|. You will notice, that the macro definition is placed in the preamble. This is not necessary, but it is good practice. Macros can be placed anywhere in the document, in packages and or classes.
-
-If we were writing the macro and compiling it using \tex only, the example can be much shorter.
+If we were writing the macro and compiling it using \tex only, the example can be much shorter and it will also compile much faster. 
 
 \emphasis{def}
 \begin{teX}
@@ -61,7 +68,7 @@ If we were writing the macro and compiling it using \tex only, the example can b
 Macros can use other macro commands. For example if we wanted to store the name of the author of |pdfTeX| we could write,
 
 \begin{texexample}{example substitution macro}{}
-\def\Thanh{^^A
+\def\Thanh{%
       H\`an~%
       \texorpdfstring{Th\^e\llap{\raise 0.5ex\hbox{\'{}}}}%
       {\ifpdfstringunicode{Th\unichar{"1EC3}}{Th\^e}}%
@@ -75,7 +82,7 @@ Macros can use other macro commands. For example if we wanted to store the name 
 
 \subsection{Macro parameters.} 
 
-In this Chapter we will spend most of the time with commands available in TeX core, before we move onto commands that are available in \latex. Now, in the example above, we did not use any parameters. \tex allows us to define parameter by adding |\#1|..|\#9| as parameters to the macro definition. Here is a short example, again using plain \tex. 
+In this Chapter we will spend most of the time with commands available in \tex core, before we move onto commands that are available in \latex. Now, in the example above, we did not use any parameters. \tex allows us to define parameter by adding |#1|..|#9| as parameters to the macro definition. Here is a short example, again using plain \tex. 
 
 
 \begin{teX}
@@ -83,6 +90,7 @@ In this Chapter we will spend most of the time with commands available in TeX co
 \twonumbers{12,13}
 \bye
 \end{teX}
+
 \def\twonumbers#1#2{(#1,#2)}
 This will print \texttt{\twonumbers{12}{13}}. The macro takes the two arguments 12 and 13  and prints the two numbers in parentheses. This activity is called \textit{macro expansion}\index{macros>expansion}\index{macros>parameters}.
 
@@ -92,21 +100,24 @@ This will print \texttt{\twonumbers{12}{13}}. The macro takes the two arguments 
 As a simple example consider the following:\index{macros>delimited}
 
 \begin{teX}
-\def\asentence#1#2;{{#1#2}}
+\def\asentence#1#2;{{\textbf{#1}#2}}
 \bye
 \end{teX}
 
-\begin{texexample}{delimited examples}{delimited}
-\def\asentence#1#2;{{#1#2}}
-
-{\asentence The whole sentence is printed;}\par
-{\asentence The whole sentence is printed;}\par
-{\asentence The whole sentence is printed;}\par
+\begin{texexample}{delimited examples}{ex:delimited}
+\def\asentence#1#2;{#1}
+\asentence The whole sentence is printed;
 \end{texexample}
 
+Example~\ref{ex:delimited} defines a macro with an undelimited first parameter, and a second parameter delimited by a semicolon. The replacement text consists only of |#1| and hence the rest are discarded.
 
-Example~\ref{delimited} defines a macro with an undelimited first parameter, and a second parameter delimited by a
-semicolon.
+\begin{texexample}{delimited examples}{ex:delimited}
+\def\asentence#1#2;{{\bfseries #1}#2}
+\asentence The whole sentence is printed;
+\end{texexample}
+
+Example~\ref{ex:delimited} defines a macro with an undelimited first parameter, and a second parameter delimited by a semicolon. The replacement text consists only of |#1| and hence the rest are discarded.
+
 
 \subsection{Space, return, and the tab character as delimiters of parameters}
 
@@ -375,7 +386,7 @@ will produce:
 \MyMacro{John}
 
 
-
+\endinput
 As mentioned before it is legal to call a macro
 inside a |\def\csname| . . .|\def\endcsname| sequence as long
 as the macro expands to characters only. Counter registers
@@ -384,7 +395,7 @@ can also be used:
 
 \begin{texexample}{count example}{}
 \bgroup
-\count0=5
+\count0=5 %
 \expandafter\def\csname ZZ-\the\count0\endcsname{outputs: 
 ZZ-\the\count0 }
 
@@ -1923,7 +1934,7 @@ While developing a package, you should try and minimize the amount of new macros
 
 
 Here, we have used two macros from the kernel, |\@firstoftwo| and |\@secondoftwo|. Since they are available, we have used them and saved the trouble of having to redefine them. We have also used |\reserved@a| and |\reserved@b|, also from the kernel. Many programmers use them, but as the names imply they are reserved. It is best to rather define your own scratch macro names.
-\MakePercentIgnore
+
 
 
 

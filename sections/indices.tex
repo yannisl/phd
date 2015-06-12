@@ -1,4 +1,7 @@
 \parskip1ex 
+\newfontfamily\tibetan{TibMachUni.ttf}
+\def\deva{{\protect\tibetan\symbol{"0F7C} xx ༃}}
+
 \chapter{Indices}
 \pagebreak
 
@@ -39,26 +42,42 @@ A section entitled ``An Alphabetical Table of the most material contents of the 
 \pagestyle{headings}
 
 
-\index{Quantum Mechanics!History|(}
+\index{Quantum Mechanics>History|(}
 \setlength{\columnsep}{2em}
 \begin{multicols}{2}
 
 \section{Preparing an index}
 
 In order to produce an index, we need to load the
-package \pkg{makeidx}  and immediately issue the command \cmd{\makeindex}.\sidenote{You will also need to at least run the file once using |MakeIndex| on |MikTex|. Check your distribution if you getting problems.}
+package \pkg{makeidx}  and immediately issue the command \cmd{\makeindex}.\footnote{You will also need to at least run the file once using |MakeIndex| on |MikTex|. Check your distribution if you getting problems.}
 At the place where
 we want the index to be printed,we use \cmd{\printindex}.
 \parindent1em
 
 In \latex, we include a word
 in the index by using the command \cmd{\index}\meta{arg}, so if the word Kroll should be included in
-the index, we should use the command |\index{Kroll}|.\index{Kroll}
+the index, we should use the command |\index{Kroll}|.
 
 If the word is to be printed in bold, we use
 
+% : = |
+% = = @
+% \catcode `|
+\bgroup
+ \catcode`|=11
+\gdef\idxmain#1{%
+   \def\idxmainentryi##1##2##3;{%
+      \index{Kr0=\textbf{#1}|textbf}
+    }
+   \idxmainentryi#1;    
+}  
 
-\index{Kroll=\textbf{Kroll}}\index{Kroll>Leon Kroll}
+
+\egroup
+
+\idxmain{Kroll}
+
+\index{Kroll=\textbf{Kroll}>Leon Kroll}
 
 
 \emphasis{usepackage,makeidx,makeindex,index,printindex}
@@ -116,10 +135,34 @@ page range in the index for the word "convex".
 
 \subsection{Subindices}
 Subindices can be produced using an exclamation mark. If we want the word `Zeus'
-to appear in the category of Greek which is in the category of Gods, we will write
+to appear in the category of Greek which is in the category of Gods, we will write:
 
-\verb+\index{Gods\!Greek\!Zeus}+
+\verb+\index{Gods!Greek!Zeus}+
 
+The actual symbol used will depend on the |.ist| file used when the file is compiled. For example in the |ltxdoc| class this is redefined as |>|.
+\DeclareRobustCommand\textat{%
+  \bgroup\makeatother \egroup
+}
+
+
+\robustify{\ttdefault}
+\robustify{\ttfamily}
+\robustify{\color}
+
+ \makeatletter
+\def\IDX#1#2{%
+   \def\xx{\expandafter\@gobble\string#2}
+   \index{\bgroup\small\texttt{\textbackslash #1}>\small\texttt{\textbackslash \xx}\egroup}
+}
+ 
+ \makeatother
+
+\IDX{chapter}{\@introduction}
+\IDX{chapter}{\intro@duction}
+\IDX{abr}{\@some@other}
+
+\meaning\ttfamily \\
+\meaning\ttdefault\\
 
 \section{Multiple Pages}
 
@@ -140,7 +183,7 @@ as the beginnings of quantum mechanics.\ldots
 
 \end{multicols}
 
-\index{Quantum Mechanics!History|)}
+\index{Quantum Mechanics>History|)}
 
 
 \section{Summary of commands}
@@ -149,11 +192,11 @@ as the beginnings of quantum mechanics.\ldots
 \toprule
 Example	&Index Entry	&Comment\\
 \midrule
-\textbackslash index\{hello\}	&hello, 1	&Plain entry\\
-\textbackslash index\{hello!Peter\}	  &Peter, 3	&Subentry under 'hello'\\
+\textbackslash index\{hello\}	          &hello, 1	&Plain entry\\
+\textbackslash index\{hello!Peter\}	      &Peter, 3	&Subentry under 'hello'\\
 \textbackslash index\{Sam@\textbackslash textsl\{Sam\}\}	&Sam, 2	&Formatted entry\\
 \textbackslash index\{Lin@\textbackslash textbf\{Lin\}\}	&\textbf{Lin}, 7	&Same as above\\
-\textbackslash index\{Jennytextbf\}	&Jenny, 3	&Formatted page number\\
+\textbackslash index\{Jennytextbf\}	     &Jenny, 3	&Formatted page number\\
 \textbackslash index\{Joe textit\}	&Joe, 5	          &Same as above\\
 \textbackslash index\{ecole@\'ecole\}	&école, 4	&Handling of accents\\
 \textbackslash index\{Peter see\{hello\}\}	&Peter, see hello	&Cross-references\\
@@ -188,7 +231,7 @@ This manual, was build using a large |ltxdoc| class and these problems appeared 
 
 \section{Customization}\index{Indexing>customizing}
 
-When creating an index with \pkgname{makeindex} one can create a \docfile{sample.ist} file that can be used together with the makeidx program to customize the way the index will look.
+When creating an index with \pkgname{makeindex} one can create a \docfile{sample.ist} file that can be used together with the |makeidx| program to customize the way the index will look.
 
 \begin{verbatim}
 heading_prefix "{\\bfseries\\hfil "
@@ -218,31 +261,31 @@ sort_rule "\," "\b\,"
 \section{Writing custom indexing commands}
 
 For complex documents it is easier to write a number of macros to assist with indexing and to also provide consistency. For example if you want to index the Devanagari alphabet we might need to get quite creative as to how to both index it as well as get the symbols in the index.
+\DeclareRobustCommand\ta{{\tibetan ༃ }}
 
-\def\Zs#1{\incsyms%
-   \indexcommand[$\string#1$]{#1}%
-   #1}
-   
-\def\ta{ZZA}
+%\begin{texexample}{Writing Indexing Commands}{ex:zs}
+%\gdef\ZZs#1{\incsyms%
+%   \indexcommand[\string#1]{#1}%
+%   #1}
+%\DeclareRobustCommand\ta{{\tibetan ༃}\xparse}
+%\ta
+%\end{texexample}
+%
+%The command |\ZZs{\ta}| typesets the command in the document, as (\ZZs{\ta}) and also adds it to the index and typesets the symbol.
+%
+%
+%\begin{phdverbatim}
+%\def\ZZs#1{\incsyms%
+%   \indexcommand[\string#1]{#1}
+%   \string#1}
+%\end{phdverbatim}
 
-The command |\Zs{\ta}| typesets the command in the document, as (\Zs{\ta}) and also adds it to the index and typesets the symbol.
 
 
 
-\begin{verbatim}
-\def\Zs#1{\incsyms%
-   \indexcommand[$\string#1$]{#1}
-   \string#1}
-\end{verbatim}
 
-\newfontfamily\tibetan{TibMachUni.ttf}
-\def\deva{{\protect\tibetan\symbol{"0F7C} xx ༃}}
 
-\Zs\deva
 
-\index{{tibetan>astronomical signs>\protect\tibetan ༃}}
-
-%\PrintIndex
 
 
 

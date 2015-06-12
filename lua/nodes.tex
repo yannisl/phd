@@ -54,15 +54,15 @@ It might puzzle you as to why the language is shown, but \tex ships this informa
 
 \begin{texexample}{Building nodes programmatically}{}
 \begin{luacode*}
-local g = node.new("glyph")
-g.font = font.current()
-g.lang = tex.language
-g.char = 86 -- V
+   local g = node.new("glyph")
+   g.font = font.current()
+  g.lang = tex.language
+  g.char = 86 -- V
 
-local hbox = node.hpack(g)
-local vbox = node.vpack(hbox)
+  local hbox = node.hpack(g)
+  local vbox = node.vpack(hbox)
 
-node.write(vbox)
+  node.write(vbox)
 \end{luacode*}
 \end{texexample}
 
@@ -135,18 +135,22 @@ nodes have number 0 (used to be char node) and ligature nodes are mapped to 7. T
 packages can use the same symbolic names as in traditional ε-TEX. Keep in mind that the internal node
 numbers are different and that there are more node types than 15.
 
-\setbox0=\hbox attr0 = 5 attr10 = 45 {contents}
+%\setbox0=\hbox attr0 = 5 attr10 = 45 {contents}
+%
+%\directlua{
+%  local attr = tex.box[0].attr.next
+%  while attr do
+%    texio.write_nl(attr.number .. " = " .. attr.value)
+%    attr = attr.next
+%  end
+%}
 
-\directlua{
-  local attr = tex.box[0].attr.next
-  while attr do
-    texio.write_nl(attr.number .. " = " .. attr.value)
-    attr = attr.next
-  end
-}
 
-A very useful article on understanding how paragraphs are build is Paul Isambert's article \textit{What it takes to make a paragraph.}
+\section{Callbacks}
 
+A very useful article on understanding how paragraphs are build is Paul Isambert's article \textit{What it takes to make a paragraph.} The below example is from the paper with minor modifications.
+
+\begin{texexample}{Boustrophedon}{ex:boust}
 \luadirect{
 local GLYF = node.id("glyph")
 function show_nodes (head)
@@ -163,7 +167,7 @@ end
 }
 
 \begin{luacode*}
-local nodenew = node.new
+local nodenew = node.new  -- %(*@\label{n.new}@*)
 local nodecopy = node.copy
 local nodetail = node.tail
 local nodeinsertbefore = node.insert_before
@@ -188,29 +192,29 @@ color_pop.command = 2
 chicken_pagenumbers = true
 
 boustrophedon = function(head)
-  rot = node.new(8,8)
+  rot = node.new(8,8)  
   rot2 = node.new(8,8)
   odd = true
     for line in node.traverse_id(0,head) do
-      --if odd == false then
+      if odd == false then
         w = line.width/65536*0.99625 -- empirical correction factor (?)
         rot.data  = "-1 0 0 1 "..w.." 0 cm"
         rot2.data = "-1 0 0 1 "..-w.." 0 cm"
         line.head = node.insert_before(line.head,line.head,nodecopy(rot))
         nodeinsertafter(line.head,nodetail(line.head),nodecopy(rot2))
         odd = true
-      --else
-        --odd = false
-      --end
+         else
+          odd = false
+        end
     end
   return head
 end
 \end{luacode*}
-
 \def\boustrophedon{
-  \directlua{luatexbase.add_to_callback("post_linebreak_filter",boustrophedon,"boustrophedon")}}
+  \directlua{luatexbase.add_to_callback("post_linebreak_filter", boustrophedon, "boustrophedon")}}
+  
 \def\unboustrophedon{
-  \directlua{luatexbase.remove_from_callback("post_linebreak_filter","boustrophedon")}}
+  \directlua{luatexbase.remove_from_callback("post_linebreak_filter", "boustrophedon")}}
 
 \boustrophedon
 
@@ -218,7 +222,48 @@ end
 
 \unboustrophedon
 
-\lorem
+
+\end{texexample}
+
+
+One of the most notable features of LuaTeX is that it can call its own functions at certain points during TeX processing.
+
+
+
+\section{The status library}
+
+The status table can provide useful information, espcially for message reporting.
+\begin{multicols}{2}
+\begin{luacode}
+local info =status.list() 
+-- 
+-- sort the table left to user as an exercise
+-- 
+-- table.sort(info)
+for i,v in pairs (info) do 
+if  (v==nil or i=='filename' or i=='banner' or i=='pdftex_banner') 
+   then 
+      --tex.print(-2,i .. ' = nil\\par') 
+   else 
+      tex.tprint({'\\ttfamily'}, {-2, i .. ' =  '..tostring(v)})
+   end
+   tex.print('\\par')
+end
+
+\end{luacode}
+\end{multicols}
+
+
+\parindent1em
+
+
+
+
+
+
+
+
+
 
 
  

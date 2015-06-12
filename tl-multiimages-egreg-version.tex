@@ -1,0 +1,137 @@
+\documentclass{article}
+\usepackage{showframe}
+\usepackage{xparse,mwe,graphicx,caption,environ}
+
+\ExplSyntaxOn
+\NewEnviron{multiimages}[1][]
+ {
+  \keys_set:nn { yl/multiimages } { #1 }
+  \tl_use:N \l_yl_multi_start_tl
+  \dim_set:Nn \parindent { 0pt }
+  \skip_set:Nn \leftskip { 0pt plus 1fil }
+  \skip_set:Nn \rightskip { 0pt plus -1fil }
+  \skip_set:Nn \lineskip { \l_yl_multi_skip_skip }
+  \yl_multiimages:V \BODY
+  \tl_use:N \l_yl_multi_end_tl
+ }
+
+\tl_new:N \l_yl_multi_start_tl
+\tl_new:N \l_yl_multi_end_tl
+
+\keys_define:nn { yl/multiimages }
+ {
+  env .choice:,
+  env/none .code:n =
+   \tl_set:Nn \l_yl_multi_start_tl { \par\addvspace{\topsep} }
+   \tl_set:Nn \l_yl_multi_end_tl { \par\addvspace{\topsep} },
+  env/figure .code:n =
+   \tl_set:Nn \l_yl_multi_start_tl { \__yl_multi_beginfigure:V \l_yl_multi_pos_tl }
+   \tl_set:Nn \l_yl_multi_end_tl { \end{figure} },
+  env .initial:n = none,
+
+  pos .tl_set:N = \l_yl_multi_pos_tl,
+  pos .initial:n = { htp },
+
+  outer .dim_set:N = \l_yl_multi_outer_dim,
+  outer .initial:n = 3.6cm,
+  inner .dim_set:N = \l_yl_multi_inner_dim,
+  inner .initial:n = 3.6cm,
+
+  skip .dim_set:N = \l_yl_multi_skip_skip,
+  skip .initial:n = \lineskip,
+
+  last .choice:,
+  last/fill .code:n = 
+   \tl_set:Nn \l_yl_multi_last_tl { { \parfillskip=0pt\par } },
+  last/center .code:n =
+   \tl_set:Nn \l_yl_multi_last_tl { { \parfillskip=0pt plus 2fil\par } },
+  last .initial:n = fill,
+ }
+
+\cs_new_protected:Npn \__yl_multi_beginfigure:n #1
+ {
+  \begin{figure}[#1]
+ }
+\cs_generate_variant:Nn \__yl_multi_beginfigure:n { V }
+
+\cs_new_protected:Npn \yl_multiimages:n #1
+ {
+  \tl_set:Nn \l_tmpa_tl { #1 }
+  \tl_remove_all:Nn \l_tmpa_tl { \par }
+  \tl_replace_all:Nnn \l_tmpa_tl { !!img ~ } { \__yl_multi_img:w }
+  \tl_replace_all:Nnn \l_tmpa_tl { !!cap ~ } { \__yl_multi_cap:w }
+  \tl_use:N \l_tmpa_tl \tl_use:N \l_yl_multi_last_tl
+ }
+\cs_generate_variant:Nn \yl_multiimages:n { V }
+
+\cs_new_protected:Npn \__yl_multi_img:w #1 !!
+ {
+  \begin{minipage}{\l_yl_multi_outer_dim}\centering
+  \includegraphics[width=\l_yl_multi_inner_dim]{ #1 }
+ }
+\cs_new_protected:Npn \__yl_multi_cap:w #1 !!
+ {
+  \captionof{figure}{#1}
+  \end{minipage}\hspace{1pc plus 3pc}
+ }
+\ExplSyntaxOff   
+
+\begin{document}
+
+\begin{multiimages}[env=figure,pos=ht]
+  !!img example-image-a!! 
+  !!cap This is the first caption!!
+
+  !!img example-image-a!!
+  !!cap This is the second caption!!
+
+  !!img example-image-a!!
+  !!cap This is the third caption!!
+
+  !!img example-image-a!!
+  !!cap This is the fourth caption!!
+
+  !!img example-image-a!!
+  !!cap This is the fifth caption!!
+
+  !!img example-image-a!!
+  !!cap This is the sixth caption!!
+\end{multiimages}
+
+\begin{multiimages}[last=center]
+  !!img example-image-a!! 
+  !!cap This is the first caption!!
+
+  !!img example-image-a!!
+  !!cap This is the second caption!!
+
+  !!img example-image-a!!
+  !!cap This is the third caption!!
+
+  !!img example-image-a!!
+  !!cap This is the fourth caption!!
+
+  !!img example-image-a!!
+  !!cap This is the fifth caption!!
+
+\end{multiimages}
+
+\begin{multiimages}[last=center,env=figure,pos=p,inner=3cm,skip=10ex]
+  !!img example-image-a!! 
+  !!cap This is the first caption!!
+
+  !!img example-image-a!!
+  !!cap This is the second caption!!
+
+  !!img example-image-a!!
+  !!cap This is the third caption!!
+
+  !!img 1975!!
+  !!cap This is the fourth caption!!
+
+  !!img 1976!!
+  !!cap This is the fifth caption!!
+
+\end{multiimages}
+
+\end{document}

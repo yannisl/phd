@@ -1,0 +1,103 @@
+\documentclass{article}
+\usepackage{expl3}
+\parindent0pt
+\begin{document}
+% Error message example
+%
+% simulate LaTeX2e \fmversion
+\def\fmversion{2000/11/12}
+\makeatletter
+\ExplSyntaxOn 
+
+% create error boolean
+  \bool_new:N \l_mypackage_error_bool
+ 
+% redirect package errors here
+  \cs_new_protected:Npn \mypackage_warning:nxx #1#2#3 {
+      \bool_set_true:N \l_mypackage_error_bool
+      \msg_info:nnxx { mypackage } {#1} {#2} {#3}
+  }
+ 
+ 
+% define some error messages     
+   \msg_set:nnnn {mypackage} { old-version }
+   { LaTeX~source~files~more~than~5~year~old.~ Is~dated~(year:#1~date:#2-#3) }
+   { Please~update~your~distribution~visit~ctan } %(*@\label{test}@*)
+   
+
+% check version number   	   	
+    \cs_new:Npn \mypackage_check_version:n #1 {
+       \exp_after:wN \l_mypackage_check_version_aux:w #1\q_stop
+    }
+
+% check version number auxiliary     		    		
+    \cs_new:Npn \l_mypackage_check_version_aux:w #1/#2/#3\q_stop {
+        \int_compare:nNnTF  { (\tex_year:D-#1)*12 + (\tex_month:D-#2) } > { 65 }
+	        { FAIL\\ \mypackage_warning:nxx {old-version} {#1} {#1/#2/#3} }
+	        { PASS\\ } 
+    }
+  
+  \mypackage_check_version:n \fmversion 
+  \mypackage_check_version:n \fmtversion 
+\ExplSyntaxOff
+
+\expandafter\index{\detokenize{\l_start}}
+
+\newcounter{cn}
+\let\oo\\\
+
+\def\valueA{35762}
+\def\valueB{62525}
+\def\valueC{67102}
+\def\valueD{38990}
+\def\valueE{1993}
+\def\valueF{42762}
+\def\valueG{22098}
+\def\valueH{28900}
+\def\valueI{45596}
+\def\valueJ{38495}
+\def\valueK{196292}
+
+
+
+\noindent The elements have the values\\[0.5\baselineskip]
+\valueA\\
+\valueB\\
+\valueC\\
+\valueD\\
+\valueE\\
+\valueF\\
+\valueG\\
+\valueH\\
+\valueI\\
+\valueJ\\
+\valueK\\[0.5\baselineskip]
+but how do I make \LaTeX{} automatically count the number of elements above? (The answer is $11$ in this case.)
+
+\def\startcount{\bgroup\def\\{\stepcounter{cn}}}
+\def\stopcount{\thecn\egroup}
+\startcount
+\valueA\\
+\valueB\\
+\valueC\\
+\valueD\\
+\valueE\\
+\valueF\\
+\valueG\\
+\valueH\\
+\valueI\\
+\valueJ\\
+\valueK\\
+
+\stopcount
+
+
+
+
+
+
+
+
+
+
+\end{document}

@@ -1,60 +1,486 @@
 \documentclass{book}
 \usepackage{pgf}
-
+\usepackage{expl3,xparse}
 \usepackage{fontspec}
-\pgfkeys{/chapter/.is family}
-\newcommand\cxset{\pgfqkeys{/chapter }} %Notice this is pgf q keys
+\setmainfont{Arial.ttf}
+\usepackage{varioref}
+\usepackage[documentation]{tcolorbox}
+\pgfkeys{/phd/.is family}
+\newcommand\cxset{\pgfqkeys{/phd }} %Notice this is pgf q keys
 %
+\parindent0pt
+\DeclareTextCommand{\foos}{a}{b}
+
 
 \begin{document}
+\chapter{Script Settings}
+\section{Scripts Management}
+\label{sect:management}
 
-\makeatletter
-\newcommand\makefontfamily@cx[1]{%
-  \newfontfamily\ogham{#1}
+
+% |\g_phd_scripts_clist| holds a list of all the scripts that have been loaded.
+% Managing the user interface is problematic, we will have users that require
+% only one script and users that might want all of them.
+% There is also the issue between the blurring of alphabets, langages and scripts
+% Since we will always specify a pan-unicode font, which we will make available
+% with the |phd| package. We map all scripts to this font first.
+%
+%    \begin{macrocode}
+\ExplSyntaxOn
+\clist_new:N \g_phd_scripts_clist
+\clist_new:N \g_phd_noto_clist
+\input{../notolist.txt.tex}
+%    \end{macrocode}
+%    \begin{macrocode}
+
+\cs_set:Npn \notofontlist 
+	{
+		\begin{multicols}{2}
+		\clist_map_inline:Nn \g_phd_noto_clist
+		  {
+		     ##1\par 
+		  }
+		\end{multicols}  
+	}
+\notofontlist
+\prop_new:N \script_prop
+\prop_put:Nnn \script_prop {name}{Armenian}
+\prop_put:Nnn \script_prop {fonts}{NonoArmenian-Regular.ttf, Others}
+\prop_get:NnN \script_prop {fonts}\l_tempa_tl
+\prop_put:Nnn \script_prop {group}{Europe}
+\prop_get:NnN \script_prop {group} \l_tempa_tl
+\l_tempa_tl
+%    \end{macrocode}
+% 
+%    \begin{macrocode}
+\NewDocumentCommand\SetPanUnicodeFont { m }
+  {
+     \gdef\panunicodefontface{#1}
+     \newfontfamily\panunicode[Scale=MatchUppercase]{#1}
+  }
+%    \end{macrocode}
+\SetPanUnicodeFont{code2000.ttf}  
+
+%
+% #1 script name e.g. tibetan
+% #2 script font face arial.ttf
+%
+
+\cs_gset:Npn \makefontfamily#1#2 {
+\if_meaning:w\panunicodefontface#2
+   true--
+\else:
+  false--
+  \exp_after:wN
+  \newfontfamily\cs:w #1fontfamily\cs_end: { #2 }
+  \cs_gset_eq:cc {#1} {#1fontfamily}
+\fi:  
 }
 
-% we keep track of all scripts we load
-\gdef\scriptsDB{}
-\def\scripts#1{\g@addto@macro\scriptsDB{#1,}}
-
-\cxset{ogham font/.code=\makefontfamily@cx{#1}}
-\cxset{ogham font/.default = code2000.ttf}
-\cxset{ogham font}
-\cxset{scripts/.code = \scripts{#1}}
-\cxset{scripts={tibetan,ogham}}
-
-\cxset{scripts={bopomofo,phoenician,syriac,cypriot,
-      cjk,hebrew,canadianaborigin}}
-\def\panunicode{Arial}
-
-
-\@for\next:=\scriptsDB\do{%
-   %store script name
-   \expandafter\expandafter\expandafter
-      \edef\csname\next @name%
-         \expandafter\expandafter\expandafter\expandafter\endcsname{\next}
-  %create if@scriptname and set to false
-   \expandafter\expandafter\expandafter
-      \newif\csname if@\next\endcsname
-  %default all scripts to code2000.ttf
-    \expandafter\newfontfamily\csname\next\endcsname{\panunicode}
-  % maketext commands
-  \expandafter\expandafter\expandafter
-      \edef\csname text\next\endcsname#1{\noexpand\csname\next\endcsname #1}
+\cs_gset:Npn \makepanfontfamily#1{
+%  \exp_after:wN
+%  \newfontfamily\cs:w #1fontfamily\cs_end: { #2 }
+  \cs_gset_eq:cN {#1fontfamily}\panunicode
+  \cs_gset_eq:cc {#1} {#1fontfamily}
 }
 
-\expandafter\MakeUppercase\bopomofo@name\ \phoenician@name
+\cs_gset:Npn \add_a_script:n #1
+ {
+   \clist_gput_left:Nn \g_phd_scripts_clist {#1 }
+   \createscriptenvironment {#1}
+   \createtextscript {#1}
+ }   
+ 
+ % add a script
+\NewDocumentCommand\addascript { m } 
+{
+    \add_a_script:n {#1}
+  
+}
+  
+% Mock an environment 
+\gdef\createscriptenvironment #1{
+   \exp_after:wN\gdef\csname #1script\endcsname{\group_begin:
+      \csname #1fontfamily\endcsname}
+   \exp_after:wN\gdef\cs:w end#1script\cs_end:{\group_end: }
+}  
 
-\if@bopomofo test\else false\fi
+% create text script
+\cs_gset:Npn \createtextscript #1{
+   \long\exp_after:wN\gdef\csname text#1\endcsname ##1
+   {
+      \group_begin: 
+      \cs:w #1fontfamily\cs_end:
+        ##1
+     \group_end:
+   }
+}  
+\ExplSyntaxOff 
 
-\if@ogham ogham loaded \else not loaded\fi
 
-\char"1681
 
-\textogham{\char"1681 \char"1689  }
+\NewDocumentCommand\AddScript { m } {
+    \cxset{script/.code=\addascript{##1}}
+    \cxset{#1 font/.code=\makefontfamily{#1}{##1}}
+    \cxset{script=#1}
+    \cxset{#1 font=\panunicodefontface}
+}
 
-\textcypriot{\char"1688\char"1681 \char"1689\char"16A0}
+\cxset{add script/.code = \AddScript{#1}}
 
-\scriptsDB
+\ExplSyntaxOn
+\clist_gset:Nn \g_phd_scripts_clist {
+      armenian,
+      hebrew,
+      arabic,
+      syriac,
+      thaana,
+      devanagari,
+      bamum,
+      bengali,
+      brahmi,
+      coptic,
+      gurmukhi,
+      gujarati,
+      oriya,
+      tamil,
+      telugu,
+      kannada,
+      malayalam,
+      thai,
+      lao,
+      lisu,
+      myanmar,
+      georgian,
+      ethiopic,
+      cherokee,
+      ogham,
+      runic,
+      buhid,
+      bopomofo,
+      tibetan, 
+      cypriot, 
+      telugu, 
+      phoenician, 
+      cham,
+      vai,
+      rejang,
+      glagolitic,
+      saurashtra,
+         sinhala,
+      sylhetinagari,
+      tifinagh,
+      kayahli,
+     mongolian,
+     oldturkic,
+     cjk,
+  
+}
 
+\clist_map_inline:Nn\g_phd_scripts_clist 
+  {
+    \AddScript{#1}
+    \makepanfontfamily {#1}
+    #1,~
+ }
+
+\ExplSyntaxOff
+
+\cxset{cypriot font=code2000.ttf}
+\cxset{runic font=code2000.ttf}
+\cxset{cherokee font=Digohweli_1.ttf}
+\cxset{sinhala font=NotoSansSinhala-Regular.ttf}
+
+\tibetan Tibetan: དབུ་ཅན\par
+ཨོཾ་ཨཿཧཱུྂ་བཛྲ་གུ་རུ་པདྨ་སིདྡྷི་ཧཱུྂ༔\par
+
+% Test a new font and see if there are any complaints
+\cxset{tibetan font= Qomolangma-UchenSutung.ttf}
+
+\begin{tibetanscript}
+The tibetan environment\par
+ཨོཾ་ཨཿཧཱུྂ་བཛྲ་གུ་རུ་པདྨ་སིདྡྷི་ཧཱུྂ༔
+\end{tibetanscript}
+
+
+\cxset {
+  script=tibetan, tibetan font=TibMachUni.ttf,
+  script=cypriot, cypriot font = NotoSansCypriot-Regular.ttf,
+  script=phoenician,
+  phoenician font=code2000.ttf,
+  script=bopomofo}
+\cxset{brahmi font= Noto Sans Brahmi,}  
+
+Cypriot script                  
+\begin{cypriotscript}
+\cypriotfontfamily
+𐠣	𐠤	𐠥	𐠦	𐠧
+\end{cypriotscript}
+
+\texttibetan{ཨོཾ་ཨཿཧཱུྂ་བཛྲ་གུ་རུ་པདྨ་སིདྡྷི་ཧཱུྂ༔  }
+\par
+phoenician
+\textphoenician{\char"10910 something}\\
+
+\noindent\textrunic{%
+U+ 16Ax   ᚠ	ᚡ	ᚢ	ᚣ	ᚤ	ᚥ	ᚦ	ᚧ	ᚨ	ᚩ	ᚪ	ᚫ	ᚬ	ᚭ	ᚮ	ᚯ\\
+U+16Bx	ᚰ	ᚱ	ᚲ	ᚳ	ᚴ	ᚵ	ᚶ	ᚷ	ᚸ	ᚹ	ᚺ	ᚻ	ᚼ	ᚽ	ᚾ	ᚿ\\
+U+16Cx	ᛀ	ᛁ	ᛂ	ᛃ	ᛄ	ᛅ	ᛆ	ᛇ	ᛈ	ᛉ	ᛊ	ᛋ	ᛌ	ᛍ	ᛎ	ᛏ\\
+U+16Dx	ᛐ	ᛑ	ᛒ	ᛓ	ᛔ	ᛕ	ᛖ	ᛗ	ᛘ	ᛙ	ᛚ	ᛛ	ᛜ	ᛝ	ᛞ	ᛟ\\
+U+16Ex	   ᛠ	ᛡ	ᛢ	ᛣ	ᛤ	ᛥ	ᛦ	ᛧ	ᛨ	ᛩ	ᛪ	᛫	᛬	᛭	ᛮ	ᛯ \\
+\par }
+
+\noindent\texttelugu{%
+U+0C0x	ఀ	ఁ	ం	ః		అ	ఆ	ఇ	ఈ	ఉ	ఊ	ఋ	ఌ		ఎ	ఏ\\
+U+0C1x	ఐ		ఒ	ఓ	ఔ	క	ఖ	గ	ఘ	ఙ	చ	ఛ	జ	ఝ	ఞ	ట\\
+U+0C2x	ఠ	డ	ఢ	ణ	త	థ	ద	ధ	న		ప	ఫ	బ	భ	మ	య\\
+U+0C3x	ర	ఱ	ల	ళ	ఴ	వ	శ	ష	స	హ				ఽ	ా	ి\\
+U+0C4x	ీ	ు	ూ	ృ	ౄ		ె	ే	ై		ొ	ో	ౌ	్		\\
+U+0C5x						ౕ	ౖ		ౘ	ౙ						\\
+U+0C6x	ౠ	ౡ	ౢ	ౣ			౦	౧	౨	౩	౪	౫	౬	౭	౮	౯\\
+U+0C7x									౸	౹	౺	౻	౼	౽	౾	౿\\
+}
+
+
+\textbengali{
+	1	2	3	4	5	6	7	8	9	A	B	C	D	E	F\\
+U+098x	 ঀ	ঁ	ং	ঃ		অ	আ	ই	ঈ	উ	ঊ	ঋ	ঌ			এ\\
+U+099x 	ঐ			ও	ঔ	ক	খ	গ	ঘ	ঙ	চ	ছ	জ	ঝ	ঞ	ট\\
+U+09Ax	ঠ	ড	ঢ	ণ	ত	থ	দ	ধ	ন		প	ফ	ব	ভ	ম	য\\
+U+09Bx	র		ল				শ	ষ	স	হ			়	ঽ	া	ি\\
+U+09Cx	ী	ু	ূ	ৃ	ৄ			ে	ৈ			ো	ৌ	্	ৎ\\	
+U+09Dx								ৗ					ড়	ঢ়		য়\\
+U+09Ex	ৠ	ৡ	ৢ	ৣ			০	১	২	৩	৪	৫	৬	৭	৮	৯\\
+U+09Fx	ৰ	ৱ	৲	৳	৴	৵	৶	৷	৸	৹	৺	৻				\\
+Notes\\
+}
+
+\textbopomofo{%
+	0	1	2	3	4	5	6	7	8	9	A	B	C	D	E	F\\
+U+310x						ㄅ	ㄆ	ㄇ	ㄈ	ㄉ	ㄊ	ㄋ	ㄌ	ㄍ	ㄎ	ㄏ\\
+U+311x	ㄐ	ㄑ	ㄒ	ㄓ	ㄔ	ㄕ	ㄖ	ㄗ	ㄘ	ㄙ	ㄚ	ㄛ	ㄜ	ㄝ	ㄞ	ㄟ\\
+U+312x	ㄠ	ㄡ	ㄢ	ㄣ	ㄤ	ㄥ	ㄦ	ㄧ	ㄨ	ㄩ	ㄪ	ㄫ	ㄬ	ㄭ\\
+}
+
+\textarmenian{
+U+053x		Ա	Բ	Գ	Դ	Ե	Զ	Է	Ը	Թ	Ժ	Ի	Լ	Խ	Ծ	Կ\\
+U+054x	Հ	Ձ	Ղ	Ճ	Մ	Յ	Ն	Շ	Ո	Չ	Պ	Ջ	Ռ	Ս	Վ	Տ\\
+U+055x	Ր	Ց	Ւ	Փ	Ք	Օ	Ֆ			ՙ	՚	՛	՜	՝	՞	՟\\
+U+056x		ա	բ	գ	դ	ե	զ	է	ը	թ	ժ	ի	լ	խ	ծ	կ\\
+U+057x	հ	ձ	ղ	ճ	մ	յ	ն	շ	ո	չ	պ	ջ	ռ	ս	վ	տ\\
+U+058x	ր	ց	ւ	փ	ք	օ	ֆ	և		։	֊			֍	֎	֏\\
+}
+
+\textbuhid{%
+	0	1	2	3	4	5	6	7	8	9	A	B	C	D	E	F\\
+U+174x	 ᝀ	ᝁ	ᝂ	ᝃ	ᝄ	ᝅ	ᝆ	ᝇ	ᝈ	ᝉ	ᝊ	ᝋ	ᝌ	ᝍ	ᝎ	ᝏ\\
+U+175x 	ᝐ	ᝑ	ᝒ	ᝓ\\
+}
+
+\textcham{%
+\mbox{\phantom{U+AA0x}} 	0	1	2	3	4	5	6	7	8	9	A	B	C	D	E	F\\
+U+AA0x	ꨀ	ꨁ	ꨂ	ꨃ	ꨄ	ꨅ	ꨆ	ꨇ	ꨈ	ꨉ	ꨊ	ꨋ	ꨌ	ꨍ	ꨎ	ꨏ\\
+U+AA1x	ꨐ	ꨑ	ꨒ	ꨓ	ꨔ	ꨕ	ꨖ	ꨗ	ꨘ	ꨙ	ꨚ	ꨛ	ꨜ	ꨝ	ꨞ	ꨟ\\
+U+AA2x	ꨠ	ꨡ	ꨢ	ꨣ	ꨤ	ꨥ	ꨦ	ꨧ	ꨨ	ꨩ	ꨪ	ꨫ	ꨬ	ꨭ	ꨮ	ꨯ\\
+U+AA3x	ꨰ	ꨱ	ꨲ	ꨳ	ꨴ	ꨵ	ꨶ									\\
+U+AA4x	ꩀ	ꩁ	ꩂ	ꩃ	ꩄ	ꩅ	ꩆ	ꩇ	ꩈ	ꩉ	ꩊ	ꩋ	ꩌ	ꩍ		\\
+U+AA5x	꩐	꩑	꩒	꩓	꩔	꩕	꩖	꩗	꩘	꩙			꩜	꩝	꩞	꩟\\
+}
+
+\textvai{
+	0	1	2	3	4	5	6	7	8	9	A	B	C	D	E	F\\
+U+A50x	ꔀ	ꔁ	ꔂ	ꔃ	ꔄ	ꔅ	ꔆ	ꔇ	ꔈ	ꔉ	ꔊ	ꔋ	ꔌ	ꔍ	ꔎ	ꔏ\\
+U+A51x	ꔐ	ꔑ	ꔒ	ꔓ	ꔔ	ꔕ	ꔖ	ꔗ	ꔘ	ꔙ	ꔚ	ꔛ	ꔜ	ꔝ	ꔞ	ꔟ\\
+U+A52x	ꔠ	ꔡ	ꔢ	ꔣ	ꔤ	ꔥ	ꔦ	ꔧ	ꔨ	ꔩ	ꔪ	ꔫ	ꔬ	ꔭ	ꔮ	ꔯ\\
+U+A53x	ꔰ	ꔱ	ꔲ	ꔳ	ꔴ	ꔵ	ꔶ	ꔷ	ꔸ	ꔹ	ꔺ	ꔻ	ꔼ	ꔽ	ꔾ	ꔿ\\
+U+A54x	ꕀ	ꕁ	ꕂ	ꕃ	ꕄ	ꕅ	ꕆ	ꕇ	ꕈ	ꕉ	ꕊ	ꕋ	ꕌ	ꕍ	ꕎ	ꕏ\\
+U+A55x	ꕐ	ꕑ	ꕒ	ꕓ	ꕔ	ꕕ	ꕖ	ꕗ	ꕘ	ꕙ	ꕚ	ꕛ	ꕜ	ꕝ	ꕞ	ꕟ\\
+U+A56x	ꕠ	ꕡ	ꕢ	ꕣ	ꕤ	ꕥ	ꕦ	ꕧ	ꕨ	ꕩ	ꕪ	ꕫ	ꕬ	ꕭ	ꕮ	ꕯ\\
+U+A57x	ꕰ	ꕱ	ꕲ	ꕳ	ꕴ	ꕵ	ꕶ	ꕷ	ꕸ	ꕹ	ꕺ	ꕻ	ꕼ	ꕽ	ꕾ	ꕿ\\
+U+A58x	ꖀ	ꖁ	ꖂ	ꖃ	ꖄ	ꖅ	ꖆ	ꖇ	ꖈ	ꖉ	ꖊ	ꖋ	ꖌ	ꖍ	ꖎ	ꖏ\\
+U+A59x	ꖐ	ꖑ	ꖒ	ꖓ	ꖔ	ꖕ	ꖖ	ꖗ	ꖘ	ꖙ	ꖚ	ꖛ	ꖜ	ꖝ	ꖞ	ꖟ\\
+U+A5Ax	ꖠ	ꖡ	ꖢ	ꖣ	ꖤ	ꖥ	ꖦ	ꖧ	ꖨ	ꖩ	ꖪ	ꖫ	ꖬ	ꖭ	ꖮ	ꖯ\\
+U+A5Bx	ꖰ	ꖱ	ꖲ	ꖳ	ꖴ	ꖵ	ꖶ	ꖷ	ꖸ	ꖹ	ꖺ	ꖻ	ꖼ	ꖽ	ꖾ	ꖿ\\
+U+A5Cx	ꗀ	ꗁ	ꗂ	ꗃ	ꗄ	ꗅ	ꗆ	ꗇ	ꗈ	ꗉ	ꗊ	ꗋ	ꗌ	ꗍ	ꗎ	ꗏ\\
+U+A5Dx	ꗐ	ꗑ	ꗒ	ꗓ	ꗔ	ꗕ	ꗖ	ꗗ	ꗘ	ꗙ	ꗚ	ꗛ	ꗜ	ꗝ	ꗞ	ꗟ\\
+U+A5Ex	ꗠ	ꗡ	ꗢ	ꗣ	ꗤ	ꗥ	ꗦ	ꗧ	ꗨ	ꗩ	ꗪ	ꗫ	ꗬ	ꗭ	ꗮ	ꗯ\\
+U+A5Fx	ꗰ	ꗱ	ꗲ	ꗳ	ꗴ	ꗵ	ꗶ	ꗷ	ꗸ	ꗹ	ꗺ	ꗻ	ꗼ	ꗽ	ꗾ	ꗿ\\
+U+A60x	ꘀ	ꘁ	ꘂ	ꘃ	ꘄ	ꘅ	ꘆ	ꘇ	ꘈ	ꘉ	ꘊ	ꘋ	ꘌ	꘍	꘎	꘏\\
+U+A61x	ꘐ	ꘑ	ꘒ	ꘓ	ꘔ	ꘕ	ꘖ	ꘗ	ꘘ	ꘙ	ꘚ	ꘛ	ꘜ	ꘝ	ꘞ	ꘟ\\
+U+A62x	꘠	꘡	꘢	꘣	꘤	꘥	꘦	꘧	꘨	꘩	ꘪ	ꘫ				\\
+U+A63x																\\
+}
+
+\textrejang{
+ 	0	1	2	3	4	5	6	7	8	9	A	B	C	D	E	F\\
+U+A93x	ꤰ	ꤱ	ꤲ	ꤳ	ꤴ	ꤵ	ꤶ	ꤷ	ꤸ	ꤹ	ꤺ	ꤻ	ꤼ	ꤽ	ꤾ	ꤿ\\
+U+A94x	ꥀ	ꥁ	ꥂ	ꥃ	ꥄ	ꥅ	ꥆ	ꥇ	ꥈ	ꥉ	ꥊ	ꥋ	ꥌ	ꥍ	ꥎ	ꥏ\\
+U+A95x	ꥐ	ꥑ	ꥒ	꥓\\
+}
+
+Saurashtra:\\
+\textsaurashtra{% 	
+0	1	2	3	4	5	6	7	8	9	A	B	C	D	E	F\\
+U+A88x	ꢀ	ꢁ	ꢂ	ꢃ	ꢄ	ꢅ	ꢆ	ꢇ	ꢈ	ꢉ	ꢊ	ꢋ	ꢌ	ꢍ	ꢎ	ꢏ\\
+U+A89x	ꢐ	ꢑ	ꢒ	ꢓ	ꢔ	ꢕ	ꢖ	ꢗ	ꢘ	ꢙ	ꢚ	ꢛ	ꢜ	ꢝ	ꢞ	ꢟ\\
+U+A8Ax	ꢠ	ꢡ	ꢢ	ꢣ	ꢤ	ꢥ	ꢦ	ꢧ	ꢨ	ꢩ	ꢪ	ꢫ	ꢬ	ꢭ	ꢮ	ꢯ\\
+U+A8Bx	ꢰ	ꢱ	ꢲ	ꢳ	ꢴ	ꢵ	ꢶ	ꢷ	ꢸ	ꢹ	ꢺ	ꢻ	ꢼ	ꢽ	ꢾ	ꢿ\\
+U+A8Cx	ꣀ	ꣁ	ꣂ	ꣃ	꣄										꣎	꣏\\
+U+A8Dx	꣐	꣑	꣒	꣓	꣔	꣕	꣖	꣗	꣘	꣙			}
+
+Sylheti Nagari:
+\textsylhetinagari{
+	0	1	2	3	4	5	6	7	8	9	A	B	C	D	E	F
+U+A80x	ꠀ	ꠁ	ꠂ	ꠃ	ꠄ	ꠅ	꠆	ꠇ	ꠈ	ꠉ	ꠊ	ꠋ	ꠌ	ꠍ	ꠎ	ꠏ
+U+A81x	ꠐ	ꠑ	ꠒ	ꠓ	ꠔ	ꠕ	ꠖ	ꠗ	ꠘ	ꠙ	ꠚ	ꠛ	ꠜ	ꠝ	ꠞ	ꠟ
+U+A82x	ꠠ	ꠡ	ꠢ	ꠣ	ꠤ	ꠥ	ꠦ	ꠧ	꠨	꠩	꠪	꠫	
+\char"A803
+}
+
+Glagolitic:
+\textglagolitic{
+	0	1	2	3	4	5	6	7	8	9	A	B	C	D	E	F\\
+U+2C0x	Ⰰ	Ⰱ	Ⰲ	Ⰳ	Ⰴ	Ⰵ	Ⰶ	Ⰷ	Ⰸ	Ⰹ	Ⰺ	Ⰻ	Ⰼ	Ⰽ	Ⰾ	Ⰿ\\
+U+2C1x	Ⱀ	Ⱁ	Ⱂ	Ⱃ	Ⱄ	Ⱅ	Ⱆ	Ⱇ	Ⱈ	Ⱉ	Ⱊ	Ⱋ	Ⱌ	Ⱍ	Ⱎ	Ⱏ\\
+U+2C2x	Ⱐ	Ⱑ	Ⱒ	Ⱓ	Ⱔ	Ⱕ	Ⱖ	Ⱗ	Ⱘ	Ⱙ	Ⱚ	Ⱛ	Ⱜ	Ⱝ	Ⱞ	\\
+U+2C3x	ⰰ	ⰱ	ⰲ	ⰳ	ⰴ	ⰵ	ⰶ	ⰷ	ⰸ	ⰹ	ⰺ	ⰻ	ⰼ	ⰽ	ⰾ	ⰿ\\
+U+2C4x	ⱀ	ⱁ	ⱂ	ⱃ	ⱄ	ⱅ	ⱆ	ⱇ	ⱈ	ⱉ	ⱊ	ⱋ	ⱌ	ⱍ	ⱎ	ⱏ\\
+U+2C5x	ⱐ	ⱑ	ⱒ	ⱓ	ⱔ	ⱕ	ⱖ	ⱗ	ⱘ	ⱙ	ⱚ	ⱛ	ⱜ	ⱝ	ⱞ\\
+
+}
+
+\textcoptic{
+	0	1	2	3	4	5	6	7	8	9	A	B	C	D	E	F\\
+U+2C8x	Ⲁ	ⲁ	Ⲃ	ⲃ	Ⲅ	ⲅ	Ⲇ	ⲇ	Ⲉ	ⲉ	Ⲋ	ⲋ	Ⲍ	ⲍ	Ⲏ	ⲏ\\
+U+2C9x	Ⲑ	ⲑ	Ⲓ	ⲓ	Ⲕ	ⲕ	Ⲗ	ⲗ	Ⲙ	ⲙ	Ⲛ	ⲛ	Ⲝ	ⲝ	Ⲟ	ⲟ\\
+U+2CAx	Ⲡ	ⲡ	Ⲣ	ⲣ	Ⲥ	ⲥ	Ⲧ	ⲧ	Ⲩ	ⲩ	Ⲫ	ⲫ	Ⲭ	ⲭ	Ⲯ	ⲯ\\
+U+2CBx	Ⲱ	ⲱ	Ⲳ	ⲳ	Ⲵ	ⲵ	Ⲷ	ⲷ	Ⲹ	ⲹ	Ⲻ	ⲻ	Ⲽ	ⲽ	Ⲿ	ⲿ\\
+U+2CCx	Ⳁ	ⳁ	Ⳃ	ⳃ	Ⳅ	ⳅ	Ⳇ	ⳇ	Ⳉ	ⳉ	Ⳋ	ⳋ	Ⳍ	ⳍ	Ⳏ	ⳏ\\
+U+2CDx	Ⳑ	ⳑ	Ⳓ	ⳓ	Ⳕ	ⳕ	Ⳗ	ⳗ	Ⳙ	ⳙ	Ⳛ	ⳛ	Ⳝ	ⳝ	Ⳟ	ⳟ\\
+U+2CEx	Ⳡ	ⳡ	Ⳣ	ⳣ	ⳤ	⳥	⳦	⳧	⳨	⳩	⳪	Ⳬ	ⳬ	Ⳮ	ⳮ	⳯\\
+U+2CFx	⳰	⳱	Ⳳ	ⳳ						⳹	⳺	⳻	⳼	⳽	⳾	⳿}
+
+
+\textkayahli{
+	0	1	2	3	4	5	6	7	8	9	A	B	C	D	E	F\\
+U+A90x	꤀	꤁	꤂	꤃	꤄	꤅	꤆	꤇	꤈	꤉	ꤊ	ꤋ	ꤌ	ꤍ	ꤎ	ꤏ\\
+U+A91x	ꤐ	ꤑ	ꤒ	ꤓ	ꤔ	ꤕ	ꤖ	ꤗ	ꤘ	ꤙ	ꤚ	ꤛ	ꤜ	ꤝ	ꤞ	ꤟ\\
+U+A92x	ꤠ	ꤡ	ꤢ	ꤣ	ꤤ	ꤥ	ꤦ	ꤧ	ꤨ	ꤩ	ꤪ	꤫	꤬	꤭	꤮	꤯\\
+}
+
+
+\texttifinagh{
+Official Unicode Consortium code chart \\
+ 	0	1	2	3	4	5	6	7	8	9	A	B	C	D	E	F\\
+U+2D3x	ⴰ	ⴱ	ⴲ	ⴳ	ⴴ	ⴵ	ⴶ	ⴷ	ⴸ	ⴹ	ⴺ	ⴻ	ⴼ	ⴽ	ⴾ	ⴿ\\
+U+2D4x	ⵀ	ⵁ	ⵂ	ⵃ	ⵄ	ⵅ	ⵆ	ⵇ	ⵈ	ⵉ	ⵊ	ⵋ	ⵌ	ⵍ	ⵎ	ⵏ\\
+U+2D5x	ⵐ	ⵑ	ⵒ	ⵓ	ⵔ	ⵕ	ⵖ	ⵗ	ⵘ	ⵙ	ⵚ	ⵛ	ⵜ	ⵝ	ⵞ	ⵟ\\
+U+2D6x	ⵠ	ⵡ	ⵢ	ⵣ	ⵤ	ⵥ	ⵦ	ⵧ								ⵯ\\
+U+2D7x	⵰	\\
+}
+
+\textbrahmi{
+	0	1	2	3	4	5	6	7	8	9	A	B	C	D	E	F\\
+U+1100x	𑀀	𑀁	𑀂	𑀃	𑀄	𑀅	𑀆	𑀇	𑀈	𑀉	𑀊	𑀋	𑀌	𑀍	𑀎	𑀏\\
+U+1101x	𑀐	𑀑	𑀒	𑀓	𑀔	𑀕	𑀖	𑀗	𑀘	𑀙	𑀚	𑀛	𑀜	𑀝	𑀞	𑀟\\
+U+1102x	𑀠	𑀡	𑀢	𑀣	𑀤	𑀥	𑀦	𑀧	𑀨	𑀩	𑀪	𑀫	𑀬	𑀭	𑀮	𑀯\\
+U+1103x	𑀰	𑀱	𑀲	𑀳	𑀴	𑀵	𑀶	𑀷	𑀸	𑀹	𑀺	𑀻	𑀼	𑀽	𑀾	𑀿\\
+U+1104x	𑁀	𑁁	𑁂	𑁃	𑁄	𑁅	𑁆	𑁇	𑁈	𑁉	𑁊	𑁋	𑁌	𑁍		\\
+U+1105x			𑁒	𑁓	𑁔	𑁕	𑁖	𑁗	𑁘	𑁙	𑁚	𑁛	𑁜	𑁝	𑁞	𑁟\\
+U+1106x	𑁠	𑁡	𑁢	𑁣	𑁤	𑁥	𑁦	𑁧	𑁨	𑁩	𑁪	𑁫	𑁬	𑁭	𑁮	𑁯\\
+U+1107x																 BNJ\\
+
+}
+
+Bamum:
+\textbamum{
+
+}
+
+Lisu:\\
+\textlisu{
+	0	1	2	3	4	5	6	7	8	9	A	B	C	D	E	F\\
+U+A4Dx	ꓐ	ꓑ	ꓒ	ꓓ	ꓔ	ꓕ	ꓖ	ꓗ	ꓘ	ꓙ	ꓚ	ꓛ	ꓜ	ꓝ	ꓞ	ꓟ\\
+U+A4Ex	ꓠ	ꓡ	ꓢ	ꓣ	ꓤ	ꓥ	ꓦ	ꓧ	ꓨ	ꓩ	ꓪ	ꓫ	ꓬ	ꓭ	ꓮ	ꓯ\\
+U+A4Fx	ꓰ	ꓱ	ꓲ	ꓳ	ꓴ	ꓵ	ꓶ	ꓷ	ꓸ	ꓹ	ꓺ	ꓻ	ꓼ	ꓽ	꓾	꓿\\
+}
+
+{\brahmi
+\directlua {
+   tex.print("𑁩𑀈	𑀉	𑀊	𑀋	𑀌	𑀍	")
+}}
+
+Cherokee:\\
+\textcherokee{
+	0	1	2	3	4	5	6	7	8	9	A	B	C	D	E	F\\
+U+13Ax	Ꭰ	Ꭱ	Ꭲ	Ꭳ	Ꭴ	Ꭵ	Ꭶ	Ꭷ	Ꭸ	Ꭹ	Ꭺ	Ꭻ	Ꭼ	Ꭽ	Ꭾ	Ꭿ\\
+U+13Bx	Ꮀ	Ꮁ	Ꮂ	Ꮃ	Ꮄ	Ꮅ	Ꮆ	Ꮇ	Ꮈ	Ꮉ	Ꮊ	Ꮋ	Ꮌ	Ꮍ	Ꮎ	Ꮏ\\
+U+13Cx	Ꮐ	Ꮑ	Ꮒ	Ꮓ	Ꮔ	Ꮕ	Ꮖ	Ꮗ	Ꮘ	Ꮙ	Ꮚ	Ꮛ	Ꮜ	Ꮝ	Ꮞ	Ꮟ\\
+U+13Dx	Ꮠ	Ꮡ	Ꮢ	Ꮣ	Ꮤ	Ꮥ	Ꮦ	Ꮧ	Ꮨ	Ꮩ	Ꮪ	Ꮫ	Ꮬ	Ꮭ	Ꮮ	Ꮯ\\
+U+13Ex	Ꮰ	Ꮱ	Ꮲ	Ꮳ	Ꮴ	Ꮵ	Ꮶ	Ꮷ	Ꮸ	Ꮹ	Ꮺ	Ꮻ	Ꮼ	Ꮽ	Ꮾ	Ꮿ\\
+U+13Fx	Ᏸ	Ᏹ	Ᏺ	Ᏻ	Ᏼ								\\
+}
+
+Sinhala:\\
+\textsinhala{
+	0	1	2	3	4	5	6	7	8	9	A	B	C	D	E	F\\
+U+0D8x			ං	ඃ		අ	ආ	ඇ	ඈ	ඉ	ඊ	උ	ඌ	ඍ	ඎ	ඏ\\
+U+0D9x	ඐ	එ	ඒ	ඓ	ඔ	ඕ	ඖ				ක	ඛ	ග	ඝ	ඞ	ඟ\\
+U+0DAx	ච	ඡ	ජ	ඣ	ඤ	ඥ	ඦ	ට	ඨ	ඩ	ඪ	ණ	ඬ	ත	ථ	ද\\
+U+0DBx	ධ	න		ඳ	ප	ඵ	බ	භ	ම	ඹ	ය	ර		ල		\\
+U+0DCx	ව	ශ	ෂ	ස	හ	ළ	ෆ				්					ා\\
+U+0DDx	ැ	ෑ	ි	ී	ු		ූ		ෘ	ෙ	ේ	ෛ	ො	ෝ	ෞ	ෟ\\
+U+0DEx							෦	෧	෨	෩	෪	෫	෬	෭	෮	෯\\
+U+0DFx			ෲ	ෳ	෴\\
+	0	1	2	3	4	5	6	7	8	9	A	B	C	D	E	F\
+U+111Ex		𑇡	𑇢	𑇣	𑇤	𑇥	𑇦	𑇧	𑇨	𑇩	𑇪	𑇫	𑇬	𑇭	𑇮	𑇯\\
+U+111Fx	𑇰	𑇱	𑇲	𑇳	𑇴\\
+}
+
+\cxset{oldturkic font=Segoe UI Symbol,}
+\textoldturkic{
+\obeylines
+Orkhon	Yenisei
+variants	Transliteration / transcription
+Old Turkic letter  𐰀	𐰁 𐰂	a, ä
+Old Turkic letter  𐰃	𐰄 𐰅	y, i (e)
+Old Turkic letter  𐰆		o, u
+Old Turkic letter  𐰇	𐰈	ö, ü
+
+	0	1	2	3	4	5	6	7	8	9	A	B	C	D	E	F
+U+10C0x	𐰀	𐰁	𐰂	𐰃	𐰄	𐰅	𐰆	𐰇	𐰈	𐰉	𐰊	𐰋	𐰌	𐰍	𐰎	𐰏
+U+10C1x	𐰐	𐰑	𐰒	𐰓	𐰔	𐰕	𐰖	𐰗	𐰘	𐰙	𐰚	𐰛	𐰜	𐰝	𐰞	𐰟
+U+10C2x	𐰠	𐰡	𐰢	𐰣	𐰤	𐰥	𐰦	𐰧	𐰨	𐰩	𐰪	𐰫	𐰬	𐰭	𐰮	𐰯
+U+10C3x	𐰰	𐰱	𐰲	𐰳	𐰴	𐰵	𐰶	𐰷	𐰸	𐰹	𐰺	𐰻	𐰼	𐰽	𐰾	𐰿
+U+10C4x	𐱀	𐱁	𐱂	𐱃	𐱄	𐱅	𐱆	𐱇	𐱈	}
+
+
+
+\begin{docKey}[phd]{sinhala font}{ = \meta{font face}} {default none, initial sinhala}
+\end{docKey}
+
+\begin{docCommand}{textsinhala}{\marg{text}}
+Command to typeset sinhalese text.
+\end{docCommand}
+
+\begin{docEnvironment}{sinhalasescript}{}
+\end{docEnvironment}
+
+\ExplSyntaxOn
+\fontspec_if_language:nTF {ROM} {true} {false}
+\ExplSyntaxOff
+\par
+
+%\Huge
+%\sinhala
+%\`{\char"25CC\char"0D8A 	}
+%
+%\def\dottedcircle{\char"25CC}
+%
+%\dottedcircle\dottedcircle\dottedcircle
+
+
+
+
+\meaning\foos
 \end{document}

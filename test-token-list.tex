@@ -1,0 +1,50 @@
+\documentclass{article}
+\usepackage{xparse,mwe,graphicx,caption,environ}
+
+\NewEnviron{multiimages}[1][]{\processmultiimages{#1}{\BODY}}[test]
+
+\ExplSyntaxOn
+
+\NewDocumentCommand \processmultiimages { m }
+ { \par \centering \yl_multiimages:N #1 }
+ 
+\cs_new_protected:Npn \yl_multiimages:N #1
+ {
+  \tl_set_eq:NN \l_tmpa_tl #1
+  \tl_remove_all:Nn \l_tmpa_tl { \par }
+  \tl_replace_all:Nnn \l_tmpa_tl { !!img } 
+   { \begin{minipage}{3.6cm}\centering\multiimg }
+  \tl_replace_all:Nnn \l_tmpa_tl { !!cap } 
+   { \multiimgcapt }
+  \tl_use:N \l_tmpa_tl
+ }
+ 
+\NewDocumentCommand \multiimg { u{!!} }
+ { \includegraphics[width=\linewidth]{\tl_trim_spaces:n { #1 } } }
+
+\NewDocumentCommand \multiimgcapt { u{!!} }
+   { \captionof{figure}{#1} \par\end{minipage}\hfill }
+\ExplSyntaxOff   
+
+\begin{document}
+
+\begin{multiimages}
+  !!img example-image-a!! 
+  !!cap This is the first caption!!
+
+  !!img example-image-a!!
+  !!cap This is the second caption!!
+
+  !!img example-image-a!!
+  !!cap This is the third caption!!
+
+  !!img example-image-a!!
+  !!cap This is the fourth caption!!
+
+  !!img example-image-a!!
+  !!cap This is the fifth caption!!
+
+  !!img example-image-c!!
+  !!cap This is the sixth caption!!
+\end{multiimages}
+\end{document}

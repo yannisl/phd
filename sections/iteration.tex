@@ -161,9 +161,9 @@ as well as this:
 \mylist{\@elt John\@elt Mary\@elt Mathew \@elt George \@elt Maria}
 \end{teXXX}
 
-\begin{macro}{\@elt}
+\begin{docCommand}{@elt}{}
 Using a macro to delimit the list elements, has the advantage that when we invoke the |mylist| list macro the |@elt| macro can map a function over the elements. We will see that a bit later in more detail but for the time being we will demonstrate this with an example:
-\end{macro}
+\end{docCommand}
 
 \begin{texexample}{Elt Lists}{}
 \def\mylist{\@elt John,\@elt Mary,\@elt Mathew, \@elt George, \@elt Maria,}
@@ -175,9 +175,9 @@ Note that the macro |\@elt| when it is defined is delimited with a comma.
 
 \newthought{Adding Elements}
 
-\begin{macro}{\g@addto@macro}
+\begin{docCommand}{g@addto@macro}{}
 There are many ways to add an element to the list, but perhaps the easiest is to use the \latex \CMDI{\g@addto@macro}. 
-\end{macro}
+\end{docCommand}
 
 \emphasis{g@addto@macro}
 \begin{teXXX}
@@ -213,9 +213,9 @@ the list is empty and to insert an elemen
 
 \subsection{How to Use LaTeX’s kernel looping constructs}
 
-\begin{macro}{\@for}
+\begin{docCommand}{@for}{}
 The \CMDI{\@for} is an internal \latexe command that can be used to iterate over a comma delimited list.
-\end{macro}
+\end{docCommand}
 
 \emphasis{mylist}
 \begin{teX}
@@ -313,11 +313,6 @@ after which `\a!' will expand to `\def\b#1{#1!}'. We will see later that ## is a
 important for alignments; see, for example, the definition of \matrix in Appendix B.
 \end{teX}
 
-
-
-
-
-
 \begin{teX}
 \long\def\@for#1:=#2\do#3{%
 \expandafter\def\expandafter\@fortmp\expandafter{#2}%
@@ -334,7 +329,6 @@ important for alignments; see, for example, the definition of \matrix in Appendi
  }
 
 
-
 \meaning\loop 
 \def\a#1{\textcolor{blue}{\uppercase{#1}}}
 \def\b{test}
@@ -342,3 +336,48 @@ important for alignments; see, for example, the definition of \matrix in Appendi
 
 \a\b
 \end{teX}
+
+
+\section{Recursion}
+Recursion is a difficult subject to grasp, although we experience it daily in our actions, language and thoughts. 
+The main characteristic of recursion, is that it can take its own output as the next input, a loop that can be extended indefinitely to create sequences of structures of unbounded length or complexity. In language we understand that a sentence can in principle be extended indefinitely, even though in practice it cannot be---although the novelist Henry James had a damn good try in the \emph{The Figure in the Carpet}. Of course what we are interested here is to study how we can write recursive macros in \tex rather than the more interesting aspects of recursion as it applies to thoughts and language. 
+
+When we write:
+
+\begin{verbatim}
+\def\mymacro{\mymacro}
+\end{verbatim}
+
+The macro will expand itself indefinitely. As it does not save anything in memory it does not exceed the capacity of any data structure, it will just cause your computer to hang.
+
+If we slightly modify the above macro to |\def\mymacro{a \mymacro}| during expansion the macro will typeset and then call itself again, typeset a and call itself again forever. After a while, it overflows the computer’s memory. The reason for this is that we never finish a paragraph. The letters accumulate in main memory as part of the same paragraph.
+
+
+\begin{teXXX}
+\def\parselist#1;{\pickup#1,;,}
+\def\pickup#1,{% Note that #1 may be \null
+\if;#1\let\next=\relax(*@\label{test}@*)
+\else\let\next=\pickup
+    #1% use #1 in any way
+\fi\next}
+\parselist $a_1$, $a_2$, $a_3$, $a_4$, $a_5$;
+\end{teXXX}
+
+The macro \cmd{\pickup} expects its argument to be delimited by `,’, so it ends up
+getting the first component of the original argument. It uses it in any desired way and
+then expands itself recursively. The process ends when the current argument becomes the `;’. The compound argument may have any number of components (even zero).\ref{test}
+
+\section{LaTeX3 Recursion}
+
+
+
+%%endinput iteration.tex
+
+
+
+
+
+
+
+
+

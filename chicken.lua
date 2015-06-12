@@ -1,7 +1,15 @@
-    # test.config
-    # Read timeout in seconds
-    read.timeout=10
-    # Write timeout in seconds
-    write.timeout=5
-   #acceptable ports
-   ports = 1002, 1003, 1004
+ local M = {}
+
+function M.chicken ()
+  return "chicken"
+end
+
+function M.chickens ()
+  return "many chickens" 
+end
+
+function M.ancient_chickens ()
+  return "\\bgroup\\hiero\\char\"13171 \\egroup"
+end
+
+return M

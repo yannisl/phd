@@ -1,4 +1,4 @@
-\newfontfamily\hiero{NotoSansEgyptianHieroglyphs-Regular.ttf}
+
 \directlua{Start = 0}
 
            
@@ -9,7 +9,7 @@
 
 \section{Modularity}
 
-Modularity is a fundamental requirement for any computer language, as it enables the development of programs using sound software engineering principles, but most importantly it allows different people to work on the codebase simultaneously. Lua is no exception. Luas modules are easy to develop and when they are all related, they are disributed as a package \textit{package}. They are normally distributed in one folder with submodules in subdirectories. 
+Modularity is a fundamental requirement for any computer language, as it enables the development of programs using sound software engineering principles, but most importantly it allows different people to work on the codebase simultaneously. Lua is no exception. Lua's modules are easy to develop and when they are all related, they are distributed as a package \textit{package}. They are normally distributed in one folder with submodules in subdirectories. 
 
 For the ecosystem to survive it requires an easy method to load the packages, a place where everything is stored and easily found by loaders and some form of standardization in defining the modules. 
 
@@ -31,63 +31,71 @@ tex.print(s)
 \end{luacode*}
 \end{texexample}
 
-In the example we use the \luacmd{string.gsub} to replace windows \textbackslash to a harmless version, so we do not need to worry about catcodes, a quick and dirty solution.  Of course we could have used a catcode table as well.
+In the example we use the \luacmd{string.gsub} to replace windows( \textbackslash) to a harmless version, so we do not need to worry about catcodes, a quick and dirty solution.  Of course we could have used a catcode table as well.
 
 \section{The Basic Approach for Writing Modules in Lua}
 
 The simplest way to create a module is to create a table and put all functions you want to export inside it, and return this table.
 
-%\begin{filecontents*}{chicken.lua}
-%local M = {}
-%
-%function M.chicken ()
-%  return "chicken"
-%end
-%
-%function M.chickens ()
-%  return "many chickens" 
-%end
-%
-%function M.ancient_chickens ()
-%  return "\\bgroup\\hiero\\char\"13171 \\egroup"
-%end
-%
-%return M
-%\end{filecontents*}
+\begin{lualisting}
+-- module chicken
+-- create a module
+local M = {}
+-- add a function
+function M.chicken ()
+  return "chicken"
+end
+-- add another function
+function M.chickens ()
+  return "many chickens" 
+end
+-- and another
+function M.ancient_chickens ()
+  return "\\bgroup\\hiero\\char\"13171 \\egroup"
+end
+return M
+\end{lualisting}
 
-\begin{texexample}{Writing a Module}{ex:wmodule}
+In the example that follows, we will load the module |chicken.lua| and then just print a couple of lines.
+\begin{luaexample}{Writing a Module}{ex:wmodule}
 \begin{luacode*}
 local c = require "chicken"
       tex.print(c.chicken(), c.chickens(), c.ancient_chickens())
-      
       tex.print(-2, package.config)
       
       package.preload ["foo"] = function () tex.print "loading foo" end
 require "foo"  --> loading foo
 \end{luacode*}
-\end{texexample}
+\end{luaexample}
+
+
 
 A second and in my opinion much better way is to return the list of functions you want to export. This way\footnote{This is very similar to Javascript modules.} your code will be much more cleaner and easier to maintain. We rewrite our module |chicken|  to |chickens|. Again the module is saved in a file with the module name and saved in a place where the module loader can find it. 
 
-%\begin{filecontents*}{manychickens.lua}
-%local M = {}
-%
-%local chicken = function ()
-%  return "chicken"
-%end
-%
-%local chickens = function ()
-%  return "many chickens" 
-%end
-%
-%local ancient_chickens = function ()
-%  return "\\bgroup\\hiero\\HUGE\\char\"13171 \\char\"13173\\egroup"
-%end
-%
-%return {chicken                = chicken,
-%            chickens              = chickens,
-%            ancient_chickens  = ancient_chickens}
-%\end{filecontents*}
+\begin{lualisting}[keywordstyle=\underbar,emph={local},emphstyle=\underbar,]
+-- create module
+local M = {}
+
+-- add a function
+local chicken = function ()
+  return "chicken"
+end
+
+-- returns just a string
+local chickens = function ()
+  return "many chickens" 
+end
+
+-- our ancient chickens from hiero
+local ancient_chickens = function ()
+  return "\\bgroup\\hiero\\HUGE\\char\"13171 \\char\"13173\\egroup"
+end
+
+return {chicken                = chicken,
+        chickens               = chickens,
+        ancient_chickens       = ancient_chickens}
+\end{lualisting}
+
 
 \begin{texexample}{Writing a Module}{ex:wmodule}
 \begin{luacode*}
@@ -117,7 +125,7 @@ Lua allows module names to be hierarchical, using a dot to separate name levels.
 
 From the point of view of Lua, submodules in the same package have no explicit relationship. Requiring a module a does not automatically load any of its submodules; similarly, requiring |a.b| does not automatically load |a|. Of course, the package author can create these links as she wants. For example, a particular module may start by explicitly requiring one or all of its submodules.
 
-In LuaTeX things are much simpler if everything falls into place and the LuaTeX searchers find the modules. I experimented a bit, before getting the paths right on a MikTeX installation. Normal modules need to be located in a place where 
+In LuaTeX things are much simpler if everything falls into place and the LuaTeX searchers find the modules. I experimented a bit, before getting the paths right on a MikTeX installation. Normal modules need to be located in a place where \tex can find them.
 
 %\begin{filecontents*}{test.config}
 %    # test.config
@@ -184,6 +192,8 @@ tex.print("\\par",f1)
 
 However, most Lua libraries use the dot notation as described above.
 
+\endinput
+
 \section{The luatexbase package}
 
 Lua's standard function require() is similar to TEX’s \cmd{\input} primitive but is somehow more
@@ -208,24 +218,25 @@ provides the function
 which can be used as a replacement to \luacmd{require()}. The only difference between them being that the luatexbase.require()  will check that the module properly identifies itself.
 
 
-%\begin{filecontents*}{dice.lua}
-%local err, warn, info, log = luatexbase.provides_module({
-%     _name      = 'dice',
-%     _date       = '2014/11/01',
-%     _version   = '0.0',
-%     _description = 'simulating a die',
-%     _author      = 'Y Lazarides',
-%     _license      =  'LPPL v1.3+' ,
-%})
-%
-%local dice =  {}    -- is this better to be local?
-%
-%function dice.txprint()
-%    return 'dice'
-%end    
-%
-%return dice         -- return the table returns {} 
-%\end{filecontents*} 
+\begin{teXXX}
+local err, warn, info, log = luatexbase.provides_module({
+     _name      = 'dice',
+     _date       = '2014/11/01',
+     _version   = '0.0',
+     _description = 'simulating a die',
+     _author      = 'Y Lazarides',
+     _license      =  'LPPL v1.3+' ,
+})
+
+local dice =  {}    -- is this better to be local?
+
+function dice.txprint()
+    return 'dice'
+end    
+
+return dice         -- return the table returns {} 
+\end{teXXX} 
+
 \begin{texexample}{luatexbase module}{}
 
 \begin{luacode}   
@@ -403,34 +414,34 @@ tex.print(os.which("ps2pdf"))}
 
 \function{os.where()} This is an alias for \textbf{os.which()}
 
-%\begin{filecontents*}{phd-utils.lua}
-%-- presents nicely a table 
-%
-%local M = M or {}
-%
-%local rep, write = string.rep, tex.print
-%
-%function M.inspect (tab, offset)
-%   local openbracket, closebracket, par = "\\{", "\\mbox{..}\\}", "\\par"
-%   
-%    offset = offset or ""
-%    for k, v in pairs (tab) do
-%        local newoffset = offset .. "\\mbox{~~}"
-%        if type(v) == "table" then
-%           write(offset .. k .. " = " .. openbracket .. par)
-%           M.inspect(v, newoffset)
-%           write(offset .. closebracket .. par)
-%        else
-%         if k~="data" then write(offset..k.." =  ".. tostring(v), "\\par") 
-%           else
-%                 write(offset.."k = char data ")
-%           end
-%       end
-%    end
-%end
-%
-%return M
-%\end{filecontents*}
+\begin{teXXX}{phd-utils.lua}
+-- presents nicely a table 
+
+local M = M or {}
+
+local rep, write = string.rep, tex.print
+
+function M.inspect (tab, offset)
+   local openbracket, closebracket, par = "\\{", "\\mbox{..}\\}", "\\par"
+   
+    offset = offset or ""
+    for k, v in pairs (tab) do
+        local newoffset = offset .. "\\mbox{~~}"
+        if type(v) == "table" then
+           write(offset .. k .. " = " .. openbracket .. par)
+           M.inspect(v, newoffset)
+           write(offset .. closebracket .. par)
+        else
+         if k~="data" then write(offset..k.." =  ".. tostring(v), "\\par") 
+           else
+                 write(offset.."k = char data ")
+           end
+       end
+    end
+end
+
+return M
+\end{teXXX}
 
 \section{phd package utilities}
 

@@ -1,48 +1,49 @@
+\cxset{chapter numbering=arabic}
+
+
 \chapter{Futurelet}
 \precis{A discussion on one of the most esoteric commands of \protect\tex, with examples as to how to write macros with optional arguments.}
 \addtocimage{-12pt}{-20pt}{../images/tocblock-futurelet.jpg}
 \epigraph{Life can only be understood backwards; but it must be lived forwards.}{
 ---S Kierkegaard}
 
-The \cmd{\futurelet} primitive deserves its own chapter, as most people have difficulty in understanding the command. The instruction allows the user to \textit{look ahead}. By look ahead we mean that \tex will look at a future token\footnote{remember that a token is either a single character or a macro command} without absorbing it, i.e, without removing that token from the token list. This operation allows the programmer to perform a test to check what token is 'coming'. You can read a couple of articles about it for example \citep{Eijkhout2001}, but generally they are difficult to follow. The information about the command is also very sparse in the \TeX Book.  Another TUGboat article is \citep{bechto88}, which gives pretty much the same example as we describe below. 
+The \docAuxCommand{futurelet} primitive deserves its own chapter, as most people have difficulty in understanding the command. The instruction allows the user to \textit{look ahead}. By look ahead we mean that \tex will look at a future token\footnote{remember that a token is either a single character or a macro command} without absorbing it, i.e, without removing that token from the token list. This operation allows the programmer to perform a test to check what token follows. You can read a couple of articles about it for example \citep{Eijkhout2001}, but generally they are difficult to follow. The information about the command is also very sparse in the \TeX Book.  Another TUGboat article is \citep{bechto88}, which gives pretty much the same example as we describe below. 
 
 The token looked at through
 |\futurelet| will be removed later, typically as part
-of an argument of a later macro call as we will see
-shortly. It is not removed by the action of the
-|\futurelet| primitive.
+of an argument of a later macro call as we will see shortly. It is important to note that it is not removed by the action of the |\futurelet| primitive.
 
 Let us be more precise now; the |\futurelet|
 instruction has the following format:
 
 
 \begin{commands}[]{}
-\cmd{\futurelet} (token$_1$) (token$_2$) (token$_3$)
+\cmd{\futurelet} \meta{token$_1$}\meta{token$_2$}\meta{token$_3$}
 \end{commands}
 
 
 \begin{enumerate}
-\item  \tex will execute a \cmd{\let}\meta{tokenl}=\meta{token3}.
-We therefore have generated a copy of (token3)
-stored under the name of (tokenl).\label{lettoken}
+\item  \tex will execute a \cmd{\let}\meta{token$_1$}=\meta{token$_3$}.
+We therefore have generated a copy of \meta{token$_3$}
+stored under the name of (token$_1$).\label{lettoken}
 
-
-\item  removes (tokenl) from the main token list.
+\item  removes (token$_1$) from the main token list.
 
 \item \tex expands (token2). This token is for all
 practical purposes a macro with the following
 properties:
 
-(a) The macro will use (tokenl), which is a
+\begin{enumerate}
+\item The macro will use (tokenl), which is a
 copy of (token3), to find out what (token3)
 is, in other words what token is to be
 expected later.
-(b) It will cause another macro to be expanded
+\item It will cause another macro to be expanded
 which will ultimately absorb (token3).
 
 This other macro ordinarily depends on
 what $<token_l>$ is.
-
+\end{enumerate}
 \end{enumerate}
 
 The description above, is a bit of a mouthful and it is better to describe it with an example. In Example~\ref{futurelet} we will try and find if the next token is the opening square bracket `['. We then according to the definition in \ref{lettoken} this should be stored in \cs{tokenone}. We verify this by peeking at its meaning.
@@ -281,7 +282,7 @@ You can say |@ifnextchar{char}{yes-code}{no-code}| to test for |(|. The result t
 
 As for example we can redefine the LaTeX code for `rule` to accept an optional parameter in round brackets, rather than the traditional square brackets.
 
-\begin{texexample}{Using ifnextchar}{}
+\begin{texexample}{Using ifnextchar}{ex:ifnextchar}
 \makeatletter
 \def\Rule{\@ifnextchar(\@Rule%
         {\@Rule(\z@)}}
@@ -357,10 +358,283 @@ The result would both be true,
 \end{texexample}
 
 
+\section{Building Deterministic Finite Automata (DFA)}
+\label{section-module-parser}
+
+The package PGF has a module |parser| that can be used to be a DFA engine for parsing strings of single letter sequences and based on the letter perform some action. The manual is somehow cryptic on its usage, but as it is
+used in the |svg| library you can examine and study the code more carefully there.
+
+\begin{pgfmodule}{parser}
+  This module defines some commands for creating a simple
+  letter-by-letter parser.
+\end{pgfmodule}
+
+This module provides commands for defining a parser that scans some
+given text letter-by-letter. For each letter, some code is executed
+and, possibly a state-switch occurs. The parsing process ends when a
+final state has been reached.
+
+\begin{command}{\pgfparserparse\marg{parser name}\meta{text}}
+  This command is used to parse the \meta{text} using the (previously
+  defined) parser named \meta{parser name}.
+
+  The \meta{text} is not contained in curly braces, rather it is all
+  the text that follows. The end of the text is determined implicitly,
+  namely when the final state of the parser has been reached.
+
+  The parser works as follows: At any moment, it is in a certain
+  \emph{state}, initially this state is called |initial|. Then, the
+  first letter of the \meta{text} is examined (using the |\futurlet|
+  command). For each possible state and each possible letter, some
+  action code is stored in the parser in a table. This code is then
+  executed. This code may, but need not, trigger a \emph{state
+    switch}, causing a new state to be set. The parser then moves on
+  to the next character of the text and repeats the whole
+  procedure, unless it is in the state |final|, which causes the
+  parsing process to stop immediately.
+
+  In the following example, the parser counts the number of |a|'s
+  in the \text{text}, ignoring any |b|'s. The \meta{text} ends with
+  the first~|c|.
+\begin{texexample}{An FDA}{ex:fda}
+\newcount\mycount
+\pgfparserdef{myparser}{initial}{the letter a}
+{\advance\mycount by 1\relax}
+\pgfparserdef{myparser}{initial}{the letter b}
+{} % do nothing
+\pgfparserdef{myparser}{initial}{the letter c}
+{\pgfparserswitch{final}}% done!
+
+\pgfparserparse{myparser}aabaabababbbbbabaabcccc
+There are \the\mycount\ a's.
+\end{texexample}
+\end{command}
+
+\begin{command}{\pgfparserdef\marg{parser name}\marg{state}\marg{symbol meaning}\marg{action}}
+  This command should be used repeatedly to define a parser named
+  \meta{parser name}. With a call to this command you specify that the
+  \meta{parser name} should do the following: When it is in state
+  \meta{state} and reads the letter \meta{symbol meaning}, perform the
+  code stored in \meta{action}.
+
+  The \meta{symbol meaning} must be the text that results from
+  applying the \TeX\ command |\meaning| to the given character. For
+  instance, |\meaning a| yields |the letter a|, while |\meaning 1|
+  yields |the character 1|. A space yields |blank space|. 
+
+  Inside the \meta{action} you can perform almost any kind of
+  code. This code will not be surrounded by a scope, so its effect
+  persists after the parsing is done. However, each time after the
+  \meta{action} is executed, control goes back to the parser. You
+  should not launch a parser inside the \meta{action} code, unless you
+  put it in a scope.
+
+  When you set the \meta{state} to |all|, the state \meta{action} is
+  performed in all states as a fallback, whenever \meta{symbol
+    meaning} is encountered. This means that when you do not specify
+  anything explicitly for a state and a letter, but you do specify
+  something for |all| and this letter, then the specified
+  \meta{action} will be used.
+
+  When the parser encounters a letter for which nothing is specified
+  in the current state (neither directly nor indirectly via |all|), an
+  error occurs.
+\end{command}
+
+\begin{command}{\pgfparserswitch\marg{state}}
+  This command can be called inside the action code of a parser to
+  cause a state switch to \meta{state}.
+\end{command}
+
+Let us first use an example from the PGF manual (page 752) to understand better what we will try and do later with
+or parser that we intend to use.
+
+\begin{texexample}{SVG Paths}{ex:svgpaths}
+\begin{pgfpicture}
+\pgfpathsvg{M10 80 Q 52.5 10, 95 80 T 180 80}
+\pgfusepath{stroke}
+\end{pgfpicture}
+\end{texexample}
+
+The |SVG| syntax consists of numerous commands staring from a letter and followed such as \textbf{M 20 20}. In the
+example M stands for move and Q stands for Quadratic. The letter T just strings multiple quadratic Beziers. After the first control point is defined the shortcut looks at the previous control point and infers a new one from it. This means that after yur first control point, you can make fairly complex shapes by specifyig only end points. The mozilla website has a good tutorial if you want to use svg\footnote{\protect\url{https://developer.mozilla.org/en-US/docs/Web/SVG/Tutorial/Paths}}. In general it will be easier to use a graphics program and then transfer the code to PGF. Anyway this chapter is about something else.
+
+\begin{texexample}{Parser example}{ex:headingsparser}
+\bgroup
+\pgfparserdef{headparser}{initial}{the letter C}
+{\boxanelement{chapter}}
+\pgfparserdef{headparser}{initial}{the letter N}
+{\boxanelement{number}} 
+\pgfparserdef{headparser}{initial}{the letter T}
+{\boxanelement{title}} 
+\pgfparserdef{headparser}{initial}{the letter p}
+{\breakline} 
+\pgfparserdef{headparser}{initial}{the character ;}
+{\pgfparserswitch{final}}
+
+\def\boxanelement#1{\fbox{\LARGE#1 }}%
+\def\breakline{\par\nointerlineskip}%
+\pgfparserparse{headparser}CpNpTp;
+\medskip
+\pgfparserparse{headparser}CNT;
+\egroup
+\end{texexample}
+
+Since we did not define any action for the case the user types |C N T;| rather than |CNT| our parser will lead to an error message. We do this next by adding another definition this time for all the states.
+
+\begin{verbatim}
+\pgfparserdef{headparser}{all}{blank space \space}{}
+\end{verbatim}
+
+\begin{texexample}{Parser example}{ex:headingsparser2}
+\bgroup
+\makeatletter
+\cxset{chapter font-family=sffamily, name=Section,
+          chapter numbering=arabic, chapter font-weight=bold}
+          
+\pgfparserdef{headparser}{initial}{the letter C}
+{\boxanelement{\setchapterfont\chaptername}}
+\pgfparserdef{headparser}{initial}{the letter N}
+{\boxanelement{\setnumberfont\thechapter}} 
+\pgfparserdef{headparser}{initial}{the letter T}
+{\boxanelement{\setchaptertitlefont title}} 
+\pgfparserdef{headparser}{initial}{the letter p}
+{\breakline} 
+\pgfparserdef{headparser}{all}{the letter b}
+{before } 
+\pgfparserdef{headparser}{all}{the letter a}
+{after } 
+
+% meaning of letter A
+\pgfparserdef{headparser}{initial}{the letter A}
+{\boxanelement{Authors}}
+
+% meaning of letter E
+\pgfparserdef{headparser}{initial}{the letter E}
+{\boxanelement{Epigraph}}
+
+\pgfparserdef{headparser}{all}{blank space \space}{\ifvmode\vskip3pt\else\space\fi}
+\pgfparserdef{headparser}{initial}{the character ;}
+{\pgfparserswitch{final}}
+
+\def\boxanelement#1{\fbox{\LARGE#1 }}
+\def\breakline{\par\nointerlineskip}
+\pgfparserparse{headparser}Cp Np Tp Ep;
+\medskip
+\pgfparserparse{headparser}C N Tp Ap Ep;
+\makeatother
+\egroup
+\end{texexample}
+
+It will be nice to know, what particular element we are typesetting in order to perhaps detect if we have additional elements and instructions for the typesetting engine. This brings us to the notion of state. So what we can do is extend our parser to define different states for elements. 
+
+We need also to handle the code before and code after settings. We can think of an element as an object and for the properties to be |C.a| |C.b| so we will limit our pattern DFA to the essential elements. 
+
+Introducing 2-letter combinations or more will create a more complex situation. If we limit the letters to two a
+all we need is to store them in a macro. If it is empty we are at the beginning and if we have entered it twice we are at the end. 
+
+\section{How does the pgf parser module works?}
+
+This fine piece of code is defined in about fifty lines of code, so it is short and brief and it leverages \tex’s two commands \cmd{\futurelet} and \cmd{\csname}\ldots\cmd{\endcsname}.
+
+% Defines an action to be taken in a state for some symbol
+% 
+% \#1 = parser
+% \#2 = state
+% \#3 = symbol text (result of saying \meaning on the symbol)
+% \#4 = action
+% 
+% Description:
+% 
+% When the parser encounters #3 while being in state #2, then code #4
+% is executed.
+% 
+% When #2 is set to the special text "all", then the symbol is handled
+% in all states by #4, except when a state defines something special
+% for this symbol
+\startlineat{10}
+
+Recall from the previous section that the user has to provide the parameters for each action. This is done in a series of calls to the \cmd{\pgfparserdef} which takes four parameters. The macro is defined next using a |csname| construct. The name of the macro combines 3 arguments. Parameter \texttt{\#1} is the parser name, \texttt{\#2} the state, \texttt{\#3} the symbol text (as meaning) and \texttt{\#4} the action required. 
+
+\begin{teX}
+\def\pgfparserdef#1#2#3#4{%
+  \expandafter\def\csname pgf@parser@a@#1@#2@#3\endcsname{#4}
+}
+\end{teX}
 
 
 
+\begin{teXXX}
+\def\pgfparserparse#1{%
+  \def\pgf@parser{#1}%
+  \def\pgf@parser@state{initial}%
+  \pgf@parser@parse%
+}
+\end{teXXX}
 
+Line 10 defines the main parsing function, which in its turn defines the name of the parser and sets the initial state to initial. It then calls the internal macro |\pgf@parser@parse|, which is the interesting part, as it uses \cmd{\futurelet}. 
+
+Recall that futurelet uses three tokens. The first two are defined in the code whereas the third one is picked from the stream. In our case the symbol will be captured in |\pgf@parser@symbol| which will then be passed on to the second token which is a macro to continue reading the stream.
+
+\begin{teXXX}
+\def\pgf@parser@parse{%
+  \futurelet\pgf@parser@symbol\pgf@parser@cont%
+}
+\end{teXXX}
+
+Essentially what we are doing here is saying |\let\pgf@parser@symbol=A|. This is then used to define the action
+of the DFA.  
+
+\begin{teXXX}
+\def\pgf@parser@cont{%
+  % Ok, defined?
+  \expandafter\let\expandafter\pgf@parser@action%
+  \csname pgf@parser@a@\pgf@parser @\pgf@parser@state @\meaning\pgf@parser@symbol\endcsname%
+  \ifx\pgf@parser@action\relax%
+    \expandafter\let\expandafter\pgf@parser@action%
+    \csname pgf@parser@a@\pgf@parser @all@\meaning\pgf@parser@symbol\endcsname%
+    \ifx\pgf@parser@action\relax%
+      \pgferror{Unexpected character
+        '\meaning\pgf@parser@symbol' in parser '\pgf@parser' in state
+        '\pgf@parser@state'}%
+    \fi%
+  \fi%
+  \pgf@parser@action%
+  \ifx\pgf@parser@symbol\pgfutil@sptoken(*@\label{riddedstart}@*)%
+    \expandafter\pgf@parser@rid@space%
+  \else%
+    \expandafter\pgf@parser@rid@other%  
+  \fi(*@\label{ridded}@*)%
+}
+\end{teXXX}
+
+
+When the user defines an action for a parser the code defines a token with the form
+
+\texttt{pgf@parser@a@myparser@initial@\meaning A}
+
+The continue function above checks if this function is defined, and then executes the action. 
+
+After executing the action the function needs to remove the current token from the stream of letters of the DFA and then call the parsing macro again. In Lines~\ref{riddedstart}--\ref{ridded} the code checks if the token is a space or not and calls an auxiliary macro to remove it. \tex when parsing a macro ignore spaces after it and some special trickery is required to remove the space token. In the \latexe kernel this is normally done using \cmd{\sp@token}. PGF has its own token \cmd{\pgfutil@sptoken}.
+
+\begin{teXXX}
+{%
+  \def\:{\pgf@parser@rid@space} \expandafter\gdef\: {\futurelet\pgf@parser@ignore\pgf@parser@ridded}
+  \gdef\pgf@parser@rid@other{\afterassignment\pgf@parser@ridded\let\pgf@parser@ignore=}  
+}
+\end{teXXX}
+
+Lastly the parser is called again by the command |\pgf@parser@ridded| or terminated if it has reached the final state, see \cmd{\pgf@parser@ridded} at Line~\ref{parserrrided}.
+
+\begin{teXXX}
+\def\pgf@parser@ridded{(*@\label{parserrrided}@*)%
+  \ifx\pgf@parser@state\pgf@parser@final@text%
+    % done
+  \else%
+    \expandafter\pgf@parser@parse%
+  \fi%
+}
+\end{teXXX}
 
 
 

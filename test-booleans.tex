@@ -1,0 +1,107 @@
+\documentclass{book}
+\usepackage{expl3,xparse,soul}
+\usepackage{fontspec}
+\newfontfamily\tiresias{Tiresias PCFont}
+\usepackage[tracking=true]{microtype}
+\usepackage{pgf}      
+\usepgfmodule{parser}%for svg     
+\usepgflibrary{svg.path}%for futurelet and parser demo       
+\def\pkgfamilyname{phd}
+\pgfkeys{/\pkgfamilyname/.is family}   
+\newcommand\cxset{\pgfqkeys{/\pkgfamilyname}} 
+\parindent0pt
+\begin{document}
+					 
+\ExplSyntaxOn
+\bool_new:N \microtypespacing
+\bool_gset_false:N \microtypespacing
+
+\bool_new:N \soulspacing
+\bool_gset_false:N \soulspacing
+
+\bool_new:N \chapterletterspacing
+
+\bool_gset_false:N \chapterletterspacing
+
+
+\makeatletter
+\edef\chaptername{CHAPTEr}
+\tl_gset:Nx \chapternamex{\chaptername}
+
+\def\chapterfont{\Huge\tiresias}
+\gdef\PrintTheChapter#1{
+
+\gdef\printthechapter##1 ;{
+
+\bool_if:nTF {\microtypespacing || \chapterletterspacing }
+      { 
+         \SetTracking [ no ligatures = {f},
+							 spacing = {600*,-100*, },
+							 outer spacing = {450,250,150},
+							 outer kerning = {*,*} ]
+							 { encoding = * }
+							 { 160 }
+         \chapterfont   
+              \textls {##1}
+       }
+      {
+          \bool_if:nTF {\soulspacing}
+           { \SSS}
+           { \chapterfont {#1} }
+      }
+  }
+  \printthechapter #1;
+}
+%
+%\def\uppercasing{\tl_expandable_uppercase:n}
+%
+
+%   
+\seq_new:N \defaultkeysstore 
+
+\cs_new:Npn \addtokeystore #1 {
+  \seq_gput_left:Nn \defaultkeysstore {#1}
+}
+\cxset{
+  chapter~after/.store~in=\chapterafter@cx,
+  chapter~spaceout/.is~choice,
+  chapter~ spaceout/soul/.code=\bool_gset_true:N \soulspacing
+                                                   \bool_gset_false:N \microtypespacing,
+  chapter~spaceout/microtype/.code=\bool_gset_true:N \microtypespacing,
+  chapter~spaceout/none/.code=\bool_gset_false:N\soulspacing
+                                                   \bool_gset_false:N \microtypespacing,
+    }
+                                                 
+ \makeatother
+ 
+ \cxset {chapter~spaceout=microtype} 
+\addtokeystore{chapter~spaceout=microtype}
+
+
+  \def\smallletters#1{#1}
+ \def\XX{\expandafter\expandafter\expandafter
+                  \uppercase
+                     \expandafter{\expandafter\smallletters\chaptername}}
+ 
+ \PrintTheChapter {\XX}\\
+
+ \tl_expandable_lowercase:n \chapternamex
+
+
+% \cxset {chapter spaceout=soul} 
+% \PrintTheChapter {\XX}
+\par
+\normalfont
+\seq_map_inline:Nn \defaultkeysstore{
+#1
+}
+ \ExplSyntaxOn
+
+
+ 
+ 
+ 
+ 
+ 
+ 
+\end{document}

@@ -22,7 +22,7 @@ m.colors = {bg = 'gray'}
 -- usage definecolor('tablerow','black!70')
 --       definecolor('tablerow',{'rgb',120,120,120})
 
-function m:definecolor(name,obj,basecolor)
+function m:definecolor(name, obj, basecolor)
   local s = ''  
   if type(obj) == 'string' then 
     s = [[\colorlet{]]..name..[[}{]]..obj..[[}]]

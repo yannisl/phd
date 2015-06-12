@@ -1,0 +1,40 @@
+\documentclass{article}
+\usepackage{expl3,xcolor}
+\begin{document}
+\ExplSyntaxOn
+% compare main
+\cs_new:Npn \ylcompare #1#2
+  {
+     \__yl_compare_auxi:nN {#2} #1 \q_recursion_tail \q_recursion_stop
+  }
+  
+%auxiliary 1  
+\cs_new:Npn \__yl_compare_auxi:nN #1#2
+  {
+    \quark_if_recursion_tail_stop:N #2
+    \__yl_compare_auxii:nN {#1} #2
+    \__yl_compare_auxi:nN {#1}
+  }
+ 
+ %auxiliary 2
+\cs_new:Npn \__yl_compare_auxii:nN #1#2
+  {
+    \__yl_compare_auxiii:NN #2 #1 \q_recursion_tail \q_recursion_stop
+  }
+\cs_new:Npn \__yl_compare_auxiii:NN #1#2
+  {
+  % if found not found stop and print
+    \quark_if_recursion_tail_stop_do:Nn #2 { \FAIL\ #1 }
+  % if not the list end  
+    \str_if_eq:nnT {#1} {#2}
+      {
+        \use_i_delimit_by_q_recursion_stop:nw { \PASS\ #1~=~#2 }
+      }
+  % recurse     
+    \__yl_compare_auxiii:NN #1
+  }
+\ExplSyntaxOff
+
+\ylcompare{1234567890AAA}{-1234567890)(}
+\ylcompare{textit}{aieouy} 
+\end{document}

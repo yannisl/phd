@@ -1,17 +1,18 @@
 \chapter{LuaTeX}
 \addtocimage{-10pt}{-40pt}{./images/tocblock-lua.JPG}
+
 \section{What is LuaTeX}
 
 Although \tex and \latex can be used to program complex commands, and the proof is this book, they are not a general programming language. Many tasks that can be easily be done
 in other programming languages, they are extrememely complicated or very slow when done with \tex. Due tothis limitation many auxiliary programs have been developed to assist in common tasks, such as |bibtex| or |biber| that are used to build bibliographies and |makeindex| or |xindex| to generate indexes. In both cases, sorting a list alphabetically is a relatively easy task, but very complicated using \tex.
 
 
-Another limitation is \tex's math capabilities. One can just marvel at the efforts of \tex macro authors in achieving what they have achieved. A cursory look at the code in the \pkgname{fp} package \cite{fp} can give you an idea of the difficulties and complexities involved.
+Another limitation is \tex's math capabilities. One can just marvel at the efforts of \tex macro authors in achieving what they have achieved. A cursory look at the code in the \pkgname{fp} package \cite{fp} can give you an idea of the difficulties and complexities involved. The similar package by the \latex3 Team is another gigantic and amazing production.
 
 To address the need to do more complex functions within \TeX, an extension of \TeX{} called Lua\TeX{} was begun a few years ago.  
 (The leaders of the project and main developers are Taco Hoekwater, Hartmut Henkel and Hans Hagen.) The idea was to enhance \TeX{} with a previously existing general purpose programming language. After a careful evaluation of possible candidates, the language chosen was Lua (see \href{http://www.lua.org/}{lua.org}), a powerful, fast, lightweight, embeddable scripting language that has,  of course, a free license suitable to be used with \TeX.
 
-Moreover, Lua is easy to learn and use, and anyone with basic programming skills can use it without difficulty. (Many examples of Lua code can be found in this book, and also in \url{http://rosettacode.org/wiki/Category:Lua},
+Lua is easy to learn and use, and anyone with basic programming skills can use it without difficulty. (Many examples of Lua code can be found in this book, and also in \url{http://rosettacode.org/wiki/Category:Lua},
 and \url{http://lua-users.org/}).
 
 Lua\TeX{} is not \TeX{}, but an extension of \TeX{}, in the same way that pdf\TeX{} or \XeTeX{} are also extensions.
@@ -23,19 +24,20 @@ and when this paper was written on \today, the release used was version \the\lua
 
 \section{Is LuaTeX for you}
 
-The choice of TeX engine should in a way be immaterial to you, if you are just thinking about typesetting normal books.
+The choice of TeX engine should in a way be immaterial to you, if you are just thinking about typesetting normal books. If you are writing a thesis or you are involved with a longer and more complex document, \lualatex might be for you. 
 
 \section{Embedding Lua in a TeX document}
 
-\begin{macro}{\directlua}
+Short Lua code can be embedded in a document fairly easily with 
+\begin{docCommand}{directlua}{\marg{code}}
 Although it is recommended to put Lua code in Lua files, from time to time one may want or need to go Lua in the middle of a document. To this end, LuaTeX has two commands: \cmd{\directlua} and \cmd{\latelua}. They work the same, except \cmd{\latelua} is processed when the page where it appears is shipped out, whereas \cmd{\directlua} is processed at once; the distinction is immaterial here, and what is said of \cmd{\directlua} also applies to \cmd{\latelua}.
-\end{macro}
+\end{docCommand}
 
 \section{From Lua to TeX}
 
-Inside Lua code, one can pass strings to be processed by TeX with the functions |tex.print()|, |tex.sprint()| and |tex.tprint()|. All such calls are processed at the end of a \cmd{\directlua} call, even though they might happen in the middle of the code. This behavior is worth noting because it might be surprising in some cases, although it is generally harmless.
+Inside Lua code, one can pass strings to be processed by TeX with the functions |tex.print()|, |tex.sprint()| and |tex.tprint()|. All such calls are processed at the end of a \refCom{directlua} call, even though they might happen in the middle of the code. This behavior is worth noting because it might be surprising in some cases, although it is generally harmless.
 
-The function can also can also take an optional number as its first argument; it is interpreted as referring to a catcode table (as defined by \cmd{\initcatcodetable} and \cmd{\savecatcodetable}), and each line is processed by TeX with that catcode regime. For instance (note that with such a minimal catcode table, braces don't even have their usual values):
+The function can also can also take an optional number as its first argument; it is interpreted as referring to a catcode table (as defined by \docAuxCommand{initcatcodetable} and \docAuxCommand{savecatcodetable}), and each line is processed by TeX with that catcode regime. For instance (note that with such a minimal catcode table, braces don't even have their usual values):
 
 \begin{texexample}{catcodes}{lua:catcodes}
 \directlua {tex.enableprimitives('',tex.extraprimitives()) }
@@ -206,65 +208,106 @@ Before presenting the tools in this package, let me insist that the best way to 
 
 \LuaTeX communicates with TeX with only a few commands. We will explore these commands first.
 
-\section{Basic print statements}
+\subsection{Basic print statements}
 
-\CMDI{\directlua\{tex.print\}}
+\begin{teXXX}
+\directlua{tex.print}
+\end{teXXX}
+
 To print you can use the Lua command \lstinline{tex.print}.
 
-\directlua{tex.print(2+2)}
 
 Lua can handle subtraction, negative numbers, numbers with decimal points, multiplication (using *),
 division (using /), exponentiation (using \texttt{\^} ), and combinations of these. Here are some examples:
 \emphasis{directlua, tex,print}
+
 \begin{texexample}{The tex.print function}{lua:texprint}
+
 \directlua{tex.print(2+2^3)}
+
 \end{texexample}
 
 \subsection{Scientific notation}
 
 You can also write numbers using the \textit{scientific notation}, where the aprt before the upper multiplied by 10 to the power after $\textup{e}$
 
-\begin{texexample}{Numbers scientific notation}{}
+\begin{texexample}{Numbers scientific notation}{ex:scientific}
+
 \directlua{tex.print(1.2193263111264E17 / 987654321)}
 \end{texexample}
 
 \subsection{Hexadecimal numbers}
 Lua also understands hexadecimal (base 16) numbers, using the letters
 a-f (or A-F) to represent 10 through 15. Hexadecimal numbers should start with \texttt{0x} or \texttt{0X}.
-\begin{tcblisting}{}
+
+\begin{texexample}{Hexadecimal numbers}{ex:hex}
 \directlua{tex.print(0XA)}
-\end{tcblisting}
+\end{texexample}
 
 
 \section{Lua variables}
 
-\begin{tcblisting}{}
-\directlua{
-   A=2^0.5
-   B=42 
+\begin{texexample}{Lua Variables}{}
+\luadirect{
+   A = 2^0.5
+   B = 42 
    tex.print(A+B)
 }
-\end{tcblisting}
+\directlua{
+   A = 2^0.5
+   B = 42 
+   tex.print(A+B)
+}
+\end{texexample}
 
-Lua is case sensitive, which means NUM, Num and num are different variables.
+Variables unless they are preceded with a |local| are in the document global space. We can continue our example from above as we did not define A and B again, they are available in the next example.
 
-\begin{tcblisting}{}
+\begin{texexample}{Lua Variables}{}
+\luadirect{
+   tex.print(A+B)
+   
+   local A,B = 1,1
+   tex.print(A+B) 
+}
+\end{texexample}
+
+\begin{texexample}{Lua Variables}{}
+\luadirect{
+   tex.print(A+B)
+   
+   local A,B = 1,1
+   tex.print(A+B) 
+}
+
+\def\abadd#1#2{%
+  \luadirect{
+     A = #1 + #2
+     tex.print(A)}
+}
+
+\abadd{100}{925.56}
+\end{texexample}
+
+
+
+Lua is case sensitive, which means |NUM|, |Num| and |num| are different variables.
+
+\begin{texexample}{Lua Variables case sensitivity}{}
 \directlua{
    NUM=1
    Num=2 
    num=3
    tex.print(NUM+Num+num)
 }
-\end{tcblisting}
+\end{texexample}
 
 
 \subsection{Multiple Assignment}
 
 You can assign multiple values to multiple variables at the same time. You can also print multiple values
-at the same time. The comma is used for both. Here’s how you use the comma for multiple assignment,
-and for printing multiple values at the same time:
+at the same time. The comma is used for both. Here's how you use the comma for multiple assignment, and for printing multiple values at the same time:
 
-\begin{tcblisting}{}
+\begin{texexample}{Another example}{}
 \directlua{
   Product, Exponent = 10*10, 999
   A,B=1,2
@@ -273,20 +316,21 @@ and for printing multiple values at the same time:
 }
 \directlua{
     A,B=1,2
-    tex.sprint(A,B)
+    tex.sprint("A=" .. A, "B =" .. B)
 }
-\end{tcblisting}
+\end{texexample}
 
 
 
 \section{Strings}
+
 The double quote characters (") mark the beginning and end of the string. Marking the beginning and
 end is all they do; they are not actually part of the string, which is why print doesn't print them, as in
 this example:
 
 \begin{texexample}{Strings}{lua:strings}
 \directlua{
- tex.sprint("This is a string")
+    tex.sprint("This is a string")
 }
 \end{texexample}
 
@@ -313,7 +357,7 @@ Like numbers, strings are values, which means they can be assigned to variables.
 
 Now what do you do if you want to print to square brackets together?
 
-\begin{tcblisting}{}
+\begin{texexample}{Comments}{}
 \ttfamily \directlua{
  tex.sprint([=[
     [[There]] are some 
@@ -321,11 +365,11 @@ Now what do you do if you want to print to square brackets together?
     string. 
 ]=])
 }
-\end{tcblisting}
+\end{texexample}
 
 \subsection{Escaping Characters}
 
-\begin{tcblisting}{}
+\begin{texexample}{Escaping characters}{ex:esc1}
 \ttfamily \directlua{
  tex.sprint([=[
     [[There]] are some 
@@ -333,32 +377,32 @@ Now what do you do if you want to print to square brackets together?
     string. 
 ]=])
 }
-\end{tcblisting}
+\end{texexample}
 
 
-\begin{tcblisting}{}
+\begin{texexample}{Escaping}{ex:esc}
 \ttfamily \directlua{
  tex.sprint("2"+21)
 }
-\end{tcblisting}
+\end{texexample}
 
 \subsection{Concatenation operator}
 
-\begin{tcblisting}{}
+\begin{texexample}{Concatenation operator}{ex:concatop}
 \ttfamily \directlua{
- tex.sprint("99"..21) -- this is a comment
+ tex.sprint("99" ..  21) -- this is a comment
 }
-\end{tcblisting}
+\end{texexample}
 
 \section{Comments}
-\begin{tcblisting}{}
+\begin{texexample}{comments}{ex:comment}
 \ttfamily \directlua{
  tex.sprint("99"..21) -- this is a comment
 }
-\end{tcblisting}
+\end{texexample}
 
 \section{Conditionals}
-\begin{tcblisting}{}
+\begin{texexample}{Conditionals}{ex:conditionals}
 \directlua{
  a=3
  b=12^2
@@ -367,32 +411,33 @@ Now what do you do if you want to print to square brackets together?
  else
  end
 }
-\end{tcblisting}
+\end{texexample}
 
 \subsection{while loop}
-\begin{tcblisting}{}
+
+\begin{texexample}{while loop}{ex:loop}
 \directlua{
-counter = 1
- while counter <= 100 do
- tex.print(counter)
- counter = counter + 1
- end
+   counter = 1
+   while counter <= 100 do
+      tex.print(counter)
+   counter = counter + 1
+   end
 }
-\end{tcblisting}
+\end{texexample}
 
 \let\exec\directlua
 \subsection{for loop}
-\begin{tcblisting}{}
+\begin{texexample}{for loop}{ex:forloop}
 \exec{
 for N = 1, 10 do
  tex.print(N)
  end
 }
-\end{tcblisting}
+\end{texexample}
 
 \subsection{repeat until}
 \let\exec\directlua
-\begin{tcblisting}{}
+\begin{texexample}{repeat until}{ex:repeat}
 \exec{
   N,Z=1,21
   F=1
@@ -403,10 +448,10 @@ for N = 1, 10 do
   until F>=99
   tex.print(Z)
 }
-\end{tcblisting}
+\end{texexample}
 
 \subsection{The break and do Statements}
-\begin{tcblisting}{}
+\begin{texexample}{Break and do}{ex:breakanddo}
 \exec{
 for N = 1, 10 do
  if N > 5 then
@@ -415,13 +460,13 @@ for N = 1, 10 do
  tex.print(N)
  end
 }
-\end{tcblisting}
+\end{texexample}
 
 \chapter{Functions}
 
 \cxset{epigraph width=0.6\textwidth,
        epigraph text align=left}
-\epigraph{“A computer is like a violin. You can imagine a novice trying ﬁrst a phonograph and then a violin. The latter, he says, sounds terrible. That is the argument we have heard from our humanists and most of our computer scientists. Computer programs are good, they say, for particular purposes, but they aren’t ﬂexible. Neither is a violin, or a typewriter, until you learn how to use it.” }{Marvin Minsky}
+\epigraph{“A computer is like a violin. You can imagine a novice trying fist a phonograph and then a violin. The latter, he says, sounds terrible. That is the argument we have heard from our humanists and most of our computer scientists. Computer programs are good, they say, for particular purposes, but they aren't flexible. Neither is a violin, or a typewriter, until you learn how to use it.” }{Marvin Minsky}
 
 \section{What are functions}
 
@@ -429,12 +474,12 @@ The main mechanism for abstraction of statements and expressions in Lua are \tex
 
 \begin{texexample}{Functions used in expressions}{ex:expressions}
 \begin{luacode}
-a = math.sin(2) + math.cos(10)
-tex.print(a)
+  a = math.sin(2) + math.cos(10)
+  tex.print(a)
 \end{luacode}
 \end{texexample}
 
-The arguments are enclosed in parenthese denoting a call. If the function does not have any arguments, we must still call it with an empty list () to denote the call.
+The arguments are enclosed in parentheses denoting a call. If the function does not have any arguments, we must still call it with an empty list () to denote the call.
 
 \section{Multiple Results}
 
@@ -471,7 +516,7 @@ Here is one that prints the Ackerman function. This is an interesting function a
 \]
 
 
-\begin{tcblisting}{}
+\begin{texexample}{The ackerman function}{ex:ackerman}
 \exec{
 function ack(M,N)
     if M == 0 then return N + 1 end
@@ -480,18 +525,20 @@ function ack(M,N)
 end
 tex.sprint(ack(3,8))
 }
-\end{tcblisting}
+\end{texexample}
 
 
 \subsection{Returning multiple values}
 
 This return an error if Arg1 is a number
-\begin{tcblisting}{}
+
+\begin{texexample}{Return multiple arguments}{ex:multargs}
 \exec{
 function ReturnArgs(Arg1, Arg2, Arg3)
   return Arg1, Arg2, Arg3
 end
-   tex.sprint(ReturnArgs("aaaa", 2, 3))
+tex.sprint(ReturnArgs("aaaa", 2, 3))
+   
 function Fact(N)
   local Ret = 1
   for I = 1, N do
@@ -501,10 +548,10 @@ function Fact(N)
   end
 tex.print(Fact(10))
 }
-\end{tcblisting}
+\end{texexample}
 
 
-\begin{tcblisting}{}
+\begin{texexample}{Factorial}{ex:luafac}
 \exec{
 function Fact(N)
   local Ret = 1
@@ -515,7 +562,7 @@ function Fact(N)
   end
 tex.print(Fact(10))
 }
-\end{tcblisting}
+\end{texexample}
 
 \subsection{Anonymous Functions}
 
@@ -536,11 +583,11 @@ you combine other values. Because of its flexibility, it is Lua’s only data st
 create other, special-purpose data structures in C.)
 \begin{verbatim}
 \begin{filecontents*}{test.lua}
-hash = {}
-hash[ "key-1" ] = "val1"
-hash[ "key-2" ] = 1
-hash[ "key-3" ] = {}
-tex.sprint(hash["key-2"])
+  hash = {}
+  hash[ "key-1" ] = "val1"
+  hash[ "key-2" ] = 1
+  hash[ "key-3" ] = {}
+  tex.sprint(hash["key-2"])
 \end{filecontents*}
 \directlua{dofile("test.lua")}
 \end{verbatim}
@@ -626,8 +673,9 @@ table.sort(Names)
  for I, Name in ipairs(Names) do
    tex.sprint(I.." ".. Name.."\\par")
  end
- \end{luacode}
+\end{luacode}
 \end{texexample}
+
 
 \endinput
 
@@ -661,11 +709,11 @@ end
 
 
 \chapter{Packages}
-The luacode package provides commands to make entering of code from a teX
+The luacode package provides commands to make entering of code from a \TeX
 file easier. It provides a better escape mechanism
 
 \emphasis{luaexec,luacode}
-\begin{tcblisting}{}
+\begin{texexample}{luaexec}{ex:exec}
 \def\foo{156789.0001}
 \(
  \luaexec{
@@ -678,19 +726,25 @@ file easier. It provides a better escape mechanism
 tex.sprint("-", math.sqrt(\foo))
  }
 \)
-\end{tcblisting}
+\end{texexample}
+
+
 \section{Using \texttt{luacode}}
-The luacode environment is similar to luaexec
-You can pass a macro, which must be fully expandable in order
-to work properly.
-\begin{tcblisting}{}
+
+One very useful environment is \refEnv{luacode}.
+
+\begin{docEnvironment}{luacode}{}
+The luacode environment is similar to luaexec. You need to be careful to pass a macro that is fully expandable in order to work properly.
+\end{docEnvironment}
+
+\begin{texexample}{luacode environment}{ex:luacode}
 \edef\foo{156789.0001}
 \[
  \begin{luacode}
     tex.sprint("a=", math.sqrt(\foo),"+ z^3")
  \end{luacode}
 \]
-\end{tcblisting}
+\end{texexample}
 
 \section{Creating new environments}
 \emphasis{luacode,endluacode,tex}

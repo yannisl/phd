@@ -27,19 +27,22 @@ strings.german = {
   leftname          = "links",
   rightname         = "recht",
   bindingcorrectionname = "Bindekorrektur",
-  germanname         = "Deutsch",
-  january            = "Januar",
-  february           = "Februar",
-  march              = [[M\"arz]],
-  april              = "April",
-  may                = "Mai",
-  june               = "Juni",
-  july               = "Juli",
-  august             = "August",
-  september          = "September",
-  october            = "Oktober",
-  november           = "November",
-  december           = "Dezember"
+  name              = "Deutsch",
+    months = {
+      january            = "Januar",
+      february           = "Februar",
+      march              = [[M\"arz]],
+      april              = "April",
+      may                = "Mai",
+      june               = "Juni",
+      july               = "Juli",
+      august             = "August",
+      september          = "September",
+      october            = "Oktober",
+      november           = "November",
+      december           = "Dezember",
+      name               = "Deutche"
+    }
  }
 
 return strings

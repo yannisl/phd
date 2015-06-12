@@ -6,3 +6,4 @@ erase *.idx
 erase *.mtc***
 erase *.out
 erase *.glo
+erase *.ind

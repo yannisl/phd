@@ -240,7 +240,7 @@ texcommands.dates = function (lang)
 --test_language('french')
 
 --test_language('german')
-    test_language('el.greek','greek')
+--test_language('el.greek','greek')
 
 --test_language('hindi')
 
@@ -249,9 +249,9 @@ texcommands.dates = function (lang)
 --test_language('italian')
 
 --test_language('japanese')  -- minimum support
---test_language('kannada')
+ -- test_language('kannada')
 
---test_language('latin')
+  -- test_language('latin')
 --test_language('lao')
 --test_language('latvian')
 --test_language('lithuanian')
@@ -314,7 +314,7 @@ texcommands.dates = function (lang)
 
 --- enables path settings
 --  unbelievable but it worked!
-    local test = require("el.test")
+    --local test = require("el.test")
     local languages = require("el.languages")
     local units = require("el.units")
     local transformNames = require("el.transformnames")
@@ -487,8 +487,7 @@ local test_timeZoneNames = function (lan)
   for k,v in pairs(str) do 
      print("December buddhist calendar written in Arabic", str[k])
   end
-  
-  
+   
   
   
   

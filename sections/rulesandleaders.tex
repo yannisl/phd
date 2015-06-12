@@ -1,13 +1,32 @@
-\cxset{custom = fashion,
-          fashion image=./images/venus.jpg}
+%\cxset{custom = fashion,
+%          fashion image=./images/venus.jpg}
 
 \chapter{Rules and Leaders}
+\pagestyle{headings}
 
+A leader is a single copy of a pattern, for example in a dashed line a dash is a leader.
 Dot leaders are a row of dots that visually connect the chapter titles and section headings to their corresponding page numbers. 
 
 Leaders don't have to be composed of dots, with \tex leaders can be used fill a space with copies of a pattern,
 \eg, to put repeated dots between a title and a page number in a table
-of contents. A leader is a single copy of the pattern. The specification of
+of contents. 
+
+The Plain Format provides six standard leader definitions. All these definitions are equivalent to an |\hfill| type of horizontal glue.
+
+\medskip
+
+\begin{tabular}{lp{3cm}}
+\docAuxCommand{hrulefill}     & \hrulefill\\
+\docAuxCommand{dotfill}        & x\dotfill x \\
+\docAuxCommand{leftarrowfill} & \leftarrowfill\\
+\docAuxCommand{rightarrowfill} & \rightarrowfill\\
+\docAuxCommand{downbracefill} & \downbracefill\\
+\docAuxCommand{upbracefill} & \upbracefill\\
+\end{tabular}
+\bigskip
+
+
+A leader is a single copy of the pattern. The specification of
 leaders contains three pieces of information:
 
 \begin{enumerate}
@@ -16,22 +35,34 @@ leaders contains three pieces of information:
 \item  how the copies of the pattern should be arranged within the space
 \end{enumerate}
 
-\begin{macro}{\leaders}
-\begin{macro}{\cleaders}
-\begin{macro}{\xleaders}
+In \tex leaders are actually \emph{visual glue}. Wherever glue can go a row of leaders can go.
+
+\begin{texexample}{Leaders}{ex:leaders}
+\meaning\dotfill  \par
+\meaning\hrulefill\par
+\meaning\downbracefill\par
+\end{texexample}
+
+\begin{docCommand}{leaders}{}
+\tex applies an imaginary window and only those leader boxes are printed which fully fit into the window. This ensures that the leader dots of different lines line up vertically.
+\end{docCommand}
+
+
+\begin{docCommand}{cleaders}{}
+\end{docCommand}
+
+\begin{docCommand}{xleaders}{}
 \tex  provides three commands for specifying leaders:\cs{leaders},\cs{cleaders},
 and\cs{xleaders} (p. 174). The argument of each command specifies the
 leader. The command must be followed by glue; the size of the glue specifies
 how much space is to be filled. The choice of command determines how
 the leaders are arranged within the space.
-\end{macro}
-\end{macro}
-\end{macro}
+\end{docCommand}
 
 Rule leaders \textit{fill} the specified amount of space with a rule extending in the direction of the skip
-specified. \index{Rules and Leaders!rule leaders}
+specified. \index{rules and leaders>rule leaders}
 
-The most common application for leaders is to fill the space with either a rule or with dots, such as shown in Example~ref{leaders} below.
+The most common application for leaders is to fill the space with either a rule or with dots, such as shown in Example~\ref{leaders} below.
 
 \emphasis{leaders,hbox,hfill}
 \begin{texexample}{Leader example}{leaders}
@@ -50,7 +81,7 @@ Leaders must be in a box, such as an \cs{hbox}. If they are not in a box an erro
 \hbox to \textwidth{g\leaders\hbox{+}\hfill 112}
 \end{texexample}
 
-because a horizontal rule has a default height of |.4pt|. On the other hand,\index{Rules and Leaders!default value}
+because a horizontal rule has a default height of |.4pt|. On the other hand,\index{Rules and Leaders>default value}
 
 \verb+\hbox{g\leaders\vrule\hskip10pt f}+
 
@@ -71,13 +102,16 @@ If the width or height-plus-depth of either the skip or the box is negative, TEX
 instead of leaders.
 
 \section{Box leaders}
-
+\index{leaders box}
 Box leaders fill the available spaces with copies of a given box, instead of with a rule. For all of the following examples, assume that a box register has been allocated:
 
 \begin{texexample}{Box leaders}{}
-\newbox\starbox
-\setbox\starbox=\hbox{\hskip.7em*\hskip.7em}
-\hbox to 5cm {lorem \leaders\copy\starbox\hfill lorem}.
+\ExplSyntaxOn  
+  \newbox\starbox
+  \setbox\starbox=\hbox{\hskip.7em*\hskip.7em}
+
+  \hbox_to_wd:nn { 5cm} {lorem \tex_leaders:D\copy\starbox\hfill lorem}.
+\ExplSyntaxOff
 \end{texexample}
 
 If you notice you have to use the \cs{copy} command rather than \cs{usebox}, as we cannot use the |\leavevmode| with leaders
@@ -117,13 +151,13 @@ placed in vertical mode; for box leaders the \textit{infinite row} then starts a
 box.
 
 
-\begin{macro}{cleaders}
-\begin{macro}{xleaders}
+\begin{docCommand}{cleaders}{}
+\begin{docCommand}{xleaders}{}
 The \cs{cleaders} command is similar to 
 \cs{leaders}, but it splits excess space before and after the leaders into two equal parts, centring the row of boxes in the available space.
 The \cs{xleaders} command is also similar, but spreads the space between and after the leaders evenly between all the boxes.
-\end{macro}
-\end{macro}
+\end{docCommand}
+\end{docCommand}
 
 The differences are best explained with an example.
 
@@ -134,6 +168,8 @@ Lorem \leaders\leaderpattern\hfill 13\par
 Lorem \cleaders\leaderpattern\hfill 13\par
 Lorem \xleaders\leaderpattern\hfill 13\par
 \end{texexample}
+
+
 
 
 \section{Vertical leaders}

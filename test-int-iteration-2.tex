@@ -1,0 +1,71 @@
+\documentclass{article}
+\usepackage{expl3,xcolor}
+\begin{document}
+\ExplSyntaxOn
+% test conditional
+\newif\ifpass\passtrue
+\ifpass
+  	      tests pass
+  	  \else
+  	     tests fail
+  	  \fi   
+
+\def\PASS{{\bfseries\textcolor{green!80!blue}{PASS\ }}}
+\def\FAIL{{\bfseries\textcolor{red!70!black}{FAIL\ }}}
+\def\ALLPASS{{\bfseries\textcolor{green!80!blue}{PASS ALL\ }}}
+\def\ALLFAIL{{\bfseries\textcolor{red!70!black}{FAIL\ }}}
+
+% syntactic cyanide for expandafters
+    \cs_generate_variant:Nn \tl_if_in:NnTF {ff }
+    \cs_generate_variant:Nn \cs_set:Npn {Npf}
+    \cs_generate_variant:Nn \tl_set_eq:NN {Nn}	    
+    \cs_generate_variant:Nn \int_step_inline:nnnn {nnfn, nnVn}	  
+    \cs_generate_variant:Nn \int_set_eq:NN {No,Nf}
+    \cs_generate_variant:Nn \tl_set:Nn {No,Nf}
+	    
+    \cs_new:Npn \test_two:nn #1#2 {
+    \passtrue
+% set the lists	    
+	    \tl_set:Nx \temp {#2}
+          \tl_set:Nx \temp_needle_tl {#1}
+	    \tl_set:Nx \head_tl {\tl_head:V \temp_needle_tl } 
+          \tl_set:Nx \start_tl {\temp_needle_tl }
+          
+% print some values  	    
+  	    head~at~start~ \head_tl \par
+  	    start~ \start_tl \par
+
+% set iteration limit 
+      	    \int_set_eq:Nf  \g_tmpa_int {\tl_count:V\temp_needle_tl}
+    	    Number~of~items~to~test \int_use:N \g_tmpa_int\par
+
+% iteration	    	    
+	    \int_step_inline:nnnn {1} {1} {\g_tmpa_int}{
+
+% test value	     
+ 	           \tl_if_in:ffTF {\temp} {\head_tl}
+		        {          
+		               \PASS  \head_tl\ ~~\start_tl \par
+		        } 
+		       {
+		               \FAIL   \head_tl\ ~~\start_tl \par
+		               \passfalse
+		       }
+		       
+%           Swap and go
+     		 \tl_set:Nx \head_tl {\tl_head:f\start_tl } 
+     		 \tl_set:Nx \oldtail_tl {\start_tl }
+     		 \tl_set:Nx \start_tl {\tl_tail:f \oldtail_tl}
+  	   }
+ \ifpass
+    \ALLPASS\par
+ \else
+  	 %    tests \FAIL\par
+ \fi    	    
+     }
+    
+\test_two:nn {-123456-7890AAA}{-1234567890)(}
+
+\test_two:nn {aeoo}{aeiouAEIOU)(} 
+\ExplSyntaxOff 
+\end{document}

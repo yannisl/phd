@@ -27,7 +27,7 @@ strings.scottish = {
   leftname          = "",
   rightname         = "",
   bindingcorrectionname = "",
-  russianname         = "russian",
+  name         = "scottish",
   months              = {
    "Faoilteach",
    "an Gearran",

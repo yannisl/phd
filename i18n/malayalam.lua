@@ -1,3 +1,4 @@
+
 local strings = strings or {}
 
 
@@ -45,3 +46,6 @@ strings.malayalam = {
   }
   
   return strings
+  
+  
+  

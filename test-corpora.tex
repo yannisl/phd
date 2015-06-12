@@ -1,0 +1,31 @@
+\documentclass{article}
+\usepackage{expl3,xparse}
+
+\begin{document}
+\ExplSyntaxOn
+\makeatletter
+\global\let\ltx_scratch_stream \@inputcheck
+\makeatother
+% open the stream
+\file_path_include:n {./corpora/}
+\ior_open:Nn \ltx_scratch_stream { male.txt }
+
+% define a macro so we can do recursion
+\cs_set:Npn \read_loop {
+  \ior_if_eof:NTF \ltx_scratch_stream
+    {
+      \ior_close:N \ltx_scratch_stream
+      \cs_set_eq:NN \next\relax
+    }
+    {  
+      \ior_get:NN \ltx_scratch_stream \tmpa
+      \tl_use:N \tmpa,~
+      \cs_set_eq:NN \next\read_loop
+   } 
+ \next 
+}
+
+% read the file and typeset the words with a comma
+\read_loop
+\ExplSyntaxOff
+\end{document}

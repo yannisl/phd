@@ -1,0 +1,53 @@
+\documentclass{article}
+\usepackage{expl3,xcolor}
+\begin{document}
+\ExplSyntaxOn
+\def\PASS{\par{\bfseries\textcolor{green!80!blue}{PASS\ }}}
+\def\FAIL{\par{\bfseries\textcolor{red!70!black}{FAIL\ }}}
+\cs_new:Npn \test_two:nn #1#2 {
+
+% syntactic cyanide for expandafters
+	    \cs_generate_variant:Nn \tl_if_in:NnTF {ff }
+	    \cs_generate_variant:Nn \cs_gset:Npn {Npf}
+	    \cs_generate_variant:Nn \tl_set_eq:NN {Nn}	    
+	    \cs_generate_variant:Nn \int_step_inline:nnnn {nnfn, nnVn}	  
+	    \cs_generate_variant:Nn \int_set_eq:NN {No,Nf}
+	    \cs_generate_variant:Nn \tl_gset:Nn {No,Nf}
+	    
+% set the lists	    
+	    \tl_gset:Nx \temp {#2}
+          \tl_gset:Nx \temp_needle_tl {#1}
+	    \tl_gset:Nn \head_tl {\tl_head:V \temp_needle_tl } 
+          \tl_gset:Nn \tail_tl {\tl_tail:V \temp_needle_tl }
+          
+% print some values  	    
+  	    head~at~start~ \head_tl\par
+  	    tail~at~ start~ \tail_tl\par
+ 
+% set iteration limit 
+      	    \int_set_eq:Nf  \g_tmpa_int {\tl_count:V\temp_needle_tl}
+    	    Number~of~items~to~test \int_use:N \g_tmpa_int\par
+
+% iteration	    	    
+	    \int_step_inline:nnnn {1} {1} {\g_tmpa_int}{
+
+% test value	     
+ 	           \tl_if_in:ffTF {\temp} {\head_tl}
+		        {          
+		               \PASS  \head_tl\ ~~\tail_tl\par
+		        } 
+		       {
+		               \FAIL   \head_tl\ ~~\tail_tl\par
+		       }
+		       
+%           Swap and go
+     		 \tl_gset:Nn \head_tl {\tl_head:f\tail_tl} 
+     		 \gdef\atemp{} 
+     		 \tl_gset:Nf \oldtail_tl {\tl_head:f\tail_tl}
+     		 \tl_gset:Nn \tail_tl {\tl_tail:f \oldtail_tl}
+  	   }
+     }
+
+\test_two:nn {1234567890AAA}{-1234567890)(} 
+
+\end{document}

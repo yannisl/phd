@@ -1,0 +1,56 @@
+\documentclass{article}
+\usepackage{expl3,xparse}
+\usepackage{hyperref}
+\ExplSyntaxOn
+
+\clist_gset:Nn \title_words_not_capitalized_en 
+    { a, an, the, at, by, for, in, of, on, to, up, and, as, but, it, or, nor, do, for, this, be,  
+    A, An, The, At, By, For, In, Of, On, To, Up, And, As, But, It, Or, Nor, Do, For, This, Be }
+    
+\cs_new:Npn \ucfirst_aux:w #1#2 \q_stop { \tl_upper_case:n { #1 } #2 }
+
+\cs_new:Npn \ucfirst #1 {
+     \exp_after:wN \ucfirst_aux:w #1 \q_stop
+}
+
+\cs_new:Npn \lowerfirst #1 {
+       \tl_lower_case:n {#1}
+ }
+
+\NewDocumentCommand {\UppercaseTitle} {s +m }
+    {
+      \IfBooleanTF { #1 } { {\bfseries {#2} } }
+        {     \tex_hyphenpenalty:D = 10000
+	        \seq_set_split:Nnn \g_tmpa_seq {~} {#2}
+	        \seq_use:Nn   \g_tmpa_seq {~}\\
+	        
+	        \seq_pop_left:NN \g_tmpa_seq \l_tmpa_tl  
+	       
+	        {\bfseries\ucfirst \l_tmpa_tl \space} 
+	        \seq_map_inline:Nn \g_tmpa_seq 
+	           {
+	              \clist_if_in:NnTF \title_words_not_capitalized_en { ##1 }
+	              { {\bfseries \lowerfirst {##1}~}} { {\bfseries \ucfirst{##1}~ } }    
+	            
+	           }            
+	       
+       }    
+    } 
+
+\ExplSyntaxOff
+\begin{document}
+\tableofcontents
+\parindent0pt
+
+\section{\UppercaseTitle {The l3seq package Sequence and stacks}}
+\ExplSyntaxOn
+\tl_mixed_case:n {The~ l3seq~ package ~Sequence~ and~ stacks}
+\ExplSyntaxOff
+
+ \UppercaseTitle {Top ten things to do in Paris}\\
+ \UppercaseTitle {How to use {\LaTeX} sequence lists effectively}\\
+ \UppercaseTitle {Senate Votes to Confirm Elena Kagan For U.S. Supreme Court}\\
+ \UppercaseTitle {what would be a ``correct'' capitalization for the title of this question?}\\
+ \UppercaseTitle* {How about {$e=mc^2$}? }\\
+
+ \end{document}

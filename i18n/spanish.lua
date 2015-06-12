@@ -1,7 +1,7 @@
 local strings = strings or {}
 
 strings.spanish = {
-  abstract          = "Resumen",
+  abstractname      = "Resumen",
   partname          = "Parte",
   chaptername       = "Capítulo",
   sectionname       = "",
@@ -29,19 +29,19 @@ strings.spanish = {
   bindingcorrectionname = "",
   name              = "spanish",
   months              = {
-    enero,
-    febrero,
-    marzo,
-    abril,
-    mayo,
-    junio,
-    julio,
-    agosto,
-    septiembre,
-    octubre,
-    noviembre,
-    diciembre
+    "enero",
+    "febrero",
+    "marzo",
+    "abril",
+    "mayo",
+    "junio",
+    "julio",
+    "agosto",
+    "septiembre",
+    "octubre",
+    "noviembre",
+    "diciembre"
     }
   }
-
+--print(strings.spanish.months[2])
 return strings

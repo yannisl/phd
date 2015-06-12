@@ -1,0 +1,223 @@
+\documentclass[a4paper]{article}
+\usepackage{expl3}
+\usepackage{etoolbox}
+
+\begin{document}
+
+\ExplSyntaxOn
+
+% Make some commands engine-robust
+\robustify\textbf
+
+% Set up to exclude items from case changing
+\tl_new:N \l_tl_case_change_exclude_tl
+
+\tl_put_right:Nn \l_tl_case_change_exclude_tl { \NoChangeCase }
+\cs_new:Npn \NoChangeCase #1 {#1}
+
+% First split the input string into sentence chunks, where `sentence' means anything after . ? ! : etc.
+ 
+\cs_new:Npn \titlecase #1
+  {
+    \tl_if_blank:nF {#1}
+      { \titlecase_split_period:w #1 . \q_recursion_tail \q_recursion_stop }
+  }
+
+%% This is the basic idea of splitting:
+%
+%\cs_new:Npn \titlecase_split_period:w #1 . #2
+%  {
+%    \titlecase_split_colon:w #1 : \q_recursion_tail \q_recursion_stop
+%    \quark_if_recursion_tail_stop:n {#2}
+%    . \c_space_tl
+%    \titlecase_split_period:w #2
+%  }
+
+% Use an obfuscated macro to avoid lengthy definitions:
+\cs_new:Nn \titlecase_new_split_fn:NNNN
+  {
+    \cs_set:Npn #2 ##1 #1 ##2
+      {
+        #4 ##1 #3 \q_recursion_tail \q_recursion_stop
+        \quark_if_recursion_tail_stop:n {##2}
+        #1 \c_space_tl
+        #2 ##2
+      }
+
+  }
+
+% The reason to use an obfuscated macro is to pass in properly sanitised `characters':
+% (Could possibly be done more easily with some clever expansion.)
+\exp_after:wN \titlecase_new_split_fn:NNNN
+\exp_after:wN .
+\exp_after:wN \titlecase_split_period:w \token_to_str:N :
+  \titlecase_split_colon:w
+\exp_after:wN \titlecase_new_split_fn:NNNN
+  \token_to_str:N : \titlecase_split_colon:w ! \titlecase_split_exclam:w
+\titlecase_new_split_fn:NNNN ! \titlecase_split_exclam:w  ? \titlecase_split_question:w
+\titlecase_new_split_fn:NNNN ? \titlecase_split_question:w  {~} \titlecase_first:w
+
+
+%% These are the internals that do the processing of each word.
+
+% The first and last words needs special attention;
+% they should always be capitalised unless there's a special exception.
+\cs_new:Npn \titlecase_firstlast:nn #1 #2
+  {
+    \titlecase_exact_exceptions:nn {#1} {#2}
+    \tl_mixed_case:n {#1} #2
+  }
+
+\cs_new:Npn \titlecase_middle:nn #1 #2
+  {
+    \titlecase_exact_exceptions:nn {#1} {#2} % catch exact matches which will never change
+    \titlecase_lc_exceptions:nn {#1} {#2} % catch words that should be lowercase
+    \tl_mixed_case:n {#1} #2 % otherwise capitalise normally
+  }
+
+
+%% After all the splitting, we now enter the word-by-word titlecasing.
+
+\cs_new:Npn \titlecase_first:w #1 ~ #2
+  {
+    \tl_if_blank:nT {#1} { \quark_if_recursion_tail_stop:n {#2} }
+    \titlecase_catch_punct:Nn \titlecase_firstlast:nn {#1}
+    \use_none_delimit_by_q_nil:w
+    \q_nil
+    \quark_if_recursion_tail_stop:n {#2}
+    \c_space_tl
+    \titlecase:w #2
+  }
+
+% The regular loop:
+\cs_new:Npn \titlecase:w #1 ~ #2
+  {
+    \quark_if_recursion_tail_stop_do:nn {#2}
+      {
+        \titlecase_catch_punct:Nn \titlecase_firstlast:nn {#1}
+        \use_none_delimit_by_q_nil:w
+        \q_nil
+      }
+
+    \titlecase_catch_punct:Nn \titlecase_middle:nn {#1}
+    \use_none_delimit_by_q_nil:w
+    \q_nil
+    \c_space_tl
+    \titlecase:w #2
+  }
+
+\cs_new:Npn \__tl_last:n #1
+  {
+    \__tl_last:w #1 \q_recursion_tail \q_recursion_tail \q_recursion_stop
+  }
+\cs_new:Npn \__tl_last:w #1 #2
+  {
+    \quark_if_recursion_tail_stop_do:nn {#2} {#1}
+    \__tl_last:w #2
+  }
+
+\cs_new:Npn \titlecase_catch_punct:Nn #1 #2
+  {
+    \str_if_eq_x:nnT { \__tl_last:n {#2} } {,}
+      {
+        \exp_args:No #1 { \titlecase_catch_comma:w #2 }{,}
+        \use_none_delimit_by_q_nil:w
+      }
+    \str_if_eq_x:nnT { \__tl_last:n {#2} } {;}
+      {
+        \exp_args:No #1 { \titlecase_catch_semicolon:w #2 }{;}
+        \use_none_delimit_by_q_nil:w
+      }
+    #1 {#2}
+  }
+
+\typeout{ LAST:~\__tl_last:n {foo bar .}}
+\cs_new:Npn \titlecase_catch_comma:w #1, {#1}
+\cs_new:Npn \titlecase_catch_semicolon:w #1; {#1}
+
+
+% The exception catching functions contain series of functions like the following to match and if so jump to the end after their specific processing.
+
+\cs_new:Npn \titlecase_exception:nnn #1 #2 #3
+  {
+    \str_if_eq_x:nnT { \tl_lower_case:n {#1} } {#3}
+      { \tl_lower_case:n {#1} #2 \use_none_delimit_by_q_nil:w }
+  }
+
+\cs_new:Npn \titlecase_exact_exception:nnn #1 #2 #3
+  {
+    \str_if_eq:nnT {#1} {#3}
+      { #1 #2 \use_none_delimit_by_q_nil:w }
+  }
+
+
+% These are the functions to define the exception catching functions.
+
+\cs_new:Npn \titlecase_set_small_exceptions:n #1
+  {
+    \seq_set_from_clist:Nn \l_titlecase_seq {#1}
+    \cs_set:Npx \titlecase_lc_exceptions:nn ##1 ##2
+      {
+        \seq_map_function:NN \l_titlecase_seq \titlecase_small_except:n
+      }
+  }
+
+\cs_new:Npn \titlecase_set_exact_exceptions:n #1
+  {
+    \seq_set_from_clist:Nn \l_titlecase_seq {#1}
+    \cs_set:Npx \titlecase_exact_exceptions:nn ##1 ##2
+      {
+        \seq_map_function:NN \l_titlecase_seq \titlecase_exact_except:n
+      }
+  }
+
+\cs_new:Npn \titlecase_small_except:n #1
+  {
+    \exp_not:N \titlecase_exception:nnn {\exp_not:N ## 1} {\exp_not:N ## 2} {#1}
+  }
+
+\cs_new:Npn \titlecase_exact_except:n #1
+  {
+    \exp_not:N \titlecase_exact_exception:nnn {\exp_not:N ## 1} {\exp_not:N ## 2} {#1}
+  }
+
+\titlecase_set_small_exceptions:n {a,an,and,as,at,but,by,en,for,if,in,of,on,or,the,to,v,via,vs}
+\titlecase_set_exact_exceptions:n {TV,iTunes,iPhone,AD,A.D.,ad}% an example only
+
+\ExplSyntaxOff
+
+\def\TCTEST#1{{\titlecase{#1}}\par\bigskip}
+%\def\TCTEST#1{\typeout{\titlecase{#1}}}
+
+\TCTEST{Modern words like \NoChangeCase{\textbf{iPhone}} and iTunes, \NoChangeCase{eyeTV}, and even just TV are annoying}
+\TCTEST{This is a sentence. But this is capitalised.}
+\TCTEST{iTunes, here to stay like iPhone}
+\TCTEST{Hello friends of the world, whom I am also friends of}
+\TCTEST{}
+\TCTEST{ }
+\TCTEST{and}
+\TCTEST{and and}
+\TCTEST{and and and}
+\TCTEST{This Was All Capitalised. but Some Words Shouldn't Be If They're Small!}
+\TCTEST{Colon test: An example of an exception}
+\TCTEST{A Question? An answer?}
+\TCTEST{A Question! An answer!}
+\TCTEST{iTunes and TV}
+\TCTEST{David v Goliath and Goliath vs Mittelbach}
+\TCTEST{Hard to say whether `quotes are 500 b.c. too hard'}
+\TCTEST{Pyramids 4500--2000 b.c. }
+\TCTEST{Anno Domini (AD or A.D?)}
+\ExplSyntaxOn
+\typeout{ [This~ is~ plain~ title_case~ with~ quotes]~ \tl_mixed_case:n {`Hello'} }
+
+[This~ is~ plain~ title_case~ with~ quotes]~ \tl_mixed_case:n {`Hello'}
+
+\par\bigskip [This~ is~ plain~ title_case~ with~ braces]~ \tl_mixed_case:n {{`Hello'}}
+
+\par\bigskip [This~ is~ plain~ title_case~ with~ bold]~ \tl_mixed_case:n {\textbf{`Hello'}}
+
+\par\bigskip [This~ is~ plain~ title_case~ with~ bold~ and~ braces]~ \tl_mixed_case:n {{\textbf{`Hello'}}}
+
+\ExplSyntaxOff
+
+\end{document}

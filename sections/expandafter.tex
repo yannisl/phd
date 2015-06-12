@@ -1,7 +1,7 @@
 \chapter{Expandafter}
 
-One of the most often misunderstood \TeX\ commands is \cmd{\expandafter}
-expandafter is an instruction that reverses the order of expansion. It is not a typesetting instruction, but an instruction that influences the expansion of macros. But what is \textit{expansion}? The term expansion means the replacement of the macro and its arguments, if there are any, by the \textit{replacement} text of the macro. If we have defined a macro
+One of the most often misunderstood \TeX\ commands is \docAuxCommand{expandafter}. This
+is an instruction that reverses the order of expansion. It is not a typesetting instruction, but an instruction that influences the expansion of macros. But what is \textit{expansion}? The term expansion means the replacement of the macro and its arguments, if there are any, by the \textit{replacement} text of the macro. If we have defined a macro
 
 \begin{teX}
 \def\test{ABC};
@@ -43,7 +43,7 @@ This results in
 
 \item token1 is primitive: Normally a primitive token can not be expanded so the |\expandafter| has no effect; but there are exceptions, which we will discuss after the example.
 
-\begin{texexample}{Expansion}{}
+\begin{texexample}{Expansion}{ex:expandafter}
 \expandafter AB
 \end{texexample}
 
@@ -123,25 +123,40 @@ Checking the log file with |\tracingmacros=2 \tracingcommands=2| we get
 
 
 \end{enumerate}
+\end{enumerate}
 
+\section{Common usage patterns}
 
-\section{Defining Macros on the fly}
+One common usage of |\expandafter| is when |\csname| is used to define a macro. The |\expandafter| command is used to suspend the |\def| expansion temporarily, so that the name can be be first defined using the |\csname|
+construct.
 
-This is a very common requirement. 
-
-\begin{texexample}{csname}{}
-\def\newtest#1#2{
+\begin{texexample}{csname}{ex:csname}
+\def\newtest#1#2{%
   \expandafter\def\csname#1\endcsname{#2}%
 }
 \newtest{letters}{test for letters}
 \letters
 \end{texexample}
 
+Another example is letting one control sequence equal to another. The below is from the kernel  definition of the internal command for renewing an environment \refCom{renew@environment}. 
 
+\begin{teX}
+ \expandafter\let\csname#1\endcsname\relax
+  \expandafter\let\csname end#1\endcsname\relax
+\end{teX}
 
+\section{Suppressing expansion }
 
+Expansion of a \meta{token} can e supressed by using the \tex primitive \docAuxCommand{noexpand}. This primitive is typically employed to:
 
+\begin{enumerate}
+\item To prevent expansion of tokens in |\edef|\rq{}s.
+\item To prevent the expansion of tokens in |\write| operations.
 \end{enumerate}
+
+There is no counter part  ``|\expand|'', which could be used in |\def|-based macro defintion to force the expansion of tokens when a macro is defined.
+
+
 
 
 

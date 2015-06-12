@@ -404,16 +404,16 @@ have a key that expects a \meta{value} of the form
 ``\meta{text}|+|\meta{more text}'' and wishes to store \meta{text} and
 \meta{more text} in two different macros. This can be achieved as
 follows:
-\begin{codeexample}[]
+\begin{texexample}{Storing values in macros}{}
 \def\mystore#1+#2\pgfeov{\def\a{#1}\def\b{#2}}
 \pgfkeyslet{/my key/.@cmd}{\mystore}
 \pgfkeys{/my key=hello+world}
 
 |\a| is \a, |\b| is \b.
-\end{codeexample}
+\end{texexample}
 
 Naturally, defining the code to be stored in a key in the above manner
-is too awkward. The following commands simplify things a bit, but the
+is too awkward. A simpler approach is shown in Example~\ref{delineated}. The following commands simplify things a bit, but the
 usual manner of setting up code for a key is to use one of the
 handlers described in Section~\ref{section-code-handlers}.
 
@@ -446,12 +446,12 @@ handlers described in Section~\ref{section-code-handlers}.
   an arbitrary \meta{argument pattern} rather than just the simple
   single argument of |\pgfkeysdef|. 
 
-\begin{codeexample}[]
+\begin{texexample}{Delineated arguments}{delineated}
 \pgfkeysdefargs{/my key}{#1+#2}{\def\a{#1}\def\b{#2}}
 \pgfkeys{/my key=hello+world}
 
 |\a| is \a, |\b| is \b.
-\end{codeexample}
+\end{texexample}
 \end{command}
 
 \begin{command}{\pgfkeysedefargs\marg{key}\marg{argument pattern}\marg{code}}
@@ -560,7 +560,8 @@ several. Suppose, for instance, that you would like keys to be
 searched 
 for in |/a|, |/b|, and |/b/c|. We setup a key |/my search path| for
 this:
-\begin{codeexample}[code only]
+
+\begin{teXXX}
 \pgfkeys{/my search path/.unknown/.code=
   {%
     \let\searchname=\pgfkeyscurrentname%
@@ -572,7 +573,8 @@ this:
   }%
 }
 \pgfkeys{/my search path/.cd,foo,bar}
-\end{codeexample}
+\end{teXXX}
+
 In the above code, |foo| and |bar| will be searched for in the three
 directories  |/a|, |/b|, and |/b/c|. 
 
@@ -776,21 +778,23 @@ list. Styles can be parametrized just like normal code.
   particular, that the code of a key could also first execute some
   normal code and only then process some further keys. 
 
-\begin{codeexample}[code only]
+\begin{texexample}{Styles}{styles}
 \pgfkeys{/par indent/.code={\parindent=#1}}
 \pgfkeys{/no indent/.style={/par indent=0pt}}
 \pgfkeys{/normal indent/.style={/par indent=2em}}
 \pgfkeys{/no indent}
-...
+\lorem
 \pgfkeys{/normal indent}
-\end{codeexample}
+\lorem
+\end{texexample}
+
   The following example shows a parametrized style ``in action''.
-\begin{codeexample}[]
+\begin{texexample}{Styles}{}
 \begin{tikzpicture}[outline/.style={draw=#1,fill=#1!20}]
   \node [outline=red]            {red box};
-  \node [outline=blue] at (0,-1) {blue box};
+  \node [outline=blue] at (3,-0) {blue box};
 \end{tikzpicture}
-\end{codeexample}
+\end{texexample}
 \end{handler}
 
 \begin{handler}{{.estyle}|=|\meta{key list}}
@@ -871,12 +875,13 @@ that is directly stored in a key.
   \meta{key} by just writing \meta{key}|=|\meta{value}. Thus, this
   handler is used to set the initial value of key.
 
-\begin{codeexample}[code only]
+\begin{texexample}{The .initial handler}{initial}
 \pgfkeys{/my key/.initial=red}
 % "/my key" now stores the value "red"
 \pgfkeys{/my key=blue}
 % "/my key" now stores the value "blue"
-\end{codeexample}
+\pgfkeys{/my key}
+\end{texexample}
 
   Note that in the after the example, writing |\pgfkeys{/my key}| will not
   have the effect you might expect (namely that |blue| is inserted
@@ -891,12 +896,12 @@ that is directly stored in a key.
   Executes a |\let| command so that \meta{macro} contains the contents
   stored in \meta{key}.  
 
-\begin{codeexample}[]
+\begin{texexample}{The handler .get}{gethandler}
 \pgfkeys{/my key/.initial=red}
 \pgfkeys{/my key=blue}
 \pgfkeys{/my key/.get=\mymacro}
 \mymacro
-\end{codeexample}
+\end{texexample}
 \end{handler}
 
 \begin{handler}{{.add}|=|\marg{prefix value}\marg{append value}}
@@ -985,6 +990,23 @@ handler is useful.
 \end{handler}
 
 
+\begin{handler}{{.store as glue}}
+  This handler is defined by the \pkgname{phd} package for capturing glue or dimensions
+  in a macro. 
+\begin{texexample}{Custom handlers}{}
+\pgfkeys{/my parindent/.store as glue=\myparindent}
+\pgfkeys{/my parindent=10pt}
+\parindent\myparindent
+\lorem
+\pgfkeys{/my parindent=20pt}
+\parindent\myparindent
+\lorem\par
+\end{texexample}  
+\end{handler}
+
+The definition of an appropriate handler, can improve the user interface and also the programmer can benefit
+by re-using code.
+
 \subsubsection{Expanding Values}
 
 When you write \meta{key}|=|\meta{value}, you usually wish to use the
@@ -1004,28 +1026,32 @@ can use the following handlers:
   then process the resulting \meta{result} as if you had written
   \meta{key}|=|\meta{result}. Note that if \meta{key} contains a
   handler itself, this handler will be called normally.
-\begin{codeexample}[]
+\begin{texexample}{Handling expansion}{pgfexpand}
 \def\a{bottom}
 \def\b{\a}
 \def\c{\b}
 
-\pgfkeys{/key1/.initial=\c}
-\pgfkeys{/key2/.initial/.expand once=\c}
-\pgfkeys{/key3/.initial/.expand twice=\c}
-\pgfkeys{/key4/.initial/.expanded=\c}
+\pgfkeys{/phd/key1/.initial=\c}
+\pgfkeys{/phd/key2/.initial/.expand once=\c}
+\pgfkeys{/phd/key3/.initial/.expand twice=\c}
+\pgfkeys{/phd/key4/.initial/.expanded=\c}
 
 \def\a{{\ttfamily\string\a}}
 \def\b{{\ttfamily\string\b}}
 \def\c{{\ttfamily\string\c}}
 
 \begin{tabular}{ll}
-Key 1:& \pgfkeys{/key1} \\
-Key 2:& \pgfkeys{/key2} \\
-Key 3:& \pgfkeys{/key3} \\
-Key 4:& \pgfkeys{/key4}
+Key 1:& \pgfkeys{/phd/key1} \\
+Key 2:& \pgfkeys{/phd/key2} \\
+Key 3:& \pgfkeys{/phd/key3} \\
+Key 4:& \pgfkeys{/phd/key4}
 \end{tabular}
-\end{codeexample}
+\end{texexample}
 \end{handler}
+
+In the example above, you can observe how the key macro definitions can be expanded. When |.expanded| is used
+the macro is fully expanded (see key4), whereas in the other two expansion is controlled. These are mind-boggling and some patience and skill is required to use them effectively.
+
 
 \begin{handler}{{.expand twice}|=|\meta{value}}
   This handler works like saying \meta{key}|/.expand once/.expand once=|\meta{value}.
@@ -1126,14 +1152,10 @@ language currently set so that users get a localized error message.
   a key setup using the |.is choice| handler that is not defined.
 \end{key}
 
-\begin{key}{/errors/unknown key=\marg{offending key}\marg{value}}
+\begin{docKey}{/errors/unknown key}{=\marg{offending key}\marg{value}}{no default}
   This key is executed whenever a key is unknown and no specific
   |.unknown| handler is found.
-\end{key}
-
-\begin{key}{/chapter/section color=\marg{color}}
-This is how it is typeset
-\end{key}
+\end{docKey}
 
 
 

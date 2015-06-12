@@ -1,6 +1,5 @@
-\cxset{fashion image=./images/egyptian.jpg}
 \chapter{Characters and TeX}
-
+\label{ch:characters}
 
 \normalsize
 
@@ -10,7 +9,7 @@ may differ from system to system.\index{characters>encoding}
 
 There are 256 characters that \tex\  might encounter at
 each step, in a file or in a line of text typed directly on your terminal. These
-256 characters are classified into 16 categories numbered 0 to 15:\index{characters>catcodes}\index{catcodes}
+256 characters are classified into 16 categories (catcodes) numbered 0 to 15:\index{characters>catcodes}\index{catcodes}
 
 
 
@@ -62,7 +61,7 @@ after \cmd{hskip} does not get into the token list, because it follows a control
 
 Knuth in the \texbook notes that:
 
-\begin{quotation}
+\begin{latexquotation}
 
 It is important to understand the idea of token lists, if you want to gain a
 thorough understanding of \tex, and it is convenient to learn the concept by
@@ -73,37 +72,37 @@ that do the actual typesetting are based entirely on tokens. As far as the stoma
 concerned, the input 
 flows in as a stream of tokens, somewhat as if your \tex manuscript
 had been typed all on one extremely long line.
-\end{quotation}
+\end{latexquotation}
 
 \section{Control sequences for characters}
 
-\DescribeMacro{\char}
-There are a number of ways in which a control sequence can denote a character. The \cmd{\char} command
-specifies a character to be typeset; the \cmd{\let} command introduces a synonym for a character
-token, that is, the combination of character code and category code.
-
-\section{Denoting characters to be typeset: \texttt{char}}
-
+\begin{docCommand}{char}{\meta{number}}
+There are a number of ways in which a control sequence can denote a character. The \docAuxCommand{char} command specifies a character to be typeset; the \cmd{\let} command introduces a synonym for a \emph{character
+token}, that is, the combination of character code and category code.
 \index{\string\char}
 Characters can be denoted numerically by, for example, \verb+ \char98 +. This command tells \tex to add
 character number 98 of the current font to the horizontal list currently under construction.
 
 Instead of decimal notation, it is often more convenient to use octal or hexadecimal notation. For
-octal the single quote is used: \verb+ \char’142+; hexadecimal uses the double quote: \verb+ \char"62+. Note that
+octal the single quote is used: \verb+ \char`142+; hexadecimal uses the double quote: \verb+ \char"62+. Of course there are very few uses for octal numbers nowdays. However the hexadecimal numbers can be very useful for unicode manipulation. We will use these extensively in routines for language scripts in other sections.
+
+\end{docCommand}
 
 \begin{texexample}{Characters}{ex:chars}
-\bgroup
-\ttfamily
-
-\char65
-
-\char`b
-
-\char`\b
-
+\char65, 
+\char`b 
+\char`\b,
 \char"70
+\end{texexample}
 
-\egroup
+The reverse operation is achieved via prefixing with \docAuxCommand{number}. 
+
+\begin{texexample}{Getting the character code of character}{}
+\number`a \\
+\meaning a \\
+\def\charnum#1{char `#1'  character code = \number`#1}
+\charnum A\\
+\charnum 6
 \end{texexample}
 
 \verb+ \char`'62+  is incorrect; the process that replaces two quotes by a double quote works at a later
@@ -120,16 +119,15 @@ operates in a very early stage of processing (in the input processor of \tex, bu
 code assignment); the \cmd{\char} command, on the other hand, comes in the final stages of processing.
 In effect it says ‘typeset character number so-and-so’.
 
-\CMDI{\Uchar} The LuaTeX expandable command \cmd{\Uchar} reads a number between 0 and 1,114,111 and expands to the
-associated Unicode character. 
+\CMDI{\Uchar} The LuaTeX expandable command \cmd{\Uchar} reads a number between 0 and 1,114,111 and expands to the associated Unicode character. 
 
-\DescribeMacro{\chardef}
+\begin{docCommand*}{chardef} {\meta{control sequence}=\meta{number}}
+
 There is a construction to let a control sequence stand for some character code: the \cmd{\chardef}
-command. The syntax of this is\\
-\cs{chardef}\meta{control sequence}=\meta{number},\\
 where the number can be an explicit representation or a counter value, but it can also be a character
-code obtained using the left quote command (see above; the full definition of hnumberi is
+code obtained using the left quote command (see above; the full definition of number is
 given in Chapter 7). In the plain format the latter possibility is used in definitions such as
+\end{docCommand*}
 
 \verb+ \chardef\%=‘\%+
 
@@ -137,15 +135,15 @@ or
 
 \verb+ \chardef\%=37   +
 
-command to typeset character 37 (usually the per cent character).\index{characters!percent character}
+command to typeset character 37 (usually the per cent character).\index{characters>percent character}
 
-A control sequence that has been defined with a \cmd{\chardef} command can also be used as a hnumberi.
+A control sequence that has been defined with a \cmd{\chardef} command can also be used as a \meta{number}.
 This fact is used in allocation commands such as \verb+ \char{newbox}+ (see Chapters 7 and 31). Tokens defined
 with \verb+ \char{mathchardef}+ can also be used this way.
 
 
 But \tex\ actually provides another kind of number that makes it unnecessary
-for you to know texttt{ASCII} at all! The token `12 (left quote), when followed by
+for you to know \texttt{ASCII} at all! The token `12 (left quote), when followed by
 any character token or by any control sequence token whose name is a single character,
 stands for \tex's internal code for the character in question. For example, \verb+\char`b+ and
 \verb+ \char`\b+ are also equivalent to \verb+ \char98+. If you look in Appendix B to see how \verb+ \%+ is
@@ -188,214 +186,150 @@ category of \verb+ ^^M+  you can obtain useful special effects, as we shall see 
 
 \section{Upper and Lowercase characters}
 
-\verb*+\lccode +the character code for the lowercase form of a letter (p. 103)
 
-\DescribeMacro{\lowercase}
-\DescribeMacro{\uppercase}
-The twin operations \cmd{\uppercase}\marg{token list} and \cmd{\lowercase}\marg{token listi}
+
+The twin operations \docAuxCommand{uppercase}\marg{token list} and \docAuxCommand{lowercase}\marg{token list}
 go through a given token list and convert all of the character tokens to their
-\cmd{\uppercase}  or \cmd{lowercase} equivalents.
+``uppercase"  or ``lowercase'' equivalents.
+
+\verb*+\lccode +the character code for the lowercase form of a letter (p. 103)
 
 \begin{texexample}{Uppercase and Lowercase}{ex:lowercase} 
 \uppercase{abcdefgh} 
 \lowercase{ABCDEFGH}
 \end{texexample}
 
-Here's how: Each of the 256 possible characters
-has two associated values called the \cmd{\uccode} and the \cmd{lccode}; these values are
+Here's how: Each of the 256 possible characters has two associated values called the \cmd{\uccode} and the \cmd{\lccode}; these values are
 changeable just as a \cmd{\catcode} is. Conversion to uppercase means that a character
 is replaced by its \cmd{\uccode} value, unless the \cmd{\uccode} value is zero (when no change
 is made). Conversion to lowercase is similar, using the
 \verb+  \lccode+. The category codes
 aren't changed. 
 
-When INITEX begins, all \verb+ \uccode+ and \verb+ \lccode+ values are zero except
+When |INITEX| begins, all \verb+ \uccode+ and \verb+ \lccode+ values are zero except
 that the letters a to z and A to Z have \verb+\uccode+ values A to Z and \verb+\lccode+ values a to z.
 
-These tow control sequences are used to build a hash table, mapping all the capital and lowercase letters to their respective character codes.
-(see pg 41 TeXbook)
+These two control sequences are used to build a hash table, mapping all the capital and lowercase letters to their respective character codes.
+(see pg 41 \texbook.)
 
-\section{Some Practical Examples}
+\section{Category codes}
 
-If you are typesetting anything that has to do with \tex\ or \latex\ you are bound to have to typeset a lot of commands. This short code below will change the category code of the \texttt{"} (double quote) to be the active command. This way anything between double quotes will be  typed out verbatim and in a Maroon color. By mainipulating the \cmd{catcode} of characters we can achieve this.
+One of the most infamous, but powerful \tex command is |catcode|. The command is used to change the category code of a character.
 
-\begin{teX}
-%% Code to catch commands
-\def\Meaningless#1>{}
-\catcode`\"=\active
-\def\startV{\leavevmode\begingroup
-  \ifdim 0pt=\lastskip\penalty200 \fi
-  \catcode`\{11 \catcode`\}11 \catcode`\%11
-  \moreV}
-\long\def\moreV#1"{%
-  \def\LtxCode{#1}%
-  \ignorespaces
-      \expandafter\Meaningless\meaning\LtxCode
-      \unskip%
-  \endgroup}
-\let"\startV
+As we do not want anything to break we run the code between a group.
 
+\subsection{Active characters}
+
+The term \emph{active character} is another name for a user defined command, which consists of only one character. You can think of active characters as control sequences without a slash consisting of only one character. 
+Control sequences can be classifed as \emph{primitive}, a \emph{character} or \emph{user defined}. The latter category is further subdivided into a macro or an active character. To define such a commands, we first have to assign it a category 13. 
+
+In the example below we will define the tilde as category 13 and then define it to expand so that it typesets a subscript.
+
+\begin{texexample}{Active character test}{}
 \bgroup
-\catcode`\<=\active
-\def<#1>{\ensuremath{\langle\mbox{\textsl{#1}}\rangle}}
-\end{teX}
+    \catcode `~=13
+    \def~{$_1$}
 
-\begin{comment}
+ a~a~a~a~a~
+ \egroup
+\end{texexample}
+
+When a command is used very often it is preferable to be as short as possible so we would normally define it as an active character. 
+
+In \latex2e and Plain the category code number is stored as |\active| by using |\chardef|
+
+|\chardef\active=13|
+
+so we could rewrite the above as:
+
+\begin{texexample}{Active character test}{}
 \bgroup
-\def\Meaningless#1>{}
-\catcode`\"=\active
-\def\startV{\leavevmode\begingroup
-  \ifdim 0pt=\lastskip\penalty200 \fi
-  \catcode`\{11 \catcode`\}11 \catcode`\%11
-  \moreV}
-\long\def\moreV#1"{%
-  \def\LtxCode{#1}%
-  \ignorespaces
-      \expandafter\Meaningless\meaning\LtxCode
-      \unskip%
-  \endgroup}
-\let"\startV
+    \catcode `~=\active
+    \def~{$_2$}
 
-\catcode`\<=\active
-\def<#1>{\ensuremath{\langle\mbox{\textsl{#1}}\rangle}}
+ a~a~a~a~a~
+ \egroup
+\end{texexample}
 
-\noindent Testing it out with a few commands we get 
-"\catcode", "\char" ,"\def" etc. We will revert back to this short example later on in our book, when you have learned a bit more about macros and programming \tex\. Note that this also affects "quotes".
+Although spaces deserve special treatment they can also be made active.
 
+\begin{texexample}{Active character test}{active space}
+\bgroup
+\makeatletter
+\def\showvisiblespaces#1{#1}%
+\catcode` =\active%
+\def {\textunderscore}%
+\showvisiblespaces{This is some test command}%
+\makeatother%
+\egroup%
+\end{texexample}
+
+Let us create another example. This time we will make the mathshift character to be the bar {\textbar} character and the dolar sign \$ to be letter.
+
+\begin{texexample}{Category code manipulation}{}
+\bgroup
+\catcode`$ = 11
+\catcode`| = 3
+
+It used to cost $0.5 for a pie, now it is $5.0.
+Let's do the math: |5/.5=10|. 
+
+This equation uses display math.
+||50+50=100||
 \egroup
-\end{comment}
+\end{texexample}
 
-A more complex example is the \pkg{shortvrb} package code.
+\latexe has a number of kernel command to assist with |\catcode| changes.  First the |\makeatletter| and |makeatother|. Another one of them is |\@sanitize|
 
-\begin{teX}
-%% Copyright (C) 1989-1999 Frank Mittelbach, all rights reserved.
-\def\MakeShortVerb{%
-  \@ifstar
-    {\def\@shortvrbdef{\verb*}\@MakeShortVerb}%
-    {\def\@shortvrbdef{\verb}\@MakeShortVerb}}
+\begin{texexample}{Category code manipulation}{}
+\bgroup
+\def\@makeother#1{\catcode`#1=12\relax}
+\makeatletter
+% define a test
+\def\test{\@relax }
 
-\def\@MakeShortVerb#1{%
-  \expandafter\ifx\csname cc\string#1\endcsname\relax
-    \@shortvrbinfo{Made }{#1}\@shortvrbdef
-    \add@special{#1}%
-    \expandafter
-    \xdef\csname cc\string#1\endcsname{\the\catcode`#1}%
-    \begingroup
-      \catcode`\~\active  \lccode`\~`#1%
-      \lowercase{%
-      \global\expandafter\let
-         \csname ac\string#1\endcsname~%
-      \expandafter\gdef\expandafter~\expandafter{\@shortvrbdef~}}%
-    \endgroup
-    \global\catcode`#1\active
-  \else
-    \@shortvrbinfo\@empty{#1 already}{\@empty\verb(*)}%
-  \fi}
-\def\DeleteShortVerb#1{%
-  \expandafter\ifx\csname cc\string#1\endcsname\relax
-    \@shortvrbinfo\@empty{#1 not}{\@empty\verb(*)}%
-  \else
-    \@shortvrbinfo{Deleted }{#1 as}{\@empty\verb(*)}%
-    \rem@special{#1}%
-    \global\catcode`#1\csname cc\string#1\endcsname
-    \global \expandafter\let \csname cc\string#1\endcsname \relax
-    \ifnum\catcode`#1=\active
-      \begingroup
-        \catcode`\~\active   \lccode`\~`#1%
-        \lowercase{%
-          \global\expandafter\let\expandafter~%
-          \csname ac\string#1\endcsname}%
-      \endgroup \fi \fi}
-\def\@shortvrbinfo#1#2#3{%
-  \PackageInfo{shortvrb}{%
-     #1\expandafter\@gobble\string#2 a short reference
-                                          for \expandafter\string#3}}
-\def\add@special#1{%
-  \rem@special{#1}%
-  \expandafter\gdef\expandafter\dospecials\expandafter
-    {\dospecials \do #1}%
-  \expandafter\gdef\expandafter\@sanitize\expandafter
-    {\@sanitize \@makeother #1}}
-\def\rem@special#1{%
-  \def\do##1{%
-    \ifnum`#1=`##1 \else \noexpand\do\noexpand##1\fi}%
-  \xdef\dospecials{\dospecials}%
-  \begingroup
-    \def\@makeother##1{%
-      \ifnum`#1=`##1 \else \noexpand\@makeother\noexpand##1\fi}%
-    \xdef\@sanitize{\@sanitize}%
-  \endgroup}
-\endinput
-%%
-%% End of file `shortvrb.sty'.
-\end{teX}
+% definition from source2e
+\def \@onelevel@sanitize #1{
+   \edef #1{\expandafter\strip@prefix
+      \meaning #1}
+ }
 
-We will spent the rest of the book in trying to understand and write code like this. My ultimate aim is  to be able to produce \tex\ code like any other program. 
+% sanitize text
+ \@onelevel@sanitize\test
+ \test
+ 
+ \makeatother
+\egroup 
+\end{texexample}
 
-\section{Example}
-
-In this example we wish to redefine some of the active codes to act as text only:
-
-\begin{teX}
-\newenvironment{plaintext}{%
-        \catcode`\$12
-        \def\&{&}%
-        \catcode`\&12
-        \def\_{_}%
-        \catcode`\_12
-        \def\^{^}%
-        \catcode`\^12
-        \catcode`\#12
-        \catcode`\%12
-        \let\~~%
-        \catcode`\~12
-}{}
-\end{teX}
-
-%\newenvironment{plaintext}{%
-%        \catcode`\$12
-%        \def\&{&}%
-%        \catcode`\&12
-%        \def\_{_}%
-%        \catcode`\_12
-%        \def\^{^}%
-%        \catcode`\^12
-%        \catcode`\#12
-%        \catcode`\%12
-%        \let\~~%
-%        \catcode`\~12
-%}{}
-%Use it like
-%
-%\begin{plaintext}
-%Here is some test text % ^ & _ $ # &.
-%
-%How about some math \(x\_y\^z\). You're still out of luck with braces
-%though.
-%\end{plaintext}
-
-\begingroup
-\catcode`\{=11 
-\catcode`\}=11
-\catcode`\[=1
-\catcode`\]=2
-
-{This is a test}
-
-\endgroup
-
-
-\section{Checking to see the meaning of a control sequence
-}
-Finding out just what a control sequence has been defined to be with |\let| can be done using
-
-%\meaning: the sequence
+In \latex the |@| character is special and reserved for internal commands only. It is defined in the source2e kernel as:
 
 \begin{teXXX}
-\let\x=3 \meaning\x
+\def\makeatletter{\catcode`\@11\relax}
+\def\makeatother{\catcode`\@12\relax}
 \end{teXXX}
-\graybox{
-gives 'the character 3'.}
+
+
+The \CMDI{\makeatother} sets it back to be a category 12 code.   Another command \CMDI{\@makeother} turns any character to character code 12. \latex3 makes both the underscore as well as the colon letters, so that they can be used in control sequences.
+
+
+\begin{texexample}{Category code manipulation}{}
+\bgroup
+\catcode `\_=12%
+\catcode `\: =12
+\def\test_long_command:Nnn {latex 3 style control sequence}
+\test_long_command:Nnn
+\egroup 
+\end{texexample}
+
+%This is some comments that you need to write and others
+
+
+
+
+
+
+
 
 
 

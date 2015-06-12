@@ -1,0 +1,40 @@
+\documentclass{article}
+\usepackage{expl3,xparse,xcolor}
+\begin{document}
+
+\ExplSyntaxOn
+\edef\exception#1{#1}
+\long\edef\catch#1{#1}
+\NewDocumentCommand\SplitDemo { +m m } 
+ {
+  \my_seq_split:nn { #1 }{#2}
+ }
+
+\tl_new:N \l_first_word_tl
+\seq_new:N \second
+\cs_generate_variant:Nn \seq_set_split:Nnn {Nxx, Nff}
+
+
+\cs_new_protected:Npn \my_seq_split:nn #1 #2
+    { 
+        \seq_set_split:Nxx \l_tmpa_seq { . } {#1  }
+       \my_seq_aux:N\l_tmpa_seq
+       %\seq_use:Nn   \l_tmpa_seq {\par}
+       %\seq_get_left:NN \l_tmpa_seq \l_first_word_tl
+       %\textcolor{blue} { \tl_use:N \l_first_word_tl  }
+    }
+\cs_new:Npn \my_seq_aux:N #1
+   {
+     \seq_map_inline:Nn #1 {--##1
+           \seq_map_inline:Nn #1 {--\par}}
+%  \seq_map_inline:Nn \second {\par}
+   }        
+    
+  
+\ExplSyntaxOff
+
+\SplitDemo { This is one sentence.  This is a second one. This is the third sentence. }{ . }\par
+\SplitDemo { The A.B.C. corporation. Another sentence. }{ . }
+\SplitDemo { The \exception{A.B.C.} corporation. Another sentence. }{  }
+..
+\end{document}

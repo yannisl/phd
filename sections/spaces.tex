@@ -1,0 +1,56 @@
+\documentclass{article}
+\usepackage{expl3,xparse,lipsum,xcolor,varioref,cleveref}
+\begin{document}
+\section{test}
+\label{sec:one}
+\parindent0pt
+\ExplSyntaxOn
+\dim_new:N \zspace_debug_dim
+\dim_set:Nn\zspace_debug_dim { 1pt }
+
+\cs_new_eq:NN \tex_vrule:w \tex_vrule:D
+
+\cs_new_protected_nopar:Npn\zspace_no_star:n #1 
+    {
+	    \tex_vrule:w 
+	    width \dim_eval:n{#1}
+	    height\zspace_debug_dim 
+	    depth0pt
+	    \scan_stop:
+	    %\nobreak
+	    %\skip_horizontal:n {0pt}
+     }
+
+\cs_new_protected_nopar:Npn\zspace_star:n #1
+    {
+          \tex_vrule:w width 
+          \dim_eval:n{#1} 
+          height0pt
+          depth0pt
+          \scan_stop:
+        %  \nobreak
+         % \skip_horizontal:n {0pt}
+   }
+   
+ \DeclareDocumentCommand {\zspace} { s m }
+  {
+     \IfBooleanTF {#1}
+     {
+       \zspace_star:n {#2}
+     }
+     {
+       \zspace_no_star:n {#2}
+     }  
+     
+  }    
+  
+
+\ExplSyntaxOff
+
+\everypar{{\color{red}\vrule height1pt width12pt\relax}}
+
+\zspace{120pt}Test \zspace*{30pt+\parindent}\lipsum[2]
+\zspace{120pt}Test \zspace*{40pt+\parindent}\lipsum[2]see \Vref{sec:one}
+
+\end{document}
+

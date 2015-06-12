@@ -1,0 +1,161 @@
+% Tests expl3 dimensions with phd keys
+% 
+\documentclass{book}
+\usepackage{expl3,xparse,lipsum,xcolor,ragged2e}
+\usepackage{pgf}      
+\usepgfmodule{parser}%for svg     
+\usepgflibrary{svg.path}%for futurelet and parser demo       
+\def\pkgfamilyname{phd}
+\pgfkeys{/\pkgfamilyname/.is family}   
+\newcommand\cxset{\pgfqkeys{/\pkgfamilyname}} 
+\ExplSyntaxOn
+\makeatletter
+\tl_new:c {chapter_title_align}
+\cxset{
+  chapter~title~text-align/.is~choice,
+  chapter~title~text-align/center/.code=\gdef\chaptertitletextalign@cx{\Centering}
+    \tl_gset:cn {chapter_title_text_align}{\Centering},                                                                                                 
+%    
+  chapter~title~text-align/centering/.code=\gdef\chaptertitletextalign@cx{\centering}
+    \tl_gset:cn {chapter_title_text_align}{\centering},                                                                                                 
+%    
+  chapter~title~text-align/none/.code=\gdef\chaptertitletextalign@cx{}
+     \tl_gset:cn {chapter_title_text_align}{},                                                                                                 
+%     
+  chapter~title~text-align/justified/.code=\gdef\chaptertitletextalign@cx{}
+    \tl_gset:cn {chapter_title_text_align}{},
+%  
+  chapter~title~text-align/left/.code=\gdef\chaptertitletextalign@cx{\RaggedRight}
+    \tl_gset:cn {chapter_title_text_align}{\RaggedRight},
+%    
+  chapter~title~text-align/raggedleft/.code=\gdef\chaptertitletextalign@cx{\RaggedLeft}
+   \tl_gset:cn {chapter_title_text_align}{\RaggedLeft},
+%   
+  chapter~title~text-align/right/.code=\gdef\chaptertitletextalign@cx{\RaggedLeft}
+   \tl_gset:cn {chapter_title_text_align}{\RaggedLeft},
+%   
+  chapter~title~text-align/raggedright/.code=\gdef\chaptertitletextalign@cx{\RaggedRight}
+   \tl_gset:cn {chapter_title_text_align}{\RaggedRight},
+}
+
+\cxset{    
+  % aligning the block title 
+  chapter~title~align/.is~choice,
+  chapter~title~align/centering/.code=\def\gluestart{\hss}\def\glueend{\hss}
+   \tl_gput_left:cn {chapter_title_align}{centering},
+   % alias
+  chapter~title~align/center/.code=\def\gluestart{\hss}\def\glueend{\hss}, 
+%   
+  chapter~title~align/raggedright/.code=\def\gluestart{\hss}\def\glueend{},
+%  
+  chapter~title~align/raggedleft/.code=\def\gluestart{}\def\glueend{\hss}
+    \tl_gset:cn {chapter_title_align}{raggedleft},
+%                                                          
+  chapter~title~align/right/.code=\def\gluestart{\hss}\def\glueend{}                                                      
+    \tl_gset:cn {chapter_title_align}{right},  
+%  
+  chapter~title~align/left/.code=\def\gluestart{}\def\glueend{\hss}
+    \tl_gset:cn {chapter_title_align}{left},
+%                                                 
+  chapter~title~align/none/.code=\def\gluestart{}\def\glueend{}
+     \tl_gset:cn {chapter_title_align}{none},}
+\makeatother
+%  
+\ExplSyntaxOff
+
+
+\parindent0pt
+\begin{document}
+
+\ExplSyntaxOn
+\dim_new:c {chapter_title_text_width}
+\dim_new:c {chapter_title_width}
+\dim_new:N \titleboxwidth
+\dim_gset:cn {chapter_title_width}{\textwidth}
+\dim_gset:cn {chapter_title_text_width} {.5\textwidth}
+\dim_set_eq:Nc \titleboxwidth {chapter_title_text_width}
+\int_gzero_new:c {chapter_title_display}
+
+\bool_new:N \chaptertitledisplayblock
+\bool_gset_false:N \chaptertitledisplayblock
+
+\bool_if:nTF {\chaptertitledisplayblock}
+   {\gdef\titlebeforebreak{\par}}
+   {\gdef\titlebeforebreak{}}
+\box_new:N \titlebox
+\fboxsep0pt %
+% This is based on natural width of box as per text-width
+
+\titlebeforebreak%
+A\kern0pt
+\cs_gset:Npn \TitleBox #1
+  {
+%    \tex_setbox:D \titlebox=
+% box dim expr contents
+    \hbox_gset_to_wd:Nnn\titlebox 
+       {\chapter_title_text_width} 
+       {
+    \fbox{
+          \vbox{\tex_parindent:D 0pt
+          \hfill\colorbox  {blue!50} {
+              \boxbefore
+             \element{#1}
+           \boxafter            
+        }\hfill\hfill
+     }
+ }
+}
+\box_use:N\titlebox
+}
+
+\long\gdef\element#1{
+ \begin{minipage}[b]{0.3\linewidth}
+                \bgroup \language-1
+                \ExplSyntaxOn
+                 \tl_use:c {chapter_title_text_align}
+                \ExplSyntaxOff
+                 \color{white}\sffamily
+                 #1 \par\egroup
+             \end {minipage}
+}
+
+\long\gdef\boxbefore{
+ \begin{minipage}[b]{0.3\linewidth}
+                \bgroup \language-1\raggedright
+                 \color{white}\sffamily
+                 \hfill BEFORE \par\egroup
+             \end {minipage}
+}
+\long\gdef\boxafter{
+ \begin{minipage}[b]{0.3\linewidth}
+                \bgroup \language-1\raggedright
+                 \color{white}\sffamily
+                  AFTER\hfill  \par\egroup
+             \end {minipage}
+}
+\ExplSyntaxOff
+\cxset {chapter title text-align=center}
+\cxset{chapter title align=centering}
+\TitleBox{The Boxing Commnds of \TeX\ and \LaTeX.}
+\ExplSyntaxOn
+\par
+\tt
+\tl_use:c {chapter_title_align}
+\vspace*{1cm}
+
+\ExplSyntaxOn
+\box_new:N \testbox
+\hbox_set_to_wd:Nnn \testbox {1cm} {
+   \vbox:n {
+     \lipsum[1]
+   }
+}
+\box_use:N \testbox
+\ExplSyntaxOff
+
+\testbox
+
+\end{document}
+
+number = block title=block
+number =none  chapter=block title=block? 

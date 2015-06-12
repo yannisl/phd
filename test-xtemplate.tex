@@ -1,0 +1,95 @@
+\documentclass{article}
+\usepackage{expl3, xtemplate, xparse, csquotes, xcolor, fontspec, xspace}
+\newfontfamily\arial{Arial}
+
+\begin{document}
+\ExplSyntaxOn
+\DeclareObjectType{inlineobj}{1}
+\DeclareTemplateInterface{inlineobj}{span}{1}
+{
+  font-face: tokenlist,
+  font-shape: choice {italic, slanted, normal}=normal,
+  font-weight: choice {bold, normal}=normal,
+  font-color: tokenlist=black,
+  quote: choice {none, enquote}=none,
+}
+
+\DeclareTemplateCode{inlineobj}{span}{1}
+{
+  font-face         =  \l_font_tl,
+  font-shape = {
+     italic       = \cs_set_nopar:Nn \afontshape: {\itshape},
+     slanted   = \cs_set_nopar:Nn \afontshape: {\itshape},
+     normal   = \cs_set_nopar:Nn \afontshape: {\upshape}
+  },
+  font-weight = {
+     bold    = \cs_set_nopar:Nn \afontseries: {\bfseries},
+     normal =\cs_set_nopar:Nn \afontseries: {\mdseries}
+   },
+  font-color = \l_tmpa_tl,  
+  quote = {
+     none = \cs_set_nopar:Npn \quotemacro:n #1 {\detokenize{#1}},  
+     enquote = \cs_set_nopar:Npn \quotemacro:n #1 {\enquote{\detokenize{#1}}},
+     unknown = \cs_set_nopar:Npn \quotemacro:n #1 {\detokenize{#1}} 
+  },
+}
+{
+% the implementation part
+  \AssignTemplateKeys
+  
+  \group_begin:
+  \color\l_tmpa_tl
+   \cs:w \l_font_tl \cs_end: 
+   \afontshape:
+   \afontseries:\selectfont 
+       \quotemacro:n{#1} 
+   \group_end:
+ }
+ 
+\DeclareInstance {inlineobj}{docFunction}{span}
+    {
+        font-face=arial,
+        font-shape=italic, 
+        font-weight=bold,
+        font-color=green!40!black,
+        quote=enquote
+     }
+
+\DeclareDocumentCommand\docFunction { m } {
+   \IfInstanceExistTF {inlineobj}{docFunction} 
+     {\UseInstance{inlineobj}{docFunction}{#1}}
+     {ERROR}
+}
+
+\DeclareInstance {inlineobj}{tn}{span}
+    {
+        font-face=arial,
+        font-shape=normal, 
+        font-weight=normal,
+        font-color=red!80!black,
+        quote=none,
+     }
+
+\DeclareDocumentCommand\tn{ m }{%
+   \IfInstanceExistTF {inlineobj}{tn}
+    {\UseInstance{inlineobj}{tn}{#1}}
+    {ERROR}
+} 
+\ExplSyntaxOff
+   
+The function \docFunction {get_string ( )} is used throughout to get a string in LuaTeX, where macros in text paragraphs are shown as \docFunction{\my_macro} in green. Typewrite text is obtained by using \tn{tn}. 
+\bigskip
+
+\ExplSyntaxOn
+\parindent0pt
+\centering
+\cs_set:Npn \make_table:nnn #1#2 #3 #4{
+    \cs_set:Npn \cell_func:n ##1 {\framebox[2em][c]{\strut \int_eval:n{##1+3} }\thinspace}
+    \cs_set:Npn \head_func:n ##1 {\framebox[2em][c]{\strut c##1 }\thinspace}
+    \int_step_function:nnnN {#1} {#2} {#3} {\head_func:n}\vskip1pt
+    \cs_set:Npn \make_rows:n ##1 { \int_step_function:nnnN {#1} {#2} {#3} { \cell_func:n}\vskip1pt   }
+    \int_step_function:nnnN {#1} {#2} {#4} {\make_rows:n}\par
+}    
+\make_table:nnn {1}{1}{10}{12}
+\ExplSyntaxOff
+ 

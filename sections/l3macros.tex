@@ -1,108 +1,220 @@
-\section{xparse}
+\chapter{A more flexible and robust method of defining functions with LaTeX3 and xparse}
+\label{ch:xparse}
 
-The LaTeX3 Team provided the package \pkg{xparse} which provides document level 
-authors withs some powerful commands that extend those such as \cs{newcommand}
-of LaTeX2e, they have been stable and the interface is not expected to change. My
-understanding is that the package and the code is very stable and is targetting
-package authors.\footnote{http://tex.stackexchange.com/questions/98152/always-use-newdocumentcommand-instead-of-newcommand}
+The \LaTeX3 Team developed the package \pkg{xparse} to provide document level 
+authors with some powerful commands that extend those such as \cs{newcommand}
+of \latexe. The code is been stable and the interface is not expected to change. 
+Although targetted at document level, the commands offered can be used effectively to produce code used in packages.\footnote{\protect\url{http://tex.stackexchange.com/questions/98152/always-use-newdocumentcommand-instead-of-newcommand}} The functions offered by the package enable commands with star, or optional arguments to be produced easily. 
 
-
-\DescribeMacro{\DeclareDocumentCommand}
-
-This family of commands are used to create a document-level \textit{function}. The argument
+\begin{docCommand}{DeclareDocumentCommand}{\marg{function}\marg{argument specification}\marg{code}}
+This family of commands are used to create a document-level \emph{function}. The argument
 specification for the function is given by \textit{arg spec}, and expanding to be replaced by the
 \textit{code}. Unlike \latex's definition commands, all xparse commands take two arguments.
-The first one is the \textit{argument specifier}, and the second is the \textit{code.} It is best to 
-start with an example to illustrate its use.
+The first one is the \textit{argument specifier}, and the second is the \textit{code.}
+\end{docCommand}
 
-\emphasis{s,m,o,m,v}
 \begin{texexample}{DeclareDocumentCommand}{l3:1}
-\DeclareDocumentCommand \foo { m o m } {% 
-    arg 1 = #1 , arg 2 =  #2 arg3 = #3 }
+\DeclareDocumentCommand \foo { m o m } { 
+    arg 1 = #1, arg 2 = #2,  arg 3 = #3 }
+\foo{A}[B]{C}  
 
-\foo{mandatory}[optional]{mandatory}
+\foo{A}{B}    
+\end{texexample}
 
-\DeclareDocumentCommand \foobar { m m m } { 
-    arg 1 = #1 , arg 2 =  #2 arg3 = #3 }
+In the example above |{m o m}| is the argument specifier. It tells the function  to expect, two mandatory arguments and one optional denoted by the letter \textbf{o}. There are many more specifiers. For example \textbf{O} takes an parameter as a default value.\index{argument specifier}
 
-\foobar{A}{B}{C}
+\begin{texexample}{DeclareDocumentCommand}{l3:1}
+\DeclareDocumentCommand \foo { m O{\ldots} m } { 
+    arg 1 = #1, arg 2 = #2,  arg 3 = #3 }
+\foo{A}[B]{C}  
 
-\foobar ABC
+\foo{A}{B}    
+\end{texexample}
 
-\DeclareDocumentCommand \chapter { s o m }
-{
+The argument markers can be entered in any order. In the following example we will also add an optional argument in a curly bracket. Although this is frowned upon in certain contexts it is useful. Consider the case of a chapter title that also has a subtitle. \docAuxCommand*{Chapter}, it maybe more natural and useful to have input of the form, as shown in Example~\ref{l3:g}. 
+
+\begin{texexample}{DeclareDocumentCommand}{l3:g}
+\DeclareDocumentCommand \MyChapter { o m g } { 
+\centering #2\par #3\par }
+    
+\MyChapter{THIS IS THE MAIN TITLE}{This is a subtitle}  
+
+\MyChapter[]{THIS IS THE MAIN TITLE}{This is a subtitle}        
+\end{texexample}
+
+\begin{texexample}{DeclareDocumentCommand}{l4:g}
+\DeclareDocumentCommand \MyChapter {s o m g } { 
+\IfBooleanTF {#1} {\gdef\fonta{\bfseries\selectfont}}{\gdef\fonta{}}
+\IfNoValueTF {#2} {No option\par}{#2}
+
+\centering {\fonta #3}\par #4\par 
+  }   
+\MyChapter{ THIS IS THE MAIN TITLE}  
+
+\MyChapter*[short title]{THIS IS THE MAIN TITLE}{This is a subtitle}        
+\end{texexample}
+
+As you can see, it is fairly easy to produce starred and unstarred versions of commands as well as as any form of optional arguments. Let us now see some of the other command definition functions, before we continue with other specifiers.
+
+\begin{docCommand}{NewDocumentCommand}{\marg{function}\marg{argument specification}\marg{code}}
+will issue an error if \meta{function} has already been defined
+\end{docCommand}
+
+\begin{docCommand}{RenewDocumentCommand}{\marg{function}\marg{argument specification}\marg{code}}
+For changing a definition,
+issuing an error message if the macro does
+not already exist.
+\end{docCommand}
+
+
+As the \cmd{\DeclareDocumentCommand} always updates a definition, it is used for the examples in this chapter to avoid any errors.
+
+What sets the above commands apart from \latexe \cmd{\newcommand} is the argument specification.
+
+
+
+\begin{texexample}{DeclareDocumentCommand}{l3:1}
+\DeclareDocumentCommand \teststar {s o m } { 
 \IfBooleanTF {#1}
   { \typesetnormalchapter {#2} {#3} }
   { \typesetstarchapter {#3} }
+}  
+\newcommand\typesetnormalchapter[2][]{
+  normal chapter
 }
-\DeclareDocumentCommand\test{ s m }{
-\IfBooleanTF{#1}
-  {\MakeTextUppercase{#2}}
-  {\MakeTextLowercase{#2}}
+\newcommand\typesetstarchapter[1]{
+  #1
 }
-\test{This is some text}
-\test*{This is SOME test}
+\teststar{Test}
 
-\DeclareDocumentCommand\test{ s +m +v }{
-\IfBooleanTF{#1}
-  {\MakeTextUppercase{#3}}
-  {\MakeTextLowercase{#2}}
- \par \leavevmode
-  #3
-}
-\RaggedRight
+\teststar*{test}
+\end{texexample}    
 
-\test*{This is SOME test\par}{\text
-                                      \othercommands
-                                      \or \a \full \macro}
+    
+The argument specification \textbf{m o m} in the example enables the function to accept three arguments, two mandatory and one optional. 
+
+
+\section{Argument specifications}
+
+The basic idea of an argument specification is that each argument is listed as a single letter. 
+As the argument specification is a mandatory argument, a function with no arguments still needs an arg spec.
+
+\begin{texexample}{Empty arg spec}{}
+\DeclareDocumentCommand\atest{}{some text}
+\atest
 \end{texexample}
 
-\DeclareDocumentCommand\test{ s +m +v }{
-\IfBooleanTF{#1}
-  {\MakeTextUppercase{#3}}
-  {\MakeTextLowercase{#2}}
- \par \leavevmode
-  #3
+Manadatory arguments are created using the letter \textbf{m}.
+
+\begin{marglist}
+\item [m] Mandatory. This is a standard mandatory argument, which can either be a single token alone or multiple tokens surrounded by curly braces. Regardless of the input, the argument will
+be passed to the internal code surrounded by a brace pair. This is the \pkgname{xparse} type
+specifier for a normal \tex argument.
+\end{marglist}
+
+\begin{texexample}{Mandatory Values, verbatim}{}
+\DeclareDocumentCommand\testverbatim{ v }{
+    \ttfamily#1
 }
+\testverbatim+ \this is a test +
+
+\testverbatim * &^%$#\test *
+
+\testverbatim{\ttfamily \bfseries\normalfont test}
+\end{texexample}
+
+The \textbf{l} specifier reads its argument, until it encounters a left brace. It is equivalent to \tex \# argument. Can be used basically for |\hbox| type comands.
+
+\begin{texexample}{Mandatory arguments l-specifier}{}
+\DeclareDocumentCommand\myhbox{ l }{
+   \hbox to \dimexpr(#1)\relax
+}
+\fbox{\myhbox 12pt+1em+13ex  {test}}
+\end{texexample}
 
 
-\begin{flushleft}
-\test*{This is SOME test\par}{|\text
-                                      \othercommands
-                                      \or \a \full \macro|}\par
-\end{flushleft}
-As you can observe from the example, the \cs{DeclareDocumentCommand} requires
-that you provide an argument specifier, that is we need to tell it what type of
-input to expect. By adding this abstraction when creating a new command or
-\textit{function} as the LaTeX3 Team like to call it, it eliminates a lot of the
-code that the package writer has to write. 
 
+\begin{marglist}
+\item [o] Optional argument in  []. Returns |-NoValue-| if not present.
+\item [O] As for \textbf{o}, but returns \meta{default}, if no value is given. Should be given as |O{default}|.
 
-
-\begin{argumentlist}{m}
-\item [m] Mandatory
-\item [o] Optional argument in  []. Returns NoValue if not present.
-\item [O] 
 \item [s] Starred version
-\item [v] Verbatim
-\item [l]
-\item [u]
-\item [d]
-\item [D] 
-\item [t]  An optional \meta{token}, which will result in a value \cs{BooleanTrue} if htokeni is 
-            present and \cs{BooleanFalse} otherwise. Given as thtokeni.
-\item [g] An optional argument given inside a pair of TEX group tokens (in standard LATEX,
-              { . . . }), which returns \cs{NoValue} if not present.
-\item [G] G As for g but returns \marg{default} if no value is given: G\marg{defaulti}.
-\end{argumentlist}
+\item [v] Verbatim. Reads an argument “verbatim”, between the following character and its next occurrence,
+in a way similar to the argument of the LATEX2" command \cmd{\verb}. Thus
+a v-type argument is read between two matching tokens, which cannot be any of
+\%, \#, \{, \}, \^ or  . The verbatim argument can also be enclosed between braces,
+\{ and \}. A command with a verbatim argument will not work when it appears
+within an argument of another function.
+\item [l] An argument which reads everything up to the first open group token: in standard
+\latex this is a left brace.
+\item [u] Reads an argument “until \meta{tokens} are encountered, where the desired \meta{tokens}
+are given as an argument to the specifier: |u|\meta{tokens}.
+\item [d] An optional argument that is delimited. 
+\item [D] As for d, but returns \meta{default} if no value is given: D\meta{token1} \meta{token2}\marg{default}.
+Internally, the o, d and O types are short-cuts to an appropriated-constructed D
+type argument.
+\item [t]  An optional \meta{token}, which will result in a value \cs{BooleanTrue} if \meta{token} is 
+            present and \cs{BooleanFalse} otherwise. Given as \meta{token}.
+\item [g] An optional argument given inside a pair of \tex group tokens (in standard \latex,
+              \{ . . . \}, which returns |-NoValue-| if not present.
+\item [G] As  for \textbf{g} but returns \meta{default} if no value is given: |G|\marg{default}.
+\end{marglist}
+
+\begin{texexample}{Default Values}{}
+\DeclareDocumentCommand\testcolor{ O{red} m }{
+    \textcolor{#1}{#2}
+}
+\testcolor{This is typeset in red}
+\testcolor[blue]{This is typeset in blue.}
+\end{texexample}
+
+\section{Testing special values}
+
+The optional arguments of a function defined using |xparse| use dedicated variables to return
+information about the naure of the argument received.
+
+\begin{docCommand}{IfNoValueTF}{\marg{argument}\marg{true code}\marg{false code}}
+The function tests if the argument has a value and executes the true of false code, by means
+of a |-NoValue-| marker. 
+\begin{texexample}{special values}{}
+\DeclareDocumentCommand\doccmd{O{red} m}
+    {
+        \IfNoValueTF{#1}
+            {\doccmdnocolor{#1}}
+            {\doccmdcolor{\textcolor{#1}{#2}}}
+     }
+\newcommand\doccmdnocolor[1]{#1}
+\newcommand\doccmdcolor[2]{#1 #2}     
+This is \doccmd[blue]{text}  and this is \doccmd{text}.   
+\end{texexample}
+\end{docCommand}
+
+\begin{texexample}{special values}{}
+\DeclareDocumentEnvironment{allbold}{o}
+    {
+        \bfseries 
+        \IfNoValueTF{#1}
+            {\color{red}}
+            {\color{#1}}
+    }
+    {                 }
+\begin{allbold}[magenta]
+\lorem
+\end{allbold}
+\end{texexample}
+
+\begin{texexample}{variants}{ex:variants}
+\ExplSyntaxOn
+\cs_set:Npn \foo_something:Nn #1#2 {
+   \csname\expandafter#1\endcsname{blue}{a a a} 
+   { #2}
+  }
+\cs_generate_variant:Nn \foo_something:Nn { c }
+%\meaning\foo_something:cn
+\ExplSyntaxOff
+\lorem
 
 
-
-
-
-
-
-
-
+\end{texexample}
 
 

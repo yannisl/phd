@@ -1,0 +1,181 @@
+\documentclass{article}
+\usepackage{expl3,graphicx,xparse}
+
+\parindent0pt
+
+\begin{document}
+
+\end{document}
+\ExplSyntaxOn
+% already defined no need to have it in the example
+ \clist_new:N \g_db_dbs_clist
+
+% contsructor function
+\cs_gset:Npn \g_db_construct_clist:n #1
+	{ 
+	  % create new DB
+		\clist_new:c {#1} 
+	  % add to master
+		\clist_put_left:Nn \g_db_dbs_clist { #1 }
+		% create meta table
+		\g_construct_metatable:n { # 1}
+	}
+	
+% persons metatable
+% PERSONS-METANAME
+% PERSONS-STATUS
+% PERSONS-TABLES
+\cs_gset:Npn \g_construct_metatable:n #1 
+  {
+    \cs_gset:cpn   {#1-METANAME  } {   #1    }
+    \cs_gset:cpn   {#1-METASTATUS} {-NoValue-}
+    \clist_gset:cn {#1-METATABLES} {-NoValue-}
+  }		
+  
+% PERSONS-TABLE-TABLENAME 
+% PERSONS-TABLE-TABLENAME-FIELDS (list)		
+
+\cs_gset:Npn \g_construct_table:cc #1 #2 
+  {
+    \cs_gset:cpn   {#1-TABLE-#2-NAME      } {#2}
+    \cs_gset:cpn   {#1-TABLE-#2-STATUS    } {}
+    % token list ok
+    \clist_gset:cn {#1-TABLE-#2-FIELDNAMES} {}
+    % indexkey as edef
+    \tl_gset:cx  {#1#2-} {name}
+    % data holding list
+    \clist_gset:cn {#1#2} {}
+  }
+
+% adds a fieldname to fieldnames
+% PERSONS-TABLE-TABLENAME-FIELDNAMES
+\cs_gset:Npn \add_fieldname #1 #2 #3
+  {
+    \clist_gput_left:cx {#1-TABLE-#2-FIELDNAMES} {#3}
+
+  }
+%
+
+\cs_gset:Npx \create_index_field #1#2#3#4
+  {
+    \clist_gput_left:cx {#1#2} {#4}
+    
+  }  
+% create DB table FAMOUS 
+\cs_gset:Npx \add_data_index #1#2#3
+  {
+    \clist_gput_left:cx {#1#2} {#3}
+    
+  } 
+  
+% add data if is index goes onto clist  
+% PERSONS-FAMOUS-ID-FIRSTNAME-SURNAME-VALUE
+%   
+\cs_gset:Npn \add_field_data #1#2#3#4#5 
+  {
+   \cs_gset:cpn {#1#2#3#4} 
+    { #5    }
+  } 
+  
+
+
+
+% read a field  
+% PERSONS-FAMOUS-JOHN-SMITH-FIELD      
+\cs_gset:Npn \get_field #1#2#3#4#5
+  { 
+    \cs:w #1#2#3#4#5\cs_end:  
+  }
+                                
+ % create DB PERSONS   
+\g_db_construct_clist:n {PERSONS}
+\g_construct_table:cc {PERSONS}{FAMOUS}                                
+
+%
+\def\AddPerson#1#2#3#4{
+	\add_data_index {PERSONS} {FAMOUS}{#1#2}
+	\add_field_data {PERSONS} {FAMOUS}{#1#2} {firstname   } {#1}
+	\add_field_data {PERSONS} {FAMOUS}{#1#2} {surname   } {#2}
+	\add_field_data {PERSONS} {FAMOUS}{#1#2} {occupation} {#3} 
+	\add_field_data {PERSONS} {FAMOUS}{#1#2} {photo} {#4}
+}
+
+\long\def\AddPersonBio #1#2#3{
+   \add_field_data {PERSONS} {FAMOUS} {#1#2} {bio} {#3}
+}
+%
+\AddPerson {Barack} {Obama} {Actor} {barack_obama_2004}
+\AddPerson {Iggy} {Pop} {Actor} {iggy_pop_2001}
+\AddPerson {Henry} {Kissinger} {Politician} {henry_kissinger_2007}
+\AddPerson {Frankie} {Velilla} {Student} {frankie_velilla_2001}
+\AddPerson {Cindy} {Sheman} {Queen} {cindy_sheman_2000}
+\AddPerson {Joe} {Namath} {Tough} {joe_namath_2006}
+\AddPerson {Christopher} {Walken} {Tough} {christopher_walken_2000}
+\AddPerson {Xiakababoi} {Xiakababoi} {Tough} {xiakababoi_2005}
+\AddPerson {Jack} {Nicholson} {Tough} {jack_nicholson_2002}
+\AddPerson {Robert} {DeNiro} {Actor} {robert_DeNiro_2006}
+
+%\get_field {PERSONS} {FAMOUS} {Iggy}  {photo} 
+
+\def\PrintImages#1#2{
+  \clist_map_inline:cn {#1#2}
+    {
+      \includegraphics[height=4.7cm]
+      {./martin-schoeller/
+       \csname PERSONSFAMOUS##1photo\endcsname
+      }\hskip3pt
+    }
+}
+
+
+\noindent\PrintImages{PERSONS}{FAMOUS}
+
+%\csname PERSONSFAMOUS-\endcsname
+\DeclareDocumentCommand \GetBio {m m} {
+  \get_field {PERSONS}{FAMOUS}{#1}{#2}{bio}
+}
+\DeclareDocumentCommand \GetPhoto {m m} {
+  \includegraphics[width=0.8\linewidth] {./martin-schoeller/
+    \get_field {PERSONS} {FAMOUS} {#1}{#2} {photo}} 
+  }
+\DeclareDocumentCommand \GetFullName {m m} {
+    \get_field {PERSONS} {FAMOUS} {#1}{#2} {firstname}
+    \space 
+   \get_field {PERSONS} {FAMOUS} {#1}{#2} {surname}
+}    
+\ExplSyntaxOff
+\AddPersonBio{Robert}{DeNiro}{
+  Robert De Niro (/dəˈnɪroʊ/; born August 17, 1943) is an American actor and producer   who has starred in over 90 films. His first major film roles were in the sports drama Bang the Drum Slowly (1973) and Martin Scorsese's crime film Mean Streets (1973). In 1974, after being turned down for the role of Sonny Corleone in the crime film The Godfather (1972), he was cast as the young Vito Corleone in The Godfather Part II (1974), a role for which he won the Academy Award for Best Supporting Actor.
+
+De Niro's longtime collaboration with Scorsese later earned him an Academy Award for Best Actor for his portrayal of Jake LaMotta in the 1980 film Raging Bull. He also earned nominations for the psychological thrillers Taxi Driver (1976) and Cape Fear (1991), both directed by Scorsese. De Niro received additional Academy Award nominations for Michael Cimino's Vietnam war drama The Deer Hunter (1978), Penny Marshall's drama Awakenings (1990), and David O. Russell's romantic comedy-drama Silver Linings Playbook (2012). His portrayal of gangster Jimmy Conway in Scorsese's crime film Goodfellas (1990) earned him a BAFTA nomination in 1990.[1] De Niro has earned four nominations for the Golden Globe Award for Best Actor – Motion Picture Musical or Comedy, for his work in the musical drama New York, New York (1977), opposite Liza Minnelli, the action comedy Midnight Run (1988), the gangster comedy Analyze This (1999), and the comedy Meet the Parents (2000). He has also simultaneously directed and starred in films such as the crime drama A Bronx Tale (1993) and the spy film The Good Shepherd (2006). De Niro has also received the AFI Life Achievement Award in 2003 and the Golden Globe Cecil B. DeMille Award in 2010.}
+
+\AddPersonBio {Jack}{Nicholson}{
+John Joseph "Jack" Nicholson (born April 22, 1937) is an American actor and filmmaker. Throughout his career, Nicholson has portrayed unique and challenging roles, many of which include dark portrayals of excitable, neurotic and psychopathic characters. Nicholson's 12 Academy Award nominations make him the most nominated male actor in the Academy's history.
+
+Nicholson has won the Academy Award for Best Actor twice, one for the drama One Flew Over the Cuckoo's Nest (1975) and the other for the romantic comedy As Good as It Gets (1997). He also won the Academy Award for Best Supporting Actor for the comedy-drama Terms of Endearment (1983). Nicholson is tied with Walter Brennan and Sir Daniel Day-Lewis as one of three male actors to win three Academy Awards. In 1988 Nicholson won a Grammy Award for Best Album for Children for The Elephant's Child. He is well known for playing Frank Costello in the Martin Scorsese-directed crime drama The Departed (2006), Jack Torrance in the Stanley Kubrick–directed psychological horror film The Shining and the Joker in Batman (1989).
+
+Nicholson is one of only two actors to be nominated for an Academy Award for acting in every decade from the 1960s to the 2000s; the other was Michael Caine. He has won six Golden Globe Awards, and received the Kennedy Center Honor in 2001. In 1994, he became one of the youngest actors to be awarded the American Film Institute's Life Achievement Award. Other notable films in which he has starred include the road movie Easy Rider (1969), the drama Five Easy Pieces (1970), the comedy-drama film The Last Detail (1973), the neo-noir mystery film Chinatown (1974), the drama The Passenger (1975), the epic film Reds (1981), the romantic horror film Wolf (1994), the legal drama A Few Good Men (1992), the Sean Penn-directed mystery film The Pledge (2001), and the comedy-drama About Schmidt (2002).
+
+}
+
+\outer\long\def\printbio#1#2{%
+{\begin{figure}
+ \centering\Huge\bfseries\GetFullName{#1}{#2}\par\vspace{20pt}}
+
+{\centering
+\GetPhoto {#1}{#2}\par\vspace{20pt}
+}
+
+\parindent1em
+\GetBio {#1}{#2}
+\end{figure}
+}
+
+\printbio{Robert}{DeNiro}
+\printbio{Jack}{Nicholson}
+
+\meaning\PERSONSFAMOUS
+
+\end{document}
+
+

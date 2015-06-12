@@ -19,23 +19,19 @@
 
 
 
-
-
-
-
-
-
-
 \NeedsTeXFormat{LaTeX2e}[1994/12/01]%
 \ProvidesPackage{phd}[2015/1/13 v1.0 less preamble (YL)]%
+\let\ltxtoday\today
 \RequirePackage{fixltx2e}[2006/03/24]
 \RequirePackage{adjustbox}
 \RequirePackage{fancybox}
 \@ifundefined{c@chapter}{%
       \newcounter{chapter}
-      \def\thechapter{}
+      \def\thechapter{\@arabic\c@chapter}
 }{}
 \RequirePackage{pgf}
+\usepgfmodule{parser}%for svg
+\usepgflibrary{svg.path}%for futurelet and parser demo
 \def\pkgfamilyname{phd}
 \pgfkeys{/\pkgfamilyname/.is family}
 \newcommand\cxset{\pgfqkeys{/\pkgfamilyname}}
@@ -43,7 +39,7 @@
  \pgfkeyssetvalue{/\pkgfamilyname/#1}{#2}%
 }
 \def\cxvalueof#1{%
- \expandafter\pgfkeysvalueof{/\pkgfamilyname/#1}%
+ \expandafter\pgfkeysvalueof{#1}%
 }
  \hfuzz=999pt % reduce overfull hbox errors
  \hbadness=10000 % reduce underfull hbox errors
@@ -53,6 +49,7 @@
   \cxset{library/#1/.code={\@ifundefined{cxlibrary@#1@loaded}{\input #2}{}}}%
   \DeclareOption{#1}{\edef\cx@optionlist{\cx@optionlist,#1}}%
 }
+\RequirePackage{phdsort}%% to check
 \RequirePackage{ifluatex}
 \RequirePackage{ifxetex}
 \def\ifengine#1#2#3{
@@ -71,23 +68,7 @@
   %\RequirePackage{luatextra}
 \fi
 
-\cxset{mainmatter numbering/.is choice,
-          mainmatter numbering/arabic/.code=\def\setpagenumbering{\pagenumbering{arabic}},
-    mainmatter numbering/roman/.code=\def\setpagenumbering{\pagenumbering{roman}},
-    mainmatter numbering/Roman/.code=\def\setpagenumbering{\pagenumbering{Roman}},
-    }
-\cxset{mainmatter numbering=arabic}
-
-\newif\if@mainmatter \@mainmattertrue
-\def\frontmatter{\cleardoublepage
-            \@mainmatterfalse
-            \setpagenumbering%
-}
-\def\mainmatter{%
-       \cleardoublepage
-       \@mainmattertrue
-       \setpagenumbering}
-
+%%
 \def\backmatter{\if@openright\cleardoublepage\else\clearpage\fi
       \@mainmatterfalse}
 \setlength\lineskip{1\p@}
@@ -161,32 +142,48 @@
     \@setfontsize\normalsize\@xptv{13.5}\AJW@setskips{\AJW@baseskip}
     \let\@listi\@listI}
   \let\listsize\normalsize
+ \pgfkeys{/handlers/.set font-face/.code=\pgfkeysalso{\pgfkeyscurrentpath/.code=
+           \def\tempa{##1}%
+           \def\tempb{normal}%
+           \def#1{##1}%
+           \ifx\tempa\tempb%
+              \def#1{\normalfont}%
+           \fi%
+   }}%
+\cxset{document font/.code 2 args=\setmainfont[#2]{#1}}
 \def\defaultfontsxetexluatex{%
+  \RequirePackage{expl3}
+  \RequirePackage{xcoffins}
+  \RequirePackage{xtemplate}
+  \RequirePackage{l3sort}
   \RequirePackage[no-math]{fontspec}
-  %\setmainfont{Arial}.
-  %\setmainfont[Ligatures=TeX,  Scale=1.03]{Tex Gyre Pagella}% free Palatino clone Numbers=OldStyle,
-  % see http://tex.stackexchange.com/questions/31739/specify-different-fonts-for-bold-and-italic-with-fontspec
-  \setmainfont[
+   \setmainfont[
       BoldFont={timesbd.ttf},
       ItalicFont={timesi.ttf},
       BoldItalicFont={timesbi.ttf},
-      SmallCapsFont={times},
+      SmallCapsFont={times.ttf},
                       ]{times.ttf} % on windows
-  %\setsansfont{Linux Biolinum O}
-  %\setsansfont{Segoe UI}
-  \setsansfont{Tex Gyre Heros}% work okay with palatino
-  %\setmonofont[Scale=0.87]{DejaVu Sans Mono}
-  \setmonofont[Scale=1.0]{SourceCodePro-Regular.ttf}
-  \newfontfamily\verbatimfamily[Scale=0.8]{DejaVu Sans Mono}
-  \let\ttfamily\verbatimfamily
-  \DeclareTextFontCommand{\texttt}{\verbatimfamily}
-  \newfontfamily\arial{Arial}
-  \let\pan\arial
-  \newfontfamily\smallcps[Scale=0.8]{Arial}
+ \setsansfont{Tex Gyre Heros}% work okay with palatino
+ \setmonofont[Scale=.95]{consola.ttf}
+ \newfontfamily\verbatimfamily[Scale=0.95]{consola.ttf}
+ \DeclareTextFontCommand{\texttt}{\verbatimfamily} %CHANGED
+ \newfontfamily\arial{Arial}
+ \let\pan\arial
+ \let\unicodenumberfam\arial
+ \newfontfamily\smallcps[Scale=0.8]{Arial}
+ \def\phd@font@times{Times New Roman}
+  \cxset{document font={\phd@font@times}{Scale=1}}
   \newfontfamily\arabicfont[Script=Arabic]{Amiri}
-  \newfontfamily\arabicfonttt[Script=Arabic,Scale=.75]{DejaVu   Sans Mono}
+ \newfontfamily\arabicfonttt[Script=Arabic,Scale=.75]{DejaVu   Sans Mono}
 }
 \ifengine{\defaultfontsxetexluatex}{\defaultfontsxetexluatex}{}
+\ifluatex
+   \RequirePackage{luaotfload}
+   \def\setRTL{\luatextextdir TRT}%\pardir TRT\textdir TRT}
+   \def\endLTR{\luatextextdir TLT}%{\pardir TLT\textdir TLT}
+   \let\beginR\setRTL
+   \let\endR\endLTR
+\fi
 \begingroup \catcode `|=0 \catcode `[= 1
 \catcode`]=2 \catcode `\{=12 \catcode `\}=12
 \catcode`\\=12 |gdef|@xsmallverbatim#1\end{smallverbatim}[#1|end[smallverbatim]]
@@ -212,26 +209,18 @@
 }
 \def\smallverbatim{\@smallverbatim \frenchspacing\@vobeyspaces \@xsmallverbatim}
 \def\endsmallverbatim{\if@newlist \leavevmode\fi\endtrivlist}
-
 \def\smallverbatim@font{\normalfont\smallverbatimsize\ttfamily}
-\ifluatex
-   \RequirePackage{luaotfload}
-   \let\TeXXeTstate\@gobble
-   \def\setRTL{\luatextextdir TRT}%\pardir TRT\textdir TRT}
-   \def\endLTR{\luatextextdir TLT}%{\pardir TLT\textdir TLT}
-   \let\beginR\setRTL
-   \let\endR\endLTR
-\fi
 \RequirePackage{fonttable}
 \ifengine{\RequirePackage{polyglossia}
   \setdefaultlanguage{english}}{%
   \RequirePackage{polyglossia}
   \setdefaultlanguage{english}}{\RequirePackage[dutch, german, main=english]{babel}}
   \RequirePackage[dutch,german,english]{xlayouts}
-\newcommand*{\savesymbol}[1]{%
+\NewDocumentCommand{\savesymbol}{ m }{%
   \expandafter\let\csname orig#1\expandafter\endcsname\csname#1\endcsname
   \expandafter\let\csname #1\endcsname\relax
 }
+
 \newcommand*{\restoresymbol}[2]{%
   \expandafter\global\expandafter\let\csname#1#2\expandafter\endcsname%
     \csname#2\endcsname
@@ -275,6 +264,7 @@
 }
 \newcommand\symbols{\flushleft}
 \def\endsymbols{\endflushleft}
+
 \def\dosymbol#1{%
    \leavevmode\hbox to .33\textwidth{%
     \hbox to 1.2em%
@@ -284,9 +274,9 @@
 \ifxetex
    \else
      \ifluatex
-     \RequirePackage{etex}
+        \RequirePackage{etex}
      \else
-     \RequirePackage{etex}
+        \RequirePackage{etex}
   \fi
 \fi
 
@@ -296,12 +286,37 @@
 \input{settings} % experimental
 \cxset{xcolor keys={fixpdftex,usenames,dvipsnames,
                   svgnames,x11names,table}}
+%% |\PassOptionsToPackage{\onlyamsmathkeys@cx}{onlyamsmath}|
 
 \ifengine%
   {\RequirePackage[tracking=true]{microtype}}%
   {\RequirePackage[tracking=true]{microtype}}%
   {\RequirePackage[tracking=true]{microtype}}%
-%%
+\newif\ifRAGGEDTWOE
+\newif\ifEVERYSEL
+\newif\ifFOOTMISC
+\PassOptionsToPackage{ragged2e}{footnotes,raggedrightboxes}
+\RequirePackage{ragged2e}
+\newif\ifSOUL
+\IfStyFileExists{soul}
+{\SOULtrue\RequirePackage{soul}
+    \sethlcolor{thehighlight}}
+{}
+\RequirePackage{lettrine}
+\ifx\dropcap\undefined
+  \def\dropcap#1#2{%
+    \lettrine[lines=3, lraise=0.1, nindent=0em, slope=.1em]{#1}{#2}
+  }%
+\fi
+\RequirePackage{siunitx}
+  \sisetup{fixed-exponent =0,
+           scientific-notation = false}
+\cxset{acronym keys/.store in = \acronymkeys@cx}
+\cxset{acronym keys={smaller,printonlyused,withpage}}
+\PassOptionsToPackage{\acronymkeys@cx}{acronym}
+\RequirePackage{acronym}
+     \RequirePackage{mdframed}
+
 \RequirePackage{graphicx}[1999/02/16]
 \DeclareGraphicsExtensions{.jpg, .JPG, .jpeg, .png, .eps}
 \graphicspath{{graphics/}{graphics//}{../images/}{images//}{./images/}{./graphics/}%
@@ -314,12 +329,17 @@
 \providecommand\href[2]{\texttt{#1}}
 \definecolor{lstbgcolor}{rgb}{0.9,0.9,0.9}
 \colorlet{examplefill}{yellow!80!black}
+\definecolor{codebackground}{HTML}{F2F2EA}
+\definecolor{thekeywordstyle}{HTML}{392726}
+\definecolor{thecommentstyle}{HTML}{DF8743}
 
 \definecolor{graphicbackground}{rgb}{0.972,0.929,0.753}
+\colorlet{graphicbackground}{codebackground}
+
 \definecolor{glyphbox}{rgb}{0.86,0.86,0.8}
-\definecolor{codebackground}{rgb}{0.8,0.8,1}
 \definecolor{theblue} {rgb}{0.02,0.04,0.48}
 \definecolor{thered}  {rgb}{0.65,0.04,0.07}
+\definecolor{thedoccommandcolor}{rgb}{0.65,0.04,0.07}% doc command colors
 \colorlet{Headings}{black} %font examples
 \colorlet{Subheadings}{black} %font examples
 \colorlet{thefontname}{black}%font examples
@@ -338,7 +358,6 @@
 \definecolor{thecream}{rgb}{1,0.95,0.4}
 \definecolor{spot}{rgb}{0,0.2,0.6}%some shades of blue
 \definecolor{sweet}{rgb}{0,.68,.93}%shades of blue
-\definecolor{graphicbackground}{rgb}{0.972,0.929,0.753}
 \definecolor{boxframe}{gray}{0.8}
 \definecolor{boxfill}{rgb}{0.95,0.95,0.99}
 \definecolor{theoption}{gray}{0.6}
@@ -353,24 +372,41 @@
 \newcommand{\partialdone}{\cellcolor{yellow}done}
 \newcommand{\hcyan}[1]{{\color{teal} #1}}
 \DeclareRobustCommand\thickrule{%
-  \leavevmode \leaders \hrule height 2pt \hfill \kern \z@}
+    \leavevmode \leaders \hrule height 2pt \hfill \kern \z@}
 \DeclareRobustCommand\thinrule{\vrule width\textwidth height0.4pt depth0pt\relax}%
 \DeclareRobustCommand\mediumrule{\rule{\textwidth}{0.8pt}}
 \DeclareRobustCommand\Rule{{\color{\tocchapternumberfill@cx}\rule[-4.1pt]{13cm}{0.4pt}}}
 \DeclareRobustCommand\bottomline{\medskip
    \noindent\rule{\linewidth}{0.4pt}\medskip}
 \DeclareRobustCommand\topline{\par\medskip
- \noindent\rule{\linewidth}{0.4pt}\medskip}
+   \noindent\rule{\linewidth}{0.4pt}\medskip}
 \cxset{chapter rule color/.store in={\chapter@rule@color}}%
-\cxset{chapter rule color=spot!50}%
+\cxset{chapter rule color=spot!50}
 \DeclareRobustCommand\tikzrule{%
-  \tikz [color=\chapter@rule@color, very thick, inner sep=0pt, outer sep=0pt]     \draw(0,0)--(\the\linewidth,0);
+  \tikz [color=\chapter@rule@color, very thick, inner sep=0pt, outer sep=0pt]%
+        \draw(0,0)--(\the\linewidth,0);
 }%
+\newcommand\drawrule[3][]{%
+    \offinterlineskip
+          \tikz [ name=s,trim left,
+                   anchor=base,
+                   draw=black,
+                 % double distance=.2pt,
+                  line width=#3,
+                  %very thick,
+                  inner sep=0pt,
+                  outer sep=0pt,#1]   \draw(0,0)--(#2,0);
+}
+ \def\drawdoublerule#1#2{%
+    \drawrule{#1}{#2}%
+    \vskip2.5pt
+    \drawrule{#1}{#2}%
+ }
 \newif\ifLIPSUM
 \RequirePackage{lipsum}
 \RequirePackage{kantlipsum}
 \RequirePackage{blindtext}
-\DeclareRobustCommand\lorem{Fusce adipiscing justo nec ante. Nullam in enim.
+\DeclareDocumentCommand\lorem{ o }{Fusce adipiscing justo nec ante. Nullam in enim.
  Pellentesque felis orci, sagittis ac, malesuada et, facilisis in,
  ligula. Nunc non magna sit amet mi aliquam dictum. In mi. Curabitur
  sollicitudin justo sed quam et quadd. \par}
@@ -465,8 +501,8 @@ ball was her favorite plaything.}%
   his spectacles and looked anxiously round, to make out who
   was talking.\par}
 
-\def\ALPHABET{A B C D E F G H I J K L M N O P Q R S T U V W X Y Z}
-\def\alphabet{a b c d e f g h i j k l m n o p q r s t u v w x y z}
+\def\ALPHABET {A B C D E F G H I J K L M N O P Q R S T U V W X Y Z}
+\def\alphabet {a b c d e f g h i j k l m n o p q r s t u v w x y z}
 \newcommand{\punctuation}{! ? . / , : }
 \RequirePackage{booktabs}
 \newcounter{step}
@@ -482,10 +518,10 @@ ball was her favorite plaything.}%
 
 \newenvironment{longsymtable}[2][true]{%
   \expandafter\global\expandafter\let
-    \expandafter\ifshowsymtable\csname if#1\endcsname
+  \expandafter\ifshowsymtable\csname if#1\endcsname
   \ifshowsymtable
     \mbox{}%
-    \Needspace*{13\baselineskip}%
+    \Needspace*{1\baselineskip}%
     \mbox{}%
     \begin{center}%
     \phantomsection
@@ -494,7 +530,7 @@ ball was her favorite plaything.}%
     \let\LT@array=\origLT@array
     \let\LT@start=\origLT@start
     \addcontentsline{toc}{subsection}{%
-      \protect\numberline{\tablename~\thetable:}{#2}}%
+     \protect\numberline{\tablename~\thetable:}{#2}}%
     \@makecaption{\fnum@table}{#2}%
     \gdef\lt@indexed{}%
     \let\next=\relax
@@ -547,6 +583,8 @@ ball was her favorite plaything.}%
   \patchcmd{\document@select@group}{\sixt@@n}{\@cclvi}{}{}
   \patchcmd{\select@group}{\sixt@@n}{\@cclvi}{}{}
 \fi
+\newif\ifAMS
+\AMStrue
 \newif\ifFontIsAvailable
 \def\testFontAvailability#1{%
   \count255=\interactionmode
@@ -675,11 +713,24 @@ ball was her favorite plaything.}%
  \PassOptionsToPackage{leqno}{mathtools}
 \RequirePackage{nicefrac}
 \RequirePackage{xfrac}
-%%
+\cxset{tag left bracket/.store in = \leftbracket@cx,
+         tag right bracket/.store in = \rightbracket@cx,
+         tag font-weight/.store in = \tagfontweight@cx,
+         mathtool center colon/.store in=\centeredcolon@cx}
+\cxset{tag left bracket =[,
+         tag right bracket =],
+         tag font-weight=\textbf,
+         mathtool center colon=false}
+
+\newtagform{brackets}[\tagfontweight@cx]{\leftbracket@cx}%
+           {\rightbracket@cx}
+\mathtoolsset{centercolon=true,mathic}%italic correction in math
+\numberwithin{equation}{section}
 \RequirePackage{amssymb}[2002/01/22]
 \RequirePackage{amsthm}[2002/01/22]
 \RequirePackage{amsopn}
 \RequirePackage{amscd}
+\setcounter{MaxMatrixCols}{20}
 \ifengine{}{}{%
  \IfStyFileExists{dsfont}%
    {\newcommand{\mathds}[1]{\mbox{\usefont{U}{dsrom}{m}{n}##1}}
@@ -854,16 +905,19 @@ ball was her favorite plaything.}%
 \fi
 \newif\ifUPGR
     \RequirePackage[Symbol]{upgreek}
+\let\oldSI\SI
+\let\SI\undefined
 \newif\ifASCII
 \newcommand\ASCII{\pkgname{ascii}}
 \IfStyFileExists{ascii}
   {\ASCIItrue
    \savesymbol{HT}
-   \usepackage{ascii}
+   \RequirePackage{ascii}
    \restoresymbol{ascii}{HT}
    \let\SI\undefined
   }
   {}
+\let\SI\oldSI
 \newif\ifCHINA
 \newcommand\CHINA{%
   \Chinasym
@@ -1095,12 +1149,6 @@ ball was her favorite plaything.}%
   }
   {}
 
-%% \end{tabular}
-%%
-%% \begin{tabular}{|*{10}{c}|} \hline
-%% \end{tabular}
-%% \begin{tabular}{|*{10}{c}|} \hline
-
 \newif\ifDING
 \newcommand\DING{\pkgname{bbding}}
 \IfStyFileExists{bbding}
@@ -1125,7 +1173,6 @@ ball was her favorite plaything.}%
 }
 {\ifnum\c@lumnsleft=\t@talcolumns \egroup
  \else \egroup \fi}
-
 {\catcode`\^^M=12%
  \gdef\st@rtenv{\@ifnextchar^^M{\dr@pnext\doNextComm@nd}{\doNextComm@nd}}%
  \gdef\setComm@nd#1#2^^M{%
@@ -1144,7 +1191,6 @@ ball was her favorite plaything.}%
 \def\dr@pnext#1#2{#1}
 \def\doNextComm@nd{\@ifnextchar\end{}{\setComm@nd}}%
 \def\setn@me#1#2.{\CSname{#2}}
-
 \newcommand{\CSname}[1]{\texttt{\protect\bslash#1}}
 \newif\ifEUSYM\EUSYMfalse
 \newcommand\EUSYM{\pkgname{eurosym}}
@@ -1155,7 +1201,6 @@ ball was her favorite plaything.}%
    \restoresymbol{MARV}{EUR}
   }
   {}
-
 \newif\ifESV\ESVfalse
 \newcommand\ESV{\pkgname{esvect}}
 
@@ -1196,28 +1241,24 @@ ball was her favorite plaything.}%
   {\UTILDtrue\RequirePackage{undertilde}}
   {}
 
-\RequirePackage{lettrine}
-\ifx\dropcap\undefined
-  \def\dropcap#1#2{%
-    \lettrine[lines=3, lraise=0.2, nindent=0em, slope=-.5em]{#1}{#2}
-  }%
-\fi
-\RequirePackage{siunitx}
-  \sisetup{fixed-exponent =0,
-           scientific-notation = false}
-\RequirePackage{numprint}
-\RequirePackage{filecontents}
+
+
+\RequirePackage{phdfilecontents}
 \RequirePackage{changepage}
 \RequirePackage{keyval}
 \usepackage{xkvview}
 \RequirePackage{ifmtarg}
 \RequirePackage{fp}
-\RequirePackage{ifthen}
+\RequirePackage{ifthenx}
 \RequirePackage{xspace}
 \RequirePackage{xstring}
 \RequirePackage{multido}
 \RequirePackage{etoolbox}
 \RequirePackage{parselines}
+\def\TRUE{ \meta{true code} }
+\def\FALSE{ \meta{false code} }
+\def\PASS{\par{\bfseries\textcolor{green!50!blue}{PASS}}\ ~}
+\def\FAIL{\par{\bfseries\textcolor{red!70!black}{FAIL}}\ ~}
 \RequirePackage{calc}
 \RequirePackage{pict2e}
 \RequirePackage{picture}
@@ -1264,13 +1305,15 @@ ball was her favorite plaything.}%
 \RequirePackage{pgfplots}
 \pgfplotsset{compat=1.11}
 \RequirePackage{pgfplotstable}
+\RequirePackage{drawstack}
 \newcommand*{\BeforeHyperrefHook}{%
   \RequirePackage{float}%
-  \RequirePackage{newfloat}
-  \RequirePackage{verse}}
+  \RequirePackage{newfloat}}
+ % \RequirePackage{verse}} TO FIX
 \newcommand*{\AfterHyperrefHook}{%
   \RequirePackage{algorithm2e}%
   \RequirePackage{fancyhdr}
+
   \RequirePackage{datetime} %%scrtime
   \RequirePackage{scrtime}
   \RequirePackage{datenumber}
@@ -1367,10 +1410,26 @@ ball was her favorite plaything.}%
     }}
 
 \fi
-
-
+\ExplSyntaxOn
+ \DeclareDocumentCommand\printtimeinterval{ m m g g }
+ {
+  #1\textsuperscript{d}%
+  #2\textsuperscript{h}%
+  \IfNoValueTF {#3} {} {#3\textsuperscript{m}}
+  \IfNoValueTF {#4} {} {#4\textsuperscript{s}}
+ }
+ \let\PrintTimeInterval\printtimeinterval
+ \ExplSyntaxOff
+\let\oldcs\cs
 \RequirePackage[theorems, skins, documentation,
                 breakable,listings]{tcolorbox}
+                \tcbset{index format=pgf,
+                        index actual={=},
+                        index level = {>},
+                        index quote = {!},
+                        index german settings,
+                        }
+\let\cs\oldcs
 
 \lstdefinelanguage{extras}{morekeywords={%
       poemtitle, poemtoc, versewidth,
@@ -1380,13 +1439,11 @@ ball was her favorite plaything.}%
       includegraphics, newarray,readarray,of
 }}
 \lstloadlanguages{[LaTeX]TeX, [primitive]TeX, extras}
-\newcommand\emphasis[2][black!80]{\lstset{emph={write, writeln,#2},escapeinside={(*@}{@*)},
-   emphstyle={\verbatimfont\bfseries\textcolor{#1}}}}%changed to textbf
 
-\newtcolorbox{scriptexample}[2][shavian]{colback=graphicbackground,
+\newtcolorbox{scriptexample}[2][shavian]{colback=codebackground,
 boxrule=0pt,toprule=0pt,colframe=white}
 
-\newtcolorbox{commands}[2][shavian]{colback=graphicbackground,
+\newtcolorbox{commands}[2][shavian]{colback=codebackground,
 boxrule=0pt,toprule=0pt,colframe=white}
 
 \lstset{language={[LaTeX]TeX},
@@ -1396,7 +1453,7 @@ boxrule=0pt,toprule=0pt,colframe=white}
        stepnumber=1,numbersep=5pt,
        numberstyle={\footnotesize\color{gray}},
        firstnumber=last,
-       breaklines=true,
+       breaklines=false,
        framesep=5pt,
        basicstyle=\small\ttfamily,
        showstringspaces=false,
@@ -1411,7 +1468,6 @@ boxrule=0pt,toprule=0pt,colframe=white}
        belowskip=7pt plus1pt minus1pt,
        backgroundcolor=\color{theshade},
 }
-
 \lstnewenvironment{teX}[1][]
   {\lstset{language=[LaTeX]TeX}\lstset{%
       breaklines=true,
@@ -1439,41 +1495,106 @@ boxrule=0pt,toprule=0pt,colframe=white}
       showstringspaces=false,
       keywordstyle=\ttfamily\color{blue},
       stringstyle=\color{maroon},
-commentstyle=\color{black},
-rulecolor=\color{gray!10},
+  commentstyle=\color{black},
+  rulecolor=\color{gray!10},
       breakatwhitespace=true,
- xleftmargin=0pt,
- xrightmargin=5pt,
- aboveskip=\medskipamount,
- belowskip=\medskipamount,
+  xleftmargin=0pt,
+  xrightmargin=5pt,
+  aboveskip=\medskipamount,
+  belowskip=\medskipamount,
       backgroundcolor=\color{gray!10}, #1
 }}
 {}
 
-\lstnewenvironment{teXXX}[1][]
-  {\lstset{language=[LaTeX]TeX}\lstset{%
-      escapeinside={{(*@}{@*)}},
-      breaklines=true,
-      framesep=5pt,
-      basicstyle=\verbatimfont,
-      showstringspaces=false,
-      keywordstyle=\verbatimfont\textcolor{blue},
-      stringstyle=\color{orange},
-   commentstyle=\color{black},
-   rulecolor=\color{gray!10},
-      breakatwhitespace=true,
-      showspaces=false,  % shows spacing symbol
-   xleftmargin=0pt,
-   xrightmargin=5pt,
-   aboveskip=0pt, % compact the code looks ugly in type
-   belowskip=0pt,  % user responsible to insert any skips
-      backgroundcolor=, #1
-}}
-{}
 \newcommand\continuelinenumber{\lstset{firstnumber=last}}
 \newcommand\startlineat[1]{\lstset{firstnumber=#1}}
 \let\numberlineat\startlineat
 \let\startnumberat\numberlineat
+\newcommand\emphasis[2][black!80]{\lstset{emph={write, writeln,#2},escapeinside={(*@}{@*)},
+   emphstyle={\verbatimfont\bfseries\textcolor{#1}}}}%changed to textbf
+
+\lstnewenvironment{teXXX}[1][]
+  {\lstset{language=[LaTeX]TeX}%
+    \lstset{%
+      emph={cs, use,new,seq,map,inline,eq,gincr,incr,IfNoValueF,if,If,exist,protect,nopar,gset,%
+      set,undefine,define,add,gadd,remove,div,%
+      round,truncate,max,min,mod,gzero,int,%
+      zero,newcount,protected,msg,error,DeclareDocumentCommand},
+      emphstyle=\verbatimfont\bfseries\color{black!80},
+      firstnumber=last,
+      stepnumber=1,
+      escapeinside={{(*@}{@*)}},
+      breaklines=false,
+      framesep=5pt,
+      basicstyle= \verbatimfont,
+      showstringspaces=false,
+      keywordstyle=\color{thegreen},
+      stringstyle=\color{black!50},
+      commentstyle=\color{black!50},
+  rulecolor=\color{gray!10},
+      breakatwhitespace=true,
+      showspaces=false,  % shows spacing symbol
+   %xleftmargin=0pt,
+   %xrightmargin=5pt,
+xleftmargin=15pt,
+xrightmargin=5pt,
+ %  aboveskip=0pt, % compact the code looks ugly in type
+  % belowskip=0pt,  % user responsible to insert any skips
+ aboveskip=\medskipamount,
+ belowskip=\medskipamount,
+       backgroundcolor=,
+       #1
+}}
+{}
+
+\lstnewenvironment{phdverbatim}[1][]
+  {\lstset{language=[LaTeX]TeX}%
+    \lstset{%
+      emph={cs, use,new,seq,map,inline,eq,gincr,incr,IfNoValueF,if,If,exist,protect,nopar,gset,%
+      set,undefine,define,add,gadd,remove,div,%
+      round,truncate,max,min,mod,gzero,int,%
+      zero,newcount,protected,msg,error,DeclareDocumentCommand},
+      emphstyle=\verbatimfont\bfseries\color{black!80},
+      numbers=none,
+     % stepnumber=1,
+      escapeinside={{(*@}{@*)}},
+      breaklines=false,
+      framesep=5pt,
+      basicstyle= \verbatimfont,
+      showstringspaces=false,
+      keywordstyle=\color{thegreen},
+      stringstyle=\color{black!50},
+      commentstyle=\color{black!50},
+  rulecolor=\color{gray!10},
+      breakatwhitespace=true,
+      showspaces=false,  % shows spacing symbol
+  xleftmargin=15pt,
+  xrightmargin=5pt,
+ %  aboveskip=0pt, % compact the code looks ugly in type
+  % belowskip=0pt,  % user responsible to insert any skips
+  aboveskip=\medskipamount,
+  belowskip=\medskipamount,
+      backgroundcolor=,
+       #1
+}}
+{}
+\lstnewenvironment{lualisting}[1][]
+{\lstset{language=[LaTeX]TeX,
+  basicstyle           = \ttfamily,
+  showstringspaces     = false,
+  upquote              = true,
+  keywordstyle         =\color{blue},
+  commentstyle         =\color{black!50},
+  stringstyle          =\color{black!80},
+  backgroundcolor      =\color{white},
+  xleftmargin          =15pt,
+  xrightmargin         =5pt,
+  aboveskip            =\medskipamount,
+  belowskip             =\medskipamount,
+  #1}}
+{}
+
+
 \newif\ifALGORITHM
 \@ifpackageloaded{hyperref}{%
     %%\RequirePackage{algorithms}
@@ -1481,16 +1602,7 @@ rulecolor=\color{gray!10},
  {\typeout{Algorithm loaded}}
   \RequirePackage{algorithm2e}
 \RequirePackage{multicol}
-\newif\ifRAGGEDTWOE
-\newif\ifEVERYSEL
-\newif\ifFOOTMISC
-\PassOptionsToPackage{ragged2e}{footnotes,raggedrightboxes}
-\RequirePackage{ragged2e}
-\newif\ifSOUL
-\IfStyFileExists{soul}
-{\SOULtrue\RequirePackage{soul}
-    \sethlcolor{thehighlight}}
-{}
+
 
 \newif\ifULEM
 \IfStyFileExists{ulem}
@@ -1505,7 +1617,7 @@ rulecolor=\color{gray!10},
 \IfStyFileExists*{cancel}
   {\havecanceltrue\RequirePackage{cancel}}
   {}
-\newcommand\hcancel[2][thecancel]{\setbox0=\hbox{#2}%
+\newcommand\hcancel[2][red]{\setbox0=\hbox{#2}%
 \rlap{\raisebox{.45\ht0}{\textcolor{#1}{\rule{\wd0}{1pt}}}}#2}
 \newif\ifSTAVE
 \newcommand\STAVE{\pkgname{staves}}
@@ -1540,10 +1652,6 @@ rulecolor=\color{gray!10},
   {\havecenternottrue\RequirePackage{centernot}}
   {}
 
-\cxset{acronym keys/.store in = \acronymkeys@cx}
-\cxset{acronym keys={smaller,printonlyused,withpage}}
-\PassOptionsToPackage{\acronymkeys@cx}{acronym}
-\RequirePackage{acronym}
 \newcommand{\hairsp}{\hspace{1pt}}% hair space
 \newcommand{\hquad}{\hskip0.5em\relax}% half quad space
 \newcommand{\qqquad}{\qquad\quad}
@@ -1585,7 +1693,8 @@ rulecolor=\color{gray!10},
 \newcommand\OpenType {\texttt{Open\kern-.25ex Type}\xspace}
 \let\opentype\OpenType
 \def\latexe{\LaTeX\xspace}
-\newcommand{\fontdefdtx}{\filename{fontdef.dtx}\xspace}
+\def\bibtex{\texttt{bibTeX\xspace}}
+\newcommand{\fontdefdtx}{fontdef.dtx\xspace}
 \newcommand{\postscript}{PostScript\index{PostScript}\xspace}
 \newcommand{\TC}{\pkgname{textcomp}}
 \newcommand\PX{\pkgname{pxfonts}}
@@ -1605,8 +1714,9 @@ rulecolor=\color{gray!10},
 }
 \DeclareRobustCommand{\xelatexInternal}{%
   \mbox{X\lower0.5ex\hbox{\kern-0.15em\reflectbox{E}}\kern-0.1em\LaTeX}}
-\newcommand{\xelatex}{\xelatexInternal\index{XeLaTeX=\xelatexInternal}\xspace}
-\def\otr{OTR\xspace}
+  \newcommand{\xelatex}{\xelatexInternal\index{XeLaTeX=\xelatexInternal}\xspace}
+
+\DeclareRobustCommand\otr{OTR\xspace}
 \let\alltex\LaTeX
 \let\doccmd\cmd
 \def\texbook{\TeX book\xspace}
@@ -1631,9 +1741,10 @@ rulecolor=\color{gray!10},
 \RequirePackage[autostyle=false]{csquotes}
 \RequirePackage{alltt}[1997/06/16]
 \RequirePackage{caption} % check
-\RequirePackage{currfile}
 
 \RequirePackage{afterpage}
+\RequirePackage{environ}
+\RequirePackage{mwe}
 \RequirePackage[final]{pdfpages}
 \newif\ifCCLIC
 \newcommand\CCLIC{\pkgname{cclicenses}}
@@ -1784,11 +1895,6 @@ rulecolor=\color{gray!10},
     {\PHILOKALIAtrue\RequirePackage{philokalia}}
     {}
 }%
-\ifengine{\loadphilokalia}{\loadphilokalia}{}
-\ifPHILOKALIA
-  \newfontfamily\plk{Philokalia-Regular}
-  \newfontfamily\PHtitl[Script=Greek,RawFeature=+titl;grek]{Philokalia-Regular}
-\fi
 \def\@maketitle{%
   %\newpage
   \null
@@ -1850,6 +1956,7 @@ rulecolor=\color{gray!10},
 \newcommand\precis[1]{%
      \precis@cx{#1}%
      \precistoc@cx{#1}%
+     \addvspace{20pt} % check this should be settable
 }
 \def\precis@cx#1{%
 \bgroup
@@ -1883,7 +1990,8 @@ rulecolor=\color{gray!10},
   quotation parindent/.store in=\quotationparindent@cx,
   quotation font-name/.store in=\quotationfontname@cx,
  }
-\let\oquotation\quotation
+\let\latexquotation\quotation
+\let\endlatexquotation\endquotation
 \def\setquotation#1{%
 \cxset{#1}
 \renewenvironment{quotation}
@@ -1902,7 +2010,7 @@ rulecolor=\color{gray!10},
   quotation left margin=50pt,
   quotation right margin=0pt,
   quotation parsep=0pt,
-  quotation font-size=\small,
+  quotation font-size=\normalsize,
   quotation parindent=12pt,
   quotation font-name=,
 }
@@ -1915,7 +2023,8 @@ rulecolor=\color{gray!10},
   quote parindent/.store in=\quoteparindent@cx,
   quote font-name/.store in=\quotefontname@cx,
  }
-
+\let\latexquote\quote
+\let\endlatexquote\endquote
 \def\setquote#1{%
   \cxset{#1}
   \renewenvironment{quote}
@@ -2209,7 +2318,137 @@ rulecolor=\color{gray!10},
   \fi
 }
 
-\newfontfamily\unicodenumberfam{Arial}
+\ExplSyntaxOn
+\clist_new:N \g_phd_scripts_clist
+\clist_new:N \g_phd_noto_clist
+\prop_new:N \script_prop
+\cs_set:Npn \notofontlist
+  {
+    \begin{multicols}{2}
+      \clist_map_inline:Nn \g_phd_noto_clist
+        {
+          ##1\par
+  }
+    \end{multicols}
+  }
+\prop_put:Nnn \script_prop {name}{Armenian}
+\prop_put:Nnn \script_prop {fonts}{NonoArmenian-Regular.ttf, Others}
+\prop_get:NnN \script_prop {fonts}\l_tempa_tl
+\prop_put:Nnn \script_prop {group}{Europe}
+\prop_get:NnN \script_prop {group} \l_tempa_tl
+\NewDocumentCommand\SetPanUnicodeFont { m }
+  {
+     \gdef\panunicodefontface{#1}
+     \newfontfamily\panunicode[Scale=MatchUppercase]{#1}
+  }
+\SetPanUnicodeFont{code2000.ttf}
+
+\cs_gset:Npn \makepanfontfamily#1{
+  \cs_gset_eq:cN {#1fontfamily}\panunicode
+  \cs_gset_eq:cc {#1} {#1fontfamily}
+}
+
+\cs_gset:Npn \add_a_script:n #1
+ {
+   \clist_gput_left:Nn \g_phd_scripts_clist {#1 }
+   \createscriptenvironment {#1}
+   \createtextscript {#1}
+ }
+
+ % add a script
+\NewDocumentCommand\addascript { m }
+  {
+    \add_a_script:n {#1}
+  }
+
+\gdef\createscriptenvironment #1{
+   \exp_after:wN\gdef\csname #1script\endcsname{\group_begin:
+      \csname #1fontfamily\endcsname}
+   \exp_after:wN\gdef\cs:w end#1script\cs_end:{\group_end: }
+}
+\ExplSyntaxOff
+\ExplSyntaxOn
+\cs_gset:Npn \createtextscript #1{
+   \long\exp_after:wN\gdef\csname text#1\endcsname ##1
+   {
+      \group_begin:
+      \cs:w #1fontfamily\cs_end:
+        ##1
+     \group_end:
+   }
+}
+\cs_gset:Npn \makefontfamily#1#2 {
+\if_meaning:w\panunicodefontface#2
+  \else:
+  \exp_after:wN
+  \newfontfamily\cs:w #1fontfamily\cs_end: { #2 }
+  \cs_gset_eq:cc {#1} {#1fontfamily}
+\fi:
+}
+\ExplSyntaxOff
+\NewDocumentCommand\AddScript { m } {
+    \cxset{script/.code=\addascript{##1}}
+    \cxset{#1 font/.code=\makefontfamily{#1}{##1}}
+    \cxset{script=#1}
+    \cxset{#1 font=\panunicodefontface}
+}
+\cxset{add script/.code = \AddScript{#1}}
+
+\ExplSyntaxOn
+\clist_gset:Nn \g_phd_scripts_clist {
+      armenian,
+      %hebrew,
+     % arabic,
+      syriac,
+      thaana,
+      devanagari,
+      bamum,
+      bengali,
+      brahmi,
+      coptic,
+      gurmukhi,
+      gujarati,
+      oriya,
+      tamil,
+      telugu,
+      kannada,
+      malayalam,
+      thai,
+      lao,
+      lisu,
+      myanmar,
+      georgian,
+      ethiopic,
+      cherokee,
+      ogham,
+      runic,
+      buhid,
+      bopomofo,
+      tibetan,
+      cypriot,
+      telugu,
+      phoenician,
+      cham,
+      vai,
+      rejang,
+      glagolitic,
+      saurashtra,
+         sinhala,
+      sylhetinagari,
+      tifinagh,
+      kayahli,
+     mongolian,
+     oldturkic,
+     cjk,
+}
+
+\clist_map_inline:Nn\g_phd_scripts_clist
+  {
+    \AddScript{#1}
+    \makepanfontfamily {#1}
+  }
+\ExplSyntaxOff
+\newcounter{glyph@count}%counts glyphs
 \def\textU#1{{\unicodenumberfam #1}}
 \def\putunicode@label#1#2;{%
 \def\reformat@unicode@string##1{%
@@ -2227,6 +2466,7 @@ rulecolor=\color{gray!10},
   \makebox[5em]{\reformat@unicode@string{#2}\hfill}%
 }
 \def\putchar@cx#1{%
+\stepcounter{glyph@count}
 \let\oldactive@prefix\active@prefix
 \let\active@prefix\relax
    \iffontchar\font\n
@@ -2300,24 +2540,45 @@ rulecolor=\color{gray!10},
         %%\fi
     \fi
   }%
-
-\newread\unicodefile
+\newread\tempstream
 
 \DeclareDocumentCommand{\printunicodeblock}{O{2} m m }{%
   \bgroup
   \leavevmode\parindent0pt\par
   \begin{multicols}{#1}%
   #3
-  \openin\unicodefile=#2
-  \loop\unless\ifeof\unicodefile
-    \read\unicodefile to\fileline %
+  \openin\@inputcheck=#2
+  \loop\unless\ifeof\@inputcheck
+    \read\@inputcheck to\fileline %
     \expandafter\parsefields \fileline:\@@
   \repeat
   \end{multicols}%
-  \immediate\closein\unicodefile
+  \immediate\closein\@inputcheck
   \egroup
 }
 \let\PrintUnicodeBlock\printunicodeblock
+
+
+
+ \ExplSyntaxOn
+ \DeclareDocumentCommand\indexmany {o m }
+ {
+   \clist_gset:Nn \indexmany: {#2}
+   \IfValueTF {#1}
+    {
+      \clist_map_inline:Nn\indexmany:
+        {
+          \index{#1>##1}\index{##1}
+        }
+    }
+    {
+     \clist_map_inline:Nn\indexmany:
+      {
+        \index{##1}
+      }
+    }
+ }
+ \ExplSyntaxOff
 
 \begingroup
  \catcode`\|=0
@@ -2501,8 +2762,22 @@ rulecolor=\color{gray!10},
 \def\Tp#1{\incsyms\indexcommand{\ding}\ding{#1} &\ttfamily\string\ding\string{#1\string}}
 \def\Tm#1{\incsyms\indexcommand{\maya}$\mayadigit{#1}$ &\ttfamily\string\maya\string{#1\string}}
 \def\Tmoon#1{\incsyms\indexcommand{\MoonPha}\MoonPha{#1} &\ttfamily\string\MoonPha\string{#1\string}}
-%% V Commands
-\newcommand{\V}[2][]{\incsyms#1 & \indexcommand[#2]{#2}#2 &\ttfamily\string#2}
+
+%% This command typesets its argument and also puts
+
+\newcommand{\V}[2][]{%
+   \incsyms#1 &
+   \indexcommand[#2]{#2}% necessary to put symbol \text
+   #2%
+   &\ttfamily\string#2}
+
+\newcommand{\docV}[2][]{%
+  % \incsyms#1 &
+  % \indexcommand[#2]{#2}% necessary to put symbol \text
+   &\csname#2\endcsname%
+   &\tcbset{color command=blue}
+      \docAuxCommand {#2}}
+
 \newcommand{\Vp}[2][]{\incsyms#1 & \indexpunct[$#2$]{#2}#2 &\ttfamily\string#2}
 
 \def\W@opt@arg[#1]#2#3{%
@@ -2521,7 +2796,8 @@ rulecolor=\color{gray!10},
 
 \def\X@opt@arg[#1]#2{\incsyms\indexcommand[$\string#1$]{#2}$#1$ &\ttfamily\string#2}
   \def\X@no@opt@arg#1{\incsyms\indexcommand[$\string#1$]{#1}$#1$ &\ttfamily\string#1}
-  \def\X{\@ifnextchar[{\X@opt@arg}{\X@no@opt@arg}}
+
+\def\X{\@ifnextchar[{\X@opt@arg}{\X@no@opt@arg}}
 
 \def\Y#1{\incsyms\indexcommand[$\string\big\string#1$]{#1}$\big#1$ & $\Bigg#1$ &\ttfamily\string#1}
 \def\Z#1{\incsyms\indexcommand[$\string#1$]{#1}\ttfamily\string#1}
@@ -2532,7 +2808,7 @@ rulecolor=\color{gray!10},
   {\endtrivlist}
 %% doccommands
 \newcommand*{\marglistfont}{\itshape}
-
+\newcommand*{\margoptionfont}{\ttfamily}
 \newcommand*{\margnotefont}{}
 
 \newcommand*{\optionlistfont}{\bfseries}
@@ -2545,9 +2821,10 @@ rulecolor=\color{gray!10},
 
 \newcommand*{\changeloglabelfont}{\bfseries}
 
-\newcommand*{\verbatimfont}{\ttfamily}
+%% needed for listings????
+\newcommand*{\verbatimfont}{\ttfamily}%
 
-\newcommand*{\displayverbfont}{\ttfamily}
+\let\displayverbfont\ttfamily
 
 \renewcommand*{\verbatim@font}{\verbatimfamily}
 
@@ -2568,6 +2845,7 @@ rulecolor=\color{gray!10},
 \deflength{\marglistsep}{10pt}
 %% This needs thorough checking as to restore previous definitions
 %% of parsep we want parsep to be a bit higher than standard enumerated lists.
+
 \global\newlength\oldparsep
 \newenvironment*{marglist}
   {\setlength\oldparsep{\parsep}\list{}{%
@@ -2576,6 +2854,15 @@ rulecolor=\color{gray!10},
      \setlength{\labelsep}{\marglistsep}%
      \setlength{\leftmargin}{0pt}%
      \renewcommand*{\makelabel}[1]{\hss\marglistfont##1}}}
+  {\endlist\setlength\parsep{\oldparsep}}
+
+\newenvironment*{margoptionslist}
+  {\setlength\oldparsep{\parsep}\list{}{%
+     \parsep 3.5\p@ \@plus0\p@ \@minus\p@
+     \setlength{\labelwidth}{\marglistwidth}%
+     \setlength{\labelsep}{\marglistsep}%
+     \setlength{\leftmargin}{0pt}%
+     \renewcommand*{\makelabel}[1]{\hss\margoptionfont\detokenize{##1}}}}
   {\endlist\setlength\parsep{\oldparsep}}
 
 \newenvironment*{keymarglist}
@@ -2652,7 +2939,7 @@ rulecolor=\color{gray!10},
 \def\calcname{\textsc{calc}}
 %% MW: END MATH MACROS
 \def\extractcommand#1#2\@@{%
-  \pgfmanualentryheadline{\declare{\texttt{\string#1}}#2}%
+  \pgfmanualentryheadline{\declare{\texttt{\bfseries\string#1}}#2}%
   \removeats{#1}%
   %%\index{\strippedat @\protect\myprintocmmand{\strippedat}}
 }
@@ -2735,13 +3022,13 @@ rulecolor=\color{gray!10},
   \end{pgfmanualentry}
 }
 
+%% Changed must watch out!!
 \def\gobble#1{}
 \def\extracthandler#1#2\@nil{%
-  \pgfmanualentryheadline{Key handler \meta{key}{\ttfamily/\declare{#1}}#2}%
+  \pgfmanualentryheadline{Key handler \meta{key}{\bfseries\ttfamily/\declare{#1}}#2}%
   \index{\gobble#1@\protect\texttt{#1} handler}%
-  \index{Key handlers!#1@\protect\texttt{#1}}
+  \index{Key handlers>#1=\protect\texttt{#1}}
 }
-
 \newenvironment{stylekey}[1]{
   \begin{pgfmanualentry}
     \def\extrakeytext{style, }
@@ -2761,6 +3048,7 @@ rulecolor=\color{gray!10},
 {
   \end{pgfmanualentry}
 }
+
 \def\extractkey#1\@nil{%
   \pgfutil@in@={#1}%
   \ifpgfutil@in@%
@@ -2775,7 +3063,7 @@ rulecolor=\color{gray!10},
       \def\mypath{}%
       \def\myname{}%
       \firsttimetrue%
-      \decompose#1/\nil%
+      \decompose#1/\nil%ERROR?
     \fi
   \fi%
 }
@@ -2855,17 +3143,6 @@ rulecolor=\color{gray!10},
     \pgfmanualentryheadline{Coordinate system {\ttfamily\declare{#1}}}%
     \index{#1@\protect\texttt{#1} coordinate system}%
     \index{Coordinate systems!#1@\protect\texttt{#1}}
-    \pgfmanualbody
-}
-{
-  \end{pgfmanualentry}
-}
-
-\newenvironment{snake}[1]{
-  \begin{pgfmanualentry}
-    \pgfmanualentryheadline{Snake {\ttfamily\declare{#1}}}%
-    \index{#1@\protect\texttt{#1} snake}%
-    \index{Snakes!#1@\protect\texttt{#1}}
     \pgfmanualbody
 }
 {
@@ -2993,8 +3270,8 @@ rulecolor=\color{gray!10},
 
 \def\beamer{\textsc{beamer}}
 \def\pdf{\textsc{pdf}}
-\def\pgfname{\textsc{pgf}}
-\def\tikzname{Ti\emph{k}Z}
+\def\pgfname{\textsc{pgf}\xspace}
+\def\tikzname{Ti\emph{k}Z\xspace}
 \def\pstricks{\textsc{pstricks}}
 \def\prosper{\textsc{prosper}}
 \def\seminar{\textsc{seminar}}
@@ -3166,7 +3443,7 @@ rulecolor=\color{gray!10},
 \endgroup
 
 \define@key{codeexample}{width}{\setlength\codeexamplewidth{#1}}
-\define@key{codeexample}{graphic}{\colorlet{graphicbackground}{#1}}
+\define@key{codeexample}{graphic}{\colorlet{codebackground}{#1}}
 \define@key{codeexample}{code}{\colorlet{codebackground}{#1}}
 \define@key{codeexample}{execute code}{\csname code@execute#1\endcsname}
 \define@key{codeexample}{code only}[]{\code@executefalse}
@@ -3175,7 +3452,6 @@ rulecolor=\color{gray!10},
 \define@key{codeexample}{vbox}[]{\def\code@pre{\vbox\bgroup\setlength{\hsize}{\linewidth-6pt}}\def\code@post{\egroup}}
 \define@key{codeexample}{ignorespaces}[]{\let\@gobble@till@return=\@gobble@till@return@ignore}
 \define@key{codeexample}{leave comments}[]{\def\code@catcode@hook{\catcode`\%=12}\let\commenthandler=\relax\let\typesetcomment=\relax}
-
 \def\code@pre{}
 \def\code@post{}
 \def\code@catcode@hook{}
@@ -3211,7 +3487,7 @@ rulecolor=\color{gray!10},
           \commenthandler%
           \xdef\code@temp{#1}% removes returns and comments
         }%
-        \colorbox{graphicbackground}{\color{black}\ignorespaces%
+        \colorbox{codebackground}{\color{black}\ignorespaces%
           \code@pre\expandafter\scantokens\expandafter{\code@temp\ignorespaces}\code@post\ignorespaces}%
       }%
     }%
@@ -3279,7 +3555,7 @@ rulecolor=\color{gray!10},
 \pgfqkeys{/codeexample}{%
 every codeexample/.style={
 width=3.9cm,
-/pgfplots/every axis/.append style={legend style={fill=graphicbackground}}
+/pgfplots/every axis/.append style={legend style={fill=codebackground}}
 },
 narrow/.style={width=6.9cm},
 }
@@ -3412,29 +3688,89 @@ narrow/.style={width=6.9cm},
 
 \def\thetexexp{\@arabic\c@section.\arabic{texexp}}
 \tcbset{texexp/.style={%
-      fonttitle=\small\ttfamily\bfseries,
-      fontupper=\small,
-      fontlower=\small,
-      coltitle=black,
-      colback = graphicbackground,% background
-      colframe=graphicbackground,
+    fonttitle=\small\ttfamily,
+    fontupper=\small,
+    fontlower=\small,
+    coltitle=black,
+    colback = codebackground,% background
+    colframe=codebackground,
       %colupper=spot!,
-      },
-      listing options = {belowskip=0pt,
-          escapeinside={(*@}{@*)},
-          backgroundcolor=\color{graphicbackground},
-          },
+   },
+   listing options = {%
+     keywordstyle=\color{thekeywordstyle},
+     belowskip=0pt,
+     escapeinside={(*@}{@*)},%
+     breaklines=true,%
+     backgroundcolor=\color{codebackground},%
+     firstnumber=last,%
+     stepnumber=1,%
+     upquote=true,%
+     alsoletter={_,:},%
+     commentstyle=\color{thecommentstyle},%
+     emph={cs,new,seq,map,inline,eq,gincr,incr,IfNoValueF,if,%
+            If,exist,protect,nopar,gset,%
+            set,undefine,define,add,gadd,remove,div,%
+            round,truncate,max,min,mod,gzero,int,exp,put,left,args,%
+            zero,newcount,protected,msg,error,%
+            eval,to,arabic,alph,Alph,roman,Roman,dim%
+            DeclareDocumentCommand,%
+            NewDocumentCommand,%
+            RenewDocumentCommand,includegraphics,
+            function,local,return
+         },%
+           %
+          % For LaTeX3 we need to add these, note % is important
+          % dn’t miss, at the end...
+          moretexcs    = {DeclareDocumentCommand,IfBooleanTF,tex_def:D,%
+          cs_new:Nn,cs_new:Npn,cs_new:cn,cs_set_nopar:Npn,token_to_meaning:N,%
+          %primitives
+          cs:w,cs_end:,tex_underline,group_begin:, group_end:,%
+          %coffins
+          NewCoffin,JoinCoffins,SetHorizontalCoffin,TypesetCoffin,%
+          %properties
+          prop_new:N,prop_new:c,prop_put:Nnn,%
+          %boolean
+          bool_new:N,bool_set_true:N,bool_set_false:N,%
+          bool_if:NTF,%
+          hbox_to_wd:nn,%
+          IfNoValueTF,%
+          %token lists
+          tl_new:N,tl_set:Nn,tl_concat:NNN,%
+          token_to_meaning:N,%
+          seq_pop_left:NN,%
+          %
+          %int
+          int_if_exist:cT,int_use:c,int_new:c,int_new:N,int_eval:n,%
+          int_add,int_use,int_to_roman,%
+          %boxes
+          box_new:c,hbox_set:cn,box_use:c,vbox_set:cn,box_move_down:nn,%
+          %string
+          str_if_eq_x:nnTF,%
+          tl_tail:n,%
+          DeclareObjectType,%
+          DeclareTemplateInterface,%
+          DeclareTemplateCode,%
+          DeclareInstance,UseInstance,AssignTemplateKeys%
+          keys_set,keys_define,%
+          },%
+     emphstyle=\verbatimfont\bfseries\color{black!80},%
+          %
+   },%close listings options
       % added for better control
       arc=0pt,
       outer arc=0pt,
       example1/.code 2 args={\refstepcounter{texexp}\label{#2}}%Reference
-     \pgfkeysalso{texexp, enhanced, breakable, title={Example \thetexexp\ #1}},
+     \pgfkeysalso{texexp, enhanced, breakable, title={Example \thetexexp\ #1}%
+ },
 }
 \newenvironment{texexp}[1]{\tcblisting{texexp,#1}}{\endtcblisting}
 \newenvironment{example1}[3][]{\tcblisting{example1={#2}{#3},#1}}%
     {\endtcblisting}
-\newenvironment{texexample}[3][]{\MakePercentComment\noindent\tcblisting{example1={#2}{#3},#1}}%
-    {\endtcblisting\MakePercentIgnore}
+\newenvironment{texexample}[3][]{\noindent\tcblisting{example1={#2}{#3},#1}}%
+    {\endtcblisting}
+\let\luaexample\texexample
+\let\endluaexample\endtexexample
+%%
 \renewcommand{\topfraction}{.85}
 \renewcommand{\bottomfraction}{.7} % .3 in kernel.
 \renewcommand{\textfraction}{.15}
@@ -4792,7 +5128,12 @@ two\or fifty three
 \or fifty four\or fifty five\or fifty six\or fifty seven\or
 fifty eight\or fifty nine
   \or sixty \or sixty one \or sixty two
-  \or sixty three \or sixty four \or sixty five\else\@ctrerr\fi }
+  \or sixty three \or sixty four \or sixty five
+    \else
+    #1
+    %\@ctrerr
+    \fi
+}
 
 \def\Words@cx#1{%
 \ifcase#1 Zero\or One\or Two\or Three\or Four\or Five\or Six\or
@@ -4809,7 +5150,11 @@ Six \or Forty Seven\or Forty Eight \or Forty Nine\or Fifty\or
 Fifty One\or Fifty Two\or Fifty Three\or Fifty four\or Fifty
 Five\or Fifty Six\or Fifty Seven\or Fifty Eight\or Fifty Nine\or
 Sixty \or Sixty One \or Sixty Two
-\or Sixty Three \or Sixty Four \or Sixty Five\else\@ctrerr\fi}
+\or Sixty Three \or Sixty Four \or Sixty Five \or SixtySix \or SixtySeven
+\or Sixty Eight \or SixtyNine \or Seventy \or Seventy One \or Seventy Two
+\else
+#1
+\fi}
 
 \def\WORDS@cx#1{%
 \ifcase#1 ZERO\or ONE\or TWO\or THREE\or FOUR\or FIVE\or SIX\or
@@ -4832,7 +5177,11 @@ THREE\or SEVENTY FOUR\or SEVENTY FIVE\or SEVENTY SIX\or SEVENTY
 SEVEN\or SEVENTY EIGHT\or SEVENTY NINE\or EIGHTY\or EIGHTY
 ONE\or EIGHTY TWO\or EIGHTY THREE\or EIGHTY FOUR\or EIGHTY
 FIVE\or EIGHTY SIX\or EIGHTY SEVEN\or EIGHTY EIGHT\or EIGHTY
-NINE\or NINETY\else\@ctrerr\fi}
+NINE\or NINETY \or NINETY ONE \or NINETY TWO \or NINETY THREE
+\or NINETY FOUR \or NINETY FIVE
+\else
+#1
+\fi}
 
 \def\ORDINALS@cx#1{%
 \ifcase#1 ZEROETH\or FIRST\or SECOND\or THIRD\or FOURTH\or
@@ -4849,7 +5198,13 @@ SIX\or FORTY SEVEN\or FORTY EIGHT\or FORTY NINE\or FIFTY\or
 FIFTY ONE\or FIFTY TWO\or FIFTY THREE\or FIFTY FOUR\or FIFTY
 FIVE\or FIFTY SIX\or FIFTY SEVEN\or FIFTY EIGHT\or FIFTY NINE\or
 SIXTY\or SIXTY ONE\or SIXTY TWO\or SIXTY THREE \or SIXTY FOUR\or
-SIXTY FIVE\else\@ctrerr\fi}
+SIXTY FIVE \or SIXTY SIX \or SIXTY SEVEN \or SIXTY EIGHT \or SIXTY NINE
+\or SEVENTY \or SEVENTY ONE \or SEVENTY TWO \or SEVENTY THREE
+\or SEVENTY FOUR \or SEVENTY FIVE \or SEVENTY SIX \or SEVENTY SEVEN
+\or SEVENTY EIGHT \or SEVENTY NINE \or EIGHTY
+\else
+#1
+\fi}
 
 \def\ordinals@cx#1{%
   \ifcase#1 Zeroeth\or First\or Second\or Third\or Fourth\or Fifth\or Sixth
@@ -4866,7 +5221,10 @@ SIX\or FORTY SEVEN\or FORTY EIGHT\or FORTY NINE\or FIFTY\or
 FIFTY ONE\or FIFTY TWO\or FIFTY THREE\or FIFTY FOUR\or FIFTY
 FIVE\or FIFTY SIX\or FIFTY SEVEN\or FIFTY EIGHT\or FIFTY NINE\or
 SIXTY\or SIXTY ONE\or SIXTY TWO\or SIXTY THREE \or SIXTY FOUR\or
-SIXTY FIVE\else\@ctrerr\fi}
+SIXTY FIVE\or SIXTY SIX \or SIXTY SEVEN \or \else
+#1
+\fi
+}
 
 \newenvironment{absolutequote}
                {\list{}{\leftmargin2cm\rightmargin\leftmargin}%
@@ -4899,6 +5257,7 @@ SIXTY FIVE\else\@ctrerr\fi}
 \newif\if@leftname
 \newif\if@rightname
 \newif\if@chapterspaceout\@chapterspaceoutfalse
+\newif\if@soulspaceout\@soulspaceoutfalse
 \newif\if@numberspaceout\@numberspaceoutfalse
 \newif\if@titlespaceout\@chapterspaceoutfalse
 \newif\if@sectionspaceout\@sectionspaceoutfalse
@@ -4930,6 +5289,8 @@ SIXTY FIVE\else\@ctrerr\fi}
   \expandafter\setfontparam@cx#4;%
 }
 \let\bold\bfseries
+\let\normal\mdseries
+\let\serif\rmfamily
 \@ifundefined{@openright}{%
   }{}
 \def\afterindenton@cx{\def\afterindent@cx{\@afterindenttrue}}
@@ -4946,22 +5307,7 @@ SIXTY FIVE\else\@ctrerr\fi}
 \gdef\titlemarginbottom@cx{10pt}
 
 \gdef\chaptermarginleft@cx{0pt}
-\global\newlength\chapterborderrightwidth
-    \setlength\chapterborderrightwidth{2pt}
-\global\newlength\chapterborderleftwidth
-    \setlength\chapterborderleftwidth{2pt}
-\global\newlength\chapterborderbottomwidth
-    \setlength\chapterborderbottomwidth{2pt}
-\global\newlength\chapterbordertopwidth
-    \setlength\chapterbordertopwidth{2pt}
-\global\newlength\chapterpaddingleft
-    \setlength\chapterpaddingleft{10pt}
-\global\newlength\chapterpaddingright
-    \setlength\chapterpaddingright{10pt}
-\global\newlength\chapterpaddingtop
-    \setlength\chapterpaddingtop{10pt}
-\global\newlength\chapterpaddingbottom
-    \setlength\chapterpaddingbottom{10pt}
+
 \def\chaptertitleblockalign{}
 \newcounter{chapterdisplay} \setcounter{chapterdisplay}{0}
 \newcounter{numberdisplay} \setcounter{numberdisplay}{0}
@@ -5000,15 +5346,44 @@ SIXTY FIVE\else\@ctrerr\fi}
 \newlength\titleborderleftwidth\setlength{\titleborderleftwidth}{0pt}
 \newlength\titleborderrightwidth\setlength{\titleborderrightwidth}{0pt}
 \def\gluestart{\hss}\def\glueend{\hss}
+\newif\if@hascomma
+\@hascommatrue
+\def\hascomma#1{%
+    \@hascommafalse
+    \@tfor\next:=#1\do{%
+    \edef\@tempa{\next}%
+    \edef\tempb{,}%
+    {\if\@tempa\tempb
+         \global\@hascommatrue
+    \fi}%
+}}%
+
+\def\checkforcomma@cx#1{%
+\hascomma{#1}%
+\if@hascomma%
+    \expandafter\@firstoftwo%
+  \else%
+    \expandafter\@secondoftwo%
+\fi
+}
 \cxset{
   name/.store in=\chaptername,
-  chapter name/.store in=\chaptername,
-  color/.store in=\color@cx,
-  color/.default=black,
+  chapter name/.code=\pgfkeysalso{name=#1},
+  chaptername/.code = \gdef\chaptername@cx{#1},
+  }
+
+\cxset{
+  %legacy to remove
+  color/.store in = \color@cx,
+  color/.default = black,
+  color/.initial = black,
+  %
   chapter color/.store in=\chaptercolor@cx,
   chapter background-color/.store in=\chapterbgcolor,
   number background-color/.store in=\numberbgcolor,
-  chaptername/.code = \gdef\chaptername@cx{#1},
+}
+
+\cxset{
   chapter opening/.is choice,
   chapter opening/right/.code={\@openrighttrue},
   chapter opening/left/.code={\@openlefttrue},
@@ -5018,85 +5393,373 @@ SIXTY FIVE\else\@ctrerr\fi}
   chapter opening/anywhere/.code={\@openanywheretrue\@openrightfalse
      \@openleftfalse\@openanyfalse},
   chapter opening/ifafter/.code={},
-  chapter font-family/.store in=\chapterfontfamily@cx,
-  chapter font-weight/.store in = \chapterfontweight@cx,
-  chapter font-size/.store in=\chapterfontsize@cx,
-  % set counter for display
+}
+
+\pgfkeys{/handlers/.font-family in/.code=\pgfkeysalso{\pgfkeyscurrentpath/.code=
+      \checkforcomma@cx{##1}{}{%
+          \edef\tempaa{sans-serif}%
+          \edef\tempbb{##1}%
+          \ifx\tempaa\tempbb%
+              \def#1{sffamily}%
+        \else%
+           \def#1{##1}%Check for initial???
+       \fi%
+       \edef\tempaa{monospace}%
+        \ifx\tempaa\tempbb%
+          \def#1{ttfamily}%
+       \fi
+       \edef\tempaa{serif}
+       \ifx\tempaa\tempbb%
+           \def#1{rmfamily}%
+       \fi%
+       \edef\tempaa{inherit}%needs work???
+       \ifx\tempaa\tempbb%
+           \def#1{rmfamily}
+       \fi
+     }%
+}}
+\pgfkeys{/handlers/.font-style in/.code=\pgfkeysalso{\pgfkeyscurrentpath/.code=
+           \edef\tempa{##1}%
+           \edef\tempb{normal}%
+           \edef\tempc{italic}%
+           \edef\tempd{oblique}%
+           \def#1{##1}%
+           \ifx\tempa\tempb%
+              \def#1{upshape}%
+           \fi%
+           \ifx\tempa\tempc%
+              \def#1{itshape}%
+            \fi%
+           \ifx\tempa\tempd%
+              \def#1{slshape}%
+           \fi
+   }}
+\pgfkeys{/handlers/.font-weight in/.code=\pgfkeysalso{\pgfkeyscurrentpath/.code=
+           \def\tempa{##1}%
+           \def\tempb{normal}%
+           \def\tempc{bold}%
+           \def\tempd{bfseries}%
+           \def#1{##1}%
+           \ifx\tempa\tempb%
+              \def#1{mdseries}%
+           \fi%
+           \ifx\tempa\tempc%
+              \def#1{bfseries}%
+            \fi%
+           \ifx\tempa\tempd%
+              \def#1{bfseries}%
+           \fi
+           \def\tempb{\bfseries}%
+           \ifx\tempa\tempb
+              \def#1{bfseries}%
+           \fi
+           \def\tempb{\mdseries}%
+           \ifx\tempa\tempb
+              \def#1{mdseries}%
+           \fi
+   }}
+   \pgfkeys{/handlers/.font-size in/.code=\pgfkeysalso{\pgfkeyscurrentpath/.code=
+           \def\tempa{##1}%
+           \def\tempb{normal}%
+           \def#1{##1}%
+           \ifx\tempa\tempb%
+              \def#1{\normalsize}%
+           \fi%
+            \def\tempb{tiny}%
+           \ifx\tempa\tempb%
+              \def#1{tiny}%
+            \fi%
+            \ifx\tempa\tempb%
+              \def#1{footnotesize}%
+            \fi%
+           \def\tempb{footnotesize}%
+           \ifx\tempa\tempb%
+              \def#1{small}%
+            \fi%
+           \def\tempb{large}%
+           \ifx\tempa\tempb%
+              \def#1{large}%
+           \fi
+            \def\tempb{Large}%
+           \def\tempb{\bfseries}%
+           \ifx\tempa\tempb%
+              \def#1{Large}%
+           \fi%
+           \def\tempb{huge}%
+           \ifx\tempa\tempb%
+              \def#1{huge}%
+           \fi%
+           \def\tempb{Huge}%
+           \ifx\tempa\tempb%
+              \def#1{Huge}%
+           \fi%
+           \def\tempb{HUGE}%
+           \ifx\tempa\tempb%
+              \def#1{HUGE}%
+           \fi
+           \def\tempb{HHUGE}%
+            \ifx\tempa\tempb%
+              \def#1{HHUGE}%
+           \fi%
+           \def\tempb{HHHUGE}%
+            \ifx\tempa\tempb%
+              \def#1{HHHUGE}%
+           \fi%
+   }}%
+
+%%   G E T   A   N U M B E R (if possible)
+%% USAGE: \itf@number\count<text>\relax\@nnil (like \@defaultunits)
+\def\itf@number#1#2\relax\@nnil{% \relax is to mimick the syntax of \@defaultunits
+   \afterassignment\itf@number@#1\number0#2\relax\itf@number@
+}
+\def\itf@number@#1\relax#2\itf@number@{%
+   \ifblank{#1}
+      {\itf@number@@{}#2\itf@number@@\@nnil
+      \csname ltx@\ifx\@let@token\itf@number@@
+         first\else second\fi oftwo\endcsname}
+      \ltx@secondoftwo
+}% \itf@number@
+\def\itf@number@@#1{\futurelet\@let@token\itf@number@@@}
+\def\itf@number@@@{%
+   \csname \ifx\@let@token\relax itf@number@@%
+   \else remove@to@nnil%
+   \fi \endcsname
+}% \itf@number@@@
+\protected\def\itf@setlength#1#2{#1\glueexpr#2\relax}%
+%% glue * 1.5 = glue * 98302 / 65536
+%% glue * 3/2 = glue * 3/2
+\def\itf@units@scale#1!{\itf@units@scale@normalize#1/\@nnil/\@nil}
+\def\itf@units@scale@normalize#1/#2/#3\@nil{%
+   \ifx#2\@nnil \number\dimexpr#1pt\relax/65536
+   \else#1/#2
+   \fi
+}% \itf@units@scale@normalize
+\def\itf@units@scaleNoCalc#1!{\itf@units@scale@normalizeNoCalc#1/\@nnil/\@nil}
+\let\itf@units@scale@normalizeNoCalc \itf@units@scale@normalize
+\protected\def\itf@setlength@calc#1#2{\begingroup
+   \let\calc@multiply@by@real \itf@calc@multiply@by@real
+   \let\calc@Adimen \itf@calc@Askip  \let\calc@Bdimen \itf@calc@Bskip
+   \setlength{#1}{#2}%
+   \expandafter\endgroup\expandafter#1\the#1\relax
+}% \itf@setlength@calc
+\def\itf@units@scale@normalize@calc#1/#2/#3\@nil{%
+   \ifx#2\@nnil 1*\ratio{\dimexpr#1pt\relax}\p@
+   \else        1*\ratio{\dimexpr#1pt\relax}/{\dimexpr#2pt\relax}%
+   \fi
+}%
+\providecommand*\pgfkeysmeaning[1]{\pgfkeysifdefined{#1}
+   {\expandafter\meaning\csname pgfk@#1\endcsname}
+   {\meaning\@undefined}%
+}% \pgfkeysmeaning
+\def\pgfkeysvalueof@unexpanded#1{%
+   \unexpanded\expandafter\expandafter\expandafter{%
+                        \csname pgfk@#1\endcsname}%
+}% \pgfkeysvalueof@unexpanded
+\ifdefined\pgfkeys@ifexecutehandler \long \fi% pgf version 2.1
+\def\pgfkeysEsetvalue#1#2{%
+   \expandafter\edef\csname pgfk@#1\endcsname{#2}%
+}% \pgfkeysEsetvalue
+\ifdefined\pgfkeys@ifexecutehandler \long \fi % pgf v2.1
+\def\pgfkeysEaddvalue#1#2#3{% \csepreappto{pgfk@#1}{#2}{#3}
+   \edef\pgfkeys@global@temp{%
+      #2%
+      \ifcsname pgfk@#1\endcsname
+         \unexpanded\expandafter\expandafter\expandafter{%
+            \csname pgfk@#1\endcsname}%
+      \fi
+      #3}%
+   \pgfkeyslet{#1}\pgfkeys@global@temp
+}% \pgfkeysEaddvalue
+\pgfkeysdef{/handlers/.store as glue}{\pgfkeysdef{\pgfkeyscurrentpath}{%
+\def\temp{##1}%
+\ifx\temp\@empty%
+  \gdef#1{1pt}%
+\else
+   \gdef#1{1pt}%
+   \if\relax\detokenize\expandafter{\romannumeral-0##1}\relax
+        \gdef#1{\dimexpr(##1)\relax}%
+  \fi
+\fi
+}}%
+\cxset{%
+  chapter font-family/.font-family in=\chapterfontfamily@cx,
+  chapter font-weight/.font-weight in = \chapterfontweight@cx,
+  chapter font-size/.font-size in=\chapterfontsize@cx,
+  chapter font-shape/.font-style in=\chapterfontshape@cx,
+  chapter font-style/.font-style in=\chapterfontshape@cx,}
+\newcounter{lastelementfloat}
+     \setcounter{lastelementfloat}{-1}
+\newcounter{chapterfloat}
+      \setcounter{chapterfloat}{1}
+\newcounter{numberfloat}
+      \setcounter{numberfloat}{1}
+\newcounter{currentelementfloat}
+      \setcounter{currentelementfloat}{-1}
+\global\newlength\chapterborderrightwidth
+    \setlength\chapterborderrightwidth{2pt}
+\global\newlength\chapterborderleftwidth
+    \setlength\chapterborderleftwidth{2pt}
+\global\newlength\chapterborderbottomwidth
+    \setlength\chapterborderbottomwidth{2pt}
+\global\newlength\chapterbordertopwidth
+    \setlength\chapterbordertopwidth{2pt}
+\global\newlength\chapterpaddingleft
+    \setlength\chapterpaddingleft{10pt}
+\global\newlength\chapterpaddingright
+    \setlength\chapterpaddingright{10pt}
+\global\newlength\chapterpaddingtop
+    \setlength\chapterpaddingtop{10pt}
+\global\newlength\chapterpaddingbottom
+    \setlength\chapterpaddingbottom{10pt}
+\ExplSyntaxOn
+\int_zero_new:c {chapterdisplaycounter}
+\int_zero_new:c {chapterfloatcounter}
+\cs_gset:Npn \phdsetcounter #1 #2
+ {
+   \int_gset:cn {#1} {#2}
+ }
+\ExplSyntaxOff
+\cxset{%
   chapter display/.is choice,
-   chapter display/inline/.code=\global\setcounter{chapterdisplay}{0},
-  chapter display/block/.code=\global\setcounter{chapterdisplay}{2},
+  chapter display/inline/.code=\global\setcounter{chapterdisplay}{0}
+                               \phdsetcounter{chapterdisplaycounter}{0},
+  chapter display/block/.code=\global\setcounter{chapterdisplay}{2}
+                               \phdsetcounter{chapterdisplaycounter}{2},
   chapter float/.is choice,
-  chapter float/none/.code= \global\setcounter{chapterfloat}{0},
-  chapter float/left/.code= \global\setcounter{chapterfloat}{0},
-  chapter float/center/.code= \global\setcounter{chapterfloat}{1},
-  chapter float/right/.code= \global\setcounter{chapterfloat}{2},
-  chapter before content/.store in=\chapterbeforecontent@cx,
-  chapter before/.store in=\chapterbefore@cx,
-  chapter margin top/.code=\gdef\chaptermargintop@cx{\topskip0pt\vskip#1\relax},
+  chapter float/none/.code= \global\setcounter{chapterfloat}{0}%
+                            \phdsetcounter{chapterfloatcounter}{0},
+  chapter float/left/.code= \global\setcounter{chapterfloat}{0}
+                            \phdsetcounter{chapterfloatcounter}{0},
+  chapter float/center/.code= \global\setcounter{chapterfloat}{1}%
+                             \phdsetcounter{chapterfloatcounter}{1},
+  chapter float/right/.code= \global\setcounter{chapterfloat}{2}%
+                             \phdsetcounter{chapterfloatcounter}{2},%
+ }
+\cxset{chapter display=block,
+       chapter float=left,
+       }
+\cxset{chapter before content/.store in=\chapterbeforecontent@cx,
+       chapter before/.store in=\chapterbefore@cx,
+ }
+\ExplSyntaxOn
+\dim_new:c {chapter_margin_top}
+\dim_new:c {chapter_margin_right}
+\dim_new:c {chapter_margin_bottom}
+\dim_new:c {chapter_margin_left}
+\dim_new:c {chapter_margin}
+\dim_new:c {chapter_border_top_width}
+\dim_new:c {chapter_border_right_width}
+\dim_new:c {chapter_border_bottom_width}
+\dim_new:c {chapter_border_left_width}
+\dim_new:c {chapter_border}
+\dim_new:c {chapter_padding_top}
+\dim_new:c {chapter_padding_right}
+\dim_new:c {chapter_padding_bottom}
+\dim_new:c {chapter_padding_left}
+\dim_new:c {chapter_padding}
+\cxset{
+  chapter~margin-top/.code=\gdef\chaptermargintop@cx{\topskip0pt\vskip#1\relax}
+    \dim_gset:cn { chapter_margin_top } { #1 },
   % left margin
-  chapter margin left/.code=\setlength\chaptermarginleft{#1}%
-                                            \global\chaptermarginleft\chaptermarginleft\relax
-                                            \def\gluestart{\hskip#1}%
-                                            \def\glueend{\hss},
-  chapter margin-left/.code=\setlength\chaptermarginleft{#1}%
-                                            \global\chaptermarginleft\chaptermarginleft\relax,
+  chapter~margin-left/.code=\setlength\chaptermarginleft{#1}%
+                            \global\chaptermarginleft\chaptermarginleft\relax
+                            \def\gluestart{\hskip#1}%
+                            \def\glueend{\hss}
+                            \dim_gset:cn {chapter_margin_left}{#1},
+  chapter~margin-right/.code = \dim_gset:cn {chapter_margin_right} { #1 },
+  chapter~margin-bottom/.code = \dim_gset:cn {chapter_margin_bottom} { #1 },
   }
-  \cxset{
- %borders
-  chapter border-top-width/.code= \setlength\chapterbordertopwidth{#1}%
-                                            \global\chapterbordertopwidth\chapterbordertopwidth\relax,
-   chapter border-right-width/.code= \setlength\chapterborderrightwidth{#1}%
-                                            \global\chapterborderrightwidth\chapterborderrightwidth\relax,
-   chapter border-bottom-width/.code= \setlength\chapterborderbottomwidth{#1}%
-                                            \global\chapterborderbottomwidth\chapterborderbottomwidth\relax,
-   chapter border-left-width/.code= \setlength\chapterborderleftwidth{#1}%
-                                            \global\chapterborderleftwidth\chapterborderleftwidth\relax,
+
+\ExplSyntaxOff
+\ExplSyntaxOn
+\cxset{
+   chapter~border-top-width/.code= \setlength\chapterbordertopwidth{#1}%
+     \global\chapterbordertopwidth\chapterbordertopwidth\relax
+     \dim_gset:cn {chapter_border_top_width} {#1},
+   chapter~border-right-width/.code= \setlength\chapterborderrightwidth{#1}%
+     \global\chapterborderrightwidth\chapterborderrightwidth\relax
+     \dim_gset:cn {chapter_border_right_width} {#1},
+   chapter~border-bottom-width/.code= \setlength\chapterborderbottomwidth{#1}%
+     \global\chapterborderbottomwidth\chapterborderbottomwidth\relax
+     \dim_gset:cn {chapter_border_bottom_width} {#1},
+   chapter~border-left-width/.code= \setlength\chapterborderleftwidth{#1}%
+     \global\chapterborderleftwidth\chapterborderleftwidth\relax
+     \dim_gset:cn {chapter_border_left_width} {#1},
+}
+\ExplSyntaxOff
   %
   %   Next we write keys for developing the short form of the border keys. These keys reset
   %  all borders to one value
   %    \begin{macrocode}
-  chapter border-width/.code = \pgfkeysalso{chapter border-top-width=#1,
-                                                 chapter border-right-width=#1,
-                                                 chapter border-bottom-width=#1,
-                                                 chapter border-left-width=#1%
-                                                 },
-}
+\ExplSyntaxOn
 \cxset{
-  chapter padding-left/.code= \setlength\chapterpaddingleft{#1}%
-                                               \global\chapterpaddingleft\chapterpaddingleft\relax,
-  chapter padding-right/.code= \setlength\chapterpaddingright{#1}%
-                                            \global\chapterpaddingright\chapterpaddingright\relax,
-  chapter padding-top/.code= \setlength\chapterpaddingtop{#1}%
-                                            \global\chapterpaddingtop\chapterpaddingtop\relax,
-  chapter padding-bottom/.code= \setlength\chapterpaddingbottom{#1}%
-                                            \global\chapterpaddingbottom\chapterpaddingbottom\relax,
+  chapter~border-width/.code = \pgfkeysalso{chapter~border-top-width=#1,
+                                            chapter~border-right-width=#1,
+                                            chapter~border-bottom-width=#1,
+                                            chapter~border-left-width=#1,
+                                            },
+}
+\ExplSyntaxOff
+\ExplSyntaxOn
+\cxset{
+  chapter~padding-left/.code= \setlength\chapterpaddingleft{#1}%
+    \global\chapterpaddingleft\chapterpaddingleft\relax
+    \dim_gset:cn {chapter_padding_left}{#1},
+  chapter~padding-right/.code= \setlength\chapterpaddingright{#1}%
+    \global\chapterpaddingright\chapterpaddingright\relax
+    \dim_gset:cn {chapter_padding_right}{#1},
+  chapter~padding-top/.code= \setlength\chapterpaddingtop{#1}%
+    \global\chapterpaddingtop\chapterpaddingtop\relax
+    \dim_gset:cn {chapter_padding_top}{#1},
+  chapter~padding-bottom/.code= \setlength\chapterpaddingbottom{#1}%
+    \global\chapterpaddingbottom\chapterpaddingbottom\relax
+    \dim_gset:cn {chapter_padding_bottom}{#1},
+}
+\ExplSyntaxOff
+\cxset{
   chapter padding/.code={\def\@tempa{none}%
-                                        \def\@tempb{#1}%
-                                           \ifx\@tempa\@tempb%
-                                              \global\setlength\chapterpaddingleft{0pt}%
-                                              \global\setlength\chapterpaddingright{0pt}%
-                                              \global\setlength\chapterpaddingtop{0pt}%
-                                              \global\setlength\chapterpaddingbottom{0pt}%
-                                            \else
-                                                \setlength\chapterpaddingleft{#1}%
-                                                 \global\chapterpaddingleft\chapterpaddingleft\relax
-                                                 \setlength\chapterpaddingright{#1}%
-                                                 \setlength\chapterpaddingtop{#1}%
-                                                 \setlength\chapterpaddingbottom{#1}%
-                                           \fi},
+    \def\@tempb{#1}%
+    \ifx\@tempa\@tempb%
+      \global\setlength\chapterpaddingleft{0pt}%
+      \global\setlength\chapterpaddingright{0pt}%
+      \global\setlength\chapterpaddingtop{0pt}%
+      \global\setlength\chapterpaddingbottom{0pt}%
+    \else
+      \setlength\chapterpaddingleft{#1}%
+      \global\chapterpaddingleft\chapterpaddingleft\relax
+      \setlength\chapterpaddingright{#1}%
+      \setlength\chapterpaddingtop{#1}%
+      \setlength\chapterpaddingbottom{#1}%
+    \fi}
+}
+\ExplSyntaxOn
+
+\ExplSyntaxOff
+\cxset{
   chapter after/.store in=\chapterafter@cx,
   chapter spaceout/.is choice,
-  chapter spaceout/soul/.code=\@chapterspaceouttrue,
-  chapter spaceout/none/.code=\@chapterspaceoutfalse,
-  chapter letter-spacing/.is choice,
-  chapter letter-spacing/soul/.code=\@chapterspaceouttrue,
-  chapter letter-spacing/true/.code=\@chapterspaceouttrue,
-  chapter letter-spacing/none/.code=\@chapterspaceoutfalse,
-   chapter letter-spacing/false/.code=\@chapterspaceoutfalse,
-   number spaceout/.is choice,
-  number spaceout/soul/.code=\@numberspaceouttrue,
-  number spaceout/none/.code=\@numberspaceoutfalse,
+  chapter spaceout/soul/.code=\@chapterspaceouttrue\@soulspaceouttrue,
+  chapter spaceout/microtype/.code=\@chapterspaceouttrue\@soulspaceouttrue,
+  chapter spaceout/none/.code=\@chapterspaceoutfalse\@soulspaceoutfalse,
+  %
+ }
+\cxset{
+  chapter border-top-style/.store in=\chapterbordertopstyle,
+  chapter border-right-style/.store in=\chapterborderrightstyle,
+  chapter border-bottom-style/.store in=\chapterborderbottomstyle,
+  chapter border-left-style/.store in=\chapterborderleftstyle,
+  chapter border-style/.code=\pgfkeysalso{chapter border-top-style=#1,%
+    chapter border-right-style=#1,%
+    chapter border-bottom-style=#1,%
+    chapter border-left-style=#1%,
+  },
 }
+\cxset{
+  chapter border-top-style=none,
+  chapter border-right-style=none,
+  chapter border-bottom-style=none,
+  chapter border-left-style=none,}
+
 \gdef\chaptershape{rounded rectangle}
 \cxset{
 chapter shape/.is choice,
@@ -5109,42 +5772,90 @@ chapter shape/.is choice,
   chapter shape/none/.code=\gdef\chaptershape{},
   chapter shape/star/.code=\gdef\chaptershape{star},
 }
+\ExplSyntaxOn
+\dim_new:c {chapter_title_text_width}
+\dim_new:c {chapter_title_width}
 \cxset{
-  chapter title width/.store in=%\global\setlength\titletextwidth{#1}%
-                                               \chaptertitlewidth@cx,
-  title text-width/.store in=%\global\setlength\titletextwidth{#1}%
-                                        \chaptertitlewidth@cx,
-  title display/.is choice,
-  title display/none/.code = \gdef\titledisplay@cx{0},
-  title display/block/.code = \gdef\titledisplay@cx{1},
-  title display/in-line block/.code=\gdef\titledisplay@cx{2},
-  title display/inline/.code=\gdef\titledisplay@cx{3},
-  chapter title text-align/.is choice,
-  chapter title text-align/center/.code=\gdef\chaptertitletextalign@cx{\Centering},
-  chapter title text-align/centering/.code=\gdef\chaptertitletextalign@cx{\Centering},
-  chapter title text-align/none/.code=\gdef\chaptertitletextalign@cx{},
-  chapter title text-align/justified/.code=\gdef\chaptertitletextalign@cx{},
-  chapter title text-align/left/.code=\gdef\chaptertitletextalign@cx{\RaggedRight},
-  chapter title text-align/raggedleft/.code=\gdef\chaptertitletextalign@cx{\RaggedLeft},
-  chapter title text-align/right/.code=\gdef\chaptertitletextalign@cx{\RaggedLeft},
-  chapter title text-align/raggedright/.code=\gdef\chaptertitletextalign@cx{\RaggedRight},
+  chapter~title~width/.code= \gdef\chaptertitlewidth@cx{#1}
+    \dim_gset:cn {chapter_title_width}{#1},
+  title~text-width/.code=\gdef\chaptertitletextwidth@cx {#1}
+    \dim_gset:cn {chapter_title_text_width} {#1},
+}
+\ExplSyntaxOff
+\ExplSyntaxOn
+\int_gzero_new:c {chapter_title_display}
+\tl_new:c {chapter_title_text_align}
+
+
+\cxset{
+  title~display/.is~choice,
+  title~display/none/.code = \gdef\titledisplay@cx{0}
+    \int_gset:cn {chapter_title_display}{0},
+  title~display/block/.code = \gdef\titledisplay@cx{1}
+    \int_gset:cn {chapter_title_display}{1},
+  title~display/in-line block/.code=\gdef\titledisplay@cx{2}
+    \int_gset:cn {chapter_title_display}{2},
+  title~display/inline/.code=\gdef\titledisplay@cx{3}
+    \int_gset:cn {chapter_title_display}{3},
+  chapter~title~display/.style = \pgfkeysalso{title~display=#1}
+}
+\cxset{title~display=block}
+\ExplSyntaxOff
+\ExplSyntaxOn
+
+\cxset{
+  chapter~title~text-align/.is~choice,
+  chapter~title~text-align/center/.code=\gdef\chaptertitletextalign@cx{\Centering}
+    \tl_gset:cn {chapter_title_text_align}{\Centering},
+  chapter~title~text-align/centering/.code=\gdef\chaptertitletextalign@cx{\centering}
+    \tl_gset:cn {chapter_title_text_align}{\centering},
+  chapter~title~text-align/none/.code=\gdef\chaptertitletextalign@cx{}
+     \tl_gset:cn {chapter_title_text_align}{},
+  chapter~title~text-align/justified/.code=\gdef\chaptertitletextalign@cx{}
+    \tl_gset:cn {chapter_title_text_align}{},
+  chapter~title~text-align/left/.code=\gdef\chaptertitletextalign@cx{\RaggedRight}
+    \tl_gset:cn {chapter_title_text_align}{\RaggedRight},
+  chapter~title~text-align/raggedleft/.code=\gdef\chaptertitletextalign@cx{\RaggedLeft}
+   \tl_gset:cn {chapter_title_text_align}{\RaggedLeft},
+  chapter~title~text-align/right/.code=\gdef\chaptertitletextalign@cx{\RaggedLeft}
+   \tl_gset:cn {chapter_title_text_align}{\RaggedLeft},
+  chapter~title~text-align/raggedright/.code=\gdef\chaptertitletextalign@cx{\RaggedRight}
+   \tl_gset:cn {chapter_title_text_align}{\RaggedRight},
+}
+\ExplSyntaxOff
+\cxset{chapter title text-align=left}
+\ExplSyntaxOn
+\tl_new:c {chapter_title_align}
+\cxset{
   % aligning the block title
-  chapter title align/.is choice,
-  chapter title align/centering/.code=\def\gluestart{\hss}\def\glueend{\hss},
+  chapter~title~align/.is~choice,
+  chapter~title~align/centering/.code=\def\gluestart{\hss}\def\glueend{\hss}
+   \tl_gset:cn {chapter_title_align}{centering},
   % alias
-  chapter title align/center/.code=\def\gluestart{\hss}\def\glueend{\hss},
-  chapter title align/raggedright/.code=\def\gluestart{\hss}\def\glueend{},
-  chapter title align/raggedleft/.code=\def\gluestart{}\def\glueend{\hss},
-   chapter title align/right/.code=\def\gluestart{\hss}\def\glueend{},
-   chapter title align/left/.code=\def\gluestart{}\def\glueend{\hss},
-   chapter title align/none/.code=\def\gluestart{}\def\glueend{},
+  chapter~title~align/center/.code=\def\gluestart{\hss}\def\glueend{\hss},
+  chapter~title~align/raggedright/.code=\def\gluestart{\hss}\def\glueend{},
+  chapter~title~align/raggedleft/.code=\def\gluestart{}\def\glueend{\hss}
+    \tl_gset:cn {chapter_title_align}{raggedleft},
+  chapter~title~align/right/.code=\def\gluestart{\hss}\def\glueend{}
+    \tl_gset:cn {chapter_title_align}{right},
+  chapter~title~align/left/.code=\def\gluestart{}\def\glueend{\hss}
+    \tl_gset:cn {chapter_title_align}{left},
+  chapter~title~align/none/.code=\def\gluestart{}\def\glueend{}
+     \tl_gset:cn {chapter_title_align}{none},
+}
+
+\ExplSyntaxOff
+\cxset{chapter title align=centering}
+
+\cxset{
   title font-family/.store in=\titlefontfamily@cx,
-  title font-family/.default=\rmfamily,
-  title font-weight/.store in=\titlefontweight@cx,
+  title font-weight/.font-weight in=\titlefontweight@cx,
   title font-size/.store in=\titlefontsize@cx,
   title font-color/.store in=\titlefontcolor@cx,
-  title font-shape/.store in= \titlefontshape@cx,
-}
+  title font-shape/.store in=\titlefontshape@cx}
+
+\cxset{title font-shape=upshape}
+
 \cxset{
   title spaceout/.is choice,
   title spaceout/soul/.code=\@titlespaceouttrue,
@@ -5160,8 +5871,9 @@ chapter shape/.is choice,
   title after/.store in=\titleafter@cx,
   title beforeskip/.store in=\titlebeforeskip@cx,
   }
-\pgfkeys{/handlers/.dimstore in/.code=\pgfkeysalso{\pgfkeyscurrentpath/.code=\def#1{\the\dimexpr##1\relax}}}
+\pgfkeys{/handlers/.dimstore in/.code=\pgfkeysalso{\pgfkeyscurrentpath/.code=\def#1{\the\dimexpr##1\relax}}}%
 \newlength\titlemarginleft \setlength\titlemarginleft{0pt}
+
 \cxset{
   title margin top/.code=%
       \gdef\titlemargintop@cx{%
@@ -5176,12 +5888,13 @@ chapter shape/.is choice,
   title margin-top/.style={title margin top=#1},
       %
   title margin bottom/.code=%
-       \gdef\titlemarginbottom@cx{%
-        \global\setlength\titlemarginbottom{\the\dimexpr#1\relax}%
-        \par\nointerlineskip
-        \vspace*{#1}%
-        }%
-        \titlemarginbottom@cx,
+    \gdef\titlemarginbottom@cx{%
+    \global\setlength\titlemarginbottom{\the\dimexpr#1\relax}%
+    \par\nointerlineskip
+    \vspace*{#1}%
+    }%
+    \titlemarginbottom@cx,
+  title margin-bottom/.style =\pgfkeysalso{title margin bottom=#1},
   title margin-left/.code=\global\setlength{\titlemarginleft}{#1}
                                       \gdef\titlemarginleft@cx{\hspace*{#1}},%,
   title margin right/.code=\def\titlemarginright@cx{\rightskip#1},
@@ -5245,11 +5958,17 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
   numbering/WORDS/.code={\gdef\thechapter{\expandafter\WORDS@cx{\expandafter\@arabic\c@chapter}}},
 %% These proved a bit trouble some and ended up calling the fmtcount package routines
   %numbering/WORDS/.code={\gdef\thechapter{\NUMBERstring{chapter}}},
-  numbering/Words/.code={\gdef\thechapter{\expandafter\words@cx{\expandafter\@arabic\c@chapter}}},
+  numbering/Words/.code={\gdef\thechapter{\expandafter\Words@cx{\expandafter\@arabic\c@chapter}}},
   numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\decimal{chapter}}
   }},
   numbering/none/.code={\gdef\thechapter{}}, % do not leave empty
   chapter numbering custom/.code=\gdef\thechapter{#1},
+   number spaceout/.is choice,
+  number spaceout/soul/.code=\@numberspaceouttrue,
+  number spaceout/none/.code=\@numberspaceoutfalse,
+  number spaceout/inherit/.code=\let\@numberspaceout\@chapterspaceout,
+  number spaceout/microtype/.code=\@numberspaceouttrue,
+  number letter-spacing/.code=\pgfkeysalso{number spaceout=soul},
   number dot/.store in=\numberpunctuation@cx,
   number position/.is choice,
   number position/leftname/.code={\@leftnametrue\@rightnamefalse},
@@ -5263,10 +5982,13 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
   number background-color/.code=\gdef\numberbgcolor{#1},
   number color/.store in=\numbercolor@cx,
   number font-size/.store in=\numberfontsize@cx,
-  number font-family/.store in=\numberfontfamily@cx,
-  number font-weight/.store in=\numberfontweight@cx,
-  number font-shape/.store in =\numberfontshape@cx,
+  number font-family/.font-family in=\numberfontfamily@cx,
+  %% new style handlers
+  number font-weight/.font-weight in=\numberfontweight@cx,
+  number font-shape/.font-style in =\numberfontshape@cx,
+  number font-style/.font-style in=\numberfontshape@cx,
   number font-name/.store in=\numberfontname@cx,%new
+  %%
   number margin top/.store in=\numbermargintop@cx,
   number margin left/.store in=\numbermarginleft@cx,
   number margin right/.store in=\numbermarginright@cx,
@@ -5350,7 +6072,7 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
           title padding-right=0pt,
           title padding=0pt,
           }}
-\cxset{chapter margin top=0pt,
+\cxset{chapter margin-top=0pt,
           chapter margin-left=20pt,
           chapter title align=left,
           chapter background-color=white,
@@ -5358,6 +6080,7 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
           chapter border-right-width=0pt,
           chapter border-bottom-width=0pt,
           chapter border-top-width=0pt,
+          chapter font-shape=upshape,
 }
 \cxset{number background-color=white,
           number padding-left=0pt,
@@ -5399,7 +6122,7 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
 \cxset{chapter title width=0.7\textwidth}
 \cxset{chapter title align=centering}
 \def\debugchapter{%
-\cxset{chapter margin top=0pt,
+\cxset{chapter margin-top=0pt,
           chapter margin-left=0pt,
           chapter background-color=white,
           chapter border-left-width=0.2pt,
@@ -5419,6 +6142,7 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
           number padding-left=0pt,
           number padding-right=0pt,
 }}
+\debugchapter
 \cxset{
   section font-size/.store in=\sectionfontsize@cx,
   section font size/.store in=\sectionfontsize@cx,
@@ -5428,6 +6152,7 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
   section font-shape/.store in=\sectionfontshape@cx,
   section color/.code=\gdef\sectioncolor@cx{#1}\renewsection,
   section color/.initial=black,
+  section color/.default=black,
  }
 \def\sectionnumberingsuffix@cx{}%
 \def\sectionnumberingprefix@cx{}%
@@ -5528,8 +6253,8 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
   subsubsection numbering/numeric/.code={\gdef\thesubsubsection{\thesubsection.\@arabic\c@subsubsection}\renewsubsubsection},
   subsubsection numbering custom/.code= \gdef\thesubsubsection{%
        \subsubsectionnumberingprefix@cx#1}\renewsubsubsection,
-  subsubsection numbering/none/.code={\gdef\thesubsubsection{%
-       \hspace*{-1em}}\renewsubsubsection},
+  subsubsection numbering/none/.code={\gdef\thesubsubsection{}\renewsubsubsection},
+  % needs handler
   subsubsection align/.store in=\subsubsectionalign@cx,
   subsubsection beforeskip/.store in=\subsubsectionbeforeskip@cx,
   subsubsection afterskip/.store in=\subsubsectionafterskip@cx,
@@ -5636,17 +6361,16 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
 \cxset{
   section font-size= LARGE,
   section font size= LARGE,
-  section font-weight=bfseries,
-  section font-family= rmfamily,
-  section font family = rmfamily,
+  section font-weight=mdseries,
+  section font family = sffamily,
   section font-shape= upshape,
-  section color =red,
-  section numbering prefix= Section,
+  section color =spot!50,
+  section numbering prefix=,
   section numbering=arabic,
   section indent=0pt,
   section beforeskip=0pt,
-  section afterskip=0pt,
-  section afterindent=on,
+  section afterskip=10pt,
+  section afterindent=off,
   section align=centering,
   section numbering suffix=,
   section number after=\quad,
@@ -5684,35 +6408,36 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
 }
 
 \cxset{
-  subsubsection font-size= \large,
-  subsubsection font size= \large,
+  subsubsection font-family=tiresias,
+  subsubsection font-size= large,
+  subsubsection font size= large,
   subsubsection font-weight=bfseries,
-  subsubsection font-family= rmfamily,
-  subsubsection font family = rmfamily,
+  subsubsection font-family= tiresias,
+  subsubsection font family = tiresias,
   subsubsection font-shape= upshape,
-  subsubsection color =red,
+  subsubsection color =spot!50,
   subsubsection numbering prefix= ,
   subsubsection numbering = arabic,
   subsubsection indent=0pt,
   subsubsection beforeskip=0pt,
-  subsubsection afterskip=0pt,
-  subsubsection align=centering,
-  subsubsection number after=!,
+  subsubsection afterskip=10pt,
+  subsubsection align=flushleft,
+  subsubsection number after=,
 }
 \renewsubsubsection
 \def\renewparagraph{%
   \renewcommand\paragraph{%
      \@startsection{paragraph}%
      {4}%level
-{\paragraphindent@cx}%indent
-{\paragraphbeforeskip@cx}%
-{\paragraphafterskip@cx}%
-{\setfont@cx{\paragraphfontweight@cx}%
-    {\paragraphfontfamily@cx}{\paragraphfontsize@cx}{\paragraphfontshape@cx}%
-   \expandafter\setfontparam@cx\paragraphalign@cx;%
-   \color{\paragraphcolor@cx}%
-}%
-}
+     {\paragraphindent@cx}%indent
+     {\paragraphbeforeskip@cx}%
+     {\paragraphafterskip@cx}%
+     {\setfont@cx{\paragraphfontweight@cx}%
+     {\paragraphfontfamily@cx}{\paragraphfontsize@cx}{\paragraphfontshape@cx}%
+     \expandafter\setfontparam@cx\paragraphalign@cx;%
+         \color{\paragraphcolor@cx}%
+     }%
+ }
 }
 
 \def\renewsubparagraph{%
@@ -5773,6 +6498,7 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
  \expandafter\setfontparam@cx\chapterfontfamily@cx;%
          \expandafter\setfontparam@cx\chapterfontsize@cx;%
          \expandafter\setfontparam@cx\chapterfontweight@cx;%
+         \expandafter\setfontparam@cx\chapterfontshape@cx;%
 }
 \gdef\tempcmd@cx{}%
 \newcounter{draw}\setcounter{draw}{1}
@@ -5789,15 +6515,49 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
            \gdef\tempcmd@cx{}%
       \fi
 }
-\newcounter{lastelementfloat}
-     \setcounter{lastelementfloat}{-1}
-\newcounter{chapterfloat}
-      \setcounter{chapterfloat}{1}
-\newcounter{numberfloat}
-      \setcounter{numberfloat}{1}
-\newcounter{currentelementfloat}
-      \setcounter{currentelementfloat}{-1}
 
+\newcommand\phd@rule[2][chapter]{%
+          \color{\rulebottomcolor}%
+           \edef\tempa{\csname#1borderbottomstyle\endcsname}
+           \edef\tempb{double}
+           \edef\tempc{solid}
+           \edef\tempd{dashed}
+           \edef\tempe{dotted}
+           \edef\tempf{double dotted}
+           \edef\tempg{asterisk}
+            \edef\temph{double asterisk}
+           % solid
+           \ifx\tempa\tempc
+              \hrule\@height\fboxrulebottom
+           \fi
+           % double
+           \ifx\tempa\tempb%
+              \hrule\@height\fboxrulebottom%thickness of rule
+                  \@width\dimexpr(\totalboxwidth+8pt)\relax%
+              \vskip1pt%
+              \hrule\@height\fboxrulebottom\relax
+           \fi
+          % dotted
+           \ifx\tempa\tempe\nointerlineskip%
+                \hbox to \totalboxwidth{\xleaders\hbox{.}\hfill\kern\z@}%a
+           \fi
+           % double dotted
+           \ifx\tempa\tempf\nointerlineskip%
+                \hbox to \totalboxwidth{\cleaders\hbox{.}\hfill\kern\z@}%
+                \vskip1pt\nointerlineskip%
+                 \hbox to \totalboxwidth{\cleaders\hbox{.}\hfill\kern\z@}%
+           \fi
+           % asterisk
+            \ifx\tempa\tempg\nointerlineskip%
+                \hbox to \totalboxwidth{\cleaders\hbox{*}\hfill\kern\z@}%
+           \fi
+            % double asterisk
+            \ifx\tempa\temph\nointerlineskip%
+                \hbox to \totalboxwidth{\cleaders\hbox{\textasteriskcentered}\hfill\kern\z@}%
+                \vskip1pt\nointerlineskip%
+                \hbox to \totalboxwidth{\cleaders\hbox{\textasteriskcentered}\hfill\kern\z@}%
+           \fi
+}
 \newdimen\fboxrule
 \newdimen\fboxsep
 \fboxrule.4pt
@@ -5828,6 +6588,7 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
     \color@begingroup%
       \kern\fboxsepleft{#1}\kern\fboxsepright%
     \color@endgroup}%
+ \edef\totalboxwidth{\expandafter\the\wd\@tempboxa}
   \phd@frameb@x\relax}
 \def\phd@framebox{%
   \@ifnextchar(%)
@@ -5852,22 +6613,50 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
     \lower\@tempdima\hbox{%
       \vbox{%
         \bgroup%
-           \color{\ruletopcolor}\hrule\@height\fboxruletop\egroup%toprule
-        \hbox{%
-              \bgroup\color{\ruleleftcolor}\vrule\@width\fboxruleleft\egroup%\fboxrule%leftrule
+           \ifdim\fboxruletop>0pt
+              \phd@rule{\totalboxwidth}%
+           \fi
+           %\color{\ruletopcolor}\hrule\@height\fboxruletop\egroup%toprule
+            \egroup
+            \hbox{%
+              \bgroup%
+              \ifdim\fboxruleleft>0pt%
+                  \color{\ruleleftcolor}%
+                  \edef\tempa{\chapterborderleftstyle}%
+                  \edef\tempc{solid}%
+                  \edef\tempb{double}%
+                  \ifx\tempa\tempb%
+                    \vrule\@width\fboxruleleft%
+                    \kern1pt\vrule\@width\fboxruleleft%
+                  \fi
+                  \ifx\tempa\tempc%
+                    \vrule\@width\fboxruleleft%
+                  \fi
+             \fi
+              \egroup%\fboxrule%leftrule
               #1%
               \vbox{%
                  \vskip\fboxseptop%toppadding
                   \box\@tempboxa
                   \vskip\fboxsepbottom}%bottompadding
                   #1%
-                  \bgroup\color{\rulerightcolor}\vrule\@width\fboxruleright\egroup
+                  \bgroup%
+                  \edef\tempa{\chapterborderrightstyle}%
+                  \edef\tempb{double}
+                  \edef\tempc{solid}
+                  \color{\rulerightcolor}%
+                  \ifx\tempa\tempb%
+                      \vrule\@width\fboxruleright%
+                       \kern1pt%
+                       \vrule\@width\fboxruleright%
+                  \fi%
+                  \ifx\tempa\tempc%
+                       \vrule\@width\fboxruleright%
+                  \fi%
+                  \egroup
             }%%
-           \bgroup\color{\rulebottomcolor}\hrule\@height\fboxrulebottom
-              \vskip1pt
-              \hrule\@height\fboxrulebottom\relax
-               \vskip1pt
-               %\tikz \draw (0,0)--(5cm,0){};
+           \bgroup
+              \phd@rule{\totalboxwidth}%
            \egroup
            }%
            }%
@@ -5875,9 +6664,9 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
 }
 \def\chapterbordertopcolor{}%
 \cxset{chapter border-top-color/.store in=\chapterbordertopcolor,
-          chapter border-right-color/.store in=\chapterborderrightcolor,
-          chapter border-bottom-color/.store in=\chapterborderbottomcolor,
-          chapter border-left-color/.store in=\chapterborderleftcolor,}
+       chapter border-right-color/.store in=\chapterborderrightcolor,
+       chapter border-bottom-color/.store in=\chapterborderbottomcolor,
+       chapter border-left-color/.store in=\chapterborderleftcolor,}
  \cxset{%
           chapter border-top-color=sweet,
           chapter border-right-color=sweet,
@@ -5915,18 +6704,10 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
           chapter border-right-color=white,
           chapter border-top-color=white}%
   \expandafter\savebox\csname#2namebox\endcsname{%
-       %\phd@fbox{#3}
+       \phd@fbox{#3}
       % \shadowbox{#3}%
        %\Ovalbox{#3}%
        %\doublebox{#3}
-      \tcbox[size=normal,
-                colframe=white, colback =white, borderline={2pt}{5pt}{black},
-               frame style={top color=white, bottom color=black, left color=black, right color=black},
-       %borderline west={2pt}{-2pt}{red},
-        %
-      % arc=5pt,outer arc=5pt, %!hyberbola
-      %outer arc=180pt,rounded corners=all,
-      tikz={rotate=0}]{#3}%
       %
  %         \phd@fbox{#3}%
   }%
@@ -6008,22 +6789,6 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
     \expandafter\setfontparam@cx\numberfontweight@cx;%
     \expandafter\setfontparam@cx\numberfontshape@cx;%
   }%
-\newcommand\drawrule[3][]{%
-    \offinterlineskip
-          \tikz [ name=s,trim left,
-                   anchor=base,
-                   draw=black,
-                 % double distance=.2pt,
-                  line width=#3,
-                  %very thick,
-                  inner sep=0pt,
-                  outer sep=0pt,#1]   \draw(0,0)--(#2,0);
-}
- \def\drawdoublerule#1#2{%
-    \drawrule{#1}{#2}%
-    \vskip2.5pt
-    \drawrule{#1}{#2}%
- }
 \newsavebox\numberbox
 \def\printnumber@cx{%
      \bgroup%
@@ -6037,12 +6802,21 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
          \end{tikzpicture}%
          \fi%
          \if@chapterspaceout
+           \if@soulspaceout
+               \SetTracking
+ [ no ligatures = {f},
+ spacing = {600*,-100*, },
+ outer spacing = {450,250,150},
+ outer kerning = {*,*} ]
+ { encoding = * }
+ { 160 }
                 \def\x{\thechapter}%
-                \def\soxx{\so\x\strutbox}%
+                \def\soxx{\textls\x\strutbox}%
                  %
+          \fi
           \else%
              \def\soxx{\thechapter}%
-          \fi%
+        \fi%
           \savebox\numberbox{%
                    \color{\numbercolor@cx}%
                    \setnumberfont%
@@ -6119,9 +6893,13 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
       \expandafter\setfontparam@cx\titlefontsize@cx;%
       \color{\titlefontcolor@cx}%
 }%
+\ExplSyntaxOn
+  \dim_new:N \chaptertitleboxwidth
+  \dim_set_eq:Nc \chaptertitleboxwidth {chapter_title_width}
+\ExplSyntaxOff
 \long\def\printchaptertitle#1{%
 \parindent0pt
-     %\titlebeforeskip@cx%
+     %\vskip\titlebeforeskip@cx  %
      \if@lefttitle%
        \beforenumber@cx%
        \counterdisplay\c@chapter\afternumber@cx%
@@ -6132,17 +6910,17 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
          \long\def\SSS{#1}%
       \fi%
        \if@runinhead% for runin heads
-                  \def\afternumber@cx{\space\textbar\space}%
-                   \thechapter\afternumber@cx\space\SSS\par%
+            \def\afternumber@cx{\space\textbar\space}%
+            \thechapter\afternumber@cx\space\SSS\par%
        \fi
       \savebox{\titlebox}{%
-             \begin{minipage}[t]{\chaptertitlewidth@cx}%
-              \language-1% no hyphenation works with lua different with others
-               \setchaptertitlefont
-               \chaptertitletextalign@cx%
-               \SSS%
-               \par
-              \end{minipage}
+      \begin{minipage}[t]{\chaptertitleboxwidth}%
+         \language-1% no hyphenation works with lua different with others
+         \setchaptertitlefont
+         \chaptertitletextalign@cx%
+         \SSS%
+         \par
+       \end{minipage}
          }%
          % attempt to emulate display modes
           \ifnum\titledisplay@cx=0\fi %do nothing
@@ -6257,15 +7035,17 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
           \appendtoheading{number}{\color{\numbercolor@cx}}%
            \appendtoheading{number}{\setnumberfont}%
            \if@chapterspaceout
-              \appendtoheading{number}{\so\thechapter}%
+              \if@soulspaceout
+                \expandafter\appendtoheading{number}{\so\thechapter}%
+              \fi
            \else
-                 \appendtoheading{number}{\thechapter}%
+              \expandafter\appendtoheading{number}{\thechapter}%
            \fi
            \appendtoheading{number}{\numberafter@cx}%
            \xdef\xtemp{\chaptername}%
            \xdef\ytemp{}%
            \ifx\xtemp\ytemp%
-                  \printchaptername[number]{\the\numbertoks}%
+               \printchaptername[number]{\the\numbertoks}%
            \else
              \appendtoheading{chapterprelim}{\leavevmode \chapterbefore@cx\par}%
              \appendtoheading{chapter}{%
@@ -6276,10 +7056,16 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
              \@ifundefined{chapterbeforecontent@cx}{%
                   \def\chapterbeforecontent@cx{}}{}%
              \if@chapterspaceout
-                \appendtoheading{chapter}{\chapterbeforecontent@cx\so\chaptername}%
-              \else
-                 \appendtoheading{chapter}{\chapterbeforecontent@cx\chaptername}%
-              \fi
+                \if@soulspaceout
+                  \expandafter
+                    \appendtoheading{chapter}{\chapterbeforecontent@cx\so\chaptername}%
+                \else
+                   \expandafter
+                    \appendtoheading{chapter}{\chapterbeforecontent@cx\chaptername}%
+                \fi
+             \else
+              \appendtoheading{chapter}{\chapterbeforecontent@cx\chaptername}%
+            \fi
            \@ifundefined{numberaftercontent@cx}{\def\numberaftercontent@cx{}}{}%
             \ifnum\thenumberdisplay=0 %
               \appendtoheading{chapter}{\kern0.5em}%
@@ -6287,7 +7073,7 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
                  %
               \the\chapterprelimtoks
               \printchaptername[chapter]{\the\chaptertoks}%
-                   %
+                 %
              \else
                 \the\chapterprelimtoks%
                 \expandafter\printchaptername[chapter]{\the\chaptertoks}%
@@ -6317,7 +7103,7 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
 \global\newif\if@chapterafterindent@cx \@chapterafterindent@cxfalse
 \cxset{chapter afterindent/.is choice,
            chapter afterindent/true/.code=\gdef\chapterafterindent@cx{%
-           \global\@chapterafterindent@cxtrue},
+                                                            \global\@chapterafterindent@cxtrue},
            chapter afterindent/false/.code=\gdef\chapterafterindent@cx{%
             \global\@chapterafterindent@cxfalse},
 }
@@ -6347,6 +7133,7 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
 \newif\if@tocspecial\@tocfalse
 \def\formattoctitle{}
 \def\@chapter[#1]#2{%
+ %\refstepcounter{chapter}%
   \ifnum \c@secnumdepth >\m@ne%
     \if@mainmatter
       \if@toc% added extra if
@@ -6386,45 +7173,357 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
   title font-weight=\bfseries,
   title font-size=\Huge,
   title font-color=purple,
+  title margin bottom=20pt,
   numbering=arabic,
   number dot=,
   number before=,
   number after=,
-  chapter font-family=sffamily,
-  chapter font-weight=bfseries,
-  chapter font-size=large,
-  chapter spaceout=soul,
-  chapter color=gray,
-  chapter before={},%need to correct for 0pt
-  chapter after=,
-  number position=rightname,
-  number color=gray,
-  number after=,
-  number before=\space,
-  number font-size=large,
-  number font-family=sffamily,
-  number font-weight= bfseries,
-  title before=,
-  title after=,
-  title afterskip={\vskip24pt},
-  title beforeskip={\vskip10pt},
-  title font=rmfamily,
-  chapter title width=\columnwidth,
-  header style=plain,
-  section font-weight=bfseries,
-  section font-family=rmfamily,
-  section font-size=Large,
-  section font-shape=upshape,
-  section align= left,
-  section numbering suffix=,
-  title font-shape=upshape,
+  %chapter name
+ chapter display=block,
+ chapter float=left,
+ chapter shape=ellipse,
+ chapter color=black,
+ chapter background-color=sweet,
+ chapter font-size= Huge,
+ chapter font-weight=bfseries,
+ chapter font-family=itshape,
+ chapter before=,
+ chapter spaceout=none,
+ chapter after=,
+ chapter margin-left=0cm,
+ chapter margin-top=0pt,
+ %
+ chapter border-width=2pt,
+ chapter border-top-width=1pt,
+ chapter border-right-width=1pt,
+ chapter border-bottom-width=1pt,
+ chapter border-left-width=4pt,
+ chapter padding-left=20pt,
+ chapter padding-right=20pt,
+ chapter padding-top=20pt,
+ chapter padding-bottom=10pt,
+ number display=block,
+ number float=right,
+ number shape=starburst,
+ numbering=Words,
+ number spaceout=soul,
+ number font-size=huge,
+ number font-weight=bold,
+ number font-family=rmfamily,
+ number font-shape=itshape,
+ number before=,
+ number display=inline,
+ number float=none,
+ number border-top-width=1pt,
+ number border-right-width=0pt,
+ number border-bottom-width=0pt,
+ number border-left-width=0pt,
+ number border-width=0pt,
+ number padding-left=0em,
+ number padding-right=0.5em,
+ number padding-top=0em,
+ number padding-bottom=0pt,
+  %number margin-top=, to do
+ %number margin-left=0pt,  to create
+ %
+ number after=\par,
+ number dot=,
+ number position=rightname,
+ number color=sweet,
+ number background-color=white,
+ title before=,
+ title after=,
+ title afterskip={\vskip24pt},
+ title beforeskip=,
+ title font=rmfamily,
+ chapter title width=\columnwidth,
+ header style=plain,
+ section font-weight=bfseries,
+ section font-family=sffamily,
+ section font-size=Large,
+ section font-shape=upshape,
+ section align= left,
+ section numbering suffix=,
+ title font-shape=upshape,
+ chapter title align=left,
+ chapter title text-align=left,
+ chapter title width=0.8\textwidth,
+ title before=,
+ title after=,
+ title display=block,
+ title beforeskip=1pt,
+ title afterskip=1pt,
+ author block=false,
+ section font-family=rmfamily,
+ section font-size=LARGE,
+ section font-weight=bfseries,
+ section indent=0pt,
+  section font-weight=mdseries,
+ section align=left,
+ epigraph text align=center,
+ epigraph rule width=0pt,
+ header style=plain
  % blank page text=,
 }
 }
 \cxset{rule color/.store in={\rulecolor@cx},
           block color/.store in={\blockcolor@cx}}
 \cxset{rule color=blue, block color=teal}
-\setdefaults
+\cxset{style87/.style={
+ chapter opening=any,
+ chapter numbering=arabic,
+ name=Chapter,
+ % positioning and float - inline is 0
+ %  float right is 2
+ number display=block,
+ number float=right,
+ number shape=starburst,
+ %numbering=Words,
+ number spaceout=soul,
+ number font-size=huge,
+ number font-weight=bold,
+ number font-family=rmfamily,
+ number font-shape=normal,
+ number before=,
+ number display=inline,
+ number float=none,
+ number border-top-width=0pt,
+ number border-right-width=0pt,
+ number border-bottom-width=0pt,
+ number border-left-width=0pt,
+ number border-width=0pt,
+ number padding-left=0em,
+ number padding-right=0.5em,
+ number padding-top=0em,
+ number padding-bottom=0pt,
+  %number margin-top=, to do
+ %number margin-left=0pt,  to create
+ %
+ number after=\par,
+ number dot=,
+ number position=rightname,
+ number color=sweet,
+ number background-color=white,
+ %chapter name
+ chapter display=block,
+ chapter float=left,
+ chapter shape=ellipse,
+ chapter color=black,
+ chapter background-color=sweet,
+ chapter font-size= Huge,
+ chapter font-weight=bfseries,
+ chapter font-family=itshape,
+ chapter before=,
+ chapter spaceout=none,
+ chapter after=,
+ chapter margin-left=0cm,
+ chapter margin-top=0pt,
+ %
+ chapter border-width=2pt,
+ chapter border-top-width=1pt,
+ chapter border-right-width=1pt,
+ chapter border-bottom-width=1pt,
+ chapter border-left-width=4pt,
+ chapter padding-left=20pt,
+ chapter padding-right=20pt,
+ chapter padding-top=20pt,
+ chapter padding-bottom=10pt,
+  %chapter title
+ title font-family=rmfamily,
+ title font-color=black!80,
+ title font-weight=bfseries,
+ title font-size=huge,
+ chapter title align=none,
+ title margin-left=1cm,
+ title margin bottom=1.3cm,
+ title margin top=30pt,
+ % title borders
+ title border-width=0pt,
+ title padding=0pt,
+ title border-color=black!80,
+ title border-left-color=black!80,
+ title border-left-width=2pt,
+ title border-color=black!80,
+ title padding-top=10pt,
+ title padding-bottom=10pt,
+ title padding-left=10pt,
+ title padding-right=0pt,
+ %
+ chapter title align=left,
+ chapter title text-align=left,
+ chapter title width=0.8\textwidth,
+ title before=,
+ title after=,
+ title display=block,
+ title beforeskip=12pt,
+ title afterskip=12pt,
+ author block=false,
+ section font-family=sffamily,
+ section font-size=LARGE,
+ section font-weight=bfseries,
+ section indent=0pt,
+  section font-weight=mdseries,
+ section align=left,
+ section font-family=tiresias,
+       subsection font-family=tiresias,
+       subsubsection font-family=tiresias,
+       subsubsection indent=0pt,
+       subsubsection font-size=large,
+ %epigraph width=\dimexpr(\textwidth-2cm)\relax,
+ %epigraph align=center,
+ %epigraph text align=center,
+ %epigraph rule width=0pt,
+ header style=plain,
+ chapter toc=true,
+ }}
+
+\cxset{section align=left}
+\cxset{section font-weight=bold}
+\cxset{section font-family=sffamily}
+\cxset{subsection beforeskip=10pt}
+\cxset{subsection afterskip=10pt,
+       subsection font-weight=\bfseries,
+       subsection font-family=\sffamily,
+       subsection font-size=\Large,
+       subsection font-shape=\upshape,
+       subsection align=flushleft,%don't say left
+       subsection color=spot!50,
+       subsection indent=0pt,
+       %subsection afterindent=false,
+       subsection numbering prefix=\thesection.,
+       subsubsection indent=0pt,
+       section font-family=tiresias,
+       subsection font-family=tiresias,
+       subsubsection font-family=tiresias,
+       subsubsection indent=0pt,
+       subsubsection font-size=large,
+       subsection afterskip=10pt,
+       subsection font-weight=\bfseries,
+       subsection font-family=tiresias,
+       subsection font-size=\Large,
+       subsection font-shape=\upshape,
+       subsection align=flushleft,%don't say left
+       subsection color=spot!50,
+       subsection indent=0pt,
+       %subsection afterindent=false,
+       subsection numbering prefix=\thesection.,
+       }
+\cxset{section align=left}
+\cxset{section font-weight=bold}
+\cxset{section font-family=sffamily}
+\cxset{subsection beforeskip=10pt}
+\cxset{subsection afterskip=10pt,
+       subsection font-weight=\bfseries,
+       subsection font-family=tiresias,
+       subsection font-size=\Large,
+       subsection font-shape=\upshape,
+       subsection align=flushleft,%don't say left
+       subsection color=spot!50,
+       subsection indent=0pt,
+       %subsection afterindent=false,
+       subsection numbering prefix=\thesection.,
+       }
+
+\cxset{style87}
+\renewsection
+\renewsubsection
+\cxset{enumerate numberingi/.is choice,
+  enumerate numberingi/.code={\renewcommand\theenumi {\csname#1\endcsname{enumi}}},
+  enumerate numberingii/.code={\renewcommand\theenumii {\csname#1\endcsname{enumii}}},
+  enumerate numberingiii/.code={\renewcommand\theenumiii {\csname#1\endcsname{enumiii}}},
+  enumerate numberingiv/.code={\renewcommand\theenumiv {\csname#1\endcsname{enumiv}}},
+  enumerate labeli punctuation/.store in=\enumeratepunctuationi@cx,
+  enumerate labeli/.is choice,
+  enumerate labeli/brackets/.code={\renewcommand\labelenumi{(\theenumi\enumeratepunctuationi@cx)}},
+  enumerate labeli/square brackets/.code={\renewcommand\labelenumi{[\theenumi\enumeratepunctuationi@cx]}},
+  enumerate labeli/right bracket/.code={\renewcommand\labelenumi{\theenumi\enumeratepunctuationi@cx)}},
+  enumerate label left/.store in=\enumeratelabelleft@cx,
+  enumerate label right/.code=\renewcommand\labelenumi{\enumeratelabelleft@cx\theenumi\enumeratepunctuationi@cx#1},
+  enumerate leftmargini/.code={\setlength\leftmargini{#1}},
+  enumerate leftmarginii/.code={\setlength\leftmarginii{#1}},
+  enumerate leftmarginiii/.code={\setlength\leftmarginiii{#1}},
+  enumerate leftmarginiv/.code={\setlength\leftmarginiv{#1}},
+  listi topsep/.store in=\listitopsep@cx,
+  listi partopsep/.store in=\listipartopsep@cx,
+  listi itemsep/.store in=\listiitemsep@cx,
+  listi parsep/.store in=\listiparsep@cx,
+  listii topsep/.store in=\listiitopsep@cx,
+  listii partopsep/.store in=\listiipartopsep@cx,
+  listii itemsep/.store in=\listiiitemsep@cx,
+  listii parsep/.store in=\listiiparsep@cx,
+  listiii topsep/.store in=\listiiitopsep@cx,
+  listiii partopsep/.store in=\listiiipartopsep@cx,
+  listiii itemsep/.store in=\listiiiitemsep@cx,
+  listiii parsep/.store in=\listiiiparsep@cx,
+}
+\cxset{compact1/.style={%
+  enumerate numberingi=arabic,
+  enumerate numberingii=alph,
+  enumerate numberingiii=alph,
+  enumerate numberingiv=roman,
+  enumerate labeli punctuation=.,
+  enumerate label left=,
+  enumerate label right=,
+  enumerate leftmargini=2.2em,
+  enumerate leftmarginii=2.1em,
+  enumerate leftmarginiii=1.5em,
+  enumerate leftmarginiv=2em,
+  listi topsep=8\p@ \@plus2\p@ \@minus\p@,
+  listi itemsep=0\p@ \@plus2\p@ \@minus\p@,
+  listi parsep=0\p@ \@plus2\p@ \@minus\p@,
+  listii topsep=0\p@ \@plus2\p@ \@minus\p@,
+  listii itemsep=0\p@ \@plus2\p@ \@minus\p@,
+  listii parsep=0\p@ \@plus2\p@ \@minus\p@,
+  listiii topsep=0\p@ \@plus2\p@ \@minus\p@,
+  listiii itemsep=0\p@ \@plus2\p@ \@minus\p@,
+  listiii parsep=0\p@ \@plus2\p@ \@minus\p@,
+}}
+\cxset{compact2/.style={%
+  enumerate numberingi=alph,
+  enumerate numberingii=roman,
+  enumerate numberingiii=alph,
+  enumerate numberingiv=roman,
+  enumerate labeli punctuation=,
+  enumerate label left=(,
+  enumerate label right=),
+  enumerate leftmargini=2.2em,
+  enumerate leftmarginii=2.1em,
+  enumerate leftmarginiii=1.5em,
+  enumerate leftmarginiv=2em,
+  listi topsep   = 8\p@ \@plus2\p@ \@minus\p@,
+  listi itemsep = 0\p@ \@plus2\p@ \@minus\p@,
+  listi parsep   = 0\p@ \@plus2\p@ \@minus\p@,
+  listii topsep  = 0\p@ \@plus2\p@ \@minus\p@,
+  listii itemsep= 0\p@ \@plus2\p@ \@minus\p@,
+  listii parsep  = 0\p@ \@plus2\p@ \@minus\p@,
+  listiii topsep = 0\p@ \@plus2\p@ \@minus\p@,
+  listiii itemsep= 0\p@ \@plus2\p@ \@minus\p@,
+  listiii parsep  = 0\p@ \@plus2\p@ \@minus\p@,
+}}
+
+\ExplSyntaxOn
+\def\setenumerate#1{
+\cxset{#1}
+\def\@listi{%
+           \leftmargin\leftmargini
+            \parsep\listiparsep@cx
+            \topsep\listitopsep@cx\relax
+            \itemsep\listiitemsep@cx}
+
+\def\@listii{\leftmargin\leftmarginii
+            \parsep\listiiparsep@cx
+            \topsep\listiitopsep@cx\relax
+            \itemsep\listiiitemsep@cx}
+
+\def\@listiii{\leftmargin\leftmarginiii
+            \parsep\listiiiparsep@cx
+            \topsep\listiiitopsep@cx\relax
+            \itemsep\listiiiitemsep@cx}
+}
+
+\setenumerate{compact1}
+\ExplSyntaxOff
+
 \cxset{steward/.style={
   custom = stewart,
   offsety/.store in=\soffsety,
@@ -6746,7 +7845,6 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
   \def\sectionmark##1{}%
   \def\subsectionmark##1{}%
  }
-
 \def\ps@headings{%
  \let\@mkboth=\markboth
  \def\@evenfoot{}
@@ -6963,16 +8061,16 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
           toc name afterskip/.store in=\tocnameafterskip@cx,
           toc name align/.is choice,
           toc name align/center/.code=\def\startalign@cx{\bgroup\centering}\def\endalign@cx{\par\egroup},
-       toc name align/right/.code=\def\startalign@cx{\flushright}\def\endalign@cx{\endflushright},
-       toc name align/left/.code=\def\startalign@cx{\@empty}\def\endalign@cx{\@empty},
-       toc name align/none/.code=\def\startalign@cx{\@empty}\def\endalign@cx{\@empty},
-       toc name indent/.store in=\tocnameindent@cx,
-       toc name case/.is choice,
-       toc name case/lower/.code=\def\tocnamecase@cx{\@lowercasetrue
+          toc name align/right/.code=\def\startalign@cx{\flushright}\def\endalign@cx{\endflushright},
+          toc name align/left/.code=\def\startalign@cx{\@empty}\def\endalign@cx{\@empty},
+          toc name align/none/.code=\def\startalign@cx{\@empty}\def\endalign@cx{\@empty},
+          toc name indent/.store in=\tocnameindent@cx,
+          toc name case/.is choice,
+          toc name case/lower/.code=\def\tocnamecase@cx{\@lowercasetrue
                              \if@lowercase\expandafter\MakeTextLowercase\fi},
-       toc name case/upper/.code=\def\tocnamecase@cx{\@lowercasefalse
+          toc name case/upper/.code=\def\tocnamecase@cx{\@lowercasefalse
                              \if@lowercase\else\expandafter\MakeTextUppercase \fi},
-      toc name case/none/.code=\def\tocnamecase@cx{\@empty},
+          toc name case/none/.code=\def\tocnamecase@cx{\@empty},
      %    \end{macrocode}
       toc pagestyle/.code=\gdef\contentspagestyle@cx{\thispagestyle{#1}},
     }
@@ -7639,7 +8737,7 @@ toc paragraph case/.is choice,
 \setkeys{img}{offsetx=1sp, offsety=0pt,width=3cm, keepaspectratio=keepaspectratio,
                       border=0pt, padding=0pt,bottommargin=0pt}
 %% Create the command graphic
-\newlength\tempa
+\newlength\tempal
 %%
 %% We create a new command to place images
 \newcommand\putimage[2][0pt]{%
@@ -7652,7 +8750,7 @@ toc paragraph case/.is choice,
 \vspace*{\img@offsety}%
 \fi%
 \hskip\img@offsetx%
-\setlength{\tempa}{\img@width}
+\setlength{\tempal}{\img@width}
 \fboxsep=1pt
 \def\setcaption{\captionof{figure}{This is the caption for the figure\lorem}}%
 \begin{minipage}{\textwidth}%
@@ -7661,7 +8759,6 @@ toc paragraph case/.is choice,
 }%\vspace*{\img@bottommargin}}%
 %%\large{\textbf{APRIL 5, 2012}}
 
-     \RequirePackage{mdframed}
 
 
 \endinput

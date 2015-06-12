@@ -1,0 +1,56 @@
+\documentclass{article}
+\usepackage{expl3,xparse,calc}
+\RequirePackage{pgf}      
+\usepgfmodule{parser}%for svg     
+\usepgflibrary{svg.path}%for futurelet and parser demo       
+\def\pkgfamilyname{phd}
+\pgfkeys{/\pkgfamilyname/.is family}   
+\newcommand\cxset{\pgfqkeys{/\pkgfamilyname}} 
+\newcounter{chapterfloat}
+\newcounter{chapterdisplay}
+\begin{document}
+\ExplSyntaxOn
+\int_zero_new:c {chapterdisplaycounter}
+\int_zero_new:c {chapter_float_counter}
+
+\cs_gset:Npn \phdsetcounter #1 #2 
+ {
+   \int_gset:cn {#1} {#2} 
+ } 
+
+\cxset{%  
+  chapter~display/.is~choice,
+  chapter~display/inline/.code=\global\setcounter{chapterdisplay}{0}
+                                              \phdsetcounter{chapterdisplaycounter}{0},
+  chapter~display/block/.code=\global\setcounter{chapterdisplay}{2}
+                               \phdsetcounter{chapterdisplaycounter}{2}, 
+  chapter~display/block/.code =\global\setcounter{chapterdisplay}{1}
+                               \phdsetcounter{chapterdisplaycounter}{0},
+%    
+  chapter~float/.is~choice,
+  chapter~float/none/.code= \global\setcounter{chapterfloat}{0}%
+                            \phdsetcounter{chapter_float_counter}{0},
+  chapter~float/left/.code= \global\setcounter{chapterfloat}{0}
+                            \phdsetcounter{chapter_float_counter}{0}, 
+  chapter~float/center/.code= \global\setcounter{chapterfloat}{1}%
+                             \phdsetcounter{chapter_float_counter}{1}, 
+%                             
+  chapter~float/right/.code= \global\setcounter{chapterfloat}{2}%
+                             \phdsetcounter{chapter_float_counter}{2},% 
+}                             
+\cxset{chapter~display=inline,%
+          chapter~float=right
+   } 
+   
+\ExplSyntaxOff
+%....
+%\int_use:c {chapter_float_counter}
+%...
+%\   
+
+  \cxset{chapter display=block,
+       chapter float=center,
+       }   
+  Test \thechapterdisplay and \thechapterfloat
+  \ExplSyntaxOn\int_use:c {chapter_float_counter} \ExplSyntaxOff
+\end{document}

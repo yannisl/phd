@@ -1,0 +1,117 @@
+\documentclass{article}
+\def\stavesfill{%
+ \leavevmode
+ \cleaders \hb@xt@ .44em{\hss\staveVI\hss}\hfill
+ \kern\z@}
+
+
+\usepackage{staves,xcolor,lipsum,soul,graphics}
+\DeclareRobustCommand\MRA{\marginpar{{\small\raggedright\hl{Name of Teacher A\par}}}}
+\DeclareRobustCommand\MRB{\marginpar{{\small\raggedright\hl{Name of Teacher B\par}}}}
+\def\TA{\dotfill\scalebox{.3}{\mbox{\color{red}\staveVI}}}
+\def\TB{{\color{blue}\staveXXXVI}}
+\makeatletter
+
+\def\TA{\dotfill\scalebox{.3}{\mbox{\color{red}\staveVI}}}
+\def\TB{{\color{blue}\staveXXXVI}}
+
+\usepackage{multicol}
+\usepackage{fontspec}
+\usepackage{multido,xcolor}
+\newfontfamily\symbola{symbola.ttf}
+\newfontfamily\arial{arial.ttf}
+\newfontfamily\pan{code2000.ttf}
+
+ \makeatother
+\begin{document}
+
+\parindent0pt
+
+\ExplSyntaxOn
+\arial
+%\multido{\i=0+1}{63000}{% from U+0000 to U+FFFF
+%  \iffontchar\font\i %
+%    \makebox[3em][l]{{\ttfamily\i}}%
+%    \expandafter\char\i\endgraf
+%  \fi
+%}
+\def\stacktwo #1{%
+       \fboxsep=0pt
+       \fboxrule=0.1pt
+          \fbox{\oalign{\noalign{\phantom{j}}
+                \strut\bfseries\large\hfil \pan\char"#1\hfil\crcr                    %character in font
+                \ttfamily\strut
+                \hfil u0\int_to_Hex:n{#1}\hfil\cr}
+                }
+ } %number
+    
+\int_zero_new:N \modcounter
+\int_zero_new:N \nocolumns
+\int_zero_new:N \noglyphs
+
+% typesets the rows and columns
+\cs_set:Npn \l_phd_print_unicode_range:n #1 
+{ \small
+   \int_gincr:N \noglyphs
+  \int_gincr:N \modcounter
+  \int_compare:nT {\noglyphs>\nocolumns}
+    {
+      \vskip5pt 
+      \int_gset:Nn\noglyphs{0}
+     }
+  
+  % compare vertical break
+  \int_compare:nT {\modcounter=16} 
+    {\int_gset:Nn\modcounter{0}\par   } 
+%    {                                                 }
+    \iffontchar\font#1
+       \stacktwo{#1}
+    \else   
+       \stacktwo{#1}
+     \fi   
+}
+
+
+\cs_set:Npn \print_unicode_range_aux #1 #2 #3
+  {  \raggedright     
+      \int_gset:Nn \nocolumns{(#3-#2)/16}
+      \int_compare:nT {\nocolumns>5}
+           {\int_gset:Nn \nocolumns{16}}
+       \int_step_function:nnnN {#2} {1} {#3} \l_phd_print_unicode_range:n
+     \int_use:N \nocolumns
+  }
+
+ \NewDocumentCommand \PrintUnicodeRange   {O{\pan} m m }
+    {
+       \print_unicode_range_aux {#1}  {#2}{#3}
+     }
+  
+\ExplSyntaxOff
+
+Latin Extended:\pan
+
+\PrintUnicodeRange [AAAA] {"0180}{"024F}
+
+
+\centering
+\symbol{57352}
+
+
+
+
+
+
+
+
+
+\end{document}
+%    \makebox[2.5em][l]{
+%       {
+%        \ifnum"#1<"999 \relax0
+%          {\expandafter\pan\int_to_Hex:n{#1}}\hskip5pt
+%        \else
+%           {\expandafter\pan\int_to_Hex:n{#1}}\hskip5pt  
+%        \fi  
+%        }
+%       }
+\end{document}

@@ -1,13 +1,23 @@
+
+ 
+\parindent1em
+\cxset{section font-family=tiresias,
+          section font-family=sffamily}
+
 \chapter{Internationalization and Globalization}
 
 \section{Introduction}
 
+In this Chapter we discuss the requirements for localization of software and how this can be applied to \latex. In a way this chapter overlaps the one on languages. However, here we focus mostly on LuaTeX solutions. We also extend the discussion to calendric and solar calculations.
+
 The development of routines for software internationalization and globalization has been an ongoing effort for many years. Currently the accepted method for building such software is the use of i18n. This is an abbreviation of the first letter and last letter of the word internationalization and the 18 is the number of characters in the word.
-Internationalization based on i18n is not an easy task for LaTeX. To an extend some of the issues have been removed with the use of Babel and Polyglossia that provide translation strings for many of the worlds scripts. The de facto standard for internationalization is the Unicode Consortium’s CLDR project.
+
+Internationalization based on i18n is not an easy task for \LaTeX. To an extend some of the issues have been removed with the use of Babel and Polyglossia that provide translation strings for many of the worlds scripts. The de facto standard for internationalization is the Unicode Consortium’s \href{http://cldr.unicode.org/}{CLDR} project.
 
 \section{Locales}
+\index{locale}
 
-In computing, a locale is a set of parameters that defines the user's language, country and any special variant preferences that the user wants to see in their user interface. Usually a locale identifier consists of at least a \textit{languag}e identifier and a \textit{region} identifier.
+In computing, a \emph{locale} is a set of parameters that defines the user's language, country and any special variant preferences that the user wants to see in their user interface. Usually a locale identifier consists of at least a \textit{languag}e identifier and a \textit{region} identifier.
 
 On POSIX platforms such as Unix, Linux and others, locale identifiers are defined similar to the BCP 47 definition of language tags, but the locale variant modifier is defined differently, and the character set is included as a part of the identifier. It is defined in this format: |[language[_territory][.codeset][@modifier]]|. (For example, Australian English using the UTF-8 encoding is en\_AU.UTF-8.)
 
@@ -32,20 +42,84 @@ The Common Locale Data Repository Project, is a project of the Unicode Consortiu
 \item Rules for formatting numbers in traditional numeral systems (like Roman numerals, Armenian numerals, ...).
 \item Rules for spelling out numbers as words.
 \item Rules for transliteration between scripts. A lot of it is based on BGN/PCGN romanization.
-\item Rules for delimiters such as quotations and question marks.
+\item Rules for \emph{delimiters} such as quotations and question marks.
 \end{enumerate}
 
-Currently the consortium’s distribution make the data available in json and xml formats.  These files hold data for a specific \emph{locale}. Sadly missing are any document sectioning information that would have enabled the incorporation of the above into LaTeX and overcoming some of the Babel and Polyglossia limitations.
+Currently the consortium’s distribution make the data available in both json and xml formats.  These files hold data for a specific \emph{locale}. Sadly missing are any document sectioning information that would have enabled the incorporation of the above into LaTeX and overcoming some of the Babel and Polyglossia limitations.
 
-I have opted to incorporate these files in the |json| format and provide routines for interfacing via the \pkgname{phd} package.  The reason for opting for a json format, is my other attempts to interface the package with |couchdb|.  My preference for a Nosql type of database, is that structurally they are better in handling data that can be found in scientific applications and also many of the routines will be interchangeable for web applications. I am also hoping that the collation information (see \ref{collation}), will eventually lead to better indices, a subject left untouched in the current distribution.
+We do not need many of the files provided by the CLDR unicode consortium and others we are missing. Take for example the |delimiters| file. 
+
+\begin{verbatim}
+  "main" = {
+    "ff": {
+      "identity": {
+        "version": {
+          "_cldrVersion": "26",
+          "_number": "$Revision: 10739 $"
+        },
+        "generation": {
+          "_date": "$Date: 2014-08-07 12:54:13 -0500 (Thu, 07 Aug 2014) $"
+        },
+        "language": "ff"
+      },
+      "delimiters": {
+        "quotationStart": "„",
+        "quotationEnd": "”",
+        "alternateQuotationStart": "‚",
+        "alternateQuotationEnd": "’"
+      }
+    }
+  }
+}
+\end{verbatim}
+
+Of course the |Json| format as it is, is not readable by Lua a format such as:
+
+\begin{verbatim}
+delimiters = {
+        quotationStart = "«",
+        quotationEnd = "»",
+        alternateQuotationStart = "\"",
+        alternateQuotationEnd = "\""
+      }
+\end{verbatim}
+
+\begin{texexample}{i18n}{i18-1}
+\begin{luacode*}
+-- mock the delimiters from the json
+-- file
+greekname = 'el'
+delimiters = {
+        quotationStart = "«", 
+        quotationEnd = "»",
+        alternateQuotationStart = "\"",
+        alternateQuotationEnd = "\""
+      }
+tex.sprint(delimiters.quotationStart .. 'test' .. delimiters.quotationEnd)
+tex.print ([[\gdef\]] .. greekname .. [[quote#1{\directlua{tex.sprint(delimiters.quotationStart .. '#1' .. delimiters.quotationEnd)}}]])
+\end{luacode*}
+
+%\def\elquote#1{%
+%  \directlua {tex.sprint(delimiters.quotationStart .. '#1' .. delimiters.quotationEnd)}
+%}
+\end{texexample}
+
+This is of course a much more simplified way of what one needs to program for a full system. The advantage
+of producing the \tex definition also through LuaTeX is that we can keep all the code in one place and econd, we can avoid |\csname| costructs.
+\begin{texexample}{elquote}{}
+\elquote{This is some longer text in Greek quotes.}
+\end{texexample}
+
+I have opted to incorporate these files in the |json| format and provide routines for interfacing via the \pkgname{phd} package.  The reason for opting for a json format, is my other attempts to interface the package with |couchdb|.  My preference for a Nosql type of database, is that  they are better suited in handling data that is commonly  found in documents and also many of the routines will be interchangeable for web applications. I am also hoping that the collation information (see \ref{collation}), will eventually lead to better indices, a subject left untouched in the current distribution.\index{json}
 
 \section{The package phd approach}
 
 The package |phd| packge takes an approach to use only json resource files for the provision of language dependent information, rather than TeX commands alone, as is done by Babel and Polyglossia. 
 
 \section{Language and Region Tags}
+\index{tags>regions}\index{tags>language}
 
-Languages are represented by tags such as "en"  for English or "el" for Greek. Other languages have no significant variation and are represented by a language subtag such as "en-US".  The names are mostly intuitive, but in many case bear no relationship to their English names, for example Armenian is coded as \textbf{hy}. There is a useful utility at the SIL website for viewing these codes.\footnote{\protect\url{http://www-01.sil.org/iso639-3/codes.asp?order=reference_name&letter=\%25}.} Note that the CLDR database does not cover all the languages listed in the ISO-639.
+Languages are represented by tags such as "en"  for English or "el" for Greek. Other languages have no significant variation and are represented by a language subtag such as "en-US".  The names are mostly intuitive, but in many case bear no relationship to their English names, for example Armenian is coded as \textbf{hy}. There is a useful utility at the SIL website for viewing these codes.\footnote{\protect\url{http://www-01.sil.org/iso639-3/codes.asp?order=reference_name&letter=\%25}.} Note that the CLDR database does not cover all the languages listed in the ISO-639.\index{ISO-639}
 
 The language tags are based on the BGN which is mapped to languages based on ISO-639-1. 
 
@@ -89,12 +163,12 @@ in the section for languages using the Arabic script.\footnote{The bidi package 
 \section{Calendars and Dates}
 
 \subsection{The year}
+\indexmany[year]{solar,tropical}
 
 The tropical or solar year, properly, and by way of eminence so-called, is the space of time in which the sun moves 
-through the twelve signs of the zodiac. This, by observa 
-tions of the best modern astronomers, contains \printtime[5]{365}{5}{48}{46.14912}. The quantity assumed by the authors of the Gregorian calendar was \printtime[0]{365}{ 5}{49}{0} which  corresponds exactly with the observations of Bianchini, and  de La Hire, in the next century. In the civil, or popular account, the year. 
+through the twelve signs of the zodiac. This, by observations of the best modern astronomers, contains \printtime[5]{365}{5}{48}{46.14912}. The quantity assumed by the authors of the Gregorian calendar was \printtime[0]{365}{ 5}{49}{0} which  corresponds exactly with the observations of Bianchini, and  de La Hire, in the next century. In the civil, or popular account, the year. 
 
-The excess of the solar year over 365 has been given by different astronomers as follows:---
+The excess of the solar year over 365 days has been given by different astronomers as follows:---
  
  \def\daytime#1#2#3#4{%
  #1\textsuperscript{d}%
@@ -103,21 +177,27 @@ The excess of the solar year over 365 has been given by different astronomers as
  #4\textsuperscript{s}%
   }
  
+ \indexmany[calendric calculations]{Meton,Euctemon,%
+   Hipparchos,Sosigenes,Albategnius,Copernicus,Tycho %  
+   Brahe,Kepler,Halley,Lalande,Delambre,Laplace,Hind}
+
+ 
  \begin{longtable}{l r l}
-Meton and Euctemon &5th Century B. C.  &\printtime[0]{6}{18}{57}{0}\\
-Hipparchus                 &2 Century BC        &\printtime[0]{5}{55}{12}{0}\\
-Sosigenes                   &1 Century BC        &\printtime[0]{6}{0}{0}{0}\\
-Albategnius                &9th Century AD    &\printtime[0]{5}{46}{24}{0}\\ 
-Alphonsine Tables       &13th Century AD  &\printtime[0]{5}{49}{16}{0}\\
-Copernicus 			  &16th Century AD  &\printtime[0]{5}{46}{6}{0}\\
-Tycho Brahe     		  &16th Century AD  &\printtime[0]{5}{48}{45.5}{0}\\
-Kepler 				  &17th Century AD  &\printtime[0]{5}{48}{57.65}{0}\\
-Halley 				  &17th Century AD  &\printtime[0]{5}{48}{54.691}{0}\\
-Lalande 			  &18th Century AD  &\printtime[0]{5}{48}{35.5}{0}\\
-Delambre			  &18th Century AD  &\printtime[0]{5}{48}{51.6}{0}\\ 
-Laplace				  &18th Century AD  &\printtime[0]{5}{48}{49.7}{0} \\
-Hind, 1850			  &19th Century AD  &\printtime[0]{5}{41}{46.2}{0} \\
-\end{longtable}
+Meton and Euctemon  &5th Century BC  &\printtimeinterval{6}{18}{57}{0}\\
+Hipparchos          &2 Century BC        &\printtimeinterval{5}{55}{12}{0}\\
+Sosigenes           &1 Century BC        &\printtimeinterval{6}{0}{0}{0}\\
+Albategnius         &9th Century AD    &\printtimeinterval{5}{46}{24}{0}\\ 
+Alphonsine Tables   &13th Century AD  &\printtimeinterval{5}{49}{16}{0}\\
+Copernicus          &16th Century AD  &\printtimeinterval{5}{46}{6}{0}\\
+Tycho Brahe     	  &16th Century AD  &\printtimeinterval{5}{48}{45.5}{0}\\
+Kepler 				    &17th Century AD  &\printtimeinterval{5}{48}{57.65}{0}\\
+Halley 				    &17th Century AD  &\printtimeinterval{5}{48}{54.691}\\
+Lalande 			      &18th Century AD  &\PrintTimeInterval{5}{48}{35.5}\\
+Delambre			      &18th Century AD  &\printtimeinterval {5}{48}{51.6}{0}\\ 
+Laplace				    &18th Century AD  &\printtimeinterval {5}{48}{49.7}{0} \\
+Hind, 1850			    &19th Century AD  &\printtimeinterval {5}{41}{46.2}{0} \\
+\end{longtable} 
+
 
 The oldest references to the Greek word τροπή [turn, soltice] are from Hesiod and Homer. Evidence
 exists that from the earliest times the Chinese, the Hindus and the Greeks, and others did measure the
@@ -126,21 +206,35 @@ length of the tropical year, also called the seasonal year. According to Delabre
 
 According to Ptolemy, Hipparchus wrote: `I composed a book about the length of the year, in which
 I show that this is the time required for the Sun to travel from a tropic to the same tropic again, or from
-an equinox to that same equinox, and that it is equal to 365.25 days minus 1/300 of a day-and-night, and
-not to a fourth of a day as the mathematicians believed’.\footnote{\textit{Almagest}, Book III. The citation has been reported by Ptolemy. }
+an equinox to that same equinox, and that it is equal to 365.25 days minus 1/300 of a day-and-night, and not to a fourth of a day as the mathematicians believed’.\footnote{\textit{Almagest}, Book III. The citation has been reported by Ptolemy.}
 
 
-The accepted current tropical year value on January 1, 2000 was 365.2421897 or \printtime[2]{365}{5}{48}{45.19} . This changes slowly; an expression suitable for calculating the length in days for the distant past is
+The accepted current tropical year value on January 1, 2000 was 365.2421897 or \PrintTimeInterval{365}{5}{48}{45.19} . This changes slowly; an expression suitable for calculating the length in days for the distant past is
 
-\[
-365.2421896698 - 6.15359×10-6T- 7.29\times10-10T2 + 2.64×10-10T3
-\]
+\begin{equation}
+365.2421896698 - 6.15359×10-6T- 7.29\times10T2 + 2.64 \times10 -10 T3
+\end{equation}
+
 
 where $T$ is in Julian centuries of 36,525 days measured from noon January 1, 2000 TT (in negative numbers for dates in the past). (McCarthy \& Seidelmann, 2009, p. 18.; Laskar, 1986)
 
 Modern astronomers define the tropical year as time for the Sun's mean longitude to increase by 360°. The process for finding an expression for the length of the tropical year is to first find an expression for the Sun's mean longitude (with respect to ♈), such as Newcomb's expression given above, or Laskar's expression (1986, p. 64). When viewed over a 1 year period, the mean longitude is very nearly a linear function of Terrestrial Time. To find the length of the tropical year, the mean longitude is differentiated, to give the angular speed of the Sun as a function of Terrestrial Time, and this angular speed is used to compute how long it would take for the Sun to move 360°. (Meeus \& Savoie, 1992, p. 42).
 
+The length of the tropical year accordinng to Leverrier
+
+\begin{equation}
+365.24219647 - 0.00000624 T \text{days}
+\end{equation}
+while Newcomb's well known expression, derived from his solar theory, is
+
+\begin{equation}
+\PrintTimeInterval {365}{5}{46}{0} - \PrintTimeInterval {0}{0}{0}{.530}T
+\end{equation}
+
+In these two expressions, $T$ is the time in Julian centuries of 36525 days measured from 1900 January 0.5 Ephemeris time. 
+
 \subsection{Month}
+\index{month}\index{month, astronomical}
 
 The next convenient measure for the division of time, which is marked by the revolution of the
 celestial objects is the month. The astronomical month is the period of time in which the moon 
@@ -164,33 +258,32 @@ day week, survived and passed to us see The Economist.\footnote{\protect\url{htt
 Occasionally, the signs only of the planets were used, for 
 the sake of brevity, particularly in diaries and journals. This 
 is notably the case in the original MS. field-book of Mason 
-and Dixon's survey of the boundary line between Pennsyl 
-vania and Maryland, 1763 to 1768, in possession of the Historical 
+and Dixon's survey of the boundary line between Pennsylvania and Maryland, 1763 to 1768, 
+in possession of the Historical 
 Society of Pennsylvania. In this book the name of 
 each day of the week is represented by the sign, in addition 
 to the usual dates, for a period of over four years. See, also, 
-" Minutes of the Provincial Council of Pennsylvania" (Colo 
-nial Records), vol. ii. pages 90 to 96, etc. etc. In the latter 
+" Minutes of the Provincial Council of Pennsylvania" (Colonial Records), vol. ii. pages 90 to 96, etc. etc. In the latter 
 part of vol i. (same Records) the Latin names of the days 
 were used. 
 
 \begin{center}
-\begin{tabular}{llll}
+\begin{tabular}{l c l l}
 \toprule
-Latin              &Signs                   &English     &Anglo-Saxon\\
+Latin              &Signs                   &English      &Anglo-Saxon\\
 \midrule
-Dies Saturni   &{\pan\char"2644}  &Saturday  &Saetern-daeg\\
-Dies Solis       &{\pan\char"2609}  &Sunday    &Sunnan-daeg\\
-Dies Lunae     &{\pan\char"263D} &Monday  &Monan-daeg\\
-Dies Martis     &{\pan\char"2642} &Tuesday   &Tiwes-daeg\\
+Dies Saturni   &{\pan\char"2644}  &Saturday     &Saetern-daeg\\
+Dies Solis       &{\pan\char"2609}  &Sunday       &Sunnan-daeg\\
+Dies Lunae     &{\pan\char"263D} &Monday      &Monan-daeg\\
+Dies Martis     &{\pan\char"2642} &Tuesday       &Tiwes-daeg\\
 Dies Mercurii  &{\pan\char"263F}  &Wednesday &Wodnes-daeg\\
-Dies Jovis       &{\pan\char"2643}  &Thursday &Thors-daeg\\
-Dies Veneris   &{\pan\char"2640}  &Fiday &Frigas-daeg\\
+Dies Jovis       &{\pan\char"2643}  &Thursday     &Thors-daeg\\
+Dies Veneris   &{\pan\char"2640}  &Fiday           &Frigas-daeg\\
 \bottomrule
 \end{tabular}
 \end{center}
 
-The IAU discourages the use of the planetary symbols in articles and we only show them in the above table for historical reasons. 
+The |IAU| discourages the use of the planetary symbols in articles and we only show them in the above table for historical reasons.  
 
 The Aztecs had a ritual cycle of 260 days, known as Tonalpohuali, which was divided
 into 20 weeks of 13 days known as Trecena. They also divided the solar year of 365 days, into 18
@@ -216,10 +309,11 @@ abandoned by a decree issued on 27 June 1940.
 \end{figure}
 
 From the summer of 1931 until 26 June 1940, each Gregorian month was usually divided into five six-day weeks, more and less (as shown by the 1933 and 1939 calendars displayed here).[2] The sixth day of each week was a uniform day off for all workers, that is days 6, 12, 18, 24 and 30 of each month. 
-The last day of 31-day months was always an extra work day in factories, which, when combined with the first five days of the following month, made six successive work days. But some commercial and government offices treated the 31st day as an extra day off. To make up for the short fifth week of February, 1 March was a uniform day off followed by four successive work days in the first week of March (2–5). The partial last week of February had four work days in common years (25–28) and five work days in leap years (25–29). But some enterprises treated 1 March as a regular work day, producing nine or ten successive work days between 25 February and 5 March, inclusive. The dates of the five national holidays did not change, but they now converted five regular work days into holidays within three six-day weeks rather than splitting those weeks into two parts (none of these holidays was on a "sixth day")
+
+The last day of 31-day months was always an extra work day in factories, which, when combined with the first five days of the following month, made six successive work days. But some commercial and government offices treated the 31st day as an extra day off. To make up for the short fifth week of February, 1 March was a uniform day off followed by four successive work days in the first week of March (2–5). The partial last week of February had four work days in common years (25–28) and five work days in leap years (25–29). But some enterprises treated 1 March as a regular work day, producing nine or ten successive work days between 25 February and 5 March, inclusive. The dates of the five national holidays did not change, but they now converted five regular work days into holidays within three six-day weeks rather than splitting those weeks into two parts (none of these holidays was on a ``sixth day")
 
 
-The Unicode cldr specification dictates that for each language a set of files are provided for calendar related information. This for example enables the printing of calendars in a specific language such as Greek, but using an islamic calendar.  The internationalization tables do not provide any conversion or calculation routines. They just represent how the traslated string would look. 
+The Unicode |CLDR| specification dictates that for each language a set of files are provided for calendar related information. This for example enables the printing of calendars in a specific language such as Greek, but using an islamic calendar.  The internationalization tables do not provide any conversion or calculation routines. They just represent how the traslated string would look. 
 
 \begin{texexample}{i18n}{i18-3}
 \begin{luacode}
@@ -277,7 +371,7 @@ became the last five days of Intercalaris. The result was to add2 or 23 days to 
 
 Caesar returned to Rome in 46 BC and, according to Plutarch, called in the best philosophers and mathematicians of his time to solve the problem of the calendar.[16] Pliny says that Caesar was aided in his reform by the astronomer Sosigenes of Alexandria[17] who is generally considered the principal designer of the reform. Sosigenes may also have been the author of the astronomical almanac published by Caesar to facilitate the reform.[18] Eventually, it was decided to establish a calendar that would be a combination between the old Roman months, the fixed length of the Egyptian calendar, and the 365¼ days of the Greek astronomy. According to Macrobius, Caesar was assisted in this by a certain Marcus Flavius.[19]
 
-Since the Julian and Gregorian calendars were long used simultaneously, although in different places, calendar dates in the transition period are often ambiguous, unless it is specified which calendar was being used. In some circumstances, double dates might be used, one in each calendar. The notation "Old Style" (O.S.) is sometimes used to indicate a date in the Julian calendar, as opposed to "New Style" (N.S.), which either represents the Julian date with the start of the year as 1 January or a full mapping onto the Gregorian calendar. This notation is used to clarify dates from countries which continued to use the Julian calendar after the Gregorian reform, such as Great Britain, which did not switch to the reformed calendar until 1752, or Russia, which did not switch until 1918.
+Since the Julian and Gregorian calendars were long used simultaneously, although in different places, calendar dates in the transition period are often ambiguous, unless it is specified which calendar was being used. In some circumstances, double dates might be used, one in each calendar. The notation ``Old Style" (O.S.) is sometimes used to indicate a date in the Julian calendar, as opposed to ``New Style" (N.S.), which either represents the Julian date with the start of the year as 1 January or a full mapping onto the Gregorian calendar. This notation is used to clarify dates from countries which continued to use the Julian calendar after the Gregorian reform, such as Great Britain, which did not switch to the reformed calendar until 1752, or Russia, which did not switch until 1918.
 
 Throughout the long transition period, the Julian calendar has continued to diverge from the Gregorian. This has happened in whole-day steps, as leap days which were dropped in certain centennial years in the Gregorian calendar continued to be present in the Julian calendar. Thus, in the year 1700 the difference increased to 11 days after February 28 (Gregorian); in 1800, 12; and in 1900, 13. Since 2000 was a leap year according to both the Julian and Gregorian calendars, the difference of 13 days did not change in that year: 29 February 2000 (Gregorian) fell on 16 February 2000 (Julian). This difference will persist through the last day of February, 2100 (Gregorian), since 2100 is not a Gregorian leap year, but is a Julian leap year. Monday 1 March 2100 (Gregorian) falls on Monday 16 February 2100 (Julian).[81]
 
@@ -360,7 +454,7 @@ end
 
 \section{The French Revolutionary Calendar}
 
-The French Revolution, accompanied by a zeal to change all traditional things in France, induced the rulers to change their calendar along with their government.  It was decreed by the National Convention, in the autumn of 1793, that the old calendar was to be abolished and that the new French era should be reckoned from the foundation of the republic, September 22, 1792, of the Common Era, on the day of the true autumnal equinox; that each year should begin on the midnight of the day on which the autumnal equinox falls; and that the first year of the French republic had begun immediately after 12 o’clock P.M. of the 21st of September, 1792, and had terminated on the midnight between the 21st and 22nd of September, 1793.
+The French Revolution, accompanied by a zeal to change all traditional things in France, induced the rulers to change their calendar along with their government.  It was decreed by the National Convention, in the autumn of 1793, that the old calendar was to be abolished and that the new French era should be reckoned from the foundation of the republic, September 22, 1792, of the Common Era, on the day of the true autumnal equinox; that each year should begin on the midnight of the day on which the autumnal equinox falls; and that the first year of the French Republic had begun immediately after 12 o’clock P.M. of the 21st of September, 1792, and had terminated on the midnight between the 21st and 22nd of September, 1793.
 
 As the French months consisted of 30 days each, making in all 360 days, the remaining five days required to complete the year were called \textit{complementary days} and \textit{sans-culottides}. They were named as follows:
 
@@ -378,7 +472,7 @@ the names of which were taken from the
 Latin numerals. The first was called Primedi, 2nd Duodi, 3rd 
 Iridi, 4th Quartidi, 5th Quintidi, 6th Sextidi, 7th Septidi, 8th 
 Octidi, 9th Nonidi, and 10th Decadi. The last was the day 
-of rest, and superseded the former Sunday. 
+of rest, and superseded the former Sunday. \index{Calendars>French Revolutionary}
 
 \begin{figure}[htp]
 \centering
@@ -392,14 +486,14 @@ Paris, Musée Carnavalet. }
 
 The year can easily be reckoned by taking the Gregorian year and adding 1. 
 
+\begin{texexample}{Revolutionary year example}{}
 \begin{luacode}
-local year, revyear
-year = 1792
-revyear = 1
-tex.print((year-revyear)+1)
-
+  local year, revyear
+  year = 1792
+  revyear = 1
+  tex.print((year-revyear)+1)
 \end{luacode}
-
+\end{texexample}
 
 
 \section{Julian Day}
