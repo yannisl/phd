@@ -99,6 +99,7 @@ See http://www.latex-project.org/lppl.txt
 \generate{
   \file{MWE-02.tex}{\from{\jobname.dtx}{MWE-02}}
   \file{MWE-03.tex}{\from{\jobname.dtx}{MWE-03}}
+  \file{defaults.tex}{\from{\jobname.dtx}{DEFAULTS}}
 }
 \generate{
   \file{test-tufte.tex}{\from{\jobname.dtx}{test-tufte}}
@@ -108,7 +109,7 @@ See http://www.latex-project.org/lppl.txt
   \file{test-hyphenation.tex}{\from{\jobname.dtx}{test-hyphenation}}
   \file{settings.tex}{\from{\jobname.dtx}{settings}}
   \file{test-spacing.tex}{\from{\jobname.dtx}{test-spacing}}
- }
+  }
 %\nopreamble\nopostamble
 %\generate{
 %  \file{hhiero.lua}{\from{\jobname.dtx}{hhiero}}
@@ -186,7 +187,6 @@ See http://www.latex-project.org/lppl.txt
   \newfontfamily\arabicfont[Script=Arabic]{Amiri}
   \newfontfamily\cherokee{Digohweli_1.ttf}%
   \newfontfamily\telugufam{code2000.ttf}
- 
   \newfontfamily\gujarati[Scale=1.0]{code2000.ttf}
   \newfontfamily\bengal[Script=Bengali,Scale=1]{Shonar Bangla}
   \newfontfamily\russianfonttt{DejaVu Sans Mono}
@@ -278,7 +278,7 @@ See http://www.latex-project.org/lppl.txt
 \usepackage{xparse}
 %\usepackage{pagenote}
 %\usepackage{pkgindoc}
-%xfrac loads xtemplate?
+%xfrac loads xtemplate?xbox
 \usepackage{subcaption}
 \usepackage{calligra} 
 %\usedictionary{pages}
@@ -573,14 +573,18 @@ See http://www.latex-project.org/lppl.txt
 % \docboxing
 % \visualizations
 %%
- \languages 
+% \languages 
 %% % programming source2e
 % \kernel 
- \bibliography{phd} 
+% \bibliography{phd} 
 %% %
- \PrintIndex
+% \PrintIndex
 
-%\debugchapter
+% \debugchapter
+\input{./sections/chapterdesign}
+\input{./styles/style52}
+\input{./styles/style53}
+\input{./styles/style83}
  \end{document}
  %
 % \input{./sections/OTR}
@@ -684,14 +688,19 @@ See http://www.latex-project.org/lppl.txt
 
 %  \OnlyDescription
 %
-%  \StopEventually{}
+% ^^A \StopEventually{}
 %<*package>
 % \CodelineNumbered
 % \pagestyle{headings}
-% \cxset{style87}
+% ^^A\cxset{style87}
 %
-% \part{IMPLEMENTATION}
+%  \cxset{number color=black}
+%
+%  \part{IMPLEMENTATION}
 % 
+%  \cxset{chapter border-top-width=1pt,
+%              }
+%
 % \chapter{Implementation Strategy}
 %
 % The implementation is divided into parts. Perhaps cutting,
@@ -706,7 +715,7 @@ See http://www.latex-project.org/lppl.txt
 %
 %  \item[The Package Manager] This section is responsible 
 %       for pre-loading  packages, resolving conflicts and 
-%       providing a interfacing commands.
+%       providing all interfacing commands.
 %
 %  \item[The Sectioning Layouts Manager] This section manages 
 %       the design of complex layouts for sectioning commands.
@@ -1282,7 +1291,7 @@ See http://www.latex-project.org/lppl.txt
        xcolor keys/.store in=\xcolorkeys@cx}
 %        
 %
-\input{settings} % experimental
+%\input{settings} % experimental
 %    \end{macrocode}
 %\cxset{nag keys = {l2tabu,%
 %                   orthodox,%
@@ -9263,24 +9272,37 @@ SIXTY FIVE\or SIXTY SIX \or SIXTY SEVEN \or \else
 % the \pkg{etoolbox} |\ifdef| macro.
 %
 %    \begin{macrocode}
-\global\def\setfontparam@cx#1;{%
+\ExplSyntaxOn 
+\gdef\setfontparam@cx #1;{%
   \ifdefmacro{#1}{#1}{\csname#1\endcsname}%
 }
-\def\setfont@cx#1#2#3#4{%
-  \expandafter\setfontparam@cx#1;%
-  \expandafter\setfontparam@cx#2;%
-  \expandafter\setfontparam@cx#3;%
-  \expandafter\setfontparam@cx#4;%
-}
+\cs_new:Npn \setfont@cx #1#2#3#4 
+  {
+    \expandafter\setfontparam@cx#1;
+    \expandafter\setfontparam@cx#2;
+    \expandafter\setfontparam@cx#3;
+    \expandafter\setfontparam@cx#4;
+  }
 \let\bold\bfseries
 \let\normal\mdseries
 \let\serif\rmfamily
+\ExplSyntaxOff
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
 %
-% \subsection{Defining Chapter Head Keys}
-%
+% \chapter{Layout Engine}
+% \section{toks registers}
+%    \begin{macrocode}
+\newtoks\chapterprelimtoks
+\newtoks\chaptertoks
+\newtoks\numbertoks
+\newtoks\titletoks
+\newtoks\headingtoks 
+\headingtoks={}
+\newsavebox\numberbox
+%    \end[macrocode}
+% \section{Registers, booleans and preliminaries}
 % Parametric definitions for chapters 
 %    \begin{macrocode}
 \@ifundefined{@openright}{%
@@ -9290,17 +9312,17 @@ SIXTY FIVE\or SIXTY SIX \or SIXTY SEVEN \or \else
 \edef\zeroboxalign@cx{c}
 %    \end{macrocode}
 %
+% \subsection{Lengths}
 %    \begin{macrocode}
-%
 \global\newlength\chaptermarginleft
     \setlength\chaptermarginleft{30pt}%
     
-\global\newlength\titlemarginbottom
-\global\setlength\titlemarginbottom{0pt}
-\global\newlength\titlemargintop
-\global\setlength\titlemargintop{0pt}
-\gdef\titlemargintop@cx{10pt}
-\gdef\titlemarginbottom@cx{10pt}
+%\global\newlength\titlemarginbottom
+%\global\setlength\titlemarginbottom{0pt}
+%\global\newlength\titlemargintop
+%\global\setlength\titlemargintop{0pt}
+%\gdef\titlemargintop@cx{10pt}
+%%\gdef\titlemarginbottom@cx{10pt}
 
 \gdef\chaptermarginleft@cx{0pt}
    
@@ -9309,92 +9331,356 @@ SIXTY FIVE\or SIXTY SIX \or SIXTY SEVEN \or \else
 \newcounter{chapterdisplay} \setcounter{chapterdisplay}{0}
 \newcounter{numberdisplay} \setcounter{numberdisplay}{0}
 %
-% numbers padding
-\global\newlength\numberpaddingright
-\global\setlength\numberpaddingright{0pt}
-\global\newlength\numberpaddingleft
-     \global\setlength\numberpaddingleft{0pt}
-
-\global\newlength\numberpaddingtop
-\global\setlength\numberpaddingtop{10pt}
-\global\newlength\numberpaddingbottom
-\global\setlength\numberpaddingbottom{10pt}
-% number border width
-\global\newlength\numberborderleftwidth
-   \setlength\numberborderleftwidth{0pt}
-\global\newlength\numberborderrightwidth
-   \setlength\numberborderrightwidth{2pt}
-\global\newlength\numberbordertopwidth
-   \setlength\numberbordertopwidth{2pt}
-\global\newlength\numberborderbottomwidth
-   \setlength\numberborderbottomwidth{2pt}
 \gdef\numberbgcolor{spot!20}   
 %    \end{macrocode}
 % All chapter titles can be fully framed with borders. We create length
 % registers for these and appropriate keys.
 % (See style 87 for usage examples)
 %    \begin{macrocode}
-\newlength\titletextwidth
-   \setlength{\titletextwidth}{\textwidth}
-\newlength\titlepadding\setlength{\titlepadding}{5pt}%
-\newlength\titlepaddingtop
-   \setlength{\titlepaddingtop}{5pt}%
-\newlength\titlepaddingbottom
-    \setlength{\titlepaddingbottom}{5pt}%
-\newlength\titlepaddingleft
-    \setlength{\titlepaddingleft}{5pt}%    
-\newlength\titlepaddingright
-    \setlength{\titlepaddingright}{5pt}%     
-%
-\newlength\titleborderwidth\setlength{\titleborderwidth}{0pt}%
-\newlength\titlebordertopwidth\setlength{\titlebordertopwidth}{0pt}
-\newlength\titleborderbottomwidth\setlength{\titleborderbottomwidth}{0pt}
-\newlength\titleborderleftwidth\setlength{\titleborderleftwidth}{0pt}
-\newlength\titleborderrightwidth\setlength{\titleborderrightwidth}{0pt}
-\def\gluestart{\hss}\def\glueend{\hss}
-%
-\newif\if@hascomma
-\@hascommatrue
-\def\hascomma#1{%
-    \@hascommafalse
-    \@tfor\next:=#1\do{%
-    \edef\@tempa{\next}%
-    \edef\tempb{,}%
-    {\if\@tempa\tempb
-         \global\@hascommatrue
-    \fi}%
-}}%
 
-
-\def\checkforcomma@cx#1{%
-\hascomma{#1}%
-\if@hascomma%
-    \expandafter\@firstoftwo%
-  \else%
-    \expandafter\@secondoftwo% 
-\fi
-}
+\ExplSyntaxOn
 %
+	\dim_new:c {chapter_margin_top}
+	\dim_new:c {chapter_margin_right}
+	\dim_new:c {chapter_margin_bottom}
+	\dim_new:c {chapter_margin_left}
+	\dim_new:c {chapter_margin}
+	%
+	\dim_new:c {chapter_border_top_width}
+	\dim_new:c {chapter_border_right_width}
+	\dim_new:c {chapter_border_bottom_width}
+	\dim_new:c {chapter_border_left_width}
+	\dim_new:c {chapter_border}
+	%
+	\dim_new:c {chapter_padding_top}
+	\dim_new:c {chapter_padding_right}
+	\dim_new:c {chapter_padding_bottom}
+	\dim_new:c {chapter_padding_left}
+	\dim_new:c {chapter_padding}
+%
+  \tl_new:N \chapter_border_top_color
+  \tl_new:N \chapter_border_right_color
+  \tl_new:N \chapter_border_bottom_color
+  \tl_new:N \chapter_border_left_color
+
+%
+  \dim_gzero_new:N \number_margin_top
+  \dim_gzero_new:N \number_margin_right
+  \dim_gzero_new:N \number_margin_bottom
+  \dim_gzero_new:N \number_margin_left
+%
+  \dim_gzero_new:N \number_border_top_width
+  \dim_gzero_new:N \number_border_right_width
+  \dim_gzero_new:N \number_border_bottom_width
+  \dim_gzero_new:N \number_border_left_width
+%  
+  \dim_new:N \number_padding_top
+  \dim_new:N \number_padding_right
+  \dim_new:N \number_padding_bottom
+  \dim_new:N \number_padding_left  
+%  
+  \dim_gzero_new:N \title_margin_top
+  \dim_gzero_new:N \title_margin_right
+  \dim_gzero_new:N \title_margin_bottom
+  \dim_gzero_new:N \title_margin_left
+%
+  \dim_gzero_new:N \title_padding_width
+  \dim_gzero_new:N \title_padding_top_width
+  \dim_gzero_new:N \title_padding_left_width
+  \dim_gzero_new:N \title_padding_right_width
+  \dim_gzero_new:N \title_padding_bottom_width 
+% 
+  \dim_gzero_new:N \title_border_width
+  \dim_gzero_new:N \title_border_left_width
+  \dim_gzero_new:N \title_border_top_width
+  \dim_gzero_new:N \title_border_right_width 
+  \dim_gzero_new:N \title_border_bottom_width 
+%  
+  \tl_new:N \chapter_title_display_tl
+  \tl_new:N \chapter_title_float_tl
+  \tl_gset:Nn \chapter_title_float_tl {center}
+  \tl_new:c {chapter_title_text_align}  
+% 
+  
+\ExplSyntaxOff
 %    \end{macrocode}
+%
+% \subsection{font family handler}
+% This handler first checks if the font-family has been supplied as a
+% list. In this case it will call check font and pick the first available
+% font.
+% 
+%    \begin{macrocode}
+\ExplSyntaxOn
+\clist_new:N \allowed_font_family_options
+\clist_gset:Nn \allowed_font_family_options 
+  {
+    sffamily,rmfamily,ttfamily, normal,italic,oblique,
+    itshape,slshape,upshape,sans-serif,serif,monospace,
+    inherit,auto
+  }
+% creat aliases for some of the names to match those commonly
+% used in css  NEEDS TESTING 
+\cs_gset_eq:cc {monospace} {ttfamily}
+\cs_gset_eq:cc {serif} {rmfamily}
+\cs_gset_eq:cc {non-serif} {sffamily}
+  
+  \pgfkeys{/handlers/.font-family~in/.code = 
+    \pgfkeysalso
+      {\pgfkeyscurrentpath/.code=
+        \clist_if_in:NnTF \allowed_font_family_options {##1 } 
+          {
+           \gdef #1 {##1}
+          } 
+          {
+            \gdef #1 {\sffamily}
+          }
+      }
+  }      
+%    \end{macrocode}
+%
+%  \begin{docCommand}{title_font_face} {\meta {font name}}
+%   This peculiar handler is a store in that can be used for all elements. We defined
+%   them as \meta{element}|_font_face|. This took a bit long to figure out. The
+%   |allowed_font_face_options| will eventually be linked with the font loading mechanism.
+%  \end{docCommand}
+%    \begin{macrocode}  
+\clist_new:N \allowed_font_face_options
+\clist_gset:Nn \allowed_font_face_options 
+  {
+    sffamily,rmfamily,ttfamily, normal,italic,oblique,
+    itshape,slshape,upshape,sans-serif,serif,monospace,
+    inherit,auto,tiresias,arial,pan
+  }
+% creat aliases for some of the names to match those commonly
+% used in css.    
+  
+  \pgfkeys{/handlers/.font-face~in/.code = 
+    \pgfkeysalso
+      {\pgfkeyscurrentpath/.code=
+         \IfNoValueTF {##1} {\@empty} 
+           {
+            \cs_if_exist:NTF { #1 } 
+              { \gdef#1 {##1} }
+              { \gdef#1 {\rmfamily} } %add error trapping as well
+           }
+          }
+               
+  }        
+  
+  
+%    \end{macrocode}
+%
+% 
+%
+%    \begin{macrocode}
+\clist_new:N \allowed_font_style_options
+\clist_gset:Nn \allowed_font_style_options {normal,upshape,itshape,oblique,slshape}
+% create some aliases also for these options.
+\cs_gset_eq:cc {normal}{upshape}  
+\cs_gset_eq:cc {italic}{itshape}
+\cs_gset_eq:cc {oblique}{slshape}
+
+
+\pgfkeys{/handlers/.font-style~in/.code = 
+    \pgfkeysalso
+      {\pgfkeyscurrentpath/.code=
+        \clist_if_in:NnTF \allowed_font_style_options {##1 } 
+          {
+           \gdef #1 {##1}
+          } 
+          {
+            upshape
+          }
+      }
+  }  
+%    \end{macrocode}
+%  
+%   \begin{docCommand}{title_font_weight}{\meta{font weight name}}
+%     Handler for defining the font-weight of an element.
+%   \end{docCommand}  
+%   These are all very repetitive and could have been replaced by one
+%   handler at the cost of obfuscating the code. 
+%    \begin{macrocode}
+\clist_new:N \allowed_font_weight_options
+\clist_gset:Nn \allowed_font_weight_options 
+  {
+    normal,bold,bfseries,mdseries
+  }
+  
+  \pgfkeys{/handlers/.font-weight~in/.code = 
+    \pgfkeysalso
+      {\pgfkeyscurrentpath/.code=
+        \clist_if_in:NnTF \allowed_font_weight_options {##1 } 
+          {
+           \gdef #1 {##1}
+          } 
+          {
+            \gdef #1 {\rmfamily}
+          }
+      }
+  }
+
+\ExplSyntaxOff   
+%    \end{macrocode}
+%  
+%    \begin{docCommand}{number_shape}{\meta{shape name}}
+%      This handler obtains values for the shape attribute.
+%    \end{docCommand} 
+%
+%    \begin{macrocode}
+\ExplSyntaxOn
+\clist_new:N \allowed_shape_options
+\clist_gset:Nn \allowed_shape_options 
+  {
+    rectangle,rounded~rectangle,circle,ellipse, 
+    diamond, starburst,none,star,custom
+  }
+  
+  \pgfkeys{/handlers/.shape~is/.code = 
+    \pgfkeysalso
+      {\pgfkeyscurrentpath/.code=
+        \clist_if_in:NnTF \allowed_shape_options {##1 } 
+          {
+           \gdef#1{##1}
+          } 
+          {
+            \gdef#1{none} %also emit error message
+          }
+      }
+  }
+  
+\ExplSyntaxOff  
+%    \end{macrocode}
+%    \begin{macrocode}
+\ExplSyntaxOn
+\clist_new:N \allowed_border_style_options
+\clist_gset:Nn \allowed_border_style_options 
+  {
+    dash,solid,double,dotted,custom,none,
+  }
+  
+  \pgfkeys{/handlers/.border~style~is/.code = 
+    \pgfkeysalso
+      {\pgfkeyscurrentpath/.code=
+        \clist_if_in:NnTF \allowed_border_style_options {##1 } 
+          {
+           \gdef#1{##1}
+          } 
+          {
+            \gdef#1{none} %also emit error message
+          }
+      }
+  }
+  
+\ExplSyntaxOff  
+%    \end{macrocode}
+%
+%
+%  The \texttt{font-size in} handler is defined next.
+%  This can be set both as a command or a name.
+%  
+%  \begin{docCommand} {allowed_keys_font_size} {\meta{list of allowed keys}}
+%    list with all allowed keys in the |phd system|
+%  \end{docCommand} 
+%
+%  Coding this through |expl3| is such a pleasure and cut the previous code in half! 
+%  These mavericks the LaTeX3 Team pulled it off! It also
+%  enables better error trapping and the allowed words can be configurable, one day!
+%  For example if 38/52 is typed one can automatically set it to a specific size?
+%  Could also allow say 10pt check in list if we have them and set it.
+%  The keys auto, inherit, autoscale need development.
+%
+%  |auto| should scale one step down from parent element.
+%  |inherit| takes the same value as the parent element
+%  |autoscale| will fit the contents in the width of its container
+%  box. (All three for next version)
+%
+%    \begin{macrocode}
+\ExplSyntaxOn   
+  
+  \clist_new:N   \allowed_keys_font_size
+  \clist_gset:Nn \allowed_keys_font_size 
+    { 
+      normal,tiny,footnotesize,small,
+      large,Large,LARGE,
+      huge,Huge,HUGE,HHUGE,
+      HHHUGE,auto,inherit,
+      autoscale,
+    }
+    
+  \pgfkeys{/handlers/.font-size~in/.code = 
+    \pgfkeysalso
+      {\pgfkeyscurrentpath/.code=
+        \clist_if_in:NnTF \allowed_keys_font_size {##1 } 
+          {
+           \gdef #1 {##1}
+          } {normalsize}
+      }
+  }
+%    \end{macrocode}
+%
+%  Handler for chaptername to hook to i18n functions, if set to auto
+%  If empty just typesets nothing. 
+%  
+%    \begin{macrocode}
+\clist_new:N \allowed_chapter_names_clist
+\clist_gset:Nn \allowed_chapter_names_clist
+  { auto, i18n, none}
+\pgfkeys{/handlers/.getchaptername/.code = 
+    \pgfkeysalso
+      {\pgfkeyscurrentpath/.code=
+        \tl_set:Nn\l_tmpa_str:N {##1}
+%        \clist_if_in:NnTF \allowed_chapter_names_clist {##1 } 
+%          {
+          % check for none auto etc
+           \str_case_x:nnTF {##1}  
+             {
+               { none } { \gdef#1{} } 
+               { auto } { \gdef#1{\chaptername} } %hook to babel
+               { i18n } { \gdef#1{\chaptername} } %hook to babl 
+             }
+             {}%true
+             {\gdef#1{#1}}%false
+           %}  
+%           { %not in clist just set to what the user wants
+%             \gdef #1 {##1}
+%           }
+           
+      }
+  }
+
+\ExplSyntaxOff   
+%    \end{macrocode}
+ 
+
+
+
+%    \begin{macrocode}
+\def\gluestart{\hss}\def\glueend{\hss}
+%    \end{macrocode}
+%
+% \section{Chapter name keys}
 %
 % It is not envisioned that the chapter name key be set directly by the user.
 % This should be set by the document language tag (like Babel). 
-% |name is legacy and will be removed.|  
 % However, the user might decide that this is an easier approach.
+%  \begin{docCommand}{chaptername}{ \meta{void}} 
+%    Holds the chapter name tag such as Chapter or 'CHAPTER' or whatever
+%    is typed by the user. 
+%    This is also hooked here for i18n routines later, hence we get it via a handler.
+% 
+%  \end{docCommand}
 %    \begin{macrocode}
-\cxset{
-  name/.store in=\chaptername,
-  chapter name/.code=\pgfkeysalso{name=#1},
-  chaptername/.code = \gdef\chaptername@cx{#1},
-  }
-  
+\cxset{chapter name/.getchaptername=\chapternameint}
+\cxset{chapter name= Chapter}  
   
 \cxset{  
   %legacy to remove
-  color/.store in = \color@cx,
-  color/.default = black,
-  color/.initial = black,
-  % 
+%  color/.store in = \color@cx,
+%  color/.default = black,
+%  color/.initial = black,
+%  % 
   chapter color/.store in=\chaptercolor@cx,
   chapter background-color/.store in=\chapterbgcolor,
 %  
@@ -9413,301 +9699,19 @@ SIXTY FIVE\or SIXTY SIX \or SIXTY SEVEN \or \else
      \@openleftfalse\@openanyfalse},
   chapter opening/ifafter/.code={},
 }
-
-
-% This handler first checks if the font-family has been supplied as a
-% list. In this case it will call check font and pick the first available
-% font.
-% 
-\pgfkeys{/handlers/.font-family in/.code=\pgfkeysalso{\pgfkeyscurrentpath/.code=
-      \checkforcomma@cx{##1}{}{%
-          \edef\tempaa{sans-serif}%
-          \edef\tempbb{##1}%
-          \ifx\tempaa\tempbb%
-              \def#1{sffamily}% 
-        \else%
-           \def#1{##1}%Check for initial???
-       \fi%
-       \edef\tempaa{monospace}%
-        \ifx\tempaa\tempbb%
-          \def#1{ttfamily}%
-       \fi
-       \edef\tempaa{serif}
-       \ifx\tempaa\tempbb%
-           \def#1{rmfamily}%
-       \fi%    
-       \edef\tempaa{inherit}%needs work???
-       \ifx\tempaa\tempbb%
-           \def#1{rmfamily}
-       \fi    
-     }%   
-}}
-\pgfkeys{/handlers/.font-style in/.code=\pgfkeysalso{\pgfkeyscurrentpath/.code=
-           \edef\tempa{##1}%
-           \edef\tempb{normal}%
-           \edef\tempc{italic}%
-           \edef\tempd{oblique}%
-           \def#1{##1}%
-           \ifx\tempa\tempb%
-              \def#1{upshape}%
-           \fi%
-           \ifx\tempa\tempc%
-              \def#1{itshape}%
-            \fi%
-           \ifx\tempa\tempd%
-              \def#1{slshape}%
-           \fi  
-   }}
-\pgfkeys{/handlers/.font-weight in/.code=\pgfkeysalso{\pgfkeyscurrentpath/.code=
-           \def\tempa{##1}%
-           \def\tempb{normal}%
-           \def\tempc{bold}%
-           \def\tempd{bfseries}%
-           \def#1{##1}%
-           \ifx\tempa\tempb%
-              \def#1{mdseries}%
-           \fi%
-           \ifx\tempa\tempc%
-              \def#1{bfseries}%
-            \fi%
-           \ifx\tempa\tempd%
-              \def#1{bfseries}%
-           \fi   
-           \def\tempb{\bfseries}%
-           \ifx\tempa\tempb
-              \def#1{bfseries}%       
-           \fi  
-           \def\tempb{\mdseries}%
-           \ifx\tempa\tempb
-              \def#1{mdseries}%       
-           \fi  
-   }} 
-%    \end{macrocode}
-%
-%  The font-size handler is defined next.
-%  This can be set both as a command or a name.
-%  Code can be optimized with a list, but needs revisiting.
-%    \begin{macrocode}   
-   \pgfkeys{/handlers/.font-size in/.code=\pgfkeysalso{\pgfkeyscurrentpath/.code=
-           \def\tempa{##1}%
-           \def\tempb{normal}%
-           \def#1{##1}%
-           \ifx\tempa\tempb%
-              \def#1{\normalsize}%
-           \fi%
-            \def\tempb{tiny}%
-           \ifx\tempa\tempb%
-              \def#1{tiny}%
-            \fi%
-            \ifx\tempa\tempb%
-              \def#1{footnotesize}%
-            \fi% 
-           \def\tempb{footnotesize}%
-           \ifx\tempa\tempb%
-              \def#1{small}%
-            \fi%
-           \def\tempb{large}% 
-           \ifx\tempa\tempb%
-              \def#1{large}%
-           \fi   
-            \def\tempb{Large}% 
-           \def\tempb{\bfseries}%
-           \ifx\tempa\tempb%
-              \def#1{Large}%       
-           \fi%  
-           \def\tempb{huge}%
-           \ifx\tempa\tempb%
-              \def#1{huge}%       
-           \fi%  
-           \def\tempb{Huge}%
-           \ifx\tempa\tempb%
-              \def#1{Huge}%       
-           \fi% 
-           \def\tempb{HUGE}%
-           \ifx\tempa\tempb%
-              \def#1{HUGE}%       
-           \fi 
-           \def\tempb{HHUGE}%
-            \ifx\tempa\tempb%
-              \def#1{HHUGE}%       
-           \fi% 
-           \def\tempb{HHHUGE}%
-            \ifx\tempa\tempb%
-              \def#1{HHHUGE}%       
-           \fi%  
-   }}%   
 %    \end{macrocode}
 
 
-% \subsubsection{Numbers}
-%
-%    \begin{macro}{\itf@number}
-%    \cs{itf@number} tries to get a number from its argument, and stores the result
-%    into the TeX count register given as first argument. Same syntax as \LaTeX \cs{@defaultunits}.
-%
-%    A number is an integer that can be assigned to a count register, may be followed
-%    by one or more \cs{relax}.
-%
-%    \begin{macrocode}
-%%   G E T   A   N U M B E R (if possible)
-%% USAGE: \itf@number\count<text>\relax\@nnil (like \@defaultunits)
-\def\itf@number#1#2\relax\@nnil{% \relax is to mimick the syntax of \@defaultunits
-   \afterassignment\itf@number@#1\number0#2\relax\itf@number@
-}
-\def\itf@number@#1\relax#2\itf@number@{%
-   \ifblank{#1}
-      {\itf@number@@{}#2\itf@number@@\@nnil
-      \csname ltx@\ifx\@let@token\itf@number@@
-         first\else second\fi oftwo\endcsname}
-      \ltx@secondoftwo
-}% \itf@number@
-\def\itf@number@@#1{\futurelet\@let@token\itf@number@@@}
-\def\itf@number@@@{%
-   \csname \ifx\@let@token\relax itf@number@@%
-   \else remove@to@nnil%
-   \fi \endcsname
-}% \itf@number@@@
-%    \end{macrocode}
-%    \end{macro}
-%
-% \subsubsection{Units and math units}
-%
-%    \begin{macro}{\itf@setlength}
-%
-%    To be able to write: \cs{pgfkeys}\M*{key=\cs{widthof\M*{some text}}} (package \pkgname{calc}),
-%    
-%
-%    \begin{macrocode}
-\protected\def\itf@setlength#1#2{#1\glueexpr#2\relax}%
-%    \end{macrocode}
-%    \end{macro}
-%
-%    \begin{macro}{\itf@units@scale}
-%
-%    For multiplication of units: \cs{glueexpr}...\cs{relax}*\cs{itf@units@scale}\meta{scaling factor}!
-%
-%    The scaling factor can be a fraction or a real number. Real numbers are approximated by a fraction
-%    of 65536.
-%
-%    \begin{macrocode}
-%% glue * 1.5 = glue * 98302 / 65536
-%% glue * 3/2 = glue * 3/2
-\def\itf@units@scale#1!{\itf@units@scale@normalize#1/\@nnil/\@nil}
-\def\itf@units@scale@normalize#1/#2/#3\@nil{%
-   \ifx#2\@nnil \number\dimexpr#1pt\relax/65536
-   \else#1/#2
-   \fi
-}% \itf@units@scale@normalize
-\def\itf@units@scaleNoCalc#1!{\itf@units@scale@normalizeNoCalc#1/\@nnil/\@nil}
-\let\itf@units@scale@normalizeNoCalc \itf@units@scale@normalize
-%    \end{macrocode}
-%    \end{macro}
-%
-%    \begin{macro}{\itf@setlength@calc}
-%
-%^^A    The version for the \xpackage{calc} package. \xpackage{calc} removes stretch
-%    and shrink components of glues when a scaling operation is done using \cs{real}
-%    or \cs{ratio}. This limitation is lifted for \texttt{key=value} assignments.
-%
-%    \begin{macro}{\itf@units@scale@normalize@calc}
-%
-%    The version of \cs{itf@units@scale@normalize} when using the \pkgname{calc} package.
-%
-%    \cs{ratio} is used.
-%
-%    \begin{macrocode}
-\protected\def\itf@setlength@calc#1#2{\begingroup
-   \let\calc@multiply@by@real \itf@calc@multiply@by@real
-   \let\calc@Adimen \itf@calc@Askip  \let\calc@Bdimen \itf@calc@Bskip
-   \setlength{#1}{#2}%
-   \expandafter\endgroup\expandafter#1\the#1\relax
-}% \itf@setlength@calc
-\def\itf@units@scale@normalize@calc#1/#2/#3\@nil{%
-   \ifx#2\@nnil 1*\ratio{\dimexpr#1pt\relax}\p@
-   \else        1*\ratio{\dimexpr#1pt\relax}/{\dimexpr#2pt\relax}%
-   \fi
-}% 
-%    \end{macrocode}
-%    \end{macro}
-%    \end{macro}
-%
-%
-%   The code below is an adaptation from the \pkgname{interfaces}
-%   Some of it I don’t understand very well and I need to revisit it.
-%
-%       
-%    \begin{macro}{\pgfkeysmeaning}
-%    \begin{macrocode}
-\providecommand*\pgfkeysmeaning[1]{\pgfkeysifdefined{#1}
-   {\expandafter\meaning\csname pgfk@#1\endcsname}
-   {\meaning\@undefined}%
-}% \pgfkeysmeaning
-%    \end{macrocode}
-%    \end{macro}
-%
-%    \begin{macro}{\pgfkeysvalueof@unexpanded}
-%    \begin{macrocode}
-\def\pgfkeysvalueof@unexpanded#1{%
-   \unexpanded\expandafter\expandafter\expandafter{%
-                        \csname pgfk@#1\endcsname}%
-}% \pgfkeysvalueof@unexpanded
-%    \end{macrocode}
-%    \end{macro}
-%
-%
-%    \begin{macro}{\pgfkeysEsetvalue}
-%    \begin{macro}{\pgfkeysEaddvalue}
-%    \begin{macrocode}
-\ifdefined\pgfkeys@ifexecutehandler \long \fi% pgf version 2.1
-\def\pgfkeysEsetvalue#1#2{%
-   \expandafter\edef\csname pgfk@#1\endcsname{#2}%
-}% \pgfkeysEsetvalue
-\ifdefined\pgfkeys@ifexecutehandler \long \fi % pgf v2.1
-\def\pgfkeysEaddvalue#1#2#3{% \csepreappto{pgfk@#1}{#2}{#3}
-   \edef\pgfkeys@global@temp{%
-      #2%
-      \ifcsname pgfk@#1\endcsname
-         \unexpanded\expandafter\expandafter\expandafter{%
-            \csname pgfk@#1\endcsname}%
-      \fi
-      #3}%
-   \pgfkeyslet{#1}\pgfkeys@global@temp
-}% \pgfkeysEaddvalue
-%    \end{macrocode}
-%    \end{macro}
-%    \end{macro}
-%    
-%
-%  We define a key to store dimensions. We test for a number and for an
-%  empty value. If the value is empty we leave as is. We use the Roman
-%  numeral trick to test if it is a number. What a lovely way to remember
-%  your history! THIS IS WRONG
-%
-%    \begin{macrocode}
-\pgfkeysdef{/handlers/.store as glue}{\pgfkeysdef{\pgfkeyscurrentpath}{%
-\def\temp{##1}%
-\ifx\temp\@empty%
-  \gdef#1{1pt}%
-\else
-   \gdef#1{1pt}%
-   \if\relax\detokenize\expandafter{\romannumeral-0##1}\relax
-        \gdef#1{\dimexpr(##1)\relax}%
-  \fi           
-\fi  
-}}%
-% /.store as glue
-%
-%    \end{macrocode}
-% 
-% \subsection{Chapter font options}
 %  The font options use handlers to get the values. This alows for more flexibiliy.
 %    \begin{macrocode}
+\ExplSyntaxOn
 \cxset{%    
-  chapter font-family/.font-family in=\chapterfontfamily@cx,
-  chapter font-weight/.font-weight in = \chapterfontweight@cx,
-  chapter font-size/.font-size in=\chapterfontsize@cx,
-  chapter font-shape/.font-style in=\chapterfontshape@cx,
-  chapter font-style/.font-style in=\chapterfontshape@cx,}
+  chapter~font-family/.font-family~in=\chapter_font_family,
+  chapter~font-weight/.font-weight~in = \chapter_font_weight,
+  chapter~font-size/.font-size~in=\chapter_font_size,
+  chapter~font-shape/.font-style~in=\chapter_font_shape,
+  chapter~font-style/.font-style~in=\chapter_font_shape,}
+\ExplSyntaxOff  
 %    \end{macrocode}
 %
 % \subsection{Chapter display and float properties}
@@ -9746,31 +9750,45 @@ SIXTY FIVE\or SIXTY SIX \or SIXTY SEVEN \or \else
 \ExplSyntaxOn
 \int_zero_new:c {chapterdisplaycounter}
 \int_zero_new:c {chapterfloatcounter}
-\cs_gset:Npn \phdsetcounter #1 #2 
+%    \end{macrocode}
+%
+% \begin{docCommand}{phdsetcounter}{ \marg{counter name} \marg{int value} }
+%    Sets an integer counter to a value.
+% \end{docCommand}
+%    \begin{macrocode}
+\cs_gset:Npn \phd_set_counter:nn #1 #2 
  {
    \int_gset:cn {#1} {#2}
  }  
 \ExplSyntaxOff
+%    \end{macrocode}
 %
+% \subsubsection{Chapter name floating and display properties}
+%
+%    \begin{macrocode}
+\ExplSyntaxOn
 \cxset{%  
-  chapter display/.is choice,
-  chapter display/inline/.code=\global\setcounter{chapterdisplay}{0}
-                               \phdsetcounter{chapterdisplaycounter}{0},
-  chapter display/block/.code=\global\setcounter{chapterdisplay}{2}
-                               \phdsetcounter{chapterdisplaycounter}{2}, 
+  chapter~display/.is~choice,
+  chapter~display/inline/.code=\global\setcounter{chapterdisplay}{0}
+                               \phd_set_counter:nn {chapterdisplaycounter}{0},
+  chapter~display/block/.code=\global\setcounter{chapterdisplay}{2}
+                               \phd_set_counter:nn {chapterdisplaycounter}{2}, 
+  chapter~display/none/.code=\global\setcounter{chapterdisplay}{0}
+                               \phd_set_counter:nn {chapterdisplaycounter}{0},                              
 %    
-  chapter float/.is choice,
-  chapter float/none/.code= \global\setcounter{chapterfloat}{0}%
-                            \phdsetcounter{chapterfloatcounter}{0},
-  chapter float/left/.code= \global\setcounter{chapterfloat}{0}
-                            \phdsetcounter{chapterfloatcounter}{0},
+  chapter~float/.is~choice,
+  chapter~float/none/.code= \global\setcounter{chapterfloat}{0}%
+                            \phd_set_counter:nn {chapterfloatcounter}{0},
+  chapter~float/left/.code= \global\setcounter{chapterfloat}{0}
+                            \phd_set_counter:nn {chapterfloatcounter}{0},
 % center = 1                             
-  chapter float/center/.code= \global\setcounter{chapterfloat}{1}%
-                             \phdsetcounter{chapterfloatcounter}{1}, 
+  chapter~float/center/.code= \global\setcounter{chapterfloat}{1}%
+                             \phd_set_counter:nn {chapterfloatcounter}{1}, 
 % right = 2                             
-  chapter float/right/.code= \global\setcounter{chapterfloat}{2}%
-                             \phdsetcounter{chapterfloatcounter}{2},%   
+  chapter~float/right/.code= \global\setcounter{chapterfloat}{2}%
+                             \phd_set_counter:nn {chapterfloatcounter}{2},%   
  }
+\ExplSyntaxOff 
 \cxset{chapter display=block,
        chapter float=left,
        } 
@@ -9780,41 +9798,29 @@ SIXTY FIVE\or SIXTY SIX \or SIXTY SEVEN \or \else
 % \subsection{Chapter content before and after}
 %
 %    \begin{macrocode}   
-\cxset{chapter before content/.store in=\chapterbeforecontent@cx,
-       chapter before/.store in=\chapterbefore@cx,
- }
+\ExplSyntaxOn
+\cxset
+  {
+    chapter~before~content/.store~in=\chapter_before_content,
+    chapter~before/.store~in=\chapter_before,
+  }
+   
+\cxset
+  {
+    chapter~before~content = ,
+    chapter~before=,
+  }
+\ExplSyntaxOff 
 %    \end{macrocode}
 % 
-%  
-%
 % \subsection{Chapter margins and padding}
 %
 % The dual code is interim we will avoid all these in the future
 %    \begin{macrocode}
 \ExplSyntaxOn
-%
-\dim_new:c {chapter_margin_top}
-\dim_new:c {chapter_margin_right}
-\dim_new:c {chapter_margin_bottom}
-\dim_new:c {chapter_margin_left}
-\dim_new:c {chapter_margin}
-%
-\dim_new:c {chapter_border_top_width}
-\dim_new:c {chapter_border_right_width}
-\dim_new:c {chapter_border_bottom_width}
-\dim_new:c {chapter_border_left_width}
-\dim_new:c {chapter_border}
-%
-\dim_new:c {chapter_padding_top}
-\dim_new:c {chapter_padding_right}
-\dim_new:c {chapter_padding_bottom}
-\dim_new:c {chapter_padding_left}
-\dim_new:c {chapter_padding}
-%
+
 \cxset{   
-  chapter~margin-top/.code=\gdef\chaptermargintop@cx{\topskip0pt\vskip#1\relax}
-    \dim_gset:cn { chapter_margin_top } { #1 },
-  % left margin 
+  chapter~margin-top/.code= \dim_gset:cn { chapter_margin_top } { #1 },
   chapter~margin-left/.code=\setlength\chaptermarginleft{#1}%
                             \global\chaptermarginleft\chaptermarginleft\relax
                             \def\gluestart{\hskip#1}%
@@ -9834,26 +9840,11 @@ SIXTY FIVE\or SIXTY SIX \or SIXTY SEVEN \or \else
 %    \begin{macrocode}      
 \ExplSyntaxOn
 \cxset{  
-   chapter~border-top-width/.code= \setlength\chapterbordertopwidth{#1}%
-     \global\chapterbordertopwidth\chapterbordertopwidth\relax
-     \dim_gset:cn {chapter_border_top_width} {#1},                                            
-   chapter~border-right-width/.code= \setlength\chapterborderrightwidth{#1}%
-     \global\chapterborderrightwidth\chapterborderrightwidth\relax
-     \dim_gset:cn {chapter_border_right_width} {#1},                                                                                      
-   chapter~border-bottom-width/.code= \setlength\chapterborderbottomwidth{#1}%
-     \global\chapterborderbottomwidth\chapterborderbottomwidth\relax
-     \dim_gset:cn {chapter_border_bottom_width} {#1},                                                                                                                              
-   chapter~border-left-width/.code= \setlength\chapterborderleftwidth{#1}%
-     \global\chapterborderleftwidth\chapterborderleftwidth\relax
-     \dim_gset:cn {chapter_border_left_width} {#1},
-}                        
-\ExplSyntaxOff                                            
-%    \end{macrocode}
-  %  
-  %   Next we write keys for developing the short form of the border keys. These keys reset
-  %  all borders to one value
-  %    \begin{macrocode}
-\ExplSyntaxOn  
+  chapter~border-top-width/.code    = \dim_gset:cn {chapter_border_top_width} {#1},                                            
+  chapter~border-right-width/.code  = \dim_gset:cn {chapter_border_right_width} {#1},                                                                                      
+  chapter~border-bottom-width/.code = \dim_gset:cn {chapter_border_bottom_width} {#1},                                                                                                                              
+  chapter~border-left-width/.code   = \dim_gset:cn {chapter_border_left_width} {#1},
+ }                        
 \cxset{  
   chapter~border-width/.code = \pgfkeysalso{chapter~border-top-width=#1,
                                             chapter~border-right-width=#1,
@@ -9864,34 +9855,22 @@ SIXTY FIVE\or SIXTY SIX \or SIXTY SEVEN \or \else
 \ExplSyntaxOff                                     
 %    \end{macrocode}  
 % 
+% \subsubsection{Chapter padding}
 % We now deal with padding the same way including the generic version                                             
 %    \begin{macrocode}  
 \ExplSyntaxOn                                             
 \cxset{
-  chapter~padding-left/.code= \setlength\chapterpaddingleft{#1}%
-    \global\chapterpaddingleft\chapterpaddingleft\relax
-    \dim_gset:cn {chapter_padding_left}{#1},                                                                                                                           
-%    
-  chapter~padding-right/.code= \setlength\chapterpaddingright{#1}%
-    \global\chapterpaddingright\chapterpaddingright\relax
-    \dim_gset:cn {chapter_padding_right}{#1},                                                                                                             
-%    
-  chapter~padding-top/.code= \setlength\chapterpaddingtop{#1}%
-    \global\chapterpaddingtop\chapterpaddingtop\relax
-    \dim_gset:cn {chapter_padding_top}{#1},                                                                                                                                                       
-% 
-  chapter~padding-bottom/.code= \setlength\chapterpaddingbottom{#1}%
-    \global\chapterpaddingbottom\chapterpaddingbottom\relax
-    \dim_gset:cn {chapter_padding_bottom}{#1},                                                                                                                                                                                                 
+  chapter~padding-left/.code   = \dim_gset:cn {chapter_padding_left}{#1},                                                                                                                           
+  chapter~padding-right/.code  = \dim_gset:cn {chapter_padding_right}{#1},                                                                                                             
+  chapter~padding-top/.code    = \dim_gset:cn {chapter_padding_top}{#1},                                                                                                                                                       
+  chapter~padding-bottom/.code = \dim_gset:cn {chapter_padding_bottom}{#1},                                                                                                                                                                                                 
 }
-\ExplSyntaxOff
-%    \end{macrocode}    
-%
-% The default if no value is entered is 0pt. Also
-% 
+%    \end{macrocode}
+% In retrospect this should go in a handler
 %    \begin{macrocode}
 \cxset{
-  chapter padding/.code={\def\@tempa{none}%
+  chapter padding/.code={
+    \def\@tempa{none}%
     \def\@tempb{#1}%
     \ifx\@tempa\@tempb%
       \global\setlength\chapterpaddingleft{0pt}%
@@ -9906,7 +9885,44 @@ SIXTY FIVE\or SIXTY SIX \or SIXTY SEVEN \or \else
       \setlength\chapterpaddingbottom{#1}%
     \fi}
 }    
-%    \end{macrocode}  
+
+%    \end{macrocode}
+%
+% \subsubsection{Chapter border colors}
+%
+% The series of keys denoted by \meta{chapter}\meta{border}\meta{top}\meta{color}
+% are used to store the colors of borders. We need to be careful here not to get
+% any expansion problems.
+
+%    \begin{macrocode}
+
+\cxset{chapter~border-top-color/.code    = \tl_gset:Nn \chapter_border_top_color {#1},
+  chapter~border-right-color/.code       = \tl_gset:Nn \chapter_border_right_color {#1},
+  chapter~border-bottom-color/.code      = \tl_gset:Nn \chapter_border_bottom_color{#1},
+  chapter~border-left-color/.code        = \tl_gset:Nn \chapter_border_left_color {#1},
+  }
+ \cxset{%
+  chapter~border-top-color=sweet,
+  chapter~border-right-color=sweet,
+  chapter~border-bottom-color=sweet,
+  chapter~border-left-color=sweet,
+}%
+%                            
+\cxset{chapter~border-color/.code=\pgfkeysalso{chapter~border-top-color={#1},%
+                                               chapter~border-right-color={#1},
+                                               chapter~border-bottom-color={#1},
+                                               chapter~border-left-color={#1}}}%
+%                                                           
+ % set some defaults                                                                
+\cxset{%
+  chapter~border-top-color=sweet,
+  chapter~border-right-color=sweet,
+  chapter~border-bottom-color=sweet,
+  chapter~border-left-color=white,
+  chapter~border-color=blue,
+ }%
+\ExplSyntaxOff          
+%    \end{macrocode}    
 %
 % \subsubsection{Chapter letter spacing} 
 % NEEDS REVISITING TO ALLOW FOR  SOUL OR MICROTYPE  LEAVE ALSO LETTER SPACING 
@@ -9936,58 +9952,60 @@ SIXTY FIVE\or SIXTY SIX \or SIXTY SEVEN \or \else
 %  apply to rectangular boxed content, using \cmd{\phd@fbox}
 %
 %    \begin{macrocode}
+\ExplSyntaxOn
+\tl_new:c {chapter_border_top_style}
+\tl_new:c {chapter_border_right_style}
+\tl_new:c {chapter_border_bottom_style}
+\tl_new:c {chapter_border_left_style}
 \cxset{
-  chapter border-top-style/.store in=\chapterbordertopstyle, 
-  chapter border-right-style/.store in=\chapterborderrightstyle, 
-  chapter border-bottom-style/.store in=\chapterborderbottomstyle,
-  chapter border-left-style/.store in=\chapterborderleftstyle, 
-  chapter border-style/.code=\pgfkeysalso{chapter border-top-style=#1,%
-    chapter border-right-style=#1,%
-    chapter border-bottom-style=#1,%
-    chapter border-left-style=#1%,
+  chapter~border-top-style/.code      = \tl_gset:cn {chapter_border_top_style}{#1}, 
+  chapter~border-right-style/.code    = \tl_gset:cn {chapter_border_right_style}{#1}, 
+  chapter~border-bottom-style/.code   = \tl_gset:cn {chapter_border_bottom_style}{#1},
+  chapter~border-left-style/.code     = \tl_gset:cn {chapter_border_left_style}{#1}, 
+  chapter~border-style/.code          = \pgfkeysalso{chapter~border-top-style=#1,%
+                              chapter~border-right-style=#1,%
+                              chapter~border-bottom-style=#1,%
+                              chapter~border-left-style=#1%,
   },
 }
+\ExplSyntaxOff
 \cxset{
-  chapter border-top-style=none,
-  chapter border-right-style=none,
-  chapter border-bottom-style=none,
-  chapter border-left-style=none,}  
+  chapter border-top-style=solid,
+  chapter border-right-style=solid,
+  chapter border-bottom-style=solid,
+  chapter border-left-style=solid}  
 %    \end{macrocode}
 
 %
-%  \begin{macro}{\chaptershape}
+%  \begin{docCommand}{chaptershape} {\meta{shape name}}
+%  Defines the shape for the Chapter
+%  \end{docCommand}
+%
 %    \begin{macrocode}
-\gdef\chaptershape{rounded rectangle}
-\cxset{
-chapter shape/.is choice,
-  chapter shape/rectangle/.code=\gdef\chaptershape{rectangle},
-  chapter shape/ellipse/.code=\gdef\chaptershape{ellipse},
-  chapter shape/circle/.code=\gdef\chaptershape{circle},
-  chapter shape/rounded rectangle/.code=\gdef\chaptershape{rounded rectangle},
-  chapter shape/diamond/.code=\gdef\chaptershape{diamond},
-  chapter shape/starburst/.code=\gdef\chaptershape{starburst},
-  chapter shape/none/.code=\gdef\chaptershape{},
-  chapter shape/star/.code=\gdef\chaptershape{star},
-}
+%
+\ExplSyntaxOn
+  \cxset{chapter~shape/.shape~is = \chaptershape, }
+  \cxset{chapter~shape = diamond}
+\ExplSyntaxOff
+%  
 %    \end{macrocode}
-%  \end{macro}
 %
-% \subsection{Chapter title parameters}
-%   We define a key to set the chapter title text width. The calculated value of this box will
-%   be less than that specified by the user, if padding and borders are defined. This is to avoid
-%   overful boxes, when the user specifies full width such as textwidth.
-%
+% \cxset{chapter shape = diamond}
+% \subsection{Chapter title keys}
+% 
+%   We define  key-sets for the chapter title block. The text is typeset in a minipage
+%   of width \docAuxCommand {chapter_title_text_width}. Any borders and padding
+%   are added by the layout engine and then the block is aligned as per the rules 
+%   and settings described later on.
+% 
 %    \begin{macrocode}  
 \ExplSyntaxOn
-\dim_new:c {chapter_title_text_width}
-\dim_new:c {chapter_title_width}
+\dim_new:N \chapter_title_text_width
 \cxset{ 
-  chapter~title~width/.code= \gdef\chaptertitlewidth@cx{#1}
-    \dim_gset:cn {chapter_title_width}{#1},
-  title~text-width/.code=\gdef\chaptertitletextwidth@cx {#1}                                          
-    \dim_gset:cn {chapter_title_text_width} {#1},
+  chapter~title~width/.code =  \dim_gset:Nn \chapter_title_text_width {#1},
+  title~text-width/.style = { chapter~title~width= {#1} }
 }    
-\ExplSyntaxOff                                            
+\ExplSyntaxOff
 %    \end{macrocode}
 %
 %  Next we deal with the title alignment. The title is typeset in a minipage
@@ -10003,84 +10021,100 @@ chapter shape/.is choice,
 % \begin{docKey}{title display}{ = \oarg{none,block,inline,inline-block}}{default block}
 % The title display key determines how the title is aligned with its neighbours.
 % It defaults to block, which it means is typeset on its own line.
+%
+%  |chapter_title_display = none|   none is left left aligned\\
+%  |chapter_title_display = block|   block typeset in minipage\\
+%  |chapter_title_display = in-line block|   in-line block minipage but cannot float\\
+%  |chapter_title_display = inline|   inline equivalent to 0 consider removing \\ 
 % \end{docKey}
 %    \begin{macrocode}
 \ExplSyntaxOn
-\int_gzero_new:c {chapter_title_display}
-\tl_new:c {chapter_title_text_align}
-
 %
-
 \cxset{
   title~display/.is~choice,
-  title~display/none/.code = \gdef\titledisplay@cx{0}
-    \int_gset:cn {chapter_title_display}{0},
-  title~display/block/.code = \gdef\titledisplay@cx{1}
-    \int_gset:cn {chapter_title_display}{1},
-  title~display/in-line block/.code=\gdef\titledisplay@cx{2}
-    \int_gset:cn {chapter_title_display}{2},
-  title~display/inline/.code=\gdef\titledisplay@cx{3}
-    \int_gset:cn {chapter_title_display}{3},
-  chapter~title~display/.style = \pgfkeysalso{title~display=#1}  
-}
-\cxset{title~display=block}  
+  title~display/none/.code          = \tl_gset:Nn \chapter_title_display_tl{none},
+  title~display/block/.code         = \tl_gset:Nn \chapter_title_display_tl{block},
+  title~display/in-line block/.code = \tl_gset:Nn \chapter_title_display_tl{in-line block},
+  title~display/inline/.code        = \tl_gset:Nn \chapter_title_display_tl{inline},
+ }
 \ExplSyntaxOff
+\cxset{title display=block}  %!REMOVE PUT AT DEFAULTS
 %    \end{macrocode}
+% 
+%  \begin{docCommand}{chapter_title_float_tl} {\meta{option}}
+%  This key determines if the title block can float. This is used together 
+%  with the display property described above. For an element to float the |title  display| must be block
+%  and the |title| float to one of |left|, |right| or |center|. The last one is a
+%  heretical departure from the css standard model, which uses |margin:auto| for this. 
+%  Not too difficult to incorporate, maybe I should do this at the next version.
+%  \end{docCommand}
+% 
+%    \begin{macrocode}
+\ExplSyntaxOn
+\cxset{
+  title~float/.is~choice,
+  title~float/none/.code   = \gdef\chapter_title_float_tl {none},    
+  title~float/left/.code   = \gdef\chapter_title_float_tl {left},
+  title~float/right/.code  = \gdef\chapter_title_float_tl {right},
+  title~float/center/.code = \gdef\chapter_title_float_tl {center},
+}
+\ExplSyntaxOff
+\cxset{title float=center}
+%    \end{macrocode}
+% 
+% 
+%  \begin{docCommand}{chapter_title_text_align} {\meta{void}}
+%  Key setting to set inner block text alignment. This allows for more options than normal css.
+%  For example we can do russian last line alignment. 
+%  
+% \end{docCommand}  
 %
 %    \begin{macrocode}  
 \ExplSyntaxOn
-
 \cxset{
   chapter~title~text-align/.is~choice,
-  chapter~title~text-align/center/.code=\gdef\chaptertitletextalign@cx{\Centering}
-    \tl_gset:cn {chapter_title_text_align}{\Centering},                                                                                                 
-%    
-  chapter~title~text-align/centering/.code=\gdef\chaptertitletextalign@cx{\centering}
-    \tl_gset:cn {chapter_title_text_align}{\centering},                                                                                                 
-%    
-  chapter~title~text-align/none/.code=\gdef\chaptertitletextalign@cx{}
-     \tl_gset:cn {chapter_title_text_align}{},                                                                                                 
-%     
-  chapter~title~text-align/justified/.code=\gdef\chaptertitletextalign@cx{}
-    \tl_gset:cn {chapter_title_text_align}{},
-%  
-  chapter~title~text-align/left/.code=\gdef\chaptertitletextalign@cx{\RaggedRight}
-    \tl_gset:cn {chapter_title_text_align}{\RaggedRight},
-%    
-  chapter~title~text-align/raggedleft/.code=\gdef\chaptertitletextalign@cx{\RaggedLeft}
-   \tl_gset:cn {chapter_title_text_align}{\RaggedLeft},
-%   
-  chapter~title~text-align/right/.code=\gdef\chaptertitletextalign@cx{\RaggedLeft}
-   \tl_gset:cn {chapter_title_text_align}{\RaggedLeft},
-%   
-  chapter~title~text-align/raggedright/.code=\gdef\chaptertitletextalign@cx{\RaggedRight}
-   \tl_gset:cn {chapter_title_text_align}{\RaggedRight},
+  chapter~title~text-align/center/.code = \tl_gset:cn {chapter_title_text_align}
+      {\Centering},                                                                                                 
+  chapter~title~text-align/centering/.code= \tl_gset:cn {chapter_title_text_align}
+      {\centering},
+  chapter~title~text-align/Centering/.code= \tl_gset:cn {chapter_title_text_align}
+      {\Centering},                                                                                                        
+  chapter~title~text-align/none/.code = \tl_gset:cn {chapter_title_text_align}{},                                                                                                 
+  chapter~title~text-align/justified/.code = \tl_gset:cn {chapter_title_text_align}{},
+  chapter~title~text-align/left/.code =  \tl_gset:cn {chapter_title_text_align}
+      {\RaggedRight},
+  chapter~title~text-align/raggedleft/.code =  \tl_gset:cn {chapter_title_text_align}
+      {\RaggedLeft},
+  chapter~title~text-align/right/.code =  \tl_gset:cn {chapter_title_text_align}
+      {\RaggedLeft},
+  chapter~title~text-align/raggedright/.code = \tl_gset:cn {chapter_title_text_align}
+     {\RaggedRight},
 }
-\ExplSyntaxOff
+
 %
-\cxset{chapter title text-align=left}
-\ExplSyntaxOn
+\cxset{chapter~title~text-align=none}
+
 \tl_new:c {chapter_title_align}
 \cxset{    
   % aligning the block title 
   chapter~title~align/.is~choice,
-  chapter~title~align/centering/.code=\def\gluestart{\hss}\def\glueend{\hss}
+  chapter~title~align/centering/.code=
    \tl_gset:cn {chapter_title_align}{centering},
   % alias
-  chapter~title~align/center/.code=\def\gluestart{\hss}\def\glueend{\hss}, 
+  chapter~title~align/center/.style= {chapter~title~align=#1} , 
 %   
-  chapter~title~align/raggedright/.code=\def\gluestart{\hss}\def\glueend{},
+  chapter~title~align/raggedright/.code=,
 %  
-  chapter~title~align/raggedleft/.code=\def\gluestart{}\def\glueend{\hss}
+  chapter~title~align/raggedleft/.code=
     \tl_gset:cn {chapter_title_align}{raggedleft},
 %                                                          
-  chapter~title~align/right/.code=\def\gluestart{\hss}\def\glueend{}                                                      
+  chapter~title~align/right/.code=                                                      
     \tl_gset:cn {chapter_title_align}{right},  
 %  
-  chapter~title~align/left/.code=\def\gluestart{}\def\glueend{\hss}
+  chapter~title~align/left/.code=
     \tl_gset:cn {chapter_title_align}{left},
 %                                                 
-  chapter~title~align/none/.code=\def\gluestart{}\def\glueend{}
+  chapter~title~align/none/.code=
      \tl_gset:cn {chapter_title_align}{none},
 }
 
@@ -10088,23 +10122,33 @@ chapter shape/.is choice,
 \ExplSyntaxOff
 \cxset{chapter title align=centering}
 %
+%    \end{macrocode}
 %
-
+% \begin {docCommand} {title_font_family} {\meta{font family name}}
+%    These keys set the font parameters for the element. These are high level commands
+%    \pkgname{fontspec} can be used for lower level fine-tuning, such as tags for scripts,
+%    languages and other features.
+% \end{docCommand}
+%    \begin{macrocode}
+\ExplSyntaxOn
 \cxset{
-  title font-family/.store in=\titlefontfamily@cx,
-  title font-weight/.font-weight in=\titlefontweight@cx,
-  title font-size/.store in=\titlefontsize@cx,
-  title font-color/.store in=\titlefontcolor@cx,
-  title font-shape/.store in=\titlefontshape@cx}
-
+  title~font-face/.font-face~in=\title_font_face, 
+  title~font-family/.font-family~in=\title_font_family,
+  title~font-weight/.font-weight~in=\title_font_weight,
+  title~font-size/.font-size~in =\titlefontsize@cx,
+  title~font-color/.store~in=\titlefontcolor@cx,
+  title~font-shape/.font-style~in=\titlefontshape@cx
+}
+\ExplSyntaxOff
 \cxset{title font-shape=upshape}
+\cxset{title font-face=pan}
 %    \end{macrocode}
 %
 %  Letter-spacing is handled in a similar fashion defining keys both for 
 %  the common \latex community terminology (spaceout) and also
-% using |letter-spacing|.
+%  using |letter-spacing|.
 %
-
+%  
 %    \begin{macrocode}
 \cxset{  
   title spaceout/.is choice,
@@ -10126,154 +10170,260 @@ chapter shape/.is choice,
   }
 %    \end{macrocode}
 %
-%   The margin top property should primarily be used for non-inline headings. If the value is
-%   zero we ensure we stay in horizontal mode. We also ensure that only specified skips
-%   are inserted so as to be able to specify exact amounts for grids.
+% \begin{docKey}{title margin-top}{ = \meta{dim}} {default 0pt}
+% This family of keys are used to set the title margins. Note these are outside 
+% the containing block and for the top and bottom, we need to be in vertical mode.
+% \end{docKey}
 %
 %   \begin{macrocode}
-\pgfkeys{/handlers/.dimstore in/.code=\pgfkeysalso{\pgfkeyscurrentpath/.code=\def#1{\the\dimexpr##1\relax}}}%
-%
-\newlength\titlemarginleft \setlength\titlemarginleft{0pt}
+\ExplSyntaxOn
 
-\cxset{
-  title margin top/.code=%
-      \gdef\titlemargintop@cx{%
-           \global\setlength\titlemargintop{#1}%
-           \ifdim#1=0pt\relax%
-            \else%
-                \par\ifvmode\nointerlineskip%
-                    \addvspace{\glueexpr#1-\parskip}% 
-                \fi%    
-           \fi%
-        },
-  title margin-top/.style={title margin top=#1},       
-      %        
-  title margin bottom/.code=%
-    \gdef\titlemarginbottom@cx{%
-    \global\setlength\titlemarginbottom{\the\dimexpr#1\relax}%
-    \par\nointerlineskip
-    \vspace*{#1}% 
-    }%
-    \titlemarginbottom@cx,
-  title margin-bottom/.style =\pgfkeysalso{title margin bottom=#1},      
-  title margin-left/.code=\global\setlength{\titlemarginleft}{#1}
-                                      \gdef\titlemarginleft@cx{\hspace*{#1}},%,
-  title margin right/.code=\def\titlemarginright@cx{\rightskip#1},
+
+\cxset  {          
+  title~margin-top/.code    = \dim_gset:Nn \title_margin_top {#1},
+  title~margin-right/.code  = \dim_gset:Nn \title_margin_right {#1},
+  title~margin-bottom/.code = \dim_gset:Nn \title_margin_bottom {#1},
+  title~margin-left/.code   = \dim_gset:Nn \title_margin_left {#1},
+ 
+}    
+\ExplSyntaxOff    
+
+%    \end{macrocode}
+%
+% \begin{docCommand}{title_padding_top_width} { \meta{dim} }  
+%    Handles all the padding settings. The padding is added outside the minipage
+%    and before the border. It is equivalent to \tikzname |inner sep| and to |\fbox|'s 
+%    |\fboxsep|, so no fire works here or browser wars.
+% \end{docCommand}
+% 
+%    \begin{macrocode}
+\ExplSyntaxOn
+\cxset{  
+   title~padding-top/.code    = \dim_gset:Nn \title_padding_top_width{#1},
+   title~padding-bottom/.code = \dim_gset:Nn \title_padding_bottom_width{#1} ,
+   title~padding-left/.code   = \dim_gset:Nn \title_padding_left_width{#1},
+   title~padding-right/.code  = \dim_gset:Nn \title_padding_right_width{#1},
+   title~padding/.style       = {title~padding-top=#1,
+                                   title~padding-right=#1,
+                                   title~padding-bottom=#1,
+                                   title~padding-left=#1,
+                                 }, 
+}
+\ExplSyntaxOff
+%    \end{macrocode}
+
+%
+% \begin{docCommand}{title_border_top_width}{\marg {dim} }
+%    Handles all the settings for the border widths. The \docAuxCommand{title_border_width}
+%    sets all borders to one value.
+% \end{docCommand}
+%    \begin{macrocode}  
+\ExplSyntaxOn  
+\cxset {                                   
+  title~border-top-width/.code  = \dim_gset:Nn \title_border_top_width {#1},
+  title~border-right-width/.code = \dim_gset:Nn \title_border_right_width {#1},
+  title~border-left-width/.code    = \dim_gset:Nn \title_border_left_width {#1},
+  title~border-bottom-width/.code=\dim_gset:Nn \title_border_bottom_width {#1},                             
+  title~border-width/.code= \dim_gset:Nn \title_border_width{#1}
+                                           \dim_gset:Nn\title_border_top_width{#1}
+                                           \dim_gset:Nn \title_border_right_width{#1}
+                                           \dim_gset:Nn \title_border_bottom_width{#1}
+                                           \dim_gset:Nn \title_border_left_width{#1},
+}                     
+\ExplSyntaxOff  
+%    \end{macrocode}
+%
+% \begin{docCommand} { title_border_color } { \meta{color} }
+%   This family of commands sets colors for titles.
+% \end{docCommand}
+%
+%    \begin{macrocode} 
+\ExplSyntaxOn
+\tl_new:N \title_border_color
+\tl_new:N \title_border_top_color
+\tl_new:N \title_border_right_color
+\tl_new:N \title_border_bottom_color
+\tl_new:N \title_border_left_color
+\cxset{  
+  title~border-left-color/.code     = \tl_gset:Nn \title_border_left_color {#1},
+  title~border-top-color/.code      = \tl_gset:Nn \title_border_top_color {#1},
+  title~border-right-color/.code    = \tl_gset:Nn \title_border_right_color {#1},
+  title~border-bottom-color/.code   = \tl_gset:Nn \title_border_bottom_color {#1},
+% 
+  title~border-color/.code=\tl_gset:Nn \title_border_color{#1}%
+                           \tl_gset:Nn \title_border_left_color{#1}%
+                           \tl_gset:Nn \title_border_right_color{#1}%
+                           \tl_gset:Nn \title_border_top_color{#1}%
+                           \tl_gset:Nn \title_border_bottom_color{#1},
+}
+\ExplSyntaxOff
+%    \end{macrocode}
+%
+%\cxset{title border-color=blue}
+%\ExplSyntaxOn
+%
+%\ExplSyntaxOff
+
+%    \begin{macrocode}
+\cxset {
+  %title margin-bottom/.style =\pgfkeysalso{title margin bottom=#1},      
+%  title margin-left/.code=\global\setlength{\titlemarginleft}{#1}
+%                                      \gdef\titlemarginleft@cx{\hspace*{#1}},%,
   title afterskip/.store in=\titleafterskip@cx,
   position/.is choice,
   position/left/.code={\@lefttrue},
   position/right/.code={\@righttrue},
   position/center/.code={\@centertrue},
-  % title padding
-  title padding-top/.code=\global\setlength{\titlepaddingtop}{#1},
-  title padding-bottom/.code=\global\setlength{\titlepaddingbottom}{#1},
-  title padding-left/.code=\global\setlength{\titlepaddingleft}{#1},
-  title padding-right/.code=\global\setlength{\titlepaddingright}{#1},
-  title padding/.code=\global\setlength{\titlepaddingtop}{#1}%
-                                  \global\setlength{\titlepaddingbottom}{#1}%
-                                  \global\setlength{\titlepaddingright}{#1}%
-                                  \global\setlength{\titlepaddingleft}{#1},
-  % borders left
-  title border-top-color/.store in=\titlebordertopcolor@cx,
-  title border-top-width/.code=\global\setlength\titlebordertopwidth{#1},
-  % borders left
-  title border-left-color/.store in=\titleborderleftcolor@cx,
-  title border-left-width/.code=\global\setlength\titleborderleftwidth{#1},
-  % borders right
-  title border-right-color/.store in=\titleborderrightcolor@cx,
-  title border-right-width/.code=\global\setlength\titleborderrightwidth{#1},
-  % borders bottom
-  title border-bottom-color/.store in=\titleborderbottomcolor@cx,
-  title border-bottom-width/.code=\global\setlength\titleborderbottomwidth{#1},
-  % we set the full short-hand keys
-  title border-color/.code=\def\titlebordercolor@cx{#1}%
-                                       \def\titleborderleftcolor@cx{#1}%
-                                       \def\titleborderrightcolor@cx{#1}%
-                                       \def\titlebordertopcolor@cx{#1}%
-                                       \def\titleborderbottomcolor@cx{#1},
-  title border-width/.code=\global\setlength\titleborderwidth{#1}%
-                                         \global\setlength\titlebordertopwidth{#1}%
-                                         \global\setlength\titleborderrightwidth{#1}%
-                                         \global\setlength\titleborderbottomwidth{#1}%
-                                         \global\setlength\titleborderleftwidth{#1},
+}
+
+%                  
 %    \end{macrocode}
 %
+% \section{The number element keys}
 % The numbering keys deal with the typesetting of the chapter number
 % in the chapter head. We use two packages for expressing numbers into
 % words. The padzeroes is to produce EWD style notes. 
 %
 %    \begin{macrocode}
+\cxset{
   chapter numbering/.is choice,
   chapter numbering/none/.code={\gdef\thechapter{}},
   chapter numbering/roman/.code={\gdef\thechapter{\@roman\c@chapter}},
   chapter numbering/Roman/.code={\gdef\thechapter{\@Roman\c@chapter}},
   chapter numbering/arabic/.code={\gdef\thechapter{\@arabic\c@chapter}},
+%  
   chapter numbering/alpha/.code={\gdef\thechapter{\alphalph\c@chapter}\relax},
   chapter numbering/Alpha/.code={\gdef\thechapter{\AlphAlph\c@chapter}},
-  chapter  numbering/words/.code={\gdef\thechapter{\expandafter\words@cx{\expandafter\@arabic\c@chapter}}},
+  chapter  numbering/words/.code=%
+  {\gdef\thechapter{\expandafter\words@cx{\expandafter\@arabic\c@chapter}}},
   chapter numbering/WORDS/.code= {\gdef\thechapter{\expandafter\WORDS@cx{\expandafter\@arabic\c@chapter}}},
   chapter numbering/ORDINALS/.code=\gdef\thechapter{%
   \expandafter\ordinals@cx{\@arabic\c@chapter}},%{\gdef\thechapter{\NUMBERstring{chapter}}},
   chapter numbering/Words/.code={\gdef\thechapter{\expandafter\Words@cx{\expandafter\@arabic\c@chapter}}},
 chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\decimal{chapter}}}},%
+ chapter numbering custom/.code=\gdef\thechapter{#1},
+}
+%    \end{macrocode}
+%
+% We define a number of shorter aliases. This also for some legacy code using it.
+%    \begin{macrocode}
+\cxset{
   numbering/.is choice,
+  numbering/none/.code = \pgfkeysalso{chapter numbering=none}, % do not leave empty
   numbering/roman/.code={\gdef\thechapter{\@roman\c@chapter}},
   numbering/Roman/.code={\gdef\thechapter{\@Roman\c@chapter}},
   numbering/arabic/.code={\gdef\thechapter{\@arabic\c@chapter}},
   numbering/alpha/.code={\gdef\thechapter{\alphalph\c@chapter}},
   numbering/Alpha/.code={\gdef\thechapter{\AlphAlph\c@chapter}},
-  %numbering/words/.code={\gdef\thechapter{\MakeTextLowercase{\expandafter\words@cx{\expandafter\@arabic\c@chapter}}}},
   numbering/WORDS/.code={\gdef\thechapter{\expandafter\WORDS@cx{\expandafter\@arabic\c@chapter}}},
-%% These proved a bit trouble some and ended up calling the fmtcount package routines
-  %numbering/WORDS/.code={\gdef\thechapter{\NUMBERstring{chapter}}},
   numbering/Words/.code={\gdef\thechapter{\expandafter\Words@cx{\expandafter\@arabic\c@chapter}}},
   numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\decimal{chapter}}
   }},
-  numbering/none/.code={\gdef\thechapter{}}, % do not leave empty
-  chapter numbering custom/.code=\gdef\thechapter{#1},
-   number spaceout/.is choice,
+  numbering/ORDINALS/.code=\gdef\thechapter{%
+  \expandafter\ordinals@cx{\@arabic\c@chapter}},
+}
+%    \end{macrocode}
+%
+%  Next we get the spaceout keys going
+%
+%    \begin{macrocode}
+\cxset{  
+  number spaceout/.is choice,
   number spaceout/soul/.code=\@numberspaceouttrue,
   number spaceout/none/.code=\@numberspaceoutfalse,
   number spaceout/inherit/.code=\let\@numberspaceout\@chapterspaceout,
   number spaceout/microtype/.code=\@numberspaceouttrue,
   number letter-spacing/.code=\pgfkeysalso{number spaceout=soul},
-  number dot/.store in=\numberpunctuation@cx,
+  number dot/.store in=\numberpunctuation@cx,}
+%    \end{macrocode}
+% The position keys will be dropped soon!
+%    \begin{macrocode}  
+\cxset{  
   number position/.is choice,
   number position/leftname/.code={\@leftnametrue\@rightnamefalse},
   number position/rightname/.code={\@rightnametrue\@leftnamefalse},
   number position/absolute/.code={},
   number position/righttitle/.code=\@righttitletrue,
   number position/lefttitle/.code=\@lefttitletrue,
-  number after/.store in=\numberafter@cx,
-  number after content/.store in=\numberaftercontent@cx,
-  number before/.store in=\numberbefore@cx,
+}
+%    \end{macrocode}
+%
+% The before and after keys. We need to expand the concept.
+%
+%    \begin{macrocode}
+\ExplSyntaxOn
+\cxset
+  {
+    number~after/.store~in=\numberafter@cx,
+    number~after~content/.store~in=\numberaftercontent@cx,
+    number~before/.store~in=\numberbefore@cx,
+    number~before~content/.store~in=\numberbeforecontent@cx,
+  }
+\ExplSyntaxOff
+\cxset{number after=,
+       number after content=,
+       number before=,
+       number before content=,}  
+%  
+\cxset{  
   number background-color/.code=\gdef\numberbgcolor{#1},
   number color/.store in=\numbercolor@cx,
-  number font-size/.store in=\numberfontsize@cx,
-  number font-family/.font-family in=\numberfontfamily@cx,
-  %% new style handlers
-  number font-weight/.font-weight in=\numberfontweight@cx,
-  number font-shape/.font-style in =\numberfontshape@cx,
-  number font-style/.font-style in=\numberfontshape@cx,
-  number font-name/.store in=\numberfontname@cx,%new
-  %% 
-  number margin top/.store in=\numbermargintop@cx,
-  number margin left/.store in=\numbermarginleft@cx,
-  number margin right/.store in=\numbermarginright@cx,
+}
+%    \end{macrocode}
+%  \begin{docCommand}{number_font_weight} {\meta{font weight name}}
+%    Defining the fonts follows the same pattern as for the other elements.
+%    These are passed onto the \refCom{setnumberfont} for further processing by the
+%    layouts engine.
+%  \end{docCommand}
+%
+%    \begin{macrocode}
+\ExplSyntaxOn
+\cxset{    
+  number~font-size/.store~in         = \number_font_size,
+  number~font-family/.font-family~in = \number_font_family,
+  number~font-weight/.font-weight~in = \number_font_weight ,
+  number~font-shape/.font-style~in   = \number_font_shape,
+  number~font-style/.font-style~in   = \number_font_shape,
+  number~font-name/.store~in         = \number_font_name,% CHECK USAGE
+}
+\ExplSyntaxOff
+%
+%    \end{macrocode}
+%
+% \subsection{Number borders}
+%    \begin{macrocode}
+\ExplSyntaxOn
+%
+
+\cxset
+  {  
+    number~margin~top/.code     = \dim_gset:Nn\number_margin_top {#1},
+    number~margin~left/.code    = \dim_gset:Nn \number_margin_left {#1},
+    number~margin~right/.code   = \dim_gset:nn \number_margin_right {#1},
+    number~margin~bottom/.code  = \dim_gset:nn \number_margin_bottom {#1}
+  }  
+%  
+\cxset
+  {  
   % number borders
-  number border top/.store in=\numberborderleft@cx,
-  number border bottom/.store in=\numberborderbottom@cx,
-  number border-top-width/.code=\global\setlength\numberbordertopwidth{#1},
-  number border-bottom-width/.code=\global\setlength\numberborderbottomwidth{#1},
-  number border-left-width/.code=\global\setlength\numberborderleftwidth{#1},
-  number border-right-width/.code=\global\setlength\numberborderrightwidth{#1},
-  number border-width/.code=\pgfkeysalso{number border-top-width=#1,
-                                                         number border-right-width=#1,
-                                                         number border-bottom-width=#1,
-                                                         number border-left-width=#1},
+  number~border-top-width/.code    = \dim_gset:Nn\number_border_top_width{#1},
+  number~border-bottom-width/.code = \dim_gset:Nn\number_border_bottom_width {#1} ,
+  number~border-right-width/.code  = \dim_gset:Nn\number_border_right_width{#1},
+  number~border-left-width/.code   = \dim_gset:Nn\number_border_left_width{#1},
+  number~border-width/.code        = \pgfkeysalso{number~border-top-width=#1,
+                                                  number~border-right-width=#1,
+                                                  number~border-bottom-width=#1,
+                                                  number~border-left-width=#1},}
+\ExplSyntaxOff
+%    \end{macrocode}
+%
+%    \begin{macrocode}                                                         
+\cxset{  
   number display/.is choice,
   number display/inline/.code=\global\setcounter{numberdisplay}{0},
-  number display/block/.code=\global\setcounter{numberdisplay}{2},   
+  number display/block/.code=\global\setcounter{numberdisplay}{2},}   
+%  
+\cxset{  
   number float/.is choice,
   number float/left/.code=\global\setcounter{numberfloat}{0},
   number float/none/.code=\global\setcounter{numberfloat}{0},                                                    
@@ -10285,47 +10435,52 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
 % I wasn’t too sure how to incorporate this in a nice way, so I defined a new property key,
 % shape
 % A shape can also have a style, if you want to really get fancy.
-%  \begin{macro}{\numbershape}
+%  \begin{docCommand}{numbershape} {\meta{void}}
+%    The |\numbershape| token list stores common shapes that can be used to shape the
+%    number. We use \tikzname to as the shaping engine except for the rectangle that
+%    we use our own. The number can be shaped separately from the chapter even when they
+%    are inline. 
+%  \end{docCommand}
+% Picked up quite a few issues here. Need to revisit to ensure everything is ok. Seems
+% to be an issue with number???
 %    \begin{macrocode}
-\gdef\numbershape{rounded rectangle}
+\ExplSyntaxOn
 \cxset{
-  number shape/.is choice,
-  number shape/rectangle/.code=\gdef\numbershape{rectangle},
-  number shape/ellipse/.code=\gdef\numbershape{ellipse},
-  number shape/circle/.code=\gdef\numbershape{circle},
-  number shape/rounded rectangle/.code=\gdef\numbershape{rounded rectangle},
-  number shape/diamond/.code=\gdef\numbershape{diamond},
-  number shape/starburst/.code=\gdef\numbershape{starburst},
-  number shape/none/.code=\gdef\numbershape{},
-  number shape/star/.code=\gdef\numbershape{star},
+   number~shape/.shape~is= \numbershape,
 }
+\ExplSyntaxOff
+\cxset{number shape=star}
+%
 %    \end{macrocode}
-%  \end{macro}
+%  
 %
 % We define border styles first individually per side and then globally with
 % a short-hand key.
 % CSS has a dotted solid dashed double
 % 
 %    \begin{macrocode}
-\newcounter{numberborderstyle} \global\setcounter{numberborderstyle}{0}
-\cxset{                                                         
-  number border-style/.is choice,
-  number border-style/solid/.code=\def\numberborderstyle@cx{1},
-  number border-style/double/.code=\def\numberborderstyle@cx{2},
-  number border-style/dashed/.code=\def\numberborderstyle@cx{3},                                                         
-  number border-style/none/.code=\def\numberborderstyle@cx{-1},%
-}  
+\ExplSyntaxOn
+\cxset
+  {                                                         
+   number~border-style/.border~style~is=\number_border_style,
+  }
+\ExplSyntaxOff   
+\cxset{number border-style=solid}
+ 
 % number padding
+\ExplSyntaxOn
+
 \cxset{  
-  number padding-top/.code=\global\setlength\numberpaddingtop{#1},
-  number padding-right/.code=\global\setlength\numberpaddingright{#1},
-  number padding-bottom/.code=\global\setlength\numberpaddingbottom{#1},
-  number padding-left/.code=\global\setlength\numberpaddingleft{#1},
-  number padding/.code=\pgfkeysalso{number padding-top=#1,
-                                                           number padding-right=#1,
-                                                           number padding-bottom=#1,
-                                                           number padding-left=#1},%
+  number~padding-top/.code= \dim_gset:Nn \number_padding_top {#1},
+  number~padding-right/.code=\dim_gset:Nn \number_padding_right{#1},
+  number~padding-bottom/.code=\dim_gset:Nn \number_padding_bottom {#1},
+  number~padding-left/.code=\dim_gset:Nn \number_padding_left{#1},
+  number~padding/.code=\pgfkeysalso{number~padding-top=#1,
+           number~padding-right=#1,
+           number~padding-bottom=#1,
+           number~ padding-left=#1},%
 }   
+\ExplSyntaxOff
 %    \end{macrocode}                                                        
 %
 % \subsection{Author blocks}
@@ -10364,7 +10519,8 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
           title padding-left=0pt,
           title padding-right=0pt,
           title padding=0pt,
-          }}                
+          }
+   }                
 \cxset{chapter margin-top=0pt,
           chapter margin-left=20pt,
           chapter title align=left,
@@ -10388,10 +10544,10 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
           number font-shape=upshape}
 \cxset{author block=false,
           author block afterskip=,
-          title margin top=0pt,
-          title margin bottom=0pt,
+          title margin-top=0pt,
+          title margin-bottom=0pt,
           title margin-left=0pt,
-          title margin right=0pt,
+          title margin-right=0pt,
           title border-top-color=sweet,
           title border-top-width=10pt,
           title border-left-color=sweet,
@@ -10882,7 +11038,7 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
 %
 % \subsection{Setting up the special chapter head mechanism}
 %
-%    We divide chapter heads in two broad categories, the
+% We divide chapter heads in two broad categories, the
 %	standard chapter heads that utilize macros similar to
 %	the standard classes and the \textit{special} chapter
 %	heads that have their own typesetter commands.
@@ -10957,13 +11113,21 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
 \global\newsavebox\tempboxa@cx
 \global\newsavebox\tempboxb@cx
 \global\newsavebox\tempboxc@cx
+%    \end{macrocode}
 %
-\def\setchapterfont{%
- \expandafter\setfontparam@cx\chapterfontfamily@cx;%
-         \expandafter\setfontparam@cx\chapterfontsize@cx;%
-         \expandafter\setfontparam@cx\chapterfontweight@cx;%
-         \expandafter\setfontparam@cx\chapterfontshape@cx;%
+%  \begin{docCommand}{set_chapter_font} {\meta{void}}
+%    Set the chapter font from global keys.
+%  \end{docCommand}
+%
+%    \begin{macrocode}
+\ExplSyntaxOn
+\cs_gset:Npn \set_chapter_font {%
+  \exp_after:wN \setfontparam@cx\chapter_font_family;%
+  \exp_after:wN \setfontparam@cx\chapter_font_size;%
+  \exp_after:wN \setfontparam@cx\chapter_font_weight;%
+  \exp_after:wN \setfontparam@cx\chapter_font_shape;%
 }
+\ExplSyntaxOff
 %    \end{macrocode}
 %
 % \begin{macro}{\drawmaybe}
@@ -10996,9 +11160,13 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
 %  Define some fancy border styles to abstract border styles
 %  \#1  rulewidth
 %    \begin{macrocode}
+\ExplSyntaxOn
 \newcommand\phd@rule[2][chapter]{%
-          \color{\rulebottomcolor}%
-           \edef\tempa{\csname#1borderbottomstyle\endcsname}
+\iffalse
+          %\color{\rulebottomcolor}%
+          \color{blue}
+           %\edef\tempa{\csname#1_border_bottom_style\endcsname}
+           \edef\tempa{solid} %TO FIX
            \edef\tempb{double}
            \edef\tempc{solid}
            \edef\tempd{dashed}
@@ -11037,7 +11205,11 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
                 \vskip1pt\nointerlineskip%
                 \hbox to \totalboxwidth{\cleaders\hbox{\textasteriskcentered}\hfill\kern\z@}%
            \fi
-}           
+\fi
+
+                      
+}       
+\ExplSyntaxOff    
 %    \end{macrocode}
 %
 %
@@ -11077,8 +11249,9 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
 % \end{macro}
 % \end{macro}
 %
-% \begin{macro}{\fbox}
-%   Abbreviated framed box command.
+% \begin{macro}{\phd@fbox}
+%   Abbreviated framed box command, based on |\fbox|, but all borders are
+%  accessible individually.
 %  The definition is from the kernel modified for variable padding and border
 %  widths. 
 % 
@@ -11090,12 +11263,13 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
 %
 \long\def\phd@fbox#1{%
   \leavevmode
-  \setbox\@tempboxa\hbox{%
-    \color@begingroup%
-      \kern\fboxsepleft{#1}\kern\fboxsepright%
-    \color@endgroup}%
- \edef\totalboxwidth{\expandafter\the\wd\@tempboxa}   
-  \phd@frameb@x\relax}
+    \setbox\@tempboxa\hbox {%
+       \color@begingroup%
+       \kern\fboxsepleft{-#1-}\kern\fboxsepright%
+       \color@endgroup
+       }%
+   \edef\totalboxwidth{\expandafter\the\wd\@tempboxa}   
+   \phd@frameb@x\relax}
 %    \end{macrocode}
 % \end{macro}
 %
@@ -11132,7 +11306,8 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
     \setbox\@tempboxa\hb@xt@\@tempdima
          {\kern\fboxsep\csname bm@#2\endcsname\kern\fboxsep}%
     \@frameb@x{\kern-\fboxrule}%
-  \@end@tempboxa}
+   \@end@tempboxa%
+  }
 %    \end{macrocode}
 % \end{macro}
 %
@@ -11149,17 +11324,16 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
   \hbox{%
     \lower\@tempdima\hbox{%
       \vbox{%
-        \bgroup%
-           \ifdim\fboxruletop>0pt 
-              \phd@rule{\totalboxwidth}%
+         \ifdim\fboxruletop>0pt 
+%              \phd@rule{\totalboxwidth}%
            \fi   
-           %\color{\ruletopcolor}\hrule\@height\fboxruletop\egroup%toprule
-            \egroup   
+           \color{blue}\hrule\@height\fboxruletop%toprule
+               
             \hbox{%
               \bgroup%
               \ifdim\fboxruleleft>0pt%
-                  \color{\ruleleftcolor}%
-                  \edef\tempa{\chapterborderleftstyle}%
+                  \color{blue}%
+                  \edef\tempa{\chapter_border_left_style}%
                   \edef\tempc{solid}%
                   \edef\tempb{double}%
                   \ifx\tempa\tempb%
@@ -11181,7 +11355,7 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
                   \edef\tempa{\chapterborderrightstyle}%
                   \edef\tempb{double}
                   \edef\tempc{solid}
-                  \color{\rulerightcolor}%
+                  \color{blue}%
                   \ifx\tempa\tempb%
                       \vrule\@width\fboxruleright%
                        \kern1pt%
@@ -11193,7 +11367,7 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
                   \egroup 
             }%%
            \bgroup
-              \phd@rule{\totalboxwidth}%
+             % \phd@rule{\totalboxwidth}%
            \egroup
            }%
            }%
@@ -11219,31 +11393,6 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
 %     
 % \begin{macro}{\saveelementbox}
 %    \begin{macrocode}
-\def\chapterbordertopcolor{}%                                                                                                                   
-\cxset{chapter border-top-color/.store in=\chapterbordertopcolor,
-       chapter border-right-color/.store in=\chapterborderrightcolor,
-       chapter border-bottom-color/.store in=\chapterborderbottomcolor,
-       chapter border-left-color/.store in=\chapterborderleftcolor,}
- \cxset{%
-          chapter border-top-color=sweet,
-          chapter border-right-color=sweet,
-          chapter border-bottom-color=sweet,
-          chapter border-left-color=sweet,
-           }%
-%                            
-\cxset{chapter border-color/.code=\pgfkeysalso{chapter border-top-color={#1},%
-                                                      chapter border-right-color={#1},
-                                                      chapter border-bottom-color={#1},
-                                                      chapter border-left-color={#1}}}%
-%                                                           
- % set some defaults                                                                
-\cxset{%
-          chapter border-top-color=sweet,
-          chapter border-right-color=sweet,
-          chapter border-bottom-color=sweet,
-          chapter border-left-color=white,
-         %chapter border-color=red%needs to be fixed
-          }%
 \def\saveelementbox#1#2#3{%
 %    \end{macrocode}
 % \end{macro}
@@ -11253,53 +11402,61 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
 %  i.e., \meta{chapter}paddingtop etc.
 %
 %    \begin{macrocode}
-%          
+   
    \expandafter\fboxseptop\csname#2paddingtop\endcsname
    \expandafter\fboxsepright\csname#2paddingright\endcsname
    \expandafter\fboxsepbottom\csname#2paddingbottom\endcsname
    \expandafter\fboxsepleft\csname#2paddingleft\endcsname
 %
-  \expandafter\fboxruletop\csname#2bordertopwidth\endcsname\relax
-  \expandafter\fboxruleright\csname#2borderrightwidth\endcsname\relax
-  \expandafter\fboxrulebottom\csname#2borderbottomwidth\endcsname\relax
-  \expandafter\fboxruleleft\csname#2borderleftwidth\endcsname\relax
+  \expandafter\fboxruletop\csname#2_border_top_width\endcsname\relax
+  \expandafter\fboxruleright\csname#2_border_right_width\endcsname\relax
+  \expandafter\fboxrulebottom\csname#2_border_bottom_width\endcsname\relax
+  \expandafter\fboxruleleft\csname#2_border_left_width\endcsname\relax
 %
 %
-   \let\ruletopcolor\chapterbordertopcolor
-   \let\rulerightcolor\chapterborderrightcolor       
-   \let\rulebottomcolor\chapterborderbottomcolor
-  \let\ruleleftcolor\chapterborderleftcolor
+%   \let\ruletopcolor\chapterbordertopcolor
+%   \let\rulerightcolor\chapterborderrightcolor       
+%   \let\rulebottomcolor\chapterborderbottomcolor
+%  \let\ruleleftcolor\chapterborderleftcolor
 %
 %
 \cxset{number border-left-width=0.1pt,
           number padding-top=0pt,
           number border-bottom-width=0pt,
-          chapter border-right-color=white,
-          chapter border-top-color=white}%
+%          chapter border-right-color=blue,
+%          chapter border-top-color=blue,
+          chapter border-width=1pt}%
 %          
   \expandafter\savebox\csname#2namebox\endcsname{%
-       \phd@fbox{#3}
-      % \shadowbox{#3}%
+     \fboxrule1pt\fboxsep1pt
+       \fbox{#3}
+      %\shadowbox{#3}%
        %\Ovalbox{#3}%
-       %\doublebox{#3}
-%      \tcbox[size=normal,
-%                colframe=white, colback =white, borderline={2pt}{5pt}{black},
-%               frame style={top color=white, bottom color=black, left color=black, right color=black},
-%       %borderline west={2pt}{-2pt}{red},
-%        %
-%      % arc=5pt,outer arc=5pt, %!hyberbola
-%      %outer arc=180pt,rounded corners=all,
-%      tikz={rotate=0}]{#3}%
-      %
-%        \tcbox[colframe=thelightgray,arc=3pt,%!hyberbola arcs 200
-%      outer arc=3.5pt,rounded corners=all,
+    
+%       \doublebox{#3}
+%      \hspace*{2cm}\tcbox[size=normal,
+%         colframe=blue, colback =blue, borderline={2pt}{5pt}{black},
+%         frame style={top color=blue, bottom color=black, left color=black, right color=black},
+%            borderline west={2pt}{-2pt}{red},
+%%        %
+%        arc=5pt,outer arc=5pt, %!hyberbola
+%        outer arc=3ptpt,rounded corners=all,
+%        tikz={shape=star, text=white}]{#3}%
+%      %
+%        \tcbox[colframe=thelightgray,arc=5pt,%!hyberbola arcs 200
+%      outer arc=5pt,rounded corners=all,
 %      tikz={rotate=30}]{#3}%
  %         \phd@fbox{#3}%
   }%
 }
+%    \end{macrocode}
 %
+% \begin{docCommand} {print_chapter_name} {\marg{element name}} {\marg{element name}}
+%   This function is a generalized macro that can be used to set and typeset
+%   an element, working out all necessary floats.
+% \end{docCommand}
 %
-%  
+%    \begin{macrocode}  
   \newcommand\printchaptername[2][chapter]{%
 %    \end{macrocode}
 % 
@@ -11354,7 +11511,7 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
 %  For block elements, i.e., elements that are allowed to float, we use a full line to float them. 
 %    \begin{macrocode}
 \def\rendercenterblock#1{%
-       \appendtoheading{heading}{%
+       \appendtotoks{heading}{%
        \centerline{%
          \expandafter\unhcopy\csname#1namebox\endcsname
         }%
@@ -11364,7 +11521,7 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
 % 
 %    \begin{macrocode}
  \def\renderleftblock#1{%
-   \appendtoheading{heading}{%
+   \appendtotoks{heading}{%
      % \leftline{%
          \expandafter\unhcopy\csname#1namebox\endcsname
       %}%
@@ -11372,7 +11529,7 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
   }
   %
 \def\renderrightblock#1{%
-   \appendtoheading{heading}{%
+   \appendtotoks{heading}{%
      \rightline{%
          \expandafter\unhcopy\csname#1namebox\endcsname
       }% 
@@ -11380,7 +11537,7 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
 }
 
 \def\renderinline#1{%
-  \appendtoheading{headingtoks}{%
+  \appendtotoks{headingtoks}{%
      \leftline{%
          \expandafter\unhcopy\csname#1namebox\endcsname
       }%    
@@ -11409,14 +11566,22 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
 %	designs such as those in multi-author books, hence we provide a macro to typeset it. 
 %	
 %    \begin{macrocode}
-\def\printauthorblock{%
-  \if@debug
+\def\authorblockdebug{
+\if@debug
     \tikz[remember picture,overlay] 
        \draw[<->] (0,0)--(0,0.5)--++(-.2,0)% 
               node[left,fill=blue!15,text=black]%
                {{\ttfamily\footnotesize author block=true}};%
-  \fi       
-  \authorblockformat@cx\authorblock@cx}%
+  \fi  
+}
+\ExplSyntaxOn
+\cs_new:Npn \print_author_block:
+  {%
+    \authorblockdebug
+    \authorblockformat@cx\authorblock@cx
+  }
+\ExplSyntaxOff  
+%
 %    \end{macrocode}
 % \end{macro}  
 %
@@ -11428,16 +11593,18 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
 %  sets the font for the number part of a chapter heading
 % \end{docCommand}
 %    \begin{macrocode}
+\ExplSyntaxOn
 \def\setnumberfont{%
-    \expandafter\setfontparam@cx\numberfontsize@cx;%
-    \expandafter\setfontparam@cx\numberfontfamily@cx;%
-    \expandafter\setfontparam@cx\numberfontweight@cx;%
-    \expandafter\setfontparam@cx\numberfontshape@cx;%
+    \expandafter\setfontparam@cx\number_font_size;%
+    \expandafter\setfontparam@cx\number_font_family;%
+    \expandafter\setfontparam@cx\number_font_weight;%
+    \expandafter\setfontparam@cx\number_font_shape;%
   }%
+\ExplSyntaxOff  
 %    \end{macrocode}
 % 
 %    \begin{macrocode}
-\newsavebox\numberbox
+
 %    \end{macrocode}
 % 
 % \begin{macro}{\printnumber@cx}
@@ -11473,11 +11640,11 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
 % We measure the width of the number box before we
 % insert any padding and borders          
           \savebox\numberbox{%
-                   \color{\numbercolor@cx}%
+                   \color{blue}%
                    \setnumberfont%
                     \soxx}%
 %                    
-            \colorbox{\numberbgcolor}{\hbox to \dimexpr(\wd\numberbox%
+            \colorbox{thegray}{\hbox to \dimexpr(\wd\numberbox%
                                +\numberborderleftwidth
                                +\numberborderrightwidth
                                +\numberpaddingright
@@ -11524,13 +11691,13 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
                    %\egroup
                %}%
                %
-               \ifnum\numberborderstyle@cx>0 %
+               %\ifnum\numberborderstyle@cx>0 %
                       \drawrule{\@tempdima}{\@tempdimb}%
-                       \ifnum\numberborderstyle@cx>1 %
+                      % \ifnum\numberborderstyle@cx>1 %
                            \drawrule{\@tempdima}{\@tempdimb}%
                            % \drawdoublerule{\@tempdima}{\@tempdimb}%
-                       \fi
-               \fi
+                      % \fi
+               %\fi
              %
             %
           }}}%
@@ -11541,23 +11708,28 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{\printchaptertitle}
+
 % \begin{macro}{\setchaptertitlefont}
 %    \begin{macrocode}
 \newif\if@runinhead \@runinheadfalse
-\def\afteralignhook@cx{\par}
-\def\chaptertitletextalign@cx{\Centering}
-\newsavebox\titlebox
 \newif\if@titleborderleft \@titleborderlefttrue
 \newif\if@titleborderright \@titleborderrighttrue
-%
-\def\setchaptertitlefont{%
-     \expandafter\setfontparam@cx\titlefontweight@cx;%
-      \expandafter\setfontparam@cx\titlefontfamily@cx;%
-      \expandafter\setfontparam@cx\titlefontshape@cx;%
-      \expandafter\setfontparam@cx\titlefontsize@cx;%
+\def\afteralignhook@cx{\par}
+
+
+\ExplSyntaxOn
+\box_new:N \chapter_title_box
+
+\ExplSyntaxOn
+\cs_new:Npn \set_chapter_title_font
+  {  \expandafter\setfontparam@cx\title_font_face;
+     \expandafter\setfontparam@cx\title_font_weight;
+      \expandafter\setfontparam@cx\title_font_family;
+      \expandafter\setfontparam@cx\titlefontshape@cx;
+      \expandafter\setfontparam@cx\titlefontsize@cx;
       \color{\titlefontcolor@cx}%
-}%
+  }
+\ExplSyntaxOff
 %    \end{macrocode}
 %
 % Provide inerface to expl3 dimensions
@@ -11566,13 +11738,26 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
 %    \begin{macrocode}
 \ExplSyntaxOn
   \dim_new:N \chaptertitleboxwidth
-  \dim_set_eq:Nc \chaptertitleboxwidth {chapter_title_width}
+  \dim_new:N \offset_for_center
+  \dim_new:N \offset_for_right
+  \dim_new:N \total_title_width
+  \dim_new:N \title_bounding_box_width 
+  \dim_set_eq:Nc \chaptertitleboxwidth {chapter_title_text_width}
 \ExplSyntaxOff
 %
+%    \end{macrocode}
+% \end{macro}
 %
-\long\def\printchaptertitle#1{%
-\parindent0pt
-     %\vskip\titlebeforeskip@cx  %
+%   \begin{docCommand} {print_chapter_title} { \meta{contents} }
+%   This function is responsible to make the chapter title. It receives one parameter
+%   which comes from the |\chapter|  command and is the contents of the title.
+%   \end{docCommand}
+%
+%    \begin{macrocode}
+\ExplSyntaxOn
+
+\cs_new:Npn \print_chapter_title #1 {%
+    \parindent0pt
      \if@lefttitle%
        \beforenumber@cx%
        \counterdisplay\c@chapter\afternumber@cx%
@@ -11589,30 +11774,29 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
        \fi
 %    \end{macrocode}      
 %
-% We save the contents in order to measure the height. Change to lrbox???
-%
+% We save the contents in order to measure the height. 
+% We also calculate the total width of the box with borders, padding and
+% the like.
 %    \begin{macrocode}
-      \savebox{\titlebox}{%   
-      \begin{minipage}[t]{\chaptertitleboxwidth}%
-         \language-1% no hyphenation works with lua different with others
-         \setchaptertitlefont
-         \chaptertitletextalign@cx%
-         \SSS%
-         \par
+			\dim_gset:Nn \total_title_width %including padding+borders
+			    {
+			         \chapter_title_text_width % text width
+			       +\title_border_left_width
+			       +\title_border_right_width
+			       +\title_padding_left_width
+			       +\title_padding_right_width
+			     }
+			     
+      \savebox \chapter_title_box {%   
+        \begin{minipage}[t]{\chaptertitleboxwidth}%
+           \language-1% no hyphenation works with lua different with others
+           \set_chapter_title_font
+           \chapter_title_text_align%
+           %\centering
+           \SSS%
+          \par\offinterlineskip
        \end{minipage} 
          }%
-         % attempt to emulate display modes
-          \ifnum\titledisplay@cx=0\fi %do nothing
-          \ifnum\titledisplay@cx=1
-             \appendtoheading{heading}{\vskip0pt%
-                       \titlemargintop@cx%
-                       \leavevmode\noindent}%
-             %\g@addto@macro{\titleafter@cx}{\par}
-          \fi
-          \ifnum\titledisplay@cx=2\fi
-          \titlebefore@cx%
-          %\titlemarginleft@cx%
- %         \chaptertitleblockalign@cx%
 %    
 %    \end{macrocode}
 %
@@ -11620,75 +11804,199 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
 %   we will provide borders all around if required and also allow for padding. 
 %   We will not repeat the browser wars here, so we will provide the borders
 %   outside the block and the padding inside.
-%   The top border is typeset first
-%    \begin{macrocode}
-%
-\appendtoheading{heading}{\mbox{%
-     \fboxrule0pt\fbox{\hbox to \titlemarginleft{}}%
-          \hbox to \chaptertitlewidth@cx{\vbox{%
-               \color{\titlebordertopcolor@cx}%              
-               \vskip0pt
-                \nointerlineskip 
-                 \vrule width
-                        \expandafter\dimexpr(\wd\titlebox+\titleborderleftwidth 
-                                                      +\titleborderrightwidth+\titlepaddingleft+\titlepaddingright) 
-                         height\titlebordertopwidth
-                 %
-                 \vskip0pt\nointerlineskip
 %   
-%                 
-                \color{\titleborderleftcolor@cx}%
-                   \vrule width\titleborderleftwidth 
-                             height\expandafter\dimexpr(\ht\titlebox
-                             +\titlepaddingtop)\relax
-                             depth\dimexpr(\titlepaddingbottom+\dp\titlebox)
-                % we kern to emulate left padding      
-                \kern\titlepaddingleft
+%   Once we done we append everything to the heading toks.
+%  
+%    \begin{macrocode}
+
+\appendtotoks{heading}{%
 %    \end{macrocode}
+%  We first add the before hook
+%  This is normally used to put ornaments or rules before the title text
+%  block.
+%    \begin{macrocode}
+ 
+  \dim_gset:Nn \offset_for_center { ( (\textwidth - \total_title_width)/2) }
+  \dim_gset:Nn \offset_for_right {(\textwidth-\total_title_width)}
+  \dim_gset:Nn \l_tmpa_dim {0pt}
+  \dim_gset:Nn \l_tmpb_dim {0pt}
+  
+
+  \dim_gset:Nn \title_bounding_box_width %width defined by kernel!strange error here
+    {20pt
+%      \chapter_title_text_width
+%      +\title_border_left_width
+%      +\title_border_right_width
+%      + \title_padding_left_width
+%      + \title_padding_right_width  
+    }
+    
+  \@debugtrue
+    \if@debug
+       \vbox to 0pt {\tiny titlewidth: \dim_use:N \total_title_width -- 
+                                  texwidth: \dim_use:N \textwidth}
+    \fi
+  \titlebefore@cx% 
+% \tikzrule
+%    \end{macrocode}
+%
+% We now need to decide if the title element can be floated or not. The description 
+% is a bit Knuthian with lot of ifs and buts, but here is a simple explanation 
+% behind the rules.
+%
+% If a \docAuxCommand{title_margin_left} has been specified it means that we need
+% to position the block exactly so many units from the left, hence we cannot float
+% and ignore any settings to that effect.
+%
+% To float the display property must be set to block and the float property
+% to right, left or center. 
+%
+% We add the title top margin only for block displays. This is questionable
+% inline blocks might also need it.
+%
+%    \begin{macrocode}
+\str_case_x:nnTF {\chapter_title_display_tl}
+		  {
+		    {block        }   {\dim_gset_eq:NN \l_tmpb_dim \title_margin_top
+		                      
+		                      }
+		    {inline       }   {\dim_gset:Nn  \l_tmpb_dim {0pt} }
+		    {inline-block }   {\dim_gset:Nn \l_tmpb_dim {0pt}}
+		    {none         }   {\dim_gset:Nn \l_tmpb_dim {0pt}}
+		  }
+		  {}
+		  {} 
+%
+ \if@debug {\tiny ~top-margin \dim_use:N 
+            \title_margin_top~\dim_use:N \l_tmpb_dim\relax 
+             ~~title-display:~\tl_use:N \chapter_title_display_tl}
+ \fi		  
+ 
+ \vskip\dim_eval:n\l_tmpb_dim		  
+% Check for left margin
+  \if_dim:w \title_margin_left>0pt
+     \dim_gset:Nn  \l_tmpa_dim {\title_margin_left}
+  \else:
+    \str_if_eq_x:nnTF {\chapter_title_display_tl}{block}
+	  { 
+%    \end{macrocode}
+%
+%    \begin{macrocode}	    
+	    \vskip\dim_eval:n \title_margin_top
+	   	\str_case_x:nnTF { \chapter_title_float_tl }
+		  {
+		    {none  }   {\dim_gset:Nn  \l_tmpa_dim {0pt}}
+		    {left  }   {\dim_gset:Nn  \l_tmpa_dim {0pt} }
+		    {center}   {\dim_gset_eq:NN \l_tmpa_dim \offset_for_center}
+		    {right }   {\dim_gset_eq:NN \l_tmpa_dim \offset_for_right}
+		  }
+		  {}
+		  {}  
+	 }
+	 {\dim_gset:Nn \l_tmpa_dim {0pt}}	  
+\fi:    
+  \if@debug
+   \hrule width \dim_eval:n \l_tmpa_dim height.2pt depth0pt\relax
+  \fi
+  \hskip\dim_eval:n \l_tmpa_dim \relax
+  \mbox{%
+    \parindent0pt
+    \hbox_to_wd:nn {\chapter_title_text_width
+                                    +\title_border_left_width
+                                    +\title_border_right_width
+                                    + \title_padding_left_width
+                                    + \title_padding_right_width
+                                    }
+      {
+         \vbox:n {%
+         \color{\title_border_top_color}%              
+         \vskip0pt
+         \nointerlineskip 
+%  draw horizontal rule   
+%          
+          \vrule width
+              \expandafter\dimexpr(\chapter_title_text_width
+               +\dim_eval:n \title_border_left_width %checked ok
+               +\dim_eval:n \title_border_right_width
+               +\dim_eval:n \title_padding_left_width
+               +\dim_eval:n \title_padding_right_width) 
+                height   \dim_eval:n \title_border_top_width \relax
+                 %
+                \vskip0pt\nointerlineskip
+%    \end{macrocode}
+%  
+%   Next we draw the left border.  
+%    \begin{macrocode}
+%        
+                   \color{\title_border_left_color}%
+                   \vrule width \dim_eval:n \title_border_left_width  
+                             height\expandafter\dimexpr(\ht\chapter_title_box
+                             +\title_padding_top_width)\relax
+                             depth\dimexpr(\title_padding_bottom_width+\dp\chapter_title_box)
+%    \end{macrocode}
+%
+%  Kern for any pading left before we put the contents.
+%    \begin{macrocode}    
+                \kern\title_padding_left_width
+%    \end{macrocode}
+%
 %  we typeset the text which is now in the minipage and we go on
 %  and also add the right padding and border if required.
 %  We copy instead of |\usebox| as we do not wanr to go into paragraph mode
 %  Unsure about this item will need to revisit. Gives issues with some of the templates. 
+%
 %    \begin{macrocode}   
-       \begin{minipage}[t]{\chaptertitlewidth@cx}%
-           \setchaptertitlefont 
-           \chaptertitletextalign@cx%
+        \begin{minipage}[t]{\chapter_title_text_width}%
+        \tcbset{%width=\chapter_title_text_width,
+                colback=white,
+                enhanced,
+                arc=0mm,
+                boxrule=1.5mm,
+                frame~hidden,
+                colback=blue!10!white,
+                nobeforeafter,
+                shrink~tight,
+                draft,
+                borderline={1mm}{0mm}{blue,dotted}}
+         \begin{tcolorbox}
+         \set_chapter_title_font 
+           \chapter_title_text_align%
            \language-1
-           \SSS\par
+           \SSS\par %NEW NEW CHECK
+          \end{tcolorbox}  
        \end{minipage}% \copy\titlebox% 
+%       
+%      \par
+       \offinterlineskip     
 %    \end{macrocode}
-%   finally we typeset the right border. 
+%   next we typeset the right border. 
 %    \begin{macrocode}             
-             \ifdim\titleborderrightwidth>0pt
-                    \color{\titleborderrightcolor@cx}% 
-                    \kern\titlepaddingright
-                     \vrule width\titleborderrightwidth
+             \ifdim\title_border_right_width>0pt
+                    \color{\title_border_right_color}% 
+                    \kern\title_padding_right_width
+                     \vrule width \dim_eval:n \title_border_right_width
                               height\expandafter\dimexpr(
-                              \ht\titlebox+\titlepaddingtop)
-                              depth\dimexpr(\titlepaddingbottom+\dp\titlebox)
+                              \ht\chapter_title_box+\title_padding_top_width)
+                              depth\dimexpr(\title_padding_bottom_width+\dp\chapter_title_box)
               \fi
 %    \end{macrocode}
 %
 %  next we skip to the bottom and draw a bottom rule
 %  if it is specified. We are still in paragraph mode
 %    \begin{macrocode}
-%      
-             \color{\titleborderbottomcolor@cx}%     
+%%      
+             \color{\title_border_bottom_color}%     
              \vskip0pt
              \nointerlineskip 
              \vrule width
                       \expandafter\dimexpr(
-                       \wd\titlebox
-                      +\titleborderleftwidth
-                      +\titleborderrightwidth
-                      +\titlepaddingleft + \titlepaddingright
+                       \chapter_title_text_width
+                      +\expandafter\title_border_left_width
+                      +\dim_eval:n \title_border_right_width
+                      +\title_padding_left_width + \title_padding_right_width
                 ) 
-             height\titleborderbottomwidth\relax
+             height \dim_eval:n \title_border_bottom_width\relax
              % hook for aligning normally par, unless there is more material  
-%
-%             
-%       
-              %
               %
 %Hook before skips
       \if@righttitle%
@@ -11699,70 +12007,115 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
       %\titleafterskip@cx 
 %    \end{macrocode}
 %  
-% Finally we add the bottom margin to the title block and we are done.
+%  The final bottom margin will be added later we just draw a debug rule
 %    \begin{macrocode}       
+      \@debugtrue
       \if@debug%
           %\par\leavevmode%
           \vbox to 0pt{%
               \offinterlineskip
-               \vrule width.4pt depth0pt height% 
-                \expandafter\the\titlemarginbottom\relax% 
-                \kern2pt\raisebox{3pt}{\hbox to 0pt{\tiny\the\titlemarginbottom}}
+               \tex_vrule:D width.4pt depth0pt height% 
+                \dim_eval:n \title_margin_bottom\relax% 
+                \tex_kern:D 2pt\raisebox{3pt}{
+                    \hbox_to_zero:n 
+                        { \tiny\dim_use:N \title_margin_bottom }
+                   }     
             }%
      \fi%
 %
  %     
-}}}%\hbox
+}}}
+%\hb
 }%\afteralignhook@cx
 %    \end{macrocode}
 % We finally add the titleafter@cx hook. This takes care of any material added at the end of the
 % text block. Also here we inject the end of paragraph marker and return to vertical mode. 
 % 
 %    \begin{macrocode}
-     \titlemarginbottom@cx%   
-     \titleafter@cx%introduces space if par???  
-}%  end macro here
+ %    \titlemarginbottom@cx%   CHECK!!!
+  %   \titleafter@cx%introduces space if par???  
+}
+\ExplSyntaxOff
+%  end macro here
 %    \end{macrocode}
-% \end{macro}
-% \end{macro}
+% 
 %
-%
-% \begin{macro}{\@makechapterhead}
-%	The macro calls the main typesetting activities of the chaper head
-%	We begin our typesetting by checking, if the macro has a special
-%	design which we then call.
-%  
+% \begin{docCommand}{make_chapter_head} {\marg{optional part of chapter}}{\marg{title}}
+%	 The macro calls the main typesetting activities of the chaper head
+%	 We begin our typesetting by checking, if the macro has a special
+%	 design which we then call.
+%  This is a replacement macro for \latexe |\@make_chapter_head|. We get it here
+%  with two parameters in order to set also the chaptermark
+
+%  \end{docCommand}
 %    \begin{macrocode}
 %    \newif\if@mainmatter \@mainmatterfalse CHECK THIS NOT NECESSARY
 %
-\newtoks\chapterprelimtoks
-\newtoks\chaptertoks
-\newtoks\numbertoks
-\newtoks\titletoks
-\newtoks\headingtoks \headingtoks={}
 %
 %    \end{macrocode}
-%
-%
-%  \begin{macro}{\appendtoheading}
-%
-%  The command \cmd{\appendtoheading} is just a helper macro to add tokens to a
-%  token register, defined as \meta{element name}|toks|. 
-%
-%    \begin{macrocode}
-\long\def\appendtoheading #1#2{%
-  \expandafter\expandafter\expandafter\csname#1toks\endcsname\expandafter{%
-     \the\csname#1toks\endcsname #2}%
-}
-%    \end{macrocode}
-% \end{macro}
-%
 % 
+%  \begin{docCommand}{appendtotoks} { \marg{toks name} \marg{contents}}  
+%   The command \cmd{\appendtotoks} is just a helper macro to append tokens to a
+%   token register, defined as \meta{element name}|toks|. 
+%  \end{docCommand}
+%
+%  \begin{docCommand}{prependtotoks} { \marg{toks name} \marg{contents}}    
+%   The command \cmd{\prependtotoks} is just a helper macro to prepend tokens to a
+%   token register, defined as \meta{element name}|toks|. 
+%  \end{docCommand}
+%
 %    \begin{macrocode}
-\renewcommand\@makechapterhead[2][]{%
-  \if@special
-       \customdesign@cx{#2}%
-  \else
+\ExplSyntaxOn
+\cs_new:Npn \appendtotoks #1#2
+  {
+    \expandafter\expandafter\expandafter\csname#1toks\endcsname\expandafter{
+      \the\csname#1toks\endcsname #2}
+  }
+\cs_new:Npn \prependtotoks #1#2
+  {
+    \expandafter\expandafter\expandafter\csname#1toks\endcsname\expandafter{
+      #2 \the\csname#1toks\endcsname }
+  }  
+\ExplSyntaxOff
+%    \end{macrocode}
+% 
+%
+%    \begin{macrocode}
+\ExplSyntaxOn
+\def\set_number: {
+  \appendtotoks{number}{\numberbefore@cx}%
+  \appendtotoks{number}{\color{\numbercolor@cx}}%
+  \appendtotoks{number}{\setnumberfont}%     
+  \if@chapterspaceout
+     \if@soulspaceout
+         \expandafter\appendtotoks{number}{\so\thechapter}%
+      \fi
+   \else
+      \expandafter\appendtotoks{number}{\thechapter}%   
+   \fi   
+   \appendtotoks{number}{\numberafter@cx}%
+}
+\ExplSyntaxOff
+%    \end{macrocode}
+%  
+%   \begin{docCommand}{@makechapterhead}{\oarg{contents}\marg{contents}}
+%     This is where everything happens. If the design is special
+%     it is by-passed and send to the custom layout renderer.
+%
+%     The engine first assembles all the elements that make up the
+%     the chapter head and inserts them into a sequence list.
+%     The macros are then expanded by the typesetting section of the 
+%     layout engine.
+%
+%   \end{docCommand}
+%    \begin{macrocode}
+\ExplSyntaxOn
+%
+\cs_gset:Npn \make_chapter_head #1 #2
+  {%
+%  \if@special
+%    \customdesign@cx{#2}%needs to go different 
+%  \else
 %    \end{macrocode}
 %
 % 	We now ready to typeset the chapter heading, we run everything 
@@ -11771,13 +12124,12 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
 % 	within mainmatter. 
 %
 %    \begin{macrocode}
-      \bgroup%
-      \parindent0pt 
+    \tex_parindent:D 0pt 
       %\offinterlineskip
       %
-      \normalfont%
-      \ifnum \c@secnumdepth>\m@ne%
-          \if@mainmatter%
+    \normalfont%
+%  \ifnum \c@secnumdepth>\m@ne%
+%    \if@mainmatter%
 %    \end{macrocode}
 %
 % We first check if we need to print anything before the chapter head, as for
@@ -11785,92 +12137,77 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
 % the right of the image and typeset it. We follow it by printing any chapter
 % 
 %    \begin{macrocode}
-         \lineskip0pt% 
-          \topskip0pt%check this out
-           %\chaptermargintop@cx%
-            \leavevmode% 
-           \if@runinhead%
-           \else%
-               \if@leftname%
-                    \printnumber@cx%
-               \fi%
+    \tex_lineskip:D 0pt% 
+    \tex_topskip:D 0pt%check this out
+    %\chaptermargintop@cx%
+    \leavevmode% 
+%    \if@runinhead%
+%    \else%
+%      \if@leftname%
+%         \printnumber@cx% Will use patterns
+%      \fi%
 %    \end{macrocode}
 %
 %  The typesetting of the chapter and number combination and as a matter of fact
 %  any generalized string of element blocks depends if the value of the property |display|
 %  is inline, inline block or block. A block can float freely, whereas the others restrict the
 %  typesetting to a linear mode.
-%  
-%  We start with checking if the chapter name is to be displayed or not. If it is empty
-%  we save execution speed, by skipping it.
-%  
+%
 %  Both token registers have a common part and a unique part
-% TO FIX THIS IS INCORRECT ALL FOR DIFFERENT SPACEOUT
 %    \begin{macrocode}
-          \appendtoheading{number}{\numberbefore@cx}%
-          \appendtoheading{number}{\color{\numbercolor@cx}}%
-           \appendtoheading{number}{\setnumberfont}%     
-           \if@chapterspaceout
-              \if@soulspaceout
-                \expandafter\appendtoheading{number}{\so\thechapter}%
-              \fi
-           \else
-              \expandafter\appendtoheading{number}{\thechapter}%   
-           \fi   
-           \appendtoheading{number}{\numberafter@cx}%
+      \set_number:
 %    \end{macrocode}
 %
-%    If there is no chapter name to print we just typeset the number.
+%    In terms of the language semantics, I am not too sure, what should happen, if the
+%    heading does not have a name (should all its properties be nullified and be taken 
+%    over by the next element? Needs thought and I will revisit this.
 %
 %    \begin{macrocode}  
-           \xdef\xtemp{\chaptername}%
-           \xdef\ytemp{}%         
-           \ifx\xtemp\ytemp%
-               \printchaptername[number]{\the\numbertoks}%               
-           \else
+       \xdef\xtemp{\chaptername}%
+       \xdef\ytemp{}%         
+       \ifx\xtemp\ytemp%
+          \printchaptername[number]{\the\numbertoks}%               
+       \else
 %    \end{macrocode}   
 %  
 %  We collect all the commands in a token register. We start with the color and font
 %  settings which we add in a group.
 %             
+%  Any before property means vertical mode by definition, we do this by means of a |vskip0pt|
 %    \begin{macrocode}
-             \appendtoheading{chapterprelim}{\leavevmode \chapterbefore@cx\par}%
-             \appendtoheading{chapter}{%
-               \leavevmode\noindent
-               \color\chaptercolor@cx%
-                \setchapterfont
-              }%
-%
-             \@ifundefined{chapterbeforecontent@cx}{%
-                  \def\chapterbeforecontent@cx{}}{}%
-%                  
-             \if@chapterspaceout
-                \if@soulspaceout       
-                  \expandafter
-                    \appendtoheading{chapter}{\chapterbeforecontent@cx\so\chaptername}%
-                \else
-                   \expandafter
-                    \appendtoheading{chapter}{\chapterbeforecontent@cx\chaptername}% 
-                \fi                                
-             \else
-              \appendtoheading{chapter}{\chapterbeforecontent@cx\chaptername}%
-            \fi   
+       \appendtotoks{chapterprelim}{\leavevmode \chapter_before\vskip0pt}
+       \appendtotoks{chapter}
+         {
+           \leavevmode\noindent
+           \color\chaptercolor@cx
+           \set_chapter_font
+         }
+       \appendtotoks{chapter}{\chapter_before_content}  
+                 
+           %\if@chapterspaceout
+               \expandafter
+  %               \so{\chaptername}}%PROBLEMS FIX
+                                             
+%           \else
+              \appendtotoks{chapter}{\chaptername}%
+ %          \fi   
+         
 %
 %    \end{macrocode}
 %
 %  Next we need to add the tokens for decorating the number. We expect all headings to ne
-%  numbered if the word `chapter’ is prefixed to the heading.  
+%  numbered if the word `chapter’ is prefixed to the heading. 
+%    
 %
 %    \begin{macrocode} 
-           \@ifundefined{numberaftercontent@cx}{\def\numberaftercontent@cx{}}{}%  
-            \ifnum\thenumberdisplay=0 %                    
-              \appendtoheading{chapter}{\kern0.5em}%
-              \appendtoheading{chapter}{\the\numbertoks\numberaftercontent@cx}%
+        \ifnum\thenumberdisplay=0 %                    
+          \appendtotoks{chapter}{\kern0.5em}%
+          \appendtotoks{chapter}{\the\numbertoks\numberaftercontent@cx}%
 %    \end{macrocode}
 %
 %   We are done with inline headings and we can typeset them.
 %    \begin{macrocode}
-                 %   
+%   
               \the\chapterprelimtoks                 
               \printchaptername[chapter]{\the\chaptertoks}%
                  %
@@ -11878,40 +12215,75 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
 %
 %  If both the chapter name as well as the number are displayed as blocks
 %  we typeset them in two operations.
+%
 %    \begin{macrocode}                  
-             \else
-                \the\chapterprelimtoks%
+          \else
+                %\the\chapterprelimtoks%
                 \expandafter\printchaptername[chapter]{\the\chaptertoks}%
                 \expandafter\printchaptername[chapter]{\the\numbertoks}%
-              \fi  
-            \fi
-           \fi%
-         \fi% mainmatter
-      \fi%secnum
+        \fi%ifnum  
+%      \fi
+%     \fi%runin
+%    \fi% mainmatter
+%   \fi%secnum
+% \fi% We close the main conditional @special   removed went to __chapter
+%    
+%   
+
+\set_chapter_title:nn {#1}{#2} 
+\typeset_heading:   
+ }      
 %    \end{macrocode}
 %
+%
+%    \begin{macrocode}
+\cs_new:Npn \set_chapter_title:nn #1#2{
 % 	We typeset the title block and if there is an author block we print it.  
 %	and print it.
 %    \begin{macrocode}
-\if@chaptertitlespecial%
+    \if@chaptertitlespecial%
        \csname ethics\endcsname{#2}%
-\else%
-       \printchaptertitle{#2}%
-\fi%   
-\the\headingtoks
-\titlemarginbottom@cx
-      \if@authorblock
-           \printauthorblock
-            \authorblockafterskip@cx
-    \fi%
-    \par\nobreak%
+    \else%
+       \print_chapter_title { #2 }
+     \fi
+}     
+%    \end{macrocode}       
+% Now we ready to add the contents in an outer box or vbox will see 
+%    \begin{macrocode} 
+   
+%   
+% Add any margin at the bottom of the title block    
+%
+\cs_new:Npn \author_block_aux: {
+   \skip_vertical:n \title_margin_bottom
+      \if@authorblock 
+           print_author_block:
+           \authorblockafterskip@cx
+      \fi%
+    \tex_par:D
+    \nobreak%
    %
-    \egroup%
- \fi% We close the main conditional @special
-  
 }%
+
+\cs_new:Npn \typeset_heading: {
+       \begin{tcolorbox}
+          [
+           oversize=2cm,
+          ]   
+        \parindent1em       
+        \the\headingtoks
+       \end{tcolorbox}
+% Need to empty the toks after we typeset them!!! Or use them in a group
+% Add to notes for pittraps of heading management!       
+  \headingtoks{}   
+  \numbertoks{}
+  \chaptertoks{}
+  \chapterprelimtoks {}  
+  \author_block_aux:     
+  }   
+\ExplSyntaxOff
 %    \end{macrocode}
-% \end{macro}
+% 
 %
 %
 % \begin{macro}{\chapter} The \cs{chapter} is modified to
@@ -11936,24 +12308,55 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
 % We set this to false by default
 \cxset{chapter afterindent=false}
 % call it after a heading
-\def\chapterafterheading@cx{%
-     \@nobreaktrue
-     \everypar{%
-     \if@nobreak
-         \@nobreakfalse
-         \clubpenalty \@M
-          \if@chapterafterindent@cx \else
-            {\setbox\z@\lastbox}%
-          \fi
-       \else
-       \clubpenalty \@clubpenalty
-       \everypar{}%
-     \fi}}
+%    \end{macrocode}
+% \begin{docCommand}{chapter_after_heading:}{ \meta{void} }
+%   This is a hook, that is called after the chapter heading is typeset in
+%   order to control the indentation of the first paragraph.
+%   It is based on similar code from \latexe and we explorify it.
+% \end{docCommand}
+%    \begin{macrocode}
+\ExplSyntaxOn
+\cs_gset:Npn \chapter_after_heading:
+  {
+    \@nobreaktrue
+    \tex_everypar:D
+      {
+         \if@nobreak
+           \@nobreakfalse
+           \clubpenalty \@M
+           \if@chapterafterindent@cx \else
+             {\setbox\z@\lastbox}
+           \fi
+         \else
+         \clubpenalty \@clubpenalty
+         \tex_everypar:D {}
+         \fi
+      }
+  }
+\ExplSyntaxOff  
 %    \end{macrocode} 
 % 
-% 
+%  \begin{docCommand}{chapter} {\oarg{short title}\marg{contents}}
+%  We renew |\chapter| after we save its old definition
+%  \end{docCommand}
+%
 %    \begin{macrocode}
-\renewcommand\chapter{%
+\ExplSyntaxOn
+\let\ltxchapter\chapter
+%
+% \begin{docCommand}{}{}
+\NewDocumentCommand \Chapter {s o m }
+{
+  % star version
+  \IfBooleanTF {#1} {} {}   
+  % optional etc
+  \ifValueTF {#2}
+    {\chapter{[#2]}{#3}} {}
+}
+
+
+\renewcommand\chapter
+  {
     \if@openright\cleardoublepage\fi
     \if@openleft\cleartoevenpage\fi
     \if@openany\clearpage\fi
@@ -11968,14 +12371,14 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
 %    title.
 %
 %    \begin{macrocode}
-    \thispagestyle{empty}%
-    \global\@topnum\z@%
+    \thispagestyle{empty}
+    \global\@topnum\z@~%
 %    \end{macrocode}
 %
 %  We provide a hook to handle indentation after a chapter. This would also necessitate to 
 % change the afterheading macro and make it specific to a chapter head.
 %    \begin{macrocode}  
-      \@chapterafterindent@cxfalse%
+      \@chapterafterindent@cxfalse
    % \@afterindentfalse
 %    \end{macrocode}
 % \end{macro}
@@ -11985,15 +12388,21 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
 % 	macros for starred and unstarred commands. 
 %
 %    \begin{macrocode}
-      \secdef\@chapter\@schapter}%[optional]{title} follows
+      \secdef\__chapter\@schapter
+   }%[optional]{title} follows
+\ExplSyntaxOff
 %    \end{macrocode}
 %
 % We first define the unstarred version of the command.
 % This is modified to include
 % our hooks.
+%%    \begin{macrocode}
+\newif\if@tocspecial\@tocfalse
+\def\formattoctitle{}
+% 
+%    \end{macrocode}
 %
-%
-% \begin{macro}{\@chapter} 
+% \begin{docCommand}{__chapter} {\marg{}\marg{}}
 %    This macro is called when we have a numbered chapter. When
 %    |secnumdepth| is larger than $-1$ and, in the book
 %    class, |\@mainmatter| is true, we display the chapter
@@ -12004,11 +12413,13 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
 %    \#1 what to write in toc if has optional argument
 %    \#2 title
 % 
+%   
+%   The non-star form of the command.
+%  
+%   \end{docCommand}
 %    \begin{macrocode}
-\newif\if@tocspecial\@tocfalse
-\def\formattoctitle{}
-% 
-\def\@chapter[#1]#2{%
+\ExplSyntaxOn
+\cs_gset:Npn \__chapter [#1]#2 {%
  %\refstepcounter{chapter}%
   \ifnum \c@secnumdepth >\m@ne%
     \if@mainmatter
@@ -12031,53 +12442,62 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
         \phantomsection
          \addcontentsline{toc}{chapter}{%
          \protect\chapternumberline{\tocchapternumber@cx}{#1}{\tocimage@cx}}%
-  	\fi%
+     	\fi%
             %\fi%
-    \else
+      \else
       \addcontentsline{toc}{chapter}{#1}%for part???
-    \fi%
-   \else%
+      \fi%
+  \else%
       \addcontentsline{toc}{chapter}{#1}%????? for part
-   \fi%
+  \fi%
 %    \end{macrocode}
 %
 %	After having written the entry to the table of contents we
 %	store the alternative title of this chapter with |\chaptermark|
 %	and add some white space to the lists of figures and tables.
-%    In one column mode we call |\@afterheading| which takes care 
-%	of supressing the indentation after a chapter heading. 
+%    In one column mode we call \refCom{chapter_after_heading:} which takes care 
+%	of supressing the indentation after a chapter heading. Then
+% we hand over the typesetting to \refCom{make_chapter_head}, which
+% is the work-horse of the package. 
 %
 %    \begin{macrocode}
   \chaptermark{#1}%
   \addtocontents{lof}{\protect\addvspace{10\p@}}%
   \addtocontents{lot}{\protect\addvspace{10\p@}}%
      \if@twocolumn
-         \@topnewpage[\@makechapterhead{#2}]%
+         \@topnewpage[\make_chapter_head {#1} {#2}]%
       \else%
-         \@makechapterhead{#2}%
-% This was afterindent, we redefined it to ensure we can make it more flexible.
-%                 
-                %\@afterheading
-                \chapterafterheading@cx%
-      \fi%
-   }
+         \if@special
+            \customdesign@cx{#2}%needs to go different 
+         \else
+           \make_chapter_head {#1} {#2}%
+         \fi
 %    \end{macrocode}
-% \end{macro}
 %
+% Next we call \refCom{chapter_after_heading:} to set the indentation
+% after the heading is typeset.
+%    \begin{macrocode}         
+          \chapter_after_heading:
+      \fi
+   }
+\ExplSyntaxOff   
+%    \end{macrocode}
+% 
 %    \begin{macrocode}
 \cxset{toc image/.store in = \tocimage@cx}
 \cxset{toc image ={}}
 %
+% 
 \gdef\setdefaults{%
 \cxset{%
   chapter toc=true,
   toc image={},
-  chapter name=CHAPTER,
+  chapter name=none,
   title font-family=\rmfamily,
   title font-weight=\bfseries,
   title font-size=\Huge,
   title font-color=purple,
-  title margin bottom=20pt,
+  title margin-bottom=20pt,
   numbering=arabic,
   number dot=,
   number before=,
@@ -12182,7 +12602,7 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
 \cxset{style87/.style={
  chapter opening=any,
  chapter numbering=arabic,
- name=Chapter,
+ chapter name= Chapter,
  % positioning and float - inline is 0
  %  float right is 2
  number display=block,
@@ -12247,9 +12667,9 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
  title font-weight=bfseries,
  title font-size=huge,
  chapter title align=none,
- title margin-left=1cm,
- title margin bottom=1.3cm,
- title margin top=30pt,
+ title margin-left=0cm,
+ title margin-bottom=1.3cm,
+ title margin-top=30pt,
  % title borders
  title border-width=0pt,
  title padding=0pt,
@@ -12347,7 +12767,7 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
 \renewsection
 \renewsubsection
 %
-%\section{List Management}
+%\chapter{List Management}
 %
 \cxset{enumerate numberingi/.is choice,
   enumerate numberingi/.code={\renewcommand\theenumi {\csname#1\endcsname{enumi}}},
@@ -12447,7 +12867,7 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
 \setenumerate{compact1}
 \ExplSyntaxOff
 
-%\setdefaults
+%
 %    \end{macrocode}
 %
 % \section{Stewart Special Design}
@@ -12529,7 +12949,10 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
 \newcommand{\tikzspecials}[2][]{%
 \@specialtrue
 \clearpage
-
+\ExplSyntaxOn
+\let\titlefontfamily@cx\title_font_family
+\let\titlefontweight@cx\title_font_weight
+\ExplyntaxOff
 \begin{tikzpicture}[remember picture,overlay]
     \node[yshift=-\bandheight@cx] at (current page.north west)
       {\begin{tikzpicture}[remember picture, overlay]
@@ -12613,6 +13036,10 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
 \end{minipage}%
 %    \end{macrocode}
 %    \begin{macrocode}
+\ExplSyntaxOn
+\let\titlefontfamily@cx\title_font_family
+\let\titlefontweight@cx\title_font_weight
+\ExplSyntaxOff
 \par
 \vspace{1.5cm  plus25pt minus25pt}
 \parbox[t]{0.3\linewidth}{%
@@ -12791,7 +13218,7 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
 \newcommand\copyrightline[1]{%
   \def\@copyrightline{#1}}
 
-\edef\@copyrightline{\relax}
+\edef\@copyrightline{\copyright Y Lazarides\relax}
 
 \newcommand\c@pyrightline[1]{%
   \gdef\@c@pyrightline{#1}}
@@ -13197,9 +13624,6 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
     \PackageInfo{phd}{The document has chapter divisions}}
 %    \end{macrocode}
 % bailing out or continue.
-%    \begin{macrocode}
-\quit@cx
-%    \end{macrocode}
 %
 % \begin{macro}{\settocpagestyle}
 % \begin{macro}{\tocpagestyle@cx}
@@ -13237,10 +13661,12 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
 % \begin{macro}{tocstart@cx}
 % \begin{macro}{tocfinish@cx}
 %    \begin{macrocode}
-\def\tocstart@cx{}
-\def\tocfinish@cx{}
+\let\ltxtableofcontents\tableofcontents
+\ExplSyntaxOn
+\cs_new:Npn \phd_toc_start:  {\hrule }
+\cs_new:Npn \phd_toc_finish: {\hrule }
  \renewcommand{\tableofcontents}{%
-    \tocstart@cx
+    \phd_toc_start:
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
@@ -13252,15 +13678,16 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
     \par
     \begingroup
       \parindent\z@ \parskip\tocparskip@cx
-      \maketoctitle@cx
+      \maketoctitle
 %    \end{macrocode}
 %
 % Finally, read the \docfile{.toc} file and finish up.
 %    \begin{macrocode}
       \@starttoc{toc}%
     \endgroup
-    \tocfinish@cx
+    \phd_toc_finish:
 }%
+\ExplSyntaxOff
 %    \end{macrocode}
 %
 % \end{macro}
@@ -13269,26 +13696,26 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
 \newif\if@lowercase
 \@lowercasetrue
 \cxset{toc name/.code = \def\contentsname{#1},
-          toc name before/.store in = \contentsnamebefore@cx,
-          toc name after/.store in = \contentsnameafter@cx,
-          toc name font-size/.store in = \contentsnamefontsize@cx,
-          toc name font-weight/.store in = \contentsnamefontweight@cx,
-          toc name font-family/.store in = \contentsnamefontfamily@cx,
-          toc name font-shape/.store in = \contentsnamefontshape@cx,
-          toc name color/.store in = \tocnamecolor@cx,
-          toc name afterskip/.store in=\tocnameafterskip@cx,
-          toc name align/.is choice,
-          toc name align/center/.code=\def\startalign@cx{\bgroup\centering}\def\endalign@cx{\par\egroup},
-          toc name align/right/.code=\def\startalign@cx{\flushright}\def\endalign@cx{\endflushright},
-          toc name align/left/.code=\def\startalign@cx{\@empty}\def\endalign@cx{\@empty},
-          toc name align/none/.code=\def\startalign@cx{\@empty}\def\endalign@cx{\@empty},
-          toc name indent/.store in=\tocnameindent@cx,
-          toc name case/.is choice,
-          toc name case/lower/.code=\def\tocnamecase@cx{\@lowercasetrue
+       toc name before/.store in = \contentsnamebefore@cx,
+       toc name after/.store in = \contentsnameafter@cx,
+       toc name font-size/.store in = \contentsnamefontsize@cx,
+       toc name font-weight/.store in = \contentsnamefontweight@cx,
+       toc name font-family/.store in = \contentsnamefontfamily@cx,
+       toc name font-shape/.store in = \contentsnamefontshape@cx,
+       toc name color/.store in = \tocnamecolor@cx,
+       toc name afterskip/.store in=\tocnameafterskip@cx,
+       toc name align/.is choice,
+       toc name align/center/.code=\def\startalign@cx{\bgroup\centering}\def\endalign@cx{\par\egroup},
+       toc name align/right/.code=\def\startalign@cx{\flushright}\def\endalign@cx{\endflushright},
+       toc name align/left/.code=\def\startalign@cx{\@empty}\def\endalign@cx{\@empty},
+       toc name align/none/.code=\def\startalign@cx{\@empty}\def\endalign@cx{\@empty},
+       toc name indent/.store in=\tocnameindent@cx,
+       toc name case/.is choice,
+       toc name case/lower/.code=\def\tocnamecase@cx{\@lowercasetrue
                              \if@lowercase\expandafter\MakeTextLowercase\fi},
-          toc name case/upper/.code=\def\tocnamecase@cx{\@lowercasefalse
-                             \if@lowercase\else\expandafter\MakeTextUppercase \fi},
-          toc name case/none/.code=\def\tocnamecase@cx{\@empty},
+       toc name case/upper/.code=\def\tocnamecase@cx{\@lowercasefalse
+                            \if@lowercase\else\expandafter\MakeTextUppercase \fi},
+       toc name case/none/.code=\def\tocnamecase@cx{\@empty},
      %    \end{macrocode}      
 %
 % The contents page is enabled to have its own pagestyle. We default this later on
@@ -13302,7 +13729,7 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
 \cxset{toc name= CONTENTS,
        toc name before = ,
        toc name after =, 
-       toc name color = sweet,
+       toc name color = black,
        toc name font-weight=bold,
        toc name font-family=sffamily,
        toc name font-shape=upshape,
@@ -13316,13 +13743,14 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
   }%
 %    \end{macrocode}
 %
-% \begin{macro}{\maketoctitle@cx}
+% \begin{macro}{\maketoctitle}
 %	\cs{maketitle@cx} is the typeset the heading that goes on top of the |ToC| page.
 %	We cater for a few hooks, so the code is rather longish. At this point we can also 
 %    divert to any custom design. TODO DEFAULT TO PARAMS FROM SECTIONING
 %
 %    \begin{macrocode}
-\newcommand{\maketoctitle@cx}{%
+\ExplSyntaxOn
+\cs_gset:Npn \maketoctitle {
   \addpenalty\@secpenalty
   \if@haschapter@cx
     \vspace*{10pt}
@@ -13332,22 +13760,27 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
   \fi
   \markboth{\contentsname}{\contentsname}%
   \contentspagestyle@cx
-  {\interlinepenalty\@M
-  {\contentsnamebefore@cx
-     \setfont@cx{\contentsnamefontweight@cx}%
-    {\contentsnamefontfamily@cx}{\contentsnamefontsize@cx}%
-    {\contentsnamefontshape@cx}%
-     \color{\tocnamecolor@cx}%
-    \startalign@cx%
-         \tocnameindent@cx \tocnamecase@cx%
-         \contentsname
-     \endalign@cx}%
-     \contentsnameafter@cx%
+  \interlinepenalty\@M
+  \begin{tcolorbox}
+  \contentsnamebefore@cx
+     \setfont@cx{\contentsnamefontweight@cx}
+                {\contentsnamefontfamily@cx}
+                {\contentsnamefontsize@cx}
+                {\contentsnamefontshape@cx}
+                \color{\tocnamecolor@cx}
+                \startalign@cx
+     \tocnameindent@cx \tocnamecase@cx
+                         \contentsname
+     \endalign@cx
+    \end{tcolorbox} 
+    \contentsnameafter@cx%
     \par\nobreak
-  \vskip\tocnameafterskip@cx\relax
-  \@afterheading}%
+    \vskip\tocnameafterskip@cx\relax
+    \@afterheading%
  }%
- \let\sampletoctitle\maketoctitle@cx
+ %
+ \let\sampletoctitle\make_toc_title:
+\ExplSyntaxOff 
 %    \end{macrocode}
 % \end{macro}
 %
@@ -13477,10 +13910,10 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
 
 
 \cxset{toc part beforeskip = 2.25em \@plus\p@,
-       toc part indent=-50pt,
+       toc part indent=0pt,
        toc part numwidth=0em,
        toc part after number=:,
-       toc part font-size={\color{teal}\large\bfseries\sffamily},
+       toc part font-size={\color{sweet}\large\bfseries\sffamily},
        toc part before number={\kern1.5pt},
        toc part page font-size=\bfseries
        }
@@ -13652,8 +14085,8 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
       \fboxrule0pt
 \fi
 \if@haschapter@cx
-   \newlength{\beforetocchapterskip@cx}
-   \setlength{\beforetocchapterskip@cx}{1.0em \@plus\p@}
+  \newlength{\beforetocchapterskip@cx}
+  \setlength{\beforetocchapterskip@cx}{1.0em \@plus\p@}
   \newlength{\cftchapindent}
   \setlength{\cftchapindent}{0em}
   \newlength{\cftchapnumwidth}\setlength{\cftchapnumwidth}{1.5em}
@@ -13807,6 +14240,9 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
 % \begin{macro}{\sampletocchapter}
 % We define a macro for mocking sample toc chapters for the documentation
 % 
+% \begin{docCommand} {sampletocchapter} {\meta{void}}
+%   Typesets  a sample based on l@chapter
+% \end{docCommand}
 %    \begin{macrocode}
 \let\sampletocchapter\l@chapter
 %    \end{macrocode}
@@ -13825,8 +14261,8 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
  % 
 %  
 \cxset{toc section beforeskip/.store in=\tocsectionbeforeskip@cx,
-          toc section beforeskip/.default={0pt plus.2pt},
-          toc section indent/.store in=\tocsectionindent@cx,
+       toc section beforeskip/.default={0pt plus.2pt},
+       toc section indent/.store in=\tocsectionindent@cx,
 %      fonts for title &num
        toc section font-size/.store in=\tocsectionfontsize@cx, 
        toc section font-family/.store in=\tocsectionfontfamily@cx, 
@@ -13875,27 +14311,30 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
 %	defined earlier.
 %  
 %    \begin{macrocode}
-\newcommand\tocsectionpagefont@cx{%
-	\setfont@cx{\tocsectionpagefonteight@cx}%
-       {\tocsectionpagefontfamily@cx}{\tocsectionpagefontsize@cx}%
-       {\tocsectionpagefontshape@cx}\color{\tocsectionpagecolor@cx}
-}%
+\ExplSyntaxOn
+\cs_new:Npn \tocsectionpagefont@cx {
+	\setfont@cx{\tocsectionpagefonteight@cx}
+  {\tocsectionpagefontfamily@cx}{\tocsectionpagefontsize@cx}
+  {\tocsectionpagefontshape@cx}\color{\tocsectionpagecolor@cx}
+}
+\ExplSyntaxOff
 %    \end{macrocode}
 % \end{macro}
 %
 % \begin{macro}{\l@section} 
 % 	This macro is called when the \cs{tableofcontents}
 %	is read from the |.toc| file and it typesets
-%	the title and the page number. Note this is also
+%	the title and the page number. 
 % 
 %    \#1 section title
 %    \#2 page number
 %      
 %    \begin{macrocode}
-\renewcommand*{\l@section}[2]{%
+\ExplSyntaxOn
+\cs_gset:Npn \l@section #1 #2{%
   \ifnum \c@tocdepth >\z@
     \if@haschapter@cx
-      \vskip \tocsectionbeforeskip@cx
+      \skip_vertical:n \tocsectionbeforeskip@cx
     \else
       \addpenalty \@secpenalty
       \addvspace{\tocsectionbeforeskip@cx}%
@@ -13931,7 +14370,9 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
 %	does the typesetting.
 %    \begin{macrocode}
       \tocsectionfillnum@cx{#2}}%
-  \fi}
+  \fi
+}
+\ExplSyntaxOff  
 %    \end{macrocode}
 % \end{macro}
 %
@@ -14930,7 +15371,7 @@ t = {
 	["C6"   ] 		= f(13062,"inpw"),
 	["C7"   ] 		= f(13063,"stX"),
 	["C8"   ] 		= f(13064,"mnw"),
-    ["C9"   ]  		= f(13065,"C9"),  
+  ["C9"   ]  		= f(13065,"C9"),  
 	["C10"  ] 		= f(13066,"mAat"),
 	["C10a" ] 		= f(13067,"C10a"),
 	["C11"  ] 		= f(13068,"HH"),
@@ -15049,18 +15490,18 @@ t = {
 
 -- E 
 
-    ["E1"  ] 		= f("130D2","E1"),
-    ["E2"  ] 		= f("130D3","E2"),
-    ["E3"  ] 		= f("130D4","E3"),
-    ["E4"  ] 		= f("130D5","E4"),
-    ["E5"  ] 		= f("130D6","E5"),
-    ["E6"  ]        = f("130D7","E6","zzmt"),
-    ["E7"  ]        = f("130D8","E7"),
-    ["E8"  ] 		= f("130D9","E8"),
-    ["E8a" ] 	    = f("130DA","E8a"),
-    ["E9"  ] 		= f("130DB","E9"),
-    ["E9a" ] 		= f("130DC","E9a"),
-    ["E10" ] 		= f("130DD","E10"),
+  ["E1"  ] 		  = f("130D2","E1"),
+  ["E2"  ] 		  = f("130D3","E2"),
+  ["E3"  ] 		  = f("130D4","E3"),
+  ["E4"  ] 		  = f("130D5","E4"),
+  ["E5"  ] 		  = f("130D6","E5"),
+  ["E6"  ]     = f("130D7","E6","zzmt"),
+  ["E7"  ]     = f("130D8","E7"),
+  ["E8"  ] 		  = f("130D9","E8"),
+  ["E8a" ] 	    = f("130DA","E8a"),
+  ["E9"  ] 		  = f("130DB","E9"),
+  ["E9a" ] 		  = f("130DC","E9a"),
+  ["E10" ] 		  = f("130DD","E10"),
 	["E11" ] 		= f("130DE","E11"),
 	["E12" ] 		= f("130DF","E12"),
 	["E13" ] 		= f("130E0","E13"),
@@ -15107,31 +15548,31 @@ t = {
 	["F8"  ] 		= f(13106,"F8",""),
 	["F9"  ] 		= f(13107,"F9",""),
 	["F10" ] 		= f(13108,"F10",""),
-	["F11" ] 		=  f(13109,"F11",""),
-	["F12" ] 		=  f("1310A","F12","wsr"),
-	["F13" ] 		=  f("1310B","F13","wp"),
-	["F13a"] 		=  f("1310C","F13a",""),
-	["F14" ] 		=  f("1310D","F14",""),
-	["F15" ] 		=  f("1310E","F15",""),
-	["F16" ] 		=  f("1310F","F16","db"),
-	["F17" ] 		=  f("13110","F17",""),
+	["F11" ] 		= f(13109,"F11",""),
+	["F12" ] 		= f("1310A","F12","wsr"),
+	["F13" ] 		= f("1310B","F13","wp"),
+	["F13a"] 		= f("1310C","F13a",""),
+	["F14" ] 		= f("1310D","F14",""),
+	["F15" ] 		= f("1310E","F15",""),
+	["F16" ] 		= f("1310F","F16","db"),
+	["F17" ] 		= f("13110","F17",""),
 	["F18" ] 		= f(13111,"F18","Hw"),
 	["F19" ] 		= f(13112,"F19",""),
 	["F20" ] 		= f(13113,"F20","ns"),
 	["F21" ] 		= f(13114,"F21","sDm"),
 	["F21a"] 		= f(13115,"F21a",""),
 	["F22" ] 		= f(13116,"F22","pH"),
-	["F23" ]       = f(13117,"F23","xpS"),
-	["F24" ]       = f(13118,"F24","xpS"),
-	["F25" ]       = f(13119,"F25","wHm"),
-	["F26" ]       = f("1311A","F26","Xn"),
-	["F27" ]       = f("1311B","F27",""),
-	["F28" ]       = f("1311C","F28",""),
-	["F29" ]       = f("1311D","F29","sti"),
-	["F30" ]       = f("1311E","F30","Sd"),
-	["F31" ]       = f("1311F","F31","ms"),
-    ["F31a"]       = f("13120","F31a",""),
-    ["F32" ]       = f(13121,"F32","X"),
+	["F23" ]     = f(13117,"F23","xpS"),
+	["F24" ]     = f(13118,"F24","xpS"),
+	["F25" ]     = f(13119,"F25","wHm"),
+	["F26" ]     = f("1311A","F26","Xn"),
+	["F27" ]     = f("1311B","F27",""),
+	["F28" ]     = f("1311C","F28",""),
+	["F29" ]     = f("1311D","F29","sti"),
+	["F30" ]     = f("1311E","F30","Sd"),
+	["F31" ]     = f("1311F","F31","ms"),
+  ["F31a"]     = f("13120","F31a",""),
+  ["F32" ]     = f(13121,"F32","X"),
 	["F33" ]       = f(13122,"F33","sd"),
 	["F34" ]       = f(13123,"F34","ib"),
 	["F35" ]       =  f(13124,"F35","nfr"),
@@ -16326,7 +16767,7 @@ return {printhierochar = printhierochar,
 \usepackage{phd}
 \begin{document}
   \begin{lstlisting}
-    \def\test{This is a test.}  
+    \def\test{This is a test for listings.}  
   \end{lstlisting}
   \begin{teX}
     \def\test{This is a test.} 
@@ -16360,7 +16801,7 @@ return {printhierochar = printhierochar,
 \usepackage{phd}
 \renewcommand{\multicolumntoc}{2}
 \title{Typesetting the Table of Contents in Multiple Columns}
-\author{Dr Y. Lazarides}
+\author{Dr Y. Lazarides June 2014}
 \begin{document}
 \maketitle
 \tableofcontents
@@ -16586,6 +17027,20 @@ go back to the beginning of current section\;
 %    \end{macrocode}
 % \iffalse
 %</settings>
+% \fi
+% \iffalse
+%<*DEFAULTS>
+% \fi
+% title related settings
+%    \begin{macrocode}    
+%% Title related settings
+ \cxset{title padding-top=0pt}
+ \cxset{title padding-right=0pt}
+ \cxset{title padding-bottom=0pt}
+ \cxset{title padding-left=0pt}
+%    \end{macrocode}    
+% \iffalse
+%</DEFAULTS>
 % \fi
 %
 % ^^A\PrintIndex
