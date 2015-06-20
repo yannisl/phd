@@ -23,12 +23,11 @@
 \ProvidesPackage{phd}[2015/1/13 v1.0 less preamble (YL)]%
 \let\ltxtoday\today
 \RequirePackage{fixltx2e}[2006/03/24]
-\RequirePackage{adjustbox}
-\RequirePackage{fancybox}
 \@ifundefined{c@chapter}{%
       \newcounter{chapter}
       \def\thechapter{\@arabic\c@chapter}
 }{}
+\RequirePackage{expl3}
 \RequirePackage{pgf}
 \usepgfmodule{parser}%for svg
 \usepgflibrary{svg.path}%for futurelet and parser demo
@@ -67,89 +66,87 @@
   \RequirePackage{luacode}
   %\RequirePackage{luatextra}
 \fi
+\ExplSyntaxOn
+\newif\if@mainmatter \@mainmattertrue
+\cxset{
+  mainmatter~numbering/.is~choice,
+  mainmatter~numbering/arabic/.code                =
+    \def\setpagenumbering{\pagenumbering{arabic}},
+  mainmatter~numbering/roman/.code                 =
+  \def\setpagenumbering{\pagenumbering{roman}},
+  mainmatter~numbering/Roman/.code                 =
+   \def\setpagenumbering{\pagenumbering{Roman}},
+  }
+\ExplSyntaxOff
+\cxset{mainmatter numbering = arabic}
+\ExplSyntaxOn
+\cs_gset:Npn \frontmatter
+  {
+    %\cleardoublepage
+    \@mainmatterfalse
+    %\setpagenumbering%
+  }
+\cs_gset:Npn \mainmatter
+  {
+     \cleardoublepage
+      \@mainmattertrue
+     \setpagenumbering
+  }
 
-%%
 \def\backmatter{\if@openright\cleardoublepage\else\clearpage\fi
       \@mainmatterfalse}
-\setlength\lineskip{1\p@}
-\setlength\normallineskip{1\p@}
-\renewcommand\baselinestretch{}
-\newskip\AJW@baseskip
-\newskip\AJW@theskip
-\def\AJW@setskips#1{\AJW@theskip #1\relax%
-  \abovedisplayskip      0.50\AJW@theskip \@plus 0.25\AJW@theskip \@minus 1\p@%
+\ExplSyntaxOff
+\ExplSyntaxOn
+  \dim_gset:Nn \tex_lineskip:D {1pt}
+  \dim_gset:Nn \normallineskip {1pt}
+  \cs_gset:Npn \baselinestretch {}
+\ExplSyntaxOff
+\ExplSyntaxOn
+\newskip\phd@baseskip
+\newskip\phd@theskip
+\def\phd@setskips#1{\phd@theskip #1\relax%
+  \abovedisplayskip      0.50\phd@theskip \@plus 0.25\phd@theskip \@minus 1\p@%
   \belowdisplayskip      \abovedisplayskip
-  \abovedisplayshortskip 0.25\AJW@theskip \@plus 0.25\AJW@theskip
-  \belowdisplayshortskip 0.50\AJW@theskip \@plus 0.25\AJW@theskip \@minus 1\p@%
+  \abovedisplayshortskip 0.25\phd@theskip \@plus 0.25\phd@theskip
+  \belowdisplayshortskip 0.50\phd@theskip \@plus 0.25\phd@theskip \@minus 1\p@%
 }
-\def\AJW@setlists#1{\AJW@theskip #1\relax%
+\def\phd@setlists#1{\phd@theskip #1\relax%
  \def\@listi{\leftmargin\leftmargini
-  \topsep  0.5\AJW@theskip \@plus 2\p@ \@minus 1\p@%
+  \topsep  0.5\phd@theskip \@plus 2\p@ \@minus 1\p@%
   \parsep  \z@
   \itemsep \z@}}
+
+\ExplSyntaxOff
 \newcommand{\@viiiptv}{8.5}%                  8.5pt
+
 \DeclareMathSizes{\@viiiptv}{\@viiiptv}{\@vipt}{\@vpt}
+
 \newcommand{\@ixptv}{9.5}%                    9.5pt
+
 \DeclareMathSizes{\@ixptv}{\@ixptv}{\@viipt}{\@vpt}
+
 \newcommand{\@xptv}{10.5}%                    10.5pt (normalsize)
+
 \DeclareMathSizes{\@xptv}{\@xptv}{\@viipt}{\@vpt}
+
 \newcommand{\@xvipt}{16}%                     16pt size
+
 \DeclareMathSizes{\@xvipt}{\@xvipt}{\@xiipt}{\@xpt}
+
 \newcommand{\@xviiipt}{18}%                   18pt size
+
 \DeclareMathSizes{\@xviiipt}{\@xviiipt}{\@xiipt}{\@xpt}
 
-\renewcommand\tiny{\@setfontsize\tiny\@vpt{6}\AJW@setskips\AJW@setlists}
-\renewcommand\footnotesize{\AJW@baseskip 10.5pt%
-  \@setfontsize\footnotesize\@viiipt{10.5}\AJW@setskips\AJW@setlists}
-\renewcommand\large{\@setfontsize\large\@xipt{14}\AJW@setskips\AJW@setlists}
-\newcommand\Aheadsize{\@setfontsize\Aheadsize\@xipt{13}\AJW@setskips\AJW@setlists}
-\renewcommand\Large{\@setfontsize\Large\@xiipt{17}\AJW@setskips\AJW@setlists}
-\renewcommand\LARGE{\@setfontsize\LARGE\@xvipt{19}\AJW@setskips\AJW@setlists}
-\renewcommand\huge{\@setfontsize\huge\@xviiipt{24}\AJW@setskips\AJW@setlists}
-\def\huge{\@setfontsize\Huge{24}{26}}
-\def\HUGE{\@setfontsize\Huge{38}{47}}
-\def\HHUGE{\@setfontsize\HHUGE{58}{67}}
-\def\HHHUGE{\@setfontsize\HHHUGE{94}{105}}
- \newcommand\smallverbatimsize{\AJW@baseskip 11.5pt%
-    \@setfontsize\smallverbatimsize{10.5}{11.5}\AJW@setskips\AJW@setlists}
-  \renewcommand\scriptsize{%
-    \@setfontsize\scriptsize\@viipt{8}\AJW@setskips\AJW@setlists}
-  \newcommand\figcaptionsize{\AJW@baseskip 10.5pt%
-    \@setfontsize\figcaptionsize\@viiipt{10.5}\AJW@setskips\AJW@setlists}
-  \let\smallertablesize\figcaptionsize
-  \renewcommand\small{\AJW@baseskip 10pt%
-    \@setfontsize\small\@ixpt{10}\AJW@setskips\AJW@setlists}
-  \let\indexsize\small
-  \newcommand\enotesize{\AJW@baseskip 11.5pt%
-    \@setfontsize\enotesize\@ixpt{11.5}\AJW@setskips\AJW@setlists}
-  \newcommand\smallish{\AJW@baseskip 11pt%
-    \@setfontsize\smallish\@ixpt{11}\AJW@setskips\AJW@setlists}
+\renewcommand\tiny{\@setfontsize\tiny\@vpt{6}\phd@setskips\phd@setlists}
+%%    \end{macrocode}
+%%    \begin{macrocode}
+  \newcommand\smallish{\phd@baseskip 11pt%
+    \@setfontsize\smallish\@ixpt{11}\phd@setskips\phd@setlists}
   \let\bibliosize\smallish
-  \newcommand\tablesize{\AJW@baseskip 11pt%
-    \@setfontsize\tablesize\@ixptv{11}\AJW@setskips\AJW@setlists}
-  \newcommand\exercisesize{\AJW@baseskip 12pt%
-    \@setfontsize\exercisesize\@ixptv{12}\AJW@setskips\AJW@setlists}
-  \newcommand\normalsmall{\AJW@baseskip 12pt%
-    \@setfontsize\normalsmall\@xpt{12}\AJW@setskips\AJW@setlists}
-  \newcommand\verbatimsize{\AJW@baseskip 13pt%
-    \@setfontsize\verbatimsize\@xpt{13}\AJW@setskips\AJW@setlists}
-  \newcommand\xheadsize{\AJW@baseskip 12pt%
-    \@setfontsize\xheadsize\@xptv{12}\AJW@setskips\AJW@setlists}
-  \newcommand\largerstill{\AJW@baseskip 14pt%
-    \@setfontsize\largerstill\@xiipt{14}\AJW@setskips\AJW@setlists}
+  \newcommand\verbatimsize{\phd@baseskip 13pt%
+    \@setfontsize\verbatimsize\@xpt{13}\phd@setskips\phd@setlists}
+%%
 
-  \renewcommand\normalsize{\AJW@baseskip 13.5pt%
-    \@setfontsize\normalsize\@xptv{13.5}\AJW@setskips{\AJW@baseskip}
-    \let\@listi\@listI}
-  \let\listsize\normalsize
- \pgfkeys{/handlers/.set font-face/.code=\pgfkeysalso{\pgfkeyscurrentpath/.code=
-           \def\tempa{##1}%
-           \def\tempb{normal}%
-           \def#1{##1}%
-           \ifx\tempa\tempb%
-              \def#1{\normalfont}%
-           \fi%
-   }}%
 \cxset{document font/.code 2 args=\setmainfont[#2]{#1}}
 \def\defaultfontsxetexluatex{%
   \RequirePackage{expl3}
@@ -211,7 +208,6 @@
 \def\smallverbatim{\@smallverbatim \frenchspacing\@vobeyspaces \@xsmallverbatim}
 \def\endsmallverbatim{\if@newlist \leavevmode\fi\endtrivlist}
 \def\smallverbatim@font{\normalfont\smallverbatimsize\ttfamily}
-\RequirePackage{fonttable}
 \ifengine{\RequirePackage{polyglossia}
   \setdefaultlanguage{english}}{%
   \RequirePackage{polyglossia}
@@ -272,6 +268,15 @@
     {\hss$#1$\hfil}%
    \footnotesize\texttt{\string#1}\hss}%
    \penalty10}
+\IfStyFileExists{calligra}
+  {\savesymbol{filename}
+   \RequirePackage{calligra}
+   \restoresymbol{CAL}{filename}
+  }
+  {}
+\IfStyFileExists{chancery}
+  {\newcommand{\mathpzc}[1]{\mbox{\usefont{OT1}{pzc}{m}{it}##1}}}
+  {}
 \ifxetex
    \else
      \ifluatex
@@ -302,21 +307,25 @@
 {\SOULtrue\RequirePackage{soul}
     \sethlcolor{thehighlight}}
 {}
+
 \RequirePackage{lettrine}
 \ifx\dropcap\undefined
   \def\dropcap#1#2{%
     \lettrine[lines=3, lraise=0.1, nindent=0em, slope=.1em]{#1}{#2}
   }%
 \fi
-\RequirePackage{siunitx}
-  \sisetup{fixed-exponent =0,
-           scientific-notation = false}
+\IfFileExists{siunitx}{
+   \RequirePackage{siunitx}
+   \sisetup{fixed-exponent =0,
+            scientific-notation = false}}
+{}
 \cxset{acronym keys/.store in = \acronymkeys@cx}
 \cxset{acronym keys={smaller,printonlyused,withpage}}
 \PassOptionsToPackage{\acronymkeys@cx}{acronym}
 \RequirePackage{acronym}
-     \RequirePackage{mdframed}
-
+\RequirePackage{mdframed}
+\RequirePackage{adjustbox}
+\RequirePackage{fancybox}
 \RequirePackage{graphicx}[1999/02/16]
 \DeclareGraphicsExtensions{.jpg, .JPG, .jpeg, .png, .eps}
 \graphicspath{{graphics/}{graphics//}{../images/}{images//}{./images/}{./graphics/}%
@@ -406,10 +415,13 @@
 \RequirePackage{lipsum}
 \RequirePackage{kantlipsum}
 \RequirePackage{blindtext}
-\DeclareDocumentCommand\lorem{ o }{Fusce adipiscing justo nec ante. Nullam in enim.
+\DeclareDocumentCommand\lorem{ s }{Fusce adipiscing justo nec ante. Nullam in enim.
  Pellentesque felis orci, sagittis ac, malesuada et, facilisis in,
  ligula. Nunc non magna sit amet mi aliquam dictum. In mi. Curabitur
- sollicitudin justo sed quam et quadd. \par}
+ sollicitudin justo sed quam et quadd.
+ \IfBooleanTF{#1}%
+ {}%
+ {\par}}
 \newcommand{\fox}{``The quick brown fox jumps over the lazy dog''}
 \newcommand\frogking{%
 \leavevmode
@@ -500,10 +512,12 @@ ball was her favorite plaything.}%
   cried out, ``Silence in the court!''; and the King put on
   his spectacles and looked anxiously round, to make out who
   was talking.\par}
-
 \def\ALPHABET {A B C D E F G H I J K L M N O P Q R S T U V W X Y Z}
 \def\alphabet {a b c d e f g h i j k l m n o p q r s t u v w x y z}
 \newcommand{\punctuation}{! ? . / , : }
+\RequirePackage{fonttable}
+
+
 \RequirePackage{booktabs}
 \newcounter{step}
 \newcommand\resetinc{\setcounter{step}{0}}
@@ -565,14 +579,19 @@ ball was her favorite plaything.}%
 \IfStyFileExists*{type1cm}
   {\usepackage{type1cm}}
   {}
-\RequirePackage{colortbl}
 \newif\ifhavemultirow
 \IfStyFileExists*{multirow}
   {\havemultirowtrue\RequirePackage{multirow}}
   {}
+\newif\ifhavecolortbl
+\IfStyFileExists*{colortbl}
+  {\havecolortbltrue\RequirePackage{colortbl}}
+  {}
 \RequirePackage{threeparttable}
 \RequirePackage{threeparttablex}
-\RequirePackage{pdflscape}
+\IfStyFileExists {pdflscape}
+  {\RequirePackage{pdflscape}}
+  {}
 \ifxetex
   \def\new@mathgroup{\alloc@8\mathgroup\mathchardef\@cclvi}
   \patchcmd{\document@select@group}{\sixt@@n}{\@cclvi}{}{}
@@ -583,8 +602,82 @@ ball was her favorite plaything.}%
   \patchcmd{\document@select@group}{\sixt@@n}{\@cclvi}{}{}
   \patchcmd{\select@group}{\sixt@@n}{\@cclvi}{}{}
 \fi
+
 \newif\ifAMS
 \AMStrue
+\newif\ifMTOOLS
+\newcommand\MTOOLS{\pkgname{mathtools}}
+ \RequirePackage{suffix}
+\IfStyFileExists{mathtools}
+  {\MTOOLStrue
+   \savesymbol{xleftrightarrow} \savesymbol{xLeftarrow}
+   \savesymbol{xRightarrow} \savesymbol{xLeftrightarrow}
+   \savesymbol{xrightharpoondown} \savesymbol{xrightharpoonup}
+   \savesymbol{xleftharpoondown} \savesymbol{xleftharpoonup}
+   \savesymbol{xleftrightharpoons} \savesymbol{xrightleftharpoons}
+   \savesymbol{xhookleftarrow} \savesymbol{xhookrightarrow}
+   \savesymbol{xmapsto} \savesymbol{underbracket}
+   \savesymbol{overbracket} \savesymbol{lparen} \savesymbol{rparen}
+   \savesymbol{dblcolon} \savesymbol{coloneqq} \savesymbol{Coloneqq}
+   \savesymbol{coloneq} \savesymbol{Coloneq} \savesymbol{eqqcolon}
+   \savesymbol{Eqqcolon} \savesymbol{eqcolon} \savesymbol{Eqcolon}
+   \savesymbol{colonapprox} \savesymbol{Colonapprox}
+   \savesymbol{colonsim} \savesymbol{Colonsim} \savesymbol{overbrace}
+   \savesymbol{underbrace}
+
+   % The mathtools package delays the definitions of some of its symbols
+   % to the \begin{document}.  We redefine \AtBeginDocument to force
+   % mathtools to define everything immediately.
+   \let\origAtBeginDocument=\AtBeginDocument
+   \def\AtBeginDocument##1{##1}
+   \usepackage[donotfixamsmathbugs]{mathtools}
+   \let\AtBeginDocument=\origAtBeginDocument
+
+   \restoresymbol{MTOOLS}{xleftrightarrow}
+   \restoresymbol{MTOOLS}{xLeftarrow}
+   \restoresymbol{MTOOLS}{xRightarrow}
+   \restoresymbol{MTOOLS}{xLeftrightarrow}
+   \restoresymbol{MTOOLS}{xrightharpoondown}
+   \restoresymbol{MTOOLS}{xrightharpoonup}
+   \restoresymbol{MTOOLS}{xleftharpoondown}
+   \restoresymbol{MTOOLS}{xleftharpoonup}
+   \restoresymbol{MTOOLS}{xleftrightharpoons}
+   \restoresymbol{MTOOLS}{xrightleftharpoons}
+   \restoresymbol{MTOOLS}{xhookleftarrow}
+   \restoresymbol{MTOOLS}{xhookrightarrow}
+   \restoresymbol{MTOOLS}{xmapsto}
+   \restoresymbol{MTOOLS}{underbracket}
+   \restoresymbol{MTOOLS}{overbracket} \restoresymbol{MTOOLS}{lparen}
+   \restoresymbol{MTOOLS}{rparen} \restoresymbol{MTOOLS}{dblcolon}
+   \restoresymbol{MTOOLS}{coloneqq} \restoresymbol{MTOOLS}{Coloneqq}
+   \restoresymbol{MTOOLS}{coloneq} \restoresymbol{MTOOLS}{Coloneq}
+   \restoresymbol{MTOOLS}{eqqcolon} \restoresymbol{MTOOLS}{Eqqcolon}
+   \restoresymbol{MTOOLS}{eqcolon} \restoresymbol{MTOOLS}{Eqcolon}
+   \restoresymbol{MTOOLS}{colonapprox}
+   \restoresymbol{MTOOLS}{Colonapprox}
+   \restoresymbol{MTOOLS}{colonsim} \restoresymbol{MTOOLS}{Colonsim}
+   \restoresymbol{MTOOLS}{overbrace} \restoresymbol{MTOOLS}{underbrace}
+
+   % Some of the above are defined in terms of \dblcolon.  At the time
+   % of this writing it doesn't seem like any other package uses the
+   % name \dblcolon so it should be safe to retain its mathtools
+   % definition.
+   \let\dblcolon=\MTOOLSdblcolon
+  }
+  {}
+\cxset{tag left bracket/.store in = \leftbracket@cx,
+       tag right bracket/.store in = \rightbracket@cx,
+       tag font-weight/.store in = \tagfontweight@cx,
+       mathtool center colon/.store in=\centeredcolon@cx}
+
+\newtagform{brackets}[\tagfontweight@cx]{\leftbracket@cx}%
+           {\rightbracket@cx}
+\mathtoolsset{centercolon=true,mathic}%italic correction in math
+\numberwithin{equation}{section}
+\cxset{tag left bracket =[,
+         tag right bracket =],
+         tag font-weight=\textbf,
+         mathtool center colon=false}
 \newif\ifFontIsAvailable
 \def\testFontAvailability#1{%
   \count255=\interactionmode
@@ -650,82 +743,10 @@ ball was her favorite plaything.}%
   {}
 \def\TX{txfonts}
 %%
-\newif\ifMTOOLS
-\newcommand\MTOOLS{\pkgname{mathtools}}
- \RequirePackage{suffix}
-\IfStyFileExists{mathtools}
-  {\MTOOLStrue
-   \savesymbol{xleftrightarrow} \savesymbol{xLeftarrow}
-   \savesymbol{xRightarrow} \savesymbol{xLeftrightarrow}
-   \savesymbol{xrightharpoondown} \savesymbol{xrightharpoonup}
-   \savesymbol{xleftharpoondown} \savesymbol{xleftharpoonup}
-   \savesymbol{xleftrightharpoons} \savesymbol{xrightleftharpoons}
-   \savesymbol{xhookleftarrow} \savesymbol{xhookrightarrow}
-   \savesymbol{xmapsto} \savesymbol{underbracket}
-   \savesymbol{overbracket} \savesymbol{lparen} \savesymbol{rparen}
-   \savesymbol{dblcolon} \savesymbol{coloneqq} \savesymbol{Coloneqq}
-   \savesymbol{coloneq} \savesymbol{Coloneq} \savesymbol{eqqcolon}
-   \savesymbol{Eqqcolon} \savesymbol{eqcolon} \savesymbol{Eqcolon}
-   \savesymbol{colonapprox} \savesymbol{Colonapprox}
-   \savesymbol{colonsim} \savesymbol{Colonsim} \savesymbol{overbrace}
-   \savesymbol{underbrace}
 
-   % The mathtools package delays the definitions of some of its symbols
-   % to the \begin{document}.  We redefine \AtBeginDocument to force
-   % mathtools to define everything immediately.
-   \let\origAtBeginDocument=\AtBeginDocument
-   \def\AtBeginDocument##1{##1}
-   \usepackage[donotfixamsmathbugs]{mathtools}
-   \let\AtBeginDocument=\origAtBeginDocument
-
-   \restoresymbol{MTOOLS}{xleftrightarrow}
-   \restoresymbol{MTOOLS}{xLeftarrow}
-   \restoresymbol{MTOOLS}{xRightarrow}
-   \restoresymbol{MTOOLS}{xLeftrightarrow}
-   \restoresymbol{MTOOLS}{xrightharpoondown}
-   \restoresymbol{MTOOLS}{xrightharpoonup}
-   \restoresymbol{MTOOLS}{xleftharpoondown}
-   \restoresymbol{MTOOLS}{xleftharpoonup}
-   \restoresymbol{MTOOLS}{xleftrightharpoons}
-   \restoresymbol{MTOOLS}{xrightleftharpoons}
-   \restoresymbol{MTOOLS}{xhookleftarrow}
-   \restoresymbol{MTOOLS}{xhookrightarrow}
-   \restoresymbol{MTOOLS}{xmapsto}
-   \restoresymbol{MTOOLS}{underbracket}
-   \restoresymbol{MTOOLS}{overbracket} \restoresymbol{MTOOLS}{lparen}
-   \restoresymbol{MTOOLS}{rparen} \restoresymbol{MTOOLS}{dblcolon}
-   \restoresymbol{MTOOLS}{coloneqq} \restoresymbol{MTOOLS}{Coloneqq}
-   \restoresymbol{MTOOLS}{coloneq} \restoresymbol{MTOOLS}{Coloneq}
-   \restoresymbol{MTOOLS}{eqqcolon} \restoresymbol{MTOOLS}{Eqqcolon}
-   \restoresymbol{MTOOLS}{eqcolon} \restoresymbol{MTOOLS}{Eqcolon}
-   \restoresymbol{MTOOLS}{colonapprox}
-   \restoresymbol{MTOOLS}{Colonapprox}
-   \restoresymbol{MTOOLS}{colonsim} \restoresymbol{MTOOLS}{Colonsim}
-   \restoresymbol{MTOOLS}{overbrace} \restoresymbol{MTOOLS}{underbrace}
-
-   % Some of the above are defined in terms of \dblcolon.  At the time
-   % of this writing it doesn't seem like any other package uses the
-   % name \dblcolon so it should be safe to retain its mathtools
-   % definition.
-   \let\dblcolon=\MTOOLSdblcolon
-  }
-  {}
  \PassOptionsToPackage{leqno}{mathtools}
 \RequirePackage{nicefrac}
 \RequirePackage{xfrac}
-\cxset{tag left bracket/.store in = \leftbracket@cx,
-         tag right bracket/.store in = \rightbracket@cx,
-         tag font-weight/.store in = \tagfontweight@cx,
-         mathtool center colon/.store in=\centeredcolon@cx}
-\cxset{tag left bracket =[,
-         tag right bracket =],
-         tag font-weight=\textbf,
-         mathtool center colon=false}
-
-\newtagform{brackets}[\tagfontweight@cx]{\leftbracket@cx}%
-           {\rightbracket@cx}
-\mathtoolsset{centercolon=true,mathic}%italic correction in math
-\numberwithin{equation}{section}
 \RequirePackage{amssymb}[2002/01/22]
 \RequirePackage{amsthm}[2002/01/22]
 \RequirePackage{amsopn}
@@ -768,13 +789,30 @@ ball was her favorite plaything.}%
    \DeclareRobustCommand{\smallbosonloopV}{\feyn{\char"1C}}
   }
   {}
+ \DeclareRobustCommand\FIRE{{\large\color{red}\Fire}}
+%%
+\newif\ifIGO
+\newcommand\IGO{\pkgname{igo}}
+
+\IfStyFileExists{xigo}
+  {
+  \savesymbol{black}
+
+   \IGOtrue
+   \RequirePackage{xigo}
+
+   % Define a version of \whitestone and \blackstone that avoid
+   % bracketed arguments.
+   \DeclareRobustCommand{\igowhitestone}[1]{\whitestone[##1]}
+   \DeclareRobustCommand{\igoblackstone}[1]{\blackstone[##1]}
+  }
+  {}
+
 \newif\ifULSY
 \newcommand\ULSY{\pkgname{ulsy}}
 \IfStyFileExists{ulsy}
   {\ULSYtrue\usepackage{ulsy}}
   {}
-
-
 \newif\ifCEQ
 \newcommand\CEQ{\pkgname{colonequals}}
 \IfStyFileExists{colonequals}
@@ -803,14 +841,13 @@ ball was her favorite plaything.}%
    \DeclareRobustCommand{\CMLLbigparr}{\raisebox{2ex}{\textCMLL{\char10}}}
   }
   {}
-%% Stmaryd package
  \newif\ifST
  \newcommand\ST{\pkgname{stmaryrd}}
  \IfStyFileExists{stmaryrd}
   {\STtrue
    \savesymbol{lightning}
    \savesymbol{bigtriangleup} \savesymbol{bigtriangledown}
-  % \RequirePackage{stmaryrd}
+   \RequirePackage{stmaryrd}
    \restoresymbol{ST}{lightning}
    \restoresymbol{ST}{bigtriangleup} \restoresymbol{ST}{bigtriangledown}
   }
@@ -868,15 +905,7 @@ ball was her favorite plaything.}%
    \newcommand{\Rangle}{\BBsym{"3E}}
   }
   {}
-\IfStyFileExists{calligra}
-  {\savesymbol{filename}
-   \RequirePackage{calligra}
-   \restoresymbol{CAL}{filename}
-  }
-  {}
-\IfStyFileExists{chancery}
-  {\newcommand{\mathpzc}[1]{\mbox{\usefont{OT1}{pzc}{m}{it}##1}}}
-  {}
+
 \IfStyFileExists{mbboard}
   {\newcommand{\MBBmathbb}[1]{\mbox{\usefont{OT1}{mbb}{m}{n}##1}}}
   {}
@@ -905,6 +934,23 @@ ball was her favorite plaything.}%
 \fi
 \newif\ifUPGR
     \RequirePackage[Symbol]{upgreek}
+\newif\ifMDOTS
+\newcommand\MDOTS{\pkgname{mathdots}}
+\IfStyFileExists{mathdots}
+  {\MDOTStrue
+   \savesymbol{ddots}
+   \savesymbol{vdots}
+   \savesymbol{iddots}
+   \savesymbol{dddot}
+   \savesymbol{ddddot}
+   \RequirePackage{mathdots}
+   \restoresymbol{MDOTS}{ddots}
+   \restoresymbol{MDOTS}{vdots}
+   \restoresymbol{MDOTS}{iddots}
+   \restoresymbol{MDOTS}{dddot}
+   \restoresymbol{MDOTS}{ddddot}
+  }
+  {}
 \let\oldSI\SI
 \let\SI\undefined
 \newif\ifASCII
@@ -1112,7 +1158,6 @@ ball was her favorite plaything.}%
      & \bfseries\@nameuse{#2}
      & \itshape\@nameuse{#2} \\}
 }
-
 %%  \tabitem{textcapitalcompwordmark}{textascendercompwordmark}
 \newif\ifWASY
 \newcommand\WASY{\pkgname{wasysym}}
@@ -1240,9 +1285,6 @@ ball was her favorite plaything.}%
 \IfStyFileExists{undertilde}
   {\UTILDtrue\RequirePackage{undertilde}}
   {}
-
-
-
 \RequirePackage{phdfilecontents}
 \RequirePackage{changepage}
 \RequirePackage{keyval}
@@ -1259,7 +1301,7 @@ ball was her favorite plaything.}%
 \def\FALSE{ \meta{false code} }
 \def\PASS{\par{\bfseries\textcolor{green!50!blue}{PASS}}\ ~}
 \def\FAIL{\par{\bfseries\textcolor{red!70!black}{FAIL}}\ ~}
-\RequirePackage{calc}
+  \RequirePackage{calc}
 \RequirePackage{pict2e}
 \RequirePackage{picture}
 \RequirePackage{tikz}
@@ -1300,17 +1342,20 @@ ball was her favorite plaything.}%
   decorations.footprints,%
   decorations.markings,%
   shadows}
-
 \usetikzlibrary{tikzmark}
 \RequirePackage{pgfplots}
 \pgfplotsset{compat=1.11}
 \RequirePackage{pgfplotstable}
-\RequirePackage {forest}
+\IfStyFileExists{forest}
+  {\RequirePackage {forest}}
+  {}
 \RequirePackage{drawstack}
 \newcommand*{\BeforeHyperrefHook}{%
   \RequirePackage{float}%
   \RequirePackage{newfloat}}
- % \RequirePackage{verse}} TO FIX
+
+   % \RequirePackage{verse}} TO FIX
+
 \newcommand*{\AfterHyperrefHook}{%
   \RequirePackage{algorithm2e}%
   \RequirePackage{fancyhdr}
@@ -1327,7 +1372,7 @@ ball was her favorite plaything.}%
     \providecommand\refname{References} % internationalize?
     \providecommand\bibname{Bibliography}
 
-\ifAJW@multisty
+\ifphd@multisty
   \def\NAT@sectionbib{on}% natbib will use \section* headings
 \fi
 
@@ -1350,7 +1395,7 @@ ball was her favorite plaything.}%
      {Empty `thebibliography' environment}}%
   \endlist\vskip-\lastskip}
 
-\ifAJW@multisty
+\ifphd@multisty
   \renewcommand\bibsection{\section{\refname %FIX ME FOR PARAMETERS
     %\ifx\@mkboth\@gobbletwo\else\markright{\refname}\fi
     }}%
@@ -1429,7 +1474,7 @@ ball was her favorite plaything.}%
                         index level = {>},
                         index quote = {!},
                         index german settings,
-                        }
+                   }
 \let\cs\oldcs
 
 \lstdefinelanguage{extras}{morekeywords={%
@@ -1477,14 +1522,14 @@ boxrule=0pt,toprule=0pt,colframe=white}
       showstringspaces=false,
       keywordstyle=\verbatimfamily,
       stringstyle={\color{gray!90}\footnotesize},
-  commentstyle={\color{gray!90}\footnotesize},
-  rulecolor=\color{theshade},
+    commentstyle={\color{gray!90}\footnotesize},
+    rulecolor=\color{theshade},
       breakatwhitespace=true,
-  xleftmargin=15pt,
-  xrightmargin=5pt,
-  aboveskip=\medskipamount,
-  belowskip=\medskipamount,
-        backgroundcolor=\color{white}, #1
+    xleftmargin=15pt,
+    xrightmargin=5pt,
+    aboveskip=\medskipamount,
+    belowskip=\medskipamount,
+      backgroundcolor=\color{white}, #1
 }}
 {}
 
@@ -1752,9 +1797,6 @@ xrightmargin=5pt,
 \IfStyFileExists{cclicenses}
   {\CCLICtrue
    \RequirePackage{cclicenses}
-   % cclicenses doesn't get along with textcomp's remapping of
-   % \textcircled to the TS1 font encoding.  Mapping it back doesn't
-   % _seem_ to cause any problems.
    \DeclareTextAccentDefault{\textcircled}{OMS}
   }
   {}
@@ -1869,7 +1911,6 @@ xrightmargin=5pt,
 \IfStyFileExists{oldprsn}
   {\PRSNtrue\RequirePackage{oldprsn}}
   {}
-
 \RequirePackage{hieroglf}
 \newif\ifUGAR
 \newcommand\UGAR{\pkgname{ugarite}}
@@ -1940,6 +1981,21 @@ xrightmargin=5pt,
       \let\doctitle@cx\@title
       \let\docauthor@cx\@author
       \gdef\@author{}\gdef\@title{}%
+}
+%% headers and footers
+\cxset{
+  header style/.store in=\headerstyle@cx,
+  rule /.is choice,
+  rule on/.code={\gdef\rulewidth@cx{0.4pt}},
+  rule off/.code={\gdef\rulewidth@cx{0pt}},
+  lhead/.code ={\lhead{#1}},
+  rhead/.code={\rhead{#1}},
+  chead/.code={\chead{#1}},
+  lfoot/.code ={\lhead{#1}},
+  cfoot/.code={\chead{#1}},
+  rfoot/.code={\rhead{#1}},
+  headrulewidth/.code={\renewcommand\headrulewidth{#1}},
+  footrulewidth/.code={\renewcommand\footrulewidth{#1}},
 }
 \@ifundefined{ps@titlepage}
     {\let\ps@titlepage=\ps@plain}{}
@@ -2199,9 +2255,7 @@ xrightmargin=5pt,
 }
 
 \newcommand{\utfviii}{\mbox{UTF-8}\index{UTF-8}\xspace}
-\newcommand{\idxboth}[2]{\mbox{}\index{#1 #2}\index{#2>#1}}
-\newcommand{\idxbothbegin}[2]{\mbox{}\index{#1 #2|(}\index{#2>#1|(}}
-\newcommand{\idxbothend}[2]{\mbox{}\index{#1 #2|)}\index{#2>#1|)}}
+
 \newcommand{\idxTBsyms}{%
   \index{symbols>TeXbook=\TeX{}book}%
   \index{TeXbook, The=\TeX{}book, The>symbols from}%
@@ -2333,7 +2387,8 @@ xrightmargin=5pt,
 \clist_new:N \g_phd_scripts_clist
 \clist_new:N \g_phd_noto_clist
 \prop_new:N \script_prop
-\cs_set:Npn \notofontlist
+
+\cs_set:Npn \printnotofontlist
   {
     \begin{multicols}{2}
       \clist_map_inline:Nn \g_phd_noto_clist
@@ -2343,7 +2398,7 @@ xrightmargin=5pt,
     \end{multicols}
   }
 \prop_put:Nnn \script_prop {name}{Armenian}
-\prop_put:Nnn \script_prop {fonts}{NonoArmenian-Regular.ttf, Others}
+\prop_put:Nnn \script_prop {fonts}{NotoArmenian-Regular.ttf, Others}
 \prop_get:NnN \script_prop {fonts}\l_tempa_tl
 \prop_put:Nnn \script_prop {group}{Europe}
 \prop_get:NnN \script_prop {group} \l_tempa_tl
@@ -2552,7 +2607,6 @@ xrightmargin=5pt,
     \fi
   }%
 \newread\tempstream
-
 \DeclareDocumentCommand{\printunicodeblock}{O{2} m m }{%
   \bgroup
   \leavevmode\parindent0pt\par
@@ -2568,8 +2622,6 @@ xrightmargin=5pt,
   \egroup
 }
 \let\PrintUnicodeBlock\printunicodeblock
-
-
 
  \ExplSyntaxOn
  \DeclareDocumentCommand\indexmany {o m }
@@ -2590,7 +2642,28 @@ xrightmargin=5pt,
     }
  }
  \ExplSyntaxOff
+\newcommand{\idxboth}[2]{\mbox{}\index{#1 #2}\index{#2>#1}}
+\newcommand{\idxbothbegin}[2]{\mbox{}\index{#1 #2|(}\index{#2>#1|(}}
+\newcommand{\idxbothend}[2]{\mbox{}\index{#1 #2|)}\index{#2>#1|)}}
+\ExplSyntaxOn
+\cs_gset_eq:NN \indexboth\idxboth
+\cs_gset_eq:NN \indexbothbegin \idxbothbegin
+\cs_gset_eq:NN \indexbothend\idxbothend
+\ExplSyntaxOff
+\ExplSyntaxOn
+\cs_new:Npn \docFont #1
+  {
+    \bgroup
+     \tcb@Print@Com{aegean}
+     \label{key:aegean}
+    \egroup
+  }
 
+\def\refFont{\tcb@ref@doc{key}}
+
+\ExplSyntaxOff
+\DeclareRobustCommand{\idxfont}[1]{\index{#1 (font)}\texttt{#1}\xspace}%
+\DeclareRobustCommand{\idxlanguage}[1]{\index{#1 (script)}\index{scripts>#1}\texttt{#1}\xspace}%
 \begingroup
  \catcode`\|=0
  \catcode`\\=12
@@ -2602,17 +2675,22 @@ xrightmargin=5pt,
    |fi
 }
 |endgroup
-  \newcommand{\indexcommand}[2][]{%
+\NewDocumentCommand \indexcommand { o m }
+  {
     \edef\sanitized{\expandafter\sanitize\string#2!!!}%
-    \def\first@arg{#1}%
-    \ifx\first@arg\@empty
-      \expandafter\index\expandafter{\sanitized=\string\verb+\string#2+}%
-    \else
-      \expandafter\index\expandafter{\sanitized=\string\verb+\string#2+ (#1)}%
-    \fi
+    %\def\first@arg{#1}%
+    \IfNoValueTF{#1}
+    {
+       \expandafter\index\expandafter{\sanitized=\string\verb+\string#2+}%
+    }
+    {
+       \expandafter\index\expandafter{\sanitized=\string\verb+\string#2+ (#1)}%
+    }
   }
-  \let\indexaccent=\indexcommand
-  \def\CLSLpipe{|}%
+\ExplSyntaxOn
+\cs_gset_eq:NN \indexaccent\indexcommand
+\cs_new:Npn \CLSLpipe {|}
+\ExplSyntaxOff
 
   \newcommand{\indexpunct}[2][]{%
     \def\first@arg{#1}%
@@ -2631,32 +2709,15 @@ xrightmargin=5pt,
       \fi
     \fi
   }
-\DeclareRobustCommand{\idxfont}[1]{\index{#1 (font)}\texttt{#1}\xspace}%
-\DeclareRobustCommand{\idxlanguage}[1]{\index{#1 (script)}\index{scripts>#1}\texttt{#1}\xspace}%
-
-\newif\ifMDOTS
-\newcommand\MDOTS{\pkgname{mathdots}}
-\IfStyFileExists{mathdots}
-  {\MDOTStrue
-   \savesymbol{ddots}
-   \savesymbol{vdots}
-   \savesymbol{iddots}
-   \savesymbol{dddot}
-   \savesymbol{ddddot}
-   \usepackage{mathdots}
-   \restoresymbol{MDOTS}{ddots}
-   \restoresymbol{MDOTS}{vdots}
-   \restoresymbol{MDOTS}{iddots}
-   \restoresymbol{MDOTS}{dddot}
-   \restoresymbol{MDOTS}{ddddot}
-  }
-  {}
 
 \newcommand\FC{\pkgname{fc}}
 \newcommand\VIET{\pkgname{vietnam}}
-\newcounter{totalsymbols}
-\newcommand{\incsyms}{\addtocounter{totalsymbols}{1}}
 
+\ExplSyntaxOn
+  \int_new:c {totalsymbols}
+  \cs_new:Npn \incsyms { \int_gincr:c {totalsymbols} }
+  \cs_new:Npn \thetotalsymbols {\int_use:c {totalsymbols} }
+\ExplSyntaxOff
 \newcommand*{\graybox}{\textcolor{thegray!60}{\rule[-\adp]{\awd}{\aht}}}
 
 \newlength\awd
@@ -2773,14 +2834,12 @@ xrightmargin=5pt,
 \def\Tp#1{\incsyms\indexcommand{\ding}\ding{#1} &\ttfamily\string\ding\string{#1\string}}
 \def\Tm#1{\incsyms\indexcommand{\maya}$\mayadigit{#1}$ &\ttfamily\string\maya\string{#1\string}}
 \def\Tmoon#1{\incsyms\indexcommand{\MoonPha}\MoonPha{#1} &\ttfamily\string\MoonPha\string{#1\string}}
-
-%% This command typesets its argument and also puts
-
 \newcommand{\V}[2][]{%
    \incsyms#1 &
    \indexcommand[#2]{#2}% necessary to put symbol \text
    #2%
-   &\ttfamily\string#2}
+   &\ttfamily\string#2
+}
 
 \newcommand{\docV}[2][]{%
   % \incsyms#1 &
@@ -3037,7 +3096,7 @@ xrightmargin=5pt,
 \def\gobble#1{}
 \def\extracthandler#1#2\@nil{%
   \pgfmanualentryheadline{Key handler \meta{key}{\bfseries\ttfamily/\declare{#1}}#2}%
-  \index{\gobble#1@\protect\texttt{#1} handler}%
+  \index{\gobble#1=\protect\texttt{#1} handler}%
   \index{Key handlers>#1=\protect\texttt{#1}}
 }
 \newenvironment{stylekey}[1]{
@@ -5292,7 +5351,9 @@ SIXTY FIVE\or SIXTY SIX \or SIXTY SEVEN \or \else
 }
 \ExplSyntaxOn
 \gdef\setfontparam@cx #1;{%
-  \ifdefmacro{#1}{#1}{\csname#1\endcsname}%
+  \ifdefmacro{#1}{#1}{
+  \csname#1\endcsname
+  }%
 }
 \cs_new:Npn \setfont@cx #1#2#3#4
   {
@@ -5305,6 +5366,28 @@ SIXTY FIVE\or SIXTY SIX \or SIXTY SEVEN \or \else
 \let\normal\mdseries
 \let\serif\rmfamily
 \ExplSyntaxOff
+%% \begin{macro}{\fboxrule}
+\newdimen\fboxrule
+\newdimen\fboxsep
+\fboxrule.4pt
+\fboxsep1pt
+\newdimen\fboxseptop
+\newdimen\fboxsepright
+\newdimen\fboxsepbottom
+\newdimen\fboxsepleft
+\fboxseptop\fboxsep
+\fboxsepright\fboxsep
+\fboxsepbottom\fboxsep
+\fboxsepleft\fboxsep
+\newdimen\fboxruletop
+   \fboxruletop\fboxrule
+\newdimen\fboxruleright
+   \fboxruleright\fboxrule
+\newdimen\fboxrulebottom
+   \fboxrulebottom\fboxrule
+\newdimen\fboxruleleft
+   \fboxruleleft\fboxrule
+
 \newtoks\chapterprelimtoks
 \newtoks\chaptertoks
 \newtoks\numbertoks
@@ -5316,14 +5399,10 @@ SIXTY FIVE\or SIXTY SIX \or SIXTY SEVEN \or \else
   }{}
 \def\afterindenton@cx{\def\afterindent@cx{\@afterindenttrue}}
 \def\afterindentoff@cx{\def\afterindent@cx{\@afterindentfalse}}
-\edef\zeroboxalign@cx{c}
 \global\newlength\chaptermarginleft
     \setlength\chaptermarginleft{30pt}%
 
-%%\gdef\titlemarginbottom@cx{10pt}
-
 \gdef\chaptermarginleft@cx{0pt}
-
 \def\chaptertitleblockalign{}
 \newcounter{chapterdisplay} \setcounter{chapterdisplay}{0}
 \newcounter{numberdisplay} \setcounter{numberdisplay}{0}
@@ -5427,8 +5506,16 @@ SIXTY FIVE\or SIXTY SIX \or SIXTY SEVEN \or \else
 
   }
 
+ \pgfkeys{/handlers/.set~font-face/.code=\pgfkeysalso{\pgfkeyscurrentpath/.code=
+           \def\tempa{##1}%
+           \def\tempb{normal}%
+           \def#1{##1}%
+           \ifx\tempa\tempb%
+              \def#1{\normalfont}%
+           \fi%
+   }}%
 \clist_new:N \allowed_font_style_options
-\clist_gset:Nn \allowed_font_style_options {normal,upshape,itshape,oblique,slshape}
+\clist_gset:Nn \allowed_font_style_options {normal,upshape,itshape,oblique,slshape,italic}
 \cs_gset_eq:cc {normal}{upshape}
 \cs_gset_eq:cc {italic}{itshape}
 \cs_gset_eq:cc {oblique}{slshape}
@@ -5441,7 +5528,7 @@ SIXTY FIVE\or SIXTY SIX \or SIXTY SEVEN \or \else
            \gdef #1 {##1}
           }
           {
-            upshape
+            \gdef#1 {upshape} %Plus error message
           }
       }
   }
@@ -5527,6 +5614,24 @@ SIXTY FIVE\or SIXTY SIX \or SIXTY SEVEN \or \else
           {
            \gdef #1 {##1}
           } {normalsize}
+      }
+  }
+\ExplSyntaxOn
+
+  \clist_new:N   \allowed_options_format
+  \clist_gset:Nn \allowed_options_format
+    {
+      plain,block,display,runin,leftmargin,rightmargin,drop,wrap,frame,custom
+    }
+
+  \pgfkeys{/handlers/.format~in/.code =
+    \pgfkeysalso
+      {\pgfkeyscurrentpath/.code=
+        \clist_if_in:NnTF \allowed_options_format {##1 }
+          {
+           \gdef #1 {##1}
+          }
+          {\gdef #1 {hang}}
       }
   }
 \clist_new:N \allowed_chapter_names_clist
@@ -5704,7 +5809,6 @@ SIXTY FIVE\or SIXTY SIX \or SIXTY SEVEN \or \else
       \setlength\chapterpaddingbottom{#1}%
     \fi}
 }
-
 
 
 \cxset{chapter~border-top-color/.code    = \tl_gset:Nn \chapter_border_top_color {#1},
@@ -6169,17 +6273,21 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
           number padding-right=0pt,
 }}
 \debugchapter
+\ExplSyntaxOn
+  \cxset {section~format/.format~in= \sectionformat@cx}
+  \cxset {section~format = block }
+\ExplSyntaxOff
+\ExplSyntaxOn
 \cxset{
-  section font-size/.store in=\sectionfontsize@cx,
-  section font size/.store in=\sectionfontsize@cx,
-  section font-weight/.store in=\sectionfontweight@cx,
-  section font-family/.store in=\sectionfontfamily@cx,
-  section font family/.store in = \sectionfontfamly@cx,
-  section font-shape/.store in=\sectionfontshape@cx,
-  section color/.code=\gdef\sectioncolor@cx{#1}\renewsection,
-  section color/.initial=black,
-  section color/.default=black,
+  section~font-size/.font-size~in=\sectionfontsize@cx,
+  section~font-weight/.font-weight~in=\sectionfontweight@cx,
+  section~font-family/.font-family~in=\sectionfontfamily@cx,
+  section~font-shape/.font-style~in=\sectionfontshape@cx,
+  section~color/.code=\gdef\sectioncolor@cx{#1}\renewsection,
+  section~color/.initial=black,
+  section~color/.default=black,
  }
+\ExplSyntaxOff
 \def\sectionnumberingsuffix@cx{}%
 \def\sectionnumberingprefix@cx{}%
 \cxset{%
@@ -6187,6 +6295,9 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
   %alias
   section number after/.store in =\sectionnumberafter@cx,
   section numbering prefix/.store in=\sectionnumberingprefix@cx,
+}
+
+\cxset{
   section numbering/.is choice,
   section numbering/roman/.code={%
        \gdef\thesection{\sectionnumberingprefix@cx\@roman\c@section}%
@@ -6214,181 +6325,385 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
   section numbering/Words/.code={%
  \gdef\thesection{\sectionnumberingprefix@cx\words@cx{\@arabic\c@section}}},
    section numbering/WORDS/.code={\gdef\thesection{\sectionnumberingprefix@cx \words@cx{\@arabic\c@section}}},
-     section numbering custom/.code=\gdef\thesection{#1}\renewsection,
+}
+\cxset{
+     section numbering custom/.code=\gdef\thesection{#1}\renewsection,}
+\cxset{
   section align/.is choice,
-  section align/right/.code = \gdef\sectionalign@cx{flushright},
-  section align/center/.code = \gdef\sectionalign@cx{\centering},
-  section align/centering/.code = \gdef\sectionalign@cx{\centering},
-  section align/Centering/.code = \gdef\sectionalign@cx{\Centering},
-  section align/left/.code = \gdef\sectionalign@cx{flushleft},
-   section align/flushleft/.code = \gdef\sectionalign@cx{flushleft},
-  section align/right/.code=\gdef\sectionalign@cx{flushright},
-  section align/flushright/.code=\gdef\sectionalign@cx{flushright},
-  section align/RaggedRight/.code=\gdef\sectionalign@cx{RaggedRight},
-  section align/raggedright/.code=\gdef\sectionalign@cx{RaggedRight},
+  section align/right/.code        = \gdef\sectionalign@cx{flushright},
+  section align/center/.code       = \gdef\sectionalign@cx{\centering},
+  section align/centering/.code    = \gdef\sectionalign@cx{\centering},
+  section align/Centering/.code    = \gdef\sectionalign@cx{\Centering},
+  section align/left/.code         = \gdef\sectionalign@cx{flushleft},
+   section align/flushleft/.code   = \gdef\sectionalign@cx{flushleft},
+  section align/right/.code        = \gdef\sectionalign@cx{flushright},
+  section align/flushright/.code   = \gdef\sectionalign@cx{flushright},
+  section align/RaggedRight/.code  = \gdef\sectionalign@cx{RaggedRight},
+  section align/raggedright/.code  = \gdef\sectionalign@cx{RaggedRight},
   %
   section afterindent/.is choice,
-  section afterindent/on/.code = \afterindenton@cx,
-  section afterindent/off/.code = \afterindentoff@cx,
-  section afterindent/true/.code = \afterindenton@cx,
-  section afterindent/false/.code = \afterindentoff@cx,
+  section afterindent/on/.code     = \afterindenton@cx,
+  section afterindent/off/.code    = \afterindentoff@cx,
+  section afterindent/true/.code   = \afterindenton@cx,
+  section afterindent/false/.code  = \afterindentoff@cx,
   %
-  section beforeskip/.store in=\sectionbeforeskip@cx,
-  section afterskip/.store in=\sectionafterskip@cx,
-  section indent/.store in=\sectionindent@cx,
+  section beforeskip/.store in     = \sectionbeforeskip@cx,
+  section afterskip/.store in      = \sectionafterskip@cx,
+  section indent/.store in         = \sectionindent@cx,
   section spaceout/.is choice,
-  section spaceout/soul/.code={\@sectionspaceouttrue},
-  section spaceout/none/.code={\@sectionspaceoutfalse},
-  section number after/.store in=\sectionnumberafter@cx,
-  subsection font-size/.store in=\subsectionfontsize@cx,
-  subsection font-weight/.store in=\subsectionfontweight@cx,
-  subsection font-family/.store in=\subsectionfontfamily@cx,
-  subsection font-shape/.store in=\subsectionfontshape@cx,
-  subsection color/.store in=\subsectioncolor@cx,
-  subsection numbering prefix/.store in = \subsectionnumberingprefix@cx,
-  subsection numbering/.is choice,
-  subsection numbering/arabic/.code={%
-    \gdef\thesubsection{\subsectionnumberingprefix@cx\@arabic\c@subsection}},
-  subsection numbering/custom/.store in=\thesubsection@cx,
-  subsection numbering/none/.code={\gdef\thesubsection{\hspace*{-1em}}\renewsubsection},
-  subsection align/.store in=\subsectionalign@cx,
-  subsection beforeskip/.store in=\subsectionbeforeskip@cx,
-  subsection afterskip/.store in=\subsectionafterskip@cx,
-  subsection indent/.store in=\subsectionindent@cx,
-  subsection numbering custom/.code=\gdef\thesubsection{%
-          \subsectionnumberingprefix@cx#1}\renewsubsection,
-  subsection number after/.store in=\subsectionnumberafter@cx,
-  % subsubsection keys
-  %
-  subsubsection font-size/.code = \gdef\subsubsectionfontsize@cx{#1},
-  subsubsection font-weight/.store in=\subsubsectionfontweight@cx,
-  subsubsection font-family/.store in=\subsubsectionfontfamily@cx,
-  subsubsection font-shape/.store in=\subsubsectionfontshape@cx,
-  % no hyphen vesion
-  subsubsection font size/.store in=\subsubsectionfontsize@cx,
-  subsubsection font weight/.store in=\subsubsectionfontweight@cx,
-  subsubsection font family/.store in=\subsubsectionfontfamily@cx,
-  subsubsection font shape/.store in=\subsubsectionfontshape@cx,
-  %e
-  subsubsection color/.store in=\subsubsectioncolor@cx,
-  subsubsection numbering prefix/.store in = \subsubsectionnumberingprefix@cx,
-  subsubsection numbering/.is choice,
-  subsubsection numbering/arabic/.code={%
-    \gdef\thesubsubsection{\subsubsectionnumberingprefix@cx\@arabic\c@subsubsection}%
-         \renewsubsubsection},
-  subsubsection numbering/numeric/.code={\gdef\thesubsubsection{\thesubsection.\@arabic\c@subsubsection}\renewsubsubsection},
-  subsubsection numbering custom/.code= \gdef\thesubsubsection{%
-       \subsubsectionnumberingprefix@cx#1}\renewsubsubsection,
-  subsubsection numbering/none/.code={\gdef\thesubsubsection{}\renewsubsubsection},
-  % needs handler
-  subsubsection align/.store in=\subsubsectionalign@cx,
-  subsubsection beforeskip/.store in=\subsubsectionbeforeskip@cx,
-  subsubsection afterskip/.store in=\subsubsectionafterskip@cx,
-  subsubsection indent/.store in=\subsubsectionindent@cx,
-  subsubsection number after/.store in=\subsubsectionnumberafter@cx,
-    %
-  paragraph font-size/.store in = \paragraphfontsize@cx,
-  paragraph font size/.store in = \paragraphfontsize@cx,
-  paragraph font-weight/.store in=\paragraphfontweight@cx,
-  paragraph font-family/.store in=\paragraphfontfamily@cx,
-  paragraph font-shape/.store in=\paragraphfontshape@cx,
-  paragraph color/.store in=\paragraphcolor@cx,
-  paragraph numbering/.is choice,
-  paragraph numbering/numeric/.code={\gdef\theparagraph{\thesubsubsection.\@arabic\c@paragraph}},
-  paragraph numbering/custom/.store in=\theparagraph@cx,
-  paragraph numbering/none/.code={\gdef\theparagraph{}},
-  paragraph align/.store in=\paragraphalign@cx,
-  paragraph beforeskip/.store in=\paragraphbeforeskip@cx,
-  paragraph afterskip/.store in=\paragraphafterskip@cx,
-  paragraph indent/.store in=\paragraphindent@cx,
-  paragraph number after/.store in=\paragraphnumberafter@cx,
-%% subparagraphs
-  subparagraph font-size/.store in=\subparagraphfontsize@cx,
-  subparagraph font-weight/.store in=\subparagraphfontweight@cx,
-  subparagraph font-family/.store in=\subparagraphfontfamily@cx,
-  subparagraph font-shape/.store in=\subparagraphfontshape@cx,
-  subparagraph color/.store in=\subparagraphcolor@cx,
-  subparagraph numbering/.is choice,
-  subparagraph numbering/numeric/.code={\gdef\thesubparagraph{\theparagraph.\@arabic\c@subparagraph}},
-  subparagraph numbering/arabic/.code={\gdef\thesubparagraph{\theparagraph.\@arabic\c@subparagraph}},
-  subparagraph numbering/custom/.store in=\thesubparagraph@cx,
-  subparagraph numbering/none/.code={\gdef\thesubparagraph{}},
-  subparagraph align/.store in=\subparagraphalign@cx,
-  subparagraph beforeskip/.store in=\subparagraphbeforeskip@cx,
-  subparagraph afterskip/.store in=\subparagraphafterskip@cx,
-  subparagraph indent/.store in=\subparagraphindent@cx,
-  subparagraph number after/.store in=\subparagraphnumberafter@cx,
-  subparagraph number after/.default=,
-  subparagraph number after/.initial=,
-%% headers and footers
-  header style/.store in=\headerstyle@cx,
-  rule /.is choice,
-  rule on/.code={\gdef\rulewidth@cx{0.4pt}},
-  rule off/.code={\gdef\rulewidth@cx{0pt}},
-  lhead/.code ={\lhead{#1}},
-  rhead/.code={\rhead{#1}},
-  chead/.code={\chead{#1}},
-  lfoot/.code ={\lhead{#1}},
-  cfoot/.code={\chead{#1}},
-  rfoot/.code={\rhead{#1}},
-  headrulewidth/.code={\renewcommand\headrulewidth{#1}},
-  footrulewidth/.code={\renewcommand\footrulewidth{#1}},
+  section spaceout/soul/.code      = \@sectionspaceouttrue,
+  section spaceout/none/.code      = \@sectionspaceoutfalse,
+  section number after/.store in   = \sectionnumberafter@cx,
 }
+\ExplSyntaxOn
+  \cxset {subsection~format/.format~in     = \subsectionformat@cx}
+  \cxset {subsection~format = hang }
+  \cxset {subsection~name/.store~in=\subsectionname@cx}
 
-\def\@startsection#1#2#3#4#5#6{%
+\cxset{
+  subsection~font-size/.font-size~in       = \subsectionfontsize@cx,
+  subsection~font-weight/.font-weight~in   = \subsectionfontweight@cx,
+  subsection~font-family/.font-family~in   = \subsectionfontfamily@cx,
+  subsection~font-shape/.font-style~in     = \subsectionfontshape@cx,
+  subsection~color/.store~in               = \subsectioncolor@cx,
+}
+\ExplSyntaxOff
+\cxset{subsection font-size=Large,
+       subsection font-weight=bold,
+       subsection font-family=rmfamily,
+       subsection font-shape=upshape,
+       subsection color=spot!50}
+
+\ExplSyntaxOn
+\cxset{
+  subsection~numbering/.is~choice,
+  subsection~numbering/arabic/.code     =
+    {
+      \gdef\thesubsection{\subsectionnumberingprefix@cx\@arabic\c@subsection}
+     },
+  subsection~numbering/custom/.store~in = \thesubsection@cx,
+  subsection~numbering/none/.code       =
+    {
+      \gdef\thesubsection{\hspace*{-1em}} \renewsubsection
+    },
+  subsection~align/.store~in            = \subsectionalign@cx,
+  subsection~beforeskip/.store~in       = \subsectionbeforeskip@cx,
+  subsection~afterskip/.store~in        = \subsectionafterskip@cx,
+  subsection~indent/.store~in           = \subsectionindent@cx,
+  subsection~numbering~custom/.code     =
+     \gdef\thesubsection
+       {
+         \subsectionnumberingprefix@cx#1
+       } \renewsubsection,
+  subsection~number~after/.store~in     = \subsectionnumberafter@cx,
+  subsection~numbering~prefix/.store~in = \subsectionnumberingprefix@cx,
+}
+\ExplSyntaxOff
+\ExplSyntaxOn
+\cxset{
+  subsubsection~font-size/.font-size~in      = \subsubsectionfontsize@cx,
+  subsubsection~font-weight/.font-weight~in  = \subsubsectionfontweight@cx,
+  subsubsection~font-family/.font-family~in  = \subsubsectionfontfamily@cx,
+  subsubsection~font-shape/.font-style~in    = \subsubsectionfontshape@cx,
+  subsubsection~color/.store~in              = \subsubsectioncolor@cx,
+}
+\ExplSyntaxOff
+\cxset{subsubsection font-shape=upshape}
+\cxset{
+  subsubsection numbering prefix/.store in   = \subsubsectionnumberingprefix@cx,
+  subsubsection numbering/.is choice,
+}
+\ExplSyntaxOn
+\cxset{
+  subsubsection~numbering/arabic/.code       =
+    {
+      \gdef\thesubsubsection
+        {
+         \thesubsection.\subsubsectionnumberingprefix@cx
+         \@arabic\c@subsubsection
+        }
+        \renewsubsubsection},
+}
+\ExplSyntaxOff
+\cxset{
+  subsubsection numbering/numeric/.code     =
+    {
+      \gdef\thesubsubsection
+        {\thesubsection.\@arabic\c@subsubsection}
+      \renewsubsubsection
+    },
+  subsubsection numbering custom/.code      =
+    \gdef\thesubsubsection
+      {%
+         \subsubsectionnumberingprefix@cx#1
+      }  \renewsubsubsection,
+  subsubsection numbering/none/.code        =
+       \gdef\thesubsubsection{}\renewsubsubsection,
+  % needs handler
+  subsubsection align/.store in             = \subsubsectionalign@cx,
+  subsubsection beforeskip/.store in        = \subsubsectionbeforeskip@cx,
+  subsubsection afterskip/.store in         = \subsubsectionafterskip@cx,
+  subsubsection indent/.store in            = \subsubsectionindent@cx,
+  subsubsection number after/.store in      = \subsubsectionnumberafter@cx,
+}
+    %
+\ExplSyntaxOn
+\cxset{
+  paragraph~font-size/.font-size~in         = \paragraphfontsize@cx,
+  paragraph~font-weight/.font-weight~in     = \paragraphfontweight@cx,
+  paragraph~font-family/.font-family~in     = \paragraphfontfamily@cx,
+  paragraph~font-shape/.font-style~in       = \paragraphfontshape@cx,
+  paragraph~color/.store~in                 = \paragraphcolor@cx,
+  paragraph~numbering/.is~choice,
+  paragraph~numbering/arabic/.code          =
+   \cs_gset:Npn \theparagraph {
+    \thesubsubsection.\@arabic\c@paragraph},
+  paragraph~numbering/custom/.store~in      = \theparagraph@cx,
+  paragraph~numbering/none/.code            = {\gdef\theparagraph{}},
+  paragraph~align/.store~in                 = \paragraphalign@cx,
+  paragraph~beforeskip/.store~in            = \paragraphbeforeskip@cx,
+  paragraph~afterskip/.store~in             = \paragraphafterskip@cx,
+  paragraph~indent/.store~in                = \paragraphindent@cx,
+  paragraph~number~after/.store~in          = \paragraph_number_after_tl,
+}
+\ExplSyntaxOff
+%% subparagraphs
+\ExplSyntaxOn
+\cxset{
+  subparagraph~name/.store~in                = \subparagraphname@cx,
+  subparagraph~font-size/.font-size~in       = \subparagraphfontsize@cx,
+  subparagraph~font-weight/.font-weight~in   = \subparagraphfontweight@cx,
+  subparagraph~font-family/.font-family~in   = \subparagraphfontfamily@cx,
+  subparagraph~font-shape/.font-style~in     = \subparagraphfontshape@cx,
+  subparagraph~color/.store~in               = \subparagraphcolor@cx,
+  subparagraph~numbering/.is~choice,
+  subparagraph~numbering/numeric/.code       =
+  {\gdef\thesubparagraph{\theparagraph.\@arabic\c@subparagraph}},
+  subparagraph~numbering/arabic/.code        =
+    \cs_gset_nopar:Npn \thesubparagraph{
+    \theparagraph.\@arabic\c@subparagraph},
+  subparagraph~numbering/custom/.store~in    = \thesubparagraph@cx,
+  subparagraph~numbering/none/.code          = \gdef\thesubparagraph{},
+  subparagraph~align/.store~in               = \subparagraphalign@cx,
+  subparagraph~beforeskip/.store~in          = \subparagraphbeforeskip@cx,
+  subparagraph~afterskip/.store~in           = \subparagraphafterskip@cx,
+  subparagraph~indent/.store~in              = \subparagraphindent@cx,
+  subparagraph~number~after/.store~in        = \subparagraphnumberafter@cx,
+  subparagraph~number~after/.default=,
+  subparagraph~number~after/.initial=,
+  subparagraph~format/.format~in             = \subparagraphformat@cx,
+}
+\ExplSyntaxOff
+
+
+\ExplSyntaxOn
+\DeclareDocumentCommand \sect_create_document_section:nnnnnnnnn {m m m m m m s o m}
+  {
     \if@noskipsec \leavevmode \fi
     \par
-    \@tempskipa #4\relax
+    \l_tmpa_skip #4\relax
     \afterindent@cx%\@afterindentfalse
-    \ifdim \@tempskipa <\z@
-        \@tempskipa -\@tempskipa\afterindent@cx %\@afterindentfalse
-     \fi
-\if@nobreak
-\everypar{}%
-\else
-   \addpenalty\@secpenalty\addvspace\@tempskipa
-\fi
-\@ifstar
- {\@ssect{#3}{#4}{#5}{#6}}%defined in the kernel
-{\@dblarg{\@sect{#1}{#2}{#3}{#4}{#5}{#6}}}}%defined in the kernel
- \def\@seccntformat#1{\@ifundefined{#1@cntformat}%
-{\csname the#1\endcsname\sectionnumberafter@cx}% default
-{\csname #1@cntformat\endcsname}% individual control
-}
-\long\def\testsections{%
-\section{Sections}
-\lorem\par
-\subsection{Subsections}
-\lorem\par
-\subsubsection{Subsubsections}
-\lorem\par
-}
-\def\sectionnumberafter@cx{\quad}%default value only space
-\def\subsectionnumberafter@cx{\quad}%default value only space
-\def\subsubsectionnumberafter@cx{\quad}%default value only space
+    \if_dim:w \l_tmpa_skip <\z@
 
-\def\section@cntformat{\thesection\sectionnumberafter@cx}
-\def\subsection@cntformat{\thesubsection\subsectionnumberafter@cx}
-\def\subsubsection@cntformat{\thesubsubsection\subsectionnumberafter@cx\quad}
+      \skip_set:Nn\l_tmpa_skip {-\l_tmpa_skip}
+      \afterindent@cx %\@afterindentfalse
+    \fi:
+    \if@nobreak
+      %\tex_everypar{}% weird ERROR and removed
+    \else
+      \addpenalty \@secpenalty
+      \addvspace\l_tmpa_skip
+    \fi
+    \IfBooleanTF {#7}
+      {\@ssect {#3} {#4} {#5} {#6} {#9} }
+      {
+        \IfValueTF {#8} {\@sect  {#1} {#2} {#3} {#4} {#5} {#6} [{#8}] {#9} }
+                        {\@sect  {#1} {#2} {#3} {#4} {#5} {#6} [{#8}] {#9} } %sends TF we get it later
+      }
+  }
+\cs_gset_eq:NN \@startsection \sect_create_document_section:nnnnnnnnn
+\ExplSyntaxOff
+
+\ExplSyntaxOn
+\cs_set:Npn \format_hang:nn #1#2 {
+  \@hangfrom{\hskip #1\relax\@svsec
+            \interlinepenalty \@M #2\@@par}%
+}
+\cs_set:Npn \format_block:nn #1#2 {
+  \begin{tcolorbox}[colback=spot!30, colframe=white, arc=3mm]
+    \centering
+    \language-1\relax
+    \@svsec {#2}
+  \end{tcolorbox}
+}
+
+\cs_set:Npn \format_display:nn #1 #2 #3{
+   \leavevmode
+   \cs:w #1name\cs_end:\space
+   \hskip#2\relax\@svsec\vskip2pt
+   #3
+}
+\cs_set_nopar:Npn \@sect #1 #2 #3 #4 #5 #6 [#7] #8 {%
+  \ifnum #2>\c@secnumdepth
+    \let\@svsec\@empty
+  \else
+    \refstepcounter{#1}%
+    \protected@edef\@svsec{\@seccntformat{#1}\relax}%
+  \fi
+  \@tempskipa #5\relax
+  \ifdim \@tempskipa>\z@
+    \begingroup
+      #6
+    \bgroup%
+    \str_case_x:nnTF { \csname#1format@cx\endcsname}
+      {
+          { display } { \format_display:nn { #1 } { #3 } { #8 } }
+          { block   } { \format_block:nn   { #3 } { #8 }        }
+          { plain   } { \format_hang:nn    { #3 } { #8 }        }
+          { hang    } { \format_hang:nn    { #3 } { #8 }        }
+      }
+      {\if@debug~\tiny\csname#1format@cx\endcsname \fi } %true code
+      {
+        \if@debug~\tiny\csname#1format@cx\endcsname\fi
+        \@hangfrom {\hskip #3\relax\@svsec}%
+        \interlinepenalty \@M #8\@@par
+      } %false code
+    \egroup
+    \endgroup
+    \IfValueTF{#7}
+    { \cs:w #1mark\cs_end: {#7} }
+    { \cs:w #1mark\cs_end: {#8} }  %
+    \addcontentsline{toc}{#1}{%
+      \ifnum #2>\c@secnumdepth \else
+        \protect\numberline{\csname the#1\endcsname}%
+      \fi
+      \IfValueTF{#7}
+        {#7          }
+        {#8}         }
+  \else
+   \cs_set:Npn \@svsechd
+     {
+        #6
+        {
+          \hskip #3\relax
+          \@svsec #8 \relax
+        }
+        \IfValueTF{#7}
+          { \cs:w #1mark\cs_end: {#7} }
+          { \cs:w #1mark\cs_end: {#8} }
+        \addcontentsline{toc}{#1}{
+          \ifnum #2>\c@secnumdepth \else
+            \protect\numberline{\csname the#1\endcsname}
+          \fi
+          \IfValueTF{#7}
+           {#7         }
+           {#8}         }
+     }
+  \fi
+  \xsect:n{#5}}
+\ExplSyntaxOff
+\ExplSyntaxOn
+\cs_set:Npn \@ssect #1 #2 #3 #4 #5 {%
+  \@tempskipa #3\relax
+  \ifdim \@tempskipa>\z@
+  \begingroup
+    #4{
+    \@hangfrom{\hskip #1}%
+    \interlinepenalty \@M (#5)\@@par}%
+    \endgroup
+  \else
+  \def\@svsechd{#4{\hskip #1\relax #5}}%
+  \fi
+  \xsect:n{#3}
+}
+\ExplSyntaxOff
+
+\ExplSyntaxOn
+\cs_set:Npn \xsect:n #1
+  {
+  \l_tmpa_skip #1\relax
+  \if_dim:w \l_tmpa_skip>0pt
+    \par \nobreak
+    \vskip \l_tmpa_skip
+    \@afterheading
+  \else:
+    \@nobreakfalse
+    \global\@noskipsectrue
+    \tex_everypar:D
+      {
+        \if@noskipsec
+          \global\@noskipsecfalse
+          {\setbox\z@\lastbox}
+          \tex_clubpenalty:D\@M
+          \group_begin:
+            \@svsechd
+          \group_end:
+          \tex_unskip:D
+          \l_tmpa_skip #1\relax
+          \hskip -\l_tmpa_skip
+        \else
+          \tex_clubpenalty:D \@clubpenalty
+          \tex_everypar:D {}
+        \fi
+      }
+  \fi:
+  \tex_ignorespaces:D
+  }
+\ExplSyntaxOff
+\ExplSyntaxOn
+ \cs_gset:Npn \@seccntformat #1
+ {
+  \@ifundefined{#1@cntformat}%
+  {\csname the#1\endcsname\section_number_after_tl}% default
+  {\csname #1@cntformat\endcsname}% individual control
+ }
+\tl_set:Nn  \section_number_after_tl{\quad}%default value only space
+\tl_set:Nn  \subsection_number_after_tl{\quad}%default value only space
+\tl_set:Nn  \subsubsection_number_after_tl{\quad}%default value only space
+\tl_set:Nn  \paragraph_number_after_tl{\quad}%default value only space
+\tl_set:Nn  \subparagraph_number_after_tl{\quad}%default value only space
+\cs_set:Npn \section@cntformat{\thesection\section_number_after_tl}
+\cs_set:Npn \subsection@cntformat{\thesubsection\subsection_number_after_tl}
+\cs_set:Npn \subsubsection@cntformat{\thesubsubsection\subsubsection_number_after_tl}
+\cs_set:Npn \paragraph@cntformat {\theparagraph\paragraph_number_after_tl }
+\cs_set:Npn \subparagraph@cntformat {\thesubparagraph\subparagraph_number_after_tl }
+\ExplSyntaxOff
+\ExplSyntaxOn
 \def\renewsection{%
-\renewcommand\section{%
-\@startsection{section}%
-{1}%level check this conflicts with source2e
-{\sectionindent@cx}%indent#2
-{\sectionbeforeskip@cx}%before skip#3
-{\sectionafterskip@cx}% after skip#4
-{%
- \setfont@cx{\sectionfontweight@cx}%
-    {\sectionfontfamily@cx}{\sectionfontsize@cx}{\sectionfontshape@cx}%
-   \expandafter\setfontparam@cx\sectionalign@cx;%
-   \color{\sectioncolor@cx}%5
-}}%
+   \renewcommand\section{%
+   \gdef\sectionname{Clause}
+    \@startsection{section}%
+      {1}%level check this conflicts with source2e
+      {\sectionindent@cx}%indent#2
+      {\sectionbeforeskip@cx}%before skip#3
+      {\sectionafterskip@cx}% after skip#4
+      {%
+      \setfont@cx{\sectionfontweight@cx}%
+      {\sectionfontfamily@cx}{\sectionfontsize@cx}{\sectionfontshape@cx}%
+      \expandafter\setfontparam@cx\sectionalign@cx;%
+      \color{\sectioncolor@cx}%5
+ }}%
 }%
+\ExplSyntaxOff
+
+\ExplSyntaxOn
+\cs_set:Npn \testsections
+  {
+    \section{Sections}
+    \lorem\par
+    \subsection{Subsections}
+    \lorem\par
+    \subsubsection{Subsubsections}
+    \lorem\par
+    \paragraph {Paragraph}
+  }
+
+\cs_set_eq:NN \TestSections\testsections
+\ExplSyntaxOff
 \cxset{
   section font-size= LARGE,
-  section font size= LARGE,
   section font-weight=mdseries,
-  section font family = sffamily,
+  section font-family = sffamily,
   section font-shape= upshape,
   section color =spot!50,
   section numbering prefix=,
@@ -6417,29 +6732,29 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
 }%
 }%
 }
-\def\renewsubsubsection{%
-\renewcommand\subsubsection{%
- \@startsection{subsubsection}%
-{3}%level
-{\subsubsectionindent@cx}%indent
-{\subsubsectionbeforeskip@cx}%
-{\subsubsectionafterskip@cx}%
-{\setfont@cx{\subsubsectionfontweight@cx}%
-    {\subsubsectionfontfamily@cx}{\subsubsectionfontsize@cx}{\subsubsectionfontshape@cx}%
-   \expandafter\setfontparam@cx\subsubsectionalign@cx;%
-  \color{\subsubsectioncolor@cx}%
-}%
+\ExplSyntaxOn
+  \def\renewsubsubsection{%
+    \renewcommand\subsubsection
+    {
+       \@startsection{subsubsection}%
+       {3}%level
+       {\subsubsectionindent@cx}%indent
+       {\subsubsectionbeforeskip@cx}
+       {\subsubsectionafterskip@cx}
+       {\setfont@cx{\subsubsectionfontweight@cx }
+       {\subsubsectionfontfamily@cx}{\subsubsectionfontsize@cx}
+       {\subsubsectionfontshape@cx}
+   \expandafter\setfontparam@cx\subsubsectionalign@cx;
+  \color{\subsubsectioncolor@cx}
+       }
+    }
 }
- %\def\@seccntformat##1{\csname the##1\endcsname\subsubsectionnumberafter@cx\hskip.5em}%
-}
-
+\ExplSyntaxOff
 \cxset{
   subsubsection font-family=tiresias,
   subsubsection font-size= large,
-  subsubsection font size= large,
   subsubsection font-weight=bfseries,
   subsubsection font-family= tiresias,
-  subsubsection font family = tiresias,
   subsubsection font-shape= upshape,
   subsubsection color =spot!50,
   subsubsection numbering prefix= ,
@@ -6451,6 +6766,7 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
   subsubsection number after=,
 }
 \renewsubsubsection
+\ExplSyntaxOn
 \def\renewparagraph{%
   \renewcommand\paragraph{%
      \@startsection{paragraph}%
@@ -6465,21 +6781,58 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
      }%
  }
 }
-
-\def\renewsubparagraph{%
-\renewcommand\subparagraph{%
- \@startsection{subparagraph}%
-{5}%level
-{\subparagraphindent@cx}%indent
-{\subparagraphbeforeskip@cx}%
-{\subparagraphafterskip@cx}%
-{\setfont@cx{\subparagraphfontweight@cx}%
-    {\subparagraphfontfamily@cx}{\subparagraphfontsize@cx}{\subparagraphfontshape@cx}%
-   \expandafter\setfontparam@cx\subparagraphalign@cx;%
-   \color{\subparagraphcolor@cx}%
- }%
-}%This command formats the section number including the space following it.
+\renewparagraph
+\ExplSyntaxOff
+\cxset{
+  paragraph font-size    = large,
+  paragraph font-weight  = bold,
+  paragraph font-family  = rmfamily,
+  paragraph font-shape   = upshape,
+  paragraph color        = spot!50,
+  paragraph numbering    = arabic,
+  paragraph align        = flushleft,
+  paragraph beforeskip   = 0pt,
+  paragraph afterskip    = -10pt,
+  paragraph indent       = 0pt,
+  paragraph number after =\quad,
 }
+
+\ExplSyntaxOn
+\cs_new:Npn \renewsubparagraph
+  {
+    \renewcommand\subparagraph
+      {
+         \@startsection{subparagraph}
+         {5}%level
+         {\subparagraphindent@cx}%indent
+         {\subparagraphbeforeskip@cx}
+         {\subparagraphafterskip@cx}
+         {
+           \setfont@cx{\subparagraphfontweight@cx}
+           {\subparagraphfontfamily@cx}{\subparagraphfontsize@cx}{\subparagraphfontshape@cx}%
+           \expandafter\setfontparam@cx\subparagraphalign@cx;
+           \color{\subparagraphcolor@cx}
+         }
+       }
+  }
+\renewsubparagraph
+\ExplSyntaxOff
+\cxset{
+  subparagraph name         = subparagraph,
+  subparagraph font-size    = large,
+  subparagraph font-weight  = bfseries,
+  subparagraph font-family  = rmfamily,
+  subparagraph font-shape   = upshape,
+  subparagraph color        = spot!50,
+  subparagraph numbering    = arabic,
+  subparagraph align        = flushleft,
+  subparagraph beforeskip   = 0pt,
+  subparagraph afterskip    = -10pt,
+  subparagraph indent       = 0pt,
+  subparagraph number after = \quad,
+  subparagraph format       = inline,
+}
+
 \cxset{custom/.code=\global\@specialtrue
                 \gdef\customdesign@cx{%
                       \csname#1\endcsname},
@@ -6528,175 +6881,7 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
   \exp_after:wN \setfontparam@cx\chapter_font_shape;%
 }
 \ExplSyntaxOff
-\gdef\tempcmd@cx{}%
-\newcounter{draw}\setcounter{draw}{1}
-\gdef\drawmaybe#1{%
-    \setcounter{draw}{0}
-    \expandafter\ifdim\csname#1bordertopwidth\endcsname>0pt \addtocounter{draw}{1}\fi
-    \expandafter\ifdim\csname#1borderrightwidth\endcsname>0pt \addtocounter{draw}{1}\fi
-    \expandafter\ifdim\csname#1borderbottomwidth\endcsname>0pt \addtocounter{draw}{1}\fi
-    \expandafter\ifdim\csname#1borderleftwidth\endcsname>0pt\addtocounter{draw}{1}\fi
-     \expandafter%
-     \ifnum\thedraw>0
-           \gdef\tempcmd@cx{draw}%
-      \else
-           \gdef\tempcmd@cx{}%
-      \fi
-}
 
-\ExplSyntaxOn
-\newcommand\phd@rule[2][chapter]{%
-\iffalse
-          %\color{\rulebottomcolor}%
-          \color{blue}
-           %\edef\tempa{\csname#1_border_bottom_style\endcsname}
-           \edef\tempa{solid} %TO FIX
-           \edef\tempb{double}
-           \edef\tempc{solid}
-           \edef\tempd{dashed}
-           \edef\tempe{dotted}
-           \edef\tempf{double dotted}
-           \edef\tempg{asterisk}
-            \edef\temph{double asterisk}
-           % solid
-           \ifx\tempa\tempc
-              \hrule\@height\fboxrulebottom
-           \fi
-           % double
-           \ifx\tempa\tempb%
-              \hrule\@height\fboxrulebottom%thickness of rule
-                  \@width\dimexpr(\totalboxwidth+8pt)\relax%
-              \vskip1pt%
-              \hrule\@height\fboxrulebottom\relax
-           \fi
-          % dotted
-           \ifx\tempa\tempe\nointerlineskip%
-                \hbox to \totalboxwidth{\xleaders\hbox{.}\hfill\kern\z@}%a
-           \fi
-           % double dotted
-           \ifx\tempa\tempf\nointerlineskip%
-                \hbox to \totalboxwidth{\cleaders\hbox{.}\hfill\kern\z@}%
-                \vskip1pt\nointerlineskip%
-                 \hbox to \totalboxwidth{\cleaders\hbox{.}\hfill\kern\z@}%
-           \fi
-           % asterisk
-            \ifx\tempa\tempg\nointerlineskip%
-                \hbox to \totalboxwidth{\cleaders\hbox{*}\hfill\kern\z@}%
-           \fi
-            % double asterisk
-            \ifx\tempa\temph\nointerlineskip%
-                \hbox to \totalboxwidth{\cleaders\hbox{\textasteriskcentered}\hfill\kern\z@}%
-                \vskip1pt\nointerlineskip%
-                \hbox to \totalboxwidth{\cleaders\hbox{\textasteriskcentered}\hfill\kern\z@}%
-           \fi
-\fi
-
-}
-\ExplSyntaxOff
-\newdimen\fboxrule
-\newdimen\fboxsep
-\fboxrule.4pt
-\fboxsep1pt
-\newdimen\fboxseptop
-\newdimen\fboxsepright
-\newdimen\fboxsepbottom
-\newdimen\fboxsepleft
-\fboxseptop\fboxsep
-\fboxsepright\fboxsep
-\fboxsepbottom\fboxsep
-\fboxsepleft\fboxsep
-\newdimen\fboxruletop
-   \fboxruletop\fboxrule
-\newdimen\fboxruleright
-   \fboxruleright\fboxrule
-\newdimen\fboxrulebottom
-   \fboxrulebottom\fboxrule
-\newdimen\fboxruleleft
-   \fboxruleleft\fboxrule
-\def\ruletopcolor{black}
-\def\rulebottomcolor{black}
-\def\ruleleftcolor{black}
-\def\rulerightcolor{black}
-\long\def\phd@fbox#1{%
-  \leavevmode
-    \setbox\@tempboxa\hbox {%
-       \color@begingroup%
-       \kern\fboxsepleft{-#1-}\kern\fboxsepright%
-       \color@endgroup
-       }%
-   \edef\totalboxwidth{\expandafter\the\wd\@tempboxa}
-   \phd@frameb@x\relax}
-\def\phd@framebox{%
-  \@ifnextchar(%)
-    \phd@framepicbox{\@ifnextchar[\phd@framebox\phd@fbox}}
-\def\phd@framebox[#1]{%
-  \@ifnextchar[%]
-    {\phd@iframebox[#1]}%
-    {\phd@iframebox[#1][c]}}
-\long\def\phd@iframebox[#1][#2]#3{%
-  \leavevmode
-  \@begin@tempboxa\hbox{#3}%
-    \setlength\@tempdima{#1}%
-    \setbox\@tempboxa\hb@xt@\@tempdima
-         {\kern\fboxsep\csname bm@#2\endcsname\kern\fboxsep}%
-    \@frameb@x{\kern-\fboxrule}%
-   \@end@tempboxa%
-  }
-\def\phd@frameb@x#1{%
-  \@tempdima\fboxruletop
-  \advance\@tempdima\fboxseptop
-  \advance\@tempdima\dp\@tempboxa
-  \hbox{%
-    \lower\@tempdima\hbox{%
-      \vbox{%
-         \ifdim\fboxruletop>0pt
-           \fi
-           \color{blue}\hrule\@height\fboxruletop%toprule
-
-            \hbox{%
-              \bgroup%
-              \ifdim\fboxruleleft>0pt%
-                  \color{blue}%
-                  \edef\tempa{\chapter_border_left_style}%
-                  \edef\tempc{solid}%
-                  \edef\tempb{double}%
-                  \ifx\tempa\tempb%
-                    \vrule\@width\fboxruleleft%
-                    \kern1pt\vrule\@width\fboxruleleft%
-                  \fi
-                  \ifx\tempa\tempc%
-                    \vrule\@width\fboxruleleft%
-                  \fi
-             \fi
-              \egroup%\fboxrule%leftrule
-              #1%
-              \vbox{%
-                 \vskip\fboxseptop%toppadding
-                  \box\@tempboxa
-                  \vskip\fboxsepbottom}%bottompadding
-                  #1%
-                  \bgroup%
-                  \edef\tempa{\chapterborderrightstyle}%
-                  \edef\tempb{double}
-                  \edef\tempc{solid}
-                  \color{blue}%
-                  \ifx\tempa\tempb%
-                      \vrule\@width\fboxruleright%
-                       \kern1pt%
-                       \vrule\@width\fboxruleright%
-                  \fi%
-                  \ifx\tempa\tempc%
-                       \vrule\@width\fboxruleright%
-                  \fi%
-                  \egroup
-            }%%
-           \bgroup
-             % \phd@rule{\totalboxwidth}%
-           \egroup
-           }%
-           }%
-        }%
-}
 \def\saveelementbox#1#2#3{%
 
    \expandafter\fboxseptop\csname#2paddingtop\endcsname
@@ -6928,192 +7113,180 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
 \ExplSyntaxOn
 
 \cs_new:Npn \print_chapter_title #1 {%
-    \parindent0pt
-     \if@lefttitle%
-       \beforenumber@cx%
-       \counterdisplay\c@chapter\afternumber@cx%
-     \fi%
-      \if@titlespaceout%
-         \long\def\SSS{{\so{#1}}}%
+%% If the title is letter spaced we define a macro to expand it.
+      \if@titlespaceout
+         \long\def\SSS{{\so{#1}}}
       \else
-         \long\def\SSS{#1}%
+         \long\def\SSS{#1}
       \fi%
        \if@runinhead% for runin heads
             \def\afternumber@cx{\space\textbar\space}%
             \thechapter\afternumber@cx\space\SSS\par%
        \fi
+%%    \end{macrocode}
+%%
+%% We save the contents in order to measure the height.
+%% We also calculate the total width of the box with borders, padding and
+%% the like.
+%%    \begin{macrocode}
 \dim_gset:Nn \total_title_width %including padding+borders
     {
-         \chapter_title_text_width % text width
+        \chapter_title_text_width % text width
        +\title_border_left_width
        +\title_border_right_width
        +\title_padding_left_width
        +\title_padding_right_width
      }
-
-      \savebox \chapter_title_box {%
-        \begin{minipage}[t]{\chaptertitleboxwidth}%
-           \language-1% no hyphenation works with lua different with others
-           \set_chapter_title_font
-           \chapter_title_text_align%
-           %\centering
-           \SSS%
-          \par\offinterlineskip
-       \end{minipage}
-         }%
+%%    \end{macrocode}
+%%
+%%   Having measured the title block, we now typeset it. Before we typeset it
+%%   we will provide borders all around if required and also allow for padding.
+%%   We will not repeat the browser wars here, so we will provide the borders
+%%   outside the block and the padding inside.
+%%
+%%   Once we done we append everything to the heading toks.
+%%
+%%    \begin{macrocode}
 
 \appendtotoks{heading}{%
-
-  \dim_gset:Nn \offset_for_center { ( (\textwidth - \total_title_width)/2) }
-  \dim_gset:Nn \offset_for_right {(\textwidth-\total_title_width)}
+%%    \end{macrocode}
+%%  We first add the before hook
+%%  This is normally used to put ornaments or rules before the title text
+%%  block.
+%%    \begin{macrocode}
+  \dim_gset:Nn \title_bounding_box_width %width defined by kernel!strange error here
+    {
+      \chapter_title_text_width
+      +\title_border_left_width
+      +\title_border_right_width
+      + \title_padding_left_width
+      + \title_padding_right_width
+    }
+%%% \tikzrule
+%%
+%% We save the contents in order to measure the height.
+%% We also calculate the total width of the box with borders, padding and
+%% the like.
+%%    \begin{macrocode}
+%%    \end{macrocode}
+%%
+%%   Having measured the title block, we now typeset it. Before we typeset it
+%%   we will provide borders all around if required and also allow for padding.
+%%   We will not repeat the browser wars here, so we will provide the borders
+%%   outside the block and the padding inside.
+%%
+%%   Once we done we append everything to the heading toks.
+%%
+%%    \begin{macrocode}
+%%    \end{macrocode}
+%%  We first add the before hook
+%%  This is normally used to put ornaments or rules before the title text
+%%  block.
+%%    \begin{macrocode}
+  \dim_gset:Nn \offset_for_center { ( (\linewidth - \chapter_title_text_width)/2) }
+  \dim_gset:Nn \offset_for_right {(\linewidth-\chapter_title_text_width)}
   \dim_gset:Nn \l_tmpa_dim {0pt}
   \dim_gset:Nn \l_tmpb_dim {0pt}
+  \tcbset{centered/.style={
+             width=\chapter_title_text_width,
+             boxrule=.4pt,boxsep=0pt,
+             left=0pt,right=0pt,
+             leftright~skip=0pt,
+             middle=0pt,arc=0pt,toptitle=0pt,bottomtitle=0pt,
+             before={\vskip1pt},
+             after={\vskip1pt}}
+                }
 
-  \dim_gset:Nn \title_bounding_box_width %width defined by kernel!strange error here
-    {20pt
-    }
-
-  \@debugtrue
-    \if@debug
-       \vbox to 0pt {\tiny titlewidth: \dim_use:N \total_title_width --
-                                  texwidth: \dim_use:N \textwidth}
-    \fi
-  \titlebefore@cx%
-\str_case_x:nnTF {\chapter_title_display_tl}
-  {
-    {block        }   {\dim_gset_eq:NN \l_tmpb_dim \title_margin_top
-
-                      }
-    {inline       }   {\dim_gset:Nn  \l_tmpb_dim {0pt} }
-    {inline-block }   {\dim_gset:Nn \l_tmpb_dim {0pt}}
-    {none         }   {\dim_gset:Nn \l_tmpb_dim {0pt}}
-  }
-  {}
-  {}
- \if@debug {\tiny ~top-margin \dim_use:N
-            \title_margin_top~\dim_use:N \l_tmpb_dim\relax
-             ~~title-display:~\tl_use:N \chapter_title_display_tl}
- \fi
-
- \vskip\dim_eval:n\l_tmpb_dim
-  \if_dim:w \title_margin_left>0pt
-     \dim_gset:Nn  \l_tmpa_dim {\title_margin_left}
-  \else:
-    \str_if_eq_x:nnTF {\chapter_title_display_tl}{block}
-  {
-    \vskip\dim_eval:n \title_margin_top
-    \str_case_x:nnTF { \chapter_title_float_tl }
-  {
-    {none  }   {\dim_gset:Nn  \l_tmpa_dim {0pt}}
-    {left  }   {\dim_gset:Nn  \l_tmpa_dim {0pt} }
-    {center}   {\dim_gset_eq:NN \l_tmpa_dim \offset_for_center}
-    {right }   {\dim_gset_eq:NN \l_tmpa_dim \offset_for_right}
-  }
-  {}
-  {}
- }
- {\dim_gset:Nn \l_tmpa_dim {0pt}}
-\fi:
-  \if@debug
-   \hrule width \dim_eval:n \l_tmpa_dim height.2pt depth0pt\relax
-  \fi
-  \hskip\dim_eval:n \l_tmpa_dim \relax
-  \mbox{%
-    \parindent0pt
-    \hbox_to_wd:nn {\chapter_title_text_width
-                                    +\title_border_left_width
-                                    +\title_border_right_width
-                                    + \title_padding_left_width
-                                    + \title_padding_right_width
-                                    }
-      {
-         \vbox:n {%
-         \color{\title_border_top_color}%
-         \vskip0pt
-         \nointerlineskip
-          \vrule width
-              \expandafter\dimexpr(\chapter_title_text_width
-               +\dim_eval:n \title_border_left_width %checked ok
-               +\dim_eval:n \title_border_right_width
-               +\dim_eval:n \title_padding_left_width
-               +\dim_eval:n \title_padding_right_width)
-                height   \dim_eval:n \title_border_top_width \relax
-                 %
-                \vskip0pt\nointerlineskip
-                   \color{\title_border_left_color}%
-                   \vrule width \dim_eval:n \title_border_left_width
-                             height\expandafter\dimexpr(\ht\chapter_title_box
-                             +\title_padding_top_width)\relax
-                             depth\dimexpr(\title_padding_bottom_width+\dp\chapter_title_box)
-                \kern\title_padding_left_width
-        \begin{minipage}[t]{\chapter_title_text_width}%
-        \tcbset{%width=\chapter_title_text_width,
-                colback=white,
-                enhanced,
-                arc=0mm,
-                boxrule=1.5mm,
-                frame~hidden,
-                colback=blue!10!white,
-                nobeforeafter,
-                shrink~tight,
-                draft,
-                borderline={1mm}{0mm}{blue,dotted}}
-         \begin{tcolorbox}
+   \tcbset{floatright/.style={
+             width=\chapter_title_text_width,
+             boxrule=.4pt,boxsep=0pt,
+             left=0pt,right=0pt,top=0pt,bottom=0pt,
+             left~skip=-\offset_for_right-\offset_for_right,
+            % right~skip=0pt,
+             %middle=0pt,arc=0pt,toptitle=0pt,bottomtitle=0pt,
+             before={\vskip1pt},
+             after={\vskip1pt}}
+                }
+%%    \end{macrocode}
+%%
+%% We now need to decide if the title element can be floated or not. The description
+%% is a bit Knuthian with lot of ifs and buts, but here is a simple explanation
+%% behind the rules.
+%%
+%% If a \docAuxCommand{title_margin_left} has been specified it means that we need
+%% to position the block exactly so many units from the left, hence we cannot float
+%% and ignore any settings to that effect.
+%%
+%% To float the display property must be set to block and the float property
+%% to right, left or center.
+%%
+%% We add the title top margin only for block displays. This is questionable
+%% inline blocks might also need it.
+%%
+%%    \begin{macrocode}
+%%
+%% Check for left margin
+%%    \end{macrocode}
+%%
+%%    \begin{macrocode}
+%%  draw horizontal rule
+%%
+%%    \end{macrocode}
+%%
+%%   Next we draw the left border.
+%%    \begin{macrocode}
+%%
+%%    \end{macrocode}
+%%
+%%  Kern for any pading left before we put the contents.
+%%    \begin{macrocode}
+%%    \end{macrocode}
+%%
+%%  we typeset the text which is now in the minipage and we go on
+%%  and also add the right padding and border if required.
+%%  We copy instead of |\usebox| as we do not wanr to go into paragraph mode
+%%  Unsure about this item will need to revisit. Gives issues with some of the templates.
+%%
+%%    \begin{macrocode}
+%%
+%%        \begin{minipage}[t]{\chapter_title_text_width}%
+%%       \vskip1pt
+         \par\rule{\linewidth}{2pt}\vskip0pt
+        \begin{tcolorbox}[centered,width=\offset_for_right]
+            Before
+         \end{tcolorbox}
+        \hspace*{3cm}\begin{tcolorbox}[floatright,]
          \set_chapter_title_font
            \chapter_title_text_align%
            \language-1
            \SSS\par %NEW NEW CHECK
           \end{tcolorbox}
-       \end{minipage}% \copy\titlebox%
-       \offinterlineskip
-             \ifdim\title_border_right_width>0pt
-                    \color{\title_border_right_color}%
-                    \kern\title_padding_right_width
-                     \vrule width \dim_eval:n \title_border_right_width
-                              height\expandafter\dimexpr(
-                              \ht\chapter_title_box+\title_padding_top_width)
-                              depth\dimexpr(\title_padding_bottom_width+\dp\chapter_title_box)
-              \fi
 %%
-             \color{\title_border_bottom_color}%
-             \vskip0pt
-             \nointerlineskip
-             \vrule width
-                      \expandafter\dimexpr(
-                       \chapter_title_text_width
-                      +\expandafter\title_border_left_width
-                      +\dim_eval:n \title_border_right_width
-                      +\title_padding_left_width + \title_padding_right_width
-                )
-             height \dim_eval:n \title_border_bottom_width\relax
-             % hook for aligning normally par, unless there is more material
-              %
-      \if@righttitle%
-         \afternumber@cx%
-         \counterdisplay\c@chapter\afternumber@cx%
-      \fi%
-      %
-      %\titleafterskip@cx
-      \@debugtrue
-      \if@debug%
-          %\par\leavevmode%
-          \vbox to 0pt{%
-              \offinterlineskip
-               \tex_vrule:D width.4pt depth0pt height%
-                \dim_eval:n \title_margin_bottom\relax%
-                \tex_kern:D 2pt\raisebox{3pt}{
-                    \hbox_to_zero:n
-                        { \tiny\dim_use:N \title_margin_bottom }
-                   }
-            }%
-     \fi%
- %
-}}}
-}%\afteralignhook@cx
- %    \titlemarginbottom@cx%   CHECK!!!
-  %   \titleafter@cx%introduces space if par???
+%%      \par
+%%    \end{macrocode}
+%%   next we typeset the right border.
+%%    \begin{macrocode}
+%%    \end{macrocode}
+%%
+%%  next we skip to the bottom and draw a bottom rule
+%%  if it is specified. We are still in paragraph mode
+%%    \begin{macrocode}
+%%%
+%%Hook before skips
+%%    \end{macrocode}
+%%
+%%  The final bottom margin will be added later we just draw a debug rule
+%%    \begin{macrocode}
+   }%heading
+%%\hb
+%%    \end{macrocode}
+%% We finally add the titleafter@cx hook. This takes care of any material added at the end of the
+%% text block. Also here we inject the end of paragraph marker and return to vertical mode.
+%%
+%%    \begin{macrocode}
 }
 \ExplSyntaxOff
+
 
 \ExplSyntaxOn
 \cs_new:Npn \appendtotoks #1#2
@@ -7186,10 +7359,12 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
                 \expandafter\printchaptername[chapter]{\the\chaptertoks}%
                 \expandafter\printchaptername[chapter]{\the\numbertoks}%
         \fi%ifnum
-
 \set_chapter_title:nn {#1}{#2}
-\typeset_heading:
+\appendtotoks{heading}{\begin{tcolorbox}[centered,left=0pt,right=0pt]{after~title}\end{tcolorbox}}
+ \typeset_heading:
  }
+
+
 \cs_new:Npn \set_chapter_title:nn #1#2{
     \if@chaptertitlespecial%
        \csname ethics\endcsname{#2}%
@@ -7201,7 +7376,7 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
 \cs_new:Npn \author_block_aux: {
    \skip_vertical:n \title_margin_bottom
       \if@authorblock
-           print_author_block:
+           \print_author_block:
            \authorblockafterskip@cx
       \fi%
     \tex_par:D
@@ -7209,15 +7384,35 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
    %
 }%
 
+\tcbset{centered/.style={
+             width=\linewidth,
+             boxrule=.4pt,boxsep=0pt,left=0pt,right=0pt,
+             leftright~skip=0cm,middle=0pt,arc=0pt,toptitle=0pt,bottomtitle=0pt,
+             before={\vskip1pt},
+             after={\vskip1pt}}
+                }
+
 \cs_new:Npn \typeset_heading: {
-       \begin{tcolorbox}
-          [
-           oversize=2cm,
-          ]
-        \parindent1em
+\parindent0pt
+       \begin{tcolorbox}[
+         width=\textwidth,
+         boxrule=.4pt,
+         boxsep=0pt,
+         leftright~skip=0cm,
+         middle=0pt,
+         arc=0pt,
+         toptitle=0pt,
+         bottomtitle=0pt,
+         left=0pt,
+         right=0pt,
+         before={\vskip1pt},
+         after={\vskip1pt},
+         oversize=0cm,]
+        %\parindent1em
         \the\headingtoks
        \end{tcolorbox}
   \headingtoks{}
+  %\headingstoks{}
   \numbertoks{}
   \chaptertoks{}
   \chapterprelimtoks {}
@@ -7319,9 +7514,9 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
   chapter toc=true,
   toc image={},
   chapter name=none,
-  title font-family=\rmfamily,
-  title font-weight=\bfseries,
-  title font-size=\Huge,
+  title font-family=rmfamily,
+  title font-weight=bfseries,
+  title font-size=Huge,
   title font-color=purple,
   title margin-bottom=20pt,
   numbering=arabic,
@@ -7532,10 +7727,10 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
 \cxset{section font-family=sffamily}
 \cxset{subsection beforeskip=10pt}
 \cxset{subsection afterskip=10pt,
-       subsection font-weight=\bfseries,
-       subsection font-family=\sffamily,
-       subsection font-size=\Large,
-       subsection font-shape=\upshape,
+       subsection font-weight=bfseries,
+       subsection font-family=sffamily,
+       subsection font-size=Large,
+       subsection font-shape=upshape,
        subsection align=flushleft,%don't say left
        subsection color=spot!50,
        subsection indent=0pt,
@@ -7548,10 +7743,10 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
        subsubsection indent=0pt,
        subsubsection font-size=large,
        subsection afterskip=10pt,
-       subsection font-weight=\bfseries,
+       subsection font-weight=bfseries,
        subsection font-family=tiresias,
-       subsection font-size=\Large,
-       subsection font-shape=\upshape,
+       subsection font-size=Large,
+       subsection font-shape=upshape,
        subsection align=flushleft,%don't say left
        subsection color=spot!50,
        subsection indent=0pt,
@@ -7563,10 +7758,10 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
 \cxset{section font-family=sffamily}
 \cxset{subsection beforeskip=10pt}
 \cxset{subsection afterskip=10pt,
-       subsection font-weight=\bfseries,
+       subsection font-weight=bfseries,
        subsection font-family=tiresias,
-       subsection font-size=\Large,
-       subsection font-shape=\upshape,
+       subsection font-size=Large,
+       subsection font-shape=upshape,
        subsection align=flushleft,%don't say left
        subsection color=spot!50,
        subsection indent=0pt,
@@ -7812,42 +8007,45 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
 }
 
 
-\@ifundefined{epigraph}{%
-   \RequirePackage{epigraph}
+\ExplSyntaxOn
+\@ifundefined{epigraph}
+  {%
+    \RequirePackage{epigraph}
    %% Set up the epigraph to be a bit wider
-  \setlength{\epigraphwidth}{8cm}
-  \setlength{\epigraphrule}{0pt}
-  \newcommand{\theepigraph}[2]{\epigraphhead[30]{\epigraph{#1}{\textit{#2}}}}
-}{\setlength{\epigraphwidth}{8cm}
-\setlength{\epigraphrule}{0pt}
-\newcommand{\theepigraph}[2]{\epigraphhead[30]{\epigraph{#1}{\textit{#2}}}}%
-}
+    \setlength{\epigraphwidth}{8cm}
+    \setlength{\epigraphrule}{0pt}
+    \newcommand{\theepigraph}[2]{\epigraphhead[30]{\epigraph{#1}{\textit{#2}}}}
+  }
+  {
+   \setlength{\epigraphwidth}{8cm}
+   \setlength{\epigraphrule}{0pt}
+   \newcommand{\theepigraph}[2]{\epigraphhead[30]{\epigraph{#1}{\textit{#2}}}}%
+  }
+\ExplSyntaxOff
 
 \cxset{
-  epigraph width/.code={\setlength\epigraphwidth{#1}},
-  epigraph font-size/.code={\renewcommand{\epigraphsize}{#1}},
-  epigraph beforeskip/.code={\setlength\beforeepigraphskip{#1}},
-  epigraph afterskip/.code={\setlength\afterepigraphskip{#1}},
+  epigraph width/.code               = {\setlength\epigraphwidth{#1}},
+  epigraph font-size/.code           = {\renewcommand{\epigraphsize}{#1}},
+  epigraph beforeskip/.code          = {\setlength\beforeepigraphskip{#1}},
+  epigraph afterskip/.code           = {\setlength\afterepigraphskip{#1}},
   epigraph align/.is choice,
-  epigraph align/center/.code={\renewcommand{\epigraphflush}{center}},
-  epigraph align/left/.code={\renewcommand{\epigraphflush}{flushleft}},
-  epigraph align/right/.code={\renewcommand{\epigraphflush}{flushright}},
+  epigraph align/center/.code        = {\renewcommand{\epigraphflush}{center}},
+  epigraph align/left/.code          = {\renewcommand{\epigraphflush}{flushleft}},
+  epigraph align/right/.code         = {\renewcommand{\epigraphflush}{flushright}},
   epigraph source align/.is choice,
-  epigraph source align/left/.code={\renewcommand{\sourceflush}{flushleft}},
-  epigraph source align/right/.code={\renewcommand{\sourceflush}{flushright}},
-  epigraph source align/center/.code={\renewcommand{\sourceflush}{center}},
+  epigraph source align/left/.code   = {\renewcommand{\sourceflush}{flushleft}},
+  epigraph source align/right/.code  = {\renewcommand{\sourceflush}{flushright}},
+  epigraph source align/center/.code = {\renewcommand{\sourceflush}{center}},
   epigraph text align/.is choice,
-  epigraph text align/left/.code={\renewcommand{\textflush}{flushleft}},
-  epigraph text align/right/.code={\renewcommand{\textflush}{flushright}},
-  epigraph text align/center/.code={\renewcommand{\textflush}{center}},
-  epigraph rule width/.code={\setlength\epigraphrule{#1}},
-  epigraph rule color/.store in = \epigraphrulecolor@cx,
+  epigraph text align/left/.code     = {\renewcommand{\textflush}{flushleft}},
+  epigraph text align/right/.code    = {\renewcommand{\textflush}{flushright}},
+  epigraph text align/center/.code   = {\renewcommand{\textflush}{center}},
+  epigraph rule width/.code          = {\setlength\epigraphrule{#1}},
+  epigraph rule color/.store in      = \epigraphrulecolor@cx,
   epigraph rule/.code={
  \renewcommand{\@epirule}{\color{\epigraphrulecolor@cx}\rule[.5ex]{\epigraphwidth}{\epigraphrule}}
 },
 }
-
-\cxset{}
 
 \cxset{epigraph width=0.5\linewidth,
     epigraph font-size=\small,
@@ -7871,6 +8069,9 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
    rightmark before/.store in=\rightmarkbefore@cx,
    rightmark after/.store in=\rightmarkafter@cx,
    chaptermark numbering/none/.code=\def\chaptermarknumber{},
+}
+
+\cxset{
    sectionmark name/.is choice,
    sectionmark name/none/.code=\def\sectionmarkname@cx{},
    sectionmark name custom/.code=\def\sectionmarkname@cx{#1},
@@ -7885,8 +8086,8 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
    header offset even/.store in=\headeroffseteven@cx,
    header offset odd/.store in=\headeroffsetodd@cx,
   %
-   header top rule/.is if=@headertoprule,
-   header bottom rule/.is if=@headerbottomrule,
+   header top rule/.is if    = @headertoprule,
+   header bottom rule/.is if = @headerbottomrule,
 }
 \cxset{header offset even=0pt,
        header offset odd=0pt,
@@ -7944,7 +8145,7 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
           header top rule=false,
           header bottom rule=true}
 
-\newif\ifAJW@multisty \AJW@multistyfalse
+\newif\ifphd@multisty \phd@multistyfalse
 \newcommand\copyrightline[1]{%
   \def\@copyrightline{#1}}
 
@@ -8002,34 +8203,59 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
   \def\sectionmark##1{}%
   \def\subsectionmark##1{}%
  }
+ %    \end{macrocode}
+ %
+ %
+ %
+ % \section{The pagestyle headings}
+ % This is one of the most common headings. We provide a full |ps@| function for
+ % speed utilizing only some parameters. The \refCom{sectionmark} is inserted
+ % by \tex's inserts mechanism, during the section typesetting.
+ %    \begin{macrocode}
+ \tcbset{thepage/.style =
+   {
+    top=0pt,right=0pt,bottom=0pt,left=0pt,
+    colframe=white,colback=spot!1,arc=1mm,
+   }
+ }
+\ExplSyntaxOn
 \def\ps@headings{%
- \let\@mkboth=\markboth
- \def\@evenfoot{}
+  \let\@mkboth=\markboth
+  \def\@evenfoot{}
   \def\@oddfoot {}
-  \def\@evenhead{\verbatimsize
-    \vbox{\global\hoffset=6pc\noindent
-    \makebox[\z@][l]{\rm \thepage}%
-      \it \strut\hfill\leftmark\hbox{}%\par\vbox to 13pt{}%
+  \cs_set:Npn \@evenhead
+    {
+
+      \vbox
+        {\verbatimsize
+          \global\hoffset=6pc\noindent
+          \makebox[\z@][l]{\rmfamily
+          {\protect\tcbox[colframe=red]{-\thepage}}}%
+          \itshape\strut\hfill\leftmark\hbox{}%\par\vbox to 13pt{}%
+        }%
     }%
-  }%
-  \def\@oddhead{\verbatimsize
-    \vbox{\global\hoffset=0pc\noindent
-    \mbox{}\it \strut\rightmark\hfill\hbox{}\makebox[\z@][r]{\rm
-      \thepage}%\par\vbox to 13pt{}%
+  \def\@oddhead
+    {
+       %\protect\tcbox[thepage]
+       {\vbox{ %replacetcbox vbox
+       \verbatimsize
+       \global\hoffset=0pc\noindent
+        \mbox{}\itshape \strut\rightmark\hfill\hbox{}
+        \makebox[\z@][r]{
+        \upshape\rmfamily
+        \thepage
+         }%\par\vbox to 13pt{}%
+       }}%
     }%
-  }%
   \def\chaptermark##1{\markboth{##1}{##1}}
-  \def\sectionmark##1{\markright{\ifnum \c@secnumdepth >\z@
+  \def\sectionmark##1
+    {
+    \markright{\ifnum \c@secnumdepth >\z@
     \thesection\enskip\fi ##1}}%
-  \ifAJW@multisty
-    \def\chaptermark##1{}
-    \def\sectionmark##1{}
-  \else
-    \def\chaptermark##1{\markboth{##1}{##1}}
-    \def\sectionmark##1{\markright{\ifnum \c@secnumdepth >\z@
-      \thesection\hspace{0.5em}\fi ##1}}%
-  \fi
+
+
 }
+\ExplSyntaxOff
 \def\ps@centerheadings{%
  \let\@mkboth=\markboth
  \def\@evenfoot{}
@@ -8049,7 +8275,7 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
   \def\chaptermark##1{\markboth{##1}{##1}}
   \def\sectionmark##1{\markright{\ifnum \c@secnumdepth >\z@
     \thesection\enskip\fi ##1}}%
-  \ifAJW@multisty
+  \ifphd@multisty
     \def\chaptermark##1{}
     \def\sectionmark##1{}
   \else
@@ -8066,25 +8292,35 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
     \let\@mkboth\@gobbletwo
     \let\chaptermark\@gobble
     \let\sectionmark\@gobble}
-\def\ps@myheadings{%
-  \let\@mkboth=\@gobbletwo
-  \def\@evenfoot{}
-  \def\@oddfoot {}
-  \def\@evenhead{\verbatimsize
-    \vbox{\global\hoffset=6pc\noindent
-    \makebox[\z@][l]{\rm \thepage}%
-      \it \strut\hfill\leftmark\hbox{}%\par\vbox to 13pt{}%
+\ExplSyntaxOn
+\cs_set:Npn \ps@myheadings
+  {
+    \let\@mkboth=\@gobbletwo
+    \def\@evenfoot{Revision 1}
+    \def\@oddfoot {Revision 1}
+
+    \def\@evenhead{\verbatimsize
+    \vbox
+      {  \global\hoffset=6pc\noindent
+       \makebox[\z@][l]{\rm \thepage}%
+       \upshape \strut\hfill\leftmark\hbox{}%\par\vbox to 13pt{}%
+      }%
     }%
-  }%
+
   \def\@oddhead{\verbatimsize
-    \vbox{\global\hoffset=0pc\noindent
-    \mbox{}\it \strut\rightmark\hfill\hbox{}\makebox[\z@][r]{\rm
-      \thepage}%\par\vbox to 13pt{}%
-    }%
+    \vbox
+      {
+        \global\hoffset=0pc\noindent
+        \mbox{}\upshape\strut\rightmark\hfill\hbox{}\makebox[\z@][r]{\rm
+        \thepage}%\par\vbox to 13pt{}%
+      }%
   }%
   \def\chaptermark##1{}
   \def\sectionmark##1{}
-  \def\subsectionmark##1{}}
+  \def\subsectionmark##1{}
+
+}
+\ExplSyntaxOff
 
 \IfFileExists{changepage.sty}{\RequirePackage{changepage}}{}
 \IfFileExists{rotating.sty}{\RequirePackage{rotating}}{}
@@ -8192,48 +8428,112 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
   \thispagestyle{plain}
 \newlength{\tocparskip@cx}
 \setlength{\tocparskip@cx}{0pt}
+\ExplSyntaxOn
+\cs_gset:Npn \format_toc_name:n #1
+  {
+ \begin{tcolorbox}[colback=spot!15,arc=3mm,colframe=white,]
+  \contents_name_before
+     \setfont@cx {\contents_name_font_weight}
+                 {\contents_name_font_family}
+                 {\contents_name_font_size}
+                 {\contents_name_font_shape}
+                 \color{\toc_name_color}
+      \startalign@cx
+      \contents_name_indent
+      \tocnamecase@cx
+        #1
+      \endalign@cx
+    \end{tcolorbox}
+ \contents_name_after%
+ }
+\ExplSyntaxOff
+
 \let\ltxtableofcontents\tableofcontents
 \ExplSyntaxOn
 \cs_new:Npn \phd_toc_start:  {\hrule }
 \cs_new:Npn \phd_toc_finish: {\hrule }
+\ExplSyntaxOff
+\ExplSyntaxOn
  \renewcommand{\tableofcontents}{%
     \phd_toc_start:
     \par
     \begingroup
       \parindent\z@ \parskip\tocparskip@cx
-      \maketoctitle
-      \@starttoc{toc}%
+      \make_toc_title:
+    \start_toc:n {toc}%
     \endgroup
     \phd_toc_finish:
 }%
 \ExplSyntaxOff
+\ExplSyntaxOn
+ \cs_new:Npn \start_toc:n #1
+   {
+     \group_begin:
+     \makeatletter
+     \@input{\jobname.#1}%
+     \if@filesw
+       \expandafter\newwrite\csname tf@#1\endcsname
+       \immediate\openout \csname tf@#1\endcsname \jobname.#1\relax
+     \fi
+     \@nobreakfalse
+    \group_end:
+  }
+\ExplSyntaxOff
+
+\ExplSyntaxOn
+\cs_gset:Npn \numberline #1
+  {
+   %needs hook here
+   \hb@xt@\@tempdima{\tocnumberbefore@cx\relax #1\@cftasnum\hfil}\@cftasnumb
+  }
+\ExplSyntaxOff
 \newif\if@lowercase
 \@lowercasetrue
-\cxset{toc name/.code = \def\contentsname{#1},
-       toc name before/.store in = \contentsnamebefore@cx,
-       toc name after/.store in = \contentsnameafter@cx,
-       toc name font-size/.store in = \contentsnamefontsize@cx,
-       toc name font-weight/.store in = \contentsnamefontweight@cx,
-       toc name font-family/.store in = \contentsnamefontfamily@cx,
-       toc name font-shape/.store in = \contentsnamefontshape@cx,
-       toc name color/.store in = \tocnamecolor@cx,
-       toc name afterskip/.store in=\tocnameafterskip@cx,
-       toc name align/.is choice,
-       toc name align/center/.code=\def\startalign@cx{\bgroup\centering}\def\endalign@cx{\par\egroup},
-       toc name align/right/.code=\def\startalign@cx{\flushright}\def\endalign@cx{\endflushright},
-       toc name align/left/.code=\def\startalign@cx{\@empty}\def\endalign@cx{\@empty},
-       toc name align/none/.code=\def\startalign@cx{\@empty}\def\endalign@cx{\@empty},
-       toc name indent/.store in=\tocnameindent@cx,
-       toc name case/.is choice,
-       toc name case/lower/.code=\def\tocnamecase@cx{\@lowercasetrue
-                             \if@lowercase\expandafter\MakeTextLowercase\fi},
-       toc name case/upper/.code=\def\tocnamecase@cx{\@lowercasefalse
-                            \if@lowercase\else\expandafter\MakeTextUppercase \fi},
-       toc name case/none/.code=\def\tocnamecase@cx{\@empty},
+\ExplSyntaxOn
+\cxset
+  {
+    toc~name/.code                                    = \cs_gset:Npn \contentsname { #1 },
+    toc~name~before/.store~in                         = \contents_name_before,
+    toc~name~after/.store~in                          = \contents_name_after,
+    toc~name~font-size/.store~in                      = \contents_name_font_size,
+    toc~name~font-weight/.store~in                    = \contents_name_font_weight,
+    toc~name~font-family/.store~in                    = \contents_name_font_family,
+    toc~name~font-shape/.store~in                     = \contents_name_font_shape,
+    toc~name~color/.store~in                          = \toc_name_color,
+    %
+    toc~name~afterskip/.store~in                      = \contents_name_after_skip,
+    toc~name~align/.is~choice,
+    toc~name~align/center/.code                       =
+          \def\startalign@cx{\bgroup\centering}
+          \def\endalign@cx{\par\egroup},
+    toc~name~align/right/.code                        =
+       \def\startalign@cx{\flushright}
+       \def\endalign@cx{\endflushright},
+    toc~name~align/left/.code                         =
+      \def\startalign@cx{\@empty}
+      \def\endalign@cx{\@empty},
+    toc~name~align/none/.code                         =
+    \def\startalign@cx{\@empty}
+    \def\endalign@cx{\@empty},
+    toc~name~indent/.store~in                         = \contents_name_indent,
+    toc~name~case/.is~choice,
+    toc~name~case/lower/.code                         =
+     \def\tocnamecase@cx{
+      \@lowercasetrue
+      \if@lowercase\expandafter
+      \MakeTextLowercase\fi},
+    toc~name~case/upper/.code=
+    \def\tocnamecase@cx{\@lowercasefalse
+    \if@lowercase\else\expandafter
+    \MakeTextUppercase \fi},
+    toc~name~case/none/.code=
+    \def\tocnamecase@cx{\@empty},
+    toc~pagestyle/.code                               =
+    \gdef\contentspagestyle@cx{\thispagestyle{#1}},
+}
+\ExplSyntaxOff
      %    \end{macrocode}
-      toc pagestyle/.code=\gdef\contentspagestyle@cx{\thispagestyle{#1}},
-    }
-\cxset{toc name= CONTENTS,
+\cxset{toc name= List of Illustrations,
        toc name before = ,
        toc name after =,
        toc name color = black,
@@ -8246,35 +8546,25 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
        toc name align=right,
        toc name indent=\hspace*{4cm},
        toc name case=upper,
-       toc pagestyle=plain,
+       toc pagestyle=headings,
   }%
+
 \ExplSyntaxOn
-\cs_gset:Npn \maketoctitle {
+
+\cs_gset:Npn \make_toc_title: {
   \addpenalty\@secpenalty
   \if@haschapter@cx
     \vspace*{10pt}
-    \pdfbookmark[0]{\contentsname}{toc}%EXPERIMENTAL
+    \pdfbookmark[0]{\contentsname}{toc}
   \else
     \vspace{10pt}
   \fi
   \markboth{\contentsname}{\contentsname}%
   \contentspagestyle@cx
   \interlinepenalty\@M
-  \begin{tcolorbox}
-  \contentsnamebefore@cx
-     \setfont@cx{\contentsnamefontweight@cx}
-                {\contentsnamefontfamily@cx}
-                {\contentsnamefontsize@cx}
-                {\contentsnamefontshape@cx}
-                \color{\tocnamecolor@cx}
-                \startalign@cx
-     \tocnameindent@cx \tocnamecase@cx
-                         \contentsname
-     \endalign@cx
-    \end{tcolorbox}
-    \contentsnameafter@cx%
+  \format_toc_name:n {\contentsname}
     \par\nobreak
-    \vskip\tocnameafterskip@cx\relax
+    \vskip\contents_name_after_skip\relax
     \@afterheading%
  }%
  %
@@ -8284,9 +8574,13 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
 \newcommand{\settocmarg@cx}[1]{\renewcommand{\@tocrmarg}{#1}}
 \setpnumwidth@cx{25pt}
 \settocmarg@cx{20pt}
-\newcommand{\dot@cx}{.}
-\newcommand{\dotfill@cx}[1]{%
-  \leaders\hbox{$\m@th\mkern #1 mu\hbox{\dot@cx}\mkern #1 mu$}\hfill}
+\ExplSyntaxOn
+\cs_gset:Npn \dot@cx { - }
+\cs_gset:Npn \dotfill@cx #1
+  {
+    \leaders\hbox{$\m@th\mkern #1 mu\hbox{\dot@cx}\mkern #1 mu$}\hfill
+  }
+\ExplSyntaxOff
 \def\nodotfill@cx{}
 \cxset{toc dotfill/.is choice,
        toc dotfill/none/.code = \nodotfill@cx,
@@ -8296,27 +8590,96 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
 \cxset{toc dotfill symbol=.,
        toc dotfill sep=4.5}
 \newcommand{\parfillskip@CX}{\parfillskip=0pt plus1fil}
-\renewcommand{\numberline}[1]{%
-   \hb@xt@\@tempdima{\tocnumberbefore@cx #1\@cftasnum\hfil}\@cftasnumb}
 \newcommand{\tocnumberbefore@cx}{[}
 \newcommand{\@cftasnum}{}
 \newcommand{\@cftasnumb}{}
+\ExplSyntaxOn
+\cs_set:Npn \format_toc_entry:nn #1 #2 #3
+  {
+     \bgroup
+      \def\fontai{
+          \expandafter\csname toc_#1_font_weight\endcsname
 
-\cxset{toc part indent/.store in = \tocpartindent@cx,
-       toc part numwidth/.store in = \tocpartnumwidth@cx,
-       toc part font-size/.store in =\tocpartfontsize@cx,
-       toc part before number/.store in = \tocpartbeforenumber@cx,
-       toc part after number/.store in=\partafterpnum@cx,
-       toc part beforeskip/.store in = \tocpartbeforeskip@cx,
-       toc part page font-size/.store in=\tocpartpagefontsize@cx
+          }
+      \def\fontaii{\expandafter\csname\fontai\expandafter\endcsname
+
+      }
+     \def\fonta{
+          \cs_gset:Npn \__acolor {\expandafter\color{\csname toc_#1_color\endcsname}}
+          \__acolor
+          \fontaii
+          }
+     \def\fontbi{
+       \expandafter\csname toc_#1_font_shape\endcsname
+          }
+     \def\fontbii{
+         \expandafter\csname\fontbi\expandafter\endcsname
+         }
+     \def\fontb{\fontbii}
+
+     \def\fontci{
+       \expandafter\csname toc_#1_font_size\endcsname
+          }
+     \def\fontcii{
+         \expandafter\csname\fontbi\expandafter\endcsname
+         }
+     \def\fontc{\fontcii}
+     \def\fontdi{
+       \expandafter\csname toc_#1_font_family\endcsname
+          }
+     \def\fontdii{
+         \expandafter\csname\fontdi\expandafter\endcsname
+         }
+     \def\fontd{\fontdii}
+
+     \leftskip \tocsectionindent@cx\relax
+     \rightskip \@tocrmarg
+     \parfillskip -\rightskip
+     \parindent \tocsectionindent@cx\relax\@afterindenttrue
+     \interlinepenalty\@M
+     \leavevmode
+     \@tempdima \tocsectionnumwidth@cx\relax
+     \let\tocnumberbefore@cx \cftsecpresnum
+     \let\@cftasnum \cftsecaftersnum
+     \let\@cftasnumb \cftsecaftersnumb
+     \advance\leftskip \@tempdima \null\nobreak\hskip -\leftskip
+     \group_begin:
+    % \begin{tcolorbox}
+       \tcbox[size=minimal,
+        nobeforeafter,
+        before=\hspace{1em},
+        ]
+         {\fonta\fontb\fontc\fontd {#2} }%fonta\MakeTextUppercase
+       %\hfill
+       \csname toc#1leader@cx\endcsname
+       \begin{tcolorbox}[size=minimal,width=1.5cm,nobeforeafter]
+         [\hfill #3]
+       \end{tcolorbox}
+       \vskip0pt
+    % \end{tcolorbox}
+     \group_end:
+     \nobreak
+    \egroup
+ }
+  \ExplSyntaxOff
+
+\ExplSyntaxOn
+\cxset{toc~part~indent/.store~in           = \tocpartindent@cx,
+       toc~part~numwidth/.store~in         = \tocpartnumwidth@cx,
+       toc~part~font-size/.store~in        = \tocpartfontsize@cx,
+       toc~part~before~number/.store~in    = \tocpartbeforenumber@cx,
+       toc~part~after~number/.store~in     = \partafterpnum@cx,
+       toc~part~beforeskip/.store~in       = \tocpartbeforeskip@cx,
+       toc~part~page~font-size/.store~in   = \tocpartpagefontsize@cx
 }
+\ExplSyntaxOff
 
 \cxset{toc part beforeskip = 2.25em \@plus\p@,
        toc part indent=0pt,
        toc part numwidth=0em,
-       toc part after number=:,
+       toc part after number=,
        toc part font-size={\color{sweet}\large\bfseries\sffamily},
-       toc part before number={\kern1.5pt},
+       toc part before number={\kern0pt},
        toc part page font-size=\bfseries
        }
   %    \end{macrocode}
@@ -8324,18 +8687,21 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
 \newif\if@haspart@cx
   \@ifundefined{part}{\@haspart@cxfalse}{\@haspart@cxtrue}
 \if@haspart@cx
-\renewcommand*{\l@part}[2]{%
-  \@dopart@cxfalse
-  \ifnum \c@tocdepth >-2\relax
-    \if@haschapter@cx
-      \@dopart@cxtrue
-    \fi
-    \ifnum \c@tocdepth >\m@ne
-      \if@haschapter@cx\else
+\ExplSyntaxOn
+\cs_gset:Npn \l@part #1 #2
+  {%
+     \@dopart@cxfalse
+     \ifnum \c@tocdepth >-2\relax
+      \if@haschapter@cx
         \@dopart@cxtrue
       \fi
+     \ifnum \c@tocdepth >\m@ne
+        \if@haschapter@cx\else
+        \@dopart@cxtrue
+      \fi
+     \fi
     \fi
-  \fi
+
   \if@dopart@cx
     \if@haschapter@cx
       \addpenalty{-\@highpenalty}%
@@ -8344,7 +8710,7 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
     \fi
     \addvspace{\tocpartbeforeskip@cx}%
     \begingroup
-      {\leftskip \tocpartindent@cx\relax
+      \leftskip \tocpartindent@cx\relax
        \rightskip \@tocrmarg % need to check this for conflics\@tocrmarg
        \parfillskip -\rightskip
        \parindent \tocpartindent@cx\relax
@@ -8354,17 +8720,19 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
        \@tempdima \tocpartnumwidth@cx\relax
        \advance\leftskip \@tempdima \null\nobreak\hskip -\leftskip
        %
-       {\tocpartfontsize@cx
-       \tocpartbeforenumber@cx #1}%
-       \partfillnum@cx{#2}}%
+       \tocpartfontsize@cx
+       \tocpartbeforenumber@cx #1
+       \partfillnum@cx{#2}%
       \nobreak
       \if@haschapter@cx
         \global\@nobreaktrue
         \everypar{\global\@nobreakfalse\everypar{}}%
      \fi
     \endgroup
-  \fi}
-\fi
+  \fi
+ } %end l@part
+ %\fi
+\ExplSyntaxOff
 \if@haspart@cx
   \newcommand{\partpresnum@cx}{}
   \newcommand{\partaftersnum@cx}{..}
@@ -8446,6 +8814,7 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
        }}%
   }%
  \newcommand{\typesettocchapterpage@cx}[1]{%
+ \@debugtrue
  \if@debug
    \fboxsep1pt
    \fboxrule-1pt
@@ -8459,6 +8828,7 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
       \par\addvspace{0.5\baselineskip}
      %  \hrule \@width\textwidth \@height1pt \@depth0pt\relax
       }%
+
 \cxset{toc chapter beforeskip/.store in=\tocchapterbeforeskip@cx,
           toc chapter afterskip/.store in=\tocafterchapterskip@cx,
           toc chapter indent/.store in = \tocchapterindent@cx,
@@ -8475,7 +8845,8 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
           toc  chapter numberwidth=0pt,
           toc chapter font= \bfseries\sffamily\large\color{sweet},
           toc chapter title width=0.8\textwidth}
-\if@haschapter@cx
+
+\ExplSyntaxOn
   \renewcommand*{\l@chapter}[2]{%
      \ifnum \c@tocdepth >\m@ne
        \addpenalty{-\@highpenalty}%
@@ -8494,41 +8865,44 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
         %\advance\leftskip \@tempdima \null\nobreak\hskip -\leftskip
         {\tocchapterfont@cx#1}\nobreak
          \typesettocchapterpage@cx{#2}}%
-    \fi}%
-\fi
+    \fi
+ }%
+\ExplSyntaxOff
 \let\sampletocchapter\l@chapter
-\renewcommand{\numberline}[1]{%
-    \hb@xt@\@tempdima{#1\hfil}} %#1
- %
-\cxset{toc section beforeskip/.store in=\tocsectionbeforeskip@cx,
-       toc section beforeskip/.default={0pt plus.2pt},
-       toc section indent/.store in=\tocsectionindent@cx,
-       toc section font-size/.store in=\tocsectionfontsize@cx,
-       toc section font-family/.store in=\tocsectionfontfamily@cx,
-       toc section font-shape/.store in=\tocsectionfontshape@cx,
-       toc section font-weight/.store in=\tocsectionfontweight@cx,
-       toc section color/.store in=\tocsectioncolor@cx,
-       toc section numwidth/.store in=\tocsectionnumwidth@cx,
-       toc section page font-size/.store in=\tocsectionpagefontsize@cx,
-       toc section page font-family/.store in=\tocsectionpagefontfamily@cx,
-       toc section page font-shape/.store in=\tocsectionpagefontshape@cx,
-       toc section page font-weight/.store in=\tocsectionpagefonteight@cx,
-       toc section page color/.store in=\tocsectionpagecolor@cx,
-   toc section dotsep/.store in = \tocsecdotsep@cx,
-       toc section page before/.store in=\tocsectionpagebefore@cx,
-       toc section page after/.store in=\tocsectionpageafter@cx,
+
+\ExplSyntaxOn
+\cxset
+  {
+    toc~section~beforeskip/.store~in=\tocsectionbeforeskip@cx,
+    toc~section~beforeskip/.default={0pt plus.2pt},
+    toc~section~indent/.store~in            = \tocsectionindent@cx,
+    toc~section~margin-left/.style          = {toc section indent=#1},
+    toc~section~font-size/.font-size~in     = \toc_section_font_size,
+    toc~section~font-family/.font-family~in = \toc_section_font_family,
+    toc~section~font-shape/.store~in        = \toc_section_font_shape,
+    toc~section~font-weight/.store~in       = \toc_section_font_weight,
+    toc~section~color/.store~in             = \toc_section_color,
+    toc~section~numwidth/.store~in          = \tocsectionnumwidth@cx,
+    toc~section~page~font-size/.store~in    = \tocsectionpagefontsize@cx,
+    toc~section~page~font-family/.store~in  = \tocsectionpagefontfamily@cx,
+    toc~section~page~font-shape/.store~in   = \tocsectionpagefontshape@cx,
+    toc~section~page~font-weight/.store~in  = \tocsectionpagefonteight@cx,
+    toc~section~page~color/.store~in        = \tocsectionpagecolor@cx,
+  toc~section~dotsep/.store~in            = \tocsecdotsep@cx,
+    toc~section~page~before/.store~in       = \tocsectionpagebefore@cx,
+    toc~section~page~after/.store~in        = \tocsectionpageafter@cx,
 }
+\ExplSyntaxOff
 \cxset{%
        toc section beforeskip=\z@ \@plus.2\p@,
-       toc section beforeskip,
        toc section indent=0em,
        toc section font-family= sffamily,
        toc section font-weight = mdseries,
        toc section font-shape = upshape,
        toc section color= sweet,
-       toc section font-size=,
+       toc section font-size= normal,
        toc section numwidth = 4.2em,
-       toc section page font-size=,
+       toc section page font-size=normal,
        toc section page font-shape= upshape,
        toc section page font-weight=,
        toc section page font-family= sffamily,
@@ -8537,15 +8911,10 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
        toc section page after =,% \},
        toc section dotsep = 2.7,
 }
+
 \ExplSyntaxOn
-\cs_new:Npn \tocsectionpagefont@cx {
-\setfont@cx{\tocsectionpagefonteight@cx}
-  {\tocsectionpagefontfamily@cx}{\tocsectionpagefontsize@cx}
-  {\tocsectionpagefontshape@cx}\color{\tocsectionpagecolor@cx}
-}
-\ExplSyntaxOff
-\ExplSyntaxOn
-\cs_gset:Npn \l@section #1 #2{%
+\cs_gset:Npn \l@section #1 #2
+  {
   \ifnum \c@tocdepth >\z@
     \if@haschapter@cx
       \skip_vertical:n \tocsectionbeforeskip@cx
@@ -8553,149 +8922,139 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
       \addpenalty \@secpenalty
       \addvspace{\tocsectionbeforeskip@cx}%
     \fi
-    {\leftskip \tocsectionindent@cx\relax
-     \rightskip \@tocrmarg
-     \parfillskip -\rightskip
-     \parindent \tocsectionindent@cx\relax\@afterindenttrue
-     \interlinepenalty\@M
-     \leavevmode
-     \@tempdima \tocsectionnumwidth@cx\relax
-     \let\tocnumberbefore@cx \cftsecpresnum
-     \let\@cftasnum \cftsecaftersnum
-     \let\@cftasnumb \cftsecaftersnumb
-     \advance\leftskip \@tempdima \null\nobreak\hskip -\leftskip
-     {%
-      \setfont@cx{\tocsectionfontweight@cx}%
-        {\tocsectionfontfamily@cx}{\tocsectionfontsize@cx}%
-        {\tocsectionfontshape@cx}%
-        \color{\tocsectioncolor@cx}%
-      #1}\nobreak
-      \tocsectionfillnum@cx{#2}}%
+    \format_toc_entry:nn {section} {#1} {#2}
   \fi
-}
+  }
 \ExplSyntaxOff
 \newcommand{\cftsecpresnum}{}
 \newcommand{\cftsecaftersnum}{}
 \newcommand{\cftsecaftersnumb}{}
 \newcommand{\tocsectionleader@cx}  {\normalfont\dotfill@cx{\tocsecdotsep@cx}}
-\newcommand{\tocsectionfillnum@cx}[1]{%
-  {\tocsectionleader@cx}\nobreak
-  \hb@xt@\@pnumwidth{\hfil\tocsectionpagefont@cx
-   \tocsectionpagebefore@cx #1}%
-   \tocsectionpageafter@cx\par}%
+\ExplSyntaxOn
 \newif\if@lowercasesubsection
-\cxset{toc subsection beforeskip/.store in=\tocsubsectionbeforeskip@cx,
-       toc subsection indent/.store in=\tocsubsectionindent@cx,
-       toc subsection font-size/.store in=\tocsubsectionfontsize@cx,
-       toc subsection font-family/.store in=\tocsubsectionfontfamily@cx,
-       toc subsection font-shape/.store in=\tocsubsectionfontshape@cx,
-       toc subsection font-weight/.store in=\tocsubsectionfontweight@cx,
-       toc subsection color/.store in=\tocsubsectioncolor@cx,
-toc subsection case/.is choice,
-       toc subsection case/lower/.code=\def\tocsubsectioncase@cx{\@lowercasesubsectiontrue
-                             \if@lowercasesubsection\expandafter\MakeTextLowercase\fi},
-       toc subsection case/upper/.code=\def\tocsubsectioncase@cx{\@lowercasesubsectionfalse
-                    \if@lowercasesubsection\else\expandafter\MakeTextUppercase \fi},
-       toc subsection case/none/.code=\def\tocsubsectioncase@cx{\@empty},
-       toc subsection numwidth/.store in=\tocsubsectionnumwidth@cx,
-       toc subsection page font-size/.store in=\tocsubsectionpagefontsize@cx,
-       toc subsection page font-family/.store in=\tocsubsectionpagefontfamily@cx,
-       toc subsection page font-shape/.store in=\tocsubsectionpagefontshape@cx,
-       toc subsection page font-weight/.store in=\tocsubsectionpagefonteight@cx,
-       toc subsection page color/.store in=\tocsubsectionpagecolor@cx,
-   toc subsection dotsep/.store in = \tocsubsecdotsep@cx,
-       toc subsection page before/.store in=\tocsubsectionpagebefore@cx,
-       toc subsection page after/.store in=\tocsubsectionpageafter@cx,
+\cxset{
+  toc~subsection~beforeskip/.store~in             = \toc_subsection_before_skip,
+  toc~subsection~indent/.store~in                 = \toc_subsection_indent,
+  toc~subsection~font-size/.font-size~in          = \toc_subsection_font_size,
+  toc~subsection~font-family/.font-family~in      = \toc_subsection_font_family,
+  toc~subsection~font-shape/.font-style~in        = \toc_subsection_font_shape,
+  toc~subsection~font-weight/.font-weight~in      = \toc_subsection_font_weight,
+  toc~subsection~color/.store~in                  = \toc_subsection_color,
+  toc~subsection~case/.is~choice,
+  toc~subsection~case/lower/.code                 =
+    \cs_gset:Npn \tocsubsectioncase@cx
+      {
+        \@lowercasesubsectiontrue
+        \if@lowercasesubsection
+          \expandafter\MakeTextLowercase
+        \fi
+      },
+  toc~subsection~case/upper/.code                 =
+       \def\tocsubsectioncase@cx{
+       \@lowercasesubsectionfalse
+         \if@lowercasesubsection
+         \else
+         \expandafter\MakeTextUppercase
+         \fi
+         },
+  toc~subsection~case/none/.code                  = \def\tocsubsectioncase@cx{\@empty},
+  toc~subsection~numwidth/.store~in               = \tocsubsectionnumwidth@cx,
+  toc~subsection~page~font-size/.font-size~in     = \toc_subsection_page_font_size,
+  toc~subsection~page~font-family/.font-family~in = \toc_subsection_page_font_family,
+  toc~subsection~page~font-shape/.font-style~in   = \toc_subsection_page_font_shape,
+  toc~subsection~page~font-weight/.font-weight~in = \toc_subsection_page_font_weight,
+  toc~subsection~page~color/.store~in             = \toc_subsection_page_color,
+  toc~subsection~dotsep/.store~in                 = \toc_subsection_dot_sep,
+  toc~subsection~page~before/.store~in            = \toc_subsection_page_before,
+  toc~subsection~page~after/.store~in             = \toc_subsection_page_after,
 }
-\cxset{toc subsection beforeskip=\z@ \@plus.2\p@,
+\ExplSyntaxOff
+\cxset{toc subsection beforeskip      = \z@ \@plus.2\p@,
        toc subsection indent=0em,
-       toc subsection font-family= sffamily,
-       toc subsection font-weight = mdseries,
-       toc subsection font-shape = upshape,
+       toc subsection font-family     = sffamily,
+       toc subsection font-weight     = bold,
+       toc subsection font-shape      = upshape,
        toc subsection color= sweet,
-       toc subsection font-size=,
+       toc subsection font-size       = normal,
        toc subsection case = none,
        toc subsection numwidth = 4.2em,
-       toc subsection page font-size=,
+       toc subsection page font-size=normal,
        toc subsection page font-shape= upshape,
        toc subsection page font-weight=,
        toc subsection page font-family= sffamily,
-       toc subsection page color = sweet,
+       toc subsection page color = yellow,
        toc subsection page before =,% \{,
        toc subsection page after =,% \},
        toc subsection dotsep = 2.7,
 }%
 \newcommand\tocsubsectionpagefont@cx{%
-\setfont@cx{\tocsubsectionpagefonteight@cx}%
-       {\tocsubsectionpagefontfamily@cx}{\tocsubsectionpagefontsize@cx}%
-       {\tocsubsectionpagefontshape@cx}\color{\tocsubsectionpagecolor@cx}
+\setfont@cx{\toc_subsection_page_font_weight}%
+       {\toc_subsection_page_font_family}{\toc_subsection_page_font_size}%
+       {\toc_subsection_page_font_shape}\color{\toc_subsection_page_color}
 }%
-\renewcommand*{\l@subsection}[2]{%
-  \ifnum \c@tocdepth >\z@
-    \if@haschapter@cx
-      \vskip \tocsubsectionbeforeskip@cx
-    \else
-      \addpenalty \@secpenalty
-      \addvspace{\tocsubsectionbeforeskip@cx}%
+\ExplSyntaxOn
+\cs_gset:Npn \l@subsection #1 #2
+  {%
+    \ifnum \c@tocdepth >\z@
+      \if@haschapter@cx
+        \vskip \toc_subsection_before_skip
+      \else
+        \addpenalty \@secpenalty
+        \addvspace{\toc_subsection_before_skip}%
     \fi
-    {\leftskip \tocsubsectionindent@cx\relax
-     \rightskip \@tocrmarg
-     \parfillskip -\rightskip
-     \parindent \tocsubsectionindent@cx\relax\@afterindenttrue
-     \interlinepenalty\@M
-     \leavevmode
-     \@tempdima \tocsubsectionnumwidth@cx\relax
-     \let\tocnumberbefore@cx \cftsecpresnum
-     \let\@cftasnum \cftsecaftersnum
-     \let\@cftasnumb \cftsecaftersnumb
-     \advance\leftskip \@tempdima \null\nobreak\hskip -\leftskip
-     {%
-      \setfont@cx{\tocsubsectionfontweight@cx}%
-        {\tocsubsectionfontfamily@cx}{\tocsubsectionfontsize@cx}%
-        {\tocsubsectionfontshape@cx}%
-        \color{\tocsubsectioncolor@cx}%
-      \tocsubsectioncase@cx#1}\nobreak
-      \tocsubsectionfillnum{#2}}%
-  \fi}
-\renewcommand{\cftsecpresnum}{.}
-\renewcommand{\cftsecaftersnum}{..}
-\renewcommand{\cftsecaftersnumb}{...}
-\newcommand{\tocsubsectionleader}{\normalfont\dotfill@cx{\tocsubsecdotsep@cx}}
-\newcommand{\tocsubsectionfillnum}[1]{%
-  {\tocsubsectionleader}\nobreak
-  \hb@xt@\@pnumwidth{\hfil\tocsubsectionpagefont@cx
-   \tocsubsectionpagebefore@cx #1}%
-   \tocsubsectionpageafter@cx\par}%
-\newif\if@lowercasesubsubsection
-\cxset{toc subsubsection beforeskip/.store in=\tocsubsubsectionbeforeskip@cx,
-       toc subsubsection indent/.store in=\tocsubsubsectionindent@cx,
-       toc subsubsection font-size/.store in=\tocsubsubsectionfontsize@cx,
-       toc subsubsection font-family/.store in=\tocsubsubsectionfontfamily@cx,
-       toc subsubsection font-shape/.store in=\tocsubsubsectionfontshape@cx,
-       toc subsubsection font-weight/.store in=\tocsubsubsectionfontweight@cx,
-       toc subsubsection color/.store in=\tocsubsubsectioncolor@cx,
-toc subsubsection case/.is choice,
-       toc subsubsection case/lower/.code=\def\tocsubsubsectioncase@cx{\@lowercasesubsubsectiontrue
-                             \if@lowercasesubsubsection\expandafter\MakeTextLowercase\fi},
-       toc subsubsection case/upper/.code=\def\tocsubsubsectioncase@cx{\@lowercasesubsubsectionfalse
-                    \if@lowercasesubsubsection\else\expandafter\MakeTextUppercase \fi},
-       toc subsubsection case/none/.code=\def\tocsubsubsectioncase@cx{\@empty},
-       toc subsubsection numwidth/.store in=\tocsubsubsectionnumwidth@cx,
-       toc subsubsection page font-size/.store in=\tocsubsubsectionpagefontsize@cx,
-       toc subsubsection page font-family/.store in=\tocsubsubsectionpagefontfamily@cx,
-       toc subsubsection page font-shape/.store in=\tocsubsubsectionpagefontshape@cx,
-       toc subsubsection page font-weight/.store in=\tocsubsubsectionpagefonteight@cx,
-       toc subsubsection page color/.store in=\tocsubsubsectionpagecolor@cx,
-   toc subsubsection dotsep/.store in = \tocsubsubsecdotsep@cx,
-       toc subsubsection page before/.store in=\tocsubsubsectionpagebefore@cx,
-       toc subsubsection page after/.store in=\tocsubsubsectionpageafter@cx,
+      \format_toc_entry:nn {subsection} {#1} {#2}
+  \fi
 }
+ \ExplSyntaxOff
+
+\ExplSyntaxOn
+\cs_new:Npn \tocsubsectionleader@cx
+  {
+  \normalfont\dotfill@cx{\toc_subsection_dot_sep}
+  }
+\ExplSyntaxOff
+
+\newif\if@lowercasesubsubsection
+\ExplSyntaxOn
+\cxset
+  {
+    toc~subsubsection~beforeskip/.store~in        = \toc_subsubsection_before_skip,
+    toc~subsubsection~indent/.store~in            = \toc_subsubsection_indent,
+    toc~subsubsection~font-size/.store~in         = \toc_subsubsection_font_size,
+    toc~subsubsection~font-family/.store~in       = \toc_subsubsection_font_family,
+    toc~subsubsection~font-shape/.store~in        = \toc_subsubsection_font_shape,
+    toc~subsubsection~font-weight/.store~in       = \toc_subsubsection_font_weight,
+    toc~subsubsection~color/.store~in             = \toc_subsubsection_color,
+    toc~subsubsection~case/.is~choice,
+    toc~subsubsection~case/lower/.code            =
+       \def\tocsubsubsectioncase@cx{
+       \@lowercasesubsubsectiontrue
+       \if@lowercasesubsubsection
+       \expandafter\MakeTextLowercase\fi},
+    toc~subsubsection~case/upper/.code            =
+       \def\tocsubsubsectioncase@cx
+       {\@lowercasesubsubsectionfalse
+        \if@lowercasesubsubsection
+        \else
+        \expandafter\MakeTextUppercase \fi},
+    toc~subsubsection~case/none/.code             = \def\tocsubsubsectioncase@cx{\@empty},
+    toc~subsubsection~numwidth/.store~in          = \tocsubsubsectionnumwidth@cx,
+    toc~subsubsection~page~font-size/.store~in    = \toc_subsubsection_page_font_size,
+    toc~subsubsection~page~font-family/.store~in  = \toc_subsubsection_page_font_family,
+    toc~subsubsection~page~font-shape/.store~in   = \toc_subsubsection_page_font_shape,
+    toc~subsubsection~page~font-weight/.store~in  = \toc_subsubsection_page_font_weight,
+    toc~subsubsection~page~color/.store~in        = \toc_subsubsection_page_color,
+  toc~subsubsection~dotsep/.store~in            = \toc_subsubsection_dot_sep,
+    toc~subsubsection~page~before/.store~in       = \toc_subsubsection_page_before,
+    toc~subsubsection~page~after/.store~in        = \toc_subsubsection_page_after,
+}
+\ExplSyntaxOff
 \cxset{toc subsubsection beforeskip=\z@ \@plus.2\p@,
        toc subsubsection indent=0em,
        toc subsubsection font-family= sffamily,
        toc subsubsection font-weight = mdseries,
        toc subsubsection font-shape = upshape,
-       toc subsubsection color= sweet,
+       toc subsubsection color= spot!50,
        toc subsubsection font-size=,
        toc subsubsection case = none,
        toc subsubsection numwidth = 4.2em,
@@ -8706,133 +9065,194 @@ toc subsubsection case/.is choice,
        toc subsubsection page color = teal,
        toc subsubsection page before =,% \{,
        toc subsubsection page after =,% \},
-       toc subsubsection dotsep = 2.7,
+       toc subsubsection dotsep = 1000,%2.7
 }
 \newcommand\tocsubsubsectionpagefont@cx{%
-\setfont@cx{\tocsubsubsectionpagefonteight@cx}%
-       {\tocsubsubsectionpagefontfamily@cx}{\tocsubsubsectionpagefontsize@cx}%
-       {\tocsubsubsectionpagefontshape@cx}\color{\tocsubsubsectionpagecolor@cx}
+\setfont@cx{\toc_subsubsection_page_font_weight}%
+       {\toc_subsubsection_page_font_family}{\toc_subsubsection_page_font_size}%
+       {\toc_subsubsection_page_font_shape}\color{\toc_subsubsection_page_color}
 }%
-\renewcommand*{\l@subsubsection}[2]{%
+\ExplSyntaxOn
+\cs_gset:Npn \l@subsubsection #1 #2
+{%
   \ifnum \c@tocdepth >\z@
     \if@haschapter@cx
-      \vskip \tocsubsubsectionbeforeskip@cx
+      \vskip \toc_subsection_before_skip
     \else
       \addpenalty \@secpenalty
-      \addvspace{\tocsubsubsectionbeforeskip@cx}%
+      \addvspace{\toc_subsection_before_skip}%
     \fi
-    {\leftskip \tocsubsubsectionindent@cx\relax
-     \rightskip \@tocrmarg
-     \parfillskip -\rightskip
-     \parindent \tocsubsubsectionindent@cx\relax\@afterindenttrue
-     \interlinepenalty\@M
-     \leavevmode
-     \@tempdima \tocsubsubsectionnumwidth@cx\relax
-     \let\tocnumberbefore@cx \cftsecpresnum
-     \let\@cftasnum \cftsecaftersnum
-     \let\@cftasnumb \cftsecaftersnumb
-     \advance\leftskip \@tempdima \null\nobreak\hskip -\leftskip
-     {%
-      \setfont@cx{\tocsubsubsectionfontweight@cx}%
-        {\tocsubsubsectionfontfamily@cx}{\tocsubsubsectionfontsize@cx}%
-        {\tocsubsubsectionfontshape@cx}%
-        \color{\tocsubsubsectioncolor@cx}%
-      \tocsubsubsectioncase@cx#1}\nobreak
-      \tocsubsubsectionfillnum{#2}}%
-  \fi}
-\renewcommand{\cftsecpresnum}{.}
-\renewcommand{\cftsecaftersnum}{..}
-\renewcommand{\cftsecaftersnumb}{...}
-\newcommand{\tocsubsubsectionleader}{\normalfont\dotfill@cx{\tocsubsubsecdotsep@cx}}
+
+  \format_toc_entry:nn {subsubsection} {#1} {#2}
+  \fi
+}
+\ExplSyntaxOff
+\ExplSyntaxOn
+ \cs_new:Npn \tocsubsubsectionleader@cx
+   {
+     \normalfont\dotfill@cx{\toc_subsubsection_dot_sep}
+   }
+\ExplSyntaxOff
 \newcommand{\tocsubsubsectionfillnum}[1]{%
   {\tocsubsubsectionleader}\nobreak
-  \hb@xt@\@pnumwidth{\hfil\tocsubsubsectionpagefont@cx
-   \tocsubsubsectionpagebefore@cx #1}%
-   \tocsubsubsectionpageafter@cx\par}%
+  \hb@xt@\@pnumwidth{\hfil\toc_subsubsection_page_font
+   \toc_subsubsection_page_before #1}%
+   \toc_subsubsection_page_after\par}%
+\ExplSyntaxOn
 \newif\if@lowercaseparagraph
-\cxset{toc paragraph beforeskip/.store in=\tocparagraphbeforeskip@cx,
-       toc paragraph indent/.store in=\tocparagraphindent@cx,
-       toc paragraph font-size/.store in=\tocparagraphfontsize@cx,
-       toc paragraph font-family/.store in=\tocparagraphfontfamily@cx,
-       toc paragraph font-shape/.store in=\tocparagraphfontshape@cx,
-       toc paragraph font-weight/.store in=\tocparagraphfontweight@cx,
-       toc paragraph color/.store in=\tocparagraphcolor@cx,
-toc paragraph case/.is choice,
-       toc paragraph case/lower/.code=\def\tocparagraphcase@cx{\@lowercaseparagraphtrue
-                             \if@lowercaseparagraph\expandafter\MakeTextLowercase\fi},
-       toc paragraph case/upper/.code=\def\tocparagraphcase@cx{\@lowercaseparagraphfalse
-                    \if@lowercaseparagraph\else\expandafter\MakeTextUppercase \fi},
-       toc paragraph case/none/.code=\def\tocparagraphcase@cx{\@empty},
-       toc paragraph numwidth/.store in=\tocparagraphnumwidth@cx,
-       toc paragraph page font-size/.store in=\tocparagraphpagefontsize@cx,
-       toc paragraph page font-family/.store in=\tocparagraphpagefontfamily@cx,
-       toc paragraph page font-shape/.store in=\tocparagraphpagefontshape@cx,
-       toc paragraph page font-weight/.store in=\tocparagraphpagefonteight@cx,
-       toc paragraph page color/.store in=\tocparagraphpagecolor@cx,
-   toc paragraph dotsep/.store in = \tocparagraphdotsep@cx,
-       toc paragraph page before/.store in=\tocparagraphpagebefore@cx,
-       toc paragraph page after/.store in=\tocparagraphpageafter@cx,
+\cxset
+  {
+    toc~paragraph~beforeskip/.store~in              = \toc_paragraph_before_skip,
+    toc~paragraph~indent/.store~in                  = \toc_paragraph_indent,
+    toc~paragraph~font-size/.font-size~in           = \toc_paragraph_font_size,
+    toc~paragraph~font-family/.font-family~in       = \toc_paragraph_font_family,
+    toc~paragraph~font-shape/.font-style~in         = \toc_paragraph_font_shape,
+    toc~paragraph~font-weight/.font-weight~in       = \toc_paragraph_font_weight,
+    toc~paragraph~color/.store~in                   = \toc_paragraph_color,
+    toc~paragraph~case/.is~choice,
+    toc~paragraph~case/lower/.code                  =
+    \def\tocparagraphcase@cx{
+    \@lowercaseparagraphtrue
+    \if@lowercaseparagraph
+    \expandafter\MakeTextLowercase\fi},
+    toc~paragraph~case/upper/.code                  =
+    \def\tocparagraphcase@cx{
+    \@lowercaseparagraphfalse
+     \if@lowercaseparagraph\else
+     \expandafter\MakeTextUppercase \fi},
+    toc~paragraph~case/none/.code                   = \def\tocparagraphcase@cx{\@empty},
+    toc~paragraph~numwidth/.store~in                = \tocparagraphnumwidth@cx,
+    toc~paragraph~page~font-size/.font-size~in      = \tocparagraphpagefontsize@cx,
+    toc~paragraph~page~font-family/.font-family~in  = \tocparagraphpagefontfamily@cx,
+    toc~paragraph~page~font-shape/.font-style~in    = \tocparagraphpagefontshape@cx,
+    toc~paragraph~page~font-weight/.font-weight~in  = \tocparagraphpagefonteight@cx,
+    toc~paragraph~page~color/.store~in              = \tocparagraphpagecolor@cx,
+  toc~paragraph~dotsep/.store~in                  = \tocparagraphdotsep@cx,
+    toc~paragraph~page~before/.store~in=\tocparagraphpagebefore@cx,
+    toc~paragraph~page~after/.store~in=\tocparagraphpageafter@cx,
 }
-
+\ExplSyntaxOff
 \cxset{toc paragraph beforeskip=\z@ \@plus.2\p@,
        toc paragraph indent=0em,
        toc paragraph font-family= sffamily,
-       toc paragraph font-weight = mdseries,
-       toc paragraph font-shape = upshape,
-       toc paragraph color= teal,
-       toc paragraph font-size=,
+       toc paragraph font-weight = bfseries,
+       toc paragraph font-shape = slshape,
+       toc paragraph color= black,
+       toc paragraph font-size=normal,
        toc paragraph case = none,
        toc paragraph numwidth = 4.2em,
-       toc paragraph page font-size=,
+       toc paragraph page font-size=normal,
        toc paragraph page font-shape= upshape,
-       toc paragraph page font-weight=,
+       toc paragraph page font-weight=normal,
        toc paragraph page font-family= sffamily,
-       toc paragraph page color = teal,
+       toc paragraph page color = spot!50,
        toc paragraph page before =,% \{,
        toc paragraph page after =,% \},
-       toc paragraph dotsep = 2.7,
+       toc paragraph dotsep = 1000,%2.7
 }
 \newcommand\tocparagraphpagefont@cx{%
 \setfont@cx{\tocparagraphpagefonteight@cx}%
        {\tocparagraphpagefontfamily@cx}{\tocparagraphpagefontsize@cx}%
        {\tocparagraphpagefontshape@cx}\color{\tocparagraphpagecolor@cx}
 }%
+\ExplSyntaxOn
 \renewcommand*{\l@paragraph}[2]{%
   \ifnum \c@tocdepth >\z@
     \if@haschapter@cx
-      \vskip \tocparagraphbeforeskip@cx
+      \vskip \toc_paragraph_before_skip
     \else
       \addpenalty \@secpenalty
-      \addvspace{\tocparagraphbeforeskip@cx}%
+      \addvspace{\toc_paragraph_before_skip}%
     \fi
-    {\leftskip \tocparagraphindent@cx\relax
-     \rightskip \@tocrmarg
-     \parfillskip -\rightskip
-     \parindent \tocparagraphindent@cx\relax\@afterindenttrue
-     \interlinepenalty\@M
-     \leavevmode
-     \@tempdima \tocparagraphnumwidth@cx\relax
-     \let\tocnumberbefore@cx \cftsecpresnum
-     \let\@cftasnum \cftsecaftersnum
-     \let\@cftasnumb \cftsecaftersnumb
-     \advance\leftskip \@tempdima \null\nobreak\hskip -\leftskip
-     {%
-      \setfont@cx{\tocparagraphfontweight@cx}%
-        {\tocparagraphfontfamily@cx}{\tocparagraphfontsize@cx}%
-        {\tocparagraphfontshape@cx}%
-        \color{\tocparagraphcolor@cx}%
-      \tocparagraphcase@cx#1}\nobreak
-      \tocparagraphfillnum{#2}}%
-  \fi}
-\renewcommand{\cftsecpresnum}{.}
-\renewcommand{\cftsecaftersnum}{..}
-\renewcommand{\cftsecaftersnumb}{...}
-\newcommand{\tocparagraphleader}{\normalfont\dotfill@cx{\tocparagraphdotsep@cx}}
-\newcommand{\tocparagraphfillnum}[1]{%
-  {\tocparagraphleader}\nobreak
-  \hb@xt@\@pnumwidth{\hfil\tocparagraphpagefont@cx
-   \tocparagraphpagebefore@cx #1}%
-   \tocparagraphpageafter@cx\par}%
+    \format_toc_entry:nn {paragraph} {#1} {#2}
+  \fi
+  }
+\ExplSyntaxOff
+\newcommand{\tocparagraphleader@cx}{\normalfont\dotfill@cx{\tocparagraphdotsep@cx}}
+%%    We can now define the command \cmd{\tocsectionfillnum}. It will print the
+%% leaders if any and the page number \#1. TODO IS par necessary??
+%%    \begin{macrocode}
+%%    \end{macrocode}
+
+\newif\if@lowercasesubparagraph
+\ExplSyntaxOn
+\cxset
+  {
+    toc~subparagraph~beforeskip/.store~in              = \toc_subparagraph_before_skip,
+    toc~subparagraph~indent/.store~in                  = \toc_subparagraph_indent,
+    toc~subparagraph~font-size/.font-size~in           = \toc_subparagraph_font_size,
+    toc~subparagraph~font-family/.font-family~in       = \toc_subparagraph_font_family,
+    toc~subparagraph~font-shape/.font-style~in         = \toc_subparagraph_font_shape,
+    toc~subparagraph~font-weight/.font-weight~in       = \toc_subparagraph_font_weight,
+    toc~subparagraph~color/.store~in                   = \toc_subparagraph_color,
+ }
+
+\cxset
+  {
+    toc~subparagraph~case/.is~choice,
+    toc~subparagraph~case/lower/.code                  =
+     \def\tocsubparagraphcase@cx{
+       \@lowercasesubparagraphtrue
+       \if@lowercasesubparagraph\expandafter
+       \MakeTextLowercase\fi},
+    toc~subparagraph~case/upper/.code=
+      \def\tocsubparagraphcase@cx{
+      \@lowercasesubparagraphfalse
+      \if@lowercasesubparagraph\else
+      \expandafter\MakeTextUppercase\fi},
+    toc~subparagraph~case/none/.code=
+    \def\tocsubparagraphcase@cx{\@empty},
+    toc~subparagraph~numwidth/.store~in                 =
+    \tocsubparagraphnumwidth@cx,
+    toc~subparagraph~page~font-size/.store~in           =
+      \toc_subparagraph_page_font_size,
+    toc~subparagraph~page~font-family/.font-family~in   = \toc_subparagraph_page_fontfamily,
+    toc~subparagraph~page~font-shape/.font-style~in     = \toc_subparagraph_page_fontshapex,
+    toc~subparagraph~page~font-weight/.font-weight~in   =\toc_subparagraph_page_font_weight@cx,
+    toc~subparagraph~page~color/.store~in               = \toc_subparagraph_page_color,
+  toc~subparagraph~dotsep/.store~in                   = \toc_subparagraph_dotsep,
+    toc~subparagraph~page~before/.store~in              = \toc_subparagraph_page_before,
+    toc~subparagraph~page~after/.store~in               = \toc_subparagraph_page_after,
+}
+
+\ExplSyntaxOff
+\cxset{toc subparagraph beforeskip         = \z@ \@plus.2\p@,
+  toc subparagraph indent=0em,
+  toc subparagraph font-family             = sffamily,
+  toc subparagraph font-weight             = normal,
+  toc subparagraph font-shape              = slshape,
+  toc subparagraph color= spot!50,
+  toc subparagraph font-size               = normal,
+  toc subparagraph case = none,
+  toc subparagraph numwidth                = 4.2em,
+  toc subparagraph page font-size          =,
+  toc subparagraph page font-shape         = upshape,
+  toc subparagraph page font-weight        = ,
+  toc subparagraph page font-family        = sffamily,
+  toc subparagraph page color              = teal,
+  toc subparagraph page before             =,% \{,
+  toc subparagraph page after              =,% \},
+  toc subparagraph dotsep                  = 1000,
+}
+\ExplSyntaxOn
+\renewcommand*{\l@subparagraph}[2]{%
+  \ifnum \c@tocdepth >\z@
+    \if@haschapter@cx
+      \vskip \toc_subparagraph_before_skip
+    \else
+      \addpenalty \@secpenalty
+      \addvspace{\toc_subparagraph_before_skip}%
+    \fi
+    \format_toc_entry:nn {subparagraph} {#1} {#2}
+  \fi
+  }
+\ExplSyntaxOff
+\ExplSyntaxOn
+\cs_new:Npn \tocsubparagraphleader@cx
+  {
+    \normalfont\dotfill@cx{\toc_subparagraph_dotsep}
+  }
+\ExplSyntaxOff
 \cxset{endnotes package/.code ={\gdef\endnotes@cs{#1}%
                    \RequirePackage{\endnotes@cs}%
                 }%
