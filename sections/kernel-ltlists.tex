@@ -2,43 +2,53 @@
          
  \section{List, and related environments}
 
+This section of the kernel creates generic factory commands for the creation of list environments. 
+These list environments \refEnv{enumerate}, \refEnv{itemize} are defined in the kernel, whereas others are normally
+defined in the class files (see \vref{ch:bookclass}, \vref{sec:clo} and \vref{sec:booklists}).
+To understand the properly we need to note that lists are shaped paragraphs, which Lamport
+decided to shape with \cs{parshape}. By shaping the paragraph the geometry of the
+paragraphs can be achieved. The complexity of the code is necessary to make sure
+that at every item the |\parshape| is used and also in any following paragraphs. Remember
+that |\parshape| will only act on one paragraph. As Knuth said the \latexe Team did some
+nifty tricks with |\parshape|.
+
  The generic commands for creating an indented environment --
  |enumerate|, |itemize|, |quote|, etc -- are:
  \begin{quote}
         |\list|\marg{label}\marg{commands} ... |\endlist|
  \end{quote}
 
- which can be invoked by the user as the list environment.  The LABEL
- argument specifies item labeling.  COMMANDS contains commands for
+ which can be invoked by the user as the |list| environment.  The \meta{label}
+ argument specifies item labeling.  \meta{commands} contains commands for
  changing the horizontal and vertical spacing parameters.
 
  Each item of the environment is begun by the command
- |\item[|ITEMLABEL|]|
- which produces an item labeled by ITEMLABEL.  If the argument is
- missing, then the LABEL argument of the |\list| command is used as the
- item label.
+ |\item[|item label|]|
+ which produces an item labeled by |itemlabel|.  If the argument is
+ missing, then the |label| argument of the |\list| command is used as the
+ item label. This enables the user to type |item|  or |item[some label]|.
 
  The label is formed by putting |\makelabel|\marg{ITEMLABEL} in an hbox
  whose width is either its natural width or else |\labelwidth|,
- whichever is larger.  The |\list| command defines |\makelabel| to have
+ whichever is larger.  The |\list| command defines \refCom{makelabel} to have
  the default  definition:
  \begin{quote}
-     |\makelabel|\marg{ARG} == BEGIN |\hfil| ARG END
+     |\makelabel|\marg{arg} == BEGIN |\hfil| arg END
  \end{quote}
- which, for a label of width less than |\labelwidth|, puts the label
- flushright, |\labelsep| to the left of the item's text.  However,
- |\makelabel| can be |\let| to another command by the |\list|'s
- COMMANDS argument.
+ which, for a label of width less than \refCom{labelwidth}, puts the label
+ flushright, \refCom{labelsep} to the left of the item's text.  However,
+ |\makelabel| can be |\let| to another command by the \refCom{list}'s
+\meta{commands} argument.
 
- A |\usecounter|\marg{foo} command in the second argument causes the
+ A \refCom{usecounter}\marg{foo} command in the second argument causes the
  counter \emph{foo} to be initialized to zero, and stepped by every
  |\item| command without an argument.  (|\label| commands within the
  list refer to this counter.)
 
  When you leave a list environment, returning either to an enclosing
- list or normal text mode, LaTeX begins a new paragraph if and only if
+ list or normal text mode, \latexe begins a new paragraph if and only if
  you leave a blank line after the |\end| command.  This is accomplished
- by the |\@endparenv| command.
+ by the \refCom{@endparenv} command.
 
  Blank lines are ignored every other reasonable place--i.e.:
  \begin{itemize}
@@ -47,7 +57,7 @@
   \item Between the end of the last item and the |\end{list}|.
  \end{itemize}
 
- For an environment like quotation, in which items are not labeled,
+ For an environment like \docAuxEnvironment{quotation}, in which items are not labeled,
  the entire environment is a single item.  It is defined by
  letting |\quotation| == |\list{}{...}\item\relax|.  (Note the
  |\relax|, there in case the first character in the environment is a
@@ -58,9 +68,9 @@
  The trivlist environment is equivalent to a list environment
  whose second argument sets the following parameter values:
  \begin{description}
- \item[\cs{leftmargin} = 0:] causes no indentation of left margin
- \item[\cs{labelwidth} = 0:] see below for precise effect this has.
- \item[\cs{itemindent} = 0:] with a null label, makes first paragraph
+ \item[\refCom{leftmargin} = 0:] causes no indentation of left margin
+ \item[\refCom{labelwidth} = 0:] see below for precise effect this has.
+ \item[\refCom{itemindent} = 0:] with a null label, makes first paragraph
         have no indentation.  Succeeding paragraphs have |\parindent|
         indentation.  To give first paragraph same indentation, set
         |\itemindent| = |\parindent| before the |\item[]|.
@@ -78,51 +88,58 @@
 
  \subsection{List and Trivlist}
 
-
  The following variables are used inside a list environment:
  \begin{description}
- \item[\cs{@totalleftmargin}] The distance that the prevailing left
+ \item[] \refCom{@totalleftmargin} The distance that the prevailing left
      margin is indented from the outermost left margin,
- \item[\cs{linewidth}] The width of the current line.  Must be
+ \item[] \refCom{linewidth} The width of the current line.  Must be
      initialized to |\hsize|.
- \item[\cs{@listdepth}] A count for holding current list nesting depth.
- \item[\cs{makelabel}] A macro with a single argument, used to
+ \item[] \refCom{@listdepth} A count for holding current list nesting depth.
+ 
+ \item[] \refCom{makelabel} A macro with a single argument, used to
    generate the label from the argument (given or implied)
    of the |\item| command. Initialized to |\@mklab| by the |\list|
    command.  This command must produce  some stretch---i.e., an
    |\hfil|.
- \item[\cs{@inlabel}] A switch that is false except between the time
+   
+ \item[] \refCom{if@inlabel} A switch that is false except between the time
    an |\item| is encountered and the time that \TeX{}
    actually enters horizontal mode.  Should be tested by commands
    that can be messed up by the list environment's use of |\everypar|.
- \item[\cs{box}\cs{@labels}] When |@inlabel = true|, it holds the labels
+   
+ \item[] \refCom{@labels} When |@inlabel = true|, it holds the labels
    to be put out by |\everypar|.
- \item[\texttt{@noparitem}] A switch set by |\list| when
+   
+ \item[] \refCom{if@noparitem} A switch set by |\list| when
    |@inlabel = true|.
-   Handles the case of a |\list| being the first thing in an item.
- \item[\texttt{@noparlist}] A switch set true for a list that begins an
+      Handles the case of a |\list| being the first thing in an item.
+      
+ \item[] \refCom{if@noparlist} A switch set true for a list that begins an
    item.  No |\topsep| space is added before or after |\item|'s such a
    list.
- \item[\texttt{@newlist}] Set true by |\list|, set false by the first
+   
+ \item[] \refCom{if@newlist} Set true by |\list|, set false by the first
    text (by |\everypar|).
- \item[\texttt{@noitemarg}]  Set true when executing an |\item| with no
+   
+ \item[]  \refCom{if@noitemarg} Set true when executing an |\item| with no
    explicit argument.  Used to save space. To save time, make two
-   separate  |\@item| commands.
- \item[\texttt{@nmbrlist}] Set true by |\usecounter| command, causes
+   separate  \refCom{@item} commands.
+   
+ \item[] \refCom{if@nmbrlist} Set true by |\usecounter| command, causes
    list to be numbered.
- \item[\cs{@listctr}] |\def|'ed by |\usecounter| to name of counter.
- \item[\cs{@noskipsec}] A switch set true by a sectioning command when
+   
+ \item[] |noskipsec| A switch set true by a sectioning command when
     it is creating an in-text heading with |\everypar|.
  \end{description}
 
 
  Throughout a list environment, |\hsize| is the width of the current
  line, measured from the outermost left margin to the outermost right
- margin.  Environments like tabbing should use |\linewidth| instead of
+ margin.  Environments like tabbing should use \refCom{linewidth} instead of
  |\hsize|.
 
  Here are the parameters of a list that can be set by commands in
- the |\list|'s COMMANDS argument.  These parameters are all TeX
+ the |\list|'s \meta{commands} argument.  These parameters are all TeX
  skips or dimensions (defined by |\newskip| or |\newdimen|), so the
  usual \TeX\ or \LaTeX\ commands can be used to set them.  The
  commands will be executed in vmode if and only if the |\list| was
@@ -133,62 +150,59 @@
 
  \subsection{Vertical Spacing (skips)}
  \begin{description}
- \item[\cs{topsep}:]  Space between first item and preceding paragraph.
- \item[\cs{partopsep}:] Extra space added to \cs{topsep} when
+ \item[]  \refCom{topsep} Space between first item and preceding paragraph.
+ \item[] \refCom{partopsep} Extra space added to \refCom{topsep} when
         environment starts a new paragraph (is called in vmode).
- \item[\cs{itemsep}:] Space between successive items.
- \item[\cs{parsep}:] Space between paragraphs within an item -- the
-                 \cs{parskip} for this environment.
+ \item[] \refCom{itemsep} Space between successive items.
+ \item[] \refCom{parsep} Space between paragraphs within an item -- the
+                 \refCom{parskip} for this environment.
  \end{description}
 
  \subsection{Penalties}
  \begin{description}
 
- \item[\cs{@beginparpenalty}:] put at the beginning of a list
- \item[\cs{@endparpenalty}:] put at end of list
-  \item[\cs{@itempenalty}:] put between items.
+ \item[] \refCom{@beginparpenalty} put at the beginning of a list
+ \item[] \refCom{@endparpenalty} put at end of list
+  \item[] \refCom{@itempenalty} put between items.
   \end{description}
 
  \subsection{Horizontal Spacing (dimens)}
  \begin{description}
- \item[\cs{leftmargin}:] space between left margin of enclosing
+ \item[]  \refCom{leftmargin} space between left margin of enclosing
    environment (or of page if top level list) and left margin of
                      this list.  Must be nonnegative.
-  \item[\cs{rightmargin}:] analogous.
-  \item[\cs{listparindent}:] extra indentation at beginning of every
-     paragraph of a list except the one started by the \cs{item}
+  \item[] \refCom{rightmargin} analogous.
+  \item[] \refCom{listparindent} extra indentation at beginning of every
+     paragraph of a list except the one started by the \refCom{item}
                       command.  May be negative!  Usually, labeled
-                       lists have \cs{listparindent} equal to zero.
-   \item[\cs{itemindent}:] extra indentation added right BEFORE an item
+                       lists have \refCom{listparindent} equal to zero.
+   \item[]  \refCom{itemindent} extra indentation added right BEFORE an item
                       label.
-  \item[\cs{labelwidth}:] nominal width of box that contains the label.
+  \item[] \refCom{labelwidth} nominal width of box that contains the label.
                       If the natural width of the
-                         label $< =$ \cs{labelwidth},
+                         label $< =$ \refCom{labelwidth},
                       then the label is flushed right inside a box
-                      of width \cs{labelwidth} (with an \cs{hfil}).
+                      of width \refCom{labelwidth} (with an |\hfil|).
                       Otherwise,
                       a box of the natural width is employed, which
                        causes an indentation of the text on that line.
-     \item[\cs{labelsep}:] space between end of label box and text of
+     \item[] \refCom{labelsep} space between end of label box and text of
                       first item.
   \end{description}
-
-
-
 
 
  \subsection{Default Values}
  
  Defaults for the list environment are set as follows.
- First, \cs{rightmargin}, \cs{listparindent} and \cs{itemindent}
+ First, \refCom{rightmargin}, \refCom{listparindent} and \refCom{itemindent}
  are set
       to 0pt.  Then, one of the commands
-      \cs{@listi}, \cs{@listii}, ... , \cs{@listvi}
+      \refCom{@listi}, \refCom{@listii}, ... , \refCom{@listvi}
       is called, depending upon the current level of the list.
-      The \cs{@list} \ldots commands should be defined by the document
+      The \refCom{@list} \ldots commands should be defined by the document
       style.  A convention that the document style should follow is
-      to set \cs{leftmargin} to
-      \cs{leftmargini},\ldots, \cs{leftmarginvi} for
+      to set \refCom{leftmargin} to
+      \refCom{leftmargini},\ldots, \refCom{leftmarginiv} for
       the appropriate level.  Items that aren't changed may be left
       alone, but everything that could possibly be changed must be
       reset.
@@ -196,203 +210,203 @@
 
 \LinesNumbered
 \begin{algorithm}
-\caption{The \cs{list} environment}
-  \cs{list}\marg{LABEL}\marg{COMMANDS} ==\\
+\caption{The \refCom{list} environment}
+  \refCom{list}\marg{LABEL}\marg{COMMANDS} ==\\
    \Begin{
-     \eIf{\cs{@listdepth} > 5}{
+     \eIf{\refCom{@listdepth} > 5}{
         LaTeX error: 'Too deeply nested'}{
-        \cs{@listdepth} :=G \cs{@listdepth} + 1\\
+        \refCom{@listdepth} :=G \refCom{@listdepth} + 1\\
      }
-     \cs{rightmargin}     := 0pt\\
-     \cs{listparindent}   := 0pt\\
-     \cs{itemindent}      := 0pt\\
-     eval(@list \cs{romannumeral}\cs{the}\cs{@listdepth})\\  
-     \cs{@itemlabel}      :=L LABEL\\
-     \cs{makelabel}       == \cs{@mklab}\\
+     \refCom{rightmargin}     := 0pt\\
+     \refCom{listparindent}   := 0pt\\
+     \refCom{itemindent}      := 0pt\\
+     eval(@list \refCom{romannumeral}\refCom{the}\refCom{@listdepth})\\  
+     \refCom{@itemlabel}      :=L LABEL\\
+     \refCom{makelabel}       == \refCom{@mklab}\\
      @nmbrlist        :=L false\\
      COMMANDS\\
-     \cs{@trivlist}\\  
-     \cs{parskip}          :=L \cs{parsep}\\
-     \cs{parindent}        :=L \cs{listparindent}\\
-     \cs{linewidth}        :=L \cs{linewidth} - \cs{rightmargin} -\cs{leftmargin}\\
-     \cs{@totalleftmargin} :=L \cs{@totalleftmargin} + \cs{leftmargin}\\
-     \cs{parshape} 1 \cs{@totalleftmargin} \cs{linewidth}\\
+     \refCom{@trivlist}\\  
+     parskip          :=L \refCom{parsep}\\
+     parindent        :=L \refCom{listparindent}\\
+     \refCom{linewidth}        :=L \refCom{linewidth} - \refCom{rightmargin} -\refCom{leftmargin}\\
+     \refCom{@totalleftmargin} :=L \refCom{@totalleftmargin} + \refCom{leftmargin}\\
+     parshape 1 \refCom{@totalleftmargin} \refCom{linewidth}\\
      \cs{ignorespaces} 
    }
 \end{algorithm}
 
-Th \cs{endlist} simply adjusts the listdepth and ends the \cs{trivlist}.
+The \refCom{endlist} simply adjusts the listdepth counter and ends the \refCom{trivlist}.
 
 \begin{algorithm}
- \cs{endlist} == \\
+ \refCom{endlist} == \\
   \Begin{
-    \cs{@listdepth} :=G \cs{@listdepth} -1\\
-    \cs{endtrivlist}\\
+    \refCom{@listdepth} :=G \refCom{@listdepth} -1\\
+    \refCom{endtrivlist}\\
   }
 \end{algorithm}
 
-The \cs{@trivlist} is define as,
+The \refCom{@trivlist} is define as,
 
 \begin{algorithm}
- \cs{@trivlist} ==\\
+ \refCom{@trivlist} ==\\
   \Begin{
-    \If{@newlist = T}{\cs{@noitemerr}}
+    \If{@newlist = T}{\refCom{@noitemerr}}
      This command removed for some forgotten reason.\\
-     \cs{@topsepadd} :=L \cs{topsep}\\
+     \refCom{@topsepadd} :=L \refCom{topsep}\\
      \If{@noskipsec}{leave vertical mode}
      \eIf{vertical mode}{
-        \cs{@topsepadd} :=L \cs{@topsepadd} + \cs{partopsep}}{
+        \refCom{@topsepadd} :=L \refCom{@topsepadd} + \refCom{partopsep}}{
         \cs{unskip} \cs{par}}
      \eIf{@inlabel = true}{
          @noparitem :=L true
          @noparlist :=L true}{
          @noparlist :=L false
-             \cs{@topsep}   :=L \cs{@topsepadd}}
-     \cs{@topsep}      :=L \cs{@topsep} + \cs{parskip}\\
+             \refCom{@topsep}   :=L \refCom{@topsepadd}}
+     \refCom{@topsep}      :=L \refCom{@topsep} + \refCom{parskip}\\
       Restore paragraphing parameters\\
      \cs{leftskip}     :=L 0pt\\  
-     \cs{rightskip}    :=L \cs{@rightskip}\\
+     \cs{rightskip}    :=L \refCom{@rightskip}\\
      \cs{parfillskip}     :=L 0pt + 1fil\\
-   NOTE: \cs{@setpar} called on every \cs{list} in case \cs{par} has been\\
-   temporarily  munged before the \cs{list} command.\\
+   NOTE: \cs{@setpar} called on every \refCom{list} in case \cs{par} has been\\
+   temporarily  munged before the \refCom{list} command.\\
      \cs{@setpar}{if @newlist = false then {\cs{@@par}} fi}\\
-     \cs{@newlist}         :=G T\\
-     \cs{@outerparskip}    :=L \cs{parskip}\\
+     \refCom{@newlist}         :=G T\\
+     \refCom{@outerparskip}    :=L \cs{parskip}\\
  }
 \end{algorithm}
 
 \begin{algorithm}
- \cs{trivlist}  ==\\
+ \refCom{trivlist}  ==\\
  \Begin{
-  \cs{parsep} := \cs{parskip}\\
+  \refCom{parsep} := \refCom{parskip}\\
    @nmbrlist := F\\
-  \cs{@trivlist}\\
-  \cs{labelwidth} := 0\\
-  \cs{leftmargin} := 0\\
-  \cs{itemindent} := \cs{parindent}\\
-  \cs{@itemlabel} :=L "empty"\\ 
-  \cs{makelabel}\marg{LABEL} == LABEL\\
+  \refCom{@trivlist}\\
+  \refCom{labelwidth} := 0\\
+  \refCom{leftmargin} := 0\\
+  \refCom{itemindent} := \refCom{parindent}\\
+  \refCom{@itemlabel} :=L "empty"\\ 
+  \refCom{makelabel}\marg{LABEL} == LABEL\\
  }
 \end{algorithm}
 
 
 
 \begin{algorithm}
- \cs{endtrivlist} ==\\
+ \refCom{endtrivlist} ==\\
  \Begin{
-     \If{@inlabel = T}{\cs{indent}}
-     \If{horizontal mode}{\cs{unskip} \cs{par}}
+     \If{@inlabel = T}{\refCom{indent}}
+     \If{horizontal mode}{\refCom{unskip} \refCom{par}}
      \eIf{@noparlist = true}{}{
-        \If{\cs{lastskip} > 0}{
-              \cs{@tempskipa} := \cs{lastskip}
-              \cs{vskip} - \cs{lastskip}
-              \cs{vskip} \cs{@tempskipa} -\cs{@outerparskip} + \cs{parskip}
+        \If{\refCom{lastskip} > 0}{
+              \refCom{@tempskipa} := \refCom{lastskip}
+              \refCom{vskip} - \refCom{lastskip}
+              \refCom{vskip} \refCom{@tempskipa} -\refCom{@outerparskip} + \refCom{parskip}
              }
-           \cs{@endparenv}
+           \refCom{@endparenv}
      }
    }
 \end{algorithm}
 
 
 \begin{algorithm}
- \cs{@endparenv} ==
+ \refCom{@endparenv} ==
    \Begin{
-    \cs{addpenalty}\marg{@endparpenalty}\\
-    \cs{addvspace}\marg{\cs{@topsepadd}}\\
-     ends the \cs{begin} command's \cs{begingroup}\\
-    \cs{endgroup}\\
-    \cs{par}  ==  \Begin{%
-                  \cs{@restorepar}\\
-                  \cs{everypar}|{}|
-                  \cs{par}
+    \refCom{addpenalty}\marg{@endparpenalty}\\
+    \refCom{addvspace}\marg{\refCom{@topsepadd}}\\
+     ends the \refCom{begin} command's \refCom{begingroup}\\
+    \refCom{endgroup}\\
+    \refCom{par}  ==  \Begin{%
+                  \refCom{@restorepar}\\
+                  \refCom{everypar}|{}|
+                  \refCom{par}
                   }
-    \cs{everypar} == \Begin{remove \cs{lastbox} \cs{everypar}|{}|}
-   to match the \cs{end} commands \cs{endgroup}\\
-    \cs{begingroup}  
+    \refCom{everypar} == \Begin{remove \refCom{lastbox} \refCom{everypar}|{}|}
+   to match the \refCom{end} commands \refCom{endgroup}\\
+    \refCom{begingroup}  
    }
 \end{algorithm}
 
 \index{kernel>lists>\textbackslash item}
 The definition of item, is fairly simple deferring the complexity
-to |\@item| which follows.
+to \refCom{@item} which follows.
 
 \begin{algorithm}[htbp]
- \cs{item} == \Begin{
+ \refCom{item} == \Begin{
     \If{math mode}{issue warning}
     \eIf{ next char = {\tt [}}{
-             \cs{@item}}{
-              \cs{@noitemarg} := true\\
-             \cs{@item}[\cs{@itemlabel}]}
+             \refCom{@item}}{
+              \refCom{@noitemarg} := true\\
+             \refCom{@item}[\refCom{@itemlabel}]}
   }
 \caption{The algorithm for \textbackslash item}
 \end{algorithm}
 
 
 \begin{algorithm}
- \cs{@item}[LAB] ==
+ \refCom{@item}[LAB] ==
     \Begin{
      \eIf{@noparitem = true}{
         @noparitem := false
              % NOTE: then clause  hardly every taken,\\
-             %  so made a macro \cs{@donoparitem}\\
-            \cs{box}\cs{@labels} :=G\\
-             \cs{hbox} \Begin{\cs{hskip} -\cs{leftmargin}\\
-                                   \cs{box}\cs{@labels}\\
-                                   \cs{hskip} \cs{leftmargin}}
+             %  so made a macro \refCom{@donoparitem}\\
+            \refCom{box}\refCom{@labels} :=G\\
+             \refCom{hbox} \Begin{\refCom{hskip} -\refCom{leftmargin}\\
+                                   \refCom{box}\\refCom{@labels}\\
+                                   \refCom{hskip} \refCom{leftmargin}}
             \If{@minipage = false}{
-               \cs{@tempskipa} := \cs{lastskip}\\
-               \cs{vskip} -\cs{lastskip}\\
-               \cs{vskip} \cs{@tempskipa} + \cs{@outerparskip} - \cs{parskip}}
+               \refCom{@tempskipa} := \refCom{lastskip}\\
+               \refCom{vskip} -\refCom{lastskip}\\
+               \refCom{vskip} \refCom{@tempskipa} + \refCom{@outerparskip} - \refCom{parskip}}
             }{
           \If{@inlabel = true}{
-              then \cs{indent} \cs{par}   % previous item empty.
+              then \refCom{indent} \refCom{par}   % previous item empty.
            }
-           \If{hmode}{then 2 \cs{unskip}'s\\
+           \If{hmode}{then 2 \refCom{unskip}'s\\
                            % To remove any space at end of prev.\\
                            % paragraph that could cause a blank line.\\
-                     \cs{par}\\
+                     \refCom{par}\\
            }
            \eIf{if @newlist = T}{
                 \eIf{@nobreak = T}{ 
-                      % Kludge if list follows \cs{section}\\
-                      \cs{addvspace}\marg{\cs{@outerparskip} - \cs{parskip}}}{
-                       \cs{addpenalty}\marg{\cs{@beginparpenalty}}\\
-                       \cs{addvspace}\marg{\cs{@topsep}}\\
-                       \cs{addvspace}\marg{-\cs{parskip}}\\  
+                      % Kludge if list follows \refCom{section}\\
+                      \refCom{addvspace}\marg{\refCom{@outerparskip} - \refCom{parskip}}}{
+                       \refCom{addpenalty}\marg{\refCom{@beginparpenalty}}\\
+                       \refCom{addvspace}\marg{\refCom{@topsep}}\\
+                       \refCom{addvspace}\marg{-\refCom{parskip}}\\  
                     }}{
-                \cs{addpenalty}\marg{\cs{@itempenalty}}\\
-                \cs{addvspace}\marg{\cs{itemsep}}\\
+                \refCom{addpenalty}\marg{\refCom{@itempenalty}}\\
+                \refCom{addvspace}\marg{\refCom{itemsep}}\\
             }
 
             @inlabel :=G true\\
      }
 
-     \cs{everypar}\{ @minipage :=G F\\
+     \refCom{everypar}\{ @minipage :=G F\\
                 @newlist :=G F\\
                 \If{@inlabel = true}{
                     @inlabel :=G false
-                       \cs{hskip} -\cs{parindent}\\
-                       \cs{box}\cs{@labels}\\
-                       \cs{penalty} 0\\
-                       \cs{box}\cs{@labels} :=G null\\
+                       \refCom{hskip} -\refCom{parindent}\\
+                       \refCom{box}\refCom{@labels}\\
+                       \refCom{penalty} 0\\
+                       \refCom{box}\refCom{@labels} :=G null\\
                 }
-                \cs{everypar}\{\} \}\\
+                \refCom{everypar}\{\} \}\\
      @nobreak :=G false\\
      \If{@noitemarg = true}{
         @noitemarg := false\\
             \If{@nmbrlist}{
-               \cs{refstepcounter}\{\cs{@listctr}\}
+               \refCom{refstepcounter}\{\refCom{@listctr}\}
             }
      }
-     \cs{@tempboxa}   :=L \cs{hbox}\marg{\cs{makelabel}\marg{LAB}}\\
-     \cs{box}\cs{@labels} :=G \cs{@labels}\cs{hskip}\cs{itemindent}\\
-                       \cs{hskip} - (\cs{labelwidth} + \cs{labelsep})\\
-                 \eIf{\cs{wd}\cs{@tempboxa} > \cs{labelwidth}}{
-                          \cs{box}\cs{@tempboxa}}{
-                          \cs{hbox} to \cs{labelwidth}\{\cs{unhbox}\cs{@tempboxa}\}\\
+     \refCom{@tempboxa}   :=L \refCom{hbox}\marg{\refCom{makelabel}\marg{LAB}}\\
+     \refCom{box}\refCom{@labels} :=G \refCom{@labels}\refCom{hskip}\refCom{itemindent}\\
+                       \refCom{hskip} - (\refCom{labelwidth} + \refCom{labelsep})\\
+                 \eIf{\refCom{wd}\refCom{@tempboxa} > \refCom{labelwidth}}{
+                          \refCom{box}\refCom{@tempboxa}}{
+                          \refCom{hbox} to \refCom{labelwidth}\{\refCom{unhbox}\refCom{@tempboxa}\}\\
                  } 
-      \cs{hskip}\cs{labelsep}\\
-     \cs{ignorespaces} %gobble space up to text
+      \refCom{hskip}\refCom{labelsep}\\
+     \refCom{ignorespaces} %gobble space up to text
   }
 \end{algorithm}
 
@@ -400,29 +414,53 @@ to |\@item| which follows.
 
 
 \begin{algorithm}
- \cs{makelabel}\marg{LABEL} == ERROR\\
-    default to catch lonely \cs{item}
+ \refCom{makelabel}\marg{LABEL} == ERROR\\
+    default to catch lonely \refCom{item}
 
- \cs{usecounter}\marg{CTR} == \Begin{
-                              \cs{@nmbrlist} :=L true\\
-                              \cs{@listctr} == CTR\\
-                              \cs{setcounter}\marg{CTR}\marg{0}
+ \refCom{usecounter}\marg{CTR} == \Begin{
+                              \refCom{@nmbrlist} :=L true\\
+                              \refCom{@listctr} == CTR\\
+                              \refCom{setcounter}\marg{CTR}\marg{0}
                              }
 \end{algorithm}
 
 
 
- DEFINE \cs{dimen}'s and \cs{count}
+ 
 
- \begin{macro}{\topskip}
- \begin{macro}{\partopsep}
- \begin{macro}{\itemsep}
- \begin{macro}{\parsep}
- \begin{macro}{\@topsep}
- \begin{macro}{\@topsepadd}
- \begin{macro}{\outerparskip}
+\begin{docCommand}{topsep} {\meta{dim}}
+The space between the first item and the preceding paragraph.
+\end{docCommand}
+
+\begin{docCommand}{partopsep} {\meta{dim}}
+The space between the first item and the preceding paragraph.
+\end{docCommand}
+
+\begin{docCommand}{itemsep} {\meta{dim}}
+The space between the first item and the preceding paragraph.
+\end{docCommand}
+
+\begin{docCommand}{@itemsep} {\meta{dim}}
+The space between the first item and the preceding paragraph.
+\end{docCommand}
+
+\begin{docCommand}{@topsepadd} {\meta{dim}}
+The space between the first item and the preceding paragraph.
+\end{docCommand}
+
+\begin{docCommand}{outerparskip} {\meta{dim}}
+The space between the first item and the preceding paragraph.
+\end{docCommand}
+
+\begin{docCommand}{parsep} {\meta{dim}}
+The space between the first item and the preceding paragraph.
+\end{docCommand}
+
+The skip registers \docAuxCommand{topskip}, \docAuxCommand*{partopsep}, 
+\docAuxCommand{itemsep}, \docAuxCommand{parsep}, \docAuxCommand{@topsep},
+\docAuxCommand{@topsepadd}, \docAuxCommand{outerparskip} are created.
+
     \begin{teX}
-\newskip\topsep
 \newskip\partopsep
 \newskip\itemsep
 \newskip\parsep
@@ -430,12 +468,29 @@ to |\@item| which follows.
 \newskip\@topsepadd
 \newskip\@outerparskip
     \end{teX}
- \end{macro}\end{macro}\end{macro}\end{macro}\end{macro}\end{macro}
- \end{macro}
- \begin{macro}{\leftmargin}\begin{macro}{\rightmargin}
- \begin{macro}{\listparindent}\begin{macro}{\itemindent}
- \begin{macro}{\labelwidth}\begin{macro}{\labelsep}
- \begin{macro}{\@totalleftmargin}
+ 
+ 
+ \begin{docCommand}{leftmargin} {\meta{dim}}
+\end{docCommand}
+\begin{docCommand}{rightmargin} {\meta{dim}}
+\end{docCommand}
+\begin{docCommand}{listparindent} {\meta{dim}}
+\end{docCommand}
+\begin{docCommand}{labelwidth} {\meta{dim}}
+\end{docCommand}
+\begin{docCommand}{@totlaleftmargin} {\meta{dim}}
+\end{docCommand}
+\begin{docCommand}{labelsep} {\meta{dim}}
+\end{docCommand}
+\begin{docCommand}{linewidth} {\meta{dim}}
+\end{docCommand}
+\begin{docCommand}{itemindent} {\meta{dim}}
+\end{docCommand}
+ \begin{docCommand}{@totalleftmargin} {}
+ \end{docCommand}
+
+
+ 
     \begin{teX}
 \newdimen\leftmargin
 \newdimen\rightmargin
@@ -446,94 +501,146 @@ to |\@item| which follows.
 \newdimen\linewidth
 \newdimen\@totalleftmargin \@totalleftmargin=\z@
     \end{teX}
- \end{macro}\end{macro}\end{macro}\end{macro}\end{macro}
- \end{macro}\end{macro}
-
- \begin{macro}{\leftmargini}
- \begin{macro}{\leftmarginii}
- \begin{macro}{\leftmarginiii}
- \begin{macro}{\leftmarginiv}
- \begin{macro}{\leftmarginv}
- \begin{macro}{\leftmarginvi}
-    \begin{teX}
+ 
+\begin{docCommand} {leftmargini} { \meta{dim}}
+\end{docCommand}
+\begin{teX}
 \newdimen\leftmargini
+\end{teX}
+\begin{docCommand} {leftmarginii} { \meta{dim}}
+\end{docCommand}
+\begin{teX}
 \newdimen\leftmarginii
-\newdimen\leftmarginiii
-\newdimen\leftmarginiv
-\newdimen\leftmarginv
-\newdimen\leftmarginvi
-    \end{teX}
- \end{macro}\end{macro}\end{macro}
- \end{macro}\end{macro}\end{macro}
+\end{teX}
 
- \begin{macro}{\@listdepth}\begin{macro}{\@itempenalty}
- \begin{macro}{\@beginparpenalty}\begin{macro}{\@endparpenalty}
+\begin{docCommand} {leftmarginiii} { \meta{dim}}
+\end{docCommand}
+\begin{teX}
+\newdimen\leftmarginiii
+\end{teX}
+
+\begin{docCommand} {leftmarginiv} { \meta{dim}}
+\end{docCommand}
+\begin{teX}
+\newdimen\leftmarginiv
+\end{teX}
+    \begin{teX}
+\newdimen\leftmarginv
+    \end{teX}
+
+
+\begin{docCommand}{@listdepth}{}
+\end{docCommand}
+\begin{docCommand}{@itempenalty}{}
+\end{docCommand}
+\begin{docCommand}{@beginparpenalty}{}
+\end{docCommand}
+\begin{docCommand}{@endparpenalty}{}
+\end{docCommand}
     \begin{teX}
 \newcount\@listdepth \@listdepth=0
 \newcount\@itempenalty
 \newcount\@beginparpenalty
 \newcount\@endparpenalty
     \end{teX}
- \end{macro}\end{macro}\end{macro}\end{macro}
 
- \begin{macro}{\@labels}
+
+ \begin{docCommand}{@labels} { \meta{box} }
+ \end{docCommand}
     \begin{teX}
 \newbox\@labels
     \end{teX}
- \end{macro}
+ 
 
- \begin{macro}{\if@inlabel}
- \begin{macro}{\@inlabelfalse}
- \begin{macro}{\@inlabeltrue}
+
+ \begin{docCommand}{if@inlabel}{}
+  \end{docCommand}
     \begin{teX}
 \newif\if@inlabel \@inlabelfalse
     \end{teX}
- \end{macro}\end{macro}\end{macro}
 
- \begin{macro}{\if@newlist}
- \begin{macro}{\@newlistfalse}
- \begin{macro}{\@newlisttrue}
-    \begin{teX}
+
+
+\begin{docCommand}{ if@newlist} { }
+\end{docCommand}
+  \begin{teX}
 \newif\if@newlist   \@newlistfalse
     \end{teX}
- \end{macro}\end{macro}\end{macro}
-
- \begin{macro}{\if@noparitem}
- \begin{macro}{\@noparitemfalse}
- \begin{macro}{\@noparitemtrue}
-    \begin{teX}
+  
+  \begin{docCommand}{if@newlistfalse }{}
+  \end{docCommand}
+  \begin{docCommand}{if@newlisttrue }{}
+  \end{docCommand}
+ 
+  
+ 
+\begin{docCommand}{if@noparitem}{}
+ \end{docCommand}
+ \begin{docCommand}{ if@noparitemtrue}{}
+ \end{docCommand}
+ \begin{docCommand}{ if@noparitemfalse}{}
+ \end{docCommand}
+ 
+\begin{teX}
 \newif\if@noparitem \@noparitemfalse
-    \end{teX}
- \end{macro}\end{macro}\end{macro}
+\end{teX}
+ 
 
- \begin{macro}{\if@noparlist}
- \begin{macro}{\@noparlistfalse}
- \begin{macro}{\@noparlisttrue}
-    \begin{teX}
+\begin{docCommand} {if@noparlist} { }
+  \end{docCommand}
+  
+\begin{docCommand} {if@noparlistfalse}{}
+\end{docCommand}
+
+\begin{docCommand} {if@noparlisttrue}{}
+\end{docCommand}  
+  
+\begin{teX}
 \newif\if@noparlist \@noparlistfalse
-    \end{teX}
- \end{macro}\end{macro}\end{macro}
+\end{teX}
 
- \begin{macro}{\if@noitemarg}
- \begin{macro}{\@noitemargfalse}
- \begin{macro}{\@noitemargtrue}
+
+\begin{docCommand} {if@noitemarg} { }
+\end{docCommand}
+
+\begin{docCommand}{if@noitemargtrue}{}
+\end{docCommand}  
+
+\begin{docCommand}{if@noitemargfalse}{}
+\end{docCommand}  
+
     \begin{teX}
 \newif\if@noitemarg \@noitemargfalse
     \end{teX}
- \end{macro}\end{macro}\end{macro}
 
- \begin{macro}{\if@newlist}
- \begin{macro}{\@newlistfalse}
- \begin{macro}{\@newlisttrue}
-    \begin{teX}
+
+\begin{docCommand}{if@newlist}{}
+\end{docCommand}
+
+\begin{docCommand}{if@newlisttrue}{}
+\end{docCommand}  
+\begin{docCommand}{if@newlistfalse}{}
+\end{docCommand}  
+\begin{docCommand}{if@nmbrlist}{}
+\end{docCommand}
+  
+\begin{teX}
 \newif\if@nmbrlist  \@nmbrlistfalse
-    \end{teX}
- \end{macro}\end{macro}\end{macro}
+\end{teX}
 
- \begin{macro}{\list}
+
+
+
+\begin{docCommand} {@itemlabel} { }
+  Temporary definition to store the label.
+\end{docCommand}
+
 \index{kernel>lists>\textbackslash list}
+\begin{docCommand} {list} {\marg{item label } \marg {commands} }
  List takes two arguments and is an author command for building
 other lists.
+\end{docCommand}
+
     \begin{teX}
 \def\list#1#2{%
   \ifnum \@listdepth >5\relax
@@ -541,6 +648,9 @@ other lists.
   \else
     \global\advance\@listdepth\@ne
   \fi
+   \end{teX}}
+Initialize all margins to 0pt in case the user did not specify anything.   
+   \begin{teX}  
   \rightmargin\z@
   \listparindent\z@
   \itemindent\z@
@@ -555,20 +665,24 @@ other lists.
   \advance\linewidth -\rightmargin
   \advance\linewidth -\leftmargin
   \advance\@totalleftmargin \leftmargin
+  \end{teX}
+Now set parshape for the rest of the paragraphs.   
+  \begin{teX}  
   \parshape \@ne \@totalleftmargin \linewidth
   \ignorespaces}
     \end{teX}
- \end{macro}
 
- \begin{macro}{\par@deathcycles}
+
+\begin{docCommand}{par@deathcycles}{}
+\end{docCommand}
     \begin{teX}
 \newcount\par@deathcycles
     \end{teX}
- \end{macro}
+ 
 
- \begin{macro}{\@trivlist}
-
- Because |\par| is sometimes made a no-op it is possible for a missing
+ \begin{docCommand}{@trivlist}{}
+ \end{docCommand}
+  Because |\par| is sometimes made a no-op it is possible for a missing
  |\item| to produce a loop that does not fill memory and so never gets
  trapped by \TeX.  We thus need to trap this here by seting |\par| to
  count the number of times a paragraph ii is called with no progress
@@ -607,11 +721,13 @@ other lists.
   \global \@newlisttrue
   \@outerparskip \parskip}
     \end{teX}
- \end{macro}
 
- 
- \begin{macro}{\trivlist}
-    \begin{teX}
+The function of a |trivlist| is very simple, it sets numbering to false and initializes all  widths to zero, thus at this stage it will default to a normal paragraph then it calls the auxiliary function \refCom{@trivlist}, which will set
+the top and bottom skips and other paragraphing parameters, if set..
+
+ \begin{docCommand}{trivlist} { \meta{void} }
+ \end{docCommand} 
+     \begin{teX}
 \def\trivlist{%
   \parsep\parskip
   \@nmbrlistfalse
@@ -624,32 +740,37 @@ other lists.
     We initialise |\@itemlabel| so that a \texttt{trivlist} with
     an |\item| not having an optional argument doesn't produce an
     error message.
- \changes{latex2e}{1993/12/13}{Initialised \cs{@itemlabel}}
+
+ \begin{docCommand} {makelabel} {\marg{item label}}
+ \end{docCommand}
     \begin{teX}
   \let\@itemlabel\@empty
   \def\makelabel##1{##1}}
     \end{teX}
- \end{macro}
 
- \begin{macro}{\endlist}
-    \begin{teX}
+
+ \begin{docCommand}{endlist} {  \meta{void}}
+  ends the list environment
+ \end{docCommand}
+     \begin{teX}
 \def\endlist{%
   \global\advance\@listdepth\m@ne
   \endtrivlist}
     \end{teX}
- \end{macro}
+ 
 
-    The definition of \cs{trivlist} used to be in ltspace.dtx 
+    The definition of \refCom{trivlist} used to be in ltspace.dtx 
     so that other commands could be `let to it'.  
-    They now use \cs{def}.
-
- \begin{macro}{\endtrivlist}
- \changes{v1.2b ltspace}{1994/11/12}{Changed order of tests to make
- \cs{@noitemerror} correct: end of an era.}
- \changes{v1.0i}{1995/05/25}{Macros moved from ltspace.dtx}
- \changes{v1.0n}{1996/10/25}{Change \cs{indent} to \cs{leavevmode}}
- \changes{v1.0n}{1996/10/25}{Reset flags explicitly}
- \changes{v1.0o}{1996/10/26}{Correct typo}
+    They now use \refCom{def}.
+ \begin{docCommand}{endtrivlist}{}
+ \end{docCommand}
+ 
+% \changes{v1.2b ltspace}{1994/11/12}{Changed order of tests to make
+% \refCom{@noitemerror} correct: end of an era.}
+% \changes{v1.0i}{1995/05/25}{Macros moved from ltspace.dtx}
+% \changes{v1.0n}{1996/10/25}{Change \refCom{indent} to \refCom{leavevmode}}
+% \changes{v1.0n}{1996/10/25}{Reset flags explicitly}
+% \changes{v1.0o}{1996/10/26}{Correct typo}
     \begin{teX}
 \def\endtrivlist{%
   \if@inlabel
@@ -681,21 +802,24 @@ other lists.
   \fi
 }
     \end{teX}
- \end{macro}
+ 
+
+  \begin{docCommand}{@endparenv}{}
+ \end{docCommand}
+ 
  
 
  
- \begin{macro}{\@endparenv}
- \begin{macro}{\@doendpe}
- To suppress the paragraph indentation in text immediately following
- a paragraph-making environment, \cs{everypar} is changed to remove the
- space, and \cs{par} is redefined to restore \cs{everypar}.  Instead of
- redefining \cs{par} and \cs{everypar}, \cs{@endparenv} was changed to 
- set the \cs{@endpe switch}, letting \cs{end} redefine \cs{par} and 
- \cs{everypar}.  
-
- This allows paragraph-making environments to work right when called 
- by other environments. (Changed 27 Oct 86)
+\begin{docCommand}{@doendpe}{}
+   To suppress the paragraph indentation in text immediately following
+   a paragraph-making environment, \refCom{everypar} is changed to remove the
+   space, and \refCom{par} is redefined to restore \refCom{everypar}.  Instead of
+   redefining \refCom{par} and \refCom{everypar}, \refCom{@endparenv} was changed to 
+   set the \refCom{@endpe switch}, letting |end| redefine |par| and 
+   |everypar|.   This allows paragraph-making environments to work right when called 
+ by other environments. )
+\end{docCommand}
+ 
     \begin{teX}
 \def\@endparenv{%
   \addpenalty\@endparpenalty\addvspace\@topsepadd\@endpetrue}
@@ -708,48 +832,52 @@ other lists.
     \end{teX}
     
     Use |\setbox0=\lastbox| instead of   |\hskip -\parindent|   
-    so that a \cs{noindent} becomes a no-op when used before 
+    so that a |\noindent| becomes a no-op when used before 
     a line immediately following a list environment(23 Oct 86).
- \changes{v1.0k}{1995/11/07}{Enclosed \cs{setbox0} assignment by a
+ \changes{v1.0k}{1995/11/07}{Enclosed \refCom{setbox0} assignment by a
  group so that it leaves the contents of box $0$ intact.
     } 
     \begin{teX}
                {{\setbox\z@\lastbox}\everypar{}\@endpefalse}}
     \end{teX}
- \end{macro}
- \end{macro}
-
  
- \begin{macro}{\if@endpe}
- \begin{macro}{\@endpefalse}
- \begin{macro}{\@endpeltrue}
+
+  \begin{docCommand}{if@endpe}{}
+ \end{docCommand}
+  \begin{docCommand}{@endpelttrue}{}
+ \end{docCommand}
+% \begin{macro}{\if@endpe}
+% \begin{macro}{\@endpefalse}
+% \begin{macro}{\@endpeltrue}
     \begin{teX}
 \newif\if@endpe
 \@endpefalse
     \end{teX}
- \end{macro}\end{macro}\end{macro}
+% \end{macro}\end{macro}\end{macro}
 
- 
- \begin{macro}{\@mklab}
+ \begin{docCommand}{@mklab}{}
+ \end{docCommand}
     \begin{teX}
 \def\@mklab#1{\hfil #1}
     \end{teX}
- \end{macro}
 
  \changes{LaTeX2.09}{1992/09/18}
-     {(RmS) Added warning if \cs{item} is used in math mode}
+     {(RmS) Added warning if \refCom{item} is used in math mode}
  \changes{v1.0c}{1994/04/28}
-     {Replaced \cs{@ltxnomath} by \cs{@inmatherr}}
+     {Replaced \refCom{@ltxnomath} by \refCom{@inmatherr}}
  \changes{v1.0d}{1994/05/03}
      {Removed superfluous braces}
- \begin{macro}{\item}
-    \begin{teX}
+     
+ \begin{docCommand}{item}{}
+ \end{docCommand}     
+     \begin{teX}
 \def\item{%
   \@inmatherr\item
   \@ifnextchar [\@item{\@noitemargtrue \@item[\@itemlabel]}}
     \end{teX}
- \end{macro}
- \begin{macro}{\@donoparitem}
+ 
+ \begin{docCommand} {@donoparitem} { }
+ \end{docCommand}
     \begin{teX}
 \def\@donoparitem{%
   \@noparitemfalse
@@ -765,12 +893,11 @@ other lists.
       \vskip\@tempskipa
   \fi}
     \end{teX}
- \end{macro}
 
- \begin{macro}{\@item}
- \changes{v1.0l}{1996/07/26}{Remove unecessary \cs{global} before
-                 \cs{@minipage...}}
-    \begin{teX}
+ 
+ \begin{docCommand}{@item}{}
+ \end{docCommand}
+     \begin{teX}
 \def\@item[#1]{%
   \if@noparitem
     \@donoparitem
@@ -814,10 +941,10 @@ other lists.
     this next command was changed from an hskip to a kern to avoid
     a break point after the parindent box: the skip could cause a
     line-break if a very long label occurs in raggedright setting.
- \changes{v1.0d}{1994/05/03}{\cs{hskip} changed to \cs{kern}}
- \changes{v1.0m}{1996/10/23}{\cs{kern...} changed to \cs{setbox...}}
+ \changes{v1.0d}{1994/05/03}{\refCom{hskip} changed to \refCom{kern}}
+ \changes{v1.0m}{1996/10/23}{\refCom{kern...} changed to \refCom{setbox...}}
  \changes{v1.0r}{1997/02/21}
-    {\cs{ifvoid} check added for \cs{noindent}. latex/2414}
+    {\refCom{ifvoid} check added for \refCom{noindent}. latex/2414}
  If |\noindent| was used after |\item| want to cancel the |\itemindent|
  skip. This case can be detected as the indentation box will be void.
     \begin{teX}
@@ -840,8 +967,8 @@ other lists.
 
     Only resetting |\@nobreak| when it is true is now
     essential since now it is sometimes set locally.
- \changes{v1.0m}{1996/10/23}{Added setting of \cs{clubpenalty} and
-    set \cs{@nobreakfalse} only when necessary}
+ \changes{v1.0m}{1996/10/23}{Added setting of \refCom{clubpenalty} and
+    set \refCom{@nobreakfalse} only when necessary}
     \begin{teX}
     \if@nobreak
       \@nobreakfalse
@@ -851,10 +978,10 @@ other lists.
       \everypar{}%
     \fi}%
     \end{teX}
- \changes{v1.0l}{1996/07/26}{Remove unecessary \cs{global} before
-                 \cs{@nobreak...}}
- \changes{v1.0m}{1996/10/23}{\cs{@nobreak...} moved into the
-          \cs{everypar} and not executed unconditionally, see above} 
+ \changes{v1.0l}{1996/07/26}{Remove unecessary \refCom{global} before
+                 \refCom{@nobreak...}}
+ \changes{v1.0m}{1996/10/23}{\refCom{@nobreak...} moved into the
+          \refCom{everypar} and not executed unconditionally, see above} 
     \begin{teX}
   \if@noitemarg
     \@noitemargfalse
@@ -879,9 +1006,9 @@ We use |\sbox| to support colour commands.
       \box\@tempboxa
 \end{teX}
  \changes{LaTeX2.09}{1991/11/22}
-         {(RmS) Changed second call to \cs{makelabel} to
-           \cs{unhbox}\cs{@tempboxa}.
-          Avoids problems with side effects in \cs{makelabel} and is
+         {(RmS) Changed second call to \refCom{makelabel} to
+           \refCom{unhbox}\refCom{@tempboxa}.
+          Avoids problems with side effects in \refCom{makelabel} and is
                more efficient.}
     \begin{teX}
     \else
@@ -890,20 +1017,22 @@ We use |\sbox| to support colour commands.
     \hskip \labelsep}%
   \ignorespaces}
     \end{teX}
- \end{macro}
-
- \begin{macro}{\makelabel}
- \changes{LaTeX2.09}{1991/11/04}
-         {(RmS) added default definition for \cs{makelabel},
-               to produce an error message.}
+ 
+ \begin{docCommand}{makelabel}{}
+ Initial definition of \cs{makelabel} set to produce the infamous and often encountered error, if it
+ has not been defined by one of the paragraphing environments.
+ \end{docCommand}
+ 
     \begin{teX}
 \def\makelabel#1{%
   \@latex@error{Lonely \string\item--perhaps a missing
         list environment}\@ehc}
     \end{teX}
- \end{macro}
+ 
 
- \begin{macro}{\@nbitem}
+ \begin{docCommand}{nbitem}{}
+ \end{docCommand}
+% \begin{macro}{\@nbitem}
  \changes{v1.0g}{1995/05/17}{Removed surplus braces}
     \begin{teX}
 \def\@nbitem{%
@@ -911,13 +1040,12 @@ We use |\sbox| to support colour commands.
   \advance\@tempskipa -\parskip
   \addvspace\@tempskipa}
     \end{teX}
- \end{macro}
 
- \begin{macro}{\usecounter}
+ \begin{docCommand}{usecounter}{}
+ \end{docCommand}
     \begin{teX}
 \def\usecounter#1{\@nmbrlisttrue\def\@listctr{#1}\setcounter{#1}\z@}
     \end{teX}
- \end{macro}
 
 
  \subsection{Itemize and Enumerate}
@@ -925,74 +1053,59 @@ We use |\sbox| to support colour commands.
   Enumeration is done with four counters: |enumi|, |enumii|, |enumiii|
   and |enumiv|, where |enum|N controls the numbering of the Nth level
   enumeration.  The label is generated by the commands
-  \cs{labelenumi} \ldots{} \cs{labelenumiv}, which should be defined
+  \refCom{labelenumi} \ldots{} \cs{labelenumiv}, which should be defined
   by the document style.
-  Note that \cs{p@enum}N\cs{theenum}N defines the output
-  of a \cs{ref} command.  A typical definition might be:
+  
+  Note that \cs{p@enum}N \cs{theenum}N defines the output
+  of a \refCom{ref} command.  A typical definition might be:
+  
  \begin{verbatim}
      \def\theenumii{\alph{enumii}}
      \def\p@enumii{\theenumi}
      \def\labelenumii{(\theenumii)}
  \end{verbatim}
  which will print the labels as `(a)', `(b)', \ldots
- and print a \cs{ref} as `3a'.
+ and print a \refCom{ref} as `3a'.
 
  The item numbers are moved to the right of the label box, so they are
- always a distance of \cs{labelsep} from the item.
+ always a distance of \refCom{labelsep} from the item.
 
- \cs{@enumdepth} holds the current enumeration nesting depth.
+ \refCom{@enumdepth} holds the current enumeration nesting depth.
 
- Itemization is controlled by four commands: \cs{labelitemi},
- \cs{labelitemii},
- \cs{labelitemiii}, and \cs{labelitemiv}.
+ Itemization is controlled by four commands: \docAuxCommand{labelitemi},
+ \docAuxCommand{labelitemii},
+ \docAuxCommand{labelitemiii}, and \docAuxCommand{labelitemiv}.
  To cause the second-level list to be
- bulleted, you just define \cs{labelitemii}
- to be $\bullet$.  \cs{@itemspacing}
- and \cs{@itemdepth} are the analogs of \cs{@enumspacing} and
- \cs{@enumdepth}.
+ bulleted, you just define \docAuxCommand{labelitemii}
+ to be |$\bullet$|.  |@itemspacing|
+ and \refCom{@itemdepth} are the analogs of |@enumspacing| and
+ \refCom{@enumdepth}.
 
- \begin{teX}
- \enumerate ==
-   BEGIN
-     if \@enumdepth > 3
-       then errormessage: ``Too deeply nested''.
-       else \@enumdepth :=L \@enumdepth + 1
-            \@enumctr :=L eval(enum@\romannumeral\the\@enumdepth)
-            \list{\label(\@enumctr)}
-                 {\usecounter{\@enumctr}
-                  \makelabel{LABEL} ==  \hss \llap{LABEL}}
-     fi
-   END
 
- \endenumerate == \endlist
- \end{teX}
-
- \begin{macro}{\@enumdepth}
-    \begin{teX}
+ \begin{docCommand}{@enumdepth}{}
+ \end{docCommand}
+     \begin{teX}
 \newcount\@enumdepth \@enumdepth = 0
     \end{teX}
- \end{macro}
+ 
 
- \begin{macro}{\c@enumi}
- \begin{macro}{\c@enumii}
- \begin{macro}{\c@enumii}
- \begin{macro}{\c@enumiv}
+Next the counters for the \refEnv{enumerate} environment, \docCounter{c@enumi}, \docCounter{c@enumii}, \docCounter{c@enumiii} and \docCounter{c@enumiv} are created.
+
     \begin{teX}
 \@definecounter{enumi}
 \@definecounter{enumii}
 \@definecounter{enumiii}
 \@definecounter{enumiv}
     \end{teX}
- \end{macro}
- \end{macro}
- \end{macro}
- \end{macro}
 
- \begin{environment}{enumerate}
-  The enumerate environment enumerates the list. The macro
+
+ \begin{docEnvironment}{enumerate}{}{}
+ \end{docEnvironment}  
+   The enumerate environment enumerates the list. The macro
   is written very efficiently and defines the basic structure. The
   typesetting parameters are left for the class files such as book
   to define them.
+
      \begin{teX}
 \def\enumerate{%
   \ifnum \@enumdepth >\thr@@\@toodeep\else
@@ -1000,7 +1113,7 @@ We use |\sbox| to support colour commands.
     \edef\@enumctr{enum\romannumeral\the\@enumdepth}%
       \expandafter
       \list
-        \csname label\@enumctr\endcsname
+        \refComname label\@enumctr\endcsname
         {\usecounter\@enumctr\def\makelabel##1{\hss\llap{##1}}}%
   \fi}
     \end{teX}
@@ -1008,32 +1121,19 @@ We use |\sbox| to support colour commands.
     \begin{teX}
 \let\endenumerate =\endlist
     \end{teX}
- \end{environment}
 
-
- \begin{teX}
-  \itemize ==
-    BEGIN
-      if \@itemdepth > 3
-        then  errormessage: 'Too deeply nested'.
-        else \@itemdepth :=L \@itemdepth + 1
-             \@itemitem  == eval(labelitem\romannumeral\the\@itemdepth)
-             \list{\@nameuse{\@itemitem}}
-                   {\makelabel{LABEL} ==  \hss \llap{LABEL}}
-      fi
-    END
-
-  \enditemize ==  \endlist
-
- \end{teX}
-
- \begin{macro}{\@itemdepth}
+ \begin{docCommand}{@itemdepth}{}
+ \end{docCommand}
     \begin{teX}
 \newcount\@itemdepth \@itemdepth = 0
     \end{teX}
- \end{macro}
 
- \begin{environment}{itemize}
+Finally the \refEnv{itemize} environment is defined. This is defined in the kernel to have a limit of 4 levels only (which as a matter
+of fact is more than adequate. \footnote{changes v1.0j 1995/07/09 Use \textbackslash expandafter. 
+Hard to believe the team missed it!}
+
+ \begin{docEnvironment}{itemize}{}
+ \end{docEnvironment}
      \begin{teX}
 \def\itemize{%
   \ifnum \@itemdepth >\thr@@\@toodeep\else
@@ -1041,7 +1141,11 @@ We use |\sbox| to support colour commands.
     \edef\@itemitem{labelitem\romannumeral\the\@itemdepth}%
     \end{teX}
     
- \footnote{changes v1.0j 1995/07/09 Use \textbackslash expandafter. Hard to believe the team missed it!}
+Call the \refCom{list} sets all parameters and defines a  \refCom{makelabel} for this particular
+environment. This is a good place to also hook other items to decorate the label, if necessary.
+Remember also that the \docAuxCommand{@itemitem}, defined above is just there to facilitate  
+calling |labelitemi| \ldots |labelitemn| depending on the level.
+
     \begin{teX}
     \expandafter
     \list
@@ -1053,7 +1157,7 @@ We use |\sbox| to support colour commands.
     \begin{teX}
 \let\enditemize =\endlist
     \end{teX}
- \end{environment}
+
 
 
 

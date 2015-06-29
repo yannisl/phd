@@ -1,5 +1,6 @@
-\documentclass{article}
+\documentclass{book}
 \usepackage{pgf}
+\usepackage{expl3,xparse,alphalph,tcolorbox}
 \begin{document}
 \def\pkgfamilyname{cx}
 \pgfkeys{/\pkgfamilyname/.is family}
@@ -30,5 +31,275 @@
 \cxvalueof{today offset}
 
 \cxvalueof{none}
+\def\chaptertitlefloat{}
+\cxset{
+  title float/.is choice,
+  title float/none/.code   = \def\chaptertitlefloattl {none},    
+  title float/left/.code   = \def\chaptertitlefloattl {left},
+  title float/right/.code  = \def\chaptertitlefloattl {right},
+  title float/center/.code = \def\chaptertitlefloattl {center},
+  title other/.store in =\test,
+}
+\cxset{title float=right}
+\cxset{title other=right}
+
+\meaning\chaptertitlefloattl
+\chaptertitlefloattl
+
+\test
+
+\gdef\chaptershape{rounded rectangle}
+\cxset{
+chapter shape/.is choice,
+  chapter shape/rectangle/.code=\gdef\chaptershape{rectangle},
+  chapter shape/ellipse/.code=\gdef\chaptershape{ellipse},
+  chapter shape/circle/.code=\gdef\chaptershape{circle},
+  chapter shape/rounded rectangle/.code=\gdef\chaptershape{rounded rectangle},
+  chapter shape/diamond/.code=\gdef\chaptershape{diamond},
+  chapter shape/starburst/.code=\gdef\chaptershape{starburst},
+  chapter shape/none/.code=\gdef\chaptershape{},
+  chapter shape/star/.code=\gdef\chaptershape{star},
+}
+
+\cxset{chapter shape=rectangle}
+
+\chaptershape
+
+\ExplSyntaxOn
+\clist_new:N \allowed_border_style_options
+\clist_gset:Nn \allowed_border_style_options 
+  {
+    dash,solid,double,dotted,custom,none,
+  }
+  
+  TSET 
+    
+%  \tl_gset:Nn \l_tmpa_tl {none}
+%        \str_case_x:nnTF  { \l_tmpa_tl }
+%        {
+%           {none}   {NONE \def\none{soo} }
+%           {roman} { }
+%           {Roman} { }
+%           {arabic } { }
+%           {words} { }
+%           {WORDS}{ }
+%           {Words} {  \def\w{Words}}
+%           {ORDINALS} {}
+%         }  
+%           {TRUE }
+%           {FALSE }
+%           
+%    TESTTTTT  
+
+\makeatletter
+    
+  
+\makeatletter
+%\cxset{
+%  chapter numbering/.is choice,
+%  chapter numbering/none/.code={\gdef\thechapter{}},
+%  chapter numbering/roman/.code={\gdef\thechapter{\@roman\c@chapter}},
+%  chapter numbering/Roman/.code={\gdef\thechapter{\@Roman\c@chapter}},
+%  chapter numbering/arabic/.code={\gdef\thechapter{\@arabic\c@chapter}},
+%  chapter numbering/alpha/.code={\gdef\thechapter{\alphalph\c@chapter}\relax},
+%  chapter numbering/Alpha/.code={\gdef\thechapter{\AlphAlph\c@chapter}},
+%  chapter  numbering/words/.code={\gdef\thechapter{\expandafter\words@cx{\expandafter\@arabic\c@chapter}}},
+%  chapter numbering/WORDS/.code= {\gdef\thechapter{\expandafter\WORDS@cx{\expandafter\@arabic\c@chapter}}},
+%  chapter numbering/ORDINALS/.code=\gdef\thechapter{%
+%  \expandafter\ordinals@cx{\@arabic\c@chapter}},%{\gdef\thechapter{\NUMBERstring{chapter}}},
+%  chapter numbering/Words/.code={\gdef\thechapter{\expandafter\Words@cx{\expandafter\@arabic\c@chapter}}},
+%chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\decimal{chapter}}}},%
+%  numbering/.is choice,
+%  numbering/roman/.code={\gdef\thechapter{\@roman\c@chapter}},
+%  numbering/Roman/.code={\gdef\thechapter{\@Roman\c@chapter}},
+%  numbering/arabic/.code={\gdef\thechapter{\@arabic\c@chapter}},
+%  numbering/alpha/.code={\gdef\thechapter{\alphalph\c@chapter}},
+%  numbering/Alpha/.code={\gdef\thechapter{\AlphAlph\c@chapter}},
+%  %numbering/words/.code={\gdef\thechapter{\MakeTextLowercase{\expandafter\words@cx{\expandafter\@arabic\c@chapter}}}},
+%  numbering/WORDS/.code={\gdef\thechapter{\expandafter\WORDS@cx{\expandafter\@arabic\c@chapter}}},
+%%% These proved a bit trouble some and ended up calling the fmtcount package routines
+%  %numbering/WORDS/.code={\gdef\thechapter{\NUMBERstring{chapter}}},
+%  numbering/Words/.code={\gdef\thechapter{\expandafter\Words@cx{\expandafter\@arabic\c@chapter}}},
+%  numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\decimal{chapter}}
+%  }}
+%}  
+
+
+
+\def\words@cx#1{%
+  \ifcase#1 zero\or one\or two\or three\or four\or five\or six\or seven
+\or eight\or nine\or ten\or eleven\or twelve\or thirteen\or
+fourteen
+\or fifteen\or sixteen\or seventeen\or eighteen\or nineteen \or
+twenty
+\or twenty one\or twenty two\or twenty three\or twenty four\or
+twenty five
+\or twenty six\or twenty seven \or twenty eight \or twenty
+nine\or thirty
+\or thirty one\or thirty two\or thirty three\or thirty four\or
+thirty five
+\or thirty six\or thirty seven\or thirty eight\or thirty nine\or
+forty\or forty one
+\or forty two \or forty three\or forty four\or forty five \or
+forty six \or forty seven
+\or forty eight \or forty nine\or fifty\or fifty on\or fifty
+two\or fifty three
+\or fifty four\or fifty five\or fifty six\or fifty seven\or
+fifty eight\or fifty nine
+  \or sixty \or sixty one \or sixty two
+  \or sixty three \or sixty four \or sixty five
+    \else
+    #1
+    %\@ctrerr
+    \fi
+}
+
+\def\Words@cx#1{%
+\ifcase#1 Zero\or One\or Two\or Three\or Four\or Five\or Six\or
+Seven\or Eight\or Nine\or Ten\or
+Eleven\or Twelve\or Thirteen\or Fourteen\or Fifteen\or
+Sixteen\or Seventeen\or Eighteen\or Nineteen \or Twenty\or
+Twenty One\or Twenty Two\or Twenty Three\or Twenty Four\or
+Twenty Five\or Twenty Six\or Twenty Seven \or Twenty Eight \or
+Twenty Nine\or Thirty\or Thirty One\or Thirty Two\or Thirty
+Three\or Thirty Four\or Thirty Five\or Thirty Six\or Thirty
+Seven\or Thirty Eight\or Thirty Nine\or Forty\or Forty One\or
+Forty Two \or Forty Three\or Forty Four\or Forty Five \or Forty
+Six \or Forty Seven\or Forty Eight \or Forty Nine\or Fifty\or
+Fifty One\or Fifty Two\or Fifty Three\or Fifty four\or Fifty
+Five\or Fifty Six\or Fifty Seven\or Fifty Eight\or Fifty Nine\or
+Sixty \or Sixty One \or Sixty Two
+\or Sixty Three \or Sixty Four \or Sixty Five \or SixtySix \or SixtySeven
+\or Sixty Eight \or SixtyNine \or Seventy \or Seventy One \or Seventy Two
+\else
+#1
+%\@ctrerr
+\fi}
+
+\def\WORDS@cx#1{%
+\ifcase#1 ZERO\or ONE\or TWO\or THREE\or FOUR\or FIVE\or SIX\or
+SEVEN\or EIGHT\or NINE\or TEN\or
+ELEVEN\or TWELVE\or THIRTEEN\or FOURTEEN\or FIFTEEN\or
+SIXTEEN\or SEVENTEEN\or EIGHTEEN\or NINETEEN \or TWENTY\or
+TWENTY ONE\or TWENTY TWO\or TWENTY THREE\or TWENTY FOUR\or
+TWENTY FIVE\or TWENTY SIX\or TWENTY SEVEN \or TWENTY EIGHT \or
+TWENTY NINE\or THIRTY\or THIRTY ONE\or THIRTY TWO\or THIRTY
+THREE\or THIRTY FOUR\or THIRTY FIVE\or THIRTY SIX\or THIRTY
+SEVEN\or THIRTY EIGHT\or THIRTY NINE\or FORTY\or FORTY ONE\or
+FORTY TWO \or FORTY THREE\or FORTY FOUR\or FORTY FIVE\or FORTY
+SIX\or FORTY SEVEN\or FORTY EIGHT\or FORTY NINE\or FIFTY\or
+FIFTY ONE\or FIFTY TWO\or FIFTY THREE\or FIFTY FOUR\or FIFTY
+FIVE\or FIFTY SIX\or FIFTY SEVEN\or FIFTY EIGHT\or FIFTY NINE\or
+SIXTY\or SIXTY ONE\or SIXTY TWO\or SIXTY THREE \or SIXTY FOUR\or
+SIXTY FIVE\or SIXTY SIX\or SIXTY SEVEN\or SIXTY EIGHT\or SIXTY
+NINE\or SEVENTY\or SEVENTY ONE\or SEVENTY TWO\or SEVENTY
+THREE\or SEVENTY FOUR\or SEVENTY FIVE\or SEVENTY SIX\or SEVENTY
+SEVEN\or SEVENTY EIGHT\or SEVENTY NINE\or EIGHTY\or EIGHTY
+ONE\or EIGHTY TWO\or EIGHTY THREE\or EIGHTY FOUR\or EIGHTY
+FIVE\or EIGHTY SIX\or EIGHTY SEVEN\or EIGHTY EIGHT\or EIGHTY
+NINE\or NINETY \or NINETY ONE \or NINETY TWO \or NINETY THREE
+\or NINETY FOUR \or NINETY FIVE
+\else
+#1
+%\@ctrerr
+\fi}
+   
+\def\ORDINALS@cx#1{%
+\ifcase#1 ZEROETH\or FIRST\or SECOND\or THIRD\or FOURTH\or
+FIFTH\or SIXTH\or SEVENTH\or EIGHTTH\or NINTH\or TENTH\or
+ELEVENTH\or TWELFTH\or THIRTEENTH\or FOURTEENTH\or FIFTEENTH\or
+SIXTEENTH\or SEVENTEEN\or EIGHTEEN\or NINETEEN \or TWENTY\or
+TWENTY ONE\or TWENTY TWO\or TWENTY THREE\or TWENTY FOUR\or
+TWENTY FIVE\or TWENTY SIX\or TWENTY SEVEN \or TWENTY EIGHT \or
+TWENTY NINE\or THIRTY\or THIRTY ONE\or THIRTY TWO\or THIRTY
+THREE\or THIRTY FOUR\or THIRTY FIVE\or THIRTY SIX\or THIRTY
+SEVEN\or THIRTY EIGHT\or THIRTY NINE\or FORTY\or FORTY ONE\or
+FORTY TWO \or FORTY THREE\or FORTY FOUR\or FORTY FIVE\or FORTY
+SIX\or FORTY SEVEN\or FORTY EIGHT\or FORTY NINE\or FIFTY\or
+FIFTY ONE\or FIFTY TWO\or FIFTY THREE\or FIFTY FOUR\or FIFTY
+FIVE\or FIFTY SIX\or FIFTY SEVEN\or FIFTY EIGHT\or FIFTY NINE\or
+SIXTY\or SIXTY ONE\or SIXTY TWO\or SIXTY THREE \or SIXTY FOUR\or
+SIXTY FIVE \or SIXTY SIX \or SIXTY SEVEN \or SIXTY EIGHT \or SIXTY NINE
+\or SEVENTY \or SEVENTY ONE \or SEVENTY TWO \or SEVENTY THREE
+\or SEVENTY FOUR \or SEVENTY FIVE \or SEVENTY SIX \or SEVENTY SEVEN
+\or SEVENTY EIGHT \or SEVENTY NINE \or EIGHTY
+\else
+#1
+%\@ctrerr
+\fi}
+
+\def\ordinals@cx#1{%
+  \ifcase#1 Zeroeth\or First\or Second\or Third\or Fourth\or Fifth\or Sixth
+  \or Seventh\or Eighth\or Ninth\or Tenth\or
+ Eleventh\or Twelfth\or Thirteenth\or Fourteenth\or Fifteenth
+\or SIXTEENTH\or SEVENTEEN\or EIGHTEEN\or NINETEEN \or TWENTY\or
+TWENTY ONE\or TWENTY TWO\or TWENTY THREE\or TWENTY FOUR\or
+TWENTY FIVE\or TWENTY SIX\or TWENTY SEVEN \or TWENTY EIGHT \or
+TWENTY NINE\or THIRTY\or THIRTY ONE\or THIRTY TWO\or THIRTY
+THREE\or THIRTY FOUR\or THIRTY FIVE\or THIRTY SIX\or THIRTY
+SEVEN\or THIRTY EIGHT\or THIRTY NINE\or FORTY\or FORTY ONE\or
+FORTY TWO \or FORTY THREE\or FORTY FOUR\or FORTY FIVE\or FORTY
+SIX\or FORTY SEVEN\or FORTY EIGHT\or FORTY NINE\or FIFTY\or
+FIFTY ONE\or FIFTY TWO\or FIFTY THREE\or FIFTY FOUR\or FIFTY
+FIVE\or FIFTY SIX\or FIFTY SEVEN\or FIFTY EIGHT\or FIFTY NINE\or
+SIXTY\or SIXTY ONE\or SIXTY TWO\or SIXTY THREE \or SIXTY FOUR\or
+SIXTY FIVE\or SIXTY SIX \or SIXTY SEVEN \or \else
+#1
+%\@ctrerr
+\fi
+}
+\pgfkeys{/handlers/.iscounter/.code = 
+    \pgfkeysalso
+      {\pgfkeyscurrentpath/.code=
+         \tl_gset:Nf \l_tmpa_tl {##1}
+        \str_case_x:nnTF  { \l_tmpa_tl }
+        {
+           {none}   {NONE \def\none{soo} }
+           {roman} { }
+           {Roman} { }
+           {arabic } { }
+           {words} {
+              \cs_gset:cpx {the##1}{\expandafter\Words@cx{\expandafter\@arabic\c@chapter}} 
+              }
+           {WORDS}{ }
+           {Words} { \gdef\thechapter{\expandafter\Words@cx{\expandafter\@arabic\c@section}}}
+           {ORDINALS} {}
+         }  
+           {}
+           { }
+      }
+  }
+  
+\ExplSyntaxOff  
+
+
+
+\cxset{
+   chapter numbering/.iscounter =chapter,
+%   section numbering/.iscounter =section
+}
+
+\meaning\chapternumbering
+
+\cxset{chapter numbering = Ordinals,
+         }
+
+\makeatother
+
+\chapter{Test 1}
+
+\chapter{Test 2}
+
+\section{Test section}
+
+\section{Another}
+\ExplSyntaxOn
+\dim_new:N \title_bounding_box_width 
+  \dim_gset:Nn \title_bounding_box_width %width defined by kernel!strange error here
+    {
+      10pt 
+    }
+\ExplSyntaxOff
+
 
 \end{document}

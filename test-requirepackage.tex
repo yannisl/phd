@@ -1,0 +1,258 @@
+\documentclass{article}
+\parindent0pt
+\usepackage{xparse,filecontents}
+\usepackage{scrlfile}
+\begin{filecontents}{test.sty}
+\ProvidesPackage{test}[2015/02/02 A test package]
+\def\atest{123456}
+\RequirePackage{nameref}
+\end{filecontents}
+\ExplSyntaxOn
+\makeatletter
+\let\package_if_loaded \@ifpackageloaded
+
+\newif\if@inbegindoc\@inbegindocfalse
+
+\AtBeginDocument{\@inbegindoctrue}
+
+\def\beforefilehook {}
+\def\afterfilehook {}
+\clist_new:N \g_phd_packages_noop
+\clist_new:N \g_phd_packages_loaded
+\clist_new:N \g_phd_packages_loaded_by_other
+\clist_new:N \loadedinbegin
+\tl_new:N \begin_document_hook
+
+\long\def \InputIfFileExists#1#2{%
+ \IfFileExists{#1}%
+ {\clist_gput_left:Nn \loadedinbegin {{#1}}#2
+   \@addtofilelist{#1}
+   \@@input 
+   \@filef@und
+ } 
+}
+
+
+\InputIfFileExists{george.sty}{\gdef\z{testing}}
+
+\begin{document} 
+test  kkk \z
+\clist_map_inline:Nn \loadedinbegin {--#1--}
+\end{document}
+
+
+
+\NewDocumentCommand {\AddToPackageStopList} { m }
+  {
+    \clist_gput_left:Nn \g_phd_packages_noop {#1}
+  }
+
+\AddToPackageStopList {acronym,fltpoint}
+
+\gdef\putouterlist #1 { \clist_gput_right:Nn \g_phd_packages_loaded {#1}}
+\gdef\putinnerlist #1 {  \clist_gput_right:Nn \g_phd_packages_loaded_by_other {#1} }
+
+\global\let\origRequirePackage\RequirePackage
+
+\bool_new:N \ifmainpackage
+\bool_gset_false:N \ifmainpackage
+
+\DeclareDocumentCommand\RequirePackage {o m o}
+  {   
+      \let\oldAtBeginDocument\AtBeginDocument
+      \long\def\AtBeginDocument##1{\ifx\origRequirePackage#1 
+        
+        \else
+           \g@addto@macro\@begindocumenthook {##1}
+         \fi
+%      
+          }
+       \putinnerlist {#2}
+       \IfValueTF{#3}
+       {\IfValueTF {#1}
+           { \origRequirePackage [{#1}] {#2} [{#3}]  }
+           { \origRequirePackage {#2} [{#3}]           }
+       }
+       {   
+        \IfValueTF{#1}
+           {
+             \origRequirePackage  [{#1}] {#2} 
+           }
+           { 
+             \origRequirePackage {#2} 
+           }
+      } 
+     \let\AtBeginDocument\oldAtBeginDocument
+     \AtBeginDocument{\begin_document_hook}
+ }
+
+
+\DeclareDocumentCommand\RequiresPackage { o m o}      
+{
+   \clist_if_in:NnTF  \g_phd_packages_noop {#2} {}
+     { 
+       \package_if_loaded {#2} {  \putouterlist { { {\itshape #2} } } }
+         {
+           \putouterlist {#2}
+           \bool_gset_true:N \ifmainpackage
+           \IfValueTF{#3}
+             {
+                \IfValueTF {#1}
+               { \RequirePackage [{#1}] {#2} [{#3}] }
+               { \RequirePackage {#2} [{#3}]      }
+             }
+             {   
+                \IfValueTF{#1}
+                  {
+                    \RequirePackage  [{#1}] {#2} 
+                  }
+                  { 
+                    \RequirePackage {#2}      
+                  }
+             }
+         }   
+     }
+     
+}  
+  
+\def\loadthreeparttable{
+     %hook
+     \RequiresPackage{threeparttable}
+     %hook
+     }  
+
+\clist_new:N  \test
+\clist_gput_left:Nn \test {threeparttable,dcolumn}
+
+\clist_map_inline:Nn \test 
+  {
+     \csname load#1\endcsname
+   }
+
+
+
+              
+\let\usepackage\RequiresPackage 
+\RequiresPackage{test}
+\RequiresPackage{etex}
+%\RequirePackage{datetime2} 
+\RequiresPackage{morefloats}
+\RequiresPackage{calligra}
+%\RequiresPackage{chancery}
+%\RequiresPackage{microtype}
+%\RequiresPackage{ragged2e}
+%\RequiresPackage{soul}
+%\RequiresPackage{lettrine}
+%\RequiresPackage{siunitx}
+%\RequiresPackage{acronym}
+%\RequiresPackage{graphicx}
+%\RequiresPackage{wrapfig}
+%\RequiresPackage{xcolor}
+%\RequiresPackage{lipsum}
+%\RequiresPackage{kantlipsum,blindtext}
+%\RequiresPackage{fonttable}
+%\RequiresPackage{array}
+%\RequiresPackage{dcolumn}
+%\RequiresPackage{longtable}
+%\RequiresPackage{threeparttable}
+%\RequiresPackage{threeparttablex}
+%\RequiresPackage{lettrine}
+%\RequiresPackage{nag}
+\RequiresPackage{environ}
+\RequiresPackage{environ}
+\RequiresPackage{colortbl}
+\RequiresPackage{multirow}
+\RequiresPackage[no-math]{fontspec}[2005/1/1]
+\RequiresPackage{fltpoint}
+\RequiresPackage{multirow}
+\RequiresPackage{dcolumn}
+\RequiresPackage{kvoptions}
+\RequiresPackage{kvsetkeys}
+\RequiresPackage{etexcmds}
+\RequiresPackage{zref-abspage}
+\RequiresPackage{zref-base}
+\RequiresPackage{kvdefinekeys}
+\RequiresPackage{auxhook}
+\RequiresPackage{atbegshi}
+\RequiresPackage{needspace}
+\RequiresPackage{mdframed}
+\RequiresPackage{fonttable}
+\RequiresPackage{rccol}
+\RequiresPackage{fltpoint}
+\RequiresPackage{fancybox}
+\RequiresPackage{longtable}
+\RequiresPackage{mathtools}
+\RequiresPackage{amsmath}
+%\RequiresPackage{yhmath}
+%\RequiresPackage{accents}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\gdef\beforepackage#1#2{
+%  \expandafter\gdef\csname before#1\endcsname{#2}
+%}
+%\gdef\afterpackage#1#2 {
+%   \expandafter\gdef\csname after#1\endcsname{#2}}
+%\beforepackage{mathabx}{\let\oldring\ring \cs_undefine:N\ring}
+%\beforemathabx
+%\RequiresPackage{mathabx}
+%\afterpackage{mathabx}{\let\ring\oldring}
+%\aftermathabx
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\RequiresPackage{nicefrac}
+\RequiresPackage{xfrac}
+\RequiresPackage{ulsy}
+\RequiresPackage{harpoon}
+\RequiresPackage{wasysym}
+\RequiresPackage{pifont}
+\RequiresPackage{upgreek}
+\RequiresPackage{expl3,xparse}
+\RequiresPackage[writefile]{listings}
+\RequiresPackage{listings}
+\RequiresPackage[spanish,italian,english]{babel}
+\RequiresPackage{translator}
+\RequiresPackage{polyglossia}
+\setdefaultlanguage{english}
+\ExplSyntaxOff
+%
+%\RequiresPackage{biblatex}
+%\RequiresPackage{tabularx}%conflicts
+\ExplSyntaxOn
+\RequiresPackage{natbib}
+\RequiresPackage{graphicx}
+\RequiresPackage{tcolorbox}
+\RequiresPackage{tikz}
+%% Hack to stop it from loading
+%\ProvidesFile{lstdoc.sty}
+%\RequiresPackage{lstdoc}
+\RequiresPackage{hyperref}
+%
+%%% Too confusing
+%%\let\oldRequirePackage=\RequirePackage    % We don't want amsmath loaded.
+%%   \def\RequirePackage#1{}
+%%   \epackage{yhmath}
+%%\let\RequirePackage=\oldRequirePackage
+%
+\RequiresPackage{fancyvrb}
+%
+\RequiresPackage{comment}
+\begin{document}
+\ExplSyntaxOn
+\clist_remove_duplicates:N \g_phd_packages_loaded_by_other
+\clist_map_inline:Nn \g_phd_packages_loaded {
+  #1,~
+}
+\hrule
+\clist_map_inline:Nn \g_phd_packages_loaded_by_other {
+  \clist_if_in:NnTF\g_phd_packages_loaded {#1}{{\par\bfseries #1~\par}\hangindent1em\hangafter0} {#1,~}
+}
+
+\hrule
+
+\clist_map_inline:Nn \loadedinbegin {--#1--}
+
+\ExplSyntaxOff
+
+\InputIfFileExists{p.s}mmmmmmmmmmmmm
+
+
+\end{document}

@@ -11,7 +11,7 @@ and the derived files   `phd.ins`,  `phd.pdf`, and `phd.sty`.
 ###Installation
 
 run
-
+          phd-lua.bat on windows
            pdflatex phd.dtx
            makeindex -s gind.ist -g phd
 
@@ -47,9 +47,12 @@ This is still an experimental version, but I will retain the
 interface in future releases. There is a large amount of
 work still to be carried out to improve the template styles
 provided, to test it more thoroughly and to add a number of
-improvements in the special designs.
+improvements in the special designs. At present I estimate
+that I have completed about 70% of the work that needs
+to be done.
 
 __The package as it stands is not production stable.__
+
 
 
 
