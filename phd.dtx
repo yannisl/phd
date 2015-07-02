@@ -168,7 +168,6 @@ See http://www.latex-project.org/lppl.txt
 \documentclass[oneside,11pt,a4paper]{ltxdoc}
 
 \makeatletter
-%\RequirePackage{morewrites}
 %\usepackage{pkgindoc}
 %\usepackage{phdfilecontents}
 %\gdef\@notprerr{supress error for commands only in preamble}
@@ -182,13 +181,14 @@ See http://www.latex-project.org/lppl.txt
 \savegeometry{std}
 
 % \usepackage[style=mla]{biblatex}
-\usepackage{phd}
-\RequirePackage{morewrites}
+\usepackage[unicodemath=on, 
+            asianscripts=off,
+            microtype=off]{phd}
 \usepackage{pkgindoc}             %%% danger
-\usepackage{phdfilecontents}   %%%% danger
 
 \usepackage{Acorn, AnnSton, ArtNouv, ArtNouvc, Carrickc, Eichenla, Eileen, EileenBl, Elzevier, GotIn, GoudyIn, Kinigcap, Konanur, Kramer, MorrisIn, Nouveaud, Romantik, Rothdn, Royal, Sanremo, Starburst, Typocaps, Zallman}
 
+\ifASIANSCRIPTS
 \ifluatex
   \newfontfamily\UI{Segoe UI}
   \newfontfamily\hiero{NotoSansEgyptianHieroglyphs-Regular.ttf}
@@ -238,6 +238,7 @@ See http://www.latex-project.org/lppl.txt
   \def\defaulttext{\arial }
   \linespread{1.05}
   \frenchspacing
+\fi
 \fi
 \ifxetex
 \newfontfamily\arabian
@@ -380,12 +381,15 @@ See http://www.latex-project.org/lppl.txt
    \part{FONTS}
    \input{./sections/unicode}
     \input{./sections/fonts}
-   \input{./sections/symbols}
-   \input{./sections/unicodemath}
-   \input{./sections/characters}
+    \input{./sections/symbols}
+    \input{./sections/characters}
  }   
 %
-
+ \ifUNICODE
+      \input{./sections/unicodemath}
+ \fi
+ 
+ 
 \def\mathdocs{
 \part{MATHEMATICS}
 \input{./sections/maths-01}
@@ -472,7 +476,7 @@ See http://www.latex-project.org/lppl.txt
   ^^A\input{./sections/kernel-ltlists}
 }
 
-  \input{./sections/acronyms}
+  %\input{./sections/acronyms}
  %\ttreport
 \def\textdocs{
   \input{./sections/paragraphs}
@@ -591,11 +595,12 @@ See http://www.latex-project.org/lppl.txt
        chapter spaceout=soul,
        }
 
-%  \phddoc
-%  \textdocs
+ % \phddoc
+ % \textdocs
 %%
- \fontsandsymbols
-\mathdocs
+ %\fontsandsymbols
+%\mathdocs
+%\input{./sections/mathlists}
 %%
 %%  
 % \mathdocs 
@@ -605,7 +610,7 @@ See http://www.latex-project.org/lppl.txt
 %%% 
 % \programming
 %
-%  \luadocs 
+ % \luadocs 
 % 
 % 
 %%
@@ -613,7 +618,9 @@ See http://www.latex-project.org/lppl.txt
 %  \docboxing
 % \visualizations
 %%%
-%\languages 
+\ifASIANSCRIPTS
+   \languages 
+\fi 
 %%% % programming source2e
 %\kernel 
 % \bibliography{phd} 
@@ -641,7 +648,7 @@ See http://www.latex-project.org/lppl.txt
 %\input{./styles/style82}
 %\input{./styles/style83}
 \DocInput{\jobname.dtx}
-%\printindex
+% \printindex
  \end{document}
  %
 % \input{./sections/OTR}
@@ -722,19 +729,6 @@ See http://www.latex-project.org/lppl.txt
 %  ^^A\def\input#1{\MakePercentComment \oldinput{#1}\MakePercentIgnore}
 %  \makeatletter \@debugfalse\makeatother
 %  
-% 
-% ^^A\input{./sections/pgfmanual-en-pgfkeys}
-% ^^A\input{./sections/tcolorbox}
-% ^^A\input{./sections/chapterdesign}
-% ^^A\input{./sections/futurelet}
-% ^^A\input{./sections/iteration}
-% ^^A\input{./sections/languages}
-
-% ^^A\input{./sections/floats}
-% ^^A \input{./sections/book-design}
-%
-
-
 %  ^^A \input{./sections/pages}  messes layout
 %  ^^A \input{./sections/floats}
 %   ^^A\input{./sections/headersandfooters01}
@@ -745,7 +739,7 @@ See http://www.latex-project.org/lppl.txt
 
 %  \OnlyDescription
 %
-%  \StopEventually{\printindex}
+%  ^^A\StopEventually{\printindex}
 %<*package>
 % \CodelineNumbered
 % \pagestyle{headings}
@@ -843,6 +837,9 @@ See http://www.latex-project.org/lppl.txt
 %
 %    \begin{macrocode}
 \RequirePackage{expl3}
+\RequirePackage{l3keys2e}
+% 
+\RequirePackage{morewrites}
 \RequirePackage{pgf}      
 \usepgfmodule{parser}%for svg     
 \usepgflibrary{svg.path}%for futurelet and parser demo       
@@ -860,8 +857,83 @@ See http://www.latex-project.org/lppl.txt
  \hbadness=10000 % reduce underfull hbox errors
 % 
 %    \end{macrocode}
-% 
-% 
+%
+% \section{PACKAGE KEY MANAGEMENT}
+% The package aims to be loaded with very few options, in order to minimize
+% the learning curve and to improve on the User interface. It takes the approach
+% that keys should remove functionality rather than add in order to allow the
+% advanced user flexibility of use.
+%    \begin{macrocode}
+\newif\ifUNICODE \UNICODEfalse
+\newif\ifASIANSCRIPTS\ASIANSCRIPTSfalse
+\newif\ifMICROTYPE\MICROTYPEfalse
+%\DeclareOption{unicodemath}{\UNICODEtrue}
+%\DeclareOption{asianscripts}{\ASIANSCRIPTStrue}
+%\DeclareOption{microtype}{\MICROTYPEtrue}
+%\ProcessOptions
+
+ \ExplSyntaxOn
+ \bool_new:N \g_phd_microtype_bool
+ \bool_set_false:N \g_phd_microtype_bool
+ \bool_new:N \g_phd_unicodemath_bool
+ \bool_set_false:N \g_phd_unicodemath_bool
+  \bool_new:N \g_phd_asianscripts_bool
+ \bool_set_false:N \g_phd_asianscripts_bool
+ 
+
+ \cs_new:Nn \phd_tl_map_dbl:nN
+   {
+     \__phd_tl_map_dbl:Nnn #2 #1 \q_recursion_tail {}{} \q_recursion_stop
+   }
+ \cs_new:Nn \__phd_tl_map_dbl:Nnn
+   {
+     \quark_if_recursion_tail_stop:n {#2}
+     \quark_if_recursion_tail_stop:n {#3}
+     #1 {#2} {#3}
+     \__phd_tl_map_dbl:Nnn #1
+   }
+ 
+ \cs_new:Nn \phd_keys_choices:nn
+   {
+     \cs_set:Npn \phd_keys_choices_fn:nn { \phd_keys_choices_aux:nnn {#1} }
+     \use:x
+     {
+       \exp_not:N \keys_define:nn {phd}
+      {
+        #1 .choice: ,
+        \phd_tl_map_dbl:nN {#2} \phd_keys_choices_fn:nn
+     }
+   }
+ }
+ 
+ \cs_new:Nn \phd_keys_choices_aux:nnn { #1 / #2 .code:n = { \exp_not:n {#3} } , }
+ 
+ \phd_keys_choices:nn {microtype}
+   {
+     {on} {\bool_set_true:N \g_phd_microtype_bool  \MICROTYPEtrue}
+     {off} {\bool_set_false:N \g_phd_microtype_bool  \MICROTYPEfalse}
+   }
+   
+ \phd_keys_choices:nn {unicodemath}
+   {
+     {on} {\bool_set_true:N \g_phd_unicodemath_bool   \UNICODEtrue }
+     {off} {\bool_set_false:N \g_phd_unicodemath_bool  \UNICODEfalse }
+   }   
+ 
+ \phd_keys_choices:nn {asianscripts}
+   {
+     {on} {\bool_set_true:N \g_phd_asianscripts_bool  \ASIANSCRIPTStrue}  
+     {off} {\bool_set_false:N \g_phd_asianscripts_bool \ASIANSCRIPTSfalse}
+   }     
+\keys_define:nn { phd }
+{
+     asianscripts .default:n = on,
+}
+   
+\ProcessKeysOptions {phd}
+
+
+%    \end{macrocode}
 % 
 %
 %    \begin{macrocode}
@@ -1606,11 +1678,12 @@ See http://www.latex-project.org/lppl.txt
 % With LuaTeX microtype must come after fontspec.
 %    \begin{macrocode}
 % 
-
+\ifMICROTYPE
 \ifengine%
 	  {\RequirePackage[tracking=true]{microtype}}%
 	  {\RequirePackage[tracking=true]{microtype}}%
 	  {\RequirePackage[tracking=true]{microtype}}%
+\fi	  
 %
 %    \end{macrocode}
 % 
@@ -1685,8 +1758,7 @@ See http://www.latex-project.org/lppl.txt
 % useful macros for formatting large numbers. We use it for some
 % of the examples.
 %    \begin{macrocode}
-\usepackage{siunitx}
-\IfFileExists{siunitx}{
+\IfStyFileExists{siunitx}{
    \RequirePackage{siunitx}
    \sisetup{fixed-exponent =0,
             scientific-notation = false}}
@@ -2322,26 +2394,6 @@ ball was her favorite plaything.}%
 %    \begin{macrocode}
 \RequirePackage{threeparttable}
 \RequirePackage{threeparttablex}
-
-% 
-%
-%  {\begin{center}
-%
-%  \begin{threeparttable}[b]
-%    \caption{...}
-%  \begin{tabular}{ll} 
-%   \toprule
-%    one cell 42\tnote{1}&\\
-%    another cell \tnote[2]&\\
-%  \bottomrule
-%  \end{tabular}
-%  \begin{tablenotes}
-%    \item [1] the first note ...
-%    \item [2] the second note
-%  \end{tablenotes}
-%  \end{threeparttable}
-%  \end{center}}
-%
 %    \end{macrocode} 
 % \section{arydshln}
 %
@@ -2392,7 +2444,7 @@ ball was her favorite plaything.}%
 %  These hacks only work for XeTeX and LuaTeX. and fail for pdflatex.
 %  Don't use pdflatex
 %    \begin{macrocode}
-\newif\ifUNICODE \UNICODEtrue
+
 \ifUNICODE
 \else
 \ifxetex
@@ -2624,7 +2676,6 @@ ball was her favorite plaything.}%
 % We load Yiannis Haralambous \pkgname{ymath}\ctan{ymath} package for its extensible wide accents. 
 % not loaded? 
 %    \begin{macrocode}
-\ifUNICODE
 \newif\ifYH
 \newcommand\YH{yhmaths}
 \IfStyFileExists{yhmaths}
@@ -2635,7 +2686,6 @@ ball was her favorite plaything.}%
    \let\RequirePackage=\origRequirePackage
   }
   { \RequirePackage{yhmath}}
-\fi 
 %    \end{macrocode}
 
 %    \begin{macrocode}
@@ -2674,15 +2724,14 @@ ball was her favorite plaything.}%
 % \section{mathrsfs}
 %
 %  The package \pkgname{mathrsfs} provides calligraphic style fonts.
-%  ^^A\mathscr{A B C D E F G}
+%  ^^A\mathscr{A B C D E F G} \FIRE to be overwriiten by unicode-math
+%  options later. Need to study it.
 % {mathscr}\FIRE needs fixing
 %    \begin{macrocode}
-\ifUNICODE
 %\else
 \IfStyFileExists{mathrsfs}
   {\newcommand{\mathscr}[1]{\mbox{\usefont{U}{rsfs}{m}{n}##1}}}
   {}
-\fi  
 %    \end{macrocode}
 % 
 %
@@ -3185,15 +3234,15 @@ ball was her favorite plaything.}%
 % ^^A$M_{\mathbbm{i}}$. The package is the work of \person{Torsten}{Hilbrich}
 %
 %    \begin{macrocode}
-\ifUNICODE
-\else
+%\ifUNICODE
+%\else
   \newif\ifBM
   \IfStyFileExists{bm}
     {\BMtrue
       \RequirePackage{bm}
     }
    {}  
-\fi   
+%\fi   
 %    \end{macrocode}
 %
 % \section{bbm}
@@ -3277,7 +3326,7 @@ ball was her favorite plaything.}%
 %
 % \section{The upgreek package} 
 %
-% This package by Walter Schmidt provides fonts
+% The package \pkgname{upgreek} by Walter Schmidt provides fonts
 % and commands for an upright Greek alphabet. It makes the upright
 % Greek characters from the `Euler'  or `Adobe Symbol' typefaces available as 
 % math symbols. It defaults to the Euler option. The package offers three
@@ -3598,7 +3647,13 @@ ball was her favorite plaything.}%
 }
 \ifengine{\UTFDeclarations}{\UTFDeclarations}{}
 %
+%    \end{macrocode}
+% \section{textcomp}
+% The package \pkgname{mathcomp} loads the \pkgname{textcomp} in
+% order to define the |TS1| encoding.\FIRE revisit, certainly we may not
+% need them in a unicode enabled font.
 %
+%    \begin{macrocode}
 \ifxetex\else\ifluatex\else
   \RequirePackage{textcomp}
   \PassOptionsToPackage{mathcomp}{rmdefault}
@@ -3908,6 +3963,9 @@ ball was her favorite plaything.}%
 %    \end{macrocode}
 % 
 %\section{Eurosym}
+% The new European currency symbol for the Euro implemented in Metafont, using the official European Commission dimensions, and providing several shapes (normal, slanted, bold, outline). The package also includes a LaTeX package which defines the macro, pre-compiled tfm files, and documentation. We keep it here, with the option max to enable comparisons with the
+% Comprehensive.
+%
 %    \begin{macrocode}
 \ExplSyntaxOn
 \newif\ifEUSYM\EUSYMfalse
@@ -3919,201 +3977,33 @@ ball was her favorite plaything.}%
    \restore_symbol:{MARV}{EUR}
   }
   {}
-%
+%    \end{macrocode}
+% 
+% \section{esvect}
+% The package \pkgname{esvect} allows typesetting vectors. Several arrows are
+%  available.
+%    \begin{macrocode}
 \newif\ifESV\ESVfalse
 \newcommand\ESV{\pkgname{esvect}}
 \ExplSyntaxOff
-%\IfStyFileExists{esvect}
-%  {\ESVtrue
-%   \usepackage{esvect}
-%   \DeclareMathSymbol{\fldra}{\mathrel}{esvector}{'021}
-%   \DeclareMathSymbol{\fldrb}{\mathrel}{esvector}{'022}
-%   \DeclareMathSymbol{\fldrc}{\mathrel}{esvector}{'023}
-%   \DeclareMathSymbol{\fldrd}{\mathrel}{esvector}{'024}
-%   \DeclareMathSymbol{\fldre}{\mathrel}{esvector}{'025}
-%   \DeclareMathSymbol{\fldrf}{\mathrel}{esvector}{'026}
-%   \DeclareMathSymbol{\fldrg}{\mathrel}{esvector}{'027}
-%   \DeclareMathSymbol{\fldrh}{\mathrel}{esvector}{'030}
-%  }
-%  {}
+\IfStyFileExists{esvect}
+  {\ESVtrue
+   \RequirePackage{esvect}
+   \DeclareMathSymbol{\fldra}{\mathrel}{esvector}{'021}
+   \DeclareMathSymbol{\fldrb}{\mathrel}{esvector}{'022}
+   \DeclareMathSymbol{\fldrc}{\mathrel}{esvector}{'023}
+   \DeclareMathSymbol{\fldrd}{\mathrel}{esvector}{'024}
+   \DeclareMathSymbol{\fldre}{\mathrel}{esvector}{'025}
+   \DeclareMathSymbol{\fldrf}{\mathrel}{esvector}{'026}
+   \DeclareMathSymbol{\fldrg}{\mathrel}{esvector}{'027}
+   \DeclareMathSymbol{\fldrh}{\mathrel}{esvector}{'030}
+  }
+  {}
 
 %    \end{macrocode}
-%
-%
-% \begin{figure}[tbp] \small 
-% \begin{commandsInColumns}{2}
-%   \ScissorRight
-%   \ScissorRightBrokenBottom
-%   \ScissorRightBrokenTop
-%   \ScissorHollowRight
-%   \ScissorLeft
-%   \ScissorLeftBrokenBottom
-%   \ScissorLeftBrokenTop
-%   \ScissorHollowLeft
-% \end{commandsInColumns}
-% \caption{Scissors from the \texttt{bbding} package.}
-% \end{figure}
-%
-% \begin{figure} \small 
-% \begin{commandsInColumns}{3}
-%   \HandRight
-%   \HandRightUp
-%   \HandCuffRight
-%   \HandCuffRightUp
-%   \HandLeft
-%   \HandLeftUp
-%   \HandCuffLeft
-%   \HandCuffLeftUp
-%   \HandPencilLeft
-% \end{commandsInColumns}
-% \caption{Hands}
-% \end{figure}
-%
-% \begin{figure} \small 
-% \begin{commandsInColumns}{3}
-%   \PencilRight
-%   \PencilRightUp
-%   \PencilRightDown
-%   \PencilLeft
-%   \PencilLeftUp
-%   \PencilLeftDown
-%   \NibRight
-%   \NibSolidRight
-%   \NibLeft
-%   \NibSolidLeft
-% \end{commandsInColumns}
-% \caption{Writing tools}
-% \end{figure}
-%
-% \begin{figure} \small 
-% \begin{commandsInColumns}{3}
-%   \XSolid
-%   \XSolidBold
-%   \XSolidBrush
-%   \Plus
-%   \PlusOutline
-%   \PlusCenterOpen
-%   \PlusThinCenterOpen
-%   \Cross
-%   \CrossOpenShadow
-%   \CrossOutline
-%   \CrossBoldOutline
-%   \CrossClowerTips
-%   \CrossMaltese
-% \end{commandsInColumns}
-% \caption{Crosses, plusses and the like}
-% \end{figure}
-%
-% \begin{figure} \small 
-% \begin{commandsInColumns}{3}
-%   \DavidStar
-%   \DavidStarSolid
-%   \JackStar
-%   \JackStarBold
-%   \FourStar
-%   \FourStarOpen
-%   \FiveStar
-%   \FiveStarLines
-%   \FiveStarOpen
-%   \FiveStarOpenCircled
-%   \FiveStarCenterOpen
-%   \FiveStarOpenDotted
-%   \FiveStarOutline
-%   \FiveStarOutlineHeavy
-%   \FiveStarConvex
-%   \FiveStarShadow
-%   \SixStar
-%   \EightStar
-%   \EightStarBold
-%   \EightStarTaper
-%   \EightStarConvex
-%   \TwelweStar
-%   \SixteenStarLight
-%   \Asterisk
-%   \AsteriskBold
-%   \AsteriskCenterOpen
-%   \AsteriskThin
-%   \AsteriskThinCenterOpen
-%   \AsteriskRoundedEnds
-%   \FourAsterisk
-%   \EightAsterisk
-% \end{commandsInColumns}
-% \caption{All kind of stars}
-% \end{figure}
-%
-% \begin{figure} \small 
-% \begin{commandsInColumns}{2}
-%   \FiveFlowerOpen
-%   \FiveFlowerPetal
-%   \SixFlowerOpenCenter
-%   \SixFlowerRemovedOpenPetal
-%   \SixFlowerAlternate
-%   \SixFlowerAltPetal
-%   \SixFlowerPetalDotted
-%   \SixFlowerPetalRemoved
-%   \EightFlowerPetalRemoved
-%   \EightFlowerPetal
-%   \FourClowerOpen
-%   \FourClowerSolid
-%   \Sparkle
-%   \SparkleBold
-%   \SnowflakeChevron
-%   \SnowflakeChevronBold
-%   \Snowflake
-% \end{commandsInColumns}
-% \caption{Flowers, snowflakes and the like}
-% \end{figure}
-%
-% \begin{figure} \small 
-% \begin{commandsInColumns}{2}
-%   \CircleSolid
-%   \CircleShadow
-%   \HalfCircleRight
-%   \HalfCircleLeft
-%   \Ellipse
-%   \EllipseSolid
-%   \EllipseShadow
-%   \Square
-%   \SquareSolid
-%   \SquareShadowBottomRight
-%   \SquareShadowTopRight
-%   \SquareShadowTopLeft
-%   \SquareCastShadowBottomRight
-%   \SquareCastShadowTopRight
-%   \SquareCastShadowTopLeft
-%   \TriangleUp
-%   \TriangleDown
-%   \DiamondSolid
-%   \OrnamentDiamondSolid
-%   \RectangleThin
-%   \Rectangle
-%   \RectangleBold
-% \end{commandsInColumns}
-% \caption{Geometrical Shapes}
-% \end{figure}
-%
-% \begin{figure} \small 
-% \begin{commandsInColumns}{3}
-%   \Phone
-%   \PhoneHandset
-%   \Tape
-%   \Plane
-%   \Envelope
-%   \Peace
-%   \Checkmark
-%   \CheckmarkBold
-%   \SunshineOpenCircled
-%   \ArrowBoldRightStrobe
-%   \ArrowBoldUpRight
-%   \ArrowBoldDownRight
-%   \ArrowBoldRightShort
-%   \ArrowBoldRightCircled
-% \end{commandsInColumns}
-% \caption{Miscellaneous}
-% \end{figure}
 % 
 % \section{Chemistry}
-% Has problems with Umathaccent in unicode!!!\FIRE
+% Fire random errors 
 %    \begin{macrocode}
   \RequirePackage{mhchem}
   \RequirePackage{chemfig}
@@ -7760,27 +7650,27 @@ boxrule=0pt,toprule=0pt,colframe=white}
 
 
 
-\def\index@prologue{\section*{Index}\addcontentsline{toc}{section}{Index}
-  This index only contains automatically generated entries. A good
-  index should also contain carefully selected keywords. This index is
-  not a good index.
-  \bigskip
-}
-\@ifundefined{c@IndexColumns}{\newcount\c@IndexColumns}{}
-\c@IndexColumns=2
-  \def\theindex{\@restonecoltrue
-    \columnseprule \z@  \columnsep 29\p@
-    \twocolumn[\index@prologue]%
-       \parindent -30pt
-       \columnsep 15pt
-       \parskip 0pt plus 1pt
-       \leftskip 30pt
-       \rightskip 0pt plus 2cm
-       \small
-       \def\@idxitem{\par}%
-    \let\item\@idxitem \ignorespaces}
-  \def\endtheindex{\onecolumn}
-\def\noindexing{\let\index=\@gobble}
+%\def\index@prologue{\section*{Index}\addcontentsline{toc}{section}{Index}
+%  This index only contains automatically generated entries. A good
+%  index should also contain carefully selected keywords. This index is
+%  not a good index.
+%  \bigskip
+%}
+%\@ifundefined{c@IndexColumns}{\newcount\c@IndexColumns}{}
+%\c@IndexColumns=2
+%  \def\theindex{\@restonecoltrue
+%    \columnseprule \z@  \columnsep 29\p@
+%    \twocolumn[\index@prologue]%
+%       \parindent -30pt
+%       \columnsep 15pt
+%       \parskip 0pt plus 1pt
+%       \leftskip 30pt
+%       \rightskip 0pt plus 2cm
+%       \small
+%       \def\@idxitem{\par}%
+%    \let\item\@idxitem \ignorespaces}
+%  \def\endtheindex{\onecolumn}
+%\def\noindexing{\let\index=\@gobble}
 
 
 
@@ -9245,8 +9135,33 @@ SIXTY FIVE\or SIXTY SIX \or SIXTY SEVEN \or \else
   }
 %    \end{macrocode}
 %
+% This handler is for making text upper or lower case. Took
+% a few tests to get it right! Will have to go to expl3 when
+% these work ok. \FIRE
+%
 %    \begin{macrocode}
-\ExplSyntaxOn   
+\ExplSyntaxOn  
+  \clist_new:N  \allowed_options_case 
+  \clist_gset:Nn \allowed_options_case 
+    { 
+      lower,upper,none
+    }
+    
+  \pgfkeys{/handlers/.case~in/.code = 
+    \pgfkeysalso
+      {\pgfkeyscurrentpath/.code=
+        \tl_set:Nn\l_tmpa_str:N {##1}
+           \str_case_x:nnTF {##1}  
+             {
+               { none } { \gdef#1 {empty}          } 
+               { lower } { \gdef#1 {MakeTextLowercase} } 
+               { upper } { \gdef#1 {MakeTextUppercase} } 
+             }
+             {}%true
+             {\gdef#1{empty}}%CHECK
+      }
+  }
+
   
   \clist_new:N   \allowed_options_format
   \clist_gset:Nn \allowed_options_format 
@@ -9265,6 +9180,8 @@ SIXTY FIVE\or SIXTY SIX \or SIXTY SEVEN \or \else
       }
   }
 %    \end{macrocode}
+
+
 %  Handler for chaptername to hook to i18n functions, if set to auto
 %  If empty just typesets nothing. 
 %  
@@ -12350,8 +12267,9 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
     \global\@topnum\z@~%
 %    \end{macrocode}
 %
-%  We provide a hook to handle indentation after a chapter. This would also necessitate to 
-% change the afterheading macro and make it specific to a chapter head.
+% We provide a hook to handle indentation after a chapter. This would 
+% also necessitate to change the afterheading macro and make it specific 
+% to a chapter head.
 %    \begin{macrocode}  
       \@chapterafterindent@cxfalse
    % \@afterindentfalse
@@ -12420,10 +12338,10 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
      	\fi%
             %\fi%
       \else
-      \addcontentsline{toc}{chapter}{#1}%for part???
+        \addcontentsline{toc}{chapter}{#1APAPAP}%for part???
       \fi%
   \else%
-      \addcontentsline{toc}{chapter}{#1}%????? for part
+      \addcontentsline{toc}{chapter}{#1PPP}%????? for part
   \fi%
 %    \end{macrocode}
 %
@@ -13859,23 +13777,23 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
 %
 % \chapter{Table of Contents}
 %
-%	Most of the macros here re-write the LaTeX macros in a way that 
+%	Most of the macros here are a re-write the LaTeX macros in a way that 
 %	we can add appropriate hooks for styling. In writing this section
 %	we had inspiration and used liberally code from Peter Wilson's 
 %	\pkg{tocloft}., including the code for the image.
 %
-% \newcommand{\maxx}{120}       ^^A picture width
+% \newcommand{\maxx}{145}       ^^A picture width 120
 % \newcommand{\maxxm}{118}      ^^A \maxx - 2\
 % \newcommand{\maxy}{55}        ^^A picture height
 % \newcommand{\maxym}{53}       ^^A \maxy - 2
-% \newcommand{\findent}{20}     ^^A indent
+% \newcommand{\findent}{45}     ^^A indent 20
 % \newcommand{\findentp}{22}    ^^A \findent + 2
 % \newcommand{\fnumwidth}{10}   ^^A numwidth
-% \newcommand{\ftocrmarg}{30}   ^^A \@tocrmarg
+% \newcommand{\ftocrmarg}{50}   ^^A \@tocrmarg
 % \newcommand{\fpnumwidth}{20}  ^^A \@pnumwidth
 % \newcommand{\fipn}{30}        ^^A \findent + \fnumwidth
-% \newcommand{\frmarg}{90}      ^^A \maxx - \ftocrmarg
-% \newcommand{\frnum}{100}      ^^A \maxx - \fpnumwidth
+% \newcommand{\frmarg}{110}      ^^A \maxx - \ftocrmarg 90
+% \newcommand{\frnum}{120}      ^^A \maxx - \fpnumwidth
 % \newcommand{\fyi}{10}         ^^A 1st y height
 % \newcommand{\fyim}{8}         ^^A \fyi - 2
 % \newcommand{\fyii}{20}        ^^A 2nd y height
@@ -13906,7 +13824,7 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
 %   \put(\frmarg,\fyv){\line(0,-1){\flin}}
 %     ^^A indent
 %   \put(0,\fyv){\vector(1,0){\findent}}
-%   \put(2,\fyvp){\makebox(0,0)[bl]{\textit{indent}}}
+%   \put(2,\fyvp){\makebox(0,0)[bl]{\textit{toc margin-left}}}
 %   \put(\findent,\fyv){\line(0,-1){\flin}}
 %     ^^A numwidth
 %   \put(\findent,\fyv){\vector(1,0){\fnumwidth}}
@@ -13931,16 +13849,29 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
 % 
 % \end{picture}
 % \setlength{\unitlength}{1pt}
-% \caption{Layout of a ToC (LoF, LoT) entry} \label{fig:ltoc}
+% \caption{Standard Layout of a ToC (LoF, LoT) entry} \label{fig:ltoc}
 % \end{figure}
 %
 % 
 % {if@haschapter@cx}
 % We will be using either chapter or section type headings for the ToC, etc.,
 % so we need to know which of these the document class supports.
+%
 %    \begin{macrocode}
+\ExplSyntaxOn
 \newcommand{\quit@cx}{}
 \newif\if@haschapter@cx\@haschapter@cxtrue
+\int_new:N \toc_depth
+\int_gset:Nn \toc_depth {\c@tocdepth}
+
+\bool_new:N \haschapter_bool \bool_gset_true:N \has_chapter_bool
+\bool_new:N \haspart_bool \bool_gset_true:N \haspart_bool
+
+\cs_if_exist:cTF {part} 
+   { \bool_gset_true:N \haspart_bool   } 
+   { \bool_gset_false:N \haspart_bool  }
+   
+\ExplSyntaxOff
 %    \end{macrocode}
 % 
 % 
@@ -13985,7 +13916,7 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
 %    \begin{macrocode}
 \newcommand{\settocpagestyle}[1]{%
   \def\tocpagestyle@cx{\thispagestyle{#1}}}
-  \thispagestyle{plain}
+ 
 %    \end{macrocode}
 % 
 % 
@@ -14021,11 +13952,12 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
                  {\contents_name_font_size}
                  {\contents_name_font_shape}
                  \color{\toc_name_color}
-      \startalign@cx
+      \start_align
       \contents_name_indent 
-      \tocnamecase@cx
+      \exp_after:wN \cs:w \exp_after:wN
+           \toc_name_case\cs_end:
         #1
-      \endalign@cx
+      \end_align
     \end{tcolorbox} 
  \contents_name_after%
  }
@@ -14075,7 +14007,8 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
 %    \begin{macrocode}
     \par
     \begingroup
-      \parindent\z@ \parskip\tocparskip@cx
+      \parindent\z@ 
+      \parskip\tocparskip@cx
       \make_toc_title:
 %    \end{macrocode}
 %
@@ -14105,7 +14038,7 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
        \immediate\openout \csname tf@#1\endcsname \jobname.#1\relax
      \fi
      \@nobreakfalse
-    \group_end:
+     \group_end:
   }
 \ExplSyntaxOff 
 %    \end{macrocode}
@@ -14113,8 +14046,8 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
 % \begin{docCommand} {numberline} { \meta {the number} }
 %  The purpose of the |\numberline{|\meta{secnum}|}| command is to typeset
 %  \meta{secnum} left justified in a box of width |\@tempdima|. I redefine
-%  it to add three additional parameters, namely |\tocnumberbefore@cx|, 
-%  |\@cftasnum| and |\@cftasnumb| 
+%  it to add three additional parameters, namely |\toc_number_before|, 
+%  |\toc_number_after| and |\toc_number_after_box| 
 %  (see \docfile{ltsect.dtx} for the original definition).\FIRE
 %
 % \begin{verbatim}
@@ -14128,10 +14061,19 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
 %
 %    \begin{macrocode}
 \ExplSyntaxOn
+\cs_set:Npn \toc_number_before_box {}
+\cs_set:Npn \toc_number_before {}
+\cs_set:Npn \toc_number_after {}
+\cs_set:Npn \toc_number_after_box {}
+%    
 \cs_gset:Npn \numberline #1
   {
-   %needs hook here
-   \hb@xt@\@tempdima{\tocnumberbefore@cx\relax #1\@cftasnum\hfil}\@cftasnumb
+   \toc_number_before_box
+   \hbox_to_wd:nn \@tempdima 
+     { 
+       \toc_number_before\relax #1 \toc_number_after \hfil 
+     }
+   \toc_number_after_box
   }
 \ExplSyntaxOff
 %    \end{macrocode}
@@ -14139,12 +14081,11 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
 % \section{ToC Name Parameters}
 %
 %    \begin{macrocode}
-\newif\if@lowercase
-\@lowercasetrue
 \ExplSyntaxOn
 \cxset 
   {
-    toc~name/.code                                    = \cs_gset:Npn \contentsname { #1 },
+    toc~name/.code                                    = 
+        \cs_gset:Npn \contentsname { #1 },
     toc~name~before/.store~in                         = \contents_name_before,
     toc~name~after/.store~in                          = \contents_name_after,
     toc~name~font-size/.store~in                      = \contents_name_font_size,
@@ -14152,36 +14093,24 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
     toc~name~font-family/.store~in                    = \contents_name_font_family,
     toc~name~font-shape/.store~in                     = \contents_name_font_shape,
     toc~name~color/.store~in                          = \toc_name_color,
-    %
     toc~name~afterskip/.store~in                      = \contents_name_after_skip,
     toc~name~align/.is~choice,
     toc~name~align/center/.code                       =
-          \def\startalign@cx{\bgroup\centering}
-          \def\endalign@cx{\par\egroup},
+      \cs_set:Npn \start_align { \bgroup \centering }
+      \cs_set:Npn \end_align {\par \egroup },
     toc~name~align/right/.code                        =
-       \def\startalign@cx{\flushright}
-       \def\endalign@cx{\endflushright},
+      \cs_set:Npn \start_align { \flushright }
+      \cs_set:Npn \end_align { \endflushright },
     toc~name~align/left/.code                         =
-      \def\startalign@cx{\@empty}
-      \def\endalign@cx{\@empty},
+      \cs_set:Npn \start_align{\@empty}
+      \cs_set:Npn \end_align{\@empty},
     toc~name~align/none/.code                         =
-    \def\startalign@cx{\@empty}
-    \def\endalign@cx{\@empty},
+      \cs_set:Npn \start_align{\@empty}
+      \cs_set:Npn \end_align{\@empty},
     toc~name~indent/.store~in                         = \contents_name_indent,
-    toc~name~case/.is~choice,
-    toc~name~case/lower/.code                         =
-     \def\tocnamecase@cx{
-      \@lowercasetrue
-      \if@lowercase\expandafter
-      \MakeTextLowercase\fi},
-    toc~name~case/upper/.code=
-    \def\tocnamecase@cx{\@lowercasefalse
-    \if@lowercase\else\expandafter
-    \MakeTextUppercase \fi},
-    toc~name~case/none/.code=
-    \def\tocnamecase@cx{\@empty},
+    toc~name~case/.case~in                            = \toc_name_case,
     toc~pagestyle/.code                               =
-    \gdef\contentspagestyle@cx{\thispagestyle{#1}},
+      \gdef\contentspagestyle@cx{\thispagestyle{#1}},
 }
 \ExplSyntaxOff     
      %    \end{macrocode}      
@@ -14201,8 +14130,8 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
        toc name font-size=LARGE,
        toc name afterskip=10pt, %set as 40pt in LaTeX
        toc name after=\par,
-       toc name align=right,
-       toc name indent=\hspace*{4cm},
+       toc name align=none,
+       toc name indent=\hspace*{0cm},
        toc name case=upper,
        toc pagestyle=headings,
   }%
@@ -14316,105 +14245,122 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
 %    \end{macrocode}
 % 
 %
-%  NUMBERLINE
-%
-% {tocnumberbefore@cx}
-% {@cftasnum}
-% {@cftasnumb}
-%
-% Originally these were not defined but were |\let| to appropriate commands
-% in the |\l@...| commands, but they
-% have to be defined in case something unexpected 
-% calls |\numberline|,
-% for example through use of the \Lpack{float} package.\footnote{This bug WAS NOTED IN TOCLOF
-% was discovered by Andrew Thurber when using the \Lpack{tocloft} and
-% \Lpack{algorithm} packages together.}
-%
-%    \begin{macrocode}
-\newcommand{\tocnumberbefore@cx}{[}
-\newcommand{\@cftasnum}{}
-\newcommand{\@cftasnumb}{}
-%    \end{macrocode}
-% 
-% 
-% 
+ 
 %
 % \begin{docCommand}{format_toc_entry} { {section name} {title} {page number} }
-%  General formatter for all sections. \FIRE
+%  General formatter for all sections. This is the standard template
+%  that typesets a ToC entry with leaders.
 % \end{docCommand}
-%
+% \tcbdocmarginnote{U 01-07-2015}
 %    \begin{macrocode}
 \ExplSyntaxOn
 \cs_set:Npn \format_toc_entry:nn #1 #2 #3
   {
-     \bgroup
-      \def\fontai{
-          \expandafter\csname toc_#1_font_weight\endcsname
-          
-          }
-      \def\fontaii{\expandafter\csname\fontai\expandafter\endcsname
-                  
-      }    
-     \def\fonta{          
-          \cs_gset:Npn \__acolor {\expandafter\color{\csname toc_#1_color\endcsname}}
-          \__acolor
-          \fontaii
-          }
-     \def\fontbi{
-       \expandafter\csname toc_#1_font_shape\endcsname
-          }     
-     \def\fontbii{
-         \expandafter\csname\fontbi\expandafter\endcsname
-         }    
-     \def\fontb{\fontbii}   
-     
-     \def\fontci{
-       \expandafter\csname toc_#1_font_size\endcsname
-          }     
-     \def\fontcii{
-         \expandafter\csname\fontbi\expandafter\endcsname
-         }    
-     \def\fontc{\fontcii} 
-     \def\fontdi{
-       \expandafter\csname toc_#1_font_family\endcsname
-          }     
-     \def\fontdii{
-         \expandafter\csname\fontdi\expandafter\endcsname
-         }    
-     \def\fontd{\fontdii} 
-     
-     
-     \leftskip \tocsectionindent@cx\relax
-     \rightskip \@tocrmarg
+   \group_begin:
+
+      \cs_set:Npn \font_weight_aux
+        {
+          \exp_after:wN \cs:w toc_#1_font_weight\cs_end:
+        }
+  
+      \cs_set:Npn \font_weight
+        {
+          \exp_after:wN \cs:w \font_weight_aux\exp_after:wN\endcsname
+        }   
+%      
+     \cs_set:Npn \font_color
+        {          
+          %\cs_gset:Npn \__acolor {
+          \expandafter\color{\csname toc_#1_color\endcsname}
+          %\__acolor
+          %\fontaii
+        }
+% font shape          
+    \cs_set:Npn \fontbi
+      {
+        \exp_after:wN \cs:w toc_#1_font_shape\cs_end:
+      }     
+    \cs_set:Npn \font_shape
+      {
+        \exp_after:wN \cs:w \fontbi \exp_after:wN \cs_end:
+      }
+             
+     %\cs_set:Npn \fontb {\fontbii}   
+
+% font size
+     \cs_set:Npn \font_size_aux
+       {
+         \exp_after:wN \cs:w toc_#1_font_size \cs_end:
+       }     
+     \cs_set:Npn \font_size 
+       {
+         \exp_after:wN \cs:w \font_size_aux \exp_after:wN \cs_end:
+       }    
+% font-family     
+     \cs_set:Npn \font_family_aux
+       {
+         \exp_after:wN \cs:w toc_#1_font_family \cs_end:
+       }     
+     \cs_set:Npn \font_family
+       {
+         \exp_after:wN \cs:w \font_family_aux \exp_after:wN \cs_end:
+       }  
+% text case     
+     \cs_set:Npn \text_case_aux
+       {
+         \exp_after:wN \cs:w toc_#1_case \cs_end:
+       }     
+     \cs_set:Npn \text_case
+       {
+         \exp_after:wN \cs:w \text_case_aux \exp_after:wN \cs_end:
+       }          
+% section indent 
+     \cs_set:Npn \tocindent {
+         \exp_after:wN \cs:w toc_#1_indent \cs_end: 
+       }
+%                        
+     \expandafter\leftskip\tocindent\relax
+%     
+     \dim_set_eq:NN \tex_rightskip:D \@tocrmarg
      \parfillskip -\rightskip
-     \parindent \tocsectionindent@cx\relax\@afterindenttrue
+     \dim_set_eq:NN \parindent\tocindent
+%     
+     
      \interlinepenalty\@M
      \leavevmode
-     \@tempdima \tocsectionnumwidth@cx\relax
-     \let\tocnumberbefore@cx \cftsecpresnum
-     \let\@cftasnum \cftsecaftersnum
-     \let\@cftasnumb \cftsecaftersnumb
+     \@tempdima \toc_section_number_width\relax
+     \let\toc_number_before \cftsecpresnum
      \advance\leftskip \@tempdima \null\nobreak\hskip -\leftskip
 %    \end{macrocode}
 %  These are the generic templates
 %    \begin{macrocode}
-     \group_begin:
-    % \begin{tcolorbox}
+     
+     %\begin{tcolorbox}
        \tcbox[size=minimal,
-        nobeforeafter,
-        before=\hspace{1em},
+         nobeforeafter,
+         before=\hspace{0em},
+         colback=white,
         ]
-         {\fonta\fontb\fontc\fontd {#2} }%fonta\MakeTextUppercase
+         {
+           \font_color\font_weight\font_shape\font_size\font_family 
+             \hspace{1em}\text_case{#2}
+         }
        %\hfill 
        \csname toc#1leader@cx\endcsname
-       \begin{tcolorbox}[size=minimal,width=1.5cm,nobeforeafter]
-         [\hfill #3]
+       % page number box this must be pnumwidth?
+       \begin{tcolorbox}
+        [
+          size=minimal,
+          width=\toc_section_number_width-1em,
+          nobeforeafter
+         ]
+         ( \hfill #3 )
        \end{tcolorbox}  
        \vskip0pt
-    % \end{tcolorbox}  
+     %\end{tcolorbox}  
      \group_end:
+     \@afterindentfalse
      \nobreak
-    \egroup
  }
   \ExplSyntaxOff
 %    \end{macrocode}
@@ -14435,99 +14381,130 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
 % In article class, Part level is 0 not -1 and hence the conditional below.
 %	
 %	We start by defining a number of keys and macros to store parameters.
-%	An entry to the ToC consists always of a section number, the title and 
+%	An entry to the ToC consists always of a number, the title and 
 %	a page number. For each part there are different styling keys.
 %
 %	{tocpartindent@cx}	 
 %    \begin{macrocode}
 \ExplSyntaxOn
-\cxset{toc~part~indent/.store~in           = \tocpartindent@cx,
-       toc~part~numwidth/.store~in         = \tocpartnumwidth@cx,
-       toc~part~font-size/.store~in        = \tocpartfontsize@cx,
-       toc~part~before~number/.store~in    = \tocpartbeforenumber@cx,
-       toc~part~after~number/.store~in     = \partafterpnum@cx,
-       toc~part~beforeskip/.store~in       = \tocpartbeforeskip@cx,
-       toc~part~page~font-size/.store~in   = \tocpartpagefontsize@cx
+\dim_new:N  \toc_part_indent
+\dim_new:N  \toc_part_number_width_dim
+\skip_new:N \toc_part_before_skip_dim
+\cxset
+  {
+    toc~part~indent/.code                     = \dim_gset:Nn\toc_part_indent { #1 },
+    toc~part~numwidth/.code                   = 
+      \dim_gset:Nn\toc_part_number_width_dim { #1 },
+    toc~part~before~number/.store~in          = \tocpartbeforenumber@cx,
+    toc~part~after~number/.store~in           = \partafterpnum@cx,
+    toc~part~beforeskip/.code                 = 
+      \skip_gset:Nn \toc_part_before_skip_dim {#1},
+    toc~part~font-family/.font-family~in      = \toc_part_font_family,   
+    toc~part~font-weight/.font-weight~in      = \toc_part_font_weight,
+    toc~part~font-size/.store~in              = \toc_part_font_size,
+    toc~part~font-shape/.font-style~in        = \toc_part_font_shape,
+    toc~part~color/.store~in                  = \toc_part_color,
+    toc~part~case/.is~choice,
+    toc~part~case/lower/.code                 = 
+      \cs_gset:Npn \toc_part_case 
+        {
+          MakeTextLowercase
+        },
+    toc~part~case/upper/.code                 =
+      \cs_gset:Npn \toc_part_case
+        {
+          MakeTextUppercase
+        },
+    toc~part~case/none/.code                  =
+      \cs_set_eq:NN \toc_part_case\empty,    
+%         
+    toc~part~page~font-size/.store~in         = \tocpartpagefontsize@cx,
 }
 \ExplSyntaxOff
 %    \end{macrocode}
 %
 
 %    \begin{macrocode}
-\cxset{toc part beforeskip = 2.25em \@plus\p@,
-       toc part indent=0pt,
-       toc part numwidth=0em,
-       toc part after number=,
-       toc part font-size={\color{sweet}\large\bfseries\sffamily},
-       toc part before number={\kern0pt},
-       toc part page font-size=\bfseries
-       }
+\cxset
+  {
+    toc part indent=0pt,
+    toc part numwidth=4.2em,
+    toc part after number=,
+    toc part font-size= LARGE,
+    toc part font-weight = bold,
+    toc part font-family = rmfamily,
+    toc part font-shape  = upshape,
+    toc part before number={\kern0pt},
+    toc part page font-size= \bfseries,
+    toc part beforeskip = 2.25em plus0.5pt minus0.5pt,
+    toc part case       = upper,
+    toc part color      = sweet,
+   }
   %    \end{macrocode}
 % 
-%
-% We need first to define conditionals to switch from
-% printing the part or not.
-%
-%    \begin{macrocode}
-\newif\if@dopart@cx
-\newif\if@haspart@cx
-  \@ifundefined{part}{\@haspart@cxfalse}{\@haspart@cxtrue}
-\if@haspart@cx
-%    \end{macrocode}
 %
 % \begin{docCommand} {l@part} { \meta{title} \meta{pagenumber} }
 % We now renew the command, in order to allow for hooks. 
 % This might be cloberred by hyperref if too many changes
 % are carried out. It takes two parameters (one for the caption and another for the title if different).
 % \end{docCommand}
-% 
+%
+% We need first to define conditionals to switch from
+% printing the part or not.
+%
+%  We allow for any document type to have parts, as long as the control sequence |\part|
+%  is defined.
+%  The part |toc_level = -1|
 %    \begin{macrocode}
 \ExplSyntaxOn
-%
-\cs_gset:Npn \l@part #1 #2
-  {%
-     \@dopart@cxfalse
-     \ifnum \c@tocdepth >-2\relax
-      \if@haschapter@cx
-        \@dopart@cxtrue
-      \fi
-     \ifnum \c@tocdepth >\m@ne
-        \if@haschapter@cx\else
-        \@dopart@cxtrue
-      \fi
-     \fi
-    \fi
+\newif\if@dopart@cx
+\newif\if@haspart@cx
+  \@ifundefined{part}{\@haspart@cxfalse}{\@haspart@cxtrue}
+\if@haspart@cx
 
-  \if@dopart@cx
-    \if@haschapter@cx
-      \addpenalty{-\@highpenalty}%
-    \else
-      \addpenalty\@secpenalty
-    \fi
-    \addvspace{\tocpartbeforeskip@cx}%
-    \begingroup
-      \leftskip \tocpartindent@cx\relax
-       \rightskip \@tocrmarg % need to check this for conflics\@tocrmarg
-       \parfillskip -\rightskip
-       \parindent \tocpartindent@cx\relax
-       \@afterindenttrue
-       \interlinepenalty\@M
-       \leavevmode    
-       \@tempdima \tocpartnumwidth@cx\relax
-       \advance\leftskip \@tempdima \null\nobreak\hskip -\leftskip
-       %
-       \tocpartfontsize@cx 
-       \tocpartbeforenumber@cx #1
-       \partfillnum@cx{#2}%
-      \nobreak
-      \if@haschapter@cx
-        \global\@nobreaktrue
-        \everypar{\global\@nobreakfalse\everypar{}}%
- 	   \fi
-    \endgroup
-  \fi
- } %end l@part
- %\fi
+\cs_gset:Npn \l@part #1 #2
+  {
+    \bool_if:NT \haspart_bool
+      {
+        \bool_if:NTF \has_chapter_bool 
+          {
+            \addpenalty{-\@highpenalty}
+          }
+          { 
+            \addpenalty\@secpenalty 
+          }
+% add any skip before using addvspace          
+          \addvspace{\toc_part_before_skip_dim}%
+%% set margins in a group          
+%          \group_begin:
+%          \tex_leftskip:D \toc_part_indent\relax       
+%          \tex_rightskip:D \@tocrmarg % need to check this for conflics\@tocrmarg
+%          \tex_parfillskip:D -\tex_rightskip:D
+%          \parindent \toc_part_indent\relax
+%          \@afterindenttrue
+%          \interlinepenalty\@M
+%% start paragraph          
+%          \leavevmode    
+%% set leftmargin          
+%          \dim_set_eq:NN \l_tmpa_dim \toc_part_number_width_dim
+%%          
+%          \dim_add:Nn \leftskip \toc_part_number_width_dim
+%          \null\nobreak\hskip -\leftskip
+%
+%          \toc_part_font_size 
+%          \tocpartbeforenumber@cx \tocpartcase {#1}
+%          \partfillnum@cx{#2}%
+           \format_toc_entry:nn {part} {#1} {#2}
+           \nobreak
+           \bool_if:NT \has_chapter_bool
+             {
+               \global\@nobreaktrue
+               \tex_everypar:D { \global\@nobreakfalse\tex_everypar:D {} }%
+ 	           }
+           %\group_end:
+    }
+  } %end l@part
+
 \ExplSyntaxOff
 %    \end{macrocode}
 % 
@@ -14535,41 +14512,28 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
 %  These are the user commands to control the typesetting of Part entries.
 %  They are initialised to give the standard appearance.
 %    \begin{macrocode}
-\if@haspart@cx
-%  \newlength{\beforepartskip@cx}
-%    \setlength{\beforepartskip@cx}{2.25em \@plus\p@}
-%  \newlength{\partnumwidth@cx}
-%    \setlength{\partnumwidth@cx}{0em}
-%  \newcommand{\cftpartfont}{\large\bfseries}
+
   \newcommand{\partpresnum@cx}{}
   \newcommand{\partaftersnum@cx}{..}
   % defined in parameters \newcommand{\partaftersnumb@cx}{}
 %
 % 
-  \newcommand{\partleader@cx}{\large\bfseries\dotfill@cx{\partdotsep@cx}}
-%
-  \def\cftnodots{10000}
+  \def\cftnodots{2.7}
   \newcommand{\partdotsep@cx}{\cftnodots}
+  \newcommand{\tocpartleader@cx}{\large\bfseries\dotfill@cx{\partdotsep@cx}}
+
+%\newcommand{\tocsectionleader@cx}  {\normalfont\dotfill@cx{\tocsecdotsep@cx}}
+%
+  
   \newcommand{\cftpartpagefont}{\large\bfseries}
   %\newcommand{\partafterpnum@cx}{}
-  \newlength{\partindent@cx}
-  \setlength{\partindent@cx}{0em}
+  
+  
   \newcommand{\partfillnum@cx}[1]{%
-    {\partleader@cx}%
+    {\tocpartleader@cx}%
     {\hb@xt@\@pnumwidth{\hss {%
        \tocpartpagefontsize@cx #1}}}\partafterpnum@cx\par}%
 %    \end{macrocode}
-% \Lpack{koma} classes use some different settings.
-%   \begin{macrocode}
-  \if@koma@cx
-    %\setlength{\partnumwidth@cx}{2em}
-    %\renewcommand{\cftpartfont}{\sectfont\large}
-    %\renewcommand{\cftpartpagefont}{\sectfont\large}
-  \fi
-\fi
-
-%    \end{macrocode}
-%
 
 
 % \section{Handling of chapters in ToC.}
@@ -14637,7 +14601,7 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
    \fboxsep0pt
    \fboxrule0pt
 \fi
- \hrule width\textwidth height1pt depth0pt\relax 
+ %\hrule width\textwidth height1pt depth0pt\relax 
   \hbox to 0pt{%
     \hspace*{0cm}%
     \vbox to 0pt{\vspace*{.9cm}%
@@ -14685,24 +14649,28 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
 % 
 
 %    \begin{macrocode}
-\cxset{toc chapter beforeskip/.store in=\tocchapterbeforeskip@cx,
-          toc chapter afterskip/.store in=\tocafterchapterskip@cx,
-          toc chapter indent/.store in = \tocchapterindent@cx,
-          toc chapter dotsep/.store in = \chapterdotsep@cx,
-          toc chapter no dots/.code=\def\chapterdotsep@cx{10000},
-          toc chapter numberwidth/.store in = \tocchapternumberwidth@cx,
-          toc chapter font/.store in=\tocchapterfont@cx,
-          toc chapter title width/.store in=\tocchaptertitlewidth@cx}
+\ExplSyntaxOn
+\cxset{
+  toc~chapter~beforeskip/.store~in         = \toc_chapter_beforeskip,
+  toc~chapter~afterskip/.store~in          = \tocafterchapterskip@cx,
+  toc~chapter~indent/.store~in             = \tocchapterindent@cx,
+  toc~chapter~dotsep/.store~in             = \chapterdotsep@cx,
+  toc~chapter~no~dots/.code                = \def\chapterdotsep@cx{10000},
+  toc~chapter~numberwidth/.store~in        = \tocchapternumberwidth@cx,
+  toc~chapter~font/.store~in               = \tocchapterfont@cx,
+  toc~chapter~title~width/.store~in        = \tocchaptertitlewidth@cx}
+\ExplSyntaxOff  
 %
 %
 
-\cxset{toc chapter beforeskip =10pt,
-          toc chapter indent= 0pt,
-          toc chapter dotsep=4.5,
-          toc chapter no dots,
-          toc  chapter numberwidth=0pt,
-          toc chapter font= \bfseries\sffamily\large\color{sweet},
-          toc chapter title width=0.8\textwidth}
+\cxset{
+  toc chapter beforeskip =10pt,
+  toc chapter indent= 0pt,
+  toc chapter dotsep=4.5,
+  toc chapter no dots,
+  toc  chapter numberwidth=0pt,
+  toc chapter font= \bfseries\sffamily\large\color{sweet},
+  toc chapter title width=0.8\textwidth}
 %    \end{macrocode}
 
 %
@@ -14714,7 +14682,7 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
   \renewcommand*{\l@chapter}[2]{%
      \ifnum \c@tocdepth >\m@ne
        \addpenalty{-\@highpenalty}%
-       \vskip \tocchapterbeforeskip@cx\relax 
+       \vskip \toc_chapter_beforeskip\relax 
         {%\leftskip\tocchapterindent@cx\relax
         %\rightskip \@tocrmarg
         %\parfillskip -\rightskip
@@ -14723,9 +14691,9 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
         %\interlinepenalty\@M
         \leavevmode
         %\@tempdima \tocchapternumberwidth@cx\relax
-        %\let\tocnumberbefore@cx \cftchappresnum
-        %\let\@cftasnum \cftchapaftersnum
-        %\let\@cftasnumb \cftchapaftersnumb
+        %\let\toc_number_before \cftchappresnum
+        %\let\toc_number_after \cftchapaftersnum
+        %\let\toc_number_after_box \cftchapaftersnumb
         %\advance\leftskip \@tempdima \null\nobreak\hskip -\leftskip
         {\tocchapterfont@cx#1}\nobreak
          \typesettocchapterpage@cx{#2}}%
@@ -14753,10 +14721,7 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
 % (see \docfile{classes.dtx} for the original definition). 
 % 	We start by defining all our parameters and variables.
 %
-%    \begin{macrocode}
-%\renewcommand{\numberline}[1]{%
-%    \hb@xt@\@tempdima{#1\hfil}} %#1
- 
+%     \begin{macrocode}
 \ExplSyntaxOn 
 \cxset
   {
@@ -14764,7 +14729,7 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
     toc~section~beforeskip/.default={0pt plus.2pt},
 %  This is the left margin! indent might be a misnomer we provide for
 %  both        
-    toc~section~indent/.store~in            = \tocsectionindent@cx,
+    toc~section~indent/.store~in            = \toc_section_indent,
     toc~section~margin-left/.style          = {toc section indent=#1},
 %      fonts for title &num
     toc~section~font-size/.font-size~in     = \toc_section_font_size, 
@@ -14772,8 +14737,8 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
     toc~section~font-shape/.store~in        = \toc_section_font_shape, 
     toc~section~font-weight/.store~in       = \toc_section_font_weight, 
     toc~section~color/.store~in             = \toc_section_color,
-    toc~section~numwidth/.store~in          = \tocsectionnumwidth@cx,
-%	  fonts etc for page number
+    toc~section~numwidth/.store~in          = \toc_section_number_width,
+    toc~section~case/.case~in               = \toc_section_case,
     toc~section~page~font-size/.store~in    = \tocsectionpagefontsize@cx,
     toc~section~page~font-family/.store~in  = \tocsectionpagefontfamily@cx,
     toc~section~page~font-shape/.store~in   = \tocsectionpagefontshape@cx,
@@ -14788,22 +14753,23 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
 \ExplSyntaxOff
 %
 \cxset{%
-       toc section beforeskip=\z@ \@plus.2\p@,
-       toc section indent=0em,
-       toc section font-family= sffamily,
-       toc section font-weight = mdseries,
-       toc section font-shape = upshape,
-       toc section color= sweet,
-       toc section font-size= normal,
-       toc section numwidth = 4.2em,
-       toc section page font-size=normal,
-       toc section page font-shape= upshape,  
-       toc section page font-weight=,  
-       toc section page font-family= sffamily,
-       toc section page color = sweet, 
-       toc section page before =,% \{,
-       toc section page after =,% \},
-       toc section dotsep = 2.7,
+  toc section beforeskip=\z@ \@plus.2\p@,
+  toc section indent=0em,
+  toc section font-family= sffamily,
+  toc section font-weight = bfseries,
+  toc section font-shape = upshape,
+  toc section color= sweet,
+  toc section case = upper,
+  toc section font-size= normal,
+  toc section numwidth = 4.2em,
+  toc section page font-size=normal,
+  toc section page font-shape= upshape,  
+  toc section page font-weight=,  
+  toc section page font-family= sffamily,
+  toc section page color = sweet, 
+  toc section page before =,
+  toc section page after =,
+  toc section dotsep = 2.7,
 }
 %    \end{macrocode}
 %
@@ -14892,24 +14858,7 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
   toc~subsection~font-shape/.font-style~in        = \toc_subsection_font_shape, 
   toc~subsection~font-weight/.font-weight~in      = \toc_subsection_font_weight, 
   toc~subsection~color/.store~in                  = \toc_subsection_color,
-  toc~subsection~case/.is~choice,
-  toc~subsection~case/lower/.code                 =
-    \cs_gset:Npn \tocsubsectioncase@cx
-      {
-        \@lowercasesubsectiontrue 
-        \if@lowercasesubsection
-          \expandafter\MakeTextLowercase
-        \fi
-      },
-  toc~subsection~case/upper/.code                 =
-       \def\tocsubsectioncase@cx{
-       \@lowercasesubsectionfalse
-         \if@lowercasesubsection
-         \else
-         \expandafter\MakeTextUppercase 
-         \fi
-         },
-  toc~subsection~case/none/.code                  = \def\tocsubsectioncase@cx{\@empty},
+  toc~subsection~case/.case~in                    = \toc_subsection_case,
   toc~subsection~numwidth/.store~in               = \tocsubsectionnumwidth@cx,
   toc~subsection~page~font-size/.font-size~in     = \toc_subsection_page_font_size,
   toc~subsection~page~font-family/.font-family~in = \toc_subsection_page_font_family,
@@ -14927,11 +14876,11 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
 \cxset{toc subsection beforeskip      = \z@ \@plus.2\p@,
        toc subsection indent=0em,
        toc subsection font-family     = sffamily,
-       toc subsection font-weight     = bold,
-       toc subsection font-shape      = upshape,
-       toc subsection color= sweet,
+       toc subsection font-weight     = normal,
        toc subsection font-size       = normal,
-       toc subsection case = none,
+       toc subsection font-shape      = upshape,
+       toc subsection case            = upper,
+       toc subsection color= sweet,
        toc subsection numwidth = 4.2em,
        toc subsection page font-size=normal,
        toc subsection page font-shape= upshape,  
@@ -14966,7 +14915,7 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
   {%
     \ifnum \c@tocdepth >\z@
       \if@haschapter@cx
-        \vskip \toc_subsection_before_skip
+        \skip_vertical:N \toc_subsection_before_skip
       \else
         \addpenalty \@secpenalty
         \addvspace{\toc_subsection_before_skip}%
@@ -14989,11 +14938,8 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
 %    \end{macrocode}
 %
 % \section{Toc subsubsection styling}
-%
-
-%
+%  Next the toc subsubsection properties. 
 %    \begin{macrocode}
-\newif\if@lowercasesubsubsection
 \ExplSyntaxOn
 \cxset
   {
@@ -15005,20 +14951,7 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
     toc~subsubsection~font-shape/.store~in        = \toc_subsubsection_font_shape, 
     toc~subsubsection~font-weight/.store~in       = \toc_subsubsection_font_weight, 
     toc~subsubsection~color/.store~in             = \toc_subsubsection_color,
-    toc~subsubsection~case/.is~choice,
-    toc~subsubsection~case/lower/.code            =
-       \def\tocsubsubsectioncase@cx{
-       \@lowercasesubsubsectiontrue
-       \if@lowercasesubsubsection
-       \expandafter\MakeTextLowercase\fi},
-    toc~subsubsection~case/upper/.code            =
-       \def\tocsubsubsectioncase@cx
-       {\@lowercasesubsubsectionfalse
-        \if@lowercasesubsubsection
-        \else
-        \expandafter\MakeTextUppercase \fi},
-    toc~subsubsection~case/none/.code             = \def\tocsubsubsectioncase@cx{\@empty},
-%    
+    toc~subsubsection~case/.case~in               = \toc_subsubsection_case,
     toc~subsubsection~numwidth/.store~in          = \tocsubsubsectionnumwidth@cx,
 %	  fonts etc for page number
     toc~subsubsection~page~font-size/.store~in    = \toc_subsubsection_page_font_size,
@@ -15038,23 +14971,24 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
 %
 % We set the subsubsecton fields.
 %    \begin{macrocode}
-\cxset{toc subsubsection beforeskip=\z@ \@plus.2\p@,
-       toc subsubsection indent=0em,
-       toc subsubsection font-family= sffamily,
-       toc subsubsection font-weight = mdseries,
-       toc subsubsection font-shape = upshape,
-       toc subsubsection color= spot!50,
-       toc subsubsection font-size=,
-       toc subsubsection case = none,
-       toc subsubsection numwidth = 4.2em,
-       toc subsubsection page font-size=,
-       toc subsubsection page font-shape= upshape,  
-       toc subsubsection page font-weight=, 
-       toc subsubsection page font-family= sffamily,
-       toc subsubsection page color = teal, 
-       toc subsubsection page before =,% \{,
-       toc subsubsection page after =,% \},
-       toc subsubsection dotsep = 1000,%2.7
+\cxset{
+  toc subsubsection beforeskip         = \z@ \@plus.2\p@,
+  toc subsubsection indent=0em,
+  toc subsubsection font-family        = sffamily,
+  toc subsubsection font-weight        = mdseries,
+  toc subsubsection font-shape         = upshape,
+  toc subsubsection case               = upper, 
+  toc subsubsection color              = sweet,
+  toc subsubsection font-size          = normal,
+  toc subsubsection numwidth           = 4.2em,
+  toc subsubsection page font-size     =,
+  toc subsubsection page font-shape    = upshape,  
+  toc subsubsection page font-weight   =, 
+  toc subsubsection page font-family   = sffamily,
+  toc subsubsection page color         = teal, %ineffective as it gets color from hyper
+  toc subsubsection page before        =,% \{,
+  toc subsubsection page after         =,% \},
+  toc subsubsection dotsep             = 1000,%2.7
 }
 %    \end{macrocode}
 %
@@ -15071,7 +15005,7 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
 }%
 %    \end{macrocode}
 %
-% \begin{docCommand} {l@subsubsection} { \meta{title} \meta{page number}}
+% \begin{docCommand} {l@subsubsection} { \meta{title} \meta{page number}} 
 %  typesets the ToC entry for
 % a |subsubsection| heading. It is a parameterised copy of the default |\l@subsubsection|
 %	We start by defining all our parameters and variables.
@@ -15095,9 +15029,9 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
 %     \interlinepenalty\@M
 %     \leavevmode
 %     \@tempdima \tocsubsubsectionnumwidth@cx\relax
-%     \let\tocnumberbefore@cx \cftsecpresnum
-%     \let\@cftasnum \cftsecaftersnum
-%     \let\@cftasnumb \cftsecaftersnumb
+%     \let\toc_number_before \cftsecpresnum
+%     \let\toc_number_after \cftsecaftersnum
+%     \let\toc_number_after_box \cftsecaftersnumb
 %     \advance\leftskip \@tempdima \null\nobreak\hskip -\leftskip
 
   \format_toc_entry:nn {subsubsection} {#1} {#2}
@@ -15145,18 +15079,7 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
     toc~paragraph~font-shape/.font-style~in         = \toc_paragraph_font_shape, 
     toc~paragraph~font-weight/.font-weight~in       = \toc_paragraph_font_weight, 
     toc~paragraph~color/.store~in                   = \toc_paragraph_color,
-    toc~paragraph~case/.is~choice,
-    toc~paragraph~case/lower/.code                  =
-    \def\tocparagraphcase@cx{
-    \@lowercaseparagraphtrue
-    \if@lowercaseparagraph
-    \expandafter\MakeTextLowercase\fi},
-    toc~paragraph~case/upper/.code                  =
-    \def\tocparagraphcase@cx{
-    \@lowercaseparagraphfalse
-     \if@lowercaseparagraph\else
-     \expandafter\MakeTextUppercase \fi},
-    toc~paragraph~case/none/.code                   = \def\tocparagraphcase@cx{\@empty},
+    toc~paragraph~case/.case~in                     = \toc_paragraph_case,
     toc~paragraph~numwidth/.store~in                = \tocparagraphnumwidth@cx,
 %	  fonts etc for page number
     toc~paragraph~page~font-size/.font-size~in      = \tocparagraphpagefontsize@cx,
@@ -15179,9 +15102,9 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
        toc paragraph font-family= sffamily,
        toc paragraph font-weight = bfseries,
        toc paragraph font-shape = slshape,
-       toc paragraph color= black,
+       toc paragraph color= sweet,
        toc paragraph font-size=normal,
-       toc paragraph case = none,
+       toc paragraph case = upper,
        toc paragraph numwidth = 4.2em,
        toc paragraph page font-size=normal,
        toc paragraph page font-shape= upshape,  
@@ -15213,12 +15136,14 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
 \ExplSyntaxOn    
 \renewcommand*{\l@paragraph}[2]{%
   \ifnum \c@tocdepth >\z@
-    \if@haschapter@cx
-      \vskip \toc_paragraph_before_skip
-    \else
-      \addpenalty \@secpenalty
-      \addvspace{\toc_paragraph_before_skip}%
-    \fi
+    \bool_if:NTF \has_chapter_bool
+      {
+        \skip_vertical:N \toc_paragraph_before_skip
+      }
+      {
+        \addpenalty \@secpenalty
+        \addvspace{\toc_paragraph_before_skip}%
+      }
 %    {\leftskip \tocparagraphindent@cx\relax
 %     \rightskip \@tocrmarg
 %     \parfillskip -\rightskip
@@ -15226,11 +15151,11 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
 %     \interlinepenalty\@M
 %     \leavevmode
 %     \@tempdima \tocparagraphnumwidth@cx\relax
-%     \let\tocnumberbefore@cx \cftsecpresnum
-%     \let\@cftasnum \cftsecaftersnum
-%     \let\@cftasnumb \cftsecaftersnumb
+%     \let\toc_number_before \cftsecpresnum
+%     \let\toc_number_after \cftsecaftersnum
+%     \let\toc_number_after_box \cftsecaftersnumb
 %     \advance\leftskip \@tempdima \null\nobreak\hskip -\leftskip
-    \format_toc_entry:nn {paragraph} {#1} {#2}
+     \format_toc_entry:nn {paragraph} {#1} {#2}
   \fi
   }
 \ExplSyntaxOff  
@@ -15276,21 +15201,16 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
 
 \cxset
   {
-    toc~subparagraph~case/.is~choice,
-    toc~subparagraph~case/lower/.code                  =
-     \def\tocsubparagraphcase@cx{
-       \@lowercasesubparagraphtrue
-       \if@lowercasesubparagraph
-          \expandafter
-          \MakeTextLowercase\fi
-          },
-    toc~subparagraph~case/upper/.code=
-      \def\tocsubparagraphcase@cx{
-      \@lowercasesubparagraphfalse
-      \if@lowercasesubparagraph\else
-      \expandafter\MakeTextUppercase\fi},
-    toc~subparagraph~case/none/.code=
-    \def\tocsubparagraphcase@cx{\@empty},
+    toc~subparagraph~case/.case~in                     = \toc_subparagraph_case,
+%    toc~subparagraph~case/lower/.code                  =
+%     \def\toc_subparagraph_case@cx{
+%       MakeTextLowercase\
+%          },
+%    toc~subparagraph~case/upper/.code=
+%      \def\toc_subparagraph_case{
+%       MakeTextUppercase},
+%    toc~subparagraph~case/none/.code=
+%    \def\toc_subparagraph_case{@empty},
     toc~subparagraph~numwidth/.store~in                 =
     \tocsubparagraphnumwidth@cx,
 %    
@@ -15311,16 +15231,17 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
 %    \end{macrocode}
 % Next we set the keys
 %    \begin{macrocode}
-\cxset{toc subparagraph beforeskip         = \z@ \@plus.2\p@,
+\cxset{
+  toc subparagraph beforeskip         = \z@ \@plus.2\p@,
   toc subparagraph indent=0em,
   toc subparagraph font-family             = sffamily,
   toc subparagraph font-weight             = normal,
   toc subparagraph font-shape              = slshape,
-  toc subparagraph color= spot!50,
+  toc subparagraph color                   = sweet ,
   toc subparagraph font-size               = normal,
-  toc subparagraph case = none,
+  toc subparagraph case                    = upper,
   toc subparagraph numwidth                = 4.2em,
-  toc subparagraph page font-size          =,
+  toc subparagraph page font-size          = normal,
   toc subparagraph page font-shape         = upshape,  
   toc subparagraph page font-weight        = , 
   toc subparagraph page font-family        = sffamily,
@@ -15328,6 +15249,7 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
   toc subparagraph page before             =,% \{,
   toc subparagraph page after              =,% \},
   toc subparagraph dotsep                  = 1000,
+%           
 }
 %    \end{macrocode}
 %
@@ -15525,8 +15447,10 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
 }%\vspace*{\img@bottommargin}}%
 %    \end{macrocode}
 %    \begin{macrocode}
-\RequirePackage{unicode-math}
-\setmathfont{xits-math.otf}
+\ifUNICODE
+    \RequirePackage{unicode-math}
+    \setmathfont{xits-math.otf}
+\fi    
 %    \end{macrocode}
 %
 % 
