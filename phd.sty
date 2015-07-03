@@ -46,14 +46,17 @@
 \newif\ifUNICODE \UNICODEfalse
 \newif\ifASIANSCRIPTS\ASIANSCRIPTSfalse
 \newif\ifMICROTYPE\MICROTYPEfalse
+\newif\if@debug \@debugfalse
 
  \ExplSyntaxOn
  \bool_new:N \g_phd_microtype_bool
  \bool_set_false:N \g_phd_microtype_bool
  \bool_new:N \g_phd_unicodemath_bool
  \bool_set_false:N \g_phd_unicodemath_bool
-  \bool_new:N \g_phd_asianscripts_bool
+ \bool_new:N \g_phd_asianscripts_bool
  \bool_set_false:N \g_phd_asianscripts_bool
+ \bool_new:N \g_phd_debug_bool
+ \bool_set_false:N \g_phd_debug_bool
 
  \cs_new:Nn \phd_tl_map_dbl:nN
    {
@@ -86,22 +89,39 @@
    {
      {on} {\bool_set_true:N \g_phd_microtype_bool  \MICROTYPEtrue}
      {off} {\bool_set_false:N \g_phd_microtype_bool  \MICROTYPEfalse}
+     {true} {\bool_set_true:N \g_phd_microtype_bool  \MICROTYPEtrue}
+     {false} {\bool_set_false:N \g_phd_microtype_bool  \MICROTYPEfalse}
    }
 
  \phd_keys_choices:nn {unicodemath}
    {
      {on} {\bool_set_true:N \g_phd_unicodemath_bool   \UNICODEtrue }
      {off} {\bool_set_false:N \g_phd_unicodemath_bool  \UNICODEfalse }
+     {true} {\bool_set_true:N \g_phd_unicodemath_bool   \UNICODEtrue }
+     {false} {\bool_set_false:N \g_phd_unicodemath_bool  \UNICODEfalse }
    }
 
  \phd_keys_choices:nn {asianscripts}
    {
      {on} {\bool_set_true:N \g_phd_asianscripts_bool  \ASIANSCRIPTStrue}
      {off} {\bool_set_false:N \g_phd_asianscripts_bool \ASIANSCRIPTSfalse}
+     {true} {\bool_set_true:N \g_phd_asianscripts_bool  \ASIANSCRIPTStrue}
+     {false} {\bool_set_false:N \g_phd_asianscripts_bool \ASIANSCRIPTSfalse}
+
+   }
+
+ \phd_keys_choices:nn {debug}
+   {
+     {on} {\bool_set_true:N \g_phd_debug_bool  \@debugtrue}
+     {off} {\bool_set_false:N \g_phd_debug_bool \@debugfalse}
+     {true} {\bool_set_true:N \g_phd_debug_bool  \@debugtrue}
+     {false} {\bool_set_false:N \g_phd_debug_bool \@debugfalse}
+
    }
 \keys_define:nn { phd }
 {
      asianscripts .default:n = on,
+     debug        .default:n = on,
 }
 
 \ProcessKeysOptions {phd}
@@ -933,24 +953,25 @@ ball was her favorite plaything.}%
  \DeclareRobustCommand\FIRE{{\large\color{red}\Fire}}
 \ExplSyntaxOff
 %%
-\ExplSyntaxOn
-\newif\ifIGO
-\newcommand\IGO{\pkgname{igo}}
-
-\IfStyFileExists{xigo}
-  {
-  \save_symbol:{black}
-
-   \IGOtrue
-   \RequirePackage{xigo}
-
-   % Define a version of \whitestone and \blackstone that avoid
-   % bracketed arguments.
-   \DeclareRobustCommand{\igowhitestone}[1]{\whitestone[##1]}
-   \DeclareRobustCommand{\igoblackstone}[1]{\blackstone[##1]}
-  }
-  {}
-\ExplSyntaxOff
+%%   \save_symbol:{white}
+%%   \save_symbol:{repeat}
+%%   % Don't let igo redefine all of the font-size commands.
+%%   \save_symbol:{scriptsize}\newcommand{\scriptsize}{}
+%%   \save_symbol:{tiny}\newcommand{\tiny}{}
+%%   \save_symbol:{large}\newcommand{\large}{}
+%%   \save_symbol:{Large}\newcommand{\Large}{}
+%%   \save_symbol:{LARGE}\newcommand{\LARGE}{}
+%%   \save_symbol:{huge}\newcommand{\huge}{}
+%%   \save_symbol:{Huge}\newcommand{\Huge}{}
+%%   \restore_symbol:{IGO}{black}
+%%   \restore_symbol:{IGO}{white}
+%%   %\restore_symbol:{IGO}{repeat}
+%%   \restore_symbol:{IGO}{tiny}
+%%   \restore_symbol:{IGO}{large}
+%%   \restore_symbol:{IGO}{Large}
+%%   \restore_symbol:{IGO}{LARGE}
+%%   \restore_symbol:{IGO}{huge}
+%%   \restore_symbol:{IGO}{Huge}
 \newif\ifULSY
 \newcommand\ULSY{\pkgname{ulsy}}
 \IfStyFileExists{ulsy}
@@ -4603,15 +4624,88 @@ SIXTY FIVE\or SIXTY SIX \or SIXTY SEVEN \or \else
         \tl_set:Nn\l_tmpa_str:N {##1}
            \str_case_x:nnTF {##1}
              {
-               { none } { \gdef#1 {empty}          }
-               { lower } { \gdef#1 {MakeTextLowercase} }
-               { upper } { \gdef#1 {MakeTextUppercase} }
+               { none       } { \cs_gset:Npn #1 { empty             } }
+               { lower      } { \cs_gset:Npn #1 { MakeTextLowercase } }
+               { lowercase  } { \cs_gset:Npn #1 { MakeTextLowercase } }
+               { upper      } { \cs_gset:Npn #1 { MakeTextUppercase } }
+               { uppercase  } { \cs_gset:Npn #1 { MakeTextUppercase } }
+               { upper case } { \cs_gset:Npn #1 { MakeTextUppercase } }
              }
-             {}%true
-             {\gdef#1{empty}}%CHECK
+             {                         }
+             { \cs_gset:Npn #1 {empty} }
       }
   }
+\ExplSyntaxOff
 
+\ExplSyntaxOn
+  \pgfkeys{/handlers/.textalign/.code =
+    \pgfkeysalso
+      {\pgfkeyscurrentpath/.code=
+        \tl_set:Nn\l_tmpa_str:N {##1}
+           \str_case_x:nnTF {##1}
+             {
+               { none         } { \cs_gset:Npn #1 {}                 }
+               { left         } { \cs_gset:Npn #1 { \RaggedRight }   }
+               { RaggedLeft   } { \cs_gset:Npn #1 { \RaggedLeft  }   }
+               { right        } { \cs_gset:Npn #1 { \RaggedLeft  }   }
+               { RaggedRight  } { \cs_gset:Npn #1 { \RaggedRight }   }
+               { center       } { \cs_gset:Npn #1 { \Centering   }   }
+               { centre       } { \cs_gset:Npn #1 { \Centering   }   }
+               { centering    } { \cs_gset:Npn #1 { \centering   }   }
+               { Centering    } { \cs_gset:Npn #1 { \Centering   }   }
+
+             }
+             {                          }
+             { \cs_gset:Npn #1 {empty} }
+      }
+  }
+\ExplSyntaxOff
+
+\ExplSyntaxOn
+  \cs_set:Npn \use_v:nnnnn #1#2#3#4#5 {#5}
+   \cs_new:Npn \remove_the:#1
+     {
+       \exp_after:wN \use_v:nnnnn \token_to_str:N #1
+     }
+   \cs_new:Npn \makethecmd #1#2
+     {
+       \gdef\countername{\remove_the:{#1} }
+       \gdef#1 {
+       \expandafter\expandafter\expandafter#2
+       \expandafter \csname c@\countername\endcsname
+     }
+   % \csname the\countername\endcsname to use
+    }
+
+  \pgfkeys{/handlers/.numbering~in/.code =
+
+    \pgfkeysalso
+      {
+        \pgfkeyscurrentpath/.code=
+        \tl_set:Nn\l_tmpa_str:N {##1}
+           \str_case_x:nnTF {##1}
+             {
+               { none       } { \cs_gset:Npn #1 {}                     }
+               { arabic     } { \makethecmd {#1}{\@arabic}             }
+               { Alpha      } { \makethecmd {#1}{\@Alph}               }
+               { alph       } { \makethecmd {#1}{\@alph}               }
+               { Roman      } { \makethecmd {#1}{\@Roman}              }
+               { roman      } { \makethecmd {#1}{\@roman}              }
+               { WORDS      } { \makethecmd {#1}{\WORDS@cx}            }
+               { Words      } { \makethecmd {#1}{\Words@cx}            }
+               { words      } { \makethecmd {#1}{\words@cx}            }
+               { ordinals   } { \makethecmd {#1}{\ordinals@cx}         }
+               { Ordinals   } { \makethecmd {#1}{\ordinals@cx}         }
+               { ORDINALS   } { \makethecmd {#1}{\ODINALS@cx}          }
+               % add padzeroes later
+             }
+             {                         }
+             { \cs_gset:Npn #1 {##1}   }
+      }
+  }
+\ExplSyntaxOff
+
+\ExplSyntaxOn
   \clist_new:N   \allowed_options_format
   \clist_gset:Nn \allowed_options_format
     {
@@ -4643,26 +4737,223 @@ SIXTY FIVE\or SIXTY SIX \or SIXTY SEVEN \or \else
                { auto } { \gdef#1{\chaptername} } %hook to babel
                { i18n } { \gdef#1{\chaptername} } %hook to babl
              }
-             {}%true
-             {\gdef#1{#1}}%false
+             {            }%true
+             {\gdef#1{#1} }%false
            %}
 
       }
   }
 
 \ExplSyntaxOff
+\ExplSyntaxOn
+  \bool_new:N \partopenleft     \bool_gset_false:N \partopenleft
+  \bool_new:N \partopenany      \bool_gset_false:N \partopenany
+  \bool_new:N \partopenanywhere \bool_gset_false:N \partopenanywhere
+  \bool_new:N \partopenright    \bool_gset_false:N \partopenright
+\cxset
+  {
+    part~name/.store~in                      = \partname,
+    part~color/.store~in                     = \part_color,
+    part~background-color/.store~in          = \part_bgcolor,
+    part~opening/.is~choice,
+    part~opening/right/.code                 = \bool_gset_true:N \partopenright,
+    part~opening/left/.code                  = \bool_gset_true:N \partopenleft,
+    part~opening/any/.code                   = \bool_gset_true:N \partopenany,
+    part~opening/none/.code                  = \bool_gset_true:N \partopenanywhere,
+    part~opening/anywhere/.code              = \bool_gset_true:N \partopenanywhere,
+    part~opening/ifafter/.code={},
+    part~font-family/.font-family~in         = \part_font_family,
+    part~font-weight/.font-weight~in         = \part_font_weight,
+    part~font-size/.font-size~in             = \part_font_size,
+    part~font-shape/.font-style~in           = \part_font_shape,
+    part~font-style/.font-style~in           = \part_font_shape,
+    part~case/.case~in                       = \part_case,
+    part~numbering/.numbering~in             = \thepart,
+    part~title~text-align/.textalign         = \part_title_text_align,
+    part~format/.store~in                    = \part_format,
+    part~number~font-family/.font-family~in  = \part_number_font_family,
+    part~number~font-weight/.font-weight~in  = \part_number_font_weight,
+    part~number~font-size/.font-size~in      = \part_number_font_size,
+    part~number~font-shape/.font-style~in    = \part_number_font_shape,
+    part~number~font-style/.font-style~in    = \part_number_font_shape,
+    part~number~color/.store~in              = \part_number_color,
+}
+\ExplSyntaxOff
+\cxset
+  {
+    part opening                             = left,
+    part color                               = black!90,
+    part background-color                    = spot!30,
+    part name                                = PART,
+    part font-size                           = Huge,
+    part font-weight                         = bold,
+    part font-family                         = serif,
+    part font-shape                          = upshape,
+    part number font-size                    = Huge,
+    part number font-weight                  = normal,
+    part number font-family                  = sans-serif,
+    part number font-shape                   = upshape,
+    part number color                        = thelightgray,
+    part numbering                           = ordinals,
+    part numbering                           = Words,
+    part title text-align                    = center,
+    part format                              = traditional,
+  }
 
+\ExplSyntaxOn
+\renewcommand\part{%
+  \bool_if:NTF \partopenanywhere {}
+    {
+      \bool_if:NT \partopenright { \cleardoublepage }
+      \bool_if:NT \partopenany   { \clearpage       }
+      \bool_if:NT \partopenleft  { \clearpage       }
+    }
+
+  \thispagestyle{plain}
+  \if@twocolumn
+    \onecolumn
+    \@tempswatrue
+  \else
+    \@tempswafalse
+  \fi
+  \null\vfil
+  \secdef\@part\@spart}
+\ExplSyntaxOff
+\ExplSyntaxOn
+  \def\@part[#1]#2{%
+    \ifnum \c@secnumdepth >-2\relax
+      \refstepcounter{part}%
+      \addcontentsline{toc}{part}{\thepart\hspace{1em}#1}%
+    \else
+      \addcontentsline{toc}{part}{#1}%
+    \fi
+    \markboth{}{}%
+    \bgroup
+    \tl_set:Nn\l_tmpa_str:N {box}
+    \str_case_x:nnTF { \part_format  }
+     {
+       { traditional} { \format_part_traditional:nn{part}{#1}{#2  }   }
+       { box        } { \format_part_boxed:nn{ part } { #1 } { #2 }   }
+       { inline     } { \format_part_inline:nn{ part } { #1 } { #2 }  }
+      }
+      {                                            }
+      { \format_part_traditional:nn{part}{#1}{#2}  }
+    \egroup
+    \@endpart
+}
+
+\def\@spart#1{%
+    {\centering
+     \interlinepenalty \@M
+     \normalfont
+     \Huge \bfseries #1\par}%
+     \@endpart}
+
+\def\@endpart{%
+              %\vfil %\newpage %was here
+              \if@twoside
+               \if@openright
+                \null
+                \thispagestyle{empty}%
+               \fi
+              \fi
+              \if@tempswa
+                \twocolumn
+              \fi}
+\ExplSyntaxOff
+\ExplSyntaxOn
+\cs_new:Npn \format_part_traditional:nn #1 #2 #3
+  {
+    \centering
+     \interlinepenalty \@M
+     \normalfont
+     \set_color:nn {#1}{color}
+     \set_font_parameters:n {#1_number}
+     \ifnum \c@secnumdepth >-2\relax
+       \partname\nobreakspace\thepart
+       \par
+       \vskip 20\p@
+     \fi
+     \group_begin:
+     \set_font_parameters:n { #1 }
+      #3
+     \group_end:
+     \par
+  }
+\ExplSyntaxOff
+\ExplSyntaxOn
+\cs_new:Npn \format_part_boxed:nn #1 #2 #3
+  {
+    \centering
+    \begin{tcolorbox}[colback=\part_bgcolor,
+                              colframe=white,
+                              arc=3mm]
+     \interlinepenalty \@M
+     \normalfont
+     \color{\part_color}
+     \ifnum \c@secnumdepth >-2\relax
+       \huge\bfseries \partname\nobreakspace\thepart
+       \par
+       \vskip 20\p@
+     \fi
+     \set_font_parameters:n { #1 }
+      #3\par
+     \end{tcolorbox}
+  }
+\ExplSyntaxOff
+\ExplSyntaxOn
+\cs_new:Npn \get_property_from_section_name:nn #1 #2
+  {
+    \csname\expandafter\csname #1#2\endcsname\endcsname
+  }
+\cs_new:Npn \set_font_parameters:n #1
+  {
+     \get_property_from_section_name:nn {#1}{_font_size}
+     \get_property_from_section_name:nn {#1}{_font_weight}
+     \get_property_from_section_name:nn {#1}{_font_shape}
+     \get_property_from_section_name:nn {#1}{_font_family}
+  }
+
+\cs_new:Npn \get_color_property:nn #1 #2
+  {
+     \cs:w #1_#2 \cs_end:
+  }
+\cs_new:Npn \set_color:nn #1 #2
+  {
+     \color{\cs:w #1_#2 \cs_end:}
+  }
+\cs_new:Npn \format_part_inline:nn #1 #2 #3
+  {
+
+     \begin{tcolorbox}[colback= \get_color_property:nn {#1}{bgcolor},
+                                colframe=white,
+                                arc=3mm]
+     \interlinepenalty \@M
+     \normalfont
+     \set_color:nn {#1}{color}
+     \cs:w #1_title_text_align \cs_end:
+     \ifnum \c@secnumdepth >-2\relax
+       {
+         \set_font_parameters:n {part_number}
+         \set_color:nn {part_number} {color}
+         \partname\nobreakspace\thepart
+       }
+     \fi
+       \set_font_parameters:n {#1}
+     \nobreakspace #3
+     \par
+     \end{tcolorbox}
+  }
+\ExplSyntaxOff
 \def\gluestart{\hss}\def\glueend{\hss}
 \cxset{chapter name/.getchaptername=\chapternameint}
 \cxset{chapter name= Chapter}
 
 \cxset{
-  %legacy to remove
   chapter color/.store in=\chaptercolor@cx,
   chapter background-color/.store in=\chapterbgcolor,
   number background-color/.store in=\numberbgcolor,
 }
-
 \cxset{
   chapter opening/.is choice,
   chapter opening/right/.code={\@openrighttrue},
@@ -5032,37 +5323,10 @@ SIXTY FIVE\or SIXTY SIX \or SIXTY SEVEN \or \else
   position/center/.code={\@centertrue},
 }
 
+%%
 \cxset{
-  chapter numbering/.is choice,
-  chapter numbering/none/.code={\gdef\thechapter{}},
-  chapter numbering/roman/.code={\gdef\thechapter{\@roman\c@chapter}},
-  chapter numbering/Roman/.code={\gdef\thechapter{\@Roman\c@chapter}},
-  chapter numbering/arabic/.code={\gdef\thechapter{\@arabic\c@chapter}},
-  chapter numbering/alpha/.code={\gdef\thechapter{\alphalph\c@chapter}\relax},
-  chapter numbering/Alpha/.code={\gdef\thechapter{\AlphAlph\c@chapter}},
-  chapter  numbering/words/.code=%
-  {\gdef\thechapter{\expandafter\words@cx{\expandafter\@arabic\c@chapter}}},
-  chapter numbering/WORDS/.code= {\gdef\thechapter{\expandafter\WORDS@cx{\expandafter\@arabic\c@chapter}}},
-  chapter numbering/ORDINALS/.code=\gdef\thechapter{%
-  \expandafter\ordinals@cx{\@arabic\c@chapter}},%{\gdef\thechapter{\NUMBERstring{chapter}}},
-  chapter numbering/Words/.code={\gdef\thechapter{\expandafter\Words@cx{\expandafter\@arabic\c@chapter}}},
-chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\decimal{chapter}}}},%
- chapter numbering custom/.code=\gdef\thechapter{#1},
-}
-\cxset{
-  numbering/.is choice,
-  numbering/none/.code = \pgfkeysalso{chapter numbering=none}, % do not leave empty
-  numbering/roman/.code={\gdef\thechapter{\@roman\c@chapter}},
-  numbering/Roman/.code={\gdef\thechapter{\@Roman\c@chapter}},
-  numbering/arabic/.code={\gdef\thechapter{\@arabic\c@chapter}},
-  numbering/alpha/.code={\gdef\thechapter{\alphalph\c@chapter}},
-  numbering/Alpha/.code={\gdef\thechapter{\AlphAlph\c@chapter}},
-  numbering/WORDS/.code={\gdef\thechapter{\expandafter\WORDS@cx{\expandafter\@arabic\c@chapter}}},
-  numbering/Words/.code={\gdef\thechapter{\expandafter\Words@cx{\expandafter\@arabic\c@chapter}}},
-  numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\decimal{chapter}}
-  }},
-  numbering/ORDINALS/.code=\gdef\thechapter{%
-  \expandafter\ordinals@cx{\@arabic\c@chapter}},
+  numbering/.numbering in = \thechapter,
+  chapter numbering/.numbering in = \thechapter,
 }
 \cxset{
   number spaceout/.is choice,
@@ -5396,50 +5660,23 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
 \ExplSyntaxOff
 \ExplSyntaxOn
 \cxset{
-  subsubsection~font-size/.font-size~in      = \subsubsectionfontsize@cx,
-  subsubsection~font-weight/.font-weight~in  = \subsubsectionfontweight@cx,
-  subsubsection~font-family/.font-family~in  = \subsubsectionfontfamily@cx,
-  subsubsection~font-shape/.font-style~in    = \subsubsectionfontshape@cx,
-  subsubsection~color/.store~in              = \subsubsectioncolor@cx,
+  subsubsection~font-size/.font-size~in         = \subsubsectionfontsize@cx,
+  subsubsection~font-weight/.font-weight~in     = \subsubsectionfontweight@cx,
+  subsubsection~font-family/.font-family~in     = \subsubsectionfontfamily@cx,
+  subsubsection~font-shape/.font-style~in       = \subsubsectionfontshape@cx,
+  subsubsection~color/.store~in                 = \subsubsectioncolor@cx,
 }
 \ExplSyntaxOff
 \cxset{subsubsection font-shape=upshape}
 \cxset{
-  subsubsection numbering prefix/.store in   = \subsubsectionnumberingprefix@cx,
-  subsubsection numbering/.is choice,
-}
-\ExplSyntaxOn
-\cxset{
-  subsubsection~numbering/arabic/.code       =
-    {
-      \gdef\thesubsubsection
-        {
-         \thesubsection.\subsubsectionnumberingprefix@cx
-         \@arabic\c@subsubsection
-        }
-        \renewsubsubsection},
-}
-\ExplSyntaxOff
-\cxset{
-  subsubsection numbering/numeric/.code     =
-    {
-      \gdef\thesubsubsection
-        {\thesubsection.\@arabic\c@subsubsection}
-      \renewsubsubsection
-    },
-  subsubsection numbering custom/.code      =
-    \gdef\thesubsubsection
-      {%
-         \subsubsectionnumberingprefix@cx#1
-      }  \renewsubsubsection,
-  subsubsection numbering/none/.code        =
-       \gdef\thesubsubsection{}\renewsubsubsection,
+  subsubsection numbering prefix/.store in      = \subsubsectionnumberingprefix@cx,
+  subsubsection numbering/.numbering in         = \thesubsubsection,
   % needs handler
-  subsubsection align/.store in             = \subsubsectionalign@cx,
-  subsubsection beforeskip/.store in        = \subsubsectionbeforeskip@cx,
-  subsubsection afterskip/.store in         = \subsubsectionafterskip@cx,
-  subsubsection indent/.store in            = \subsubsectionindent@cx,
-  subsubsection number after/.store in      = \subsubsectionnumberafter@cx,
+  subsubsection align/.store in                 = \subsubsectionalign@cx,
+  subsubsection beforeskip/.store in            = \subsubsectionbeforeskip@cx,
+  subsubsection afterskip/.store in             = \subsubsectionafterskip@cx,
+  subsubsection indent/.store in                = \subsubsectionindent@cx,
+  subsubsection number after/.store in          = \subsubsectionnumberafter@cx,
 }
     %
 \ExplSyntaxOn
@@ -5829,6 +6066,7 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
   subparagraph format       = inline,
 }
 
+
 \cxset{custom/.code=\global\@specialtrue
                 \gdef\customdesign@cx{%
                       \csname#1\endcsname},
@@ -5857,7 +6095,7 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
                          ]{#2};
              \end{tikzpicture}%
 \ignorespaces}%
-\newif\if@debug \@debugfalse
+
 \def\tikzi{%
     \tikz[remember picture,overlay]
     \draw[<->] (0,0)--(0,1.5)--++(-.2,0) node[left,fill=blue!15,text=black]%
@@ -6470,25 +6708,29 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
 \newif\if@tocspecial\@tocfalse
 \def\formattoctitle{}
 \ExplSyntaxOn
-\cs_gset:Npn \__chapter [#1]#2 {%
- %\refstepcounter{chapter}%
-  \ifnum \c@secnumdepth >\m@ne%
-    \if@mainmatter
-      \if@toc% added extra if
-        \refstepcounter{chapter}%
-        \typeout{\@chapapp\space\thechapter.}%
-        \def\tocchapternumber@cx{\@arabic\c@chapter}%
-        \phantomsection
-         \addcontentsline{toc}{chapter}{%
-         \protect\chapternumberline{\tocchapternumber@cx}{#1}{\tocimage@cx}}%
-      \fi%
+\cs_gset:Npn \__chapter [#1]#2
+  {
+  %\refstepcounter{chapter}%
+    \ifnum \c@secnumdepth >\m@ne%
+      \if@mainmatter
+        \if@toc% added extra if
+          \refstepcounter{chapter}%
+          \typeout{\@chapapp\space\thechapter.}%
+          \def\tocchapternumber@cx{\@arabic\c@chapter}%to move over
+          \phantomsection
+          \addcontentsline{toc}{chapter}
+            {
+              \protect\numberline{Chapter~\tocchapternumber@cx~}{#1}
+         %\protect\chapternumberline{\tocchapternumber@cx}{#1}{\tocimage@cx}
+            }
+        \fi%
             %\fi%
       \else
-        \addcontentsline{toc}{chapter}{#1APAPAP}%for part???
+          \addcontentsline{toc}{chapter}{#1APAPAP}%for prelims???
       \fi%
-  \else%
+    \else%
       \addcontentsline{toc}{chapter}{#1PPP}%????? for part
-  \fi%
+    \fi%secnumdepth
   \chaptermark{#1}%
   \addtocontents{lof}{\protect\addvspace{10\p@}}%
   \addtocontents{lot}{\protect\addvspace{10\p@}}%
@@ -7612,16 +7854,16 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
      \group_end:
   }
 \ExplSyntaxOff
-
 \ExplSyntaxOn
 \cs_set:Npn \toc_number_before_box {}
 \cs_set:Npn \toc_number_before {}
 \cs_set:Npn \toc_number_after {}
 \cs_set:Npn \toc_number_after_box {}
+\dim_new:N \numberlineboxwidth
 \cs_gset:Npn \numberline #1
   {
    \toc_number_before_box
-   \hbox_to_wd:nn \@tempdima
+   \hbox_to_wd:nn \numberlineboxwidth                   %\numberlineboxwidth
      {
        \toc_number_before\relax #1 \toc_number_after \hfil
      }
@@ -7661,7 +7903,7 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
 }
 \ExplSyntaxOff
      %    \end{macrocode}
-\cxset{toc name= List of Illustrations,
+\cxset{toc name= Contents,
        toc name before = ,
        toc name after =,
        toc name color = black,
@@ -7690,7 +7932,7 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
   \markboth{\contentsname}{\contentsname}%
   \contentspagestyle@cx
   \interlinepenalty\@M
-  \format_toc_name:n {\contentsname}
+  \format_toc_name:n { \contentsname}
     \par\nobreak
     \vskip\contents_name_after_skip\relax
     \@afterheading%
@@ -7704,7 +7946,7 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
 \settocmarg@cx{20pt}
 \ExplSyntaxOn
 \cs_gset:Npn \dot@cx { - }
-\cs_gset:Npn \dotfill@cx #1
+\cs_gset:Npn \dot_fill #1
   {
     \leaders\hbox{$\m@th\mkern #1 mu\hbox{\dot@cx}\mkern #1 mu$}\hfill
   }
@@ -7785,9 +8027,10 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
 
      \interlinepenalty\@M
      \leavevmode
-     \@tempdima \toc_section_number_width\relax
+     \numberlineboxwidth \toc_section_number_width\relax
      \let\toc_number_before \cftsecpresnum
-     \advance\leftskip \@tempdima \null\nobreak\hskip -\leftskip
+     \advance\leftskip \numberlineboxwidth
+     \null\nobreak\hskip -\leftskip
 
      %\begin{tcolorbox}
        \tcbox[size=minimal,
@@ -7903,13 +8146,13 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
   } %end l@part
 
 \ExplSyntaxOff
-
+\ExplSyntaxOn
   \newcommand{\partpresnum@cx}{}
   \newcommand{\partaftersnum@cx}{..}
   % defined in parameters \newcommand{\partaftersnumb@cx}{}
   \def\cftnodots{2.7}
   \newcommand{\partdotsep@cx}{\cftnodots}
-  \newcommand{\tocpartleader@cx}{\large\bfseries\dotfill@cx{\partdotsep@cx}}
+  \newcommand{\tocpartleader@cx}{\large\bfseries\dot_fill{\partdotsep@cx}}
 
 
   \newcommand{\cftpartpagefont}{\large\bfseries}
@@ -7919,9 +8162,10 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
     {\tocpartleader@cx}%
     {\hb@xt@\@pnumwidth{\hss {%
        \tocpartpagefontsize@cx #1}}}\partafterpnum@cx\par}%
+\ExplSyntaxOff
 
 
-\@debugfalse
+\ExplSyntaxOn
 \if@debug
       \fboxsep1pt
       \fboxrule-1pt
@@ -7939,104 +8183,106 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
   \newcommand{\cftchappresnum}{}
   \newcommand{\cftchapaftersnum}{}
   \newcommand{\cftchapaftersnumb}{}
-  \newcommand{\cftchapleader}{\bfseries\dotfill@cx{\cftchapdotsep}}
-  \newcommand{\cftchapdotsep}{\chapterdotsep@cx}
+  \newcommand{\cftchapleader}{\bfseries\dot_fill{\cftchapdotsep}}
+\ExplSyntaxOff
+  \newcommand{\cftchapdotsep}{\toc_chapter_dot_sep}
   \newcommand{\cftchappagefont}{\sffamily\bfseries\color{teal}}
   \newcommand{\cftchapafterpnum}{}
  %    \end{macrocode}
 \fi
 
-\newcommand{\chapternumberline}[3]{%
-\if@debug
-   \fboxsep1pt
-   \fboxrule-1pt
-\else
-   \fboxsep0pt
-   \fboxrule0pt
-\fi
- %\hrule width\textwidth height1pt depth0pt\relax
-  \hbox to 0pt{%
-    \hspace*{0cm}%
-    \vbox to 0pt{\vspace*{.9cm}%
-       \parbox[t]{2cm}{%
-         }}}%
- % Typesets the Chapter  number
- % and chapter name
-  \hspace*{0cm}%
-   \fbox{\parbox[t]{2.5cm}{%
-      \fbox{\chaptername
-      \kern0.5em #1}%
-  }}%
-  \@@par
-  %   Typeset the chapter title width
-\fbox{\parbox[t]{\tocchaptertitlewidth@cx}{%
-      \bgroup
-         \raggedright%
-         \language-1
-         \MakeTextUppercase{#2}%
-        \par
-        \egroup
-       }}%
-  }%
- \newcommand{\typesettocchapterpage@cx}[1]{%
- \@debugtrue
- \if@debug
-   \fboxsep1pt
-   \fboxrule-1pt
-\else
-   \fboxsep0pt
-   \fboxrule0pt
-\fi
-      \hfill\fbox{\parbox[b]{3em}{%
-       \hfill%
-       #1}}%
-      \par\addvspace{0.5\baselineskip}
-     %  \hrule \@width\textwidth \@height1pt \@depth0pt\relax
-      }%
-
 \ExplSyntaxOn
-\cxset{
-  toc~chapter~beforeskip/.store~in         = \toc_chapter_beforeskip,
-  toc~chapter~afterskip/.store~in          = \tocafterchapterskip@cx,
-  toc~chapter~indent/.store~in             = \tocchapterindent@cx,
-  toc~chapter~dotsep/.store~in             = \chapterdotsep@cx,
-  toc~chapter~no~dots/.code                = \def\chapterdotsep@cx{10000},
-  toc~chapter~numberwidth/.store~in        = \tocchapternumberwidth@cx,
-  toc~chapter~font/.store~in               = \tocchapterfont@cx,
-  toc~chapter~title~width/.store~in        = \tocchaptertitlewidth@cx}
+\cxset
+  {
+    toc~chapter~indent/.store~in             = \toc_chapter_indent,
+    toc~chapter~beforeskip/.store~in         = \toc_chapter_beforeskip,
+    toc~chapter~afterskip/.store~in          = \toc_chapter_after_skip,
+    toc~chapter~dotsep/.store~in             = \toc_chapter_dot_sep,
+    toc~chapter~no~dots/.code                = \def\toc_chapter_dot_sep{10000},
+    toc~chapter~numberwidth/.store~in        = \toc_chapter_number_width,
+    toc~chapter~font-size/.font-size~in      = \toc_chapter_font_size,
+    toc~chapter~font-family/.font-family~in  = \toc_chapter_font_family,
+    toc~chapter~font-shape/.store~in         = \toc_chapter_font_shape,
+    toc~chapter~font-weight/.store~in        = \toc_chapter_font_weight,
+    toc~chapter~color/.store~in              = \toc_chapter_color,
+    toc~chapter~numwidth/.store~in           = \toc_chapter_number_width,
+    toc~chapter~case/.case~in                = \toc_chapter_case,
+    toc~chapter~font/.store~in               = \tocchapterfont@cx,
+    toc~chapter~title~width/.store~in        = \tocchaptertitlewidth@cx,
+    toc~chapter~page~font-size/.store~in     = \toc_chapter_page_font_size,
+    toc~chapter~page~font-family/.store~in   = \toc_chapter_page_font_family,
+    toc~chapter~page~font-shape/.store~in    = \toc_chapter_page_font_shape,
+    toc~chapter~page~font-weight/.store~in   = \toc_chapter_page_font_weight,
+    toc~chapter~page~color/.store~in         = \toc_chapter_page_color,
+    toc~chapter~page~before/.store~in        = \toc_chapter_page_before,
+    toc~chapter~page~after/.store~in         = \toc_chapter_page_after,
+    toc~chapter~page~pnumwidth/.store~in     = \toc_chapter_page_number_width
+  }
 \ExplSyntaxOff
-
-\cxset{
-  toc chapter beforeskip =10pt,
-  toc chapter indent= 0pt,
-  toc chapter dotsep=4.5,
-  toc chapter no dots,
-  toc  chapter numberwidth=0pt,
-  toc chapter font= \bfseries\sffamily\large\color{sweet},
-  toc chapter title width=0.8\textwidth}
+\cxset
+  {
+    toc chapter indent                       = 0pt,
+    toc chapter beforeskip                   = 15pt plus0.5pt minus0.5pt,
+    toc chapter afterskip                    = 15pt plus0.5pt minus0.5pt,
+    toc chapter dotsep                       = 4.5,
+    toc chapter no dots,
+    toc  chapter numberwidth                 = 7.25em,
+    toc chapter font                         = \bfseries\sffamily\large,
+    toc chapter title width                  = 0.6\textwidth,
+    toc chapter page pnumwidth               = 2.35em,
+    toc chapter page before                  = [,
+    toc chapter page after                   = ],
+    toc chapter case                         = upper,
+  }
 
 \ExplSyntaxOn
   \renewcommand*{\l@chapter}[2]{%
      \ifnum \c@tocdepth >\m@ne
        \addpenalty{-\@highpenalty}%
        \vskip \toc_chapter_beforeskip\relax
-        {%\leftskip\tocchapterindent@cx\relax
-        %\rightskip \@tocrmarg
-        %\parfillskip -\rightskip
-         \parindent \tocchapterindent@cx\relax%
-         \@afterindenttrue
-        %\interlinepenalty\@M
-        \leavevmode
-        %\@tempdima \tocchapternumberwidth@cx\relax
-        %\let\toc_number_before \cftchappresnum
-        %\let\toc_number_after \cftchapaftersnum
-        %\let\toc_number_after_box \cftchapaftersnumb
-        %\advance\leftskip \@tempdima \null\nobreak\hskip -\leftskip
-        {\tocchapterfont@cx#1}\nobreak
-         \typesettocchapterpage@cx{#2}}%
+        {
+        \format_toc_chapter_leaders:nn {#1} {#2}
+        }%
+       \vskip \toc_chapter_after_skip
     \fi
  }%
 \ExplSyntaxOff
+\ExplSyntaxOn
+\cs_new:Npn \format_toc_chapter_leaders:nn #1 #2
+  {
+   \leftskip\toc_chapter_indent\relax
+   \rightskip \@tocrmarg
+   \parfillskip -\rightskip
+   \parindent \toc_chapter_indent\relax%
+   \@afterindenttrue
+   \interlinepenalty\@M
+   \leavevmode
+   \begin{tcolorbox}[colback=spot!30,arc=3mm,colframe=white]
+   \numberlineboxwidth\toc_chapter_number_width\relax
+        %\let\toc_number_before \cftchappresnum
+        %\let\toc_number_after \cftchapaftersnum
+        %\let\toc_number_after_box \cftchapaftersnumb
+    \advance\leftskip\numberlineboxwidth
+    \null\nobreak\hskip -\leftskip
+    {
+      \tocchapterfont@cx
+      \exp_after:wN \cs:w \toc_chapter_case \cs_end:
+      {#1}
+    }
+    {\lotleader}\nobreak
+     \toc_chapter_page_before\makebox[\toc_chapter_page_number_width][r]
+    {
+        \exp_after:wN \cs:w \exp_after:wN \lot_page_font_size \cs_end:
+        \exp_after:wN \cs:w \exp_after:wN \lot_page_font_weight \cs_end:
+        \exp_after:wN \cs:w \exp_after:wN \lot_page_font_family \cs_end:
+        \exp_after:wN \cs:w \exp_after:wN \lot_page_font_shape \cs_end:
+       \hss#2
+    }\toc_chapter_page_after
+   \end{tcolorbox}
+
+  }
+\ExplSyntaxOff
+
 \let\sampletocchapter\l@chapter
 \ExplSyntaxOn
 \cxset
@@ -8069,7 +8315,7 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
   toc section font-weight = bfseries,
   toc section font-shape = upshape,
   toc section color= sweet,
-  toc section case = upper,
+  toc section case = none,
   toc section font-size= normal,
   toc section numwidth = 4.2em,
   toc section page font-size=normal,
@@ -8096,10 +8342,12 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
   \fi
   }
 \ExplSyntaxOff
+\ExplSyntaxOn
 \newcommand{\cftsecpresnum}{}
 \newcommand{\cftsecaftersnum}{}
 \newcommand{\cftsecaftersnumb}{}
-\newcommand{\tocsectionleader@cx}  {\normalfont\dotfill@cx{\tocsecdotsep@cx}}
+\newcommand{\tocsectionleader@cx}  {\normalfont\dot_fill{\tocsecdotsep@cx}}
+\ExplSyntaxOff
 \ExplSyntaxOn
 \newif\if@lowercasesubsection
 \cxset{
@@ -8128,7 +8376,7 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
        toc subsection font-weight     = normal,
        toc subsection font-size       = normal,
        toc subsection font-shape      = upshape,
-       toc subsection case            = upper,
+       toc subsection case            = none,
        toc subsection color= sweet,
        toc subsection numwidth = 4.2em,
        toc subsection page font-size=normal,
@@ -8163,7 +8411,7 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
 \ExplSyntaxOn
 \cs_new:Npn \tocsubsectionleader@cx
   {
-  \normalfont\dotfill@cx{\toc_subsection_dot_sep}
+  \normalfont\dot_fill{\toc_subsection_dot_sep}
   }
 \ExplSyntaxOff
 \ExplSyntaxOn
@@ -8194,7 +8442,7 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
   toc subsubsection font-family        = sffamily,
   toc subsubsection font-weight        = mdseries,
   toc subsubsection font-shape         = upshape,
-  toc subsubsection case               = upper,
+  toc subsubsection case               = none,
   toc subsubsection color              = sweet,
   toc subsubsection font-size          = normal,
   toc subsubsection numwidth           = 4.2em,
@@ -8230,7 +8478,7 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
 \ExplSyntaxOn
  \cs_new:Npn \tocsubsubsectionleader@cx
    {
-     \normalfont\dotfill@cx{\toc_subsubsection_dot_sep}
+     \normalfont\dot_fill{\toc_subsubsection_dot_sep}
    }
 \ExplSyntaxOff
 \newcommand{\tocsubsubsectionfillnum}[1]{%
@@ -8268,7 +8516,7 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
        toc paragraph font-shape = slshape,
        toc paragraph color= sweet,
        toc paragraph font-size=normal,
-       toc paragraph case = upper,
+       toc paragraph case = none,
        toc paragraph numwidth = 4.2em,
        toc paragraph page font-size=normal,
        toc paragraph page font-shape= upshape,
@@ -8299,7 +8547,9 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
   \fi
   }
 \ExplSyntaxOff
-\newcommand{\tocparagraphleader@cx}{\normalfont\dotfill@cx{\tocparagraphdotsep@cx}}
+\ExplSyntaxOn
+\newcommand{\tocparagraphleader@cx}{\normalfont\dot_fill{\tocparagraphdotsep@cx}}
+\ExplSyntaxOff
 %%    We can now define the command \cmd{\tocsectionfillnum}. It will print the
 %% leaders if any and the page number \#1. TODO IS par necessary??
 %%    \begin{macrocode}
@@ -8341,7 +8591,7 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
   toc subparagraph font-shape              = slshape,
   toc subparagraph color                   = sweet ,
   toc subparagraph font-size               = normal,
-  toc subparagraph case                    = upper,
+  toc subparagraph case                    = none,
   toc subparagraph numwidth                = 4.2em,
   toc subparagraph page font-size          = normal,
   toc subparagraph page font-shape         = upshape,
@@ -8368,9 +8618,377 @@ chapter numbering/padzeroes/.code={\gdef\thechapter{\mbox{EWD -\padzeroes[4]\dec
 \ExplSyntaxOn
 \cs_new:Npn \tocsubparagraphleader@cx
   {
-    \normalfont\dotfill@cx{\toc_subparagraph_dotsep}
+    \normalfont\dot_fill{\toc_subparagraph_dotsep}
   }
 \ExplSyntaxOff
+
+%%    \end{macrocode}
+%% Ensure that any previous paragraph has been finished.
+%% within a group set
+%% the local paragraphing style and typeset the title. \label{code:tableofcontents}
+%%    \begin{macrocode}
+%%    \end{macrocode}
+%%
+%% Finally, start reading the \docfile{.toc} file and finish up.
+%%    \begin{macrocode}
+\ExplSyntaxOn
+\cs_gset:Npn \format_lof_name:n #1
+  {
+ \begin{tcolorbox}[colback=spot!30,arc=3mm,colframe=white,]
+  \contents_name_before
+     \setfont@cx {\lof_name_font_weight}
+                 {\lof_name_font_family}
+                 {\lof_name_font_size}
+                 {\lof_name_font_shape}
+                 \color{\lof_name_color}
+      \start_align
+      \lof_name_indent
+      \exp_after:wN \cs:w \exp_after:wN
+           \lof_name_case\cs_end:
+        #1
+      \end_align
+    \end{tcolorbox}
+ \contents_name_after%
+ }
+\ExplSyntaxOff
+\ExplSyntaxOn
+\renewcommand\listoffigures{%
+    \if@twocolumn
+      \@restonecoltrue\onecolumn
+    \else
+      \@restonecolfalse
+    \fi
+    \make_lof_title
+    \start_toc:n {lof}%
+    \if@restonecol
+      \twocolumn
+    \fi
+    }
+\ExplSyntaxOff
+\ExplSyntaxOn
+\cxset
+  {
+    lof~name/.code                                    =
+        \cs_gset:Npn \listfigurename { #1 },
+    lof~name~before/.store~in                         = \lof_name_before,
+    lof~name~after/.store~in                          = \lof_name_after,
+    lof~name~font-size/.store~in                      = \lof_name_font_size,
+    lof~name~font-weight/.store~in                    = \lof_name_font_weight,
+    lof~name~font-family/.store~in                    = \lof_name_font_family,
+    lof~name~font-shape/.store~in                     = \lof_name_font_shape,
+    lof~name~color/.store~in                          = \lof_name_color,
+    lof~name~afterskip/.store~in                      = \lof_name_after_skip,
+    lof~name~align/.is~choice,
+    lof~name~align/center/.code                       =
+      \cs_set:Npn \start_align { \bgroup \centering }
+      \cs_set:Npn \end_align {\par \egroup },
+    lof~name~align/right/.code                        =
+      \cs_set:Npn \start_align { \flushright }
+      \cs_set:Npn \end_align { \endflushright },
+    lof~name~align/left/.code                         =
+      \cs_set:Npn \start_align{\@empty}
+      \cs_set:Npn \end_align{\@empty},
+    lof~name~align/none/.code                         =
+      \cs_set:Npn \start_align{\@empty}
+      \cs_set:Npn \end_align{\@empty},
+    lof~name~indent/.store~in                         = \lof_name_indent,
+    lof~name~case/.case~in                            = \lof_name_case,
+    lof~pagestyle/.code                               =
+    \gdef\contentspagestyle@cx{\thispagestyle{#1}},
+}
+\ExplSyntaxOff
+\cxset{lof name= Illustrations,
+       lof name before = ,
+       lof name after =,
+       lof name color = black,
+       lof name font-weight=bold,
+       lof name font-family=sffamily,
+       lof name font-shape=upshape,
+       lof name font-size=LARGE,
+       lof name afterskip=10pt, %set as 40pt in LaTeX
+       lof name after=\par,
+       lof name align=none,
+       lof name indent=\hspace*{0cm},
+       lof name case=upper,
+       lof pagestyle=headings,
+  }%
+
+\ExplSyntaxOn
+\def\phd_lof_start{}
+\def\phd_lof_end {}
+\cs_new:Npn \make_lof_title
+  {
+    \newpage
+    \phd_lof_start
+    \format_lof_name:n {\listfigurename}%
+    \@mkboth{\MakeUppercase\listfigurename}%
+            {\MakeUppercase\listfigurename}%
+    \phd_lof_end
+  }
+\ExplSyntaxOff
+\ExplSyntaxOn
+\cxset
+  {
+    lof~entry~beforeskip/.store~in              = \lof_before_skip,
+    lof~entry~indent/.store~in                  = \lof_indent,
+    lof~entry~margin-left/.style                = {lof indent=#1},
+    lof~entry~font-size/.font-size~in           = \lof_font_size,
+    lof~entry~font-family/.font-family~in       = \lof_font_family,
+    lof~entry~font-shape/.store~in              = \lof_font_shape,
+    lof~entry~font-weight/.store~in             = \lof_font_weight,
+    lof~entry~color/.store~in                   = \lof_color,
+    lof~numwidth/.store~in                      = \lof_number_width,
+    lof~pnumwidth/.store~in                     = \lof_page_number_width,
+    lof~rmargin/.store~in                       = \lof_rmargin,
+    lof~case/.case~in                           = \lof_case,
+    lof~page~font-size/.store~in                = \lof_page_font_size,
+    lof~page~font-family/.store~in              = \lof_page_font_family,
+    lof~page~font-shape/.store~in               = \lof_page_font_shape,
+    lof~page~font-weight/.store~in              = \lof_page_font_weight,
+    lof~page~color/.store~in                    = \lof_page_color,
+    lof~dotsep/.store~in                        = \lof_dotsep,
+    lof~page~before/.store~in                   = \lof_page_before,
+    lof~page~after/.store~in                    = \lof_page_after,
+}
+\ExplSyntaxOff
+\cxset
+  {%
+    lof entry beforeskip=\z@ \@plus.2\p@,
+    lof entry indent=0em,
+    lof entry font-family= sffamily,
+    lof entry font-weight = bfseries,
+    lof entry font-shape = upshape,
+    lof entry color= black,
+    lof case = upper,
+    lof entry font-size= normal,
+    lof numwidth = 3em,
+    lof pnumwidth = 2.35em, %set at 1.55em in book
+    lof rmargin   = 3.35em, %set at 2.55em in book
+    lof page font-size=normal,
+    lof page font-shape= upshape,
+    lof page font-weight=bold,
+    lof page font-family= sffamily,
+    lof page color = sweet,
+    lof page before =,
+    lof page after =,
+    lof dotsep = 2.7,
+}
+\ExplSyntaxOn
+ \renewcommand*{\l@figure}[2]{%
+     \vskip \lof_before_skip
+    {
+      \format_lof_entry_leaders_type {#1}{#2}
+    }%
+  }
+\newcommand{\lofleader}{\normalfont\dot_fill{\lof_dotsep}}
+
+\cs_new:Npn \format_lof_entry_leaders_type #1 #2
+  {
+   \leftskip \lof_indent\relax
+   \rightskip \lof_rmargin
+   \parfillskip -\rightskip
+   \parindent \lof_indent\relax\@afterindenttrue
+   \interlinepenalty\@M
+   \leavevmode
+    % set parameters for number
+    \numberlineboxwidth \lof_number_width\relax
+    % set numberline hooks if any
+    \advance\leftskip \numberlineboxwidth \null\nobreak\hskip -\leftskip
+    #1
+    {\lofleader}\nobreak
+    % set hooks for page??
+     \lof_page_before\makebox[\lof_page_number_width][r]
+      {
+        \exp_after:wN \cs:w \exp_after:wN \lof_page_font_size \cs_end:
+        \exp_after:wN \cs:w \exp_after:wN \lof_page_font_weight \cs_end:
+        \exp_after:wN \cs:w \exp_after:wN \lof_page_font_family \cs_end:
+        \exp_after:wN \cs:w \exp_after:wN \lof_page_font_shape \cs_end:
+       \hss#2
+      }\lof_page_after
+
+    \par
+  }
+\ExplSyntaxOff
+\ExplSyntaxOn
+\cs_gset:Npn \format_lot_name:n #1
+  {
+ \begin{tcolorbox}[colback=spot!50,arc=3mm,colframe=white,]
+  \contents_name_before
+     \setfont@cx {\lot_name_font_weight}
+                 {\lot_name_font_family}
+                 {\lot_name_font_size}
+                 {\lot_name_font_shape}
+                 \color{\lot_name_color}
+      \start_align
+      \lot_name_indent
+      \exp_after:wN \cs:w \exp_after:wN
+           \lot_name_case\cs_end:
+        #1
+      \end_align
+    \end{tcolorbox}
+ \contents_name_after%
+ }
+\ExplSyntaxOff
+\ExplSyntaxOn
+\renewcommand\listoftables {%
+    \if@twocolumn
+      \@restonecoltrue\onecolumn
+    \else
+      \@restonecolfalse
+    \fi
+    \make_lot_title
+    \start_toc:n {lot}%
+    \if@restonecol
+      \twocolumn
+    \fi
+    }
+\ExplSyntaxOff
+\ExplSyntaxOn
+\cxset
+  {
+    lot~name/.code                                    =
+        \cs_gset:Npn \listfigurename { #1 },
+    lot~name~before/.store~in                         = \lot_name_before,
+    lot~name~after/.store~in                          = \lot_name_after,
+    lot~name~font-size/.store~in                      = \lot_name_font_size,
+    lot~name~font-weight/.store~in                    = \lot_name_font_weight,
+    lot~name~font-family/.store~in                    = \lot_name_font_family,
+    lot~name~font-shape/.store~in                     = \lot_name_font_shape,
+    lot~name~color/.store~in                          = \lot_name_color,
+    lot~name~afterskip/.store~in                      = \lot_name_after_skip,
+    lot~name~align/.is~choice,
+    lot~name~align/center/.code                       =
+      \cs_set:Npn \start_align { \bgroup \centering }
+      \cs_set:Npn \end_align {\par \egroup },
+    lot~name~align/right/.code                        =
+      \cs_set:Npn \start_align { \flushright }
+      \cs_set:Npn \end_align { \endflushright },
+    lot~name~align/left/.code                         =
+      \cs_set:Npn \start_align{\@empty}
+      \cs_set:Npn \end_align{\@empty},
+    lot~name~align/none/.code                         =
+      \cs_set:Npn \start_align{\@empty}
+      \cs_set:Npn \end_align{\@empty},
+    lot~name~indent/.store~in                         = \lot_name_indent,
+    lot~name~case/.case~in                            = \lot_name_case,
+    lot~pagestyle/.code                               =
+    \gdef\contentspagestyle@cx{\thispagestyle{#1}},
+}
+\ExplSyntaxOff
+\cxset{lof name= Illustrations,
+       lof name before = ,
+       lof name after =,
+       lof name color = black,
+       lof name font-weight=bold,
+       lof name font-family=sffamily,
+       lof name font-shape=upshape,
+       lof name font-size=LARGE,
+       lof name afterskip=10pt, %set as 40pt in LaTeX
+       lof name after=\par,
+       lof name align=none,
+       lof name indent=\hspace*{0cm},
+       lof name case=upper,
+       lof pagestyle=headings,
+  }%
+
+\ExplSyntaxOn
+\def\phd_lot_start{}
+\def\phd_lot_end {}
+\cs_new:Npn \make_lot_title
+  {
+    \newpage
+    \phd_lot_start
+    \format_lof_name:n {\listtablename}%
+    \@mkboth{\MakeUppercase\listtablename}%
+            {\MakeUppercase\listtablename}%
+    \phd_lot_end
+  }
+\ExplSyntaxOff
+\ExplSyntaxOn
+\cxset
+  {
+    lot~entry~beforeskip/.store~in              = \lot_before_skip,
+    lot~entry~indent/.store~in                  = \lot_indent,
+    lot~entry~margin-left/.style                = {lof indent=#1},
+    lot~entry~font-size/.font-size~in           = \lot_font_size,
+    lot~entry~font-family/.font-family~in       = \lot_font_family,
+    lot~entry~font-shape/.store~in              = \lot_font_shape,
+    lot~entry~font-weight/.store~in             = \lot_font_weight,
+    lot~entry~color/.store~in                   = \lot_color,
+    lot~numwidth/.store~in                      = \lot_number_width,
+    lot~pnumwidth/.store~in                     = \lot_page_number_width,
+    lot~rmargin/.store~in                       = \lot_rmargin,
+    lot~case/.case~in                           = \lot_case,
+    lot~page~font-size/.store~in                = \lot_page_font_size,
+    lot~page~font-family/.store~in              = \lot_page_font_family,
+    lot~page~font-shape/.store~in               = \lot_page_font_shape,
+    lot~page~font-weight/.store~in              = \lot_page_font_weight,
+    lot~page~color/.store~in                    = \lot_page_color,
+    lot~dotsep/.store~in                        = \lot_dotsep,
+    lot~page~before/.store~in                   = \lot_page_before,
+    lot~page~after/.store~in                    = \lot_page_after,
+}
+\ExplSyntaxOff
+\cxset
+  {%
+    lot entry beforeskip=\z@ \@plus.2\p@,
+    lot entry indent=0em,
+    lot entry font-family= sffamily,
+    lot entry font-weight = bfseries,
+    lot entry font-shape = upshape,
+    lot entry color= black,
+    lot case = upper,
+    lot entry font-size= normal,
+    lot numwidth = 3em,
+    lot pnumwidth = 2.35em, %set at 1.55em in book
+    lot rmargin   = 3.35em, %set at 2.55em in book
+    lot page font-size=normal,
+    lot page font-shape= upshape,
+    lot page font-weight=bold,
+    lot page font-family= sffamily,
+    lot page color = sweet,
+    lot page before =,
+    lot page after =,
+    lot dotsep = 2.7,
+}
+\ExplSyntaxOn
+ \renewcommand*{\l@table}[2]{%
+     \vskip \lot_before_skip
+    {
+      \format_lof_entry_leaders_type {#1}{#2}
+    }%
+  }
+\newcommand{\lotleader}{\normalfont\dot_fill{\lot_dotsep}}
+
+\cs_new:Npn \format_lot_entry_leaders_type #1 #2
+  {
+   \leftskip \lot_indent\relax
+   \rightskip \lot_rmargin
+   \parfillskip -\rightskip
+   \parindent \lot_indent\relax\@afterindenttrue
+   \interlinepenalty\@M
+   \leavevmode
+    % set parameters for number
+    \numberlineboxwidth \lot_number_width\relax
+    % set numberline hooks if any
+    \advance\leftskip \numberlineboxwidth
+     \null\nobreak\hskip -\leftskip
+    #1
+    {\lotleader}\nobreak
+    % set hooks for page??
+     \lot_page_before\makebox[\lot_page_number_width][r]
+      {
+        \exp_after:wN \cs:w \exp_after:wN \lot_page_font_size \cs_end:
+        \exp_after:wN \cs:w \exp_after:wN \lot_page_font_weight \cs_end:
+        \exp_after:wN \cs:w \exp_after:wN \lot_page_font_family \cs_end:
+        \exp_after:wN \cs:w \exp_after:wN \lot_page_font_shape \cs_end:
+       \hss#2
+      }\lot_page_after
+
+    \par
+  }
+\ExplSyntaxOff
+
 \cxset{endnotes package/.code ={\gdef\endnotes@cs{#1}%
                    \RequirePackage{\endnotes@cs}%
                 }%
