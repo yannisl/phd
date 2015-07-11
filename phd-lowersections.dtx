@@ -288,13 +288,9 @@ See http://www.latex-project.org/lppl.txt
 % This part of the code is a bit verbose. We care to provide keys for all
 % parameters in order to allow flexibility and easy extensions.
 %
-% \subsection{Sections}
+% \section{Sections}
 %    \begin{macrocode}
 \ExplSyntaxOn
-\dim_gzero_new:N \l_phd_section_title_margin_top_dim
-\dim_gzero_new:N \l_phd_section_title_margin_right_dim
-\dim_gzero_new:N \l_phd_section_title_margin_bottom_dim
-\dim_gzero_new:N \l_phd_section_title_margin_left_dim
 %
 \dim_gzero_new:N \l_phd_section_title_padding_top_dim
 \dim_gzero_new:N \l_phd_section_title_padding_right_dim
@@ -302,181 +298,215 @@ See http://www.latex-project.org/lppl.txt
 \dim_gzero_new:N \l_phd_section_title_padding_left_dim
 
 \dim_gzero_new:N \l_phd_section_title_border_left_width_dim
-%
-%
-\dim_gzero_new:N \l_phd_section_border_left_width_dim
-\dim_gzero_new:N \l_phd_section_border_right_width_dim
-\dim_gzero_new:N \l_phd_section_border_top_width_dim
-\dim_gzero_new:N \l_phd_section_border_bottom_width_dim
 
-\dim_gzero_new:N \l_phd_subsection_border_left_width_dim
-\dim_gzero_new:N \l_phd_subsection_border_right_width_dim
-\dim_gzero_new:N \l_phd_subsection_border_top_width_dim
-\dim_gzero_new:N \l_phd_subsection_border_bottom_width_dim
 
-\dim_gzero_new:N \l_phd_subsubsection_border_left_width_dim
-\dim_gzero_new:N \l_phd_subsubsection_border_right_width_dim
-\dim_gzero_new:N \l_phd_subsubsection_border_top_width_dim
-\dim_gzero_new:N \l_phd_subsubsection_border_bottom_width_dim
+\cs_new:Npn \makenewparams #1 
+{
+ \dim_gzero_new:c {l_phd_#1_padding_top_width_dim}
+ \dim_gzero_new:c {l_phd_#1_padding_right_width_dim}
+ \dim_gzero_new:c {l_phd_#1_padding_bottom_width_dim}
+ \dim_gzero_new:c {l_phd_#1_padding_left_width_dim}
+% 
+ \dim_gzero_new:c {l_phd_#1_border_left_width_dim}
+ \dim_gzero_new:c {l_phd_#1_border_right_width_dim}
+ \dim_gzero_new:c {l_phd_#1_border_top_width_dim}
+ \dim_gzero_new:c {l_phd_#1_border_bottom_width_dim}
+% 
+ \dim_gzero_new:c {l_phd_#1title_margin_top_dim}
+ \dim_gzero_new:c {l_phd_#1title_margin_right_dim}
+ \dim_gzero_new:c {l_phd_#1title_margin_bottom_dim}
+ \dim_gzero_new:c {l_phd_#1title_margin_left_dim}
 %
-\dim_gzero_new:N \l_phd_section_padding_top_width_dim
-\dim_gzero_new:N \l_phd_section_padding_right_width_dim
-\dim_gzero_new:N \l_phd_section_padding_bottom_width_dim
-\dim_gzero_new:N \l_phd_section_padding_left_width_dim
+ \dim_gzero_new:c {l_phd_#1title_padding_top_width_dim}
+ \dim_gzero_new:c {l_phd_#1title_padding_right_width_dim}
+ \dim_gzero_new:c {l_phd_#1title_padding_bottom_width_dim}
+ \dim_gzero_new:c {l_phd_#1title_padding_left_width_dim}
+% 
+ \dim_gzero_new:c {l_phd_#1title_border_left_width_dim}
+ \dim_gzero_new:c {l_phd_#1title_border_right_width_dim}
+ \dim_gzero_new:c {l_phd_#1title_border_top_width_dim}
+ \dim_gzero_new:c {l_phd_#1title_border_bottom_width_dim}
+}
+
+\clist_new:N \phd_book_divisions_clist
+\clist_gset:Nn \phd_book_divisions_clist
+  {
+    section,subsection,subsubsection,
+    paragraph,subparagraph
+  }
+\clist_map_inline:Nn \phd_book_divisions_clist
+  {
+    \makenewparams{#1}
+  }
+%    \endmacrocode}
+% 
+% 
+%    \begin{macrocode}
+\ExplSyntaxOn
+\def\makekeys#1
+ {
+  \cxset
+    {
+% Main elements names etc
+     #1~name/.code                 = \cs_gset:cpn {#1name} {##1}, 
+     #1~beforeskip/.code           = \cs_gset:cpn {l_phd_#1_before_skip_tl}{##1},
+     #1~afterskip/.code            = \cs_gset:cpn {l_phd_#1_after_skip_tl}{##1},
+     #1~indent/.code               = \cs_gset:cpn {l_phd_#1_indent_tl}{##1},
+% fonts
+     #1~font-size/.fontsize        = l_phd_#1_fontsize_tl,
+     #1~font-weight/.fontweight    = l_phd_#1_fontweight_tl, 
+     #1~font-shape/.fontstyle      = l_phd_#1_fontshape_tl,  
+     #1~font-family/.fontfamily    = l_phd_#1_fontfamily_tl,   
+% Format
+     #1~format/.format~in          = l_phd_#1_format_tl,   
+% Colors
+     #1~background-color/.colorin =  l_phd_#1_background_color_tl,
+     #1~color/.colorin            =  l_phd_#1_color_tl, 
+% Main text alignment
+     #1~align/.textalign           = l_phd_#1_align_tl,         
+% Main element borders
+     #1~border-top-width/.code    = \dim_set:cn {l_phd_#1_border_top_width_dim}    {##1},  
+     #1~border-right-width/.code  = \dim_set:cn {l_phd_#1_border_right_width_dim}  {##1}, 
+     #1~border-bottom-width/.code = \dim_set:cn {l_phd_#1_border_bottom_width_dim} {##1},  
+     #1~border-left-width/.code   = \dim_set:cn {l_phd_#1_border_left_width_dim}   {##1}, 
+% 
+     #1~padding-top-width/.code    = \dim_set:cn {l_phd_#1_padding_top_width_dim}    {##1},  
+     #1~padding-right-width/.code  = \dim_set:cn {l_phd_#1_padding_right_width_dim}  {##1}, 
+     #1~padding-bottom-width/.code = \dim_set:cn {l_phd_#1_padding_bottom_width_dim} {##1},  
+     #1~padding-left-width/.code   = \dim_set:cn {l_phd_#1_padding_left_width_dim}   {##1}, 
+%         
+     #1~margin-top-width/.code    = \dim_set:cn {l_phd_#1_margin_top_width_dim}    {##1},  
+     #1~margin-right-width/.code  = \dim_set:cn {l_phd_#1_margin_right_width_dim}  {##1}, 
+     #1~margin-bottom-width/.code = \dim_set:cn {l_phd_#1_margin_bottom_width_dim} {##1},  
+     #1~margin-left-width/.code   = \dim_set:cn {l_phd_#1_margin_left_width_dim}   {##1}, 
+%     
+     #1~title~width/.code          = 
+        \expandafter\def\cs:w l_phd_#1_title_width_dim\cs_end:{##1},
+% title margins        
+      #1~title~margin-top/.code  = \dim_gset:cn {l_phd_sectiontitle_margin_top_dim} {##1},
+% Numbering Wow!
+    #1~numbering/.is~choice,
+    #1~numbering/roman/.code          =
+       \cs_gset:cpn {the#1}
+         {
+           \cs:w l_phd_section_number_prefix_tl \cs_end: 
+             \@roman\cs:w c@#1\cs_end:\relax
+           \cs:w l_phd_#1_number_suffix_tl \cs_end:   
+         },
+    #1~numbering/Roman/.code          =
+      \cs_gset:cpn {the#1}
+        {
+          \cs:w l_phd_section_number_prefix_tl \cs_end: 
+          \expandafter\@Roman{\cs:w c@#1\cs_end:} \relax
+          \cs:w l_phd_#1_number_suffix_tl \cs_end:  
+        },
+   #1~numbering/(roman)/.code          =
+    \cs_gset:cpn {the#1}
+       {
+       \cs:w l_phd_section_number_prefix_tl \cs_end: 
+         (\@roman\cs:w c@#1\cs_end:\relax)
+       \cs:w l_phd_#1_number_suffix_tl \cs_end:    
+       },
+   #1~numbering/(Roman)/.code          =
+    \cs_gset:cpn {the#1}
+      {
+        \cs:w l_phd_section_number_prefix_tl \cs_end: 
+        (\@Roman \cs:w c@#1\cs_end:\relax)
+        \cs:w l_phd_#1_number_suffix_tl \cs_end:  
+      },
+  #1~numbering/arabic/.code           =
+    \cs_gset:cpn {the#1}
+      {
+        \cs:w l_phd_section_number_prefix_tl \cs_end: 
+        \@arabic\cs:w c@#1\cs_end: \relax
+        \cs:w l_phd_#1_number_suffix_tl \cs_end: 
+      },
+  #1~numbering/numeric/.code          =
+    \cs_gset:cpn {the#1}
+      {
+        \cs:w l_phd_section_number_prefix_tl \cs_end: 
+        \@arabic\cs:w c@#1\cs_end:
+        \cs:w l_phd_#1_number_suffix_tl \cs_end: 
+      },
+  #1~numbering/none/.code             = 
+    \cs_gset:cpn {the#1} {},
+  #1~numbering/alpha/.code            = 
+    \cs_gset:cpn {the#1}
+      {
+        \cs:w l_phd_section_number_prefix_tl \cs_end: 
+        \exp_after:wN \alphalph {\cs:w c@#1\cs_end:}
+        \cs:w l_phd_#1_number_suffix_tl \cs_end:   
+      },
+  #1~numbering/Alpha/.code            = 
+    \cs_gset:cpn {the#1}
+      {
+        \cs:w l_phd_section_number_prefix_tl \cs_end: 
+          \exp_after:wN \AlphAlph{\cs:w c@#1\cs_end:}
+        \cs:w l_phd_#1_number_suffix_tl \cs_end:  
+      },
+  #1~numbering/words/.code            = 
+    \cs_gset:cpn {the#1}
+      {
+       \cs:w l_phd_section_number_prefix_tl \cs_end: 
+       \words@cx{\@arabic\cs:w c@#1\cs_end:}
+       \cs:w l_phd_#1_number_suffix_tl \cs_end:  
+      },
+  #1~numbering/Words/.code            =
+    \cs_gset:cpn {the#1}
+      {
+        \cs:w l_phd_section_number_prefix_tl \cs_end: 
+        \Words@cx{\@arabic\cs:w c@#1\cs_end: }
+        \cs:w l_phd_#1_number_suffix_tl \cs_end:  
+      },
+  #1~numbering/WORDS/.code            =
+    \cs_gset:cpn {the#1}
+      {
+       \cs:w l_phd_section_number_prefix_tl \cs_end:   
+       \WORDS@cx{\@arabic\cs:w c@#1\cs_end:}
+       \cs:w l_phd_#1_number_suffix_tl \cs_end:  
+      },
+  #1~numbering~custom/.code           = 
+    \cs_gset:cpn {the#1} {##1},        
+    }   
+  }   
+%  
 %
-\dim_gzero_new:N \l_phd_subsection_padding_top_width_dim
-\dim_gzero_new:N \l_phd_subsection_padding_right_width_dim
-\dim_gzero_new:N \l_phd_subsection_padding_bottom_width_dim
-\dim_gzero_new:N \l_phd_subsection_padding_left_width_dim
+\clist_map_inline:Nn \phd_book_divisions_clist
+  {
+    \makekeys{#1}
+  }
+%  
+\ExplSyntaxOff  
+%    \end{macrocode}
+%    \begin{macrocode} 
+\ExplSyntaxOn 
+%\cxset
+% {  
+%   section~title~margin-top/.code         = 
+%   \dim_gset:cn {l_phd_sectiontitle_margin_top_dim} {#1},
+% }  
 %
-\dim_gzero_new:N \l_phd_subsubsection_padding_top_width_dim
-\dim_gzero_new:N \l_phd_subsubsection_padding_right_width_dim
-\dim_gzero_new:N \l_phd_subsubsection_padding_bottom_width_dim
-\dim_gzero_new:N \l_phd_subsubsection_padding_left_width_dim
-%
+\cxset{section~title~margin-top = 0pt,} 
 \cxset 
   { 
-    section~border-top-width/.code             = 
-      \dim_set:Nn 
-     \l_phd_section_border_top_width_dim {#1},  
-%     
-    section~border-left-width/.code       = 
-     \dim_set:Nn 
-     \l_phd_section_border_left_width_dim {#1},
-%     
-    section~border-bottom-width/.code       = 
-     \dim_set:Nn 
-     \l_phd_section_border_bottom_width_dim {#1},     
-%     
-    section~border-right-width/.code       = 
-     \dim_set:Nn 
-     \l_phd_section_border_right_width_dim {#1}, 
-% padding     
-    section~padding-top-width/.code             = 
-      \dim_set:Nn 
-     \l_phd_section_padding_top_width_dim {#1},  
-%     
-    section~padding-left-width/.code       = 
-     \dim_set:Nn 
-     \l_phd_section_padding_left_width_dim {#1},
-%     
-    section~padding-bottom-width/.code       = 
-     \dim_set:Nn 
-     \l_phd_section_padding_bottom_width_dim {#1},     
-%     
-    section~padding-right-width/.code       = 
-     \dim_set:Nn 
-     \l_phd_section_padding_right_width_dim {#1},   
-%     
-    section~name/.store~in                 = \sectionname,
-    section~format/.format~in              = \l_phd_section_format_tl,
-    section~background-color/.store~in     = \l_phd_section_background_color_tl,
-    section~color/.store~in                = \l_phd_section_color_tl,
 %    
     section~arc/.store~in                  = \l_phd_section_arc_tl,
     section~grow~left/.store~in            = \l_phd_section_grow_left_dim,
     section~grow~right/.store~in           = \l_phd_section_grow_right_dim,
     section~rounded~corners/.store~in      = \l_phd_section_rounded_corners_tl,
-%    
-    section~font-size/.font-size~in        = \l_phd_section_fontsize_tl,
-    section~font-weight/.font-weight~in    = \l_phd_section_fontweight_tl,
-    section~font-family/.font-family~in    = \l_phd_section_fontfamily_tl,
-    section~font-shape/.font-style~in      = \l_phd_section_fontshape_tl,
-%
     section~number~after/.store~in         = \l_phd_section_number_after_tl,
     section~numbering~prefix/.store~in     = \l_phd_section_number_prefix_tl,
     section~numbering~suffix/.store~in     = \l_phd_section_number_suffix_tl, 
 %
-    section~numbering/.is~choice,
-    section~numbering/roman/.code          =
-       \cs_gset:Npn \thesection
-         {
-           \l_phd_section_number_prefix_tl
-             \@roman\c@section
-           \l_phd_section_number_suffix_tl  
-         },
-    section~numbering/Roman/.code          =
-      \cs_gset:Npn \thesection
-        {
-          \l_phd_section_number_prefix_tl
-          \@Roman\c@section\relax
-          \l_phd_section_number_suffix_tl 
-        },
-  section~numbering/(roman)/.code          =
-    \cs_gset:Npn \thesection
-       {
-       \l_phd_section_number_prefix_tl
-         (\@roman\c@section\relax)
-       \l_phd_section_number_suffix_tl   
-       },
-  section~numbering/(Roman)/.code          =
-    \cs_gset:Npn \thesection
-      {
-        \l_phd_section_number_prefix_tl
-        (\@Roman\c@section)
-        \l_phd_section_number_suffix_tl 
-      },
-  section~numbering/arabic/.code           =
-    \cs_gset:Npn \thesection
-      {
-        \l_phd_section_number_prefix_tl
-        \@arabic\c@section\relax
-        \l_phd_section_number_suffix_tl
-      },
-  section~numbering/numeric/.code          =
-    \cs_gset:Npn \thesection
-      {
-        \l_phd_section_number_prefix_tl
-        \@arabic\c@section
-        \l_phd_section_number_suffix_tl
-      },
-  section~numbering/none/.code             = 
-    \cs_gset:Npn \thesection {},
-  section~numbering/alpha/.code            = 
-    \cs_gset:Npn \thesection 
-      {
-        \l_phd_section_number_prefix_tl
-        \alphalph\c@section
-        \l_phd_section_number_suffix_tl  
-      },
-  section~numbering/Alpha/.code            = 
-    \cs_gset:Npn \thesection 
-      {
-        \l_phd_section_number_prefix_tl
-        \AlphAlph\c@section
-        \l_phd_section_number_suffix_tl 
-      },
-  section~numbering/words/.code            = 
-    \cs_gset:Npn \thesection
-      {
-       \l_phd_section_number_prefix_tl
-       \words@cx{\@arabic\c@section}
-       \l_phd_section_number_suffix_tl 
-      },
-  section~numbering/Words/.code            =
-    \cs_gset:Npn \thesection
-      {
-        \l_phd_section_number_prefix_tl
-        \words@cx{\@arabic\c@section}
-        \l_phd_section_number_suffix_tl 
-      },
-  section~numbering/WORDS/.code            =
-    \cs_gset:Npn \thesection
-      {
-       \l_phd_section_number_prefix_tl  
-       \words@cx{\@arabic\c@section}
-       \l_phd_section_number_suffix_tl 
-      },
-  section~numbering~custom/.code           = 
-    \cs_gset:Npn \thesection {#1},
+ 
 %
-    section~align/.textalign               = \l_phd_section_align_tl,
+%    section~align/.textalign               = \l_phd_section_align_tl,
 %    
-    section~afterindent/.onoff             = \afterindent@cx,
+    section~afterindent/.onoff             = {afterindent@cx},
 %
-    section~beforeskip/.store~in           = \l_phd_section_before_skip_tl,
-    section~afterskip/.store~in            = \l_phd_section_after_skip_tl,
-    section~indent/.store~in               = \l_phd_section_indent_tl,
+%    section~beforeskip/.store~in           = \l_phd_section_before_skip_tl,
+%    section~afterskip/.store~in            = \l_phd_section_after_skip_tl,
+%    section~indent/.store~in               = \l_phd_section_indent_tl,
     section~spaceout/.is~choice,
     section~spaceout/soul/.code            = \@sectionspaceouttrue,
     section~spaceout/none/.code            = \@sectionspaceoutfalse,
@@ -486,17 +516,6 @@ See http://www.latex-project.org/lppl.txt
 %    \end{macrocode}
 % As described earlier boxed headings have numerous elements, each of which can be styled
 % on its own. 
-%    \begin{macrocode}
-\ExplSyntaxOn
-\cxset
-  {
-    section~title~width/.store~in          = \l_phd_section_title_width_dim,
-    section~title~margin-top/.code         = 
-     \dim_gset:Nn \l_phd_section_title_margin_top_dim {#1},
-  }   
-\cxset{section~title~margin-top = 0pt,}  
-\ExplSyntaxOff  
-%    \end{macrocode}
 % 
 % \subsection{Subsection keys}
 % From now on almost everything is a repetition of whatever was previously
@@ -504,54 +523,21 @@ See http://www.latex-project.org/lppl.txt
 %
 %    \begin{macrocode}
 \ExplSyntaxOn
-  \cxset {subsection~format/.format~in     = \l_phd_subsection_format_tl }
-  \cxset {subsection~format = block }
-  \cxset {subsection~name/.store~in=\subsectionname,
-         subsection~background-color/.store~in=\l_phd_subsection_background_color_tl}
-\cxset{  
-%      
-  subsection~border-top-width/.code             = 
-      \dim_gset:Nn 
-     \l_phd_subsection_border_top_width_dim {#1},  
-%     
-    subsection~border-left-width/.code       = 
-     \dim_gset:Nn 
-     \l_phd_subsection_border_left_width_dim {#1},
-%     
-    subsection~border-bottom-width/.code       = 
-     \dim_gset:Nn 
-     \l_phd_subsection_border_bottom_width_dim {#1},     
-%     
-    subsection~border-right-width/.code       = 
-     \dim_gset:Nn 
-     \l_phd_subsection_border_right_width_dim {#1},               
-% padding
-    subsection~padding-top-width/.code             = 
-      \dim_set:Nn 
-     \l_phd_subsection_padding_top_width_dim {#1},  
-%     
-    subsection~padding-left-width/.code       = 
-     \dim_set:Nn 
-     \l_phd_subsection_padding_left_width_dim {#1},
-%     
-    subsection~padding-bottom-width/.code       = 
-     \dim_set:Nn 
-     \l_phd_subsection_padding_bottom_width_dim {#1},     
-%     
-    subsection~padding-right-width/.code       = 
-     \dim_set:Nn 
-     \l_phd_subsection_padding_right_width_dim {#1},
-}        
+%  \cxset {subsection~format/.format~in     = \l_phd_subsection_format_tl }
+%  \cxset {subsection~format = block }
+%  \cxset {
+%         subsection~background-color/.store~in=\l_phd_subsection_background_color_tl
+%         }
+
 \cxset{
-  subsection~font-size/.font-size~in       = \l_phd_subsection_font_size_tl,
-  subsection~font-weight/.font-weight~in   = \l_phd_subsection_font_weight_tl,
-  subsection~font-family/.font-family~in   = \l_phd_subsection_font_family_tl,
-  subsection~font-shape/.font-style~in     = \l_phd_subsection_font_shape_tl,
-  subsection~color/.store~in               = \l_phd_subsection_color_tl,
-  subsection~align/.textalign              = \l_phd_subsection_align_tl,
-  subsection~beforeskip/.store~in          = \l_phd_subsection_before_skip_tl,
-  subsection~afterskip/.store~in           = \l_phd_subsection_after_skip_tl,
-  subsection~indent/.store~in              = \l_phd_subsection_indent_tl,
+%  subsection~font-size/.font-size~in       = \l_phd_subsection_font_size_tl,
+%  subsection~font-weight/.font-weight~in   = \l_phd_subsection_font_weight_tl,
+%  subsection~font-family/.font-family~in   = \l_phd_subsection_font_family_tl,
+%  subsection~font-shape/.font-style~in     = \l_phd_subsection_font_shape_tl,
+%  subsection~align/.textalign              = \l_phd_subsection_align_tl,
+%  subsection~beforeskip/.store~in          = \l_phd_subsection_before_skip_tl,
+%  subsection~afterskip/.store~in           = \l_phd_subsection_after_skip_tl,
+%  subsection~indent/.store~in              = \l_phd_subsection_indent_tl,
   subsection~before/.store~in              = \l_phd_subsection_before_tl,
 }
 \ExplSyntaxOff 
@@ -565,88 +551,88 @@ See http://www.latex-project.org/lppl.txt
   {
     subsection~numbering~suffix/.store~in=\l_phd_subsection_number_suffix_tl, 
     subsection~numbering~prefix/.store~in=\l_phd_subsection_number_refix_tl,
-    subsection~numbering/.is~choice,
-    subsection~numbering/roman/.code          =
-       \cs_gset:Npn \thesubsection
-         {
-           \l_phd_subsection_number_prefix_tl
-             \@roman\c@subsection
-           \l_phd_subsection_number_suffix_tl  
-         },
-    subsection~numbering/Roman/.code          =
-      \cs_gset:Npn \thesubsection
-        {
-          \l_phd_subsection_number_prefix_tl
-          \@Roman\c@subsection\relax
-          \l_phd_subsection_number_suffix_tl 
-        },
-  subsection~numbering/(roman)/.code          =
-    \cs_gset:Npn \thesubsection
-       {
-       \l_phd_subsection_number_prefix_tl
-         (\@roman\c@subsection\relax)
-       \l_phd_subsection_number_suffix_tl   
-       },
-  subsection~numbering/(Roman)/.code          =
-    \cs_gset:Npn \thesubsection
-      {
-        \l_phd_subsection_number_prefix_tl
-        (\@Roman\c@subsection)
-        \l_phd_subsection_number_suffix_tl 
-      },
-  subsection~numbering/arabic/.code           =
-    \cs_gset:Npn \thesubsection
-      {
-        \l_phd_subsection_number_prefix_tl
-        \@arabic\c@subsection\relax
-        \l_phd_subsection_number_suffix_tl
-      },
-  subsection~numbering/numeric/.code          =
-    \cs_gset:Npn \thesubsection
-      {
-        \l_phd_subsection_number_prefix_tl
-        \@arabic\c@subsection
-        \l_phd_subsection_number_suffix_tl
-      },
-  subsection~numbering/none/.code             = 
-    \cs_gset:Npn \thesubsection {},
-  subsection~numbering/alpha/.code            = 
-    \cs_gset:Npn \thesubsection 
-      {
-        \l_phd_subsection_number_prefix_tl
-        \alphalph\c@subsection
-        \l_phd_subsection_number_suffix_tl  
-      },
-  subsection~numbering/Alpha/.code            = 
-    \cs_gset:Npn \thesubsection 
-      {
-        \l_phd_subsection_number_prefix_tl
-        \AlphAlph\c@subsection
-        \l_phd_subsection_number_suffix_tl 
-      },
-  subsection~numbering/words/.code            = 
-    \cs_gset:Npn \thesubsection
-      {
-       \l_phd_subsection_number_prefix_tl
-       \words@cx{\@arabic\c@subsection}
-       \l_phd_subsection_number_suffix_tl 
-      },
-  subsection~numbering/Words/.code            =
-    \cs_gset:Npn \thesubsection
-      {
-        \l_phd_subsection_number_prefix_tl
-        \words@cx{\@arabic\c@subsection}
-        \l_phd_subsection_number_suffix_tl 
-      },
-  subsection~numbering/WORDS/.code            =
-    \cs_gset:Npn \thesubsection
-      {
-       \l_phd_subsection_number_prefix_tl  
-       \words@cx{\@arabic\c@subsection}
-       \l_phd_subsection_number_suffix_tl 
-      },
-  subsection numbering custom/.code           = 
-    \cs_gset:Npn \thesubsection {#1},
+%    subsection~numbering/.is~choice,
+%    subsection~numbering/roman/.code          =
+%       \cs_gset:Npn \thesubsection
+%         {
+%           \l_phd_subsection_number_prefix_tl
+%             \@roman\c@subsection
+%           \l_phd_subsection_number_suffix_tl  
+%         },
+%    subsection~numbering/Roman/.code          =
+%      \cs_gset:Npn \thesubsection
+%        {
+%          \l_phd_subsection_number_prefix_tl
+%          \@Roman\c@subsection\relax
+%          \l_phd_subsection_number_suffix_tl 
+%        },
+%  subsection~numbering/(roman)/.code          =
+%    \cs_gset:Npn \thesubsection
+%       {
+%       \l_phd_subsection_number_prefix_tl
+%         (\@roman\c@subsection\relax)
+%       \l_phd_subsection_number_suffix_tl   
+%       },
+%  subsection~numbering/(Roman)/.code          =
+%    \cs_gset:Npn \thesubsection
+%      {
+%        \l_phd_subsection_number_prefix_tl
+%        (\@Roman\c@subsection)
+%        \l_phd_subsection_number_suffix_tl 
+%      },
+%  subsection~numbering/arabic/.code           =
+%    \cs_gset:Npn \thesubsection
+%      {
+%        \l_phd_subsection_number_prefix_tl
+%        \@arabic\c@subsection\relax
+%        \l_phd_subsection_number_suffix_tl
+%      },
+%  subsection~numbering/numeric/.code          =
+%    \cs_gset:Npn \thesubsection
+%      {
+%        \l_phd_subsection_number_prefix_tl
+%        \@arabic\c@subsection
+%        \l_phd_subsection_number_suffix_tl
+%      },
+%  subsection~numbering/none/.code             = 
+%    \cs_gset:Npn \thesubsection {},
+%  subsection~numbering/alpha/.code            = 
+%    \cs_gset:Npn \thesubsection 
+%      {
+%        \l_phd_subsection_number_prefix_tl
+%        \alphalph\c@subsection
+%        \l_phd_subsection_number_suffix_tl  
+%      },
+%  subsection~numbering/Alpha/.code            = 
+%    \cs_gset:Npn \thesubsection 
+%      {
+%        \l_phd_subsection_number_prefix_tl
+%        \AlphAlph\c@subsection
+%        \l_phd_subsection_number_suffix_tl 
+%      },
+%  subsection~numbering/words/.code            = 
+%    \cs_gset:Npn \thesubsection
+%      {
+%       \l_phd_subsection_number_prefix_tl
+%       \words@cx{\@arabic\c@subsection}
+%       \l_phd_subsection_number_suffix_tl 
+%      },
+%  subsection~numbering/Words/.code            =
+%    \cs_gset:Npn \thesubsection
+%      {
+%        \l_phd_subsection_number_prefix_tl
+%        \words@cx{\@arabic\c@subsection}
+%        \l_phd_subsection_number_suffix_tl 
+%      },
+%  subsection~numbering/WORDS/.code            =
+%    \cs_gset:Npn \thesubsection
+%      {
+%       \l_phd_subsection_number_prefix_tl  
+%       \words@cx{\@arabic\c@subsection}
+%       \l_phd_subsection_number_suffix_tl 
+%      },
+%  subsection numbering custom/.code           = 
+%    \cs_gset:Npn \thesubsection {#1},
 }
 \ExplSyntaxOff
 %    \end{macrocode}
@@ -662,50 +648,18 @@ See http://www.latex-project.org/lppl.txt
 %    \begin{macrocode}
 %
 \ExplSyntaxOn 
-\cxset{
-    subsubsection~border-top-width/.code             = 
-      \dim_set:Nn 
-     \l_phd_subsubsection_border_top_width_dim {#1},  
-%     
-    subsubsection~border-left-width/.code       = 
-     \dim_set:Nn 
-     \l_phd_subsubsection_border_left_width_dim {#1},
-%     
-    subsubsection~border-bottom-width/.code       = 
-     \dim_set:Nn 
-     \l_phd_subsubsection_border_bottom_width_dim {#1},     
-%     
-    subsubsection~border-right-width/.code       = 
-     \dim_set:Nn 
-     \l_phd_subsubsection_border_right_width_dim {#1},
-% padding     
-    subsubsection~padding-top-width/.code             = 
-      \dim_set:Nn 
-     \l_phd_subsubsection_padding_top_width_dim {#1},  
-%     
-    subsubsection~padding-left-width/.code       = 
-     \dim_set:Nn 
-     \l_phd_subsubsection_padding_left_width_dim {#1},
-%     
-    subsubsection~padding-bottom-width/.code       = 
-     \dim_set:Nn 
-     \l_phd_subsubsection_padding_bottom_width_dim {#1},     
-%     
-    subsubsection~padding-right-width/.code       = 
-     \dim_set:Nn 
-     \l_phd_subsubsection_padding_right_width_dim {#1},        
-}
+
 
 \cxset{  
-  subsubsection~name/.store~in                   = \subsubsectionname,
-  subsubsection~format/.format~in               = \l_phd_subsubsection_format_tl,  
-  subsubsection~background-color/.store~in      = \l_phd_background_color_tl,
-  subsection~bakground~color/.store~in          = \l_phd_subsection_background_color_tl,
-  subsubsection~font-size/.font-size~in         = \l_phd_subsubsection_fontsize_tl,
-  subsubsection~font-weight/.font-weight~in     = \l_phd_subsubsection_fontweight_tl,
-  subsubsection~font-family/.font-family~in     = \l_phd_subsubsection_fontfamily_tl,
-  subsubsection~font-shape/.font-style~in       = \l_phd_subsubsection_fontshape_tl,
-  subsubsection~color/.store~in                 = \l_phd_subsubsection_color_tl,
+%  subsubsection~name/.store~in                   = \subsubsectionname,
+%  subsubsection~format/.store~in               = \l_phd_subsubsection_format_tl,  
+%  subsubsection~background-color/.store~in      = \l_phd_background_color_tl,
+%  subsection~bakground~color/.store~in          = \l_phd_subsection_background_color_tl,
+%  subsubsection~font-size/.font-size~in         = \l_phd_subsubsection_fontsize_tl,
+%  subsubsection~font-weight/.font-weight~in     = \l_phd_subsubsection_fontweight_tl,
+%  subsubsection~font-family/.font-family~in     = \l_phd_subsubsection_fontfamily_tl,
+%  subsubsection~font-shape/.font-style~in       = \l_phd_subsubsection_fontshape_tl,
+  %subsubsection~color/.store~in                 = \l_phd_subsubsection_color_tl,
 }
 \ExplSyntaxOff
 
@@ -719,95 +673,94 @@ See http://www.latex-project.org/lppl.txt
     subsubsection~number~suffix/.store~in        =
      \l_phd_subsubsection_number_suffix_tl, 
 %     
-    subsubsection~numbering/.is~choice,
-    subsubsection~numbering/roman/.code          =
-       \cs_gset:Npn \thesubsubsection
-         {
-           \l_phd_subsubsection_number_prefix_tl
-             \@roman\c@subsubsection
-           \l_phd_subsubsection_number_suffix_tl  
-         },
-    subsubsection~numbering/Roman/.code          =
-      \cs_gset:Npn \thesubsubsection
-        {
-          \l_phd_subsubsection_number_prefix_tl
-          \@Roman\c@subsubsection\relax
-          \l_phd_subsubsection_number_suffix_tl 
-        },
-  subsubsection~numbering/(roman)/.code          =
-    \cs_gset:Npn \thesubsubsection
-       {
-       \l_phd_subsubsection_number_prefix_tl
-         (\@roman\c@subsubsection\relax)
-       \l_phd_subsubsection_number_suffix_tl   
-       },
-  subsubsection~numbering/(Roman)/.code          =
-    \cs_gset:Npn \thesubsubsection
-      {
-        \l_phd_subsubsection_number_prefix_tl
-        (\@Roman\c@subsubsection)
-        \l_phd_subsubsection_number_suffix_tl 
-      },
-  subsubsection~numbering/arabic/.code           =
-    \cs_gset:Npn \thesubsubsection
-      {
-        \l_phd_subsubsection_number_prefix_tl
-        \@arabic\c@subsubsection\relax
-        \l_phd_subsubsection_number_suffix_tl
-      },
-  subsubsection~numbering/numeric/.code          =
-    \cs_gset:Npn \thesubsubsection
-      {
-        \l_phd_subsubsection_number_prefix_tl
-        \@arabic\c@subsubsection
-        \l_phd_subsubsection_number_suffix_tl
-      },
-  subsubsection~numbering/none/.code             = 
-    \cs_gset:Npn \thesubsubsection {},
-  subsubsection~numbering/alpha/.code            = 
-    \cs_gset:Npn \thesubsubsection 
-      {
-        \l_phd_subsubsection_number_prefix_tl
-        \alphalph\c@subsubsection
-        \l_phd_subsubsection_number_suffix_tl  
-      },
-  subsubsection~numbering/Alpha/.code            = 
-    \cs_gset:Npn \thesubsubsection 
-      {
-        \l_phd_subsubsection_number_prefix_tl
-        \AlphAlph\c@subsubsection
-        \l_phd_subsubsection_number_suffix_tl 
-      },
-  subsubsection~numbering/words/.code            = 
-    \cs_gset:Npn \thesubsubsection
-      {
-       \l_phd_subsubsection_number_prefix_tl
-       \words@cx{\@arabic\c@subsubsection}
-       \l_phd_subsubsection_number_suffix_tl 
-      },
-  subsubsection~numbering/Words/.code            =
-    \cs_gset:Npn \thesubsubsection
-      {
-        \l_phd_subsubsection_number_prefix_tl
-        \words@cx{\@arabic\c@subsubsection}
-        \l_phd_subsubsection_number_suffix_tl 
-      },
-  subsubsection~numbering/WORDS/.code            =
-    \cs_gset:Npn \thesubsubsection
-      {
-       \l_phd_subsubsection_number_prefix_tl  
-       \words@cx{\@arabic\c@subsubsection}
-       \l_phd_subsubsection_number_suffix_tl 
-      },
-  section numbering custom/.code                 = 
-    \cs_gset:Npn \thesubsubsection {#1},
-   subsubsection numbering/none/.code            =
-       \gdef\thesubsubsection{},    
+%    subsubsection~numbering/.is~choice,
+%    subsubsection~numbering/roman/.code          =
+%       \cs_gset:Npn \thesubsubsection
+%         {
+%           \l_phd_subsubsection_number_prefix_tl
+%             \@roman\c@subsubsection
+%           \l_phd_subsubsection_number_suffix_tl  
+%         },
+%    subsubsection~numbering/Roman/.code          =
+%      \cs_gset:Npn \thesubsubsection
+%        {
+%          \l_phd_subsubsection_number_prefix_tl
+%          \@Roman\c@subsubsection\relax
+%          \l_phd_subsubsection_number_suffix_tl 
+%        },
+%  subsubsection~numbering/(roman)/.code          =
+%    \cs_gset:Npn \thesubsubsection
+%       {
+%       \l_phd_subsubsection_number_prefix_tl
+%         (\@roman\c@subsubsection\relax)
+%       \l_phd_subsubsection_number_suffix_tl   
+%       },
+%  subsubsection~numbering/(Roman)/.code          =
+%    \cs_gset:Npn \thesubsubsection
+%      {
+%        \l_phd_subsubsection_number_prefix_tl
+%        (\@Roman\c@subsubsection)
+%        \l_phd_subsubsection_number_suffix_tl 
+%      },
+%  subsubsection~numbering/arabic/.code           =
+%    \cs_gset:Npn \thesubsubsection
+%      {
+%        \l_phd_subsubsection_number_prefix_tl
+%        \@arabic\c@subsubsection\relax
+%        \l_phd_subsubsection_number_suffix_tl
+%      },
+%  subsubsection~numbering/numeric/.code          =
+%    \cs_gset:Npn \thesubsubsection
+%      {
+%        \l_phd_subsubsection_number_prefix_tl
+%        \@arabic\c@subsubsection
+%        \l_phd_subsubsection_number_suffix_tl
+%      },
+%  subsubsection~numbering/none/.code             = 
+%    \cs_gset:Npn \thesubsubsection {},
+%  subsubsection~numbering/alpha/.code            = 
+%    \cs_gset:Npn \thesubsubsection 
+%      {
+%        \l_phd_subsubsection_number_prefix_tl
+%        \alphalph\c@subsubsection
+%        \l_phd_subsubsection_number_suffix_tl  
+%      },
+%  subsubsection~numbering/Alpha/.code            = 
+%    \cs_gset:Npn \thesubsubsection 
+%      {
+%        \l_phd_subsubsection_number_prefix_tl
+%        \AlphAlph\c@subsubsection
+%        \l_phd_subsubsection_number_suffix_tl 
+%      },
+%  subsubsection~numbering/words/.code            = 
+%    \cs_gset:Npn \thesubsubsection
+%      {
+%       \l_phd_subsubsection_number_prefix_tl
+%       \words@cx{\@arabic\c@subsubsection}
+%       \l_phd_subsubsection_number_suffix_tl 
+%      },
+%  subsubsection~numbering/Words/.code            =
+%    \cs_gset:Npn \thesubsubsection
+%      {
+%        \l_phd_subsubsection_number_prefix_tl
+%        \words@cx{\@arabic\c@subsubsection}
+%        \l_phd_subsubsection_number_suffix_tl 
+%      },
+%  subsubsection~numbering/WORDS/.code            =
+%    \cs_gset:Npn \thesubsubsection
+%      {
+%       \l_phd_subsubsection_number_prefix_tl  
+%       \words@cx{\@arabic\c@subsubsection}
+%       \l_phd_subsubsection_number_suffix_tl 
+%      },
+%  section numbering custom/.code                 = 
+%    \cs_gset:Npn \thesubsubsection {#1},
+%   subsubsection numbering/none/.code            =
+%       \gdef\thesubsubsection{},    
 %      
-    subsubsection~align/.textalign               = \l_phd_subsubsection_align_tl,
-    subsubsection~beforeskip/.store~in           = \l_phd_subsubsection_before_skip_tl,
-    subsubsection~afterskip/.store~in            = \l_phd_subsubsection_after_skip_tl,
-    subsubsection~indent/.store~in               = \l_phd_subsubsection_indent_tl,
+%    subsubsection~align/.textalign               = \l_phd_subsubsection_align_tl,
+%    subsubsection~afterskip/.store~in            = \l_phd_subsubsection_after_skip_tl,
+%    subsubsection~indent/.store~in               = \l_phd_subsubsection_indent_tl,
     subsubsection~number~after/.store~in         = \l_phd_subsubsection_number_after_tl,
 }  
 \ExplSyntaxOff  
@@ -823,104 +776,103 @@ See http://www.latex-project.org/lppl.txt
 \def\l_phd_paragraph_number_suffix_tl{}
 \cxset
   {
-    paragraph~name/.store~in                     = \paragraphname,
+%    paragraph~name/.store~in                     = \paragraphname,
     paragraph~number~prefix/.store~in            = \l_phd_paragraph_number_prefix_tl,
     paragraph~number~suffix/.store~in            = \l_phd_paragraph_number_suffix_tl,  
-    paragraph~format/.store~in                   = \l_phd_paragraph_format_tl,
-    paragraph~name/.store~in                     = \paragraphname,
-    paragraph~font-size/.font-size~in            = \l_phd_paragraph_font_size_tl,
-    paragraph~font-weight/.font-weight~in        = \l_phd_paragraph_font_weight_tl,
+%    paragraph~format/.store~in                   = \l_phd_paragraph_format_tl,
+%    paragraph~name/.store~in                     = \paragraphname,
+%    paragraph~font-weight/.font-weight~in        = \l_phd_paragraph_font_weight_tl,
     paragraph~font-family/.font-family~in        = \l_phd_paragraph_font_family_tl,
-    paragraph~font-shape/.font-style~in          = \l_phd_paragraph_font_shape_tl,
+%    paragraph~font-shape/.font-style~in          = \l_phd_paragraph_font_shape_tl,
     paragraph~color/.store~in                    = \l_ph_paragraph_color_tl,
-    paragraph~numbering/.is~choice,
-    paragraph~numbering/roman/.code          =
-       \cs_gset:Npn \theparagraph
-         {
-           \l_phd_paragraph_number_prefix_tl
-             \@roman\c@paragraph
-           \l_phd_paragraph_number_suffix_tl  
-         },
-    paragraph~numbering/Roman/.code          =
-      \cs_gset:Npn \theparagraph
-        {
-          \l_phd_paragraph_number_prefix_tl
-          \@Roman\c@paragraph\relax
-          \l_phd_paragraph_number_suffix_tl 
-        },
-  paragraph~numbering/(roman)/.code          =
-    \cs_gset:Npn \theparagraph
-       {
-       \l_phd_paragraph_number_prefix_tl
-         (\@roman\c@paragraph\relax)
-       \l_phd_paragraph_number_suffix_tl   
-       },
-  paragraph~numbering/(Roman)/.code          =
-    \cs_gset:Npn \theparagraph
-      {
-        \l_phd_paragraph_number_prefix_tl
-        (\@Roman\c@paragraph)
-        \l_phd_paragraph_number_suffix_tl 
-      },
-  paragraph~numbering/arabic/.code             =
-    \cs_gset:Npn \theparagraph
-      {
-        \l_phd_paragraph_number_prefix_tl
-        \@arabic\c@paragraph\relax
-        \l_phd_paragraph_number_suffix_tl
-      },
-  paragraph~numbering/numeric/.code          =
-    \cs_gset:Npn \theparagraph
-      {
-        \l_phd_paragraph_number_prefix_tl
-        \@arabic\c@paragraph
-        \l_phd_paragraph_number_suffix_tl
-      },
-  paragraph~numbering/none/.code              = 
-    \cs_gset:Npn \theparagraph {},
-  paragraph~numbering/alpha/.code             = 
-    \cs_gset:Npn \theparagraph 
-      {
-        \l_phd_paragraph_number_prefix_tl
-        \alphalph\c@paragraph
-        \l_phd_paragraph_number_suffix_tl  
-      },
-  paragraph~numbering/Alpha/.code            = 
-    \cs_gset:Npn \theparagraph 
-      {
-        \l_phd_paragraph_number_prefix_tl
-        \AlphAlph\c@paragraph
-        \l_phd_paragraph_number_suffix_tl 
-      },
-  paragraph~numbering/words/.code           = 
-    \cs_gset:Npn \theparagraph
-      {
-       \l_phd_paragraph_number_prefix_tl
-       \words@cx{\@arabic\c@paragraph}
-       \l_phd_paragraph_number_suffix_tl 
-      },
-  paragraph~numbering/Words/.code          =
-    \cs_gset:Npn \theparagraph
-      {
-        \l_phd_paragraph_number_prefix_tl
-        \words@cx{\@arabic\c@paragraph}
-        \l_phd_paragraph_number_suffix_tl 
-      },
-  paragraph~numbering/WORDS/.code        =
-    \cs_gset:Npn \theparagraph
-      {
-       \l_phd_paragraph_number_prefix_tl  
-       \words@cx{\@arabic\c@paragraph}
-       \l_phd_paragraph_number_suffix_tl 
-      },
-  paragraph~numbering custom/.code                     = 
-    \cs_gset:Npn \theparagraph {#1},
-    paragraph~align/.textalign                   = \l_phd_paragraph_align_tl,
-    paragraph~beforeskip/.store~in               = \l_phd_paragraph_before_skip_tl,
-    paragraph~afterskip/.store~in                = \l_phd_paragraph_after_skip_tl,
-    paragraph~indent/.store~in                   = \l_phd_paragraph_indent_tl,
+%    paragraph~numbering/.is~choice,
+%    paragraph~numbering/roman/.code          =
+%       \cs_gset:Npn \theparagraph
+%         {
+%           \l_phd_paragraph_number_prefix_tl
+%             \@roman\c@paragraph
+%           \l_phd_paragraph_number_suffix_tl  
+%         },
+%    paragraph~numbering/Roman/.code          =
+%      \cs_gset:Npn \theparagraph
+%        {
+%          \l_phd_paragraph_number_prefix_tl
+%          \@Roman\c@paragraph\relax
+%          \l_phd_paragraph_number_suffix_tl 
+%        },
+%  paragraph~numbering/(roman)/.code          =
+%    \cs_gset:Npn \theparagraph
+%       {
+%       \l_phd_paragraph_number_prefix_tl
+%         (\@roman\c@paragraph\relax)
+%       \l_phd_paragraph_number_suffix_tl   
+%       },
+%  paragraph~numbering/(Roman)/.code          =
+%    \cs_gset:Npn \theparagraph
+%      {
+%        \l_phd_paragraph_number_prefix_tl
+%        (\@Roman\c@paragraph)
+%        \l_phd_paragraph_number_suffix_tl 
+%      },
+%  paragraph~numbering/arabic/.code             =
+%    \cs_gset:Npn \theparagraph
+%      {
+%        \l_phd_paragraph_number_prefix_tl
+%        \@arabic\c@paragraph\relax
+%        \l_phd_paragraph_number_suffix_tl
+%      },
+%  paragraph~numbering/numeric/.code          =
+%    \cs_gset:Npn \theparagraph
+%      {
+%        \l_phd_paragraph_number_prefix_tl
+%        \@arabic\c@paragraph
+%        \l_phd_paragraph_number_suffix_tl
+%      },
+%  paragraph~numbering/none/.code              = 
+%    \cs_gset:Npn \theparagraph {},
+%  paragraph~numbering/alpha/.code             = 
+%    \cs_gset:Npn \theparagraph 
+%      {
+%        \l_phd_paragraph_number_prefix_tl
+%        \alphalph\c@paragraph
+%        \l_phd_paragraph_number_suffix_tl  
+%      },
+%  paragraph~numbering/Alpha/.code            = 
+%    \cs_gset:Npn \theparagraph 
+%      {
+%        \l_phd_paragraph_number_prefix_tl
+%        \AlphAlph\c@paragraph
+%        \l_phd_paragraph_number_suffix_tl 
+%      },
+%  paragraph~numbering/words/.code           = 
+%    \cs_gset:Npn \theparagraph
+%      {
+%       \l_phd_paragraph_number_prefix_tl
+%       \words@cx{\@arabic\c@paragraph}
+%       \l_phd_paragraph_number_suffix_tl 
+%      },
+%  paragraph~numbering/Words/.code          =
+%    \cs_gset:Npn \theparagraph
+%      {
+%        \l_phd_paragraph_number_prefix_tl
+%        \words@cx{\@arabic\c@paragraph}
+%        \l_phd_paragraph_number_suffix_tl 
+%      },
+%  paragraph~numbering/WORDS/.code        =
+%    \cs_gset:Npn \theparagraph
+%      {
+%       \l_phd_paragraph_number_prefix_tl  
+%       \words@cx{\@arabic\c@paragraph}
+%       \l_phd_paragraph_number_suffix_tl 
+%      },
+%  paragraph~numbering custom/.code                     = 
+%    \cs_gset:Npn \theparagraph {#1},
+%    paragraph~align/.textalign                   = \l_phd_paragraph_align_tl,
+%    paragraph~beforeskip/.store~in               = \l_phd_paragraph_before_skip_tl,
+%    paragraph~afterskip/.store~in                = \l_phd_paragraph_after_skip_tl,
+%    paragraph~indent/.store~in                   = \l_phd_paragraph_indent_tl,
     paragraph~number~after/.store~in             = \l_phd_paragraph_number_after_tl,
-    paragraph~background-color/.store~in         = \l_phd_paragraph_background_color_tl,
+%    paragraph~background-color/.store~in         = \l_phd_paragraph_background_color_tl,
 }  
 \ExplSyntaxOff
 %    \end{macrocode}
@@ -934,105 +886,103 @@ See http://www.latex-project.org/lppl.txt
 \def\l_phd_subparagraph_number_suffix_tl{}
 \cxset
   {
-    subparagraph~name/.store~in                 = \subparagraphname,
+%    subparagraph~name/.store~in                 = \subparagraphname,
     subparagraph~number~prefix/.store~in       = \l_phd_subparagraph_number_prefix_tl,
     subparagraph~number~suffix/.store~in       = \l_phd_subparagraph_number_suffix_tl,  
-    subparagraph~format/.format~in             = \l_phd_subparagraph_format_tl,
-    subparagraph~font-size/.font-size~in       = \l_phd_subparagraph_fontsize_tl,
-    subparagraph~font-weight/.font-weight~in   = \l_phd_subparagraph_fontweight_tl,
-    subparagraph~font-family/.font-family~in   = \l_phd_subparagraph_fontfamily_tl,
-    subparagraph~font-shape/.font-style~in     = \l_phd_subparagraph_fontshape_tl,
-    subparagraph~color/.store~in               = \l_ph_subparagraph_color_tl,
-    subparagraph~background-color/.store~in    = \l_phd_subparagraph_background_color_tl,
-    subparagraph~numbering/.is~choice,
-    subparagraph~numbering/roman/.code          =
-       \cs_gset:Npn \thesubparagraph
-         {
-           \l_phd_subparagraph_number_prefix_tl
-             \@roman\c@subparagraph
-           \l_phd_subparagraph_number_suffix_tl  
-         },
-    subparagraph~numbering/Roman/.code          =
-      \cs_gset:Npn \thesubparagraph
-        {
-          \l_phd_subparagraph_number_prefix_tl
-          \@Roman\c@subparagraph\relax
-          \l_phd_subparagraph_number_suffix_tl 
-        },
-  subparagraph~numbering/(roman)/.code          =
-    \cs_gset:Npn \thesubparagraph
-       {
-       \l_phd_subparagraph_number_prefix_tl
-         (\@roman\c@subparagraph\relax)
-       \l_phd_subparagraph_number_suffix_tl   
-       },
-  subparagraph~numbering/(Roman)/.code          =
-    \cs_gset:Npn \thesubparagraph
-      {
-        \l_phd_subparagraph_number_prefix_tl
-        (\@Roman\c@subparagraph)
-        \l_phd_subparagraph_number_suffix_tl 
-      },
-  subparagraph~numbering/arabic/.code             =
-    \cs_gset:Npn \thesubparagraph
-      {
-        \l_phd_subparagraph_number_prefix_tl
-        \@arabic\c@subparagraph\relax
-        \l_phd_subparagraph_number_suffix_tl
-      },
-  subparagraph~numbering/numeric/.code          =
-    \cs_gset:Npn \thesubparagraph
-      {
-        \l_phd_subparagraph_number_prefix_tl
-        \@arabic\c@subparagraph
-        \l_phd_subparagraph_number_suffix_tl
-      },
-  subparagraph~numbering/none/.code              = 
-    \cs_gset:Npn \thesubparagraph {},
-  subparagraph~numbering/alpha/.code             = 
-    \cs_gset:Npn \thesubparagraph 
-      {
-        \l_phd_subparagraph_number_prefix_tl
-        \alphalph\c@subparagraph
-        \l_phd_subparagraph_number_suffix_tl  
-      },
-  subparagraph~numbering/Alpha/.code            = 
-    \cs_gset:Npn \thesubparagraph 
-      {
-        \l_phd_subparagraph_number_prefix_tl
-        \AlphAlph\c@subparagraph
-        \l_phd_subparagraph_number_suffix_tl 
-      },
-  subparagraph~numbering/words/.code           = 
-    \cs_gset:Npn \thesubparagraph
-      {
-       \l_phd_subparagraph_number_prefix_tl
-       \words@cx{\@arabic\c@subparagraph}
-       \l_phd_subparagraph_number_suffix_tl 
-      },
-  subparagraph~numbering/Words/.code          =
-    \cs_gset:Npn \thesubparagraph
-      {
-        \l_phd_subparagraph_number_prefix_tl
-        \words@cx{\@arabic\c@subparagraph}
-        \l_phd_subparagraph_number_suffix_tl 
-      },
-  subparagraph~numbering/WORDS/.code        =
-    \cs_gset:Npn \thesubparagraph
-      {
-       \l_phd_subparagraph_number_prefix_tl  
-       \words@cx{\@arabic\c@subparagraph}
-       \l_phd_subparagraph_number_suffix_tl 
-      },
-  subparagraph~numbering custom/.code                     = 
-    \cs_gset:Npn \thesubparagraph {#1},    
-    subparagraph~align/.textalign              = \l_phd_subparagraph_align_tl,
-    subparagraph~beforeskip/.store~in          = \l_phd_subparagraph_before_skip_tl,
-    subparagraph~afterskip/.store~in           = \l_phd_subparagraph_after_skip_tl,
-    subparagraph~indent/.store~in              = \l_phd_subparagraph_indent_tl,
+%   subparagraph~format/.format~in             = l_phd_subparagraph_format_tl,
+%    subparagraph~font-size/.font-size~in       = \l_phd_subparagraph_fontsize_tl,
+%    subparagraph~font-weight/.font-weight~in   = \l_phd_subparagraph_fontweight_tl,
+%    subparagraph~font-family/.font-family~in   = \l_phd_subparagraph_fontfamily_tl,
+%    subparagraph~font-shape/.font-style~in     = \l_phd_subparagraph_fontshape_tl,
+%    subparagraph~color/.store~in               = \l_ph_subparagraph_color_tl,
+%    subparagraph~background-color/.store~in    = \l_phd_subparagraph_background_color_tl,
+%    subparagraph~numbering/.is~choice,
+%    subparagraph~numbering/roman/.code          =
+%       \cs_gset:Npn \thesubparagraph
+%         {
+%           \l_phd_subparagraph_number_prefix_tl
+%             \@roman\c@subparagraph
+%           \l_phd_subparagraph_number_suffix_tl  
+%         },
+%    subparagraph~numbering/Roman/.code          =
+%      \cs_gset:Npn \thesubparagraph
+%        {
+%          \l_phd_subparagraph_number_prefix_tl
+%          \@Roman\c@subparagraph\relax
+%          \l_phd_subparagraph_number_suffix_tl 
+%        },
+%  subparagraph~numbering/(roman)/.code          =
+%    \cs_gset:Npn \thesubparagraph
+%       {
+%       \l_phd_subparagraph_number_prefix_tl
+%         (\@roman\c@subparagraph\relax)
+%       \l_phd_subparagraph_number_suffix_tl   
+%       },
+%  subparagraph~numbering/(Roman)/.code          =
+%    \cs_gset:Npn \thesubparagraph
+%      {
+%        \l_phd_subparagraph_number_prefix_tl
+%        (\@Roman\c@subparagraph)
+%        \l_phd_subparagraph_number_suffix_tl 
+%      },
+%  subparagraph~numbering/arabic/.code             =
+%    \cs_gset:Npn \thesubparagraph
+%      {
+%        \l_phd_subparagraph_number_prefix_tl
+%        \@arabic\c@subparagraph\relax
+%        \l_phd_subparagraph_number_suffix_tl
+%      },
+%  subparagraph~numbering/numeric/.code          =
+%    \cs_gset:Npn \thesubparagraph
+%      {
+%        \l_phd_subparagraph_number_prefix_tl
+%        \@arabic\c@subparagraph
+%        \l_phd_subparagraph_number_suffix_tl
+%      },
+%  subparagraph~numbering/none/.code              = 
+%    \cs_gset:Npn \thesubparagraph {},
+%  subparagraph~numbering/alpha/.code             = 
+%    \cs_gset:Npn \thesubparagraph 
+%      {
+%        \l_phd_subparagraph_number_prefix_tl
+%        \alphalph\c@subparagraph
+%        \l_phd_subparagraph_number_suffix_tl  
+%      },
+%  subparagraph~numbering/Alpha/.code            = 
+%    \cs_gset:Npn \thesubparagraph 
+%      {
+%        \l_phd_subparagraph_number_prefix_tl
+%        \AlphAlph\c@subparagraph
+%        \l_phd_subparagraph_number_suffix_tl 
+%      },
+%  subparagraph~numbering/words/.code           = 
+%    \cs_gset:Npn \thesubparagraph
+%      {
+%       \l_phd_subparagraph_number_prefix_tl
+%       \words@cx{\@arabic\c@subparagraph}
+%       \l_phd_subparagraph_number_suffix_tl 
+%      },
+%  subparagraph~numbering/Words/.code          =
+%    \cs_gset:Npn \thesubparagraph
+%      {
+%        \l_phd_subparagraph_number_prefix_tl
+%        \words@cx{\@arabic\c@subparagraph}
+%        \l_phd_subparagraph_number_suffix_tl 
+%      },
+%  subparagraph~numbering/WORDS/.code        =
+%    \cs_gset:Npn \thesubparagraph
+%      {
+%       \l_phd_subparagraph_number_prefix_tl  
+%       \words@cx{\@arabic\c@subparagraph}
+%       \l_phd_subparagraph_number_suffix_tl 
+%      },
+%  subparagraph~numbering custom/.code                     = 
+%    \cs_gset:Npn \thesubparagraph {#1},    
+%    subparagraph~align/.textalign              = \l_phd_subparagraph_align_tl,
+%    subparagraph~beforeskip/.store~in          = \l_phd_subparagraph_before_skip_tl,
+%    subparagraph~afterskip/.store~in           = \l_phd_subparagraph_after_skip_tl,
+%    subparagraph~indent/.store~in              = \l_phd_subparagraph_indent_tl,
     subparagraph~number~after/.store~in        = \l_phd_subparagraph_number_after_tl,
-    subparagraph~number~after/.default=,
-    subparagraph~number~after/.initial=,
 }
 \ExplSyntaxOff
 \cxset{subparagraph background-color           = sweet!50}  
@@ -1107,10 +1057,10 @@ See http://www.latex-project.org/lppl.txt
      {
         \cs_set:cpn {tcbarc_#2} {0pt}
      }
-% alignment 
-\cs_if_exist:cTF {#1align@cx}
+% alignment \FIRE
+\cs_if_exist:cTF {l_phd_#1_align_tl}
      {
-        \def\tcbalign{\csname#1align@cx\endcsname}
+        \def\tcbalign{\csnamel_#1_align_tl\endcsname}
      }
      {
        \def\tcbalign{}
@@ -1137,9 +1087,9 @@ See http://www.latex-project.org/lppl.txt
     {
       \def\tcbroundedcorners{all}
     } 
- \cs_if_exist:cTF { l_phd_#1_title_margin_top_dim }
+ \cs_if_exist:cTF { l_phd_#1title_margin_top_dim }
     {
-      \def\tcbtitlevspace{\cs:w l_phd_#1_title_margin_top_dim \cs_end:} 
+      \def\tcbtitlevspace{\cs:w l_phd_#1title_margin_top_dim \cs_end:} 
     }
     {
       \def\tcbtitlevspace{0pt}
@@ -1223,7 +1173,7 @@ See http://www.latex-project.org/lppl.txt
           {
             size               = minimal, %resets
             enhanced,
-            colback            = white,%\cs:w \tcbbgcolor \cs_end:, 
+            colback            = \cs:w #1tcbbgcolor \cs_end:, 
             colframe           = black!80, 
             sharpish~corners,
             sharp~corners      = all,
@@ -1313,7 +1263,7 @@ See http://www.latex-project.org/lppl.txt
 
 \ExplSyntaxOff
 %    \end{macrocode}
-%
+% 
 % \subsection{Display format}
 % The display format typesets a heading in a similar fashion to 
 % traditional chapters.
@@ -1652,8 +1602,7 @@ See http://www.latex-project.org/lppl.txt
 %    \begin{macrocode}
 \ExplSyntaxOn
 
-\if@ltxcompat
-\else
+
   \renewcommand\section{%
     \@startsection{section}%
       {1}%level check this conflicts with source2e
@@ -1665,21 +1614,24 @@ See http://www.latex-project.org/lppl.txt
       {\l_phd_section_after_skip_tl}% after skip#4
       
       {% 
-        \setfont@cx{\l_phd_section_fontweight_tl}%
-          {\l_phd_section_fontfamily_tl}{\l_phd_section_fontsize_tl}{\l_phd_section_fontshape_tl}%
+        \setfont@cx
+        {\l_phd_section_fontweight_tl}%
+        {\l_phd_section_fontfamily_tl}
+        {\l_phd_section_fontsize_tl}
+        {\l_phd_section_fontshape_tl}%
           \expandafter\setfontparam@cx\l_phd_section_align_tl;%
           \color{\l_phd_section_color_tl}%5
       }
  }%
-\fi
+
 
 \ExplSyntaxOff
 %    \end{macrocode}
 %   
 %     \begin{macrocode}
 \ExplSyntaxOn
-\if@ltxcompat
-\else
+%\if@ltxcompat
+%\else
   \renewcommand\subsection
     {
       \@startsection{subsection}
@@ -1689,14 +1641,16 @@ See http://www.latex-project.org/lppl.txt
         {\l_phd_subsection_after_skip_tl}% after skip#4
       
         { 
-        \setfont@cx{\l_phd_subsection_font_weight_tl}
-          {\l_phd_subsection_font_family_tl}{\l_phd_subsection_font_size_tl}
-          {\l_phd_subsection_font_shape_tl}
-          \expandafter\setfontparam@cx\l_phd_subsection_align_tl;%
+        \setfont@cx
+          {\l_phd_subsection_fontweight_tl}
+          {\l_phd_subsection_fontfamily_tl}
+          {\l_phd_subsection_fontsize_tl}
+          {\l_phd_subsection_fontshape_tl}
+         % \expandafter\setfontparam@cx\l_phd_subsection_align_tl;%
           \color{\l_phd_subsection_color_tl}%5
         }
    }
-\fi
+%\fi
 \ExplSyntaxOff
 %\renewcommand\subsection{\@startsection{subsection}{2}{\z@}%
 %                                     {-3.25ex\@plus -1ex \@minus -.2ex}%
@@ -1756,10 +1710,10 @@ See http://www.latex-project.org/lppl.txt
      {\l_phd_paragraph_before_skip_tl}%
      {\l_phd_paragraph_after_skip_tl}%
      {\setfont@cx
-      {\l_phd_paragraph_font_weight_tl}%
-     {\l_phd_paragraph_font_family_tl}
-     {\l_phd_paragraph_font_size_tl}
-     {\l_phd_paragraph_font_shape_tl}%
+      {\l_phd_paragraph_fontweight_tl}%
+     {\l_phd_paragraph_fontfamily_tl}
+     {\l_phd_paragraph_fontsize_tl}
+     {\l_phd_paragraph_fontshape_tl}%
      \expandafter\setfontparam@cx\l_phd_paragraph_align_tl;%
          \color{\l_ph_paragraph_color_tl}%
      }%
@@ -1886,7 +1840,7 @@ See http://www.latex-project.org/lppl.txt
     subsubsection format                  = block,  
     subsubsection background-color        = orange!30, 
     subsubsection font-family             = serif, 
-    subsubsection font-size               = large,
+    subsubsection font-size               = LARGE,
     subsubsection font-weight             = bfseries,
     subsubsection font-family             = tiresias,
     subsubsection font-shape              = itshape,
@@ -2061,7 +2015,7 @@ See http://www.latex-project.org/lppl.txt
 %           subsection~align=center,
 %           subsection~border-top-width=0pt,
 %           subsection~border-bottom-width=0pt}
-%    \subsection{Subsection~set~in~#1}
+%   \subsection{Subsection~set~in~#1}
 %    \lorem\par
 %  } 
 % 
@@ -2126,15 +2080,36 @@ See http://www.latex-project.org/lppl.txt
 % }
 
 % \section{block section}\lorem
-% \cxset{section arc=5mm,
+% \cxset{
+%        section arc                = 5mm,
 %        section format=block,
-%        section beforeskip=-3.25ex,
-%        section afterskip=3.25ex,
-%        section background-color=white,
-%        section title margin-top=10pt,
+%        section beforeskip         = -3.25ex,
+%        section afterskip          = 3.25ex,
+%        section background-color   = white,
+%        section title margin-top   = 10pt,
+%        section title width        = 8cm,
+%        section border-left-width  = 2pt,
+%        section afterindent        = on,
+%        section name               = Section,
+%        section background-color   = spot!30,
+%        section font-size          = huge,
+%        section font-weight        = bfseries,  
+%        section font-shape         = normal,
+%        section font-family        = rmfamily,
+%        section border-right-width = 2pt,
 % }
-
+%
 % \section{display section}\lorem
 % \lorem\lorem
+%
+% \ExplSyntaxOn
+% \makeatletter
+% \l_phd_section_title_width_dim\\
+% \afterindent@cx\\
+% \l_phd_section_background_color_tl\\
+% \l_phd_section_align_tl\\
+% \meaning\l_phd_subsection_align_tl\\
+% \makeatother
+% \ExplSyntaxOff
 %</LSECT>
 \endinput
