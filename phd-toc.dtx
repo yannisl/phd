@@ -1,0 +1,2016 @@
+%<*TOC>
+% \chapter{Table of Contents}
+%
+%	Most of the macros here are a re-write the LaTeX macros in a way that 
+%	we can add appropriate hooks for styling. In writing this section
+%	we had inspiration and used liberally code from Peter Wilson's 
+%	\pkg{tocloft}., including the code for the image.
+%
+% \newcommand{\maxx}{120}       ^^A picture width
+% \newcommand{\maxxm}{118}      ^^A \maxx - 2\
+% \newcommand{\maxy}{55}        ^^A picture height
+% \newcommand{\maxym}{53}       ^^A \maxy - 2
+% \newcommand{\findent}{20}     ^^A indent
+% \newcommand{\findentp}{22}    ^^A \findent + 2
+% \newcommand{\fnumwidth}{10}   ^^A numwidth
+% \newcommand{\ftocrmarg}{30}   ^^A \@tocrmarg
+% \newcommand{\fpnumwidth}{20}  ^^A \@pnumwidth
+% \newcommand{\fipn}{30}        ^^A \findent + \fnumwidth
+% \newcommand{\frmarg}{90}      ^^A \maxx - \ftocrmarg
+% \newcommand{\frnum}{100}      ^^A \maxx - \fpnumwidth
+% \newcommand{\fyi}{10}         ^^A 1st y height
+% \newcommand{\fyim}{8}         ^^A \fyi - 2
+% \newcommand{\fyii}{20}        ^^A 2nd y height
+% \newcommand{\fyiii}{25}       ^^A 3rd y height
+% \newcommand{\fyiv}{30}        ^^A 4th y height
+% \newcommand{\fyv}{40}         ^^A 5th y height
+% \newcommand{\fyvp}{42}        ^^A \fyv + 2
+% \newcommand{\flin}{4}         ^^A length of leader lines
+% \newcommand{\frmargm}{89}     ^^A \frmarg (90) - a little bit
+% 
+% \providecommand{\bs}{\textbackslash}
+% \begin{figure}
+% \centering
+% \setlength{\unitlength}{1mm}
+% \begin{picture}(\maxx,\maxy)
+%     ^^A side lines and linewidth
+%   \put(0,0){\line(0,1){\maxy}}
+%   \put(\maxx,0){\line(0,1){\maxy}}
+%   \put(0,\maxy){\vector(1,0){\maxx}}
+%   \put(2,\maxym){\makebox(0,0)[tl]{\texttt{\bs linewidth}}}
+%     ^^A \@pnumwidth
+%   \put(\maxx,\fyi){\vector(-1,0){\fpnumwidth}}
+%   \put(\maxxm,\fyim){\makebox(0,0)[tr]{\texttt{\bs @pnumwidth}}}
+%   \put(\frnum,\fyi){\line(0,1){\flin}}
+%     ^^A \@tocrmarg
+%   \put(\maxx,\fyv){\vector(-1,0){\ftocrmarg}}
+%   \put(\maxxm,\fyvp){\makebox(0,0)[br]{\texttt{\bs @tocrmarg}}}
+%   \put(\frmarg,\fyv){\line(0,-1){\flin}}
+%     ^^A indent
+%   \put(0,\fyv){\vector(1,0){\findent}}
+%   \put(2,\fyvp){\makebox(0,0)[bl]{\textit{toc margin-left}}}
+%   \put(\findent,\fyv){\line(0,-1){\flin}}
+%     ^^A numwidth
+%   \put(\findent,\fyv){\vector(1,0){\fnumwidth}}
+%   \put(\findentp,\fyvp){\makebox(0,0)[bl]{\textit{numwidth}}}
+%   \put(\fipn,\fyv){\line(0,-1){\flin}}
+%     ^^A last title line
+%   \put(\maxx,\fyii){\makebox(0,0)[br]{487}}
+%   \put(\fipn,\fyii){title end}
+%     ^^A second title line
+%   \put(\fipn,\fyiii){continue\ldots}
+%   \put(\frmarg,\fyiii){\makebox(0,0)[br]{\ldots title}}
+%     ^^A first title line
+%   \put(\findent,\fyiv){\textbf{3.5}}
+%   \put(\fipn,\fyiv){Heading\ldots}
+%   \put(\frmarg,\fyiv){\makebox(0,0)[br]{\ldots title}}
+%     ^^A dotted leader
+%   \multiput(\frmargm,\fyii)(-\flin,0){12}{.}
+%   \multiput(\frmarg,\fyi)(-\flin,0){2}{\line(0,1){\flin}}
+%   \put(\frmarg,\fyi){\vector(-1,0){\flin}}
+%   \put(\frmarg,\fyi){\vector(1,0){0}}
+%   \put(\frmarg,\fyim){\makebox(0,0)[tr]{\texttt{\bs @dotsep}}}
+% 
+% \end{picture}
+% \setlength{\unitlength}{1pt}
+% \caption{Standard Layout of a ToC (LoF, LoT) entry} \label{fig:ltoc}
+% \end{figure}
+%
+% 
+% {if@haschapter@cx}
+% We will be using either chapter or section type headings for the ToC, etc.,
+% so we need to know which of these the document class supports.
+%
+%    \begin{macrocode}
+\ExplSyntaxOn
+\newif\if@haschapter@cx\@haschapter@cxtrue
+\int_new:N \toc_depth
+\int_gset:Nn \toc_depth {\c@tocdepth}
+
+\bool_new:N \haschapter_bool \bool_gset_true:N \has_chapter_bool
+\bool_new:N \haspart_bool \bool_gset_true:N \haspart_bool
+
+\cs_if_exist:cTF {part} 
+   { \bool_gset_true:N \haspart_bool   } 
+   { \bool_gset_false:N \haspart_bool  }
+   
+\ExplSyntaxOff
+%    \end{macrocode}
+% 
+% 
+% {if@koma@cx}
+% The \pkg{koma} classes have different defaults than the standard classes,
+% so we need to know if a \pkg{koma} class has been loaded.
+%    \begin{macrocode}
+\newif\if@koma@cx  \@koma@cxfalse
+\@ifclassloaded{scrartcl}{\@koma@cxtrue}{}
+\@ifclassloaded{scrreprt}{\@koma@cxtrue}{}
+\@ifclassloaded{scrbook}{\@koma@cxtrue}{}
+%    \end{macrocode}
+% 
+%
+% {if@memoir@cx}
+%    \begin{macrocode}
+\newif\if@memoir@cx  \@memoir@cxfalse
+\@ifclassloaded{memoir}{\@memoir@cxtrue}{}
+%    \end{macrocode}
+% 
+%
+% Issue a warning if there are no recognised sectional divisions 
+% and then skip the rest of the package code.
+%    \begin{macrocode}
+\@ifundefined{chapter}{%
+  \@haschapter@cxfalse
+  \@ifundefined{section}{%
+    \PackageWarning{phd}%
+      {I don't recognize any sectional divisions so I'll do very little and many things can break}
+    \renewcommand{\quit@cx}{\endinput}
+    }{\PackageInfo{phd}{The document has section divisions}}
+  }{\@haschapter@cxtrue
+    \PackageInfo{phd}{The document has chapter divisions}}
+%    \end{macrocode}
+% bailing out or continue.
+%
+% {settocpagestyle}
+% {tocpagestyle@cx}
+%	We define a user macro and to be used in keys
+%   a pagestyle for the first page of the ToC.
+%   The default is the |plain| pagestyle. CHECK THIS.
+%    \begin{macrocode}
+\newcommand{\settocpagestyle}[1]{%
+  \def\tocpagestyle@cx{\thispagestyle{#1}}}
+ 
+%    \end{macrocode}
+% 
+% 
+%
+% {tocparskip@cx}
+% The |\parskip| local to the ToC, etc., is set to the length |\tocparskip@cx|.
+%
+%    \begin{macrocode}
+\newlength{\tocparskip@cx}
+\setlength{\tocparskip@cx}{0pt}
+%    \end{macrocode}
+% 
+%
+% \section{General Formatters}
+%
+% In order to provide maximum flexibility and to re-use code, we provide general
+% formatting code. These in general start with the prefix \emph{format}. They take
+% as input the basic parameters, required to format. The decoration parameters come
+% from the key value interface.
+%  
+% \begin{docCommand}{format_toc_name:n} { \marg{name} }
+%   Formats and typesets the conents name, in a ToC. 
+% \end{docCommand}
+%
+%    \begin{macrocode}
+\ExplSyntaxOn
+\cs_gset:Npn \format_toc_name:n #1 
+  {
+ \begin{tcolorbox}[colback=spot!15,arc=3mm,colframe=white,]
+  \contents_name_before
+     \setfont@cx {\contents_name_font_weight}
+                 {\contents_name_font_family}
+                 {\contents_name_font_size}
+                 {\contents_name_font_shape}
+                 \color{\toc_name_color}
+      \start_align
+      \contents_name_indent 
+      \exp_after:wN \cs:w \exp_after:wN
+           \toc_name_case\cs_end:
+        #1
+      \end_align
+    \end{tcolorbox} 
+ \contents_name_after%
+ }
+\ExplSyntaxOff
+%    \end{macrocode}
+
+%
+%
+% 
+%  \begin{docCommand} {phd_toc_start} { \meta{void}}
+%    Typesets any material before the toc, for example a rule or image. This
+%    can also be used to typeset a two column or three column toc.
+%  \end{docCommand}
+%
+%  \begin{docCommand}{phd_toc_finish} { \meta{void}}
+%    Typesets any material after the toc, for example a rule or image. This
+%    can also be used to typeset end a two column or three column layout.
+%  \end{docCommand} 
+%
+%    \begin{macrocode}
+\let\ltxtableofcontents\tableofcontents
+%
+\ExplSyntaxOn
+\cs_new:Npn \phd_toc_start:  {\hrule }
+\cs_new:Npn \phd_toc_finish: {\hrule } 
+\ExplSyntaxOff
+%    \end{macrocode} 
+% 
+% \begin{docCommand}{tableofcontents} {\meta{void}}
+%  This is a parameterised version of the default |\tableofcontents| command.
+%  Each class has its own definition, but we have to cater for all classes
+%  in one definition, hence some of the checks. The definition is
+%  modified after all packages have been loaded. The normal LaTeX way is to use
+%  the chapter to set it in the book class and the section in others. Here we opted to
+%  leave it up to the user.
+%	 Consider more checks here
+% \end{docCommand}
+%
+%    \begin{macrocode}
+\ExplSyntaxOn
+ \renewcommand{\tableofcontents}{%
+    \phd_toc_start:
+%    \end{macrocode}
+% Ensure that any previous paragraph has been finished. 
+%	within a group set
+% the local paragraphing style and typeset the title. \label{code:tableofcontents}
+%    \begin{macrocode}
+    \par
+    \begingroup
+      \parindent\z@ 
+      \parskip\tocparskip@cx
+      \make_toc_title:
+%    \end{macrocode}
+%
+% Finally, start reading the \docfile{.toc} file and finish up.
+%    \begin{macrocode}
+    \start_toc:n {toc}%
+    \endgroup
+    \phd_toc_finish:
+}%
+\ExplSyntaxOff
+%    \end{macrocode}
+%
+%  \begin{docCommand} {start_toc} { \meta {void}}
+%    Reads the file |.toc|. Write to the file conditionally. This was
+%    originally provided in the source2e class |lsect|, which we redefine.\FIRE
+%  \end{docCommand}
+%
+%    \begin{macrocode}
+\ExplSyntaxOn
+ \cs_new:Npn \start_toc:n #1 
+   {
+     \group_begin:
+     \makeatletter
+     \@input{\jobname.#1}%
+     \if@filesw
+       \expandafter\newwrite\csname tf@#1\endcsname
+       \immediate\openout \csname tf@#1\endcsname \jobname.#1\relax
+     \fi
+     \@nobreakfalse
+     \group_end:
+  }
+\ExplSyntaxOff 
+%    \end{macrocode}
+% 
+% \begin{docCommand} {numberline} { \meta {the number} }
+%  The purpose of the |\numberline{|\meta{secnum}|}| command is to typeset
+%  \meta{secnum} left justified in a box of width |\@tempdima|. I redefine
+%  it to add three additional parameters, namely |\toc_number_before|, 
+%  |\toc_number_after| and |\toc_number_after_box| 
+%  (see \docfile{ltsect.dtx} for the original definition).\FIRE
+%
+% \begin{verbatim}
+%   \contentsline {section}
+%      {\numberline {4}Language Manager}
+%      {10}{section.1.4}
+% \end{verbatim} 
+% \end{docCommand}
+%
+%    \begin{macrocode}
+\ExplSyntaxOn
+\cs_set:Npn \toc_number_before_box {}
+\cs_set:Npn \toc_number_before {}
+\cs_set:Npn \toc_number_after {}
+\cs_set:Npn \toc_number_after_box {}
+%    \end{macrocode}
+%
+% This is the most important part of all. It is saved in the .toc
+% and when we use l@\meta{chapter} etc it is used for formatting. No
+% separation of concerns here~
+% We might even need to add more hooks! What happens if we want
+% a full tcolorbox box?
+%    \begin{macrocode}  
+\dim_new:N \numberlineboxwidth  
+\cs_gset:Npn \numberline #1
+  {
+   \toc_number_before_box
+   \hbox_to_wd:nn \numberlineboxwidth                   %\numberlineboxwidth  
+     { 
+       \toc_number_before\relax #1 \toc_number_after \hfil 
+     }
+   \toc_number_after_box
+  }
+\ExplSyntaxOff
+%    \end{macrocode}
+% 
+% \section{ToC Name Parameters}
+%
+%    \begin{macrocode}
+\ExplSyntaxOn
+\cxset 
+  {
+    toc~name/.code                                    = 
+        \cs_gset:Npn \contentsname { #1 },
+    toc~name~before/.store~in                         = \contents_name_before,
+    toc~name~after/.store~in                          = \contents_name_after,
+    toc~name~font-size/.store~in                      = \contents_name_font_size,
+    toc~name~font-weight/.store~in                    = \contents_name_font_weight,
+    toc~name~font-family/.store~in                    = \contents_name_font_family,
+    toc~name~font-shape/.store~in                     = \contents_name_font_shape,
+    toc~name~color/.store~in                          = \toc_name_color,
+    toc~name~afterskip/.store~in                      = \contents_name_after_skip,
+    toc~name~align/.is~choice,
+    toc~name~align/center/.code                       =
+      \cs_set:Npn \start_align { \bgroup \centering }
+      \cs_set:Npn \end_align {\par \egroup },
+    toc~name~align/right/.code                        =
+      \cs_set:Npn \start_align { \flushright }
+      \cs_set:Npn \end_align { \endflushright },
+    toc~name~align/left/.code                         =
+      \cs_set:Npn \start_align{\@empty}
+      \cs_set:Npn \end_align{\@empty},
+    toc~name~align/none/.code                         =
+      \cs_set:Npn \start_align{\@empty}
+      \cs_set:Npn \end_align{\@empty},
+    toc~name~indent/.store~in                         = \contents_name_indent,
+    toc~name~case/.case~in                            = \toc_name_case,
+    toc~pagestyle/.code                               =
+      \gdef\contentspagestyle@cx{\thispagestyle{#1}},
+}
+\ExplSyntaxOff     
+     %    \end{macrocode}      
+%
+% The contents page is enabled to have its own pagestyle. We default this later on
+% to plain.
+% This needs also a bit of a thought, if we require to enable it further down the line.
+%
+%    \begin{macrocode}
+\cxset{toc name= Contents,
+       toc name before = ,
+       toc name after =, 
+       toc name color = black,
+       toc name font-weight=bold,
+       toc name font-family=sffamily,
+       toc name font-shape=upshape,
+       toc name font-size=LARGE,
+       toc name afterskip=10pt, %set as 40pt in LaTeX
+       toc name after=\par,
+       toc name align=none,
+       toc name indent=\hspace*{0cm},
+       toc name case=upper,
+       toc pagestyle=headings,
+  }%
+  
+%    \end{macrocode}
+%
+% \begin{docCommand}{make_toc_title:} {\meta{void}}
+%	Typesets the heading that goes on top of the |ToC| page.
+%	We cater for a few hooks, so the code is rather longish. 
+% \end{docCommand}
+%
+%    \begin{macrocode}
+\ExplSyntaxOn
+
+
+\cs_gset:Npn \make_toc_title: {
+  \addpenalty\@secpenalty
+  \if@haschapter@cx
+    \vspace*{10pt}
+    \pdfbookmark[0]{\contentsname}{toc}
+  \else
+    \vspace{10pt}
+  \fi
+  \markboth{\contentsname}{\contentsname}%
+  \contentspagestyle@cx
+  \interlinepenalty\@M
+%    \end{macrocode}
+% Following the way we developed section headings we
+% can call formatters at this stage to format the heading.
+% For the time being instead of emulating a 'chapter' we give
+% it its own style in a colorbox.  
+%    \begin{macrocode}  
+  \format_toc_name:n { \contentsname}
+%    \end{macrocode}
+%    \begin{macrocode}  
+    \par\nobreak
+    \vskip\contents_name_after_skip\relax
+    \@afterheading%
+ }%
+ %
+ \let\sampletoctitle\make_toc_title:
+\ExplSyntaxOff 
+%    \end{macrocode}
+% 
+%
+% {setpnumwidth@cx}
+% {setocmarg@cx}
+%  Users commands for setting |\@pnumwidth| and |\@tocrmarg|.
+%    \begin{macrocode}
+\newcommand{\setpnumwidth@cx}[1]{\renewcommand{\@pnumwidth}{#1}}
+\newcommand{\settocmarg@cx}[1]{\renewcommand{\@tocrmarg}{#1}}
+\setpnumwidth@cx{25pt}
+\settocmarg@cx{20pt}
+%    \end{macrocode}
+% 
+% 
+%
+% \section{Styling the dot leaders}
+%  	Here we will allow the user to either have dotfills and
+%    be	able to specify the type and spacing of the dots.
+%	We also provide a key to disable dotfills.
+%
+% \begin{docCommand} {dot@cx} { \meta{void}}
+%   Stores the leaders pattern. In the standard classes this
+%   is normally a dot.
+% \end{docCommand}
+%
+% \begin{docCommand} {dotfill@cx} { \meta{void}}
+%   Typesets the leaders based on the pattern stored in \#1
+% \end{docCommand}
+%
+%   In the default |ToC|, a dotted line can be used to provide a leader between
+%   a title and the page number. As Peter Wilson wrote and I found at my
+%   distress the definition of the leader is buried
+%   in the \cs{@dottedtocline} command. The 
+%	\cs{dotfill@cx}\marg{sep}
+%   command provides a parameterised version of the leader code, where
+%   \marg{sep} is the seperation between the dots in mu units.
+%   The symbol used for the `dots' in the leader is given by the 
+%   value  of |\dot@cx|. 
+% 
+%    \begin{macrocode}
+\ExplSyntaxOn
+\cs_gset:Npn \dot@cx { - }
+\cs_gset:Npn \dot_fill #1 
+  {
+    \leaders\hbox{$\m@th\mkern #1 mu\hbox{\dot@cx}\mkern #1 mu$}\hfill
+  }
+\ExplSyntaxOff  
+%    \end{macrocode}
+% 
+% 
+%
+%    \begin{macrocode}
+\def\nodotfill@cx{}
+\cxset{toc dotfill/.is choice,
+       toc dotfill/none/.code = \nodotfill@cx,
+       toc dotfill symbol/.code= \renewcommand{\dot@cx}{#1},
+       toc dotfill sep/.store in=\dotfillsep@cx,
+}
+\cxset{toc dotfill symbol=.,
+       toc dotfill sep=4.5}
+%    \end{macrocode}
+%
+% ^^A{parfillskip@CX}
+% The |\l@kind| commands modify (locally) the value of |\parfillskip|.
+% |\parfillskip@CX| is a copy of the default \texbook\ 
+% |\parfillskip| definition.
+%    \begin{macrocode}
+\newcommand{\parfillskip@CX}{\parfillskip=0pt plus1fil}
+%    \end{macrocode}
+% 
+%
+ 
+%
+% \begin{docCommand}{format_toc_entry} { {section name} {title} {page number} }
+%  General formatter for all sections. This is the standard template
+%  that typesets a ToC entry with leaders.
+% \end{docCommand}
+% \tcbdocmarginnote{U 01-07-2015}
+%    \begin{macrocode}
+\ExplSyntaxOn
+\cs_set:Npn \format_toc_entry:nn #1 #2 #3
+  {
+   \group_begin:
+
+      \cs_set:Npn \font_weight_aux
+        {
+          \exp_after:wN \cs:w toc_#1_font_weight\cs_end:
+        }
+  
+      \cs_set:Npn \font_weight
+        {
+          \exp_after:wN \cs:w \font_weight_aux\exp_after:wN\endcsname
+        }   
+%      
+     \cs_set:Npn \font_color
+        {          
+          %\cs_gset:Npn \__acolor {
+          \expandafter\color{\csname toc_#1_color\endcsname}
+          %\__acolor
+          %\fontaii
+        }
+% font shape          
+    \cs_set:Npn \fontbi
+      {
+        \exp_after:wN \cs:w toc_#1_font_shape\cs_end:
+      }     
+    \cs_set:Npn \font_shape
+      {
+        \exp_after:wN \cs:w \fontbi \exp_after:wN \cs_end:
+      }
+             
+     %\cs_set:Npn \fontb {\fontbii}  
+     %
+
+% font size
+     \cs_set:Npn \font_size_aux
+       {
+         \exp_after:wN \cs:w toc_#1_font_size \cs_end:
+       }     
+     \cs_set:Npn \font_size 
+       {
+         \exp_after:wN \cs:w \font_size_aux \exp_after:wN \cs_end:
+       }    
+% font-family     
+     \cs_set:Npn \font_family_aux
+       {
+         \exp_after:wN \cs:w toc_#1_font_family \cs_end:
+       }     
+     \cs_set:Npn \font_family
+       {
+         \exp_after:wN \cs:w \font_family_aux \exp_after:wN \cs_end:
+       }  
+% text case     
+     \cs_set:Npn \text_case_aux
+       {
+         \exp_after:wN \cs:w toc_#1_case \cs_end:
+       }     
+     \cs_set:Npn \text_case
+       {
+         \exp_after:wN \cs:w \text_case_aux \exp_after:wN \cs_end:
+       }          
+% section indent 
+     \cs_set:Npn \tocindent {
+         \exp_after:wN \cs:w toc_#1_indent \cs_end: 
+       }
+%                        
+     \expandafter\leftskip\tocindent\relax
+%     
+     \dim_set_eq:NN \tex_rightskip:D \@tocrmarg
+     \parfillskip -\rightskip
+     \dim_set_eq:NN \parindent\tocindent
+%     
+     
+     \interlinepenalty\@M
+     \leavevmode
+     \numberlineboxwidth \toc_section_number_width\relax
+     \let\toc_number_before \cftsecpresnum
+     \advance\leftskip \numberlineboxwidth
+     \null\nobreak\hskip -\leftskip
+%    \end{macrocode}
+%  These are the generic templates
+%    \begin{macrocode}
+     
+     %\begin{tcolorbox}
+       \tcbox[size=minimal,
+         nobeforeafter,
+         before=\hspace{0em},
+         colback=white,
+        ]
+         {
+           \font_color\font_weight\font_shape\font_size\font_family 
+             \hspace{1em}\text_case{#2}
+         }
+       %\hfill 
+       \csname toc#1leader@cx\endcsname
+       % page number box this must be pnumwidth?
+       \begin{tcolorbox}
+        [
+          size=minimal,
+          width=\toc_section_number_width-1em,
+          nobeforeafter
+         ]
+         ( \hfill #3 )
+       \end{tcolorbox}  
+       \vskip0pt
+     %\end{tcolorbox}  
+     \group_end:
+     \@afterindentfalse
+     \nobreak
+ }
+  \ExplSyntaxOff
+%    \end{macrocode}
+%
+% \section{Styling Part in the Toc}
+
+
+%  |\l@part{|\meta{title}|}{|\meta{page}|}| typesets the ToC entry for
+% a |part| heading. It is a parameterised copy of the default |\l@part|
+% (see \docfile{classes.dtx} for the original definition and the code
+%  below for |\l@part| for an explanation of most of this
+%  code). 
+%
+% By default, Parts
+% (and Chapters) do not have dotted leaders. This package provides
+% for all entries to have the ability to have dotted leaders, as some styles treat the part in a similar manner.
+%
+% In article class, Part level is 0 not -1 and hence the conditional below.
+%	
+%	We start by defining a number of keys and macros to store parameters.
+%	An entry to the ToC consists always of a number, the title and 
+%	a page number. For each part there are different styling keys.
+%
+%	{tocpartindent@cx}	 
+%    \begin{macrocode}
+\ExplSyntaxOn
+\dim_new:N  \toc_part_indent
+\dim_new:N  \toc_part_number_width_dim
+\skip_new:N \toc_part_before_skip_dim
+\cxset
+  {
+    toc~part~indent/.code                     = \dim_gset:Nn\toc_part_indent { #1 },
+    toc~part~numwidth/.code                   = 
+      \dim_gset:Nn\toc_part_number_width_dim { #1 },
+    toc~part~before~number/.store~in          = \tocpartbeforenumber@cx,
+    toc~part~after~number/.store~in           = \partafterpnum@cx,
+    toc~part~beforeskip/.code                 = 
+      \skip_gset:Nn \toc_part_before_skip_dim {#1},
+    toc~part~font-family/.font-family~in      = \toc_part_font_family,   
+    toc~part~font-weight/.font-weight~in      = \toc_part_font_weight,
+    toc~part~font-size/.store~in              = \toc_part_font_size,
+    toc~part~font-shape/.font-style~in        = \toc_part_font_shape,
+    toc~part~color/.store~in                  = \toc_part_color,
+    toc~part~case/.is~choice,
+    toc~part~case/lower/.code                 = 
+      \cs_gset:Npn \toc_part_case 
+        {
+          MakeTextLowercase
+        },
+    toc~part~case/upper/.code                 =
+      \cs_gset:Npn \toc_part_case
+        {
+          MakeTextUppercase
+        },
+    toc~part~case/none/.code                  =
+      \cs_set_eq:NN \toc_part_case\empty,    
+%         
+    toc~part~page~font-size/.store~in         = \tocpartpagefontsize@cx,
+}
+\ExplSyntaxOff
+%    \end{macrocode}
+%
+
+%    \begin{macrocode}
+\cxset
+  {
+    toc part indent=0pt,
+    toc part numwidth=4.2em,
+    toc part after number=,
+    toc part font-size= LARGE,
+    toc part font-weight = bold,
+    toc part font-family = rmfamily,
+    toc part font-shape  = upshape,
+    toc part before number={\kern0pt},
+    toc part page font-size= \bfseries,
+    toc part beforeskip = 2.25em plus0.5pt minus0.5pt,
+    toc part case       = upper,
+    toc part color      = sweet,
+   }
+  %    \end{macrocode}
+% 
+%
+% \begin{docCommand} {l@part} { \meta{title} \meta{pagenumber} }
+% We now renew the command, in order to allow for hooks. 
+% This might be cloberred by hyperref if too many changes
+% are carried out. It takes two parameters (one for the caption and another for the title if different).
+% \end{docCommand}
+%
+% We need first to define conditionals to switch from
+% printing the part or not.
+%
+%  We allow for any document type to have parts, as long as the control sequence |\part|
+%  is defined.
+%  The part |toc_level = -1|
+%    \begin{macrocode}
+\ExplSyntaxOn
+\newif\if@dopart@cx
+\newif\if@haspart@cx
+  \@ifundefined{part}{\@haspart@cxfalse}{\@haspart@cxtrue}
+\if@haspart@cx
+
+\cs_gset:Npn \l@part #1 #2
+  {
+    \bool_if:NT \haspart_bool
+      {
+        \bool_if:NTF \has_chapter_bool 
+          {
+            \addpenalty{-\@highpenalty}
+          }
+          { 
+            \addpenalty\@secpenalty 
+          }
+% add any skip before using addvspace          
+          \addvspace{\toc_part_before_skip_dim}%
+%% set margins in a group          
+%          \group_begin:
+%          \tex_leftskip:D \toc_part_indent\relax       
+%          \tex_rightskip:D \@tocrmarg % need to check this for conflics\@tocrmarg
+%          \tex_parfillskip:D -\tex_rightskip:D
+%          \parindent \toc_part_indent\relax
+%          \@afterindenttrue
+%          \interlinepenalty\@M
+%% start paragraph          
+%          \leavevmode    
+%% set leftmargin          
+%          \dim_set_eq:NN \l_tmpa_dim \toc_part_number_width_dim
+%%          
+%          \dim_add:Nn \leftskip \toc_part_number_width_dim
+%          \null\nobreak\hskip -\leftskip
+%
+%          \toc_part_font_size 
+%          \tocpartbeforenumber@cx \tocpartcase {#1}
+%          \partfillnum@cx{#2}%
+           \format_toc_entry:nn {part} {#1} {#2}
+           \nobreak
+           \bool_if:NT \has_chapter_bool
+             {
+               \global\@nobreaktrue
+               \tex_everypar:D { \global\@nobreakfalse\tex_everypar:D {} }%
+ 	           }
+           %\group_end:
+    }
+  } %end l@part
+
+\ExplSyntaxOff
+%    \end{macrocode}
+% 
+%
+%  These are the user commands to control the typesetting of Part entries.
+%  They are initialised to give the standard appearance.
+%    \begin{macrocode}
+\ExplSyntaxOn
+  \newcommand{\partpresnum@cx}{}
+  \newcommand{\partaftersnum@cx}{..}
+  % defined in parameters \newcommand{\partaftersnumb@cx}{}
+%
+% 
+  \def\cftnodots{2.7}
+  \newcommand{\partdotsep@cx}{\cftnodots}
+  \newcommand{\tocpartleader@cx}{\large\bfseries\dot_fill{\partdotsep@cx}}
+
+%\newcommand{\tocsectionleader@cx}  {\normalfont\dot_fill{\tocsecdotsep@cx}}
+%
+  
+  \newcommand{\cftpartpagefont}{\large\bfseries}
+  %\newcommand{\partafterpnum@cx}{}
+  
+  
+  \newcommand{\partfillnum@cx}[1]{%
+    {\tocpartleader@cx}%
+    {\hb@xt@\@pnumwidth{\hss {%
+       \tocpartpagefontsize@cx #1}}}\partafterpnum@cx\par}%
+\ExplSyntaxOff       
+%    \end{macrocode}
+
+
+% \section{Handling of chapters in ToC.}
+%
+
+%  These are the user commands to control the typesetting of Chapter entries.
+%  They are initialised to give the standard appearance.
+%    \begin{macrocode}
+
+\if@debug
+      \fboxsep1pt
+      \fboxrule-1pt
+\else
+      \fboxsep0pt
+      \fboxrule0pt
+\fi
+\if@haschapter@cx
+  \newlength{\beforetocchapterskip@cx}
+  \setlength{\beforetocchapterskip@cx}{1.0em \@plus\p@}
+  \newlength{\cftchapindent}
+  \setlength{\cftchapindent}{0em}
+  \newlength{\cftchapnumwidth}\setlength{\cftchapnumwidth}{1.5em}
+  \newcommand{\cftchapfont}{\bfseries}
+  \newcommand{\cftchappresnum}{}
+  \newcommand{\cftchapaftersnum}{}
+  \newcommand{\cftchapaftersnumb}{}
+  \newcommand{\cftchapleader}{\bfseries\dot_fill{\cftchapdotsep}}
+
+%    \end{macrocode}
+%
+%	The following code determines the spacing of the dots.
+%    \begin{macrocode}
+  \newcommand{\cftchapdotsep}{\toc_chapter_dot_sep} 
+  \newcommand{\cftchappagefont}{\sffamily\bfseries\color{teal}}
+  \newcommand{\cftchapafterpnum}{}
+%
+ %    \end{macrocode}
+%    \begin{macrocode}
+%
+% \pkgname{koma} classes have different chapter settings.
+%    \begin{macrocode}
+%  \if@cftkoma
+%    \renewcommand{\cftchapfont}{\sectfont}
+%  \fi
+\fi
+
+%    \end{macrocode}
+%
+% \subsection{l@chapter}
+%
+% \begin{docCommand} {l@chapter} { }
+%  \cs{l@chapter}\marg{title}\marg{page} typesets the ToC entry for
+% a |chapter| heading. It is a parameterised copy of the default |\l@chapter|
+%  (see \docfile{classes.dtx} for the original definition). This only applies
+%  to chaptered documents.
+% \end{docCommand}
+%
+%    \begin{macrocode}
+\ExplSyntaxOn
+\cxset
+  {
+    toc~chapter~indent/.store~in             = \toc_chapter_indent,
+    toc~chapter~beforeskip/.store~in         = \toc_chapter_beforeskip,
+    toc~chapter~afterskip/.store~in          = \toc_chapter_after_skip,
+    toc~chapter~dotsep/.store~in             = \toc_chapter_dot_sep,
+    toc~chapter~no~dots/.code                = \def\toc_chapter_dot_sep{10000},
+    toc~chapter~numberwidth/.store~in        = \toc_chapter_number_width,
+    toc~chapter~font-size/.font-size~in      = \toc_chapter_font_size, 
+    toc~chapter~font-family/.font-family~in  = \toc_chapter_font_family, 
+    toc~chapter~font-shape/.store~in         = \toc_chapter_font_shape, 
+    toc~chapter~font-weight/.store~in        = \toc_chapter_font_weight, 
+    toc~chapter~color/.store~in              = \toc_chapter_color,
+    toc~chapter~numwidth/.store~in           = \toc_chapter_number_width,
+    toc~chapter~case/.case~in                = \toc_chapter_case,
+    toc~chapter~font/.store~in               = \tocchapterfont@cx,
+    toc~chapter~title~width/.store~in        = \tocchaptertitlewidth@cx,
+    toc~chapter~page~font-size/.store~in     = \toc_chapter_page_font_size,
+    toc~chapter~page~font-family/.store~in   = \toc_chapter_page_font_family,
+    toc~chapter~page~font-shape/.store~in    = \toc_chapter_page_font_shape,
+    toc~chapter~page~font-weight/.store~in   = \toc_chapter_page_font_weight,
+    toc~chapter~page~color/.store~in         = \toc_chapter_page_color,
+    toc~chapter~page~before/.store~in        = \toc_chapter_page_before,
+    toc~chapter~page~after/.store~in         = \toc_chapter_page_after,
+    toc~chapter~page~pnumwidth/.store~in     = \toc_chapter_page_number_width
+  }
+\ExplSyntaxOff  
+%
+\cxset
+  {
+    toc chapter indent                       = 0pt,
+    toc chapter beforeskip                   = 15pt plus0.5pt minus0.5pt,
+    toc chapter afterskip                    = 15pt plus0.5pt minus0.5pt,
+    toc chapter dotsep                       = 4.5,
+    toc chapter no dots,
+    toc  chapter numberwidth                 = 7.25em,
+    toc chapter font                         = \bfseries\sffamily\large,
+    toc chapter title width                  = 0.6\textwidth,
+    toc chapter page pnumwidth               = 2.35em,
+    toc chapter page before                  = [,
+    toc chapter page after                   = ],
+    toc chapter case                         = upper,
+  }
+%    \end{macrocode}
+
+%
+% \begin{docCommand} {l@chapter} { \meta{title}  \meta{page number} }
+%   Controls the toc entry for chapters.  \FIRE
+% \end{docCommand}
+%    \begin{macrocode}
+\ExplSyntaxOn
+  \renewcommand*{\l@chapter}[2]{%
+     \ifnum \c@tocdepth >\m@ne
+       \addpenalty{-\@highpenalty}%
+       \vskip \toc_chapter_beforeskip\relax 
+        {
+        \format_toc_chapter_leaders:nn {#1} {#2}
+        }%
+       \vskip \toc_chapter_after_skip 
+    \fi
+ }%
+\ExplSyntaxOff 
+%    \end{macrocode}
+%
+%    \begin{macrocode}
+\ExplSyntaxOn
+\cs_new:Npn \format_toc_chapter_leaders:nn #1 #2
+  {
+   \leftskip\toc_chapter_indent\relax
+   \rightskip \@tocrmarg
+   \parfillskip -\rightskip
+   \parindent \toc_chapter_indent\relax%
+   \@afterindenttrue
+   \interlinepenalty\@M
+   \leavevmode
+   \begin{tcolorbox}[colback=spot!30,arc=3mm,colframe=white]
+   \numberlineboxwidth\toc_chapter_number_width\relax
+        %\let\toc_number_before \cftchappresnum
+        %\let\toc_number_after \cftchapaftersnum
+        %\let\toc_number_after_box \cftchapaftersnumb
+    \advance\leftskip\numberlineboxwidth
+    \null\nobreak\hskip -\leftskip
+    {
+      \tocchapterfont@cx 
+      \exp_after:wN \cs:w \toc_chapter_case \cs_end:
+      {#1}
+    }
+    {\lotleader}\nobreak 
+     \toc_chapter_page_before\makebox[\toc_chapter_page_number_width][r]
+    {
+        \exp_after:wN \cs:w \exp_after:wN \lot_page_font_size \cs_end:
+        \exp_after:wN \cs:w \exp_after:wN \lot_page_font_weight \cs_end: 
+        \exp_after:wN \cs:w \exp_after:wN \lot_page_font_family \cs_end:
+        \exp_after:wN \cs:w \exp_after:wN \lot_page_font_shape \cs_end:
+       \hss#2
+    }\toc_chapter_page_after
+   \end{tcolorbox}
+          
+  }          
+\ExplSyntaxOff  
+
+    
+%    \end{macrocode}
+% 
+% 
+% We define a macro for mocking sample toc chapters for the documentation
+% 
+% \begin{docCommand} {sampletocchapter} {\meta{void}}
+%   Typesets  a sample based on l@chapter
+% \end{docCommand}
+%    \begin{macrocode}
+\let\sampletocchapter\l@chapter
+%    \end{macrocode}
+% 
+%
+% \section{ToC section styling}
+%
+%  |\l@section{|\meta{title}|}{|\meta{page}|}| typesets the ToC entry for
+% a |section| heading. It is a parameterised copy of the default |\l@section|
+% (see \docfile{classes.dtx} for the original definition). 
+% 	We start by defining all our parameters and variables.
+%
+%     \begin{macrocode}
+\ExplSyntaxOn 
+\cxset
+  {
+    toc~section~beforeskip/.store~in=\tocsectionbeforeskip@cx,
+    toc~section~beforeskip/.default={0pt plus.2pt},
+%  This is the left margin! indent might be a misnomer we provide for
+%  both        
+    toc~section~indent/.store~in            = \toc_section_indent,
+    toc~section~margin-left/.style          = {toc section indent=#1},
+%      fonts for title &num
+    toc~section~font-size/.font-size~in     = \toc_section_font_size, 
+    toc~section~font-family/.font-family~in = \toc_section_font_family, 
+    toc~section~font-shape/.store~in        = \toc_section_font_shape, 
+    toc~section~font-weight/.store~in       = \toc_section_font_weight, 
+    toc~section~color/.store~in             = \toc_section_color,
+    toc~section~numwidth/.store~in          = \toc_section_number_width,
+    toc~section~case/.case~in               = \toc_section_case,
+    toc~section~page~font-size/.store~in    = \tocsectionpagefontsize@cx,
+    toc~section~page~font-family/.store~in  = \tocsectionpagefontfamily@cx,
+    toc~section~page~font-shape/.store~in   = \tocsectionpagefontshape@cx,
+    toc~section~page~font-weight/.store~in  = \tocsectionpagefonteight@cx,
+    toc~section~page~color/.store~in        = \tocsectionpagecolor@cx,
+%      leaders template only
+	  toc~section~dotsep/.store~in            = \tocsecdotsep@cx,
+%      before and after page number
+    toc~section~page~before/.store~in       = \tocsectionpagebefore@cx,
+    toc~section~page~after/.store~in        = \tocsectionpageafter@cx,
+}
+\ExplSyntaxOff
+%
+\cxset{%
+  toc section beforeskip=\z@ \@plus.2\p@,
+  toc section indent=0em,
+  toc section font-family= sffamily,
+  toc section font-weight = bfseries,
+  toc section font-shape = upshape,
+  toc section color= sweet,
+  toc section case = none,
+  toc section font-size= normal,
+  toc section numwidth = 4.2em,
+  toc section page font-size=normal,
+  toc section page font-shape= upshape,  
+  toc section page font-weight=,  
+  toc section page font-family= sffamily,
+  toc section page color = sweet, 
+  toc section page before =,
+  toc section page after =,
+  toc section dotsep = 2.7,
+}
+%    \end{macrocode}
+%
+%
+% \begin{docCommand} {format_toc_entry} { \meta{section title} {\meta {page number}} }
+%   Responsible for decorating one entry in the toc. It is a generic
+%   template for all levels.
+%
+%    \#1 section name i.e, section or subsection\\
+%    \#2 section title\\
+%    \#3 section page number\\
+%
+% \end{docCommand}
+%
+
+%
+% \begin{docCommand} { l@section } { \meta{title} } { page number }
+% 	 This macro is called when the \cs{tableofcontents}
+%	 is read from the |.toc| file and it typesets
+%	 the title and the page number. It is called in a |csname| by |\contentsline|
+% 
+%    \#1 section title\\
+%    \#2 page number\\
+%    \#3 added by Hyperref
+%      
+% \end{docCommand}
+%    \begin{macrocode}
+\ExplSyntaxOn
+\cs_gset:Npn \l@section #1 #2
+  {
+  \ifnum \c@tocdepth >\z@
+    \if@haschapter@cx
+      \skip_vertical:n \tocsectionbeforeskip@cx
+    \else
+      \addpenalty \@secpenalty
+      \addvspace{\tocsectionbeforeskip@cx}%
+    \fi
+    \format_toc_entry:nn {section} {#1} {#2}
+  \fi
+  }
+\ExplSyntaxOff  
+%    \end{macrocode}
+% 
+%
+%  These are the user commands to control the typesetting 
+%	 of Section entries.
+%    They are initialised to give the standard appearance.
+%	 These are hooks to \cs{numberline}.
+%    \begin{macrocode}
+\ExplSyntaxOn
+\newcommand{\cftsecpresnum}{}
+\newcommand{\cftsecaftersnum}{}
+\newcommand{\cftsecaftersnumb}{}
+%
+%
+\newcommand{\tocsectionleader@cx}  {\normalfont\dot_fill{\tocsecdotsep@cx}}
+%^^A\newcommand{\cftsecdotsep}{\cftdotsep}
+%    \end{macrocode}
+%    We can now define the command \cmd{\tocsectionfillnum@cx}. 
+%    will print the 
+%	leaders if any and the page number \#1. 
+%    \begin{macrocode}
+%\newcommand{\tocsectionfillnum@cx}[1]{%
+%  {\tocsectionleader@cx}\nobreak
+%  \hb@xt@\@pnumwidth{\hfil\tocsectionpagefont@cx
+%   \tocsectionpagebefore@cx #1}%
+%   \tocsectionpageafter@cx\par}%
+\ExplSyntaxOff
+%    \end{macrocode}
+%
+%
+% \section{Toc subsection styling}
+%
+% 
+%  \refCom{l@subsection} typesets the ToC entry for
+% a |section| heading. It is similar to   \refCom{l@section}
+% (see \docfile{classes.dtx} for the original definition). 
+% 	We start by defining all our parameters and variables.
+%
+%    \begin{macrocode}
+\ExplSyntaxOn
+\newif\if@lowercasesubsection
+\cxset{
+  toc~subsection~beforeskip/.store~in             = \toc_subsection_before_skip,
+  toc~subsection~indent/.store~in                 = \toc_subsection_indent,
+  toc~subsection~font-size/.font-size~in          = \toc_subsection_font_size, 
+  toc~subsection~font-family/.font-family~in      = \toc_subsection_font_family, 
+  toc~subsection~font-shape/.font-style~in        = \toc_subsection_font_shape, 
+  toc~subsection~font-weight/.font-weight~in      = \toc_subsection_font_weight, 
+  toc~subsection~color/.store~in                  = \toc_subsection_color,
+  toc~subsection~case/.case~in                    = \toc_subsection_case,
+  toc~subsection~numwidth/.store~in               = \tocsubsectionnumwidth@cx,
+  toc~subsection~page~font-size/.font-size~in     = \toc_subsection_page_font_size,
+  toc~subsection~page~font-family/.font-family~in = \toc_subsection_page_font_family,
+  toc~subsection~page~font-shape/.font-style~in   = \toc_subsection_page_font_shape,
+  toc~subsection~page~font-weight/.font-weight~in = \toc_subsection_page_font_weight,
+  toc~subsection~page~color/.store~in             = \toc_subsection_page_color,
+  toc~subsection~dotsep/.store~in                 = \toc_subsection_dot_sep,
+  toc~subsection~page~before/.store~in            = \toc_subsection_page_before,
+  toc~subsection~page~after/.store~in             = \toc_subsection_page_after,
+}
+\ExplSyntaxOff 
+%    \end{macrocode}
+% Settings
+%    \begin{macrocode} 
+\cxset{toc subsection beforeskip      = \z@ \@plus.2\p@,
+       toc subsection indent=0em,
+       toc subsection font-family     = sffamily,
+       toc subsection font-weight     = normal,
+       toc subsection font-size       = normal,
+       toc subsection font-shape      = upshape,
+       toc subsection case            = none,
+       toc subsection color= sweet,
+       toc subsection numwidth = 4.2em,
+       toc subsection page font-size=normal,
+       toc subsection page font-shape= upshape,  
+       toc subsection page font-weight=, 
+       toc subsection page font-family= sffamily,
+       toc subsection page color = yellow, 
+       toc subsection page before =,% \{,
+       toc subsection page after =,% \},
+       toc subsection dotsep = 2.7,
+}%
+%    \end{macrocode}
+%
+%    For convenience we define font setting commands for
+%    the page number. We use \cs{setfont@cx}, which we have
+%	defined earlier.
+%    
+%    \begin{macrocode}
+\newcommand\tocsubsectionpagefont@cx{%
+	\setfont@cx{\toc_subsection_page_font_weight}%
+       {\toc_subsection_page_font_family}{\toc_subsection_page_font_size}%
+       {\toc_subsection_page_font_shape}\color{\toc_subsection_page_color}
+}%
+%    \end{macrocode}
+%
+% \begin{docCommand}{l@subsection} { \meta{title} \meta{page number} }
+%  Similar to \refCom{l@section} function.
+% \end{docCommand}
+%
+%    \begin{macrocode}        
+\ExplSyntaxOn
+\cs_gset:Npn \l@subsection #1 #2 
+  {%
+    \ifnum \c@tocdepth >\z@
+      \if@haschapter@cx
+        \skip_vertical:N \toc_subsection_before_skip
+      \else
+        \addpenalty \@secpenalty
+        \addvspace{\toc_subsection_before_skip}%
+    \fi
+      \format_toc_entry:nn {subsection} {#1} {#2}
+  \fi
+}
+ \ExplSyntaxOff 
+%    \end{macrocode}
+% 
+%
+
+%    \begin{macrocode}
+\ExplSyntaxOn
+\cs_new:Npn \tocsubsectionleader@cx 
+  {
+  \normalfont\dot_fill{\toc_subsection_dot_sep}
+  }
+\ExplSyntaxOff    
+%    \end{macrocode}
+%
+% \section{Toc subsubsection styling}
+%  Next the toc subsubsection properties. 
+%    \begin{macrocode}
+\ExplSyntaxOn
+\cxset
+  {
+    toc~subsubsection~beforeskip/.store~in        = \toc_subsubsection_before_skip,
+    toc~subsubsection~indent/.store~in            = \toc_subsubsection_indent,
+%      fonts for title &num
+    toc~subsubsection~font-size/.store~in         = \toc_subsubsection_font_size, 
+    toc~subsubsection~font-family/.store~in       = \toc_subsubsection_font_family, 
+    toc~subsubsection~font-shape/.store~in        = \toc_subsubsection_font_shape, 
+    toc~subsubsection~font-weight/.store~in       = \toc_subsubsection_font_weight, 
+    toc~subsubsection~color/.store~in             = \toc_subsubsection_color,
+    toc~subsubsection~case/.case~in               = \toc_subsubsection_case,
+    toc~subsubsection~numwidth/.store~in          = \tocsubsubsectionnumwidth@cx,
+%	  fonts etc for page number
+    toc~subsubsection~page~font-size/.store~in    = \toc_subsubsection_page_font_size,
+    toc~subsubsection~page~font-family/.store~in  = \toc_subsubsection_page_font_family,
+    toc~subsubsection~page~font-shape/.store~in   = \toc_subsubsection_page_font_shape,
+    toc~subsubsection~page~font-weight/.store~in  = \toc_subsubsection_page_font_weight,
+    toc~subsubsection~page~color/.store~in        = \toc_subsubsection_page_color,
+%      leaders
+	  toc~subsubsection~dotsep/.store~in            = \toc_subsubsection_dot_sep,
+%      before and after page number
+    toc~subsubsection~page~before/.store~in       = \toc_subsubsection_page_before,
+    toc~subsubsection~page~after/.store~in        = \toc_subsubsection_page_after,
+}
+\ExplSyntaxOff
+%
+%    \end{macrocode}
+%
+% We set the subsubsecton fields.
+%    \begin{macrocode}
+\cxset{
+  toc subsubsection beforeskip         = \z@ \@plus.2\p@,
+  toc subsubsection indent=0em,
+  toc subsubsection font-family        = sffamily,
+  toc subsubsection font-weight        = mdseries,
+  toc subsubsection font-shape         = upshape,
+  toc subsubsection case               = none, 
+  toc subsubsection color              = sweet,
+  toc subsubsection font-size          = normal,
+  toc subsubsection numwidth           = 4.2em,
+  toc subsubsection page font-size     =,
+  toc subsubsection page font-shape    = upshape,  
+  toc subsubsection page font-weight   =, 
+  toc subsubsection page font-family   = sffamily,
+  toc subsubsection page color         = teal, %ineffective as it gets color from hyper
+  toc subsubsection page before        =,% \{,
+  toc subsubsection page after         =,% \},
+  toc subsubsection dotsep             = 1000,%2.7
+}
+%    \end{macrocode}
+%
+%    For convenience we define font setting commands for
+%    the page number. We use \cs{setfont@cx}, which we have
+%	defined earlier. Note this might be clobbered if 
+%  hyperref is to provide a page link.
+%    
+%    \begin{macrocode}
+\newcommand\tocsubsubsectionpagefont@cx{%
+	\setfont@cx{\toc_subsubsection_page_font_weight}%
+       {\toc_subsubsection_page_font_family}{\toc_subsubsection_page_font_size}%
+       {\toc_subsubsection_page_font_shape}\color{\toc_subsubsection_page_color}
+}%
+%    \end{macrocode}
+%
+% \begin{docCommand} {l@subsubsection} { \meta{title} \meta{page number}} 
+%  typesets the ToC entry for
+% a |subsubsection| heading. It is a parameterised copy of the default |\l@subsubsection|
+%	We start by defining all our parameters and variables.
+% \end{docCommand} 
+%       
+%    \begin{macrocode}
+\ExplSyntaxOn
+\cs_gset:Npn \l@subsubsection #1 #2
+{%
+  \ifnum \c@tocdepth >\z@
+    \if@haschapter@cx
+      \vskip \toc_subsection_before_skip
+    \else
+      \addpenalty \@secpenalty
+      \addvspace{\toc_subsection_before_skip}%
+    \fi
+%    {\leftskip \toc_subsection_indent\relax
+%     \rightskip \@tocrmarg
+%     \parfillskip -\rightskip
+%     \parindent \toc_subsection_indent\relax\@afterindenttrue
+%     \interlinepenalty\@M
+%     \leavevmode
+%     \@tempdima \tocsubsubsectionnumwidth@cx\relax
+%     \let\toc_number_before \cftsecpresnum
+%     \let\toc_number_after \cftsecaftersnum
+%     \let\toc_number_after_box \cftsecaftersnumb
+%     \advance\leftskip \@tempdima \null\nobreak\hskip -\leftskip
+
+  \format_toc_entry:nn {subsubsection} {#1} {#2}
+  \fi
+}
+\ExplSyntaxOff
+%    \end{macrocode}
+%
+% 
+%    \begin{macrocode}
+\ExplSyntaxOn
+ \cs_new:Npn \tocsubsubsectionleader@cx 
+   {
+     \normalfont\dot_fill{\toc_subsubsection_dot_sep}
+   }
+\ExplSyntaxOff
+%\newcommand{\cftsecdotsep}{\cftdotsep}
+%    \end{macrocode}
+%    We can now define the command \cmd{\tocsectionfillnum}. It will print the 
+%	leaders if any and the page number \#1. TODO IS par necessary??
+%    \begin{macrocode}
+\newcommand{\tocsubsubsectionfillnum}[1]{%
+  {\tocsubsubsectionleader}\nobreak
+  \hb@xt@\@pnumwidth{\hfil\toc_subsubsection_page_font
+   \toc_subsubsection_page_before #1}%
+   \toc_subsubsection_page_after\par}%
+%    \end{macrocode}
+%
+% \section{Toc paragraph styling}
+%
+% 
+% Similarly to the higher headings \refCom{l@subsubsection} typesets the ToC entry for
+% a \emph{paragraph} heading.	We start by defining  parameters and variables.
+%
+%    \begin{macrocode}
+\ExplSyntaxOn
+\newif\if@lowercaseparagraph
+\cxset
+  {
+    toc~paragraph~beforeskip/.store~in              = \toc_paragraph_before_skip,
+    toc~paragraph~indent/.store~in                  = \toc_paragraph_indent,
+%      fonts for title &num
+    toc~paragraph~font-size/.font-size~in           = \toc_paragraph_font_size, 
+    toc~paragraph~font-family/.font-family~in       = \toc_paragraph_font_family, 
+    toc~paragraph~font-shape/.font-style~in         = \toc_paragraph_font_shape, 
+    toc~paragraph~font-weight/.font-weight~in       = \toc_paragraph_font_weight, 
+    toc~paragraph~color/.store~in                   = \toc_paragraph_color,
+    toc~paragraph~case/.case~in                     = \toc_paragraph_case,
+    toc~paragraph~numwidth/.store~in                = \tocparagraphnumwidth@cx,
+%	  fonts etc for page number
+    toc~paragraph~page~font-size/.font-size~in      = \tocparagraphpagefontsize@cx,
+    toc~paragraph~page~font-family/.font-family~in  = \tocparagraphpagefontfamily@cx,
+    toc~paragraph~page~font-shape/.font-style~in    = \tocparagraphpagefontshape@cx,
+    toc~paragraph~page~font-weight/.font-weight~in  = \tocparagraphpagefonteight@cx,
+    toc~paragraph~page~color/.store~in              = \tocparagraphpagecolor@cx,
+%      leaders
+	  toc~paragraph~dotsep/.store~in                  = \tocparagraphdotsep@cx,
+%      before and after page number
+    toc~paragraph~page~before/.store~in=\tocparagraphpagebefore@cx,
+    toc~paragraph~page~after/.store~in=\tocparagraphpageafter@cx,
+}
+\ExplSyntaxOff
+%    \end{macrocode}
+% We set default values.
+%    \begin{macrocode}
+\cxset{toc paragraph beforeskip=\z@ \@plus.2\p@,
+       toc paragraph indent=0em,
+       toc paragraph font-family= sffamily,
+       toc paragraph font-weight = bfseries,
+       toc paragraph font-shape = slshape,
+       toc paragraph color= sweet,
+       toc paragraph font-size=normal,
+       toc paragraph case = none,
+       toc paragraph numwidth = 4.2em,
+       toc paragraph page font-size=normal,
+       toc paragraph page font-shape= upshape,  
+       toc paragraph page font-weight=normal, 
+       toc paragraph page font-family= sffamily,
+       toc paragraph page color = spot!30, 
+       toc paragraph page before =,% \{,
+       toc paragraph page after =,% \},
+       toc paragraph dotsep = 1000,%2.7
+}
+%    \end{macrocode}
+%
+%    For convenience we define font setting commands for
+%    the page number. We use \cs{setfont@cx}, which we have
+%	defined earlier.
+%    
+%    \begin{macrocode}
+\newcommand\tocparagraphpagefont@cx{%
+	\setfont@cx{\tocparagraphpagefonteight@cx}%
+       {\tocparagraphpagefontfamily@cx}{\tocparagraphpagefontsize@cx}%
+       {\tocparagraphpagefontshape@cx}\color{\tocparagraphpagecolor@cx}
+}%
+%    \end{macrocode}     
+%
+% \begin{docCommand} {l@paragraph} { \meta{title} \meta{page number}}
+% \end{docCommand}
+%
+%    \begin{macrocode}
+\ExplSyntaxOn    
+\renewcommand*{\l@paragraph}[2]{%
+  \ifnum \c@tocdepth >\z@
+    \bool_if:NTF \has_chapter_bool
+      {
+        \skip_vertical:N \toc_paragraph_before_skip
+      }
+      {
+        \addpenalty \@secpenalty
+        \addvspace{\toc_paragraph_before_skip}%
+      }
+%    {\leftskip \tocparagraphindent@cx\relax
+%     \rightskip \@tocrmarg
+%     \parfillskip -\rightskip
+%     \parindent \tocparagraphindent@cx\relax\@afterindenttrue
+%     \interlinepenalty\@M
+%     \leavevmode
+%     \@tempdima \tocparagraphnumwidth@cx\relax
+%     \let\toc_number_before \cftsecpresnum
+%     \let\toc_number_after \cftsecaftersnum
+%     \let\toc_number_after_box \cftsecaftersnumb
+%     \advance\leftskip \@tempdima \null\nobreak\hskip -\leftskip
+     \format_toc_entry:nn {paragraph} {#1} {#2}
+  \fi
+  }
+\ExplSyntaxOff  
+%    \end{macrocode}
+%
+%
+%    \begin{macrocode}
+\ExplSyntaxOn
+\newcommand{\tocparagraphleader@cx}{\normalfont\dot_fill{\tocparagraphdotsep@cx}}
+\ExplSyntaxOff
+%\newcommand{\cftsecdotsep}{\cftdotsep}
+%    \end{macrocode}
+%%    We can now define the command \cmd{\tocsectionfillnum}. It will print the 
+%%	leaders if any and the page number \#1. TODO IS par necessary??
+%%    \begin{macrocode}
+%\newcommand{\tocparagraphfillnum}[1]{%
+%  {\tocparagraphleader}\nobreak
+%  \hb@xt@\@pnumwidth{\hfil\tocparagraphpagefont@cx
+%   \tocparagraphpagebefore@cx #1}%
+%   \tocparagraphpageafter@cx\par}%
+%    \end{macrocode}
+%
+% \section{Toc subparagraph styling}
+%
+% \tcbdocmarginnote{U 20-6-2015}
+% 
+% 
+% 
+% Similarly to the higher headings \refCom{l@subsubsection} typesets the ToC entry for
+% a \emph{subparagraph} heading.	We start by defining  parameters and variables.
+%
+%    \begin{macrocode}
+\newif\if@lowercasesubparagraph
+\ExplSyntaxOn
+\cxset
+  {
+    toc~subparagraph~beforeskip/.store~in              = \toc_subparagraph_before_skip,
+    toc~subparagraph~indent/.store~in                  = \toc_subparagraph_indent,
+    toc~subparagraph~font-size/.font-size~in           = \toc_subparagraph_font_size, 
+    toc~subparagraph~font-family/.font-family~in       = \toc_subparagraph_font_family, 
+    toc~subparagraph~font-shape/.font-style~in         = \toc_subparagraph_font_shape, 
+    toc~subparagraph~font-weight/.font-weight~in       = \toc_subparagraph_font_weight, 
+    toc~subparagraph~color/.store~in                   = \toc_subparagraph_color,
+ }
+
+\cxset
+  {
+    toc~subparagraph~case/.case~in                     = \toc_subparagraph_case,
+%    toc~subparagraph~case/lower/.code                  =
+%     \def\toc_subparagraph_case@cx{
+%       MakeTextLowercase\
+%          },
+%    toc~subparagraph~case/upper/.code=
+%      \def\toc_subparagraph_case{
+%       MakeTextUppercase},
+%    toc~subparagraph~case/none/.code=
+%    \def\toc_subparagraph_case{@empty},
+    toc~subparagraph~numwidth/.store~in                 =
+    \tocsubparagraphnumwidth@cx,
+%    
+    toc~subparagraph~page~font-size/.store~in           =
+      \toc_subparagraph_page_font_size,
+    toc~subparagraph~page~font-family/.font-family~in   = \toc_subparagraph_page_fontfamily,
+    toc~subparagraph~page~font-shape/.font-style~in     = \toc_subparagraph_page_fontshapex,
+    toc~subparagraph~page~font-weight/.font-weight~in   =\toc_subparagraph_page_font_weight@cx,
+    toc~subparagraph~page~color/.store~in               = \toc_subparagraph_page_color,
+%     leaders
+	  toc~subparagraph~dotsep/.store~in                   = \toc_subparagraph_dotsep,
+%      before and after page number
+    toc~subparagraph~page~before/.store~in              = \toc_subparagraph_page_before,
+    toc~subparagraph~page~after/.store~in               = \toc_subparagraph_page_after,
+}
+
+\ExplSyntaxOff 
+%    \end{macrocode}
+% Next we set the keys
+%    \begin{macrocode}
+\cxset{
+  toc subparagraph beforeskip         = \z@ \@plus.2\p@,
+  toc subparagraph indent=0em,
+  toc subparagraph font-family             = sffamily,
+  toc subparagraph font-weight             = normal,
+  toc subparagraph font-shape              = slshape,
+  toc subparagraph color                   = sweet ,
+  toc subparagraph font-size               = normal,
+  toc subparagraph case                    = none,
+  toc subparagraph numwidth                = 4.2em,
+  toc subparagraph page font-size          = normal,
+  toc subparagraph page font-shape         = upshape,  
+  toc subparagraph page font-weight        = , 
+  toc subparagraph page font-family        = sffamily,
+  toc subparagraph page color              = teal, 
+  toc subparagraph page before             =,% \{,
+  toc subparagraph page after              =,% \},
+  toc subparagraph dotsep                  = 1000,
+%           
+}
+%    \end{macrocode}
+%
+% \begin{docCommand} {l@subparagraph} { \meta{title} \meta{page number}}
+% \end{docCommand}
+%
+% \paragraph{Testing paragraph}
+% \subparagraph{Testing subparagraph}
+%
+%    \begin{macrocode} 
+\ExplSyntaxOn   
+\renewcommand*{\l@subparagraph}[2]{%
+  \ifnum \c@tocdepth >\z@
+    \if@haschapter@cx
+      \vskip \toc_subparagraph_before_skip
+    \else
+      \addpenalty \@secpenalty
+      \addvspace{\toc_subparagraph_before_skip}%
+    \fi
+    \format_toc_entry:nn {subparagraph} {#1} {#2}
+  \fi
+  }
+\ExplSyntaxOff  
+%    \end{macrocode}
+%
+%
+%    \begin{macrocode}
+\ExplSyntaxOn
+\cs_new:Npn \tocsubparagraphleader@cx
+  {
+    \normalfont\dot_fill{\toc_subparagraph_dotsep}
+  }
+\ExplSyntaxOff
+%    \end{macrocode}
+%
+% This brings us, dear reader to a long and arduous 
+% path. Surely there must be an easier way. we have 
+% added parameters in all sectioning commands, down to 
+% paragraph level and we can even lower if you want
+% for the legal guys and for construction specs. But
+% we also need to do the other lists, list of figure
+% and list of tables and maybe others.
+%
+% \section{List of Figures}
+% \tcbdocmarginnote{U 30-06-2015}
+
+% The standard list of figures follows the same patterns
+% for the ToC. We need to redefine the standard macros
+% with adequate hooks for parameters. The parameters are
+% simpler than the ToC, as we do not have to care
+% about different heading levels.
+%
+% \begin{docCommand}{format_lof_name:n} { \marg{name} }
+%   Formats and typesets the contents name part, in a LoF. 
+% \end{docCommand}
+%
+%    \begin{macrocode}
+\ExplSyntaxOn
+\cs_gset:Npn \format_lof_name:n #1 
+  {
+ \begin{tcolorbox}[colback=spot!30,arc=3mm,colframe=white,]
+  \contents_name_before
+     \setfont@cx {\lof_name_font_weight}
+                 {\lof_name_font_family}
+                 {\lof_name_font_size}
+                 {\lof_name_font_shape}
+                 \color{\lof_name_color}
+      \start_align
+      \lof_name_indent 
+      \exp_after:wN \cs:w \exp_after:wN
+           \lof_name_case\cs_end:
+        #1
+      \end_align
+    \end{tcolorbox} 
+ \contents_name_after%
+ }
+\ExplSyntaxOff
+%    \end{macrocode}
+%
+% \begin{docCommand}{listoffigures} { \meta{void} }
+%  Start by redefining the list of figures.
+%  This will call its own function to format the heading
+%  of the LoF and then either write to the file or read a
+%  a file using \refCom{start_toc:n}
+% \end{docCommand}
+%
+%    \begin{macrocode}
+\ExplSyntaxOn
+\renewcommand\listoffigures{%
+    \if@twocolumn
+      \@restonecoltrue\onecolumn
+    \else
+      \@restonecolfalse
+    \fi
+    \make_lof_title
+    \start_toc:n {lof}%
+    \if@restonecol
+      \twocolumn
+    \fi
+    }
+\ExplSyntaxOff    
+%    \end{macrocode}
+% 
+% \subsection{Keys for LoF}
+% Next we define all the properties we need to add for the LoF heading. In
+% the standard classes it just uses |\chapter*|, but many books have a totally
+% different style for this.
+% 
+%    \begin{macrocode}
+\ExplSyntaxOn
+\cxset 
+  {
+    lof~name/.code                                    = 
+        \cs_gset:Npn \listfigurename { #1 },
+    lof~name~before/.store~in                         = \lof_name_before,
+    lof~name~after/.store~in                          = \lof_name_after,
+    lof~name~font-size/.store~in                      = \lof_name_font_size,
+    lof~name~font-weight/.store~in                    = \lof_name_font_weight,
+    lof~name~font-family/.store~in                    = \lof_name_font_family,
+    lof~name~font-shape/.store~in                     = \lof_name_font_shape,
+    lof~name~color/.store~in                          = \lof_name_color,
+    lof~name~afterskip/.store~in                      = \lof_name_after_skip,
+    lof~name~align/.is~choice,
+    lof~name~align/center/.code                       =
+      \cs_set:Npn \start_align { \bgroup \centering }
+      \cs_set:Npn \end_align {\par \egroup },
+    lof~name~align/right/.code                        =
+      \cs_set:Npn \start_align { \flushright }
+      \cs_set:Npn \end_align { \endflushright },
+    lof~name~align/left/.code                         =
+      \cs_set:Npn \start_align{\@empty}
+      \cs_set:Npn \end_align{\@empty},
+    lof~name~align/none/.code                         =
+      \cs_set:Npn \start_align{\@empty}
+      \cs_set:Npn \end_align{\@empty},
+    lof~name~indent/.store~in                         = \lof_name_indent,
+    lof~name~case/.case~in                            = \lof_name_case,
+    lof~pagestyle/.code                               =
+    \gdef\contentspagestyle@cx{\thispagestyle{#1}},
+}
+\ExplSyntaxOff     
+%    \end{macrocode}
+%
+%    \begin{macrocode}
+\cxset{lof name= Illustrations,
+       lof name before = ,
+       lof name after =, 
+       lof name color = black,
+       lof name font-weight=bold,
+       lof name font-family=sffamily,
+       lof name font-shape=upshape,
+       lof name font-size=LARGE,
+       lof name afterskip=10pt, %set as 40pt in LaTeX
+       lof name after=\par,
+       lof name align=none,
+       lof name indent=\hspace*{0cm},
+       lof name case=upper,
+       lof pagestyle=headings,
+  }%
+  
+%    \end{macrocode}    
+% 
+%    \begin{macrocode}    
+\ExplSyntaxOn
+\def\phd_lof_start{}
+\def\phd_lof_end {}
+\cs_new:Npn \make_lof_title
+  {
+    \newpage
+    \phd_lof_start
+    \format_lof_name:n {\listfigurename}%
+    \@mkboth{\MakeUppercase\listfigurename}%
+            {\MakeUppercase\listfigurename}%
+    \phd_lof_end         
+  }        
+\ExplSyntaxOff    
+%    \end{macrocode}    
+%
+% The |l@figure| is a much simpler operation and it only
+% needs to adjust a much smaller set of parameters. The \emph{entry}
+% refers to the whole block of a LoF entry. The \emph{page} only
+% at the page number of the entry. 
+% 
+%    \begin{macrocode}
+\ExplSyntaxOn 
+\cxset
+  {
+    lof~entry~beforeskip/.store~in              = \lof_before_skip,
+    lof~entry~indent/.store~in                  = \lof_indent,
+    lof~entry~margin-left/.style                = {lof indent=#1},
+    lof~entry~font-size/.font-size~in           = \lof_font_size, 
+    lof~entry~font-family/.font-family~in       = \lof_font_family, 
+    lof~entry~font-shape/.store~in              = \lof_font_shape, 
+    lof~entry~font-weight/.store~in             = \lof_font_weight, 
+    lof~entry~color/.store~in                   = \lof_color,
+    lof~numwidth/.store~in                      = \lof_number_width,
+    lof~pnumwidth/.store~in                     = \lof_page_number_width,
+    lof~rmargin/.store~in                       = \lof_rmargin,
+    lof~case/.case~in                           = \lof_case,
+    lof~page~font-size/.store~in                = \lof_page_font_size,
+    lof~page~font-family/.store~in              = \lof_page_font_family,
+    lof~page~font-shape/.store~in               = \lof_page_font_shape,
+    lof~page~font-weight/.store~in              = \lof_page_font_weight,
+    lof~page~color/.store~in                    = \lof_page_color,
+    lof~dotsep/.store~in                        = \lof_dotsep,
+    lof~page~before/.store~in                   = \lof_page_before,
+    lof~page~after/.store~in                    = \lof_page_after,
+}
+\ExplSyntaxOff
+%
+\cxset
+  {%
+    lof entry beforeskip=\z@ \@plus.2\p@,
+    lof entry indent=0em,
+    lof entry font-family= sffamily,
+    lof entry font-weight = bfseries,
+    lof entry font-shape = upshape,
+    lof entry color= black,
+    lof case = upper,
+    lof entry font-size= normal,
+    lof numwidth = 3em,
+    lof pnumwidth = 2.35em, %set at 1.55em in book
+    lof rmargin   = 3.35em, %set at 2.55em in book
+    lof page font-size=normal,
+    lof page font-shape= upshape,  
+    lof page font-weight=bold,  
+    lof page font-family= sffamily,
+    lof page color = sweet, 
+    lof page before =,
+    lof page after =,
+    lof dotsep = 2.7,
+}
+%    \end{macrocode}
+% 
+% \begin{docCommand}{l@figure} { \marg{number and title} } { \marg {page number} }
+%  As for the other lists the |l@figure| has been defined in one of the classes.
+%  We re-write it to add parameters. As the style can vary considerably from book
+%  to book we also introduce special formatters.
+% \end{docCommand}
+%    \begin{macrocode}
+\ExplSyntaxOn
+ \renewcommand*{\l@figure}[2]{%
+%  \ifnum \c@lofdepth >\z@
+     \vskip \lof_before_skip
+    {
+%      \@tempdima \lof_number_width\relax
+%     \let\@cftbsnum \cftfigpresnum
+%     \let\@cftasnum \cftfigaftersnum
+%     \let\@cftasnumb \cftfigaftersnumb
+%      \advance\leftskip \@tempdima \null\nobreak\hskip -\leftskip
+%      { #1}\nobreak %add font commands here
+%      \cftfigfillnum{#2}
+      \format_lof_entry_leaders_type {#1}{#2}
+    }%
+%   \fi
+  }
+%
+\newcommand{\lofleader}{\normalfont\dot_fill{\lof_dotsep}}
+
+\cs_new:Npn \format_lof_entry_leaders_type #1 #2 
+  {
+   \leftskip \lof_indent\relax
+   \rightskip \lof_rmargin
+   \parfillskip -\rightskip
+   \parindent \lof_indent\relax\@afterindenttrue
+   \interlinepenalty\@M
+   \leavevmode
+    % set parameters for number
+    \numberlineboxwidth \lof_number_width\relax
+    % set numberline hooks if any
+    \advance\leftskip \numberlineboxwidth \null\nobreak\hskip -\leftskip
+    #1 
+    {\lofleader}\nobreak
+    % set hooks for page??
+     \lof_page_before\makebox[\lof_page_number_width][r]
+      {
+        \exp_after:wN \cs:w \exp_after:wN \lof_page_font_size \cs_end:
+        \exp_after:wN \cs:w \exp_after:wN \lof_page_font_weight \cs_end: 
+        \exp_after:wN \cs:w \exp_after:wN \lof_page_font_family \cs_end:
+        \exp_after:wN \cs:w \exp_after:wN \lof_page_font_shape \cs_end:
+       \hss#2
+      }\lof_page_after
+     
+    \par
+  }  
+\ExplSyntaxOff  
+%    \end{macrocode}
+%
+% \section{List of Tables}
+%
+% The standard list of tables is similar to that of the
+% for the LoF. As a matter of fact in the book class they are
+% let to equal. We need to redefine the standard macros
+% with adequate hooks for parameters. The parameters are
+% simpler than the ToC, as we do not have to care
+% about different heading levels.
+%
+%
+%    \begin{macrocode}
+\ExplSyntaxOn
+\cs_gset:Npn \format_lot_name:n #1 
+  {
+ \begin{tcolorbox}[colback=spot!30,arc=3mm,colframe=white,]
+  \contents_name_before
+     \setfont@cx {\lot_name_font_weight}
+                 {\lot_name_font_family}
+                 {\lot_name_font_size}
+                 {\lot_name_font_shape}
+                 \color{\lot_name_color}
+      \start_align
+      \lot_name_indent 
+      \exp_after:wN \cs:w \exp_after:wN
+           \lot_name_case\cs_end:
+        #1
+      \end_align
+    \end{tcolorbox} 
+ \contents_name_after%
+ }
+\ExplSyntaxOff
+%    \end{macrocode}
+%
+% \begin{docCommand}{listoftables} { \meta{void} }
+%  Start by redefining the list of figures.
+%  This will call its own function to format the heading
+%  of the LoF and then either write to the file or read a
+%  a file using \refCom{start_toc:n}
+% \end{docCommand}
+%
+%    \begin{macrocode}
+\ExplSyntaxOn
+\renewcommand\listoftables {%
+    \if@twocolumn
+      \@restonecoltrue\onecolumn
+    \else
+      \@restonecolfalse
+    \fi
+    \make_lot_title
+    \start_toc:n {lot}%
+    \if@restonecol
+      \twocolumn
+    \fi
+    }
+\ExplSyntaxOff    
+%    \end{macrocode}
+% 
+% \subsection{Keys for LoF}
+% Next we define all the properties we need to add for the LoF heading. In
+% the standard classes it just uses |\chapter*|, but many books have a totally
+% different style for this.
+% 
+%    \begin{macrocode}
+\ExplSyntaxOn
+\cxset 
+  {
+    lot~name/.code                                    = 
+        \cs_gset:Npn \listfigurename { #1 },
+    lot~name~before/.store~in                         = \lot_name_before,
+    lot~name~after/.store~in                          = \lot_name_after,
+    lot~name~font-size/.store~in                      = \lot_name_font_size,
+    lot~name~font-weight/.store~in                    = \lot_name_font_weight,
+    lot~name~font-family/.store~in                    = \lot_name_font_family,
+    lot~name~font-shape/.store~in                     = \lot_name_font_shape,
+    lot~name~color/.store~in                          = \lot_name_color,
+    lot~name~afterskip/.store~in                      = \lot_name_after_skip,
+    lot~name~align/.is~choice,
+    lot~name~align/center/.code                       =
+      \cs_set:Npn \start_align { \bgroup \centering }
+      \cs_set:Npn \end_align {\par \egroup },
+    lot~name~align/right/.code                        =
+      \cs_set:Npn \start_align { \flushright }
+      \cs_set:Npn \end_align { \endflushright },
+    lot~name~align/left/.code                         =
+      \cs_set:Npn \start_align{\@empty}
+      \cs_set:Npn \end_align{\@empty},
+    lot~name~align/none/.code                         =
+      \cs_set:Npn \start_align{\@empty}
+      \cs_set:Npn \end_align{\@empty},
+    lot~name~indent/.store~in                         = \lot_name_indent,
+    lot~name~case/.case~in                            = \lot_name_case,
+    lot~pagestyle/.code                               =
+    \gdef\contentspagestyle@cx{\thispagestyle{#1}},
+}
+\ExplSyntaxOff     
+%    \end{macrocode}
+%
+%    \begin{macrocode}
+\cxset{lof name= Illustrations,
+       lof name before = ,
+       lof name after =, 
+       lof name color = black,
+       lof name font-weight=bold,
+       lof name font-family=sffamily,
+       lof name font-shape=upshape,
+       lof name font-size=LARGE,
+       lof name afterskip=10pt, %set as 40pt in LaTeX
+       lof name after=\par,
+       lof name align=none,
+       lof name indent=\hspace*{0cm},
+       lof name case=upper,
+       lof pagestyle=headings,
+  }%
+  
+%    \end{macrocode}    
+% 
+%    \begin{macrocode}    
+\ExplSyntaxOn
+\def\phd_lot_start{}
+\def\phd_lot_end {}
+\cs_new:Npn \make_lot_title
+  {
+    \newpage
+    \phd_lot_start
+    \format_lof_name:n {\listtablename}%
+    \@mkboth{\MakeUppercase\listtablename}%
+            {\MakeUppercase\listtablename}%
+    \phd_lot_end         
+  }        
+\ExplSyntaxOff    
+%    \end{macrocode}    
+%
+% The |l@figure| is a much simpler operation and it only
+% needs to adjust a much smaller set of parameters. The \emph{entry}
+% refers to the whole block of a LoF entry. The \emph{page} only
+% at the page number of the entry. 
+% 
+%    \begin{macrocode}
+\ExplSyntaxOn 
+\cxset
+  {
+    lot~entry~beforeskip/.store~in              = \lot_before_skip,
+    lot~entry~indent/.store~in                  = \lot_indent,
+    lot~entry~margin-left/.style                = {lof indent=#1},
+    lot~entry~font-size/.font-size~in           = \lot_font_size, 
+    lot~entry~font-family/.font-family~in       = \lot_font_family, 
+    lot~entry~font-shape/.store~in              = \lot_font_shape, 
+    lot~entry~font-weight/.store~in             = \lot_font_weight, 
+    lot~entry~color/.store~in                   = \lot_color,
+    lot~numwidth/.store~in                      = \lot_number_width,
+    lot~pnumwidth/.store~in                     = \lot_page_number_width,
+    lot~rmargin/.store~in                       = \lot_rmargin,
+    lot~case/.case~in                           = \lot_case,
+    lot~page~font-size/.store~in                = \lot_page_font_size,
+    lot~page~font-family/.store~in              = \lot_page_font_family,
+    lot~page~font-shape/.store~in               = \lot_page_font_shape,
+    lot~page~font-weight/.store~in              = \lot_page_font_weight,
+    lot~page~color/.store~in                    = \lot_page_color,
+    lot~dotsep/.store~in                        = \lot_dotsep,
+    lot~page~before/.store~in                   = \lot_page_before,
+    lot~page~after/.store~in                    = \lot_page_after,
+}
+\ExplSyntaxOff
+%
+\cxset
+  {%
+    lot entry beforeskip=\z@ \@plus.2\p@,
+    lot entry indent=0em,
+    lot entry font-family= sffamily,
+    lot entry font-weight = bfseries,
+    lot entry font-shape = upshape,
+    lot entry color= black,
+    lot case = upper,
+    lot entry font-size= normal,
+    lot numwidth = 3em,
+    lot pnumwidth = 2.35em, %set at 1.55em in book
+    lot rmargin   = 3.35em, %set at 2.55em in book
+    lot page font-size=normal,
+    lot page font-shape= upshape,  
+    lot page font-weight=bold,  
+    lot page font-family= sffamily,
+    lot page color = sweet, 
+    lot page before =,
+    lot page after =,
+    lot dotsep = 2.7,
+}
+%    \end{macrocode}
+% 
+% \begin{docCommand}{l@figure} { \marg{number and title} } { \marg {page number} }
+%  As for the other lists the |l@figure| has been defined in one of the classes.
+%  We re-write it to add parameters. As the style can vary considerably from book
+%  to book we also introduce special formatters.
+% \end{docCommand}
+%    \begin{macrocode}
+\ExplSyntaxOn
+ \renewcommand*{\l@table}[2]{%
+%  \ifnum \c@lofdepth >\z@
+     \vskip \lot_before_skip
+    {
+%      \@tempdima \lot_number_width\relax
+%     \let\@cftbsnum \cftfigpresnum
+%     \let\@cftasnum \cftfigaftersnum
+%     \let\@cftasnumb \cftfigaftersnumb
+%      \advance\leftskip \@tempdima \null\nobreak\hskip -\leftskip
+%      { #1}\nobreak %add font commands here
+%      \cftfigfillnum{#2}
+      \format_lof_entry_leaders_type {#1}{#2}
+    }%
+%   \fi
+  }
+%
+\newcommand{\lotleader}{\normalfont\dot_fill{\lot_dotsep}}
+
+\cs_new:Npn \format_lot_entry_leaders_type #1 #2 
+  {
+   \leftskip \lot_indent\relax
+   \rightskip \lot_rmargin
+   \parfillskip -\rightskip
+   \parindent \lot_indent\relax\@afterindenttrue
+   \interlinepenalty\@M
+   \leavevmode
+    % set parameters for number
+    \numberlineboxwidth \lot_number_width\relax
+    % set numberline hooks if any
+    \advance\leftskip \numberlineboxwidth
+     \null\nobreak\hskip -\leftskip
+    #1 
+    {\lotleader}\nobreak
+    % set hooks for page??
+     \lot_page_before\makebox[\lot_page_number_width][r]
+      {
+        \exp_after:wN \cs:w \exp_after:wN \lot_page_font_size \cs_end:
+        \exp_after:wN \cs:w \exp_after:wN \lot_page_font_weight \cs_end: 
+        \exp_after:wN \cs:w \exp_after:wN \lot_page_font_family \cs_end:
+        \exp_after:wN \cs:w \exp_after:wN \lot_page_font_shape \cs_end:
+       \hss#2
+      }\lot_page_after
+     
+    \par
+  }  
+\ExplSyntaxOff  
+%    \end{macrocode}
+%</TOC>      
+       
+        
+          

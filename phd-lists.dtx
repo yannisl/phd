@@ -1,0 +1,401 @@
+%
+% \chapter{List Management}
+% 
+% Lists like tables, have always been difficult to devise a syntax for setting them. 
+% We first start from enumerated lists.
+%
+% \section{Current status}
+%
+% Most journals develped their own lists and hard-wired them. Current packages are:
+% \pkgname{enumitem} , \pkgname{enumerate}, \pkgname{paralist}.
+%
+% \subsection{enumerate}
+% This package gives the \refEnv{enumerate} an optional argument which determines
+% the style in which the counter is printed. An occurence of one of the tokens 
+% \textbf{A a I i } or \textbf{1} produces the value of the counter printed with
+% (respectively) \cmd{\Alph} \cmd{\alph} \cmd{\Roman} \cmd{\roman} or \cmd{\arabic}. 
+% These letters may be surrounded by any string involving any other \tex expressions, 
+% however the tokens \textbf{A a I i 1} must be inside a \{\} group if they are
+% not to be taken as special.
+%
+%    \begin{macrocode}
+% \begin{enumerate}[EX i.]
+%   \item one one one one one one one
+%         one one one one\label{LA}
+%   \item two
+%      \begin{enumerate}[{example} a)]
+%        \item one of two one of two
+%          one of two\label{LB}
+%        \item two of two
+%       \end{enumerate}
+%   \item two of two
+% \end{enumerate}
+% 
+
+% \begin{enumerate}[{A}-1]
+% \item one\label{LC}
+% \item two
+% \end{enumerate}
+%    \end{macrocode}
+%
+% This package minimally changes the original \latexe definitions. It is very convenient when you
+% want now and then to change labels in a document.
+%
+% The enumerate environment uses four counters: \docCounter{enumi}, \docCounter{enumii}, 
+% \docCounter{enumiii}, \docCounter{enumiv}. These control the numbering of the $n^{th}$ level
+% enumeration.
+%
+% \section{User Level}
+%
+% At the user level we want to simplify things as much as possible. Since we are going to provide
+% styles, we can provide some very flexible environments, including a |newlist| environment.
+%
+% \subsection{Requirements}
+%
+% The keys will be set at two levels. At the User Level we will provide an optional argument to
+% the standard or non-standard environments to enable them to be redefined on the fly. Once they
+% are redefined they will stay in force until another directive is used.
+%
+% \subsubsection {Vertical spacing}
+%
+%  The options |topsep, partopsep, parsep, itemsep| will be offered.\footnote{This will be inline with
+%   the enumitem, so users familiar with its syntax can continue using it.}
+%
+% \subsubsection {Horizontal spacing}
+%
+% The options |leftmargin|, |rightmargin|, |listparindent|, |labelwidth|, |labelsep|, |itemindent| will
+% also be offered.   
+% 
+% \subsection{Labels}
+%
+% The labels in the enumerate environment are mostly the numbering labels. Bezos's package allows for
+% a set of commands to go here.
+%
+% |label=\emph{\alph*})|
+%
+% It also offers |label*=\meta{commands}| that emulates the enumerate package style.
+%
+% Options we need to offer |font|, |format| |align| |before|
+%
+% \subsubsection{Commands to start and resume the numbering of the list}
+%
+% Bezos offers this also as a key. This is very useful and has its uses.
+%
+% The |CSS| model that we try to follow, is more suitable for exensions for languages and others.
+% This uses the |list-style-property|, which is common both for |<ul>| or |<ol>|. The
+% |<ul>| and |<ol>| can be thought of as environments. 
+%
+% 
+%    \begin{macrocode}
+\RequirePackage{enumerate}
+\ExplSyntaxOn
+\cxset 
+  {
+    enumerate~numberingi/.is~choice,
+    enumerate~numberingi/arabic/.code = \cs_gset:Npn \theenumi {\@arabic\c@enumi}\relax,
+    enumerate~numberingi/alpha/.code  = \cs_gset:Npn 
+                                                \theenumi {\@alph\c@enumi}\relax,
+    enumerate~numberingi/alph/.code  =  \cs_gset:Npn 
+                                                \theenumi {\@alph\c@enumi}\relax,                                              
+    enumerate~numberingi/Alpha/.code  = \cs_gset:Npn \theenumi 
+                                                {\@Alph\c@enumi}\relax,
+    enumerate~numberingi/roman/.code  = \cs_gset:Npn 
+                                                \theenumi {\@roman\c@enumi}\relax,
+    enumerate~numberingi/Roman/.code  = \cs_gset:Npn 
+                                                 \theenumi {\@Roman\c@enumi}\relax,
+    enumerate~numberingi/none/.code  =  \cs_gset:Npn 
+                                                 \theenumi {}\relax,
+}                                                 
+%
+\cxset{                                                 
+    enumerate~list-style-type/.is~choice,
+    enumerate~list-style-type/decimal/.code = \cs_gset:Npn \theenumi {\@arabic\c@enumi},                                                   
+    enumerate~list-style-type/upper-roman/.code = \cs_gset:Npn 
+                                                 \theenumi {\@Roman\c@enumi}\relax,
+    enumerate~list-style-type/lower-roman/.code = \cs_gset:Npn 
+                                                 \theenumi {\@roman\c@enumi}\relax,                                             
+    enumerate~list-style-type/lower-alpha/.code = \cs_gset:Npn 
+                                                 \theenumi {\@alph\c@enumi}\relax,                                                                                          
+    enumerate~list-style-type/uper-alpha/.code = \cs_gset:Npn 
+                                                 \theenumi {\@Alph\c@enumi}\relax,                                                                                                                                       
+    enumerate~list-style-type/Diamond/.code = \cs_gset:Npn 
+                                                 \theenumi {\Diamond},                                                                                                                                                                                        
+    enumerate~list-style-type/.unknown/.code =  \cs_gset:Npn 
+                                                 \theenumi {\@Alph\c@enumi},                                                                                                                                                                                                                                        
+                                                 
+  }
+\cxset  
+  {
+    enumerate~numberingii/.is~choice,
+    enumerate~numberingii/arabic/.code = \cs_gset:Npn \theenumii 
+                                                 {\@arabic\c@enumii}\relax,
+    enumerate~numberingii/alpha/.code  = \cs_gset:Npn 
+                                                \theenumii {\@alph\c@enumii}\relax,
+    enumerate~numberingii/Alpha/.code  = \cs_gset:Npn \theenumii 
+                                                {\@Alph\c@enumii}\relax,
+    enumerate~numberingii/roman/.code  = \cs_gset:Npn 
+                                                \theenumii {\@roman\c@enumii}\relax,
+    enumerate~numberingii/Roman/.code  = \cs_gset:Npn 
+                                                 \theenumii {\@Roman\c@enumii}\relax,
+    enumerate~numberingii/none/.code  =  \cs_gset:Npn 
+                                                 \theenumii {}\relax,
+  }
+ \cxset  
+  {
+    enumerate~numberingiii/.is~choice,
+    enumerate~numberingiii/arabic/.code = \cs_gset:Npn \theenumiii 
+                                                 {\@arabic\c@enumiii}\relax,
+    enumerate~numberingiii/alpha/.code  = \cs_gset:Npn 
+                                                \theenumiii {\@alph\c@enumiii}\relax,
+    enumerate~numberingiii/Alpha/.code  = \cs_gset:Npn \theenumii 
+                                                {\@Alph\c@enumiii}\relax,
+    enumerate~numberingiii/roman/.code  = \cs_gset:Npn 
+                                                \theenumiii {\@roman\c@enumiii}\relax,
+    enumerate~numberingiii/Roman/.code  = \cs_gset:Npn 
+                                                 \theenumiii {\@Roman\c@enumiii}\relax,
+    enumerate~numberingiii/none/.code  =  \cs_gset:Npn 
+                                                 \theenumiii {}\relax,
+  } 
+  \cxset  
+  {
+    enumerate~numberingiv/.is~choice,
+    enumerate~numberingiv/arabic/.code = \cs_gset:Npn \theenumiv 
+                                                 {\@arabic\c@enumiv},
+    enumerate~numberingiv/alpha/.code  = \cs_gset:Npn 
+                                                \theenumiv {\@alph\c@enumiv},
+    enumerate~numberingiv/Alpha/.code  = \cs_gset:Npn \theenumiv 
+                                                {\@Alph\c@enumiv},
+    enumerate~numberingiv/roman/.code  = \cs_gset:Npn 
+                                                \theenumiv {\@roman\c@enumiv},
+    enumerate~numberingiv/Roman/.code  = \cs_gset:Npn 
+                                                 \theenumiv {\@Roman\c@enumiv},
+    enumerate~numberingiv/none/.code  =  \cs_gset:Npn 
+                                                 \theenumiv{},
+  } 
+%    \end{macrocode}
+% 
+%  The left and right margin are \docAuxCommand{leftskip} and \docAuxCommand{rightskip} and is 
+%  the distance from the current margin.
+% 
+%    \begin{macrocode}  
+\cxset
+  {
+    enumerate~leftmargini/.code={\setlength\leftmargini{#1}},
+    enumerate~leftmarginii/.code={\setlength\leftmarginii{#1}},
+    enumerate~leftmarginiii/.code={\setlength\leftmarginiii{#1}},
+    enumerate~leftmarginiv/.code={\setlength\leftmarginiv{#1}},
+  }
+\cxset
+  {    
+    listi~topsep/.store~in=\listitopsep@cx,
+    listi~partopsep/.store~in=\listipartopsep@cx,
+    listi~itemsep/.store~in=\listiitemsep@cx,
+    listi~parsep/.store~in=\listiparsep@cx,
+  }
+%      
+\cxset
+  {
+    listii~topsep/.store~in=\listiitopsep@cx,
+    listii~partopsep/.store~in=\listiipartopsep@cx,
+    listii~itemsep/.store~in=\listiiitemsep@cx,
+    listii~parsep/.store~in=\listiiparsep@cx,
+  }
+%
+\cxset
+  {    
+    listiii~topsep/.store~in=\listiiitopsep@cx,
+    listiii~partopsep/.store~in=\listiiipartopsep@cx,
+    listiii~itemsep/.store~in=\listiiiitemsep@cx,
+    listiii~parsep/.store~in=\listiiiparsep@cx,
+  }  
+%  
+\cxset
+  {    
+    listiv~topsep/.store~in=\listivtopsep@cx,
+    listiv~partopsep/.store~in=\listivpartopsep@cx,
+    listiv~itemsep/.store~in=\listivitemsep@cx,
+    listiv~parsep/.store~in=\listivparsep@cx,
+  }    
+\ExplSyntaxOff
+%    \end{macrocode}
+%
+% \cxset{enumerate list-style-type = Rain,
+%        enumerate numberingii=alpha,
+%        enumerate numberingiii=Roman,
+%        enumerate numberingiv=roman}
+%
+%   
+% \lorem 
+% \begin{enumerate}
+%  \item This is the first level
+%   \begin{enumerate} 
+%     \item This is the second level
+%         \begin{enumerate}
+%            \item{third list}
+%               \begin{enumerate}
+%                 \item {fourth list}
+%               \end{enumerate}
+%          \end{enumerate}
+%   \end{enumerate}
+%  \end{enumerate}
+% 
+% \subsection{enumitem}
+% This package by Bezos has very much superceded the \pkgname{enumerate}. It pr
+%
+%    \begin{macrocode}
+\cxset{  
+  enumerate labeli punctuation/.store in=\enumeratepunctuationi@cx,
+  enumerate labeli/.is choice,
+  enumerate labeli/brackets/.code={\renewcommand\labelenumi{(\theenumi\enumeratepunctuationi@cx)}},
+  enumerate labeli/square brackets/.code={\renewcommand\labelenumi{[\theenumi\enumeratepunctuationi@cx]}},
+  enumerate labeli/right bracket/.code={\renewcommand\labelenumi{\theenumi\enumeratepunctuationi@cx)}},
+  enumerate label left/.store in=\enumeratelabelleft@cx,
+  enumerate label right/.code=\renewcommand\labelenumi{\enumeratelabelleft@cx\theenumi\enumeratepunctuationi@cx#1},
+%  
+}
+\cxset{compact1/.style={%
+  enumerate numberingi=arabic,
+  enumerate numberingii=alpha,
+  enumerate numberingiii=alpha,
+  enumerate numberingiv=roman,
+  enumerate labeli punctuation=.,
+  enumerate label left=,
+  enumerate label right=,
+  enumerate leftmargini=2.2em,
+  enumerate leftmarginii=2.1em,
+  enumerate leftmarginiii=1.5em,
+  enumerate leftmarginiv=2em,
+  listi topsep=0\p@ \@plus2\p@ \@minus\p@,
+  listi itemsep=0\p@ \@plus2\p@ \@minus\p@,
+  listi parsep=0\p@ \@plus2\p@ \@minus\p@,
+%  
+  listii topsep=0\p@ \@plus2\p@ \@minus\p@,
+  listii itemsep=0\p@ \@plus2\p@ \@minus\p@,
+  listii parsep=0\p@ \@plus2\p@ \@minus\p@,
+%  
+  listiii topsep=0\p@ \@plus2\p@ \@minus\p@,
+  listiii itemsep=0\p@ \@plus2\p@ \@minus\p@,
+  listiii parsep=0\p@ \@plus2\p@ \@minus\p@,
+}}
+\cxset{compact2/.style={%
+  enumerate numberingi=alpha,
+  enumerate numberingii=roman,
+  enumerate numberingiii=alph,
+  enumerate numberingiv=roman,
+  enumerate labeli punctuation=,
+  enumerate label left=(,
+  enumerate label right=),
+  enumerate leftmargini=2.2em,
+  enumerate leftmarginii=2.1em,
+  enumerate leftmarginiii=1.5em,
+  enumerate leftmarginiv=0em,
+  listi topsep   = 8\p@ \@plus2\p@ \@minus\p@,
+  listi itemsep = 0\p@ \@plus2\p@ \@minus\p@,
+  listi parsep   = 0\p@ \@plus2\p@ \@minus\p@,
+  listii topsep  = 0\p@ \@plus2\p@ \@minus\p@,
+  listii itemsep= 0\p@ \@plus2\p@ \@minus\p@,
+  listii parsep  = 0\p@ \@plus2\p@ \@minus\p@,
+  listiii topsep = 0\p@ \@plus2\p@ \@minus\p@,
+  listiii itemsep= 0\p@ \@plus2\p@ \@minus\p@,
+  listiii parsep  = 0\p@ \@plus2\p@ \@minus\p@,
+}}
+
+
+\ExplSyntaxOn
+\def\setenumerate#1{
+\cxset{#1}
+\def\@listi{%
+           \leftmargin\leftmargini
+            \parsep\listiparsep@cx
+            \topsep\listitopsep@cx\relax
+            \itemsep\listiitemsep@cx}
+            
+\def\@listii{\leftmargin\leftmarginii
+            \parsep\listiiparsep@cx
+            \topsep\listiitopsep@cx\relax
+            \itemsep\listiiitemsep@cx}
+            
+\def\@listiii{\leftmargin\leftmarginiii
+            \parsep\listiiiparsep@cx
+            \topsep\listiiitopsep@cx\relax
+            \itemsep\listiiiitemsep@cx}
+}
+
+
+\setenumerate{compact1}
+\ExplSyntaxOff
+
+%
+%    \end{macrocode}
+% \cxset{enumerate numberingi=Roman}
+% 
+%
+% \begin{enumerate}
+%  \item This is the first level\par
+%         \begin{enumerate}
+%            \item{third list}
+%            \item {fourth list}
+%          \end{enumerate}
+%  \end{enumerate}
+% 
+%
+% \begin{enumerate}
+%  \item This is the first level\par
+%         \begin{enumerate}
+%            \item{third list}
+%            \item {fourth list}
+%          \end{enumerate}
+%  \end{enumerate}
+
+% \section{The Itemize environment}
+%
+% The standard \latexe defined itemize environment, is much easier to 
+% to parameterize, since there are no counters to worry about. However,
+% we still need to worry about syntactic sugar for a better user interface.
+% 
+%    \begin{macrocode}
+\ExplSyntaxOn
+\cxset{
+ labelitemi/.code=\def\labelitemi{#1},
+ labelitemii/.code=\def\labelitemii{#1},
+ labelitemiii/.code=\def\labelitemiii{#1},
+ labelitemiv/.code=\def\labelitemiv{#1},
+}
+\ExplSyntaxOff
+%    \end{macrocode}
+%    \begin{macrocode}
+\def\dingpoint{\ding{217}}
+\def\dingpointi{\ding{226}}
+\def\dingpointii{\ding{229}}
+\def\dingpointiii{\ding{110}}
+
+
+\cxset{
+ labelitemi    = \FIRE,
+ labelitemii   = \RainCloud,
+ labelitemiii  = \dingpointi,
+ labelitemiv   = \textbullet,
+}
+%    \end{macrocode}
+
+% \dingpointiii \dingpointii
+% 
+%  \begin{itemize}
+%   \item First Item
+%   \item Second Item
+%      \begin{itemize}
+%         \item Second level
+%         \item Second level
+%           \begin{itemize}
+%              \item Third Level
+%              \item Third Level
+%                \begin{itemize}
+%                  \item Fourth Level
+%                    \meaning\labelitemiv 
+%                \end{itemize}    
+%           \end{itemize}
+%      \end{itemize} 
+%  \end{itemize}
+
+% \meaning\labelitemiv 
+%
