@@ -55,9 +55,9 @@ See http://www.latex-project.org/lppl.txt
 \generate{
   \file{README.txt}{\from{\jobname.dtx}{readme}}
 }
-\generate{
-  \file{phd-testhead.tex}{\from{\jobname.dtx}{TEST}}
-}
+%\generate{
+%  \file{phd-testhead.tex}{\from{\jobname.dtx}{TEST}}
+%}
 %\generate{
 %  \file{TODO.tex}{\from{\jobname.dtx}{TODO}}
 %}
@@ -71,10 +71,13 @@ See http://www.latex-project.org/lppl.txt
 \NeedsTeXFormat{LaTeX2e}
 \ProvidesFile{phd-runningheads.drv}%
   [2013/01/13 v1.0 ]%
-\documentclass[oneside,11pt,a4paper]{ltxdoc}
+\documentclass[twoside,11pt,a4paper]{ltxdoc}
 \usepackage[bottom=2cm]{geometry}
 \savegeometry{std}
 \usepackage{phd}
+\usepackage{phd-lowersections}
+\usepackage{phd-runningheads}
+\input{defaults-chapters}
 \sethyperref
 \EnableCrossrefs
 \CodelineIndex
@@ -89,11 +92,14 @@ See http://www.latex-project.org/lppl.txt
  % \tableofcontents
   
   \mainmatter
-  \pagestyle{myheadings}
-  \input{./sections/headersandfooters01}
+  \thispagestyle{myheadings}
+  %\input{./sections/headersandfooters01}
   % \catcode `\| =12
-  \DeleteShortVerb
-  \DocInput{\jobname.dtx}%
+%  \DeleteShortVerb
+\makeatletter
+\@debugtrue
+\makeatother
+  \DocInput{phd-runningheads.dtx}%
 \end{document}
 %</driver>
 % \fi
@@ -137,7 +143,7 @@ See http://www.latex-project.org/lppl.txt
 %
 % \maketitle
 % 
-% \begin{summary}[Abstract]
+% \begin{summary}
 %   This package forms part of the \pkgname{phd} bundle and can be used to manage running heads
 %   with a key-value interface. It comes with a number of predefined styles, that cover most of the
 %  common use cases for books and journals. It is still in alpha stage. However it will not hopefully
@@ -148,20 +154,114 @@ See http://www.latex-project.org/lppl.txt
 % \newpage
 % \tableofcontents
 %
-% \chapter{Introduction}
-%  This manual is typeset according to the conventions of the
-% \LaTeX{} \textsc{docstrip} utility which enables the automatic
-% extraction of the \LaTeX{} macro source files~\cite{GOOSSENS94}.
 % \pagestyle{headings}
 % 
 %
 %
-% \StopEventually{}
+% ^^A\StopEventually{}
 % 
-% \section{Implementation}
+% \chapter{Package Objectives and Implementation}
+%  \pagestyle{headings}
+% \begin{enumerate}
+%  \item To simplify the user interface for specifying  headers and footers in \latexe.
+% \item To make available a number of differently styled page headers to lessen
+% the need for book designers to have to create new ones.
+% \item To provide a key value interface to blend with the other keys provided by
+%  the \pkgname{phd}  package.
+% \end{enumerate}
 %
+% \section{Simplifying the terminology}
+%
+%  \begin{description}
+%  \item[header] The top part of the page where a running head can be inserted.
+%  \item [footer]  The bottom part of the page, where a running footer can be inserted.
+%  \item [header odd] The header on an odd page.
+%  \item [header even] The header on an even page.
+%  \item [footer odd] The footer on an odd page.
+%  \item [footer even] The footer on an even page.
+% \end{description}
+%
+%  We classify users according to the \LaTeX3 terminology as a) programmers b) template designers
+%  and c) authors.
+%
+% \subsection{Author}
+%  We assume that the author has an exising template which she is using but might want to do
+%  some minor modifications, for example use an italic shape for the font of the mark, but an 
+%  upright font for the page numbers. 
+%
+% {\obeylines 
+%~~ |\cxset|
+%~~~~~|{|
+%~~~~~~~~\textit{header even}~~|format          = apa,|
+%~~~~~~~~\textit{header even mark} |font-size   = Large,|
+%~~~~~~~~\textit{header even mark} |font-family = serif,|
+%~~~~~~~~\textit{header even mark} |font-weight = normal,|
+%~~~~~~~~\textit{header even mark} |font-shape  = italic,|  
+%~~~~~|}|
+%}  
+%
+% We follow the idea of representing the basic elements of documents
+% as elements, each one having a parent in order to specify
+% the element we need to style as accurate as possible. One can think of
+% this approach being congruent with objects in other languages.
+% As a matter fact nothing stops us from defining a key value
+% interface as shown below.
+%
+% {\obeylines 
+%~~ |\cxset|
+%~~~~~|{| 
+%~~~~~~~~\textit{header.even.mark.font.size}   = |Large,|
+%~~~~~~~~\textit{header.even.mark.font.family} = |serif,|
+%~~~~~|}|
+%}  
+%
+% This would pehaps make it easier for the tempalte designer, but I have rejected
+% the idea as my aim is to make it easy for the author, who can search the template
+% and just enter a couple of new proerty values.
+%
+% \subsection{Template designer}
+% The template designer in the example above would have selected the format style
+% from a number of predefined formats (templates) or would have created a style
+% called \textit{apa} from an existing template and modified it using declarative
+% key style.
+%
+% \subsection{The programmer}
+%
+% The programmer in the example above could have created the basic format
+% \textit{apa} by using both declarative as well as defining or using existing
+% macros. To the programmer we offer an extension mechanism, where the contents
+% of a |ps@| command are defined. For example teh programmer can define a new
+% style using \tikzname, but without having to worry about defining full |ps@|
+% and their interface.
+%
+% \section{Canned Templates}
+%
+% Luckily the available permutations for headers and footers are less than the
+% variations one sees in headings. Our approah here is to create |ps@| like
+% commands to cover most use cases. We are interested in defining these structurally
+% and leave the font and colour styling to the the key value interface.
+%
+% \begin{enumerate}
+%  \item Redefine \textit{plain,headings,myheadings} to add appropriate hooks
+%        for styling and rules.
+%  \item Provide in addition 5-10 other styles to cover all the needs of the
+%        hundred or so designs we provide with the \pkgname{phd} package.
+% \end{enumerate}
+%
+% \subsection{Mark composition}
+%
+% A mark can either be a \docAuxCommand{leftmark} or a \docAuxCommand{rightmark}. They
+% are normally composed of the title of a heading and the page number styled in 
+% numerous ways. We need to make allowances as to how to handle different type 
+% of mark combinations. Sometimes they include dates, revision numbers, author name, title or short title, logos and even images or links. The latter offers a very user 
+% friendly way to navigate through a book's sections.
+%
+% \section{Introduction}
+%  This manual is typeset according to the conventions of the
+% \LaTeX{} \textsc{docstrip} utility which enables the automatic
+% extraction of the \LaTeX{} macro source files~\cite{GOOSSENS94}.
 %    \begin{macrocode}
-%<*RH|TEST>
+%<*RH>
 
 \NeedsTeXFormat{LaTeX2e}
 \ProvidesPackage{phd-runningheads}%
@@ -175,9 +275,14 @@ See http://www.latex-project.org/lppl.txt
 % so you can define your own if you want.
 % 
 %    \begin{macrocode}
+\ExplSyntaxOn
+\dim_new:N \phd_headerwidth_dim
+\dim_new:N \phd_footerwidth_dim
+\ExplSyntaxOff
+%
+%
 \newif\ifheadertoprule
 \newif\ifheaderbottomrule
-
 \cxset{
    chaptermark name color/.store in=\chaptermarknamecolor@cx,
    chaptermark title color/.store in=\chaptermarktitlecolor@cx,
@@ -286,8 +391,8 @@ See http://www.latex-project.org/lppl.txt
 \newcommand\copyrightline[1]{%
   \def\@copyrightline{#1}}
 
-\edef\@copyrightline{\copyright Y Lazarides\relax}
-
+%\edef\@copyrightline{\copyright Y Lazarides\relax}
+\edef\@copyrightline{}
 \newcommand\c@pyrightline[1]{%
   \gdef\@c@pyrightline{#1}}
 
@@ -301,30 +406,52 @@ See http://www.latex-project.org/lppl.txt
 %    \end{macrocode}
 %    
 % \section{Plain headings}
-%  Provides a simple plain heading.
+%  We wish to leave the original plain definition untouched. The command
+%  clears the headers and set the footers to just print the page number
+%  at the margins.
+% 
+% \pagestyle{plain}
 %    \begin{macrocode}
-\def\ps@plain{\leftskip\z@\let\@mkboth\@gobbletwo\vfuzz=5\p@
-    \def\@oddhead{}%
-    \def\@evenhead{}%
-  \def\@oddfoot{\verbatimsize
-    \vbox{\vspace{15pt}%
-      \global\hoffset=0pc%
-      \noindent\hbox to\textwidth{\mbox{}\hfill{\rm\thepage}}
-      \makebox[\z@][l]{\@c@pyrightline}%
-%     \noindent\hspace*{-9pc}\rule{37pc}{0.25pt}%
-    }%
-  }%
-  \def\@evenfoot{\verbatimsize
-    \vbox{\vspace{15pt}%
-  %  \global\hoffset=6pc%
-    \noindent\hbox to\textwidth{{\rmfamily\thepage}\hfill\mbox{}}
-    \makebox[\z@][l]{\@c@pyrightline}%
-%   \noindent\rule{37pc}{0.25pt}%
-    }%
-  }%
-  \def\sectionmark##1{}%
-  \def\subsectionmark##1{}%
+\ExplSyntaxOn
+\let\ps@plainltx\ps@plain
+\def\ps@plain
+  {
+    \leftskip\z@\let\@mkboth\@gobbletwo
+    \vfuzz=5pt 
+    \def\@oddhead{}
+    \def\@evenhead{}
+    
+    \def\@evenfoot
+      {
+        \verbatimsize
+        \parbox[t]{\textwidth}
+          {
+            \vspace{1pt}%
+            \noindent\hbox to\textwidth{{\rmfamily\thepage}\hfill\mbox{}}
+            \vskip1pt
+            \makebox[\z@][l]{\@c@pyrightline}
+%            
+%            \noindent\rule{\textwidth}{0.25pt}%
+         }
+      }  
+        
+    \def\@oddfoot{%
+      \vbox{
+        %\noindent\hspace*{0pt}\rule{\textwidth}{0.25pt}
+        \vspace{1pt}%
+        \noindent\hbox to\textwidth{\mbox{}\hfill{\rm\thepage}
+        }
+         \makebox[\z@][l]{\@c@pyrightline}%
+         \vskip1pt
+       
+        }
+        
+    }
+
+  \cs_set:Npn \sectionmark##1{}
+  \cs_set:Npn \subsectionmark##1{}
  }
+\ExplSyntaxOff
 %    \end{macrocode} 
 %    
 %\section{A vertical rule heading}
@@ -337,13 +464,15 @@ See http://www.latex-project.org/lppl.txt
     \def\@evenhead{}%
     
 \def\@oddfoot{\verbatimsize
-    \vbox{\vspace{15pt}%
+    \parbox[t]{\textwidth}{
+    \vspace{15pt}%
       \global\hoffset=0pc%
       \noindent\hbox to\textwidth{\hbox to 0pt{\rule{1pt}{\textheight}\color{blue}\thepage}}
       \makebox[\z@][l]{\@c@pyrightline}%
 %     \noindent\hspace*{-9pc}\rule{37pc}{0.25pt}%
     }%
   }%
+  
   \def\@evenfoot{\verbatimsize
     \vbox{\vspace{15pt}%
    % \global\hoffset=6pc%
@@ -399,7 +528,7 @@ See http://www.latex-project.org/lppl.txt
        \verbatimsize
        \global\hoffset=0pc\noindent
         \mbox{}\itshape \strut\rightmark\hfill\hbox{}
-        \makebox[\z@][r]{
+        \makebox[\z@][r]{oo
         \upshape\rmfamily
         \thepage
          }%\par\vbox to 13pt{}%
@@ -412,7 +541,7 @@ See http://www.latex-project.org/lppl.txt
     \markright{\ifnum \c@secnumdepth >\z@
     \thesection\enskip\fi ##1}}%
     
-%   \def\chaptermark##1{\markboth{##1}{##1}}
+   \def\chaptermark##1{\markboth{##1}{##1}}
 %   \def\sectionmark##1{\markright{\ifnum \c@secnumdepth >\z@
 %   \thesection\hspace{0.5em}\fi ##1}}%
   
@@ -423,43 +552,123 @@ See http://www.latex-project.org/lppl.txt
 %    
 % \section{Centered headings}
 % 
+%  \begin{docCommand}{ps@centerheadings } { \meta{void} }
+%   Provides centered headings. Puts the section mark at the middle
+%  of the header and the page at the right or left.
+% \end{docCommand}
+% 
 %    \begin{macrocode}
 \def\ps@centerheadings{%
  \let\@mkboth=\markboth
  \def\@evenfoot{}
   \def\@oddfoot {}
-  \def\@evenhead{\verbatimsize
-    \vbox{\global\hoffset=6pc\noindent
-    \makebox[\z@][l]{\rm \thepage}%
-      \it \strut\hfill\leftmark\hfill\hbox{}%\par\vbox to 13pt{}%
+  
+  \def\@evenhead{
+   \verbatimsize
+    \vbox{
+     \tikzi[even center]
+     \noindent
+     \global\hoffset=0pc
+      \mbox{\rm \thepage}%
+      \it \strut
+       \leftmark\hfill\hbox{}%\par\vbox to 13pt{}%
 %    \noindent\rule{37pc}{0.25pt}%
     }%
   }%
-  \def\@oddhead{\verbatimsize
-    \vbox{\global\hoffset=0pc\noindent\hfill
-    \mbox{}\it \strut\rightmark\hfill\hbox{}\makebox[\z@][r]{\rm
-      \thepage}%\par\vbox to 13pt{}%
-%    \noindent\hspace*{-9pc}\rule{37pc}{0.25pt}%
-    }%
+  \def\@oddhead{
+    \vbox{%
+    \tikzi[odd center]
+     \global\hoffset=0pc
+    \noindent\hfill
+    \mbox{}\it 
+    \verbatimsize
+    \rightmark\hfill\hbox{}
+      \makebox[\z@][r]{\rm
+      \thepage}\par\nointerlineskip%
+      \vskip0pt
+    \noindent\hspace*{0pc}\rule{37pc}{0.25pt}%
+     }%
   }%
+  
   \def\chaptermark##1{\markboth{##1}{##1}}
+  
   \def\sectionmark##1{\markright{\ifnum \c@secnumdepth >\z@
     \thesection\enskip\fi ##1}}%
-  \ifphd@multisty
-    \def\chaptermark##1{}
-    \def\sectionmark##1{}
-  \else
-    \def\chaptermark##1{\markboth{##1}{##1}}
-    \def\sectionmark##1{\markright{\ifnum \c@secnumdepth >\z@
+   \def\chaptermark##1{\markboth{##1}{##1}}
+   \def\sectionmark##1{\markright{\ifnum \c@secnumdepth >\z@
       \thesection\hspace{0.5em}\fi ##1}}%
-  \fi
 }
 %    \end{macrocode}
-%    
+
+% \section{Flush headings}
+% 
+%  \begin{docCommand}{ps@flush} { \meta{void} }
+%    Provides centered headings. Puts the section mark at the middle
+%    of the header and the page at the right or left.
+%  \end{docCommand}
+% 
+%    \begin{macrocode}
+\ExplSyntaxOn
+\cs_set:Npn \ps@flush
+  { 
+     \let\@mkboth=\markboth
+     \def\@evenfoot{}
+     \def\@oddfoot {}
+     \def\@evenhead{}
+     \def\@oddhead {}
+     \def\@evenhead{
+         \verbatimsize
+         \parbox[t]{\textwidth}{
+         \tikzi[even flush]
+          \noindent
+           \mbox{
+             \rm \thepage}%
+             \it \strut
+            \enskip\leftmark
+            \hfill\hbox{}
+             }%
+      }%
+  
+\def\@oddhead
+  {
+     \hbox:n
+       {
+         \rlap{\parbox[t]{\textwidth}
+          {
+             \tikzi[odd flush]
+             \noindent\hfill\hfill
+              \mbox{} 
+              \verbatimsize \rm
+              \rightmark\hbox{}
+              \mbox{
+                 \rm
+                 \space/\thinspace
+                 \thepage
+                }
+%               \par\nointerlineskip%
+%               \vskip0pt
+%               \noindent\hspace*{0pc}\rule{\textwidth}{0pt}%
+          }
+       }  
+    }%
+  }
+  
+ \def\sectionmark##1{\markright{\ifnum \c@secnumdepth >\z@
+        \thesection\enskip\fi ##1}}%
+        
+ %\def\chaptermark##1{\markboth{##1}{}}
+
+ \def\sectionmark##1{\markright{\ifnum \c@secnumdepth >\z@
+     \sectionname \enspace \thesection\hspace{0.5em}\fi ##1}}%
+      
+\ExplSyntaxOff      
+}
+%    \end{macrocode}
+
 % \section{Chaperstyle heading}    
 % 
 %  This style provides a special heading to be used on chapter opening pages only.
-%  \tcbdocmarginnote{U 20-6-2015}
+%  \tcbdocmarginnote[width=2cm]{U 20-6-2015}
 %  
 %    \begin{macrocode}
 \def\ps@chapterstyle{%
@@ -483,33 +692,37 @@ See http://www.latex-project.org/lppl.txt
 \cs_set:Npn \ps@myheadings 
   {
     \let\@mkboth=\@gobbletwo
-    \def\@evenfoot{Revision 1}
-    \def\@oddfoot {Revision 1}
+    \def\@evenfoot{Even page note 2}
+    \def\@oddfoot {Odd page note 1}
     
-    \def\@evenhead{\verbatimsize
-    \vbox
-      {  \global\hoffset=6pc\noindent
-       \makebox[\z@][l]{\rm \thepage}%
-       \upshape \strut\hfill\leftmark\hbox{}%\par\vbox to 13pt{}%
-%    \noindent\rule{37pc}{0.25pt}%
-      }%
+    \def\@evenhead
+    {
+      \verbatimsize
+      \vbox:n
+        {  
+          \global\hoffset=6pc\noindent
+         \makebox[\z@][l]{\rm \thepage}%
+         \upshape \strut\hfill\leftmark\hbox{}%\par\vbox to 13pt{}%
+         \noindent\rule{37pc}{0.25pt}%
+        }%
     }%
-    
+% for one side or both sides    
   \def\@oddhead{\verbatimsize
-    \vbox 
+    \vbox:n 
       {
         \global\hoffset=0pc\noindent
-        \mbox{}\upshape\strut\rightmark\hfill\hbox{}\makebox[\z@][r]{\rm
-        \thepage}%\par\vbox to 13pt{}%
-%    \noindent\hspace*{-9pc}\rule{37pc}{0.25pt}%
+        \tcbox[width=\textwidth]{\upshape\strut\rightmark\hfill\hbox{}\makebox[\z@][r]{\rm
+        MHEADINGS  \thepage}%\par\vbox to 13pt{}%
+        \vspace{1pt}
+     \noindent\hspace*{-9pc}\rule{37pc}{0.25pt}%
       }%
   }%
 %
-  \def\chaptermark##1{}
-  \def\sectionmark##1{}
-  \def\subsectionmark##1{}
- 
-}
+    \def\chaptermark##1{}
+    \def\sectionmark##1{}
+    \def\subsectionmark##1{}
+   }
+ }
 \ExplSyntaxOff 
 %    \end{macrocode}
 %
@@ -574,11 +787,33 @@ See http://www.latex-project.org/lppl.txt
   \newpage
   \if@twocolumn\hbox{}\newpage\fi\fi\fi}
 %    \end{macrocode}
-%</RH|TEST>       
+%</RH>       
 %
+% \pagestyle{flush}
+% \section{Test myheadings}
+% \lipsum[1-3] 
+% \section{my headings 1}
+% \lipsum [4-7]
+% \section{my headings 2}
+% \lipsum [4-7]
+% \section{Another one}
+%  \makeatletter  
+%    \@oddhead
 %
-% 
+%    \@evenhead
+% \lipsum [4-5]
+% \section{test}
 %
+%  \makeatletter  
+%    \@oddhead
+%
+%    \@evenhead
+% \makeatother
+%
+% \leftmark\\
+% \rightmark\\
+%
+\endinput
 % \bibliographystyle{alpha}
 % \begingroup
 % \raggedright
