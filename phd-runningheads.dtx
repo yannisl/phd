@@ -72,7 +72,8 @@ See http://www.latex-project.org/lppl.txt
 \ProvidesFile{phd-runningheads.drv}%
   [2013/01/13 v1.0 ]%
 \documentclass[twoside,11pt,a4paper]{ltxdoc}
-\usepackage[bottom=2cm]{geometry}
+\usepackage[bottom=4cm,footskip=3cm,
+            headsep=2cm]{geometry}
 \savegeometry{std}
 \usepackage{phd}
 \usepackage{phd-lowersections}
@@ -82,23 +83,21 @@ See http://www.latex-project.org/lppl.txt
 \EnableCrossrefs
 \CodelineIndex
 \RecordChanges
+       
 \begin{document}
   \let\bold\bfseries
- \coverpage{asia}{Book Design }{Camel Press}{RUNNING HEADS}{DESIGN} 
+ \coverpage{desert}{Book Design }{Camel Press}{RUNNING HEADS}{DESIGN} 
  \secondpage
-  
-  \newpage
-  
- % \tableofcontents
-  
-  \mainmatter
-  \thispagestyle{myheadings}
-  %\input{./sections/headersandfooters01}
+ \newpage
+ \tableofcontents
+ \mainmatter
+  \thispagestyle{headings}
+% \input{./sections/headersandfooters01}
   % \catcode `\| =12
 %  \DeleteShortVerb
-\makeatletter
-\@debugtrue
-\makeatother
+  \makeatletter
+  \@debugtrue
+  \makeatother
   \DocInput{phd-runningheads.dtx}%
 \end{document}
 %</driver>
@@ -131,7 +130,7 @@ See http://www.latex-project.org/lppl.txt
 %  \def\fileversion{v1.0}          
 %  \def\filedate{2012/03/06}
 % \title{The \textsf{\jobname} package.
-% \author{Dr. Yiannis Lazarides \\ \url{yannislaz@gmail.com}}
+% \author{Dr. Yiannis Lazarides}
 % \thanks{This
 %        file (\texttt{\jobname.dtx}) has version number 
 %        \fileversion, last revised
@@ -140,7 +139,7 @@ See http://www.latex-project.org/lppl.txt
 % 
 % \date{\filedate}
 %
-%
+%% \newpage
 % \maketitle
 % 
 % \begin{summary}
@@ -151,10 +150,8 @@ See http://www.latex-project.org/lppl.txt
 % \end{summary}
 %
 % 
-% \newpage
-% \tableofcontents
-%
-% \pagestyle{headings}
+
+
 % 
 %
 %
@@ -173,7 +170,7 @@ See http://www.latex-project.org/lppl.txt
 % \section{Simplifying the terminology}
 %
 %  \begin{description}
-%  \item[header] The top part of the page where a running head can be inserted.
+%  \item [header] The top part of the page where a running head can be inserted.
 %  \item [footer]  The bottom part of the page, where a running footer can be inserted.
 %  \item [header odd] The header on an odd page.
 %  \item [header even] The header on an even page.
@@ -275,7 +272,33 @@ See http://www.latex-project.org/lppl.txt
 % so you can define your own if you want.
 % 
 %    \begin{macrocode}
+\global\let\tikz@ensure@dollar@catcode=\relax
+%    \end{macrocode}
+%
+% We define a handler to handle the choice keys for what goes in the center left or right
+% of a header or footer.
+% 
+%    \begin{macrocode}
 \ExplSyntaxOn
+    \pgfkeys{/handlers/.mark/.code = 
+    \pgfkeysalso
+      {
+        \pgfkeyscurrentpath/.code=
+           \str_case_x:nnTF {##1}  
+             {
+               { none           } { \tl_gset:cn  {#1} { \empty}          } 
+               { leftmark       } { \tl_gset:cn  {#1} { \leftmark     }  } 
+               { rightmark      } { \tl_gset:cn  {#1} { \rightmark    }  } 
+               { page           } { \tl_gset:cn  {#1} { \thepage      }  } 
+               { today          } { \tl_gset:cn  {#1} { \today        }  } 
+               { jobname        } { \tl_gset:cn  {#1} { \jobname      }  }
+               { author         } { \tl_gset:cn  {#1} { \docauthoright }  }
+             }
+             {                         }
+             {   \tl_gset:cn {#1} { } \tl_put_right:cn {#1} {##1}   }
+     }   
+   }   
+% 
 \dim_new:N \phd_headerwidth_dim
 \dim_new:N \phd_footerwidth_dim
 \ExplSyntaxOff
@@ -283,109 +306,110 @@ See http://www.latex-project.org/lppl.txt
 %
 \newif\ifheadertoprule
 \newif\ifheaderbottomrule
-\cxset{
-   chaptermark name color/.store in=\chaptermarknamecolor@cx,
-   chaptermark title color/.store in=\chaptermarktitlecolor@cx,
-   chaptermark title before/.store in=\chaptermarktitlebefore@cx,
-   chaptermark after number/.store in=\chaptermarkafternumber@cx,
-   chaptermark name/.store in=\chaptermarkname@cx,
-   chaptermark numbering/.is choice,
-   leftmark before/.store in=\leftmarkbefore@cx,
-   leftmark after/.store in=\leftmarkafter@cx,
-   rightmark before/.store in=\rightmarkbefore@cx,
-   rightmark after/.store in=\rightmarkafter@cx,
-   chaptermark numbering/none/.code=\def\chaptermarknumber{},
-}
+%    
+\ExplSyntaxOn
+\cs_new:Npn \create_pagestyle_keys #1 
+  {
+    \cxset
+      {
+        #1~even.header.left/.mark   = even_#1_header_left,
+        #1~even~header~center/.mark = even_#1_header_center,
+        #1~even~header~right/.mark  = even_#1_header_right,
+        #1~even~footer~left/.mark   = even_#1_footer_left,
+        #1~even~footer~center/.mark = even_#1_footer_center,
+        #1~even~footer~right/.mark  = even_#1_footer_right,
+        #1~even~header~background~color/.code = 
+          \cs_set:cpn {even_#1_header_background_color}{##1},
+        #1~even~footer~background~color/.code = 
+          \cs_set:cpn {even_#1_footer_background_color}{##1},
+%          
+        #1~even~header~left~font-family/.fontfamily   = even_#1_header_left_fontfamily, 
+        #1~even~header~left~font-size/.fontsize     = even_#1_header_left_fontsize, 
+        #1~even~header~left~font-weight/.fontweight   = even_#1_header_left_fontweight,  
+        #1~even~header~left~font-shape/.fontstyle     = even_#1_header_left_fontshape,
+%         
+        #1~even~header~center~font-family/.fontfamily = even_#1_header_center_fontfamily, 
+        #1~even~header~center~font-size/.fontsize   = even_#1_header_center_fontsize, 
+        #1~even~header~center~font-weight/.fontweight = even_#1_header_center_fontweight,  
+        #1~even~header~center~font-shape/.fontstyle  = even_#1_header_center_fontshape,
+%          
+        #1~even~header~right~font-family/.fontfamily = even_#1_header_right_fontfamily, 
+        #1~even~header~right~font-size/.fontsize   = even_#1_header_right_fontsize, 
+        #1~even~header~right~font-weight/.fontweight = even_#1_header_right_fontweight,  
+        #1~even~header~right~font-shape/.fontstyle  = even_#1_header_right_fontshape,         
+%        
+        #1~odd~header~left/.mark    = odd_#1_header_left,
+        #1~odd~header~center/.mark  = odd_#1_header_center,
+        #1~odd~header~right/.mark   = odd_#1_header_right,
+        #1~odd~footer~left/.mark    = odd_#1_footer_left,
+        #1~odd~footer~center/.mark  = odd_#1_footer_center,
+        #1~odd~footer~right/.mark   = odd_#1_footer_right,        
+        #1~odd~header~background~color/.code = \cs_set:cpn {odd_#1_header_background_color}{##1},
+        #1~odd~footer~background~color/.code = \cs_set:cpn {odd_#1_footer_background_color}{##1},     
+      }
+  }  
 
-\cxset{   
-   sectionmark name/.is choice,
-   sectionmark name/none/.code=\def\sectionmarkname@cx{},
-   sectionmark name custom/.code=\def\sectionmarkname@cx{#1},
-   sectionmark number/.is choice,
-   sectionmark number/none/.code=\def\sectionmarknumber@cx{},
-   sectionmark after number/.store in=\sectionmarkafternumber@cx,
-   sectionmark name color/.store in=\sectionmarkcolor@cx,
-   sectionmark title font/.store in=\sectionmarktitlefont@cx,
-   sectionmark title color/.store in=\sectionmarktitlecolor@cx,
-   sectionmark before title/.store in=\sectionmarkbeforetitle@cx,
-   sectionmark after title/.store in=\sectionmarkaftertitle@cx,
-   header offset even/.store in=\headeroffseteven@cx,
-   header offset odd/.store in=\headeroffsetodd@cx,
-   header top rule/.is if=headertoprule,
-   header bottom rule/.is if=headerbottomrule
-  %
- }
-%    \end{macrocode}
-%
+\create_pagestyle_keys {plain}   
 
-%    \begin{macrocode}
-\cxset{header offset even=0pt,
-       header offset odd=0pt,
-       rightmark before=,
-       rightmark after=,
-       chaptermark title before=,
-       header top rule=true}
-%    \end{macrocode}
-%
-% Set the pagestyles to a default
-%
+\cxset
+  {
+    plain~demo/.style={
+    plain~even.header.left             = {plain~even~header~L},
+    plain~even~header~center           = {plain~even~header~C},
+    plain~even~header~right            = {plain~even~header~R}, 
+    plain~even~footer~left             = {plain~even~footer~L},
+    plain~even~footer~center           = {plain~even~footer~C},
+    plain~even~footer~right            = {plain~even~footer~R},
+    plain~odd~header~left              = {plain~odd~header~L},
+    plain~odd~header~center            = {plain~odd~header~C},
+    plain~odd~header~right             = {plain~odd~header~R}, 
+    plain~odd~footer~left              = {plain~odd~footer~L},
+    plain~odd~footer~center            = {plain~odd~footer~C},
+    plain~odd~footer~right             = {plain~odd~footer~R},  
+% bg colors    
+    plain~odd~header~background~color  = spot!15,
+    plain~odd~footer~background~color  = spot!15,
+    plain~even~header~background~color = magenta!15,
+    plain~even~footer~background~color = magenta!15,
+   } 
+  }  
+  
+\cxset
+  { plain~colored/.style={
+    plain~even.header.left             = page,
+    plain~even~header~center           = none,
+    plain~even~header~right            = rightmark, 
+    plain~even~footer~left             = page,
+    plain~even~footer~center           = none,
+    plain~even~footer~right            = ,
+    plain~odd~header~left              = leftmark,
+    plain~odd~header~center            = none,
+    plain~odd~header~right             = page, 
+    plain~odd~footer~left              = today,
+    plain~odd~footer~center            = none,
+    plain~odd~footer~right             = none,  
+% bg colors    
+    plain~odd~header~background~color  = spot!15,
+    plain~odd~footer~background~color  = spot!15,
+    plain~even~header~background~color = magenta!15,
+    plain~even~footer~background~color = magenta!15,
+% fonts
+    plain~even~header~left~font-weight = bfseries,   
+   } 
+  }   
+   
+\cxset{plain~colored} 
+\cxset{plain~even~footer~background~color = green!90!black} 
+%  \g@addto@macro\headerright{Chapter~\thechapter~Section~\thesection}
+%  \g@addto@macro\headerright{Page ~\thepage}
+\ExplSyntaxOff   
+
+
 %    \begin{macrocode}
 \cxset{pagestyle/.code=\pagestyle{#1}}
 %cxset{pagestyle=ruled-01}
 %
-%
-\cxset{headings ruled-01/.style={pagestyle=headings,
-          header style=headings,
-          chaptermark name color=theblue,
-          chaptermark after number={\thinspace:\space },
-          chaptermark name=,
-          chaptermark title color=black!80,
-          leftmark before=\thepage\hfill, 
-          leftmark after=,
-          sectionmark name color=theblue,
-          sectionmark title color=black!80,
-          header offset even=0pt,
-          header offset odd=0pt,
-%          =false,
-%          header bottom rheader top ruleule=true,
-          }}
-%
-\cxset{headings ruled-02/.style={pagestyle=headings,
-          header style=headings,
-          chaptermark name color=theblue,
-          chaptermark after number=,
-          chaptermark name=,%\@chapapp,
-          chaptermark numbering=none,
-          chaptermark title color=black!80,
-          sectionmark name=none,
-          sectionmark number=none,
-          leftmark before=,
-          leftmark after=\qquad\quad\thepage,
-          rightmark before=\thepage,
-          rightmark after=\hfill\hfill,
-          sectionmark name color=theblue,
-          sectionmark title color=black!80,
-          sectionmark after title=,
-          sectionmark after number=\qquad,
-%          header top rule=false,
-%          header bottom rule=true,
-          header offset even=1.5cm,
-          header offset odd=-1.5cm,
-          header bottom rule=false}}
-%
-\cxset{%
-          header style=headings,
-          chaptermark name=,
-          chaptermark name color=black,
-          chaptermark after number={\thinspace:\space },
-          chaptermark title color=black!80,
-          sectionmark name color=black,
-          sectionmark title color=black!80,
-          sectionmark after title=,
-          sectionmark after number,
-%          header top rule=false,
-%          header bottom rule=true
-          } 
+
           
 \newif\ifphd@multisty \phd@multistyfalse
 \newcommand\copyrightline[1]{%
@@ -405,52 +429,162 @@ See http://www.latex-project.org/lppl.txt
 }
 %    \end{macrocode}
 %    
-% \section{Plain headings}
+% \section{Formatters}
 %  We wish to leave the original plain definition untouched. The command
 %  clears the headers and set the footers to just print the page number
-%  at the margins.
+%  at the margins. We allow for rules.
 % 
 % \pagestyle{plain}
 %    \begin{macrocode}
 \ExplSyntaxOn
 \let\ps@plainltx\ps@plain
-\def\ps@plain
-  {
-    \leftskip\z@\let\@mkboth\@gobbletwo
-    \vfuzz=5pt 
-    \def\@oddhead{}
-    \def\@evenhead{}
-    
-    \def\@evenfoot
-      {
-        \verbatimsize
-        \parbox[t]{\textwidth}
-          {
-            \vspace{1pt}%
-            \noindent\hbox to\textwidth{{\rmfamily\thepage}\hfill\mbox{}}
-            \vskip1pt
-            \makebox[\z@][l]{\@c@pyrightline}
-%            
-%            \noindent\rule{\textwidth}{0.25pt}%
-         }
-      }  
-        
-    \def\@oddfoot{%
-      \vbox{
-        %\noindent\hspace*{0pt}\rule{\textwidth}{0.25pt}
-        \vspace{1pt}%
-        \noindent\hbox to\textwidth{\mbox{}\hfill{\rm\thepage}
-        }
-         \makebox[\z@][l]{\@c@pyrightline}%
-         \vskip1pt
-       
-        }
-        
-    }
+\dim_new:N  \even_offset_l 
+\dim_set:Nn \even_offset_l {0pt}
+\dim_new:N  \even_offset_r
+\dim_set:Nn \even_offset_r {0pt}
+\dim_gzero_new:N \header_width_dim
+\dim_set_eq:NN \header_width_dim \textwidth
 
-  \cs_set:Npn \sectionmark##1{}
-  \cs_set:Npn \subsectionmark##1{}
+\tl_new:N \leftglue
+\tl_new:N \rightglue 
+%
+%    \end{macrocode}
+% \begin{docCommand} {format_running_head_box} { \marg {prefix} \marg{} \marg{} \marg{} }
+%   The general formatter for heads.
+%
+%   |#1| outer box style\\
+%   |#2| page box style\\
+%   |#3| left glue\\
+%   |#4| right glue
+%
+% \end{docCommand}
+%    \begin{macrocode}
+\newtcbox{\headerbox}[1]%
+  {
+     nobeforeafter,
+     size=minimal,
+     width=\header_width_dim, 
+     colback= \cs:w #1background_color \cs_end:, 
+     colframe=white,
+     box~align=base,
+     arc=2mm,boxsep=3mm,
+     rounded~corners=all,
+     drop~shadow=black,
+  }
+  
+\newtcbox{\headerboxleft}[1]%
+  {
+     nobeforeafter,
+     size=minimal,
+     width=\header_width_dim, 
+     colback= \cs:w #1background_color \cs_end:, 
+     colframe=white,
+     box~align=base,
+%     arc=2mm,boxsep=3mm,
+%     rounded~corners=all,
+%     drop~shadow=black,
+  } 
+\newtcbox{\headerboxcenter}[1]%
+  {
+     nobeforeafter,
+     size=minimal,
+     width=\header_width_dim, 
+     colback= \cs:w #1background_color \cs_end:, 
+     colframe=white,
+     box~align=base,
+%     arc=2mm,boxsep=3mm,
+%     rounded~corners=all,
+%     drop~shadow=black,
+  }  
+\newtcbox{\headerboxright}[1]%
+  {
+     nobeforeafter,
+     size=minimal,
+     width=\header_width_dim, 
+     colback= \cs:w #1background_color \cs_end:, 
+     colframe=black,
+     box~align=base,
+     %arc=2mm,
+     %rounded~corners=all,
+     %drop~shadow=black,
+  }    
+\cs_new:Npn \format_running_head_box #1 #2 #3 #4
+  { 
+    \dim_add:Nn \header_width_dim {\even_offset_l + \even_offset_l}
+    \skip_horizontal:n {-\dim_use:N \even_offset_l}
+      \headerbox{#1}
+       {\hss\hbox_to_wd:nn \header_width_dim 
+         { 
+           \headerboxleft {#1}
+             { \bfseries
+               \even_plain_header_left_fontweight
+               \cs:w #1left \cs_end:
+             }
+             \hss
+             \headerboxcenter {#1}
+                {
+                 \cs:w #1center \cs_end:
+                }  
+             \hss
+             \headerboxright {#1}
+                {\meaning\even_plain_header_left_fontweight
+                 \cs:w #1right \cs_end:
+                }
+                 
+         }
+      }
+  }
+
+
+
+\newcommand*{\ps_aux}[1][box]
+  {
+      
+    \renewcommand*{\@evenhead}
+      { 
+        \cs:w format_running_head_#1 \cs_end: {even_plain_header_} {} {} {}
+      } 
+    
+    \renewcommand*{\@oddhead}
+      { 
+        \cs:w format_running_head_#1\cs_end:  {odd_plain_header_} {} {} {}
+      } 
+      
+    \renewcommand*{\@evenfoot}
+      { 
+        \cs:w format_running_head_#1\cs_end: {even_plain_footer_} {} {} {}
+      } 
+       
+    \renewcommand*{\@oddfoot}
+      { 
+        \cs:w format_running_head_#1\cs_end: {odd_plain_footer_} {} {} {}
+      }
+%      
+  \cs_set:Npn \sectionmark##1{##1}
+  \def\sectionmark##1
+    {
+    \markright{\ifnum \c@secnumdepth >\z@
+    \thesection\enskip\fi ##1}}%
  }
+%    \end{macrocode}
+% 
+% \begin{docCommand} {make_ps} { \marg{style name} }
+%  A generic function for creating new pagestyles. The function takes the pagestyle name as its
+%  argument and calls an auxilairy function to create the |ps@| command. 
+% \end{docCommand}
+%
+%    \begin{macrocode} 
+\cs_gset:Npn \make_ps #1 
+  {
+     \cs_gset:cpn {ps@#1} 
+       {
+           \ps_aux
+       }
+  }   
+ 
+\make_ps {plain}
+\make_ps {headings}
+ 
 \ExplSyntaxOff
 %    \end{macrocode} 
 %    
@@ -491,7 +625,7 @@ See http://www.latex-project.org/lppl.txt
 %    \end{macrocode}
 %
 %
-% 
+%  \end{document}
 % \section{The pagestyle headings}
 % This is one of the most common headings. We provide a full |ps@| function for
 % speed utilizing only some parameters. The \refCom{sectionmark} is inserted
@@ -505,47 +639,47 @@ See http://www.latex-project.org/lppl.txt
  }
 \ExplSyntaxOn
 %
-\def\ps@headings{%
-  \let\@mkboth=\markboth
-  \def\@evenfoot{}
-  \def\@oddfoot {}
-  \cs_set:Npn \@evenhead 
-    {
-      
-      \vbox
-        {\verbatimsize
-        %  \global\hoffset=6pc\noindent
-          \makebox[\z@][l]{\rmfamily 
-          {\protect\tcbox[colframe=red]{-\thepage}}}%
-          \itshape\strut\hfill\leftmark\hbox{}%\par\vbox to 13pt{}%
-%     \noindent\rule{37pc}{0.25pt}%
-        }%
-    }%
-  \def\@oddhead
-    {
-       %\protect\tcbox[thepage]
-       {\vbox{ %replacetcbox vbox
-       \verbatimsize
-       \global\hoffset=0pc\noindent
-        \mbox{}\itshape \strut\rightmark\hfill\hbox{}
-        \makebox[\z@][r]{oo
-        \upshape\rmfamily
-        \thepage
-         }%\par\vbox to 13pt{}%
-%    \noindent\hspace*{-9pc}\rule{37pc}{0.25pt}%
-       }}%
-    }%
-  \def\chaptermark##1{\markboth{##1}{##1}}
-  \def\sectionmark##1
-    {
-    \markright{\ifnum \c@secnumdepth >\z@
-    \thesection\enskip\fi ##1}}%
-    
-   \def\chaptermark##1{\markboth{##1}{##1}}
-%   \def\sectionmark##1{\markright{\ifnum \c@secnumdepth >\z@
-%   \thesection\hspace{0.5em}\fi ##1}}%
-  
-}
+%\def\ps@headings{%
+%  \let\@mkboth=\markboth
+%  \def\@evenfoot{}
+%  \def\@oddfoot {}
+%  \cs_set:Npn \@evenhead 
+%    {
+%      
+%      \vbox
+%        {\verbatimsize
+%        %  \global\hoffset=6pc\noindent
+%          \makebox[\z@][l]{\rmfamily 
+%          {\protect\tcbox[colframe=red]{-\thepage}}}%
+%          \itshape\strut\hfill\leftmark\hbox{}%\par\vbox to 13pt{}%
+%%     \noindent\rule{37pc}{0.25pt}%
+%        }%
+%    }%
+%  \def\@oddhead
+%    {
+%       %\protect\tcbox[thepage]
+%       {\vbox{ %replacetcbox vbox
+%       \verbatimsize
+%       \global\hoffset=0pc\noindent
+%        \mbox{}\itshape \strut\rightmark\hfill\hbox{}
+%        \makebox[\z@][r]{oo
+%        \upshape\rmfamily
+%        \thepage
+%         }%\par\vbox to 13pt{}%
+%%    \noindent\hspace*{-9pc}\rule{37pc}{0.25pt}%
+%       }}%
+%    }%
+%  \def\chaptermark##1{\markboth{##1}{##1}}
+%  \def\sectionmark##1
+%    {
+%    \markright{\ifnum \c@secnumdepth >\z@
+%    \thesection\enskip\fi ##1}}%
+%    
+%   \def\chaptermark##1{\markboth{##1}{##1}}
+%%   \def\sectionmark##1{\markright{\ifnum \c@secnumdepth >\z@
+%%   \thesection\hspace{0.5em}\fi ##1}}%
+%  
+%}
 %
 \ExplSyntaxOff
 %    \end{macrocode}

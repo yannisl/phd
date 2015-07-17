@@ -1,0 +1,49 @@
+\documentclass{article}
+\usepackage{expl3,xparse}
+\ExplSyntaxOn
+\seq_new:N \l_pkgfirst_list_seq
+\bool_new:N \l_pkgfirst_tmpa_bool
+\cs_generate_variant:Nn \seq_set_split:Nnn { Nnx }
+\NewDocumentCommand{\ifpackagefirst}{mmmm}
+  {
+   \bool_set_false:N \l_pkgfirst_tmpa_bool
+   \seq_set_split:Nnx \l_pkgfirst_list_seq {,} { \use:c { @filelist} }
+   \seq_if_in:NnT \l_pkgfirst_list_seq {#1} { \bool_set_true:N \l_pkgfirst_tmpa_bool }
+   \seq_if_in:NnT \l_pkgfirst_list_seq {#2} { \bool_set_true:N \l_pkgfirst_tmpa_bool }
+   \bool_if:NTF \l_pkgfirst_tmpa_bool
+     { \pkgfirst_compare:nnnn {#1}{#2}{#3}{#4} }
+     { \msg_term:x {OOPS,~packages~not~both~loaded} }
+  }
+\cs_new:Npn \pkgfirst_compare:nnnn #1 #2 #3 #4
+  {
+   \bool_set_false:N \l_pkgfirst_tmpa_bool
+   \seq_map_inline:Nn \l_pkgfirst_list_seq
+     {
+      \str_if_eq:nnT { #1 } { ##1 }
+        { \__prg_map_break:Nn { \bool_set_true:N \l_pkgfirst_tmpa_bool } }
+      \str_if_eq:nnT { #2 } { ##1 }
+        { \prg_map_break:n { \bool_set_false:N \l_pkgfirst_tmpa_bool } }
+     }
+   \bool_if:NTF \l_pkgfirst_tmpa_bool {#3} {#4}
+  }
+
+
+\NewDocumentCommand\test{m m}
+  {\ifpackagefirst{#1}{#2}{\msg_term:x {#1~before~#2}}{\msg_term:x {#1~after~#2}}}
+
+\ExplSyntaxOff
+
+\usepackage{graphicx}
+\usepackage{imakeidx}
+\usepackage{kantlipsum}
+
+
+\test{graphicx.sty}{imakeidx.sty}
+
+\test{imakeidx.sty}{kantlipsum.sty}
+
+\test{kantlipsum.sty}{graphicx.sty}
+
+\test{pippo.sty}{pluto.sty}
+
+\stop
