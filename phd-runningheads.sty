@@ -1,0 +1,528 @@
+%%
+%% This is file `phd-runningheads.sty',
+%% generated with the docstrip utility.
+%%
+%% The original source files were:
+%%
+%% phd-runningheads.dtx  (with options: `RH')
+%% ----------------------------------------------------------------
+%% phd-runningheads
+%% A package to manage running heads in LaTeX
+%% E-mail: yannislaz@gmail.com
+%% Released under the LaTeX Project Public License v1.3c or later
+%% See http://www.latex-project.org/lppl.txt
+%% ----------------------------------------------------------------
+
+%% \newpage
+
+
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{phd-runningheads}%
+  [2015/13/06 v1.0 Running heads styling]%
+\global\let\tikz@ensure@dollar@catcode=\relax
+\ExplSyntaxOn
+    \pgfkeys{/handlers/.mark/.code =
+    \pgfkeysalso
+      {
+        \pgfkeyscurrentpath/.code=
+           \str_case_x:nnTF {##1}
+             {
+               { none           } { \tl_gset:cn  {#1} { \empty}          }
+               { leftmark       } { \tl_gset:cn  {#1} { \leftmark     }  }
+               { rightmark      } { \tl_gset:cn  {#1} { \rightmark    }  }
+               { page           } { \tl_gset:cn  {#1} { \thepage      }  }
+               { today          } { \tl_gset:cn  {#1} { \today        }  }
+               { jobname        } { \tl_gset:cn  {#1} { \jobname      }  }
+               { author         } { \tl_gset:cn  {#1} { \docauthoright }  }
+             }
+             {                         }
+             {   \tl_gset:cn {#1} { } \tl_put_right:cn {#1} {##1}   }
+     }
+   }
+\dim_new:N \phd_headerwidth_dim
+\dim_new:N \phd_footerwidth_dim
+\ExplSyntaxOff
+\newif\ifheadertoprule
+\newif\ifheaderbottomrule
+\ExplSyntaxOn
+\cs_new:Npn \create_pagestyle_keys #1
+  {
+    \cxset
+      {
+        #1~even.header.left/.mark   = #1_even_header_left,
+        #1~even~header~center/.mark = #1_even_header_center,
+        #1~even~header~right/.mark  = #1_even_header_right,
+        #1~even~footer~left/.mark   = #1_even_footer_left,
+        #1~even~footer~center/.mark = #1_even_footer_center,
+        #1~even~footer~right/.mark  = #1_even_footer_right,
+        #1~even~header~background~color/.code =
+          \cs_set:cpn {#1_even_header_background_color}{##1},
+        #1~even~footer~background~color/.code =
+          \cs_set:cpn {#1_even_footer_background_color}{##1},
+        #1~even~header~left~font-family/.fontfamily   = #1_even_header_left_fontfamily,
+        #1~even~header~left~font-size/.fontsize       = #1_even_header_left_fontsize,
+        #1~even~header~left~font-weight/.fontweight   = #1_even_header_left_fontweight,
+        #1~even~header~left~font-shape/.fontstyle     = #1_even_header_left_fontshape,
+        #1~even~header~center~font-family/.fontfamily = #1_even_header_center_fontfamily,
+        #1~even~header~center~font-size/.fontsize     = #1_even_header_center_fontsize,
+        #1~even~header~center~font-weight/.fontweight = #1_even_header_center_fontweight,
+        #1~even~header~center~font-shape/.fontstyle   = #1_even_header_center_fontshape,
+        #1~even~header~right~font-family/.fontfamily  = #1_even_header_right_fontfamily,
+        #1~even~header~right~font-size/.fontsize      = #1_even_header_right_fontsize,
+        #1~even~header~right~font-weight/.fontweight  = #1_even_header_right_fontweight,
+        #1~even~header~right~font-shape/.fontstyle    = #1_even_header_right_fontshape,
+        #1~odd~header~left/.mark    = #1_odd_header_left,
+        #1~odd~header~center/.mark  = #1_odd_header_center,
+        #1~odd~header~right/.mark   = #1_odd_header_right,
+        #1~odd~footer~left/.mark    = #1_odd_footer_left,
+        #1~odd~footer~center/.mark  = #1_odd_footer_center,
+        #1~odd~footer~right/.mark   = #1_odd_footer_right,
+        #1~odd~header~background~color/.code = \cs_set:cpn {#1_odd_header_background_color}{##1},
+        #1~odd~footer~background~color/.code = \cs_set:cpn {#1_odd_footer_background_color}{##1},
+        #1~odd~header~left~font-family/.fontfamily   = #1_odd_header_left_fontfamily,
+        #1~odd~header~left~font-size/.fontsize       = #1_odd_header_left_fontsize,
+        #1~odd~header~left~font-weight/.fontweight   = #1_odd_header_left_fontweight,
+        #1~odd~header~left~font-shape/.fontstyle     = #1_odd_header_left_fontshape,
+        #1~odd~header~center~font-family/.fontfamily = #1_odd_header_center_fontfamily,
+        #1~odd~header~center~font-size/.fontsize     = #1_odd_header_center_fontsize,
+        #1~odd~header~center~font-weight/.fontweight = #1_odd_header_center_fontweight,
+        #1~odd~header~center~font-shape/.fontstyle   = #1_odd_header_center_fontshape,
+        #1~odd~header~right~font-family/.fontfamily  = #1_odd_header_right_fontfamily,
+        #1~odd~header~right~font-size/.fontsize      = #1_odd_header_right_fontsize,
+        #1~odd~header~right~font-weight/.fontweight  = #1_odd_header_right_fontweight,
+        #1~odd~header~right~font-shape/.fontstyle    = #1_odd_header_right_fontshape,
+  }
+}
+
+\create_pagestyle_keys {plain}
+
+\cxset
+  {
+    plain~demo/.style={
+    plain~even.header.left             = {plain~even~header~L},
+    plain~even~header~center           = {plain~even~header~C},
+    plain~even~header~right            = {plain~even~header~R},
+    plain~even~footer~left             = {plain~even~footer~L},
+    plain~even~footer~center           = {plain~even~footer~C},
+    plain~even~footer~right            = {plain~even~footer~R},
+    plain~odd~header~left              = {plain~odd~header~L},
+    plain~odd~header~center            = {plain~odd~header~C},
+    plain~odd~header~right             = {plain~odd~header~R},
+    plain~odd~footer~left              = {plain~odd~footer~L},
+    plain~odd~footer~center            = {plain~odd~footer~C},
+    plain~odd~footer~right             = {plain~odd~footer~R},
+    plain~odd~header~background~color  = spot!15,
+    plain~odd~footer~background~color  = spot!15,
+    plain~even~header~background~color = magenta!15,
+    plain~even~footer~background~color = magenta!15,
+   }
+  }
+
+\cxset
+  { plain~colored/.style={
+    plain~even.header.left             = page,
+    plain~even~header~center           = none,
+    plain~even~header~right            = rightmark,
+    plain~even~footer~left             = page,
+    plain~even~footer~center           = none,
+    plain~even~footer~right            = ,
+    plain~odd~header~left              = leftmark,
+    plain~odd~header~center            = none,
+    plain~odd~header~right             = page,
+    plain~odd~footer~left              = today,
+    plain~odd~footer~center            = none,
+    plain~odd~footer~right             = none,
+    plain~odd~header~background~color  = spot!15,
+    plain~odd~footer~background~color  = spot!15,
+    plain~even~header~background~color = magenta!15,
+    plain~even~footer~background~color = magenta!15,
+    plain~even~header~left~font-family = sffamily,
+    plain~even~header~left~font-weight = bfseries,
+    plain~even~header~left~font-size   = small,
+    plain~even~header~left~font-shape  = italic,
+    plain~even~header~center~font-family = sffamily,
+    plain~even~header~center~font-weight = bfseries,
+    plain~even~header~center~font-size   = small,
+    plain~even~header~center~font-shape  = italic,
+    plain~even~header~right~font-family = sffamily,
+    plain~even~header~right~font-weight = bfseries,
+    plain~even~header~right~font-size   = small,
+    plain~even~header~right~font-shape  = italic,
+    plain~odd~header~left~font-family   = sffamily,
+    plain~odd~header~left~font-weight   = bfseries,
+    plain~odd~header~left~font-size     = scriptsize,
+    plain~odd~header~left~font-shape    = italic,
+    plain~odd~header~center~font-family = sffamily,
+    plain~odd~header~center~font-weight = bfseries,
+    plain~odd~header~center~font-size   = small,
+    plain~odd~header~center~font-shape  = italic,
+    plain~odd~header~right~font-family = sffamily,
+    plain~odd~header~right~font-weight = bfseries,
+    plain~odd~header~right~font-size   = small,
+    plain~odd~header~right~font-shape  = italic,
+   }
+  }
+
+\cxset{plain~colored}
+\cxset{plain~even~footer~background~color = green!90!black}
+\ExplSyntaxOff
+
+\cxset{pagestyle/.code=\pagestyle{#1}}
+
+\newif\ifphd@multisty \phd@multistyfalse
+\newcommand\copyrightline[1]{%
+  \def\@copyrightline{#1}}
+
+\edef\@copyrightline{}
+\newcommand\c@pyrightline[1]{%
+  \gdef\@c@pyrightline{#1}}
+
+\gdef\@c@pyrightline{%
+  \vbox to 5.5\p@{\noindent
+  \parbox[t]{\textwidth}{\normalfont\footnotesize\baselineskip 9\p@
+  \@copyrightline
+  }%
+  \vss}%
+}
+\ExplSyntaxOn
+\let\ps@plainltx\ps@plain
+\dim_new:N  \even_offset_l
+\dim_set:Nn \even_offset_l {0pt}
+\dim_new:N  \even_offset_r
+\dim_set:Nn \even_offset_r {0pt}
+\dim_gzero_new:N \header_width_dim
+\dim_set_eq:NN \header_width_dim \textwidth
+
+\tl_new:N \leftglue
+\tl_new:N \rightglue
+\newtcbox{\headerbox}[1]%
+  {
+     nobeforeafter,
+     size=minimal,
+     width=\header_width_dim,
+     colback= \cs:w #1background_color \cs_end:,
+     colframe=white,
+     box~align=base,
+     arc=2mm,boxsep=3mm,
+     rounded~corners=all,
+     drop~shadow=black,
+  }
+
+\newtcbox{\headerboxleft}[1]%
+  {
+     nobeforeafter,
+     size=minimal,
+     width=\header_width_dim,
+     colback= \cs:w #1background_color \cs_end:,
+     colframe=white,
+     box~align=base,
+  }
+\newtcbox{\headerboxcenter}[1]%
+  {
+     nobeforeafter,
+     size=minimal,
+     width=\header_width_dim,
+     colback= \cs:w #1background_color \cs_end:,
+     colframe=white,
+     box~align=base,
+  }
+\newtcbox{\headerboxright}[1]%
+  {
+     nobeforeafter,
+     size=minimal,
+     width=\header_width_dim,
+     colback= \cs:w #1background_color \cs_end:,
+     colframe=black,
+     box~align=base,
+     %arc=2mm,
+     %rounded~corners=all,
+     %drop~shadow=black,
+  }
+\cs_new:Npn \format_running_head_box #1 #2 #3 #4
+  {
+    \dim_add:Nn \header_width_dim {\even_offset_l + \even_offset_l}
+    \skip_horizontal:n {-\dim_use:N \even_offset_l}
+      \headerbox{#1}
+       {\hss\hbox_to_wd:nn \header_width_dim
+         {
+           \headerboxleft {#1}
+             {
+               \cs:w #1left_fontfamily \cs_end:
+               \cs:w #1left_fontweight \cs_end:
+               \cs:w #1left_fontshape  \cs_end:
+               \cs:w #1left_fontsize   \cs_end:
+               \cs:w #1left \cs_end:
+             }
+             \hss
+             \headerboxcenter {#1}
+                {
+                 \cs:w #1center \cs_end:
+                }
+             \hss
+             \headerboxright {#1}
+                {
+                  \cs:w #1right_fontfamily \cs_end:
+                  \cs:w #1right_fontweight \cs_end:
+                  \cs:w #1right_fontshape  \cs_end:
+                  \cs:w #1right_fontsize   \cs_end:
+                  %
+                  \cs:w #1right \cs_end:
+                }
+
+         }
+      }
+  }
+
+\newcommand*{\ps_aux}[2]
+  {
+
+    \renewcommand*{\@evenhead}
+      {
+        \cs:w format_running_head_#1 \cs_end: {plain_even_header_} {} {} {}
+      }
+
+    \renewcommand*{\@oddhead}
+      {
+        \cs:w format_running_head_#1\cs_end:  {plain_odd_header_} {} {} {}
+      }
+
+    \renewcommand*{\@evenfoot}
+      {
+        \cs:w format_running_head_#1\cs_end: {plain_even_footer_} {} {} {}
+      }
+
+    \renewcommand*{\@oddfoot}
+      {
+        \cs:w format_running_head_#1\cs_end: {plain_odd_footer_} {} {} {}
+      }
+  \cs_set:Npn \sectionmark##1{##1}
+  \def\sectionmark##1
+    {
+    \markright{\ifnum \c@secnumdepth >\z@
+    \thesection\enskip\fi ##1}}%
+ }
+\cs_gset:Npn \make_ps #1 #2
+  {
+     \cs_gset:cpn {ps@#1}
+       {
+           \ps_aux{box}{#1}
+       }
+  }
+
+\make_ps {plain} {box}
+\make_ps {headings} {box}
+
+\ExplSyntaxOff
+\def\ps@verticalrule{\leftskip\z@\let\@mkboth\@gobbletwo\vfuzz=5\p@
+    \def\@oddhead{}%
+    \def\@evenhead{}%
+
+\def\@oddfoot{\verbatimsize
+    \parbox[t]{\textwidth}{
+    \vspace{15pt}%
+      \global\hoffset=0pc%
+      \noindent\hbox to\textwidth{\hbox to 0pt{\rule{1pt}{\textheight}\color{blue}\thepage}}
+      \makebox[\z@][l]{\@c@pyrightline}%
+    }%
+  }%
+
+  \def\@evenfoot{\verbatimsize
+    \vbox{\vspace{15pt}%
+   % \global\hoffset=6pc%
+    \noindent\hbox to\textwidth{{\color{blue}\rmfamily
+    \thepage}\hfill\makebox[0pt][l]{\rule{1pt}{30pt}}}
+    \makebox[\z@][l]{\@c@pyrightline}%
+    }%
+  }%
+  \def\sectionmark##1{}%
+  \def\subsectionmark##1{}%
+ }
+ \tcbset{thepage/.style =
+   {
+    top=0pt,right=0pt,bottom=0pt,left=0pt,
+    colframe=white,colback=spot!1,arc=1mm,
+   }
+ }
+\ExplSyntaxOn
+%%     \noindent\rule{37pc}{0.25pt}%
+%%    \noindent\hspace*{-9pc}\rule{37pc}{0.25pt}%
+%%   \def\sectionmark##1{\markright{\ifnum \c@secnumdepth >\z@
+%%   \thesection\hspace{0.5em}\fi ##1}}%
+\ExplSyntaxOff
+\def\ps@centerheadings{%
+ \let\@mkboth=\markboth
+ \def\@evenfoot{}
+  \def\@oddfoot {}
+
+  \def\@evenhead{
+   \verbatimsize
+    \vbox{
+     \tikzi[even center]
+     \noindent
+     \global\hoffset=0pc
+      \mbox{\rm \thepage}%
+      \it \strut
+       \leftmark\hfill\hbox{}%\par\vbox to 13pt{}%
+    }%
+  }%
+  \def\@oddhead{
+    \vbox{%
+    \tikzi[odd center]
+     \global\hoffset=0pc
+    \noindent\hfill
+    \mbox{}\it
+    \verbatimsize
+    \rightmark\hfill\hbox{}
+      \makebox[\z@][r]{\rm
+      \thepage}\par\nointerlineskip%
+      \vskip0pt
+    \noindent\hspace*{0pc}\rule{37pc}{0.25pt}%
+     }%
+  }%
+
+  \def\chaptermark##1{\markboth{##1}{##1}}
+
+  \def\sectionmark##1{\markright{\ifnum \c@secnumdepth >\z@
+    \thesection\enskip\fi ##1}}%
+   \def\chaptermark##1{\markboth{##1}{##1}}
+   \def\sectionmark##1{\markright{\ifnum \c@secnumdepth >\z@
+      \thesection\hspace{0.5em}\fi ##1}}%
+}
+
+\ExplSyntaxOn
+\cs_set:Npn \ps@flush
+  {
+     \let\@mkboth=\markboth
+     \def\@evenfoot{}
+     \def\@oddfoot {}
+     \def\@evenhead{}
+     \def\@oddhead {}
+     \def\@evenhead{
+         \verbatimsize
+         \parbox[t]{\textwidth}{
+         \tikzi[even flush]
+          \noindent
+           \mbox{
+             \rm \thepage}%
+             \it \strut
+            \enskip\leftmark
+            \hfill\hbox{}
+             }%
+      }%
+
+\def\@oddhead
+  {
+     \hbox:n
+       {
+         \rlap{\parbox[t]{\textwidth}
+          {
+             \tikzi[odd flush]
+             \noindent\hfill\hfill
+              \mbox{}
+              \verbatimsize \rm
+              \rightmark\hbox{}
+              \mbox{
+                 \rm
+                 \space/\thinspace
+                 \thepage
+                }
+          }
+       }
+    }%
+  }
+
+ \def\sectionmark##1{\markright{\ifnum \c@secnumdepth >\z@
+        \thesection\enskip\fi ##1}}%
+
+ %\def\chaptermark##1{\markboth{##1}{}}
+
+ \def\sectionmark##1{\markright{\ifnum \c@secnumdepth >\z@
+     \sectionname \enspace \thesection\hspace{0.5em}\fi ##1}}%
+
+\ExplSyntaxOff
+}
+
+\def\ps@chapterstyle{%
+    \let\@oddfoot\@empty\let\@evenfoot\@empty
+    \def\@evenhead{\thepage\hfil\slshape\leftmark}%
+    \def\@oddhead{{\slshape\rightmark}\hfil\thepage}%
+    \let\@mkboth\@gobbletwo
+    \let\chaptermark\@gobble
+    \let\sectionmark\@gobble}
+\ExplSyntaxOn
+\cs_set:Npn \ps@myheadings
+  {
+    \let\@mkboth=\@gobbletwo
+    \def\@evenfoot{Even page note 2}
+    \def\@oddfoot {Odd page note 1}
+
+    \def\@evenhead
+    {
+      \verbatimsize
+      \vbox:n
+        {
+          \global\hoffset=6pc\noindent
+         \makebox[\z@][l]{\rm \thepage}%
+         \upshape \strut\hfill\leftmark\hbox{}%\par\vbox to 13pt{}%
+         \noindent\rule{37pc}{0.25pt}%
+        }%
+    }%
+  \def\@oddhead{\verbatimsize
+    \vbox:n
+      {
+        \global\hoffset=0pc\noindent
+        \tcbox[width=\textwidth]{\upshape\strut\rightmark\hfill\hbox{}\makebox[\z@][r]{\rm
+        MHEADINGS  \thepage}%\par\vbox to 13pt{}%
+        \vspace{1pt}
+     \noindent\hspace*{-9pc}\rule{37pc}{0.25pt}%
+      }%
+  }%
+    \def\chaptermark##1{}
+    \def\sectionmark##1{}
+    \def\subsectionmark##1{}
+   }
+ }
+\ExplSyntaxOff
+
+\IfFileExists{changepage.sty}{\RequirePackage{changepage}}{}
+\IfFileExists{rotating.sty}{\RequirePackage{rotating}}{}
+\def\even@samplepage{%
+ \begin{picture}(0,0)
+   \put(\Xeven,\Yeven){\turnbox{90}{\Huge \textcolor{\watermark@textcolor}{\watermark@text}}}
+\end{picture}
+}
+%% Define a macro to print SAMPLE PAGE IN THE MARGIN
+\def\odd@samplepage{%
+ \begin{picture}(0,0)
+   \put(\Xodd,\Yodd){\turnbox{90}{\Huge \textcolor{\watermark@textcolor}{\watermark@text}}}
+ \end{picture}
+}
+
+\gdef\watermarktext#1{\gdef\watermark@text{\fontfamily{phv}\selectfont#1}}
+\def\watermarktextcolor#1{\gdef\watermark@textcolor{#1}}
+\watermarktext{SAMPLE PAGE}
+\watermarktextcolor{black!50}
+\def\ps@samplepage{\let\@mkboth\@gobbletwo
+ \let\@oddhead\odd@samplepage\def\@oddfoot{\reset@font\hfil\thepage}
+ \let\@evenhead\even@samplepage\def\@evenfoot{\reset@font\thepage\hfil}}
+\def\Xodd{480}
+\def\Xeven{-15}\def\Yeven{-810}
+\def\Yeven{-\expandafter\strip@pt\textheight}
+\let\Yodd\Yeven
+
+\cxset{blank page text/.store in=\blankpagetext@cx{#1}}
+\cxset{blank page text={}}
+
+\def\cleardoublepage{\clearpage\if@twoside\ifodd\c@page\else
+  \hbox{}
+  \vspace*{\fill}
+  \begin{center}
+     \blankpagetext@cx
+  \end{center}
+  \vspace{\fill}
+  \thispagestyle{empty}
+  \newpage
+  \if@twocolumn\hbox{}\newpage\fi\fi\fi}
+%%  Copyright (C) 2015 by Dr. Yiannis Lazarides <yannislaz@gmail.com>
+%%
+%% End of file `phd-runningheads.sty'.

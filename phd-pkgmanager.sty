@@ -1,0 +1,1566 @@
+%%
+%% This is file `phd-pkgmanager.sty',
+%% generated with the docstrip utility.
+%%
+%% The original source files were:
+%%
+%% phd-pkgmanager.dtx  (with options: `PKG')
+%% ----------------------------------------------------------------
+%% phd --- A package to beautify documents.
+%% E-mail: yannislaz@gmail.com
+%% Released under the LaTeX Project Public License v1.3c or later
+%% See http://www.latex-project.org/lppl.txt
+%% ----------------------------------------------------------------
+
+
+
+\NeedsTeXFormat{LaTeX2e}[1994/12/01]%
+\ProvidesFile{phd-packagemanager}[2015/1/13 v1.0 less preamble (YL)]%
+\let\ltxtoday\today
+
+\RequirePackage{fixltx2e}[2006/03/24]
+\@ifundefined{c@chapter}{%
+      \newcounter{chapter}
+      \def\thechapter{\@arabic\c@chapter}
+}{}
+\ExplSyntaxOn
+\clist_new:N \g_phd_packages_loaded_clist
+\ExplSyntaxOff
+\ExplSyntaxOn
+\clist_new:N \g_phd_packages_not_found
+\ExplSyntaxOff
+\ExplSyntaxOn
+\clist_new:N \g_phd_packages_loaded_by_others
+\ExplSyntaxOff
+\ExplSyntaxOn
+\cs_new:Npn \save_symbol: #1
+  {
+    \cs_gset_eq:cc {orig#1} {#1}
+    \cs_undefine:c {#1}
+  }
+\ExplSyntaxOff
+\ExplSyntaxOn
+\cs_new:Npn \restore_symbol: #1 #2
+  {
+    \cs_gset_eq:cc {#1#2} {#2}
+    \cs_gset_eq:cc {#2} {orig#2}
+ }
+\ExplSyntaxOff
+
+\newcommand*{\renamerobustsymbol}[2]{%
+  \expandafter\let\expandafter\origrealcommand
+    \csname #2\space\endcsname
+    \expandafter\global\expandafter\let\csname#1#2\endcsname=\origrealcommand
+}
+\def\ifnotsavedsym@helper#1#2!{\expandafter\ifx\csname orig#2\endcsname\relax}
+\newcommand*{\ifnotsavedsym}[1]{%
+  \expandafter\ifnotsavedsym@helper\string#1!%
+}
+\let\oldcontentsline\contentsline
+\newif\ifcomplete
+\ExplSyntaxOn
+\global\let\origRequirePackage\RequirePackage
+\DeclareDocumentCommand\RequirePackage {o m o}
+  {
+     \IfValueTF{#3}
+       {\IfValueTF {#1}
+           { \origRequirePackage [{#1}] {#2} [{#3}] }
+           { \origRequirePackage {#2} [{#3}]      }
+       }
+       {
+        \IfValueTF{#1}
+           {
+             \origRequirePackage  [{#1}] {#2}
+           }
+           {
+             \origRequirePackage {#2}
+           }
+      }
+  }
+
+\ExplSyntaxOff
+\newif\ifloadpackages
+\loadpackagestrue
+\newcommand{\missingpkgs}{}
+\newcommand{\foundpkgs}{}
+\newcommand{\if@sty@file@exists@star}[3]{%
+  \ifloadpackages
+    \IfFileExists{#1.sty}{#2}{#3}%
+  \else
+    #3%
+  \fi
+}
+\newcommand{\if@sty@file@exists}[3]{%
+  \ifloadpackages
+    \IfFileExists{#1.sty}%
+                 {#2\@cons\foundpkgs{{#1}}}%
+                 {#3\completefalse\@cons\missingpkgs{{#1}}}%
+  \else
+    #3\completefalse\@cons\missingpkgs{{#1}}%
+  \fi
+}
+\newcommand{\IfStyFileExists}{%
+  \@ifstar{\if@sty@file@exists@star}{\if@sty@file@exists}%
+}
+\newcommand\symbols{\flushleft}
+\def\endsymbols{\endflushleft}
+
+\def\dosymbol#1{%
+   \leavevmode\hbox to .33\textwidth{%
+    \hbox to 1.2em%
+    {\hss$#1$\hfil}%
+   \footnotesize\texttt{\string#1}\hss}%
+   \penalty10}
+\ExplSyntaxOn
+\IfStyFileExists{calligra}
+  {\save_symbol:{filename}
+   \RequirePackage{calligra}
+   \restore_symbol:{CAL}{filename}
+   \DeclareMathAlphabet{\mathcalligra}{T1}{calligra}{m}{n}
+   \DeclareFontShape{T1}{calligra}{m}{n}{<->s*[2.2]callig15}{}
+  }
+  {}
+\ExplSyntaxOff
+
+\IfStyFileExists{chancery}
+  {\newcommand{\mathpzc}[1]{\mbox{\usefont{OT1}{pzc}{m}{it}##1}}}
+  {}
+\ifxetex
+   \else
+     \ifluatex
+        \RequirePackage{etex}
+     \else
+        \RequirePackage{etex}
+  \fi
+\fi
+
+\cxset{nag keys/.store in =\nagkeys@cx,
+       onlyamsmath keys/.store in=\onlyamsmathkeys@cx,
+       xcolor keys/.store in=\xcolorkeys@cx}
+\cxset{xcolor keys={fixpdftex,usenames,dvipsnames,
+                  svgnames,x11names,table}}
+%% |\PassOptionsToPackage{\onlyamsmathkeys@cx}{onlyamsmath}|
+\ifMICROTYPE
+\ifengine%
+  {\RequirePackage[tracking=true]{microtype}}%
+  {\RequirePackage[tracking=true]{microtype}}%
+  {\RequirePackage[tracking=true]{microtype}}%
+\fi
+\newif\ifRAGGEDTWOE
+\newif\ifEVERYSEL
+\newif\ifFOOTMISC
+\PassOptionsToPackage{ragged2e}{footnotes,raggedrightboxes}
+\RequirePackage{ragged2e}
+\newif\ifSOUL
+\IfStyFileExists{soul}
+{\SOULtrue\RequirePackage{soul}
+    \sethlcolor{thehighlight}}
+{}
+
+\RequirePackage{lettrine}
+\ifx\dropcap\undefined
+  \def\dropcap#1#2{%
+    \lettrine[lines=3, lraise=0.1, nindent=0em, slope=.1em]{#1}{#2}
+  }%
+\fi
+\IfStyFileExists{siunitx}{
+   \RequirePackage{siunitx}
+   \sisetup{fixed-exponent =0,
+            scientific-notation = false}}
+{}
+\cxset{acronym keys/.store in = \acronymkeys@cx}
+\cxset{acronym keys={smaller,printonlyused,withpage}}
+\PassOptionsToPackage{\acronymkeys@cx}{acronym}
+\RequirePackage{acronym}
+\RequirePackage{mdframed}
+\RequirePackage{adjustbox}
+\RequirePackage{fancybox}
+\RequirePackage{graphicx}[1999/02/16]
+\DeclareGraphicsExtensions{.jpg, .JPG, .jpeg, .png, .eps}
+\graphicspath{{graphics/}{graphics//}{../images/}{images//}{./images/}{./graphics/}%
+   {../graphics/}{./pic/}{../pic}}
+\RequirePackage{wrapfig}
+\RequirePackage[quiet]{rotating}
+
+\DeclareRobustCommand\thickrule{%
+    \leavevmode \leaders \hrule height 2pt \hfill \kern \z@}
+\DeclareRobustCommand\thinrule{\vrule width\textwidth height0.4pt depth0pt\relax}%
+\DeclareRobustCommand\mediumrule{\rule{\textwidth}{0.8pt}}
+\DeclareRobustCommand\Rule{{\color{\tocchapternumberfill@cx}\rule[-4.1pt]{13cm}{0.4pt}}}
+\DeclareRobustCommand\bottomline{\medskip
+   \noindent\rule{\linewidth}{0.4pt}\medskip}
+\DeclareRobustCommand\topline{\par\medskip
+   \noindent\rule{\linewidth}{0.4pt}\medskip}
+\cxset{chapter rule color/.store in={\chapter@rule@color}}%
+\cxset{chapter rule color=spot!30}
+\DeclareRobustCommand\tikzrule{%
+  \tikz [color=\chapter@rule@color, very thick, inner sep=0pt, outer sep=0pt]%
+        \draw(0,0)--(\the\linewidth,0);
+}%
+\newcommand\drawrule[3][]{%
+    \offinterlineskip
+          \tikz [ name=s,trim left,
+                   anchor=base,
+                   draw=black,
+                 % double distance=.2pt,
+                  line width=#3,
+                  %very thick,
+                  inner sep=0pt,
+                  outer sep=0pt,#1]   \draw(0,0)--(#2,0);
+}
+ \def\drawdoublerule#1#2{%
+    \drawrule{#1}{#2}%
+    \vskip2.5pt
+    \drawrule{#1}{#2}%
+ }
+\newif\ifLIPSUM
+\RequirePackage{lipsum}
+\RequirePackage{kantlipsum}
+\RequirePackage{blindtext}
+\DeclareDocumentCommand\lorem{ s }{Fusce adipiscing justo nec ante. Nullam in enim.
+ Pellentesque felis orci, sagittis ac, malesuada et, facilisis in,
+ ligula. Nunc non magna sit amet mi aliquam dictum. In mi. Curabitur
+ sollicitudin justo sed quam et quadd.
+ \IfBooleanTF{#1}%
+ {}%
+ {\par}}
+\newcommand{\fox}{``The quick brown fox jumps over the lazy dog''}
+\newcommand\frogking{%
+\leavevmode
+\hskip1em In olden times when wishing
+still helped one, there lived a
+king whose daughters were all
+beautiful, but the youngest was so
+beautiful that the sun itself,
+which has seen so much, was
+astonished whenever it shone in
+her face. Close by the king's
+castle lay a great dark forest,
+and under an old lime-tree in the
+forest was a well, and when
+the day was very warm, the
+king's child went out into the
+forest and sat down by the side
+of the cool fountain, and when she was bored she
+took a golden ball, and threw it up on a high and caught it, and this
+ball was her favorite plaything. \par}%
+\newcommand\onepar{In olden times when wishing
+still helped one, there lived a
+king whose daughters were all
+beautiful, but the youngest was so
+beautiful that the sun itself,
+which has seen so much, was
+astonished whenever it shone in
+her face. Close by the king's
+castle lay a great dark forest,
+and under an old lime-tree in the
+forest was a well, and when
+the day was very warm, the
+king's child went out into the
+forest and sat down by the side
+of the cool fountain, and when she was bored she
+took a golden ball, and threw it up on a high and caught it, and this
+ball was her favorite plaything.}%
+
+\newcommand\alicei{%
+  The King and Queen of Hearts were seated on their throne
+  when they arrived, with a great crowd assembled about them
+  ---all sorts of little birds and beasts, as well as the
+  whole pack of cards: the Knave was standing before them,
+  in chains, with a soldier on each side to guard him; and
+  near the King was the White Rabbit, with a trumpet in one
+  hand, and a scroll of parchment in the other.  In the very
+  middle of the court was a table, with a large dish of
+  tarts upon it: they looked so good, that it made Alice
+  quite hungry to look at them---``I wish they'd get the
+  trial done,'' she thought, ``and hand round the
+  refreshments!''.  But there seemed to be no chance of this,
+  so she began looking at everything about her to pass away
+  the time.}%
+
+\newcommand\aliceii{%
+  Alice had never been in a court of justice before, but she
+  had read about them in books, and she was quite pleased to
+  find that she knew the name of nearly everything there.
+  ``That's the judge,'' she said to herself, ``because of his
+  great wig.''.
+
+  The judge, by the way, was the King, and as he wore his
+  crown over the wig, (look at the frontispiece if you want
+  to see how he did it,) he did not look at all comfortable,
+  and it was certainly not becoming.
+}
+
+ \newcommand\aliceiii{``And that's the jury-box,'' thought Alice, ``and those
+  twelve creatures,'' (she was obliged to say ``creatures,''
+  you see, because some of them were animals, and some were
+  birds) ``I suppose they are the jurors.''.  She said this
+  last word two or three times over to herself being rather
+  proud of it: for she thought, and rightly too, that very
+  few little girls of her age knew the meaning of it at all.
+  However, ``jurymen'' would have done just as well.}
+
+ \newcommand\aliceiv{The twelve jurors were all writing very busily on slates.
+  ``What are they doing?'' Alice whispered to the Gryphon.
+  ``They can't have anything to put down yet, before the
+  trial's begun.''.}
+
+\newcommand\alicev{``They're putting down their names,'' the Gryphon
+  whispered in reply, ``for fear they should forget them
+  before the end of the trial.''.}
+
+\newcommand\alicevi{``Stupid things!'' Alice began in a loud indignant voice,
+  but she stopped herself hastily, for the White Rabbit
+  cried out, ``Silence in the court!''; and the King put on
+  his spectacles and looked anxiously round, to make out who
+  was talking.\par}
+\def\ALPHABET {A B C D E F G H I J K L M N O P Q R S T U V W X Y Z}
+\def\alphabet {a b c d e f g h i j k l m n o p q r s t u v w x y z}
+\newcommand{\punctuation}{! ? . / , : }
+\RequirePackage{fonttable}
+
+\RequirePackage{booktabs}
+\newcounter{step}
+\newcommand\resetinc{\setcounter{step}{0}}
+\newcommand\inc{\stepcounter{step}\thestep}
+\RequirePackage{tabularx}
+\RequirePackage{array}
+\RequirePackage{dcolumn}
+\RequirePackage{rccol}
+\RequirePackage{longtable}
+\let\origLT@array=\LT@array
+\let\origLT@start=\LT@start
+\newenvironment{longsymtable}[2][true]{%
+  \expandafter\global\expandafter\let
+  \expandafter\ifshowsymtable\csname if#1\endcsname
+  \ifshowsymtable
+    \mbox{}%
+    \Needspace*{1\baselineskip}%
+    \mbox{}%
+    \begin{center}%
+    \phantomsection
+    \refstepcounter{table}%
+    \let\refstepcounter=\@gobble
+    \let\LT@array=\origLT@array
+    \let\LT@start=\origLT@start
+
+    \addcontentsline{toc}{subsection}{%
+     \protect\numberline{\tablename~\thetable:}{#2}}%
+    \@makecaption{\fnum@table}{#2}%
+    \gdef\lt@indexed{}%
+    \let\next=\relax
+  \else
+    % The following was taken verbatim from verbatim.sty.
+    \let\do\@makeother\dospecials\catcode`\^^M\active
+    \let\verbatim@startline\relax
+    \let\verbatim@addtoline\@gobble
+    \let\verbatim@processline\relax
+    \let\verbatim@finish\relax
+    \let\next=\verbatim@
+  \fi
+  \next
+}{%
+  \ifshowsymtable
+    \end{center}
+    \let\@elt=\index\lt@indexed  % Close our index ranges.
+    \gdef\lt@indexed{}%
+    \vskip 8ex minus 2ex
+  \fi
+}
+
+
+\newcommand{\ltindex}[1]{%
+  \index{#1|(}%
+  \@cons{\lt@indexed}{{#1|)}}%
+}
+\newcommand{\ltidxboth}[2]{\mbox{}\ltindex{#1 #2}\ltindex{#2>#1}}
+
+\let\LT@array=\origLT@array
+\let\LT@start=\origLT@start
+
+\IfStyFileExists*{type1cm}
+  {\usepackage{type1cm}}
+  {}
+\newif\ifhavemultirow
+\IfStyFileExists{multirow}
+  {\havemultirowtrue
+  \RequirePackage{multirow}
+  }
+  {}
+\newif\ifhavecolortbl
+\IfStyFileExists{colortbl}
+  {\havecolortbltrue\RequirePackage{colortbl}}
+  {}
+\RequirePackage{threeparttable}
+\RequirePackage{threeparttablex}
+
+\IfStyFileExists {pdflscape}
+  {\RequirePackage{pdflscape}}
+  {}
+
+\ifUNICODE
+\else
+\ifxetex
+  \def\new@mathgroup{\alloc@8\mathgroup\mathchardef\@cclvi}
+  \patchcmd{\document@select@group}{\sixt@@n}{\@cclvi}{}{}
+  \patchcmd{\select@group}{\sixt@@n}{\@cclvi}{}{}
+\fi
+\ifluatex
+  \def\new@mathgroup{\alloc@8\mathgroup\mathchardef\@cclvi}
+  \patchcmd{\document@select@group}{\sixt@@n}{\@cclvi}{}{}
+  \patchcmd{\select@group}{\sixt@@n}{\@cclvi}{}{}
+\fi
+\fi
+
+\newif\ifAMS
+\AMStrue
+\ExplSyntaxOn
+\newif\ifMTOOLS
+\newcommand\MTOOLS{\pkgname{mathtools}}
+ \RequirePackage{mathtools}
+ \RequirePackage{suffix}
+\IfStyFileExists{mathtools}
+  {\MTOOLStrue
+   \save_symbol:{xleftrightarrow} \save_symbol:{xLeftarrow}
+   \save_symbol:{xRightarrow} \save_symbol:{xLeftrightarrow}
+   \save_symbol:{xrightharpoondown} \save_symbol:{xrightharpoonup}
+   \save_symbol:{xleftharpoondown} \save_symbol:{xleftharpoonup}
+   \save_symbol:{xleftrightharpoons} \save_symbol:{xrightleftharpoons}
+   \save_symbol:{xhookleftarrow} \save_symbol:{xhookrightarrow}
+   \save_symbol:{xmapsto} \save_symbol:{underbracket}
+   \save_symbol:{overbracket} \save_symbol:{lparen} \save_symbol:{rparen}
+   \save_symbol:{dblcolon} \save_symbol:{coloneqq} \save_symbol:{Coloneqq}
+   \save_symbol:{coloneq} \save_symbol:{Coloneq} \save_symbol:{eqqcolon}
+   \save_symbol:{Eqqcolon} \save_symbol:{eqcolon} \save_symbol:{Eqcolon}
+   \save_symbol:{colonapprox} \save_symbol:{Colonapprox}
+   \save_symbol:{colonsim} \save_symbol:{Colonsim} \save_symbol:{overbrace}
+   \save_symbol:{underbrace}%NEW
+   \save_symbol:{underbrace}
+   \save_symbol:{overleftrightarrow}%NEW
+   \save_symbol:{mathscr}
+   \save_symbol:{ulcorner}
+   \save_symbol:{urcorner}
+   \save_symbol:{llcorner}
+   \save_symbol:{lrcorner}
+   \save_symbol:{backepsilon}
+   \save_symbol:{digamma}
+   \save_symbol:{underrightarrow}
+   \save_symbol:{underleftarrow}
+   \save_symbol:{underleftrightarrow}
+   \save_symbol:{eth}
+   \save_symbol:{underbracket}
+   % The mathtools package delays the definitions of some of its symbols
+   % to the \begin{document}.  We redefine \AtBeginDocument to force
+   % mathtools to define everything immediately.
+   \let\origAtBeginDocument=\AtBeginDocument
+   \def\AtBeginDocument##1{##1}
+  % \let\RequirePackage\origRequirePackage
+  \PassOptionsToPackage{donotfixmathbugs}{mathtools}
+   \RequirePackage{mathtools}
+
+   \let\AtBeginDocument=\origAtBeginDocument
+
+   \restore_symbol:{MTOOLS}{xleftrightarrow}
+   \restore_symbol:{MTOOLS}{xLeftarrow}
+   \restore_symbol:{MTOOLS}{xRightarrow}
+   \restore_symbol:{MTOOLS}{xLeftrightarrow}
+   \restore_symbol:{MTOOLS}{xrightharpoondown}
+   \restore_symbol:{MTOOLS}{xrightharpoonup}
+   \restore_symbol:{MTOOLS}{xleftharpoondown}
+   \restore_symbol:{MTOOLS}{xleftharpoonup}
+   \restore_symbol:{MTOOLS}{xleftrightharpoons}
+   \restore_symbol:{MTOOLS}{xrightleftharpoons}
+   \restore_symbol:{MTOOLS}{xhookleftarrow}
+   \restore_symbol:{MTOOLS}{xhookrightarrow}
+   \restore_symbol:{MTOOLS}{xmapsto}
+   \restore_symbol:{MTOOLS}{underbracket}
+   \restore_symbol:{MTOOLS}{overbracket} \restore_symbol:{MTOOLS}{lparen}
+   \restore_symbol:{MTOOLS}{rparen} \restore_symbol:{MTOOLS}{dblcolon}
+   \restore_symbol:{MTOOLS}{coloneqq} \restore_symbol:{MTOOLS}{Coloneqq}
+   \restore_symbol:{MTOOLS}{coloneq} \restore_symbol:{MTOOLS}{Coloneq}
+   \restore_symbol:{MTOOLS}{eqqcolon} \restore_symbol:{MTOOLS}{Eqqcolon}
+   \restore_symbol:{MTOOLS}{eqcolon} \restore_symbol:{MTOOLS}{Eqcolon}
+   \restore_symbol:{MTOOLS}{colonapprox}
+   \restore_symbol:{MTOOLS}{Colonapprox}
+   \restore_symbol:{MTOOLS}{colonsim} \restore_symbol:{MTOOLS}{Colonsim}
+   \restore_symbol:{MTOOLS}{overbrace} \restore_symbol:{MTOOLS}{underbrace}
+   \restore_symbol:{MTOOLS}{underbracket}
+
+   % Some of the above are defined in terms of \dblcolon.  At the time
+   % of this writing it doesn't seem like any other package uses the
+   % name \dblcolon so it should be safe to retain its mathtools
+   % definition.
+   \let\dblcolon=\MTOOLSdblcolon
+  }
+  {}
+\ExplSyntaxOff
+%%
+\newif\ifFontIsAvailable
+\def\testFontAvailability#1{%
+  \count255=\interactionmode
+  \batchmode
+  \let\preload=\nullfont
+  \font\preload="#1" at 10pt
+  \ifx\preload\nullfont \FontIsAvailablefalse
+  \else \FontIsAvailabletrue \fi
+  \interactionmode=\count255
+}
+
+\def\FindAnInstalledFont#1#2{
+  \expandafter\getFirstFontName#1/\end
+  \let\next\gobbleTwo
+  \ifx\trialFontName\empty
+    \def#2{<No suitable font found>}%
+  \else
+    \testFontAvailability{\trialFontName}
+    \ifFontIsAvailable
+      \edef#2{\trialFontName}%
+    \else
+      \let\next\FindAnInstalledFont
+    \fi
+  \fi
+  \expandafter\next\expandafter{\remainingNames}{#2}
+}
+\def\getFirstFontName#1/#2\end{\def\trialFontName{#1}\def\remainingNames{#2}}
+\def\gobbleTwo#1#2{}
+\newcommand\ligatures[2][Old Standard-Regular]{%
+  \bgroup
+  \fontspec[Ligatures = Common]{#1}%
+  \textit{#2}%
+  \egroup
+}
+\renewcommand\U[1]{{\texttt{U+#1}}(\char"#1)\xspace}
+
+\newif\ifYH
+\newcommand\YH{yhmaths}
+\IfStyFileExists{yhmaths}
+  {\YHtrue
+   \let\origRequirePackage=\RequirePackage    % We don't want amsmath loaded.
+   \def\RequirePackage##1{}
+   \RequirePackage{yhmath}
+   \let\RequirePackage=\origRequirePackage
+  }
+  { \RequirePackage{yhmath}}
+
+\RequirePackage{multienum}
+\ExplSyntaxOn
+\newif\ifACCENTS
+\IfStyFileExists{accents}
+  {\ACCENTStrue
+   \save_symbol:{undertilde}
+   \save_symbol:{dddot}
+   \save_symbol:{ddddot}
+   \RequirePackage{accents}
+   \restore_symbol:{ACCENTS}{undertilde}
+   \restore_symbol:{ACCENTS}{dddot}
+   \restore_symbol:{ACCENTS}{ddddot}
+  }
+  {}
+\ExplSyntaxOff
+ %\RequirePackage {nath} DANGEROUS
+\IfStyFileExists{mathrsfs}
+  {\newcommand{\mathscr}[1]{\mbox{\usefont{U}{rsfs}{m}{n}##1}}}
+  {}
+\def\TX{txfonts}
+
+  % Redefine \DeclareMathSymbol to stick "ABX" in front of each symbol name.
+  % Do the same for \DeclareMathDelimiter.
+  % Define only those accents that are not defined elsewhere.
+%%
+\RequirePackage{nicefrac}
+\RequirePackage{xfrac}
+\RequirePackage{amssymb}[2002/01/22]
+\RequirePackage{amsthm}[2002/01/22]
+\RequirePackage{amsopn}
+\RequirePackage{amscd}
+\setcounter{MaxMatrixCols}{20}
+\ifengine{}{}{%
+  \IfStyFileExists{dsfont}%
+    { \newcommand{\mathds}[1]{\mbox{\usefont{U}{dsrom}{m}{n}##1}}
+      \newcommand{\mathdsss}[1]{\mbox{\usefont{U}{dsss}{m}{n}##1}}}
+    {}
+}
+
+\ExplSyntaxOn
+\newif\ifFEYN
+\newcommand\FEYN{\pkgname{feyn}}
+\IfStyFileExists{feyn}
+  {\FEYNtrue
+   \let\origProvidesPackage=\ProvidesPackage
+   \def\ProvidesPackage##1[##2]{\origProvidesPackage{##1}[##2]\endinput}
+   \save_symbol:{filename}
+   \usepackage{feyn}
+   \restore_symbol:{FEYN}{filename}
+   \let\ProvidesPackage=\origProvidesPackage
+   \DeclareFontFamily{OMS}{textfeyn}{\skewchar\font'000}
+   \DeclareFontShape{OMS}{textfeyn}{m}{n}{%
+     <-10.5>feyntext10%
+     <10.5-11.5>feyntext11%
+     <11.5->feyntext12%
+   }{}
+   \DeclareRobustCommand{\feyn}[1]{{\usefont{OMS}{textfeyn}{m}{n}##1}}
+   \DeclareRobustCommand{\wfermion}{\feyn{\char"64}}
+   \DeclareRobustCommand{\hfermion}{\feyn{\char"6B}}
+   \DeclareRobustCommand{\shfermion}{\feyn{\char"6C}}
+   \DeclareRobustCommand{\whfermion}{\feyn{\char"6D}}
+   \DeclareRobustCommand{\gvcropped}{\feyn{\char"07}}
+   \DeclareRobustCommand{\bigbosonloop}{\feyn{\char"7B}}
+   \DeclareRobustCommand{\smallbosonloop}{\feyn{\char"7C}}
+   \DeclareRobustCommand{\bigbosonloopA}{\feyn{\char"5B}}
+   \DeclareRobustCommand{\smallbosonloopA}{\feyn{\char"5C}}
+   \DeclareRobustCommand{\bigbosonloopV}{\feyn{\char"1B}}
+   \DeclareRobustCommand{\smallbosonloopV}{\feyn{\char"1C}}
+  }
+  {}
+ \DeclareRobustCommand\FIRE{{\large\color{red}\Fire}}
+\ExplSyntaxOff
+%%
+%%   \save_symbol:{white}
+%%   \save_symbol:{repeat}
+%%   % Don't let igo redefine all of the font-size commands.
+%%   \save_symbol:{scriptsize}\newcommand{\scriptsize}{}
+%%   \save_symbol:{tiny}\newcommand{\tiny}{}
+%%   \save_symbol:{large}\newcommand{\large}{}
+%%   \save_symbol:{Large}\newcommand{\Large}{}
+%%   \save_symbol:{LARGE}\newcommand{\LARGE}{}
+%%   \save_symbol:{huge}\newcommand{\huge}{}
+%%   \save_symbol:{Huge}\newcommand{\Huge}{}
+%%   \restore_symbol:{IGO}{black}
+%%   \restore_symbol:{IGO}{white}
+%%   %\restore_symbol:{IGO}{repeat}
+%%   \restore_symbol:{IGO}{tiny}
+%%   \restore_symbol:{IGO}{large}
+%%   \restore_symbol:{IGO}{Large}
+%%   \restore_symbol:{IGO}{LARGE}
+%%   \restore_symbol:{IGO}{huge}
+%%   \restore_symbol:{IGO}{Huge}
+\newif\ifULSY
+\newcommand\ULSY{\pkgname{ulsy}}
+\IfStyFileExists{ulsy}
+  {\ULSYtrue\usepackage{ulsy}}
+  {}
+\ExplSyntaxOn
+\newif\ifCEQ
+\newcommand\CEQ{\pkgname{colonequals}}
+\IfStyFileExists{colonequals}
+  {\save_symbol:{colonapprox}
+   \save_symbol:{colonsim}
+   \CEQtrue
+   \usepackage{colonequals}
+   \restore_symbol:{CEQ}{colonapprox}
+   \restore_symbol:{CEQ}{colonsim}
+  }
+  {}
+\ExplSyntaxOff
+\newif\ifCMLL
+\newcommand\CMLL{\pkgname{cmll}}
+\IfStyFileExists{cmll}
+  {\CMLLtrue
+   \newcommand*{\textCMLL}[1]{{\usefont{U}{cmllr}{m}{n}##1}}
+   \DeclareRobustCommand{\CMLLparr}{\textCMLL{\char0}}
+   \DeclareRobustCommand{\CMLLshpos}{\textCMLL{\char1}}
+   \DeclareRobustCommand{\CMLLshneg}{\textCMLL{\char2}}
+   \DeclareRobustCommand{\CMLLshift}{\textCMLL{\char3}}
+   \DeclareRobustCommand{\CMLLcoh}{\textCMLL{\char4}}
+   \DeclareRobustCommand{\CMLLscoh}{\textCMLL{\char5}}
+   \DeclareRobustCommand{\CMLLincoh}{\textCMLL{\char6}}
+   \DeclareRobustCommand{\CMLLsincoh}{\textCMLL{\char7}}
+   \DeclareRobustCommand{\CMLLbigwith}{\raisebox{2ex}{\textCMLL{\char8}}}
+   \DeclareRobustCommand{\CMLLbigparr}{\raisebox{2ex}{\textCMLL{\char10}}}
+  }
+  {}
+\ExplSyntaxOn
+ \newif\ifST
+ \newcommand\ST{\pkgname{stmaryrd}}
+ \IfStyFileExists{stmaryrd}
+  {\STtrue
+   \save_symbol:{lightning}
+   \save_symbol:{bigtriangleup} \save_symbol:{bigtriangledown}
+   \RequirePackage{stmaryrd}
+   \restore_symbol:{ST}{lightning}
+   \restore_symbol:{ST}{bigtriangleup} \restore_symbol:{ST}{bigtriangledown}
+  }
+  {}
+\ExplSyntaxOff
+\ExplSyntaxOn
+\newif\ifXPFEIL
+\newcommand\XPFEIL{\pkgname{extpfeil}}
+\IfStyFileExists{extpfeils}
+  {\XPFEILtrue
+   % extpfeil tries to do a \RequirePackage of stmaryrd with
+   % conflicting options from what we used to load stmaryd.  We
+   % therefore temporarily make \RequirePackage a no-op to prevent LaTeX
+   % from complaining.
+   \let\origRequirePackage=\RequirePackage
+   \renewcommand*{\RequirePackage}[2][]{}
+   \save_symbol:{xlongequal}
+   \save_symbol:{xmapsto}
+   \RequirePackage{extpfeil}
+   \restore_symbol:{XPFEIL}{xlongequal}
+   \restore_symbol:{XPFEIL}{xmapsto}
+   \let\RequirePackage=\origRequirePackage
+  }
+  {}
+\ExplSyntaxOff
+\iffalse
+\newif\ifEU
+\IfStyFileExists{euscript}
+  {\EUtrue\RequirePackage[mathcal]{euscript}
+   \renewcommand{\mathcal}[1]{\mbox{\usefont{U}{eus}{m}{n}##1}}
+  }
+  {\let\CMcal\mathcal}
+\fi
+  \newif\ifBM
+  \IfStyFileExists{bm}
+    {\BMtrue
+      \RequirePackage{bm}
+    }
+   {}
+\ifUNICODE
+ \else
+\IfStyFileExists{bbm}
+  {\newcommand{\mathbbm}[1]{\mbox{\usefont{U}{bbm}{m}{n}##1}}
+   \newcommand{\mathbbmss}[1]{\mbox{\usefont{U}{bbmss}{m}{n}##1}}
+   \newcommand{\mathbbmtt}[1]{\mbox{\usefont{U}{bbmtt}{m}{n}##1}}}
+  {}
+\fi
+\ifUNICODE
+\else
+\IfStyFileExists{bbold}
+  {
+  %</fontdef
+  \newcommand{\BBmathbb}[1]{\mbox{\usefont{U}{bbold}{m}{n}##1}}
+   % We have to manually define all of the symbols we care about.
+   \newcommand{\BBsym}[1]{\ensuremath{\BBmathbb{\char##1}}}
+   \newcommand{\Langle}{\BBsym{`<}}
+   \newcommand{\Lbrack}{\BBsym{`[}}
+   \newcommand{\Lparen}{\BBsym{`(}}
+   \newcommand{\bbalpha}{\BBsym{"0B}}
+   \newcommand{\bbbeta}{\BBsym{"0C}}
+   \newcommand{\bbgamma}{\BBsym{"0D}}
+   \newcommand{\Rparen}{\BBsym{`)}}
+   \newcommand{\Rbrack}{\BBsym{`]}}
+   \newcommand{\Rangle}{\BBsym{"3E}}
+  }
+  {}
+\fi
+\IfStyFileExists{mbboard}
+  {\newcommand{\MBBmathbb}[1]{\mbox{\usefont{OT1}{mbb}{m}{n}##1}}}
+  {}
+\ifx\MBBmathbb\undefined
+\else
+  % Define only the symbols we actually use.
+  \newcommand{\bbnabla}{\MBBmathbb{\char"9A}}
+  \newcommand{\bbdollar}{\MBBmathbb{\char"24}}
+  \newcommand{\bbeuro}{\MBBmathbb{\char"FB}}
+  \newcommand{\bbpe}{\MBBmathbb{\char"D4}}
+  \newcommand{\bbqof}{\MBBmathbb{\char"D7}}
+  \newcommand{\bbyod}{\MBBmathbb{\char"C9}}
+  \newcommand{\bbfinalnun}{\MBBmathbb{\char"CF}}
+
+  % The following was copied from mbboard.sty.
+  \DeclareFontFamily{OT1}{mbb}{\hyphenchar\font45}
+  \DeclareFontShape{OT1}{mbb}{m}{n}{
+        <5> <6> <7> <8> <9> <10> gen * mbb
+        <10.95> mbb10 <12> <14.4> mbb12 <17.28> <20.74> <24.88> mbb17
+        }{}
+\fi
+
+\ifx\mathfrak\undefined
+\else
+  \renewcommand{\mathfrak}[1]{\mbox{\fontencoding{U}\fontfamily{euf}\selectfont#1}}
+\fi
+\newif\ifUPGR
+    \RequirePackage[Symbol]{upgreek}
+\ExplSyntaxOn
+\newif\ifMDOTS
+\newcommand\MDOTS{\pkgname{mathdots}}
+\ifUNICODE
+\else
+\IfStyFileExists{mathdots}
+  {\MDOTStrue
+   \save_symbol:{ddots}
+   \save_symbol:{vdots}
+   \save_symbol:{iddots}
+   \save_symbol:{dddot}
+   \save_symbol:{ddddot}
+   \RequirePackage{mathdots}
+   \restore_symbol:{MDOTS}{ddots}
+   \restore_symbol:{MDOTS}{vdots}
+   \restore_symbol:{MDOTS}{iddots}
+   \restore_symbol:{MDOTS}{dddot}
+   \restore_symbol:{MDOTS}{ddddot}
+  }
+  {}
+\fi
+\ExplSyntaxOff
+\ExplSyntaxOn
+\let\oldSI\SI
+\let\SI\undefined
+\newif\ifASCII
+\newcommand\ASCII{\pkgname{ascii}}
+\IfStyFileExists{ascii}
+  {\ASCIItrue
+   \save_symbol:{HT}
+   \RequirePackage{ascii}
+   \restore_symbol:{ascii}{HT}
+   \let\SI\undefined
+  }
+  {}
+\let\SI\oldSI
+\ExplSyntaxOff
+\ExplSyntaxOn
+\newif\ifCHINA
+\newcommand\CHINA{%
+  \Chinasym
+  \index{china2e=\textsf{china2e} (package)}%
+  \index{packages>china2e=\textsf{china2e}}}
+\IfStyFileExists{china2e}
+  {\CHINAtrue
+   \save_symbol:{Info}
+   \save_symbol:{Earth}
+   \save_symbol:{Telephone}
+   \save_symbol:{Fire}
+   \save_symbol:{vdots}
+   \let\origDeclareSymbolFont=\DeclareSymbolFont
+   \let\origDeclareMathSymbol=\DeclareMathSymbol
+   \renewcommand{\DeclareSymbolFont}[5]{}
+   \renewcommand{\DeclareMathSymbol}[4]{%
+     \DeclareRobustCommand{##1}{{\uchr##4}}}
+   \usepackage{china2e}
+   \let\DeclareSymbolFont=\origDeclareSymbolFont
+   \let\DeclareMathSymbol=\origDeclareMathSymbol
+   \restore_symbol:{china}{Info}
+   \restore_symbol:{china}{Earth}
+   \restore_symbol:{china}{Telephone}
+   \restore_symbol:{china}{Fire}
+   \restore_symbol:{CHINA}{vdots}
+  }
+  {}
+\ExplSyntaxOff
+\newif\ifHARP
+\newcommand\HARP{\pkgname{harpoon}}
+\IfStyFileExists{harpoon}
+  {\HARPtrue\usepackage{harpoon}}
+  {}
+
+\DeclareTextCommandDefault{\ltextcopyright}{\textcircled{c}}
+\DeclareTextCommandDefault{\ltextregistered}{\textcircled{\scshape r}}
+\DeclareTextCommandDefault{\ltexttrademark}{\textsuperscript{TM}}
+\DeclareTextCommandDefault{\ltextordfeminine}{\textsuperscript{a}}
+\DeclareTextCommandDefault{\ltextordmasculine}{\textsuperscript{o}}
+\DeclareTextSymbol{\textcentoldstyle}{TS1}{'213}
+\DeclareTextSymbolDefault{\textcentoldstyle}{TS1}
+\DeclareTextSymbol{\textdollaroldstyle}{TS1}{'212}
+\DeclareTextSymbolDefault{\textdollaroldstyle}{TS1}
+\DeclareTextSymbol{\textguarani}{TS1}{'220}
+\DeclareTextSymbolDefault{\textguarani}{TS1}
+
+\def\UTFDeclarations{%
+  \DeclareUTFcharacter[\UTFencname]{x3008}{\textlangle}
+  \DeclareUTFcharacter[\UTFencname]{x3009}{\textrangle}
+  \DeclareUTFcharacter[\UTFencname]{x301A}{\textlbrackdbl}
+  \DeclareUTFcharacter[\UTFencname]{x301B}{\textrbrackdbl}
+
+
+  \DeclareUTFcharacter[\UTFencname]{xFF10}{\textzerooldstyle}
+  \DeclareUTFcharacter[\UTFencname]{xFF11}{\textoneoldstyle}
+  \DeclareUTFcharacter[\UTFencname]{xFF12}{\texttwooldstyle}
+  \DeclareUTFcharacter[\UTFencname]{xFF13}{\textthreeoldstyle}
+  \DeclareUTFcharacter[\UTFencname]{xFF14}{\textfouroldstyle}
+  \DeclareUTFcharacter[\UTFencname]{xFF15}{\textfiveoldstyle}
+  \DeclareUTFcharacter[\UTFencname]{xFF16}{\textsixoldstyle}
+  \DeclareUTFcharacter[\UTFencname]{xFF17}{\textsevenoldstyle}
+  \DeclareUTFcharacter[\UTFencname]{xFF18}{\texteightoldstyle}
+  \DeclareUTFcharacter[\UTFencname]{xFF19}{\textnineoldstyle}
+
+
+  \DeclareEncodedCompositeCharacter{\UTFencname}{\textcircled}{20DD}{25EF}
+  \DeclareUTFcomposite[\UTFencname]{x2460}{\textcircled}{1}
+  \DeclareUTFcomposite[\UTFencname]{x2461}{\textcircled}{2}
+  \DeclareUTFcomposite[\UTFencname]{x2462}{\textcircled}{3}
+  \DeclareUTFcomposite[\UTFencname]{x2463}{\textcircled}{4}
+  \DeclareUTFcomposite[\UTFencname]{x2464}{\textcircled}{5}
+  \DeclareUTFcomposite[\UTFencname]{x2465}{\textcircled}{6}
+  \DeclareUTFcomposite[\UTFencname]{x2466}{\textcircled}{7}
+  \DeclareUTFcomposite[\UTFencname]{x2467}{\textcircled}{8}
+  \DeclareUTFcomposite[\UTFencname]{x2468}{\textcircled}{9}
+  \DeclareUTFcomposite[\UTFencname]{x2469}{\textcircled}{10}
+  \DeclareUTFcomposite[\UTFencname]{x246A}{\textcircled}{11}
+  \DeclareUTFcomposite[\UTFencname]{x246B}{\textcircled}{12}
+  \DeclareUTFcomposite[\UTFencname]{x246C}{\textcircled}{13}
+  \DeclareUTFcomposite[\UTFencname]{x246D}{\textcircled}{14}
+  \DeclareUTFcomposite[\UTFencname]{x246E}{\textcircled}{15}
+  \DeclareUTFcomposite[\UTFencname]{x246F}{\textcircled}{16}
+  \DeclareUTFcomposite[\UTFencname]{x2470}{\textcircled}{17}
+  \DeclareUTFcomposite[\UTFencname]{x2471}{\textcircled}{18}
+  \DeclareUTFcomposite[\UTFencname]{x2472}{\textcircled}{19}
+  \DeclareUTFcomposite[\UTFencname]{x2473}{\textcircled}{20}
+  \DeclareUTFcomposite[\UTFencname]{x24B6}{\textcircled}{A}
+  \DeclareUTFcomposite[\UTFencname]{x24B7}{\textcircled}{B}
+  \DeclareUTFcomposite[\UTFencname]{x24B8}{\textcircled}{C}
+  \DeclareUTFcomposite[\UTFencname]{x24B9}{\textcircled}{D}
+  \DeclareUTFcomposite[\UTFencname]{x24BA}{\textcircled}{E}
+  \DeclareUTFcomposite[\UTFencname]{x24BB}{\textcircled}{F}
+  \DeclareUTFcomposite[\UTFencname]{x24BC}{\textcircled}{G}
+  \DeclareUTFcomposite[\UTFencname]{x24BD}{\textcircled}{H}
+  \DeclareUTFcomposite[\UTFencname]{x24BE}{\textcircled}{I}
+  \DeclareUTFcomposite[\UTFencname]{x24BF}{\textcircled}{J}
+  \DeclareUTFcomposite[\UTFencname]{x24C0}{\textcircled}{K}
+  \DeclareUTFcomposite[\UTFencname]{x24C1}{\textcircled}{L}
+  \DeclareUTFcomposite[\UTFencname]{x24C2}{\textcircled}{M}
+  \DeclareUTFcomposite[\UTFencname]{x24C3}{\textcircled}{N}
+  \DeclareUTFcomposite[\UTFencname]{x24C4}{\textcircled}{O}
+  \DeclareUTFcomposite[\UTFencname]{x24C5}{\textcircled}{P}
+  \DeclareUTFcomposite[\UTFencname]{x24C6}{\textcircled}{Q}
+  \DeclareUTFcomposite[\UTFencname]{x24C7}{\textcircled}{R}
+  \DeclareUTFcomposite[\UTFencname]{x24C8}{\textcircled}{S}
+  \DeclareUTFcomposite[\UTFencname]{x24C9}{\textcircled}{T}
+  \DeclareUTFcomposite[\UTFencname]{x24CA}{\textcircled}{U}
+  \DeclareUTFcomposite[\UTFencname]{x24CB}{\textcircled}{V}
+  \DeclareUTFcomposite[\UTFencname]{x24CC}{\textcircled}{W}
+  \DeclareUTFcomposite[\UTFencname]{x24CD}{\textcircled}{X}
+  \DeclareUTFcomposite[\UTFencname]{x24CE}{\textcircled}{Y}
+  \DeclareUTFcomposite[\UTFencname]{x24CF}{\textcircled}{Z}
+  \DeclareUTFcomposite[\UTFencname]{x24D0}{\textcircled}{a}
+  \DeclareUTFcomposite[\UTFencname]{x24D1}{\textcircled}{b}
+  \DeclareUTFcomposite[\UTFencname]{x24D2}{\textcircled}{c}
+  \DeclareUTFcomposite[\UTFencname]{x24D3}{\textcircled}{d}
+  \DeclareUTFcomposite[\UTFencname]{x24D4}{\textcircled}{e}
+  \DeclareUTFcomposite[\UTFencname]{x24D5}{\textcircled}{f}
+  \DeclareUTFcomposite[\UTFencname]{x24D6}{\textcircled}{g}
+  \DeclareUTFcomposite[\UTFencname]{x24D7}{\textcircled}{h}
+  \DeclareUTFcomposite[\UTFencname]{x24D8}{\textcircled}{i}
+  \DeclareUTFcomposite[\UTFencname]{x24D9}{\textcircled}{j}
+  \DeclareUTFcomposite[\UTFencname]{x24DA}{\textcircled}{k}
+  \DeclareUTFcomposite[\UTFencname]{x24DB}{\textcircled}{l}
+  \DeclareUTFcomposite[\UTFencname]{x24DC}{\textcircled}{m}
+  \DeclareUTFcomposite[\UTFencname]{x24DD}{\textcircled}{n}
+  \DeclareUTFcomposite[\UTFencname]{x24DE}{\textcircled}{o}
+  \DeclareUTFcomposite[\UTFencname]{x24DF}{\textcircled}{p}
+  \DeclareUTFcomposite[\UTFencname]{x24E0}{\textcircled}{q}
+  \DeclareUTFcomposite[\UTFencname]{x24E1}{\textcircled}{r}
+  \DeclareUTFcomposite[\UTFencname]{x24E2}{\textcircled}{s}
+  \DeclareUTFcomposite[\UTFencname]{x24E3}{\textcircled}{t}
+  \DeclareUTFcomposite[\UTFencname]{x24E4}{\textcircled}{u}
+  \DeclareUTFcomposite[\UTFencname]{x24E5}{\textcircled}{v}
+  \DeclareUTFcomposite[\UTFencname]{x24E6}{\textcircled}{w}
+  \DeclareUTFcomposite[\UTFencname]{x24E7}{\textcircled}{x}
+  \DeclareUTFcomposite[\UTFencname]{x24E8}{\textcircled}{y}
+  \DeclareUTFcomposite[\UTFencname]{x24E9}{\textcircled}{z}
+  \DeclareUTFcomposite[\UTFencname]{x24EA}{\textcircled}{0}
+  \DeclareUTFcharacter[\UTFencname]{x25EF}{\textbigcircle}
+  \DeclareUTFcomposite[\UTFencname]{x3251}{\textcircled}{21}
+  \DeclareUTFcomposite[\UTFencname]{x3252}{\textcircled}{22}
+  \DeclareUTFcomposite[\UTFencname]{x3253}{\textcircled}{23}
+  \DeclareUTFcomposite[\UTFencname]{x3254}{\textcircled}{24}
+  \DeclareUTFcomposite[\UTFencname]{x3255}{\textcircled}{25}
+  \DeclareUTFcomposite[\UTFencname]{x3256}{\textcircled}{26}
+  \DeclareUTFcomposite[\UTFencname]{x3257}{\textcircled}{27}
+  \DeclareUTFcomposite[\UTFencname]{x3258}{\textcircled}{28}
+  \DeclareUTFcomposite[\UTFencname]{x3259}{\textcircled}{29}
+  \DeclareUTFcomposite[\UTFencname]{x325A}{\textcircled}{30}
+  \DeclareUTFcomposite[\UTFencname]{x325B}{\textcircled}{31}
+  \DeclareUTFcomposite[\UTFencname]{x325C}{\textcircled}{32}
+  \DeclareUTFcomposite[\UTFencname]{x325D}{\textcircled}{33}
+  \DeclareUTFcomposite[\UTFencname]{x325E}{\textcircled}{34}
+  \DeclareUTFcomposite[\UTFencname]{x325F}{\textcircled}{35}
+  \DeclareUTFcomposite[\UTFencname]{x32B1}{\textcircled}{36}
+  \DeclareUTFcomposite[\UTFencname]{x32B2}{\textcircled}{37}
+  \DeclareUTFcomposite[\UTFencname]{x32B3}{\textcircled}{38}
+  \DeclareUTFcomposite[\UTFencname]{x32B4}{\textcircled}{39}
+  \DeclareUTFcomposite[\UTFencname]{x32B5}{\textcircled}{40}
+  \DeclareUTFcomposite[\UTFencname]{x32B6}{\textcircled}{41}
+  \DeclareUTFcomposite[\UTFencname]{x32B7}{\textcircled}{42}
+  \DeclareUTFcomposite[\UTFencname]{x32B8}{\textcircled}{43}
+  \DeclareUTFcomposite[\UTFencname]{x32B9}{\textcircled}{44}
+  \DeclareUTFcomposite[\UTFencname]{x32BA}{\textcircled}{45}
+  \DeclareUTFcomposite[\UTFencname]{x32BB}{\textcircled}{46}
+  \DeclareUTFcomposite[\UTFencname]{x32BC}{\textcircled}{47}
+  \DeclareUTFcomposite[\UTFencname]{x32BD}{\textcircled}{48}
+  \DeclareUTFcomposite[\UTFencname]{x32BE}{\textcircled}{49}
+  \DeclareUTFcomposite[\UTFencname]{x32BF}{\textcircled}{50}
+}
+\ifengine{\UTFDeclarations}{\UTFDeclarations}{}
+\ifxetex\else\ifluatex\else
+  \RequirePackage{textcomp}
+  \PassOptionsToPackage{mathcomp}{rmdefault}
+  \RequirePackage{mathcomp}
+  \fi
+\fi
+\ifxetex
+    \else
+     \ifluatex
+     \else
+       %\RequirePackage{exscale}
+       %\RequirePackage{relsize}
+     \fi
+\fi
+\newcommand{\tabitem}[2]{%
+  \texttt{\symbol{`\\}#1} & \@nameuse{#1}
+   & \bfseries\@nameuse{#1}& \itshape\@nameuse{#1}
+   \ifthenelse{\equal{#2}{}}
+    {}
+    {& \texttt{\symbol{`\\}#2} & \@nameuse{#2}
+     & \bfseries\@nameuse{#2}
+     & \itshape\@nameuse{#2} \\}
+}
+%%  \tabitem{textcapitalcompwordmark}{textascendercompwordmark}
+\ExplSyntaxOn
+\newif\ifWASY
+\newcommand\WASY{\pkgname{wasysym}}
+\IfStyFileExists{wasysym}
+  {\WASYtrue
+   \save_symbol:{lightning}
+   \save_symbol:{Box}
+   \save_symbol:{Diamond}
+   \save_symbol:{clock}
+   \RequirePackage{wasysym}
+   \restore_symbol:{WASY}{lightning}
+   \restore_symbol:{WASY}{Box}
+   \restore_symbol:{WASY}{Diamond}
+   \restore_symbol:{WASY}{clock}
+  }
+  {}
+\ExplSyntaxOff
+\newif\ifPI
+\newcommand\PI{\pkgname{pifont}}
+\IfStyFileExists{pifont}
+  {\PItrue\RequirePackage{pifont}}
+  {}
+\ExplSyntaxOn
+\newif\ifMARV
+\newcommand\MARV{\pkgname{marvosym}}
+\IfStyFileExists*{marvosym}
+  {\save_symbol:{CheckedBox}
+   \RequirePackage{marvosym}[2000/05/01]% Major rewrite at this version.
+   \global\MARVtrue
+   \restore_symbol:{CheckedBox}{CheckedBox}
+   \@ifundefined{Denarius} % \Denarius is a newer symbol.
+     {\global\MARVfalse}
+     {}
+   \@ifundefined{MVRightarrow}% \Mvrightarrow is an even newer symbol.
+     {\global\MARVfalse}
+     {}
+  }
+  {}
+\ExplSyntaxOff
+
+\ExplSyntaxOn
+\newif\ifDING
+\newcommand\DING{\pkgname{bbding}}
+\IfStyFileExists{bbding}
+  {\DINGtrue
+   \save_symbol:{Cross}
+   \save_symbol:{Square}
+   \RequirePackage{bbding}
+   \restore_symbol:{ding}{Cross}
+   \restore_symbol:{ding}{Square}
+  }
+  {}
+
+\newcount\c@lumnsleft
+\newcount\t@talcolumns
+\newdimen\c@lumnwidth
+\newenvironment{commandsInColumns}[1]{%
+  \t@talcolumns=#1\advance\t@talcolumns-1\c@lumnsleft=\t@talcolumns%
+  \c@lumnwidth=-2em\multiply\c@lumnwidth by \t@talcolumns%
+  \advance\c@lumnwidth by\hsize \divide\c@lumnwidth by #1%
+  \vskip\z@     % Ensures vertical mode
+  \catcode`\^^M=12%
+  \hbox\bgroup%
+  \st@rtenv%
+}
+{\ifnum\c@lumnsleft=\t@talcolumns \egroup
+ \else \egroup \fi}
+{\catcode`\^^M=12%
+ \gdef\st@rtenv{\@ifnextchar^^M{\dr@pnext\doNextComm@nd}{\doNextComm@nd}}%
+ \gdef\setComm@nd#1#2^^M{%
+   \hbox to \c@lumnwidth%
+     {\hbox to .5cm{#1\hss}\hbox{\expandafter\setn@me\string#1.}\hss}%
+   \advance\c@lumnsleft-1%
+   \ifnum\c@lumnsleft>0%
+     \hskip2em%
+   \else%
+     \egroup%
+     \hbox\bgroup%
+     \c@lumnsleft\t@talcolumns%
+   \fi%
+   \doNextComm@nd%
+  }}
+\def\dr@pnext#1#2{#1}
+\def\doNextComm@nd{\@ifnextchar\end{}{\setComm@nd}}%
+\def\setn@me#1#2.{\CSname{#2}}
+\newcommand{\CSname}[1]{\texttt{\protect\bslash#1}}
+\ExplSyntaxOff
+\ExplSyntaxOn
+\newif\ifEUSYM\EUSYMfalse
+\newcommand\EUSYM{\pkgname{eurosym}}
+\IfStyFileExists{eurosym}
+  {\EUSYMtrue
+   \save_symbol:{EUR}
+   \usepackage{eurosym}
+   \restore_symbol:{MARV}{EUR}
+  }
+  {}
+\newif\ifESV\ESVfalse
+\newcommand\ESV{\pkgname{esvect}}
+\ExplSyntaxOff
+\IfStyFileExists{esvect}
+  {\ESVtrue
+   \RequirePackage{esvect}
+   \DeclareMathSymbol{\fldra}{\mathrel}{esvector}{'021}
+   \DeclareMathSymbol{\fldrb}{\mathrel}{esvector}{'022}
+   \DeclareMathSymbol{\fldrc}{\mathrel}{esvector}{'023}
+   \DeclareMathSymbol{\fldrd}{\mathrel}{esvector}{'024}
+   \DeclareMathSymbol{\fldre}{\mathrel}{esvector}{'025}
+   \DeclareMathSymbol{\fldrf}{\mathrel}{esvector}{'026}
+   \DeclareMathSymbol{\fldrg}{\mathrel}{esvector}{'027}
+   \DeclareMathSymbol{\fldrh}{\mathrel}{esvector}{'030}
+  }
+  {}
+
+  \RequirePackage{mhchem}
+  \RequirePackage{chemfig}
+
+\newif\ifMAN
+\newcommand\MAN{\pkgname{manfnt}}
+\IfStyFileExists{manfnt}
+  {\MANtrue\RequirePackage{manfnt}}
+  {}
+
+\ExplSyntaxOn
+  \newenvironment {ddanger}
+ {
+  \begin{trivlist}\item[]\noindent
+  \begingroup\hangindent=3.5pc\hangafter=-2
+  \cs_set_nopar:Npn \par{\endgraf\endgroup}
+  \hbox to0pt{\hskip-\hangindent\dbend\kern2pt\dbend\hfill}\ignorespaces
+ }{
+  \par\end{trivlist}
+ }
+\ExplSyntaxOff
+
+\ExplSyntaxOn
+\newif\ifIFS
+\newcommand\IFS{\pkgname{ifsym}}
+\IfStyFileExists{ifsym}
+  {\IFStrue
+   \save_symbol:{Letter}
+   \save_symbol:{Square}
+   \save_symbol:{Cross}
+   \save_symbol:{Sun}
+   \save_symbol:{TriangleUp} \save_symbol:{TriangleDown} \save_symbol:{Circle}
+   \save_symbol:{Lightning}
+   \RequirePackage[alpine,clock,electronic,geometry,misc,weather]{ifsym}[2000/04/18]
+   \restore_symbol:{ifs}{Letter} \restore_symbol:{ifs}{Square}
+   \restore_symbol:{ifs}{Cross} \restore_symbol:{ifs}{Sun}
+   \restore_symbol:{ifs}{TriangleUp} \restore_symbol:{ifs}{TriangleDown}
+   \restore_symbol:{ifs}{Circle} \restore_symbol:{ifs}{Lightning}
+   \DeclareRobustCommand{\allCubes}{%
+     \Cube{1}~%
+     \Cube{2}~%
+     \Cube{3}~%
+     \Cube{4}~%
+     \Cube{5}~%
+     \Cube{6}%
+   }
+  }
+  {}
+\ExplSyntaxOff
+\newif\ifUTILD
+\newcommand\UTILD{\pkgname{undertilde}}
+\IfStyFileExists{undertilde}
+  {\UTILDtrue\RequirePackage{undertilde}}
+  {}
+\RequirePackage{phdfilecontents}
+\RequirePackage{changepage}
+
+\RequirePackage{keyval}
+\usepackage{xkvview}
+\RequirePackage{ifmtarg}
+\RequirePackage{fp}
+\RequirePackage{ifthenx}
+\RequirePackage{xspace}
+\RequirePackage{xstring}
+\RequirePackage{multido}
+\RequirePackage{etoolbox}
+\RequirePackage{parselines}
+\def\TRUE{ \meta{true code} }
+\def\FALSE{ \meta{false code} }
+\def\PASS{\par{\bfseries\textcolor{green!50!blue}{PASS}}\ ~}
+\def\FAIL{\par{\bfseries\textcolor{red!70!black}{FAIL}}\ ~}
+  \RequirePackage{calc}
+\RequirePackage{pict2e}
+\RequirePackage{picture}
+\RequirePackage{tikz}
+\usetikzlibrary{%
+  arrows,%
+  calc,%
+  fit,%
+  patterns,%
+  plotmarks,%
+  shapes.geometric,%
+  shapes.misc,%
+  shapes.symbols,%
+  shapes.arrows,%
+  shapes.callouts,%
+  shapes.multipart,%
+  shapes.gates.logic.US,%
+  shapes.gates.logic.IEC,%
+  er,%
+  automata,%
+  backgrounds,%
+  chains,%
+  topaths,%
+  trees,%
+  petri,%
+  mindmap,%
+  matrix,%
+  calendar,%
+  folding,%
+  fadings,%
+  through,%
+  positioning,%
+  scopes,%
+  decorations.fractals,%
+  decorations.shapes,%
+  decorations.text,%
+  decorations.pathmorphing,%
+  decorations.pathreplacing,%
+  decorations.footprints,%
+  decorations.markings,%
+  shadows}
+\usetikzlibrary{tikzmark}
+\RequirePackage{pgfplots}
+\pgfplotsset{compat=1.11}
+\RequirePackage{pgfplotstable}
+\IfStyFileExists{forest}
+  {\RequirePackage {forest}}
+  {}
+\RequirePackage{drawstack}
+\ExplSyntaxOn
+\tl_new:N \beforehyperhook
+\cs_gset:Npn \putbeforehyperhook #1
+  {
+    \tl_gput_left:Nn \beforehyperhook {#1}
+  }
+\ExplSyntaxOff
+
+\newcommand*{\BeforeHyperrefHook}
+  {%
+ % \putbeforehyperhook
+  \RequirePackage{float}%
+  \RequirePackage{newfloat}
+  }
+
+   % \RequirePackage{verse}} TO FIX
+
+\newcommand*{\AfterHyperrefHook}{%
+  \RequirePackage{algorithm2e}%
+  \RequirePackage{fancyhdr}
+
+  \RequirePackage{datetime} %%scrtime
+  \RequirePackage{scrtime}
+  \RequirePackage{datenumber}
+  \RequirePackage{natbib}
+   \bibliographystyle{abbrvnat}
+  \usepackage{bibentry} % needs checking
+  %\bibpunct{(}{)}{;}{a}{,}{,}
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\@ifpackageloaded{natbib}{%
+    \providecommand\refname{References} % internationalize?
+    \providecommand\bibname{Bibliography}
+
+
+\setlength\bibhang{1em}
+\renewenvironment{thebibliography}[1]{%
+  \bibsection\parindent \z@\bibpreamble\bibliosize\list
+   {\@biblabel{\arabic{NAT@ctr}}}{\@bibsetup{##1}%changed
+    \setcounter{NAT@ctr}{0}}%
+    \ifNAT@openbib
+      \renewcommand\newblock{\par}
+    \else
+      \renewcommand\newblock{\hskip .11em \@plus.33em \@minus.07em}%
+    \fi
+    \sloppy\clubpenalty4000\widowpenalty4000
+    \sfcode`\.=1000\relax
+    \let\citeN\cite \let\shortcite\cite
+    \let\citeasnoun\cite
+ }{\def\@noitemerr{%
+  \PackageWarning{natbib}
+     {Empty `thebibliography' environment}}%
+  \endlist\vskip-\lastskip}
+
+}{}
+}
+\def\sethyperref{%
+  \BeforeHyperrefHook
+  \RequirePackage{hyperref}
+%% hyperdoc has a problem with tcolorboc documentation
+%% macros.
+%%\usepackage{hypdoc}
+\hypersetup{
+  bookmarks,
+  raiselinks,
+  pageanchor,
+  hyperindex=true,
+  colorlinks,
+  allcolors=theblue,
+  linktocpage,
+  hyperfootnotes=true,
+  breaklinks=true,
+  anchorcolor= theblue,
+  filecolor=blue,
+  hypertexnames=true, %useguessable names for links
+  urlcolor= theblue,
+  linkcolor= theblue,
+  pdftitle={My Title},
+  pdfauthor={Yiannis Lazarides},
+  pdfsubject={The phd LaTeX package},
+  pdfkeywords={LaTeX package management, document design},
+  plainpages=true%do page number anchors as plain Arabic
+ }
+\AfterHyperrefHook
+}
+\newif\ifALGORITHM
+\@ifpackageloaded{hyperref}{%
+    %%\RequirePackage{algorithms}
+ }
+ {\typeout{Algorithm loaded}}
+  \RequirePackage{algorithm2e}
+\RequirePackage{multicol}
+
+
+\newif\ifULEM
+\IfStyFileExists{ulem}
+{\ULEMtrue\RequirePackage[normalem]{ulem}}
+{}
+\newif\ifhaveslashed
+\IfStyFileExists*{slashed}
+  {\haveslashedtrue\RequirePackage{slashed}}
+  {}
+
+\newif\ifhavecancel
+\IfStyFileExists*{cancel}
+  {\havecanceltrue\RequirePackage{cancel}}
+  {}
+
+\newcommand\hcancel[2][red]{\setbox0=\hbox{#2}%
+\rlap{\raisebox{.45\ht0}{\textcolor{#1}{\rule{\wd0}{1pt}}}}#2}
+\newif\ifSTAVE
+\newcommand\STAVE{\pkgname{staves}}
+\IfStyFileExists{staves}
+  {\STAVEtrue\usepackage{staves}}
+  {}
+
+\newif\ifSHUF
+\newcommand\SHUF{\pkgname{shuffle}}
+\IfStyFileExists{shuffle}
+  {\let\origDeclareSymbolFont=\DeclareSymbolFont
+   \let\origDeclareMathSymbol=\DeclareMathSymbol
+   \renewcommand{\DeclareSymbolFont}[5]{}
+   \renewcommand{\DeclareMathSymbol}[4]{%
+     \DeclareRobustCommand{##1}{{\usefont{U}{shuffle}{m}{n}\char##4\relax}}
+   }
+   \SHUFtrue
+   \RequirePackage{shuffle}
+   \let\DeclareSymbolFont=\origDeclareSymbolFont
+   \let\DeclareMathSymbol=\origDeclareMathSymbol
+  }
+  {}
+
+\RequirePackage{framed}
+\RequirePackage{varioref}
+\RequirePackage{setspace}
+
+\providecommand*\switch[2]{{\fontfamily{#1}\selectfont #2}}
+
+\newif\ifhavecenternot
+\IfStyFileExists*{centernot}%
+  {\havecenternottrue\RequirePackage{centernot}}
+  {}
+\RequirePackage{genealogytree}
+\RequirePackage{chngcntr}
+\RequirePackage{fourier-orns}
+\RequirePackage{eso-pic}
+\RequirePackage{alphalph}
+\RequirePackage{fmtcount}
+\RequirePackage{varwidth}
+\RequirePackage{comment}
+\RequirePackage{textcase}
+\RequirePackage[autostyle=false]{csquotes}
+\RequirePackage{alltt}[1997/06/16]
+
+\RequirePackage{caption} % check
+\RequirePackage{subcaption}
+
+\RequirePackage[final]{pdfpages}
+\newif\ifCCLIC
+\newcommand\CCLIC{\pkgname{cclicenses}}
+\IfStyFileExists{cclicenses}
+  {\CCLICtrue
+   \RequirePackage{cclicenses}
+   \DeclareTextAccentDefault{\textcircled}{OMS}
+  }
+  {}
+\ifxetex\else
+\newif\ifFOUR
+\newcommand\FOUR{\pkgname{fourier}}
+\IfStyFileExists{fourier}
+  {\FOURtrue
+   \RequirePackage{fourier-orns}
+   % Define single-glyph symbols.
+   \DeclareFontEncoding{FMS}{}{}
+   \DeclareFontSubstitution{FMS}{futm}{m}{n}
+   \DeclareFontEncoding{FML}{}{}
+   \DeclareFontSubstitution{FML}{futmi}{m}{it}
+   \newcommand{\fourierdef}[6]{%
+     \DeclareRobustCommand{##1}{{\usefont{##2}{##3}{##4}{##5}\char##6}}}
+   \fourierdef{\parallelslant}{FMS}{futm}{m}{n}{134}
+   \fourierdef{\nparallelslant}{FMS}{futm}{m}{n}{143}
+   \fourierdef{\FOURrho}{FML}{futmi}{m}{it}{26}
+   \fourierdef{\FOURvarrho}{FML}{futmi}{m}{it}{37}
+   \fourierdef{\varvarrho}{FML}{futmi}{m}{it}{129}
+   \fourierdef{\FOURpi}{FML}{futmi}{m}{it}{25}
+   \fourierdef{\FOURvarpi}{FML}{futmi}{m}{it}{36}
+   \fourierdef{\varvarpi}{FML}{futmi}{m}{it}{131}
+   \fourierdef{\FOURpartial}{FML}{futmi}{m}{it}{64}
+   \fourierdef{\varpartialdiff}{FML}{futmi}{m}{it}{130}
+   \fourierdef{\FOURtexteuro}{TS1}{futx}{m}{n}{191}
+   % Fake a math accent with text-mode commands.
+   \DeclareRobustCommand{\FOURfakewidetopaccent}[5]{%
+     \setbox0=\hbox{\ensuremath{##1}}%
+     \setbox1=\hbox{\ensuremath{abc}}%
+     \leavevmode
+     \ifdim\wd0<\wd1
+       \kern1pt
+       \rlap{\raisebox{##2}{\makebox[\wd0]{\usefont{FMX}{futm}{m}{n}\char##3}}}%
+       \kern-0.1em
+       \box0
+     \else
+       \rlap{\raisebox{##4}{\makebox[\wd0]{\usefont{FMX}{futm}{m}{n}\char##5}}}%
+       \box0
+     \fi
+   }
+
+   % Manually define Fourier's extensible accents.  Note that we don't
+   % bother trying to use Fourier's \mathring to construct the
+   % \FOURwidering symbol.
+   \DeclareFontEncoding{FMX}{}{}
+   \DeclareFontSubstitution{FMX}{futm}{m}{n}
+   \DeclareRobustCommand{\FOURwidearc}[1]{%
+     \FOURfakewidetopaccent{##1}{0ex}{216}{0.5ex}{217}}
+   \DeclareRobustCommand{\FOURwideOarc}[1]{%
+     \FOURfakewidetopaccent{##1}{0ex}{228}{0.5ex}{229}}
+   \DeclareRobustCommand{\FOURwideparen}[1]{%
+     \FOURfakewidetopaccent{##1}{0ex}{148}{0.5ex}{150}}
+   \DeclareRobustCommand{\FOURwidering}[1]{\overset{\smash{\vbox to .2ex{%
+     \hbox{$\mathring{}$}}}}{\FOURwideparen{##1}}}
+
+   % Manually define Fourier's variable-sized delimiters.
+   \newcommand{\fouriercdef}[6]{%
+     \DeclareRobustCommand{##1}{%
+       \textvcenter{\usefont{##2}{##3}{##4}{##5}\char##6}}}
+   \fouriercdef{\FOURtllbracket}{FMX}{futm}{m}{n}{133}
+   \fouriercdef{\FOURdllbracket}{FMX}{futm}{m}{n}{139}
+   \fouriercdef{\FOURtrrbracket}{FMX}{futm}{m}{n}{134}
+   \fouriercdef{\FOURdrrbracket}{FMX}{futm}{m}{n}{140}
+   \newcommand*{\FOURverticals}[1]{%
+     \vbox{%
+       \baselineskip=-\maxdimen
+       \lineskiplimit=\maxdimen
+       \lineskip=0pt%
+       \usefont{FMX}{futm}{m}{n}%
+       \ialign{####\cr##1}%
+     }%
+   }
+   \DeclareRobustCommand{\FOURtVERT}{%
+     \raisebox{0.5ex}{\textvcenter{\FOURverticals{\char147\cr\char147\cr}}}}
+   \DeclareRobustCommand{\FOURdVERT}{%
+     \raisebox{0.5ex}{\textvcenter{\FOURverticals{\char147\cr\char147\cr\char147\cr\char147\cr}}}}
+  }
+  {}
+\fi
+\IfStyFileExists{dirtree}
+{
+  \RequirePackage{dirtree}}
+{}
+\IfStyFileExists*{needspace}
+  {\RequirePackage{needspace}}
+  {\newcommand{\Needspace}[2]{\par \penalty-100\begingroup
+     \setlength{\dimen@}{##2}%
+     \dimen@ii\pagegoal \advance\dimen@ii-\pagetotal
+     \ifdim \dimen@>\dimen@ii
+       \break
+     \fi\endgroup}
+  }
+\RequirePackage{uncial}
+\newif\ifarchaic
+  \archaictrue
+\ifarchaic
+
+\newif\ifLINA
+\newcommand\LINA{\pkgname{lineara}}
+\IfStyFileExists{lineara}
+  {\LINAtrue\RequirePackage{lineara}}
+  {}
+\newif\ifLINB
+\newcommand\LINB{\pkgname{linearb}}
+\IfStyFileExists{linearb}
+  {\LINBtrue\RequirePackage{linearb}}
+  {}
+\newif\ifCYPR
+\newcommand\CYPR{\pkgname{cypriot}}
+\IfStyFileExists{cypriot}
+  {\CYPRtrue\RequirePackage{cypriot}}
+  {}
+\newif\ifSARAB
+\newcommand\SARAB{\pkgname{sarabian}}
+\IfStyFileExists{sarabian}
+  {\SARABtrue\RequirePackage{sarabian}}
+  {}
+\newif\ifPRSN
+\newcommand\PRSN{\pkgname{oldprsn}}
+\IfStyFileExists{oldprsn}
+  {\PRSNtrue\RequirePackage{oldprsn}}
+  {}
+\RequirePackage{hieroglf}
+\newif\ifUGAR
+\newcommand\UGAR{\pkgname{ugarite}}
+\RequirePackage{ugarite}
+\IfStyFileExists{ugarite}
+  {\UGARtrue\RequirePackage{ugarite}}
+  {}
+\newif\ifOLMEC
+\newif\ifscriptolmec \scriptolmectrue
+\cxset{olmec/.is if=scriptolmec}
+\cxset{olmec=true}
+\ifscriptolmec
+\RequirePackage{epiolmec}
+\IfStyFileExists{epiolmec}
+  {\OLMECtrue\RequirePackage{epiolmec}}
+  {}
+\fi
+
+\newif\ifPHILOKALIA
+\def\loadphilokalia{%
+  \@namedef{ver@xltxtra.sty}{}% a fake for a "xlextra" package
+  \RequirePackage{philokalia}
+  \IfStyFileExists{philokalia}
+    {\PHILOKALIAtrue\RequirePackage{philokalia}}
+    {}
+}%
+\ifengine{\loadphilokalia}{\loadphilokalia}{}
+\ifPHILOKALIA
+  \newfontfamily\plk{Philokalia-Regular}
+  \newfontfamily\PHtitl[Script=Greek,RawFeature=+titl;grek]{Philokalia-Regular}
+\fi
+\def\diacritic#1{{#1\LARGE ῾◌◌\char"0375}}
+\newfontfamily\greek[Script=Greek,Scale=1.0]{Arial Unicode MS}
+\def\greektext#1{\greek{#1}}
+ \newsavebox{\philobox}
+ \savebox{\philobox}{\PHtitl Π}
+\endinput
+%%
+%% End of file `phd-pkgmanager.sty'.

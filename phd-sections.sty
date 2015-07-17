@@ -1,0 +1,1526 @@
+%%
+%% This is file `phd-sections.sty',
+%% generated with the docstrip utility.
+%%
+%% The original source files were:
+%%
+%% phd-sections.dtx  (with options: `SECT')
+%% ----------------------------------------------------------------
+%% phd --- A package to beautify documents.
+%% E-mail: yannislaz@gmail.com
+%% Released under the LaTeX Project Public License v1.3c or later
+%% See http://www.latex-project.org/lppl.txt
+%% ----------------------------------------------------------------
+
+
+
+\NeedsTeXFormat{LaTeX2e}[1994/12/01]%
+\ProvidesPackage{phd-sections}[2015/1/13 v1.0 chapter head management (YL)]%
+\let\ltxtoday\today
+
+\newdimen\fboxrule
+\newdimen\fboxsep
+\fboxrule.4pt
+\fboxsep1pt
+\newdimen\fboxseptop
+\newdimen\fboxsepright
+\newdimen\fboxsepbottom
+\newdimen\fboxsepleft
+\fboxseptop\fboxsep
+\fboxsepright\fboxsep
+\fboxsepbottom\fboxsep
+\fboxsepleft\fboxsep
+\newdimen\fboxruletop
+   \fboxruletop\fboxrule
+\newdimen\fboxruleright
+   \fboxruleright\fboxrule
+\newdimen\fboxrulebottom
+   \fboxrulebottom\fboxrule
+\newdimen\fboxruleleft
+   \fboxruleleft\fboxrule
+
+\newtoks\chapterprelimtoks
+\newtoks\chaptertoks
+\newtoks\numbertoks
+\numbertoks={}
+\newtoks\titletoks
+\newtoks\headingtoks
+\headingtoks={}
+\newsavebox\numberbox
+\@ifundefined{@openright}{%
+  }{}
+\def\afterindenton@cx{\def\afterindent@cx{\@afterindenttrue}}
+\def\afterindentoff@cx{\def\afterindent@cx{\@afterindentfalse}}
+\global\newlength\chaptermarginleft
+    \setlength\chaptermarginleft{30pt}%
+
+\gdef\chaptermarginleft@cx{0pt}
+\def\chaptertitleblockalign{}
+\newcounter{chapterdisplay} \setcounter{chapterdisplay}{0}
+\newcounter{numberdisplay} \setcounter{numberdisplay}{0}
+\gdef\numberbgcolor{spot!20}
+
+\ExplSyntaxOn
+\gdef\chapter_number_color{blue},
+\dim_new:c {chapter_margin_top}
+\dim_new:c {chapter_margin_right}
+\dim_new:c {chapter_margin_bottom}
+\dim_new:c {chapter_margin_left}
+\dim_new:c {chapter_margin}
+\dim_new:c {chapter_border_top_width}
+\dim_new:c {chapter_border_right_width}
+\dim_new:c {chapter_border_bottom_width}
+\dim_new:c {chapter_border_left_width}
+\dim_new:c {chapter_border}
+\dim_new:c {chapter_padding_top}
+\dim_new:c {chapter_padding_right}
+\dim_new:c {chapter_padding_bottom}
+\dim_new:c {chapter_padding_left}
+\dim_new:c {chapter_padding}
+  \tl_new:N \chapter_border_top_color
+  \tl_new:N \chapter_border_right_color
+  \tl_new:N \chapter_border_bottom_color
+  \tl_new:N \chapter_border_left_color
+
+  \dim_gzero_new:N \number_margin_top
+  \dim_gzero_new:N \number_margin_right
+  \dim_gzero_new:N \number_margin_bottom
+  \dim_gzero_new:N \number_margin_left
+  \dim_gzero_new:N \number_border_top_width
+  \dim_gzero_new:N \number_border_right_width
+  \dim_gzero_new:N \number_border_bottom_width
+  \dim_gzero_new:N \number_border_left_width
+  \dim_new:N \number_padding_top
+  \dim_new:N \number_padding_right
+  \dim_new:N \number_padding_bottom
+  \dim_new:N \number_padding_left
+  \dim_gzero_new:N \title_margin_top
+  \dim_gzero_new:N \title_margin_right
+  \dim_gzero_new:N \title_margin_bottom
+  \dim_gzero_new:N \title_margin_left
+  \dim_gzero_new:N \title_padding_width
+  \dim_gzero_new:N \title_padding_top_width
+  \dim_gzero_new:N \title_padding_left_width
+  \dim_gzero_new:N \title_padding_right_width
+  \dim_gzero_new:N \title_padding_bottom_width
+  \dim_gzero_new:N \title_border_width
+  \dim_gzero_new:N \title_border_left_width
+  \dim_gzero_new:N \title_border_top_width
+  \dim_gzero_new:N \title_border_right_width
+  \dim_gzero_new:N \title_border_bottom_width
+  \tl_new:N \chapter_title_display_tl
+  \tl_new:N \chapter_title_float_tl
+  \tl_gset:Nn \chapter_title_float_tl {center}
+  \tl_new:c {chapter_title_text_align}
+\ExplSyntaxOff
+
+
+\ExplSyntaxOn
+\clist_new:N \allowed_shape_options
+\clist_gset:Nn \allowed_shape_options
+  {
+    rectangle,rounded~rectangle,circle,ellipse,
+    diamond, starburst,none,star,custom
+  }
+
+  \pgfkeys{/handlers/.shape~is/.code =
+    \pgfkeysalso
+      {\pgfkeyscurrentpath/.code=
+        \clist_if_in:NnTF \allowed_shape_options {##1 }
+          {
+           \gdef#1{##1}
+          }
+          {
+            \gdef#1{none} %also emit error message
+          }
+      }
+  }
+
+\ExplSyntaxOff
+\ExplSyntaxOn
+\clist_new:N \allowed_border_style_options
+\clist_gset:Nn \allowed_border_style_options
+  {
+    dash,solid,double,dotted,custom,none,
+  }
+
+  \pgfkeys{/handlers/.border~style~is/.code =
+    \pgfkeysalso
+      {\pgfkeyscurrentpath/.code=
+        \clist_if_in:NnTF \allowed_border_style_options {##1 }
+          {
+           \gdef#1{##1}
+          }
+          {
+            \gdef#1{none} %also emit error message
+          }
+      }
+  }
+
+\ExplSyntaxOff
+
+
+\ExplSyntaxOn
+\clist_new:N \allowed_chapter_names_clist
+\clist_gset:Nn \allowed_chapter_names_clist
+  { auto, i18n, none}
+\pgfkeys{/handlers/.getchaptername/.code =
+    \pgfkeysalso
+      {\pgfkeyscurrentpath/.code=
+        \tl_set:Nn\l_tmpa_str:N {##1}
+           \str_case_x:nnTF {##1}
+             {
+               { none } { \gdef#1{} }
+               { auto } { \gdef#1{\chaptername} } %hook to babel
+               { i18n } { \gdef#1{\chaptername} } %hook to babl
+             }
+             {            }
+             {\gdef#1{#1} }
+
+      }
+  }
+
+\ExplSyntaxOff
+\ExplSyntaxOn
+  \bool_new:N \part_open_left_bool     \bool_gset_false:N \part_open_left_bool
+  \bool_new:N \part_open_any_bool      \bool_gset_false:N \part_open_any_bool
+  \bool_new:N \part_open_anywhere_bool \bool_gset_false:N \part_open_anywhere_bool
+  \bool_new:N \part_open_right_bool    \bool_gset_false:N \part_open_right_bool
+\cxset
+  {
+    part~name/.store~in                      = \partname,
+    part~color/.store~in                     = \part_color,
+    part~background-color/.store~in          = \part_bgcolor,
+    part~opening/.is~choice,
+    part~opening/right/.code                 = \bool_gset_true:N \part_open_right_bool,
+    part~opening/left/.code                  = \bool_gset_true:N \part_open_left_bool,
+    part~opening/any/.code                   = \bool_gset_true:N \part_open_any_bool,
+    part~opening/none/.code                  = \bool_gset_true:N \part_open_anywhere_bool,
+    part~opening/anywhere/.code              = \bool_gset_true:N \part_open_anywhere_bool,
+    part~opening/ifafter/.code={},
+    part~font-family/.font-family~in         = \part_font_family,
+    part~font-weight/.font-weight~in         = \part_font_weight,
+    part~font-size/.font-size~in             = \part_font_size,
+    part~font-shape/.font-style~in           = \part_font_shape,
+    part~font-style/.font-style~in           = \part_font_shape,
+    part~case/.case~in                       = \part_case,
+    part~numbering/.numbering~in             = \thepart,
+    part~title~text-align/.textalign         = \part_title_text_align,
+    part~format/.store~in                    = \part_format,
+    part~template/.style                     = {part~format=#1},
+    part~number~font-family/.font-family~in  = \part_number_font_family,
+    part~number~font-weight/.font-weight~in  = \part_number_font_weight,
+    part~number~font-size/.font-size~in      = \part_number_font_size,
+    part~number~font-shape/.font-style~in    = \part_number_font_shape,
+    part~number~font-style/.font-style~in    = \part_number_font_shape,
+    part~number~color/.store~in              = \part_number_color,
+}
+\ExplSyntaxOff
+\cxset
+  {
+    part opening                             = left,
+    part color                               = black!90,
+    part background-color                    = spot!30,
+    part name                                = PART,
+    part font-size                           = Huge,
+    part font-weight                         = bold,
+    part font-family                         = serif,
+    part font-shape                          = upshape,
+    part number font-size                    = Huge,
+    part number font-weight                  = normal,
+    part number font-family                  = sans-serif,
+    part number font-shape                   = upshape,
+    part number color                        = thelightgray,
+    part numbering                           = ordinals,
+    part numbering                           = Roman,
+    part title text-align                    = center,
+    part format                              = box,
+    part template                            = stewartpart,
+  }
+\ExplSyntaxOn
+\renewcommand\part{%
+  \bool_if:NTF \part_open_anywhere_bool {}
+    {
+      \bool_if:NT \part_open_right_bool { \cleardoublepage }
+      \bool_if:NT \part_open_any_bool  { \clearpage       }
+      \bool_if:NT \part_open_left_bool  { \clearpage       }
+    }
+
+  \thispagestyle{plain}
+  \if@twocolumn
+    \onecolumn
+    \@tempswatrue
+  \else
+    \@tempswafalse
+  \fi
+  \null\vfil
+  \secdef\@part\@spart}
+\ExplSyntaxOff
+\ExplSyntaxOn
+  \def\@part[#1]#2{%
+    \ifnum \c@secnumdepth >-2\relax
+      \refstepcounter{part}%
+      \addcontentsline{toc}{part}{\thepart\hspace{1em}#1}%
+    \else
+      \addcontentsline{toc}{part}{#1}%
+    \fi
+    \markboth{}{}%
+    \bgroup
+    \tl_set:Nn\l_tmpa_str:N {box}
+    \str_case_x:nnTF { \part_format  }
+     {
+       { traditional} { \format_part_traditional:nn { part } { #1 } { #2 } }
+       { box        } { \format_head_boxed:nn       { part } { #1 } { #2 } }
+       { inline     } { \format_head_inline:nn      { part } { #1 } { #2 } }
+       { inmargin   } { \format_head_inmargin:nn    { part } { #1 } { #2 } }
+      }
+      {                                            }
+      { \cs:w stewartpart\cs_end: {part} {#1}  }
+    \egroup
+    \@endpart
+}
+
+\def\@spart#1{%
+    {\centering
+     \interlinepenalty \@M
+     \normalfont
+     \Huge \bfseries #1\par}%
+     \@endpart}
+
+\def\@endpart{%
+              %\vfil %\newpage %was here
+              \if@twoside
+               \if@openright
+                \null
+                \thispagestyle{empty}%
+               \fi
+              \fi
+              \if@tempswa
+                \twocolumn
+              \fi}
+\ExplSyntaxOff
+\ExplSyntaxOn
+\cs_new:Npn \format_part_traditional:nn #1 #2 #3
+  {
+   \group_begin:
+    \centering
+     \interlinepenalty \@M
+     \normalfont
+     \set_color:nn {#1_number}{color}
+     \set_font_parameters:n {#1_number}
+     \ifnum \c@secnumdepth >-2\relax
+       \partname\nobreakspace\thepart
+       \par
+       \vskip 20\p@
+     \fi
+     \group_begin:
+       \set_color:nn {#1}{color}
+       \set_font_parameters:n { #1 }
+          #3
+     \group_end:
+     \par
+   \group_end:
+  }
+
+\cs_new:Npn \format_head_inmargin:nn #1 #2 #3
+  {
+   \tcbdocmarginnote
+     {
+       \group_begin:
+         \parindent0pt
+         \language-1
+         \normalfont
+         %\set_color:nn {#1_number}{color}
+         \color{blue}
+         \set_font_parameters:n {#1_number}
+         \ifnum \c@secnumdepth >-2\relax
+           \partname\nobreakspace\thepart\\[2pt]
+         \fi
+         \group_begin:
+           %\set_color:nn {#1_number}{color}
+           \color{blue}
+           \set_font_parameters:n { #1 }
+           \nobreakspace#3
+         \group_end:
+         \group_end:
+    }
+  }
+\ExplSyntaxOff
+\ExplSyntaxOn
+\cs_new:Npn \format_head_boxed:nn #1 #2 #3
+  {
+    \centering
+    \begin{tcolorbox}[colback=\part_bgcolor,
+                              colframe=white,
+                              arc=5mm]
+     \bgroup
+     \interlinepenalty \@M
+     \normalfont
+     \color{\part_color}
+     \ifnum \c@secnumdepth >-2\relax
+       \huge\bfseries \partname\nobreakspace\thepart
+       \par
+       \vskip 20\p@
+     \fi
+     \set_font_parameters:n { #1 }
+      #3\par
+      \egroup
+     \end{tcolorbox}
+  }
+\ExplSyntaxOff
+\ExplSyntaxOn
+\cs_new:Npn \get_property_from_section_name:nn #1 #2
+  {
+    \csname\expandafter\csname #1#2\endcsname\endcsname
+  }
+\cs_new:Npn \set_font_parameters:n #1
+  {
+     \get_property_from_section_name:nn {#1}{_font_size}
+     \get_property_from_section_name:nn {#1}{_font_weight}
+     \get_property_from_section_name:nn {#1}{_font_shape}
+     \get_property_from_section_name:nn {#1}{_font_family}
+  }
+
+\cs_new:Npn \get_color_property:nn #1 #2
+  {
+     \cs:w #1_#2 \cs_end:
+  }
+\cs_new:Npn \set_color:nn #1 #2
+  {
+     \color{\cs:w #1_#2 \cs_end:}
+  }
+\ExplSyntaxOff
+\ExplSyntaxOn
+\cs_new:Npn \format_head_inline:nn #1 #2 #3
+  {
+
+     \begin{tcolorbox}[colback= \get_color_property:nn {#1}{bgcolor},
+                                colframe=white,
+                                arc=3mm]
+     \interlinepenalty \@M
+     \normalfont
+     \set_color:nn {#1}{color}
+     \cs:w #1_title_text_align \cs_end:
+     \ifnum \c@secnumdepth >-2\relax
+       {
+         \set_font_parameters:n {part_number}
+         \set_color:nn {part_number} {color}
+         \partname\nobreakspace\thepart
+       }
+     \fi
+       \set_font_parameters:n {#1}
+     \nobreakspace #3
+     \par
+     \end{tcolorbox}
+  }
+\ExplSyntaxOff
+\def\gluestart{\hss}\def\glueend{\hss}
+
+\ExplSyntaxOn
+\cxset
+  {
+    chapter~name/.getchaptername                = \chapternameint,
+    chapter~color/.store~in                     = \chapter_color,
+    chapter~background-color/.store~in          = \chapter_bgcolor,
+    number~background-color/.store~in           = \numberbgcolor,
+}
+\ExplSyntaxOff
+
+\cxset{chapter name= Chapter}
+\cxset{
+  chapter opening/.is choice,
+  chapter opening/right/.code={\@openrighttrue},
+  chapter opening/left/.code={\@openlefttrue},
+  chapter opening/any/.code={\@openanytrue},
+  chapter opening/none/.code={\@openanywheretrue\@openrightfalse%
+                                                  \@openleftfalse\@openanyfalse},
+  chapter opening/anywhere/.code={\@openanywheretrue\@openrightfalse
+     \@openleftfalse\@openanyfalse},
+  chapter opening/ifafter/.code={},
+}
+
+\ExplSyntaxOn
+\cxset{%
+  chapter~font-family/.font-family~in    = \chapter_font_family,
+  chapter~font-weight/.font-weight~in    = \chapter_font_weight,
+  chapter~font-size/.font-size~in        = \chapter_font_size,
+  chapter~font-shape/.font-style~in      = \chapter_font_shape,
+  chapter~font-style/.font-style~in      = \chapter_font_shape,}
+\ExplSyntaxOff
+\newcounter{lastelementfloat}
+     \setcounter{lastelementfloat}{-1}
+\newcounter{chapterfloat}
+      \setcounter{chapterfloat}{1}
+\newcounter{numberfloat}
+      \setcounter{numberfloat}{1}
+\newcounter{currentelementfloat}
+      \setcounter{currentelementfloat}{-1}
+\global\newlength\chapterborderrightwidth
+    \setlength\chapterborderrightwidth{2pt}
+\global\newlength\chapterborderleftwidth
+    \setlength\chapterborderleftwidth{2pt}
+\global\newlength\chapterborderbottomwidth
+    \setlength\chapterborderbottomwidth{2pt}
+\global\newlength\chapterbordertopwidth
+    \setlength\chapterbordertopwidth{2pt}
+\global\newlength\chapterpaddingleft
+    \setlength\chapterpaddingleft{10pt}
+\global\newlength\chapterpaddingright
+    \setlength\chapterpaddingright{10pt}
+\global\newlength\chapterpaddingtop
+    \setlength\chapterpaddingtop{10pt}
+\global\newlength\chapterpaddingbottom
+    \setlength\chapterpaddingbottom{10pt}
+
+\ExplSyntaxOn
+\int_zero_new:c {chapterdisplaycounter}
+\int_zero_new:c {chapterfloatcounter}
+\cs_gset:Npn \phd_set_counter:nn #1 #2
+ {
+   \int_gset:cn {#1} {#2}
+ }
+\ExplSyntaxOff
+\ExplSyntaxOn
+\cxset{%
+  chapter~display/.is~choice,
+  chapter~display/inline/.code    =\global\setcounter{chapterdisplay}{0}
+                               \phd_set_counter:nn {chapterdisplaycounter}{0},
+  chapter~display/block/.code     =\global\setcounter{chapterdisplay}{2}
+                               \phd_set_counter:nn {chapterdisplaycounter}{2},
+  chapter~display/none/.code      =\global\setcounter{chapterdisplay}{0}
+                               \phd_set_counter:nn {chapterdisplaycounter}{0},
+  chapter~float/.is~choice,
+  chapter~float/none/.code        = \global\setcounter{chapterfloat}{0}%
+                            \phd_set_counter:nn {chapterfloatcounter}{0},
+  chapter~float/left/.code= \global\setcounter{chapterfloat}{0}
+                            \phd_set_counter:nn {chapterfloatcounter}{0},
+  chapter~float/center/.code= \global\setcounter{chapterfloat}{1}%
+                             \phd_set_counter:nn {chapterfloatcounter}{1},
+  chapter~float/right/.code= \global\setcounter{chapterfloat}{2}%
+                             \phd_set_counter:nn {chapterfloatcounter}{2},%
+ }
+\ExplSyntaxOff
+\cxset{chapter display=block,
+       chapter float=left,
+       }
+\ExplSyntaxOn
+\cxset
+  {
+    chapter~before~content/.store~in        = \chapter_before_content,
+    chapter~before/.store~in                = \chapter_before,
+    chapter~before~content = ,
+    chapter~before=,
+  }
+\ExplSyntaxOff
+\ExplSyntaxOn
+
+\cxset{
+  chapter~margin-top/.code= \dim_gset:cn { chapter_margin_top } { #1 },
+  chapter~margin-left/.code=\setlength\chaptermarginleft{#1}%
+                            \global\chaptermarginleft\chaptermarginleft\relax
+                            \def\gluestart{\hskip#1}%
+                            \def\glueend{\hss}
+                            \dim_gset:cn {chapter_margin_left}{#1},
+  chapter~margin-right/.code = \dim_gset:cn {chapter_margin_right} { #1 },
+  chapter~margin-bottom/.code = \dim_gset:cn {chapter_margin_bottom} { #1 },
+  }
+
+\ExplSyntaxOff
+\ExplSyntaxOn
+\cxset{
+  chapter~border-top-width/.code    = \dim_gset:cn {chapter_border_top_width} {#1},
+  chapter~border-right-width/.code  = \dim_gset:cn {chapter_border_right_width} {#1},
+  chapter~border-bottom-width/.code = \dim_gset:cn {chapter_border_bottom_width} {#1},
+  chapter~border-left-width/.code   = \dim_gset:cn {chapter_border_left_width} {#1},
+ }
+\cxset{
+  chapter~border-width/.code = \pgfkeysalso{chapter~border-top-width=#1,
+                                            chapter~border-right-width=#1,
+                                            chapter~border-bottom-width=#1,
+                                            chapter~border-left-width=#1,
+                                            },
+}
+\ExplSyntaxOff
+\ExplSyntaxOn
+\cxset{
+  chapter~padding-left/.code   = \dim_gset:cn {chapter_padding_left}{#1},
+  chapter~padding-right/.code  = \dim_gset:cn {chapter_padding_right}{#1},
+  chapter~padding-top/.code    = \dim_gset:cn {chapter_padding_top}{#1},
+  chapter~padding-bottom/.code = \dim_gset:cn {chapter_padding_bottom}{#1},
+}
+\ExplSyntaxOff
+\cxset{
+  chapter padding/.code={
+    \def\@tempa{none}%
+    \def\@tempb{#1}%
+    \ifx\@tempa\@tempb%
+      \global\setlength\chapterpaddingleft{0pt}%
+      \global\setlength\chapterpaddingright{0pt}%
+      \global\setlength\chapterpaddingtop{0pt}%
+      \global\setlength\chapterpaddingbottom{0pt}%
+    \else
+      \setlength\chapterpaddingleft{#1}%
+      \global\chapterpaddingleft\chapterpaddingleft\relax
+      \setlength\chapterpaddingright{#1}%
+      \setlength\chapterpaddingtop{#1}%
+      \setlength\chapterpaddingbottom{#1}%
+    \fi}
+}
+
+
+\ExplSyntaxOn
+\cxset{chapter~border-top-color/.code    = \tl_gset:Nn \chapter_border_top_color {#1},
+  chapter~border-right-color/.code       = \tl_gset:Nn \chapter_border_right_color {#1},
+  chapter~border-bottom-color/.code      = \tl_gset:Nn \chapter_border_bottom_color{#1},
+  chapter~border-left-color/.code        = \tl_gset:Nn \chapter_border_left_color {#1},
+  }
+ \cxset{%
+  chapter~border-top-color=sweet,
+  chapter~border-right-color=sweet,
+  chapter~border-bottom-color=sweet,
+  chapter~border-left-color=sweet,
+}%
+\cxset{chapter~border-color/.code=\pgfkeysalso{chapter~border-top-color={#1},%
+                                               chapter~border-right-color={#1},
+                                               chapter~border-bottom-color={#1},
+                                               chapter~border-left-color={#1}}}%
+ % set some defaults
+\cxset{%
+  chapter~border-top-color=sweet,
+  chapter~border-right-color=sweet,
+  chapter~border-bottom-color=sweet,
+  chapter~border-left-color=white,
+  chapter~border-color=blue,
+ }%
+\ExplSyntaxOff
+
+\cxset{
+  chapter after/.store in=\chapterafter@cx,
+  chapter spaceout/.is choice,
+  chapter spaceout/soul/.code=\@chapterspaceouttrue\@soulspaceouttrue,
+  chapter spaceout/microtype/.code=\@chapterspaceouttrue\@soulspaceouttrue,
+  chapter spaceout/none/.code=\@chapterspaceoutfalse\@soulspaceoutfalse,
+  %
+  chapter letter-spacing/.is choice,
+  chapter letter-spacing/soul/.style=\pgfkeysalso{chapter spaceout=soul},
+  chapter letter-spacing/microtype/.style=\pgfkeysalso{chapter spaceout=microtype},
+  chapter letter-spacing/true/.code=\@chapterspaceouttrue,
+  chapter letter-spacing/none/.code=\@chapterspaceoutfalse,
+  chapter letter-spacing/false/.code=\@chapterspaceoutfalse,
+ }
+\ExplSyntaxOn
+\tl_new:c {chapter_border_top_style}
+\tl_new:c {chapter_border_right_style}
+\tl_new:c {chapter_border_bottom_style}
+\tl_new:c {chapter_border_left_style}
+\cxset{
+  chapter~border-top-style/.code      = \tl_gset:cn {chapter_border_top_style}{#1},
+  chapter~border-right-style/.code    = \tl_gset:cn {chapter_border_right_style}{#1},
+  chapter~border-bottom-style/.code   = \tl_gset:cn {chapter_border_bottom_style}{#1},
+  chapter~border-left-style/.code     = \tl_gset:cn {chapter_border_left_style}{#1},
+  chapter~border-style/.code          = \pgfkeysalso{chapter~border-top-style=#1,%
+                              chapter~border-right-style=#1,%
+                              chapter~border-bottom-style=#1,%
+                              chapter~border-left-style=#1%,
+  },
+}
+\ExplSyntaxOff
+\cxset{
+  chapter border-top-style=solid,
+  chapter border-right-style=solid,
+  chapter border-bottom-style=solid,
+  chapter border-left-style=solid}
+
+\ExplSyntaxOn
+  \cxset{chapter~shape/.shape~is = \chaptershape, }
+  \cxset{chapter~shape = diamond}
+\ExplSyntaxOff
+\ExplSyntaxOn
+\dim_new:N \chapter_title_text_width
+\cxset{
+  chapter~title~width/.code =  \dim_gset:Nn \chapter_title_text_width {#1},
+  title~text-width/.style = { chapter~title~width= {#1} }
+}
+\ExplSyntaxOff
+\ExplSyntaxOn
+\cxset{
+  title~display/.is~choice,
+  title~display/none/.code          = \tl_gset:Nn \chapter_title_display_tl{none},
+  title~display/block/.code         = \tl_gset:Nn \chapter_title_display_tl{block},
+  title~display/in-line block/.code = \tl_gset:Nn \chapter_title_display_tl{in-line block},
+  title~display/inline/.code        = \tl_gset:Nn \chapter_title_display_tl{inline},
+ }
+\ExplSyntaxOff
+\cxset{title display=block}  %!REMOVE PUT AT DEFAULTS
+\ExplSyntaxOn
+\cxset{
+  title~float/.is~choice,
+  title~float/none/.code   = \gdef\chapter_title_float_tl {none},
+  title~float/left/.code   = \gdef\chapter_title_float_tl {left},
+  title~float/right/.code  = \gdef\chapter_title_float_tl {right},
+  title~float/center/.code = \gdef\chapter_title_float_tl {center},
+}
+\ExplSyntaxOff
+\cxset{title float=center}
+\ExplSyntaxOn
+\cxset{
+  chapter~title~text-align/.textalign = \chapter_title_text_align,
+  %/.is~choice,
+}
+
+\cxset{chapter~title~text-align=left}
+
+\tl_new:c {chapter_title_align}
+\cxset{
+  % aligning the block title
+  chapter~title~align/.is~choice,
+  chapter~title~align/centering/.code=
+   \tl_gset:cn {chapter_title_align}{centering},
+  % alias
+  chapter~title~align/center/.style= {chapter~title~align=#1} ,
+  chapter~title~align/raggedright/.code=,
+  chapter~title~align/raggedleft/.code=
+    \tl_gset:cn {chapter_title_align}{raggedleft},
+  chapter~title~align/right/.code=
+    \tl_gset:cn {chapter_title_align}{right},
+  chapter~title~align/left/.code=
+    \tl_gset:cn {chapter_title_align}{left},
+  chapter~title~align/none/.code=
+     \tl_gset:cn {chapter_title_align}{none},
+}
+
+\ExplSyntaxOff
+\cxset{chapter title align=centering}
+\ExplSyntaxOn
+\cxset{
+  title~font-face/.font-face~in               = \title_font_face,
+  title~font-family/.font-family~in           = \title_font_family,
+  title~font-weight/.font-weight~in           = \title_font_weight,
+  title~font-size/.font-size~in               = \title_font_size,
+  title~font-color/.store~in                  = \titlefontcolor@cx,
+  title~font-shape/.font-style~in             = \title_font_shape
+}
+\ExplSyntaxOff
+\cxset{title font-shape=upshape}
+\cxset{title font-face=pan}
+\cxset{
+  title spaceout/.is choice,
+  title spaceout/soul/.code                  = \@titlespaceouttrue,
+  title spaceout/none/.code                  = \@titlespaceoutfalse,
+  title spaceout/true/.code                  = \@titlespaceouttrue,
+  title spaceout/false/.code                 = \@titlespaceoutfalse,
+  title letter-spacing/true/.code            = \@titlespaceouttrue,
+  title letter-spacing/false/.code           = \@titlespaceoutfalse,
+}
+\cxset{
+  title font/.style={title font-family=#1},
+  title before/.store in=\titlebefore@cx,
+  title after/.store in=\titleafter@cx,
+  title beforeskip/.store in=\titlebeforeskip@cx,
+  }
+\ExplSyntaxOn
+
+\cxset  {
+  title~margin-top/.code    = \dim_gset:Nn \title_margin_top {#1},
+  title~margin-right/.code  = \dim_gset:Nn \title_margin_right {#1},
+  title~margin-bottom/.code = \dim_gset:Nn \title_margin_bottom {#1},
+  title~margin-left/.code   = \dim_gset:Nn \title_margin_left {#1},
+
+}
+\ExplSyntaxOff
+
+\ExplSyntaxOn
+\cxset{
+   title~padding-top/.code    = \dim_gset:Nn \title_padding_top_width{#1},
+   title~padding-bottom/.code = \dim_gset:Nn \title_padding_bottom_width{#1} ,
+   title~padding-left/.code   = \dim_gset:Nn \title_padding_left_width{#1},
+   title~padding-right/.code  = \dim_gset:Nn \title_padding_right_width{#1},
+   title~padding/.style       = {title~padding-top=#1,
+                                   title~padding-right=#1,
+                                   title~padding-bottom=#1,
+                                   title~padding-left=#1,
+                                 },
+}
+\ExplSyntaxOff
+
+\ExplSyntaxOn
+\cxset {
+  title~border-top-width/.code      = \dim_gset:Nn \title_border_top_width {#1},
+  title~border-right-width/.code    = \dim_gset:Nn \title_border_right_width {#1},
+  title~border-left-width/.code     = \dim_gset:Nn \title_border_left_width {#1},
+  title~border-bottom-width/.code   =\dim_gset:Nn \title_border_bottom_width {#1},
+  title~border-width/.code= \dim_gset:Nn \title_border_width{#1}
+                                           \dim_gset:Nn\title_border_top_width{#1}
+                                           \dim_gset:Nn \title_border_right_width{#1}
+                                           \dim_gset:Nn \title_border_bottom_width{#1}
+                                           \dim_gset:Nn \title_border_left_width{#1},
+}
+\ExplSyntaxOff
+\ExplSyntaxOn
+\tl_new:N \title_border_color
+\tl_new:N \title_border_top_color
+\tl_new:N \title_border_right_color
+\tl_new:N \title_border_bottom_color
+\tl_new:N \title_border_left_color
+\cxset{
+  title~border-left-color/.code     = \tl_gset:Nn \title_border_left_color {#1},
+  title~border-top-color/.code      = \tl_gset:Nn \title_border_top_color {#1},
+  title~border-right-color/.code    = \tl_gset:Nn \title_border_right_color {#1},
+  title~border-bottom-color/.code   = \tl_gset:Nn \title_border_bottom_color {#1},
+  title~border-color/.code=\tl_gset:Nn \title_border_color{#1}%
+                           \tl_gset:Nn \title_border_left_color{#1}%
+                           \tl_gset:Nn \title_border_right_color{#1}%
+                           \tl_gset:Nn \title_border_top_color{#1}%
+                           \tl_gset:Nn \title_border_bottom_color{#1},
+}
+\ExplSyntaxOff
+
+\cxset {
+  %title margin-bottom/.style =\pgfkeysalso{title margin bottom=#1},
+  title afterskip/.store in=\titleafterskip@cx,
+  position/.is choice,
+  position/left/.code={\@lefttrue},
+  position/right/.code={\@righttrue},
+  position/center/.code={\@centertrue},
+}
+
+\cxset{
+  numbering/.numbering in = \thechapter,
+  chapter numbering/.numbering in = \thechapter,
+}
+\cxset{
+  number spaceout/.is choice,
+  number spaceout/soul/.code=\@numberspaceouttrue,
+  number spaceout/none/.code=\@numberspaceoutfalse,
+  number spaceout/inherit/.code=\let\@numberspaceout\@chapterspaceout,
+  number spaceout/microtype/.code=\@numberspaceouttrue,
+  number letter-spacing/.code=\pgfkeysalso{number spaceout=soul},
+  number dot/.store in=\numberpunctuation@cx,}
+\cxset{
+  number position/.is choice,
+  number position/leftname/.code={\@leftnametrue\@rightnamefalse},
+  number position/rightname/.code={\@rightnametrue\@leftnamefalse},
+  number position/absolute/.code={},
+  number position/righttitle/.code=\@righttitletrue,
+  number position/lefttitle/.code=\@lefttitletrue,
+}
+\ExplSyntaxOn
+\cxset
+  {
+    number~after/.store~in               = \numberafter@cx,
+    number~after~content/.store~in       = \numberaftercontent@cx,
+    number~before/.store~in              = \numberbefore@cx,
+    number~before~content/.store~in      = \numberbeforecontent@cx,
+  }
+\ExplSyntaxOff
+
+\cxset{number after=,
+       number after content=,
+       number before=,
+       number before content=,}
+\ExplSyntaxOn
+\cxset{
+  number background-color/.code=\gdef\numberbgcolor{#1},
+  number color/.store in=\chapter_number_color,
+}
+\cxset{number color=blue}
+\ExplSyntaxOff
+\ExplSyntaxOn
+\cxset{
+  number~font-size/.store~in         = \number_font_size,
+  number~font-family/.font-family~in = \number_font_family,
+  number~font-weight/.font-weight~in = \number_font_weight ,
+  number~font-shape/.font-style~in   = \number_font_shape,
+  number~font-style/.font-style~in   = \number_font_shape,
+  number~font-name/.store~in         = \number_font_name,% CHECK USAGE
+}
+\ExplSyntaxOff
+\ExplSyntaxOn
+
+\cxset
+  {
+    number~margin~top/.code     = \dim_gset:Nn\number_margin_top {#1},
+    number~margin~left/.code    = \dim_gset:Nn \number_margin_left {#1},
+    number~margin~right/.code   = \dim_gset:nn \number_margin_right {#1},
+    number~margin~bottom/.code  = \dim_gset:nn \number_margin_bottom {#1}
+  }
+\cxset
+  {
+  % number borders
+  number~border-top-width/.code    = \dim_gset:Nn\number_border_top_width{#1},
+  number~border-bottom-width/.code = \dim_gset:Nn\number_border_bottom_width {#1} ,
+  number~border-right-width/.code  = \dim_gset:Nn\number_border_right_width{#1},
+  number~border-left-width/.code   = \dim_gset:Nn\number_border_left_width{#1},
+  number~border-width/.code        = \pgfkeysalso{number~border-top-width=#1,
+                                                  number~border-right-width=#1,
+                                                  number~border-bottom-width=#1,
+                                                  number~border-left-width=#1},}
+\ExplSyntaxOff
+\cxset{
+  number display/.is choice,
+  number display/inline/.code=\global\setcounter{numberdisplay}{0},
+  number display/block/.code=\global\setcounter{numberdisplay}{2},}
+\cxset{
+  number float/.is choice,
+  number float/left/.code=\global\setcounter{numberfloat}{0},
+  number float/none/.code=\global\setcounter{numberfloat}{0},
+  number float/center/.code=\global\setcounter{numberfloat}{1},
+  number float/right/.code=\global\setcounter{numberfloat}{2},
+}
+\ExplSyntaxOn
+\cxset{
+   number~shape/.shape~is= \numbershape,
+}
+\ExplSyntaxOff
+\cxset{number shape=star}
+\ExplSyntaxOn
+\cxset
+  {
+   number~border-style/.border~style~is=\number_border_style,
+  }
+\ExplSyntaxOff
+\cxset{number border-style=solid}
+
+\ExplSyntaxOn
+
+\cxset{
+  number~padding-top/.code= \dim_gset:Nn \number_padding_top {#1},
+  number~padding-right/.code=\dim_gset:Nn \number_padding_right{#1},
+  number~padding-bottom/.code=\dim_gset:Nn \number_padding_bottom {#1},
+  number~padding-left/.code=\dim_gset:Nn \number_padding_left{#1},
+  number~padding/.code=\pgfkeysalso{number~padding-top=#1,
+           number~padding-right=#1,
+           number~padding-bottom=#1,
+           number~ padding-left=#1},%
+}
+\ExplSyntaxOff
+\cxset{
+  author block/.is choice,
+  author block/true/.code={\@authorblocktrue},
+  author block/false/.code={\@authorblockfalse},
+  author names/.store in=\authorblock@cx,
+  author block format/.store in=\authorblockformat@cx,
+  author block afterskip/.store in=\authorblockafterskip@cx,
+  chapter toc/.is choice,
+  chapter toc/true/.code=\@toctrue,
+  chapter toc/false/.code=\@tocfalse,
+  chapter toc/none/.code=\@tocfalse,
+}
+
+\def\debugtitle{%
+\cxset{title border-top-color=sweet,
+          title border-top-width=10pt,
+          title border-left-color=sweet,
+          title border-left-width=10pt,
+          title border-right-color=sweet,
+          title border-right-width=20pt,
+          title border-bottom-color=sweet,
+          title border-bottom-width=20pt,
+          title border-width=0.2pt,
+          title border-color=red,
+          title padding-top=50pt,
+          title padding-bottom=50pt,
+          title padding-left=0pt,
+          title padding-right=0pt,
+          title padding=0pt,
+          }
+   }
+\cxset{chapter margin-top=0pt,
+          chapter margin-left=20pt,
+          chapter title align=left,
+          chapter background-color=white,
+          chapter border-left-width=0pt,
+          chapter border-right-width=0pt,
+          chapter border-bottom-width=0pt,
+          chapter border-top-width=0pt,
+          chapter font-shape=upshape,
+}
+\cxset{number background-color=white,
+          number padding-left=0pt,
+          number padding-right=0pt,
+          number padding-top=0pt,
+          number padding-bottom=0pt,
+          number border-top-width=0pt,
+          number border-bottom-width=0pt,
+          number border-left-width=0pt,
+          number border-right-width=0pt,
+          number border-style=solid,
+          number font-shape=upshape}
+\cxset{author block=false,
+          author block afterskip=,
+          title margin-top=0pt,
+          title margin-bottom=0pt,
+          title margin-left=0pt,
+          title margin-right=0pt,
+          title border-top-color=sweet,
+          title border-top-width=10pt,
+          title border-left-color=sweet,
+          title border-left-width=10pt,
+          title border-right-color=sweet,
+          title border-right-width=20pt,
+          title border-bottom-color=sweet,
+          title border-bottom-width=20pt,
+          title border-width=0pt,
+          title border-color=red,
+          title padding-top=50pt,
+          title padding-bottom=50pt,
+          title padding-left=50pt,
+          title padding-right=50pt,
+          title padding=0pt,
+          chapter title text-align=center,
+          title display=block,
+          }
+\cxset{author names=}
+\cxset{author block format=}
+\cxset{chapter title width=0.7\textwidth}
+\cxset{chapter title align=centering}
+\def\debugchapter{%
+\cxset{chapter margin-top=0pt,
+          chapter margin-left=0pt,
+          chapter background-color=white,
+          chapter border-left-width=0.2pt,
+          chapter border-right-width=0.2pt,
+          chapter border-bottom-width=0.2pt,
+          chapter border-top-width=0.2pt,
+          chapter padding-top=1pt,
+          chapter padding-bottom=0pt,
+          chapter padding-left=0pt,
+          chapter padding-right=0pt,
+          number border-left-width=0.2pt,
+          number border-right-width=0.2pt,
+          number border-bottom-width=0.2pt,
+          number border-top-width=0.2pt,
+          number padding-top=1pt,
+          number padding-bottom=0pt,
+          number padding-left=0pt,
+          number padding-right=0pt,
+}}
+\debugchapter
+\cxset{custom/.code=\global\@specialtrue
+                \gdef\customdesign@cx{%
+                      \csname#1\endcsname},
+          fill/.store in=\fill@cx}
+ \newcommand\inshape[2][fill=sweet,white]{%
+  %
+        \begin{tikzpicture}
+         \filldraw[gray]  (0,0) circle [radius=1.5pt];%
+         \node at (0,0) [%rounded rectangle,
+                      trim left,
+                      name=s,
+                      %anchor=midway,
+                       behind path,
+                       circle,
+                       drop shadow={opacity=0.5,fill=sweet}, %box shadow in css
+                        black,
+                       % double=sweet,
+                        %text height=1.5ex,
+                        %text depth=1ex,
+                        %anchor=s.base,
+                        draw,
+                        outer ysep=0pt, %no outer so that lines can align nicely
+                        inner ysep=0pt,
+                        inner xsep=0pt,
+                        line width=1pt,%#1
+                         ]{#2};
+         \end{tikzpicture}%
+\ignorespaces}%
+
+\def\tikzi{%
+    \tikz[remember picture,overlay]
+    \draw[<->] (0,0)--(0,1.5)--++(-.2,0) node[left,fill=blue!15,text=black]%
+       {{\ttfamily\footnotesize\string\chaptermarginleft}};%\space%
+}%
+\global\newsavebox\chapternamebox
+\global\newsavebox\numbernamebox
+\global\newsavebox\bothboxes
+\global\newsavebox\tempboxa@cx
+\global\newsavebox\tempboxb@cx
+\global\newsavebox\tempboxc@cx
+\ExplSyntaxOn
+\cs_gset:Npn \set_chapter_font {%
+  \exp_after:wN \setfontparam@cx\chapter_font_family;%
+  \exp_after:wN \setfontparam@cx\chapter_font_size;%
+  \exp_after:wN \setfontparam@cx\chapter_font_weight;%
+  \exp_after:wN \setfontparam@cx\chapter_font_shape;%
+}
+\ExplSyntaxOff
+
+\ExplSyntaxOn
+\def\saveelementbox#1#2#3{%
+
+   \expandafter\fboxseptop\csname#2paddingtop\endcsname
+   \expandafter\fboxsepright\csname#2paddingright\endcsname
+   \expandafter\fboxsepbottom\csname#2paddingbottom\endcsname
+   \expandafter\fboxsepleft\csname#2paddingleft\endcsname
+  \expandafter\fboxruletop\csname#2_border_top_width\endcsname\relax
+  \expandafter\fboxruleright\csname#2_border_right_width\endcsname\relax
+  \expandafter\fboxrulebottom\csname#2_border_bottom_width\endcsname\relax
+  \expandafter\fboxruleleft\csname#2_border_left_width\endcsname\relax
+  \expandafter\savebox\csname#2namebox\endcsname{%
+     %\fboxrule1pt\fboxsep1pt
+       #3
+      %\shadowbox{#3}%
+       %\Ovalbox{#3}%
+
+%%        %
+ %         \phd@fbox{#3}%
+  }%
+}
+\ExplSyntaxOff
+  \newcommand\printchaptername[2][chapter]{%
+   \saveelementbox{}{#1}{#2}%
+\setcounter{currentelementfloat}{\csname c@#1float\endcsname}%
+      \ifcase \@arabic\c@currentelementfloat
+                 \expandafter\renderleftblock{#1}\or         %0
+                 \expandafter\rendercenterblock{#1}\or         %1
+                 \expandafter\renderrightblock{#1}  \or         %2
+                 \expandafter\renderinline{#1} \or          %3
+      \else
+                \rendercenterblock{#1}%
+      \fi
+   \ifnum\@arabic\c@numberdisplay=0
+      %\hrule
+      %\csname#1after@cx\endcsname%
+     \else
+     \@@par
+  \fi
+     }
+
+\def\rendercenterblock#1{%
+       \appendtotoks{heading}{%
+       \centerline{%
+         \expandafter\unhcopy\csname#1namebox\endcsname
+        }%
+    }%
+  }
+ \def\renderleftblock#1{%
+   \appendtotoks{heading}{%
+     % \leftline{%
+         \expandafter\unhcopy\csname#1namebox\endcsname
+      %}%
+      }%
+  }
+  %
+\def\renderrightblock#1{%
+   \appendtotoks{heading}{%
+     \rightline{%
+         \expandafter\unhcopy\csname#1namebox\endcsname
+      }%
+     }%
+}
+
+\def\renderinline#1{%
+  \appendtotoks{headingtoks}{%
+     \leftline{%
+         \expandafter\unhcopy\csname#1namebox\endcsname
+      }%
+      }%
+    }
+
+\def\renderboxcontents#1{%
+        \drawmaybe{#1}%
+        \edef\tmp{\tempcmd@cx}
+       \inshape[\expandafter\csname#1color@cx\endcsname,
+                            fill=\expandafter\csname#1bgcolor\endcsname,
+                            ellipse,
+                            \expandafter\csname#1shape\endcsname,
+                            behind path,
+                            line width=1pt,  %!fixme
+                            \tmp,]{\expandafter\copy%
+                                 \expandafter\csname#1namebox\endcsname}%
+  }
+\def\authorblockdebug{
+\if@debug
+    \tikz[remember picture,overlay]
+       \draw[<->] (0,0)--(0,0.5)--++(-.2,0)%
+              node[left,fill=blue!15,text=black]%
+               {{\ttfamily\footnotesize author block=true}};%
+  \fi
+}
+\ExplSyntaxOn
+\cs_new:Npn \print_author_block:
+  {%
+    \authorblockdebug
+    \authorblockformat@cx\authorblock@cx
+  }
+
+
+
+\def\setnumberfont{%
+
+    %\set_font_parameters:n {number}
+  }%
+
+
+
+\def\afteralignhook@cx{\par}
+  \box_new:N \chapter_title_box
+  \dim_new:N \chaptertitleboxwidth
+  \dim_new:N \offset_for_center
+  \dim_new:N \offset_for_right
+  \dim_new:N \total_title_width
+  \dim_new:N \title_bounding_box_width
+  \dim_set_eq:Nc \chaptertitleboxwidth {chapter_title_text_width}
+
+
+\cs_new:Npn \print_chapter_title #1
+ {
+      \if@titlespaceout
+         \long\def\SSS{{\so{#1}}}
+      \else
+         \long\def\SSS{#1}
+      \fi%
+
+\dim_gset:Nn \total_title_width %including padding+borders
+    {
+        \chapter_title_text_width % text width
+       +\title_border_left_width
+       +\title_border_right_width
+       +\title_padding_left_width
+       +\title_padding_right_width
+     }
+     \savebox \chapter_title_box {%
+        \begin{tcolorbox}[
+           size=minimal,
+           colback=spot!15,
+           colframe=spot!15]
+           \set_font_parameters:n {title}
+           \chapter_title_text_align%
+           \language-1
+           \SSS\par %NEW NEW CHECK
+        \end{tcolorbox}
+      }
+
+%%    \end{macrocode}
+%%
+%%   Having measured the title block, we now typeset it. Before we typeset it
+%%   we will provide borders all around if required and also allow for padding.
+%%   We will not repeat the browser wars here, so we will provide the borders
+%%   outside the block and the padding inside.
+%%
+%%   Once we done we append everything to the heading toks.
+%%
+%%    \begin{macrocode}
+
+    \appendtotoks{heading}{%
+
+%%    \end{macrocode}
+%%  We first add the before hook
+%%  This is normally used to put ornaments or rules before the title text
+%%  block.
+%%    \begin{macrocode}
+
+    \dim_gset:Nn \title_bounding_box_width %width defined by kernel!strange error here
+      {
+        \chapter_title_text_width
+        +\title_border_left_width
+        +\title_border_right_width
+        + \title_padding_left_width
+        + \title_padding_right_width
+      }
+%%    \end{macrocode}
+%%
+%%   Having measured the title block, we now typeset it. Before we typeset it
+%%   we will provide borders all around if required and also allow for padding.
+%%   We will not repeat the browser wars here, so we will provide the borders
+%%   outside the block and the padding inside.
+%%
+%%   Once we done we append everything to the heading toks.
+    \dim_gset:Nn \offset_for_center { ( (\linewidth - \chapter_title_text_width)/2) }
+    \dim_gset:Nn \offset_for_right {(\linewidth-\chapter_title_text_width)}
+    \dim_gset:Nn \l_tmpa_dim {0pt}
+    \dim_gset:Nn \l_tmpb_dim {0pt}
+    \tcbset{centered/.style={
+          width=\chapter_title_text_width,
+          boxrule=0pt,boxsep=0pt,
+          left=0pt,right=0pt,
+          leftright~skip=0pt,
+          middle=0pt,arc=0pt,toptitle=0pt,bottomtitle=0pt,
+          before={\vskip1pt},
+          after={\vskip1pt},
+          colback=spot!15}
+             }
+
+    \tcbset{floatright/.style={
+             width=\chapter_title_text_width,
+             boxrule=0pt,
+             boxsep=0pt,
+             left=0pt,
+             right=0pt,
+             top=0pt,
+             bottom=0pt,
+             left~skip=-\offset_for_right-\offset_for_right,
+            % right~skip=0pt,
+             %middle=0pt,arc=0pt,toptitle=0pt,bottomtitle=0pt,
+             before={\vskip1pt},
+             after={\vskip1pt}}
+                }
+    \begin{tcolorbox}[
+          centered,
+          width=\offset_for_right,
+          colback=spot!15,
+          colframe=spot!30]
+           % Before
+         \end{tcolorbox}
+        %\hspace*{3cm}
+        \begin{tcolorbox}[
+           floatright,
+           colback=spot!15,
+           colframe=spot!50]
+           \set_font_parameters:n {title}
+           \chapter_title_text_align%
+           \language-1
+           \SSS\par %NEW NEW CHECK
+        \end{tcolorbox}
+    }%appendtotoks
+
+}
+\ExplSyntaxOff
+
+\ExplSyntaxOn
+\cs_new:Npn \appendtotoks #1#2
+  {
+    \expandafter\expandafter\expandafter\csname#1toks\endcsname\expandafter{
+      \the\csname#1toks\endcsname #2}
+  }
+\cs_new:Npn \prependtotoks #1#2
+  {
+    \expandafter\expandafter\expandafter\csname#1toks\endcsname\expandafter{
+      #2 \the\csname#1toks\endcsname }
+  }
+\ExplSyntaxOff
+\ExplSyntaxOn
+\def\set_number: {
+  \appendtotoks{number}{\numberbefore@cx}%
+  \appendtotoks{number}{\color{blue}%chapter_number_color
+  \appendtotoks{number}{\setnumberfont}%
+  \if@chapterspaceout
+     \if@soulspaceout
+         \expandafter\appendtotoks{number}{\so\thechapter}%
+      \fi
+   \else
+      \expandafter\appendtotoks{number}{\thechapter}%
+   \fi
+   \appendtotoks{number}{\numberafter@cx}%
+}
+\ExplSyntaxOff
+\ExplSyntaxOn
+\cs_gset:Npn \make_chapter_head #1 #2
+  {
+    \tex_parindent:D 0pt
+      %\offinterlineskip
+      %
+    \normalfont%
+    \tex_lineskip:D 0pt%
+    \tex_topskip:D 0pt%check this out
+    %\chaptermargintop@cx%
+    \leavevmode%
+      \set_number:
+       \xdef\xtemp{\chaptername}%
+       \xdef\ytemp{}%
+       \ifx\xtemp\ytemp%
+          \printchaptername[number]{\the\numbertoks}%
+       \else
+       \appendtotoks{chapterprelim}{\leavevmode \chapter_before\vskip0pt}
+       \appendtotoks{chapter}
+         {
+           \leavevmode\noindent
+           \color{\chapter_color}
+           \set_chapter_font
+         }
+       \appendtotoks{chapter}{\chapter_before_content}
+
+           %\if@chapterspaceout
+               \expandafter
+  %               \so{\chaptername}}%PROBLEMS FIX
+
+              \appendtotoks{chapter}{\chaptername}%
+ %          \fi
+
+        \ifnum\thenumberdisplay=0 %
+          \appendtotoks{chapter}{\kern0.5em}%
+          \appendtotoks{chapter}{\the\numbertoks\numberaftercontent@cx}%
+              \the\chapterprelimtoks
+              \printchaptername[chapter]{\the\chaptertoks}%
+                 %
+          \else
+                %\the\chapterprelimtoks%
+                \expandafter\printchaptername[chapter]{\the\chaptertoks}%
+                \expandafter\printchaptername[chapter]{\the\numbertoks}%
+        \fi%ifnum
+
+  \set_chapter_title:nn {#1}{#2}
+  \appendtotoks{heading}{
+       \begin{tcolorbox}[
+          centered,
+          left=0pt,right=0pt,colback=spot!15,
+          ]
+         %after~title
+       \end{tcolorbox}}
+ \typeset_heading:
+ }
+\ExplSyntaxOff
+
+
+\ExplSyntaxOn
+\cs_new:Npn \set_chapter_title:nn #1#2{
+    \if@chaptertitlespecial%
+       \csname ethics\endcsname{#2}%
+    \else%
+       \print_chapter_title { #2 }
+     \fi
+}
+\ExplSyntaxOff
+\ExplSyntaxOn
+\cs_new:Npn \author_block_aux: {
+   \skip_vertical:n \title_margin_bottom
+      \if@authorblock
+           \print_author_block:
+           \authorblockafterskip@cx
+      \fi%
+    \tex_par:D
+    \nobreak%
+   %
+}%
+\ExplSyntaxOff
+\tcbset{centered/.style={
+             width=\linewidth,
+             boxrule=0pt,boxsep=0pt,left=0pt,right=0pt,
+             leftright~skip=0cm,middle=0pt,arc=0pt,toptitle=0pt,bottomtitle=0pt,
+             before={\vskip1pt},
+             after={\vskip1pt}}
+            }
+\ExplSyntaxOn
+\cs_new:Npn \typeset_heading: {
+
+       \parindent0pt
+       \begin{tcolorbox}[
+         width=\textwidth,
+         boxrule=0pt,
+         boxsep=0pt,
+         leftright~skip=0cm,
+         middle=0pt,
+         arc=3pt,
+         toptitle=0pt,
+         bottomtitle=0pt,
+         left=0pt,
+         right=0pt,
+         before={\vskip1pt},
+         after={\vskip1pt},
+         oversize=0cm,
+         colback=spot!15,
+         colframe=white,
+         ]
+        %\parindent1em
+        \the\headingtoks
+       \end{tcolorbox}
+  \headingtoks{}
+  %\headingstoks{}
+  \numbertoks{}
+  \chaptertoks{}
+  \chapterprelimtoks {}
+  \author_block_aux:
+
+  }
+\ExplSyntaxOff
+\global\newif\if@chapterafterindent@cx \@chapterafterindent@cxtrue
+\cxset{chapter afterindent/.is choice,
+           chapter afterindent/true/.code=\gdef\chapterafterindent@cx{%
+                                                            \global\@chapterafterindent@cxtrue},
+           chapter afterindent/false/.code=\gdef\chapterafterindent@cx{%
+            \global\@chapterafterindent@cxfalse},
+}
+\cxset{chapter afterindent=true}
+\ExplSyntaxOn
+\cs_gset:Npn \chapter_after_heading:
+  {
+    \@nobreaktrue
+    \everypar
+      {
+         \if@nobreak
+           \@nobreakfalse
+           \clubpenalty \@M
+           \if@chapterafterindent@cx \else
+             {\setbox\z@\lastbox}
+           \fi
+         \else
+         \clubpenalty \@clubpenalty
+         \everypar {}
+         \fi
+      }
+  }
+\ExplSyntaxOff
+\ExplSyntaxOn
+\let\ltxchapter\chapter
+
+\renewcommand\chapter
+  {
+    \if@openright\cleardoublepage\fi
+    \if@openleft\cleartoevenpage\fi
+    \if@openany\clearpage\fi
+    \thispagestyle{empty}
+    \global\@topnum\z@~%
+      \@chapterafterindent@cxfalse
+   % \@afterindentfalse
+      \secdef\__chapter\@schapter
+   }%[optional]{title} follows
+\ExplSyntaxOff
+%%    \begin{macrocode}
+\newif\if@tocspecial\@tocfalse
+\def\formattoctitle{}
+\ExplSyntaxOn
+\cs_gset:Npn \__chapter [#1]#2
+  {
+  %\refstepcounter{chapter}%
+    \ifnum \c@secnumdepth >\m@ne%
+      \if@mainmatter
+        \if@toc% added extra if
+          \refstepcounter{chapter}%
+          \typeout{\@chapapp\space\thechapter.}%
+          \def\tocchapternumber@cx{\@arabic\c@chapter}%to move over
+          \phantomsection
+          \addcontentsline{toc}{chapter}
+            {
+              \protect\numberline{Chapter~\tocchapternumber@cx~}{#1}
+         %\protect\chapternumberline{\tocchapternumber@cx}{#1}{\tocimage@cx}
+            }
+        \fi%
+            %\fi%
+      \else
+          \addcontentsline{toc}{chapter}{#1APAPAP}%for prelims???
+      \fi%
+    \else%
+      \addcontentsline{toc}{chapter}{#1PPP}%????? for part
+    \fi%secnumdepth
+  \chaptermark{#1}%
+  \addtocontents{lof}{\protect\addvspace{10\p@}}%
+  \addtocontents{lot}{\protect\addvspace{10\p@}}%
+     \if@twocolumn
+         \@topnewpage[\make_chapter_head {#1} {#2}]%
+      \else%
+            \make_chapter {#1} {#2}%
+          \chapter_after_heading:
+      \fi
+   }
+
+\cs_new:Npn \make_chapter #1 #2
+  {
+
+    \str_case_x:nnTF { box }
+     {
+       { traditional} { \format_part_traditional:nn { chapter } { #1 } { #2 } }
+       { box        } { \format_head_boxed:nn       { chapter } { #1 } { #2 } }
+       { inline     } { \format_head_inline:nn      { chapter } { #1 } { #2 } }
+       { inmargin   } { \format_head_inmargin:nn    { chapter } { #1 } { #2 } }
+       { css        } { \make_chapter_head {#1} {#2}                          }
+      }
+      {                                           }
+      { \cs:w stewartpart\cs_end: {chapter} {#1}  }
+   }
+
+\ExplSyntaxOff
+\cxset{toc image/.store in = \tocimage@cx}
+\cxset{toc image ={}}
+\endinput
+%%
+%% End of file `phd-sections.sty'.

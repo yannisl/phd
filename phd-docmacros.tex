@@ -1,0 +1,422 @@
+%<*DOCS>
+%\subsection{meta}\label{meta}
+%
+% This has been lifted from |doc|
+% {meta}
+%    The |\meta| macro is a bit tricky. We want to allow line
+%    breaks at blanks in the argument but we don't want a break
+%    in between. In the past this was done by defining |\meta| in a way that a
+%    \verb*+ + is active when the argument is scanned. Words are then
+%    scanned into |\hbox|es. The active \verb*+ + will end the
+%    preceding |\hbox| add an ordinary space and open a new
+%    |\hbox|. In this way breaks are only possible at spaces.  The
+%    disadvantage of this method was that |\meta| was neither robust
+%    nor could it be |\protect|ed. The new implementation  fixes this
+%    problem by defining |\meta| in a radically different way: we
+%    prevent hypenation by defining a |\language| which has no
+%    patterns associated with it and use this to typeset the words
+%    within the angle brackets. see \sref{meta}
+% 
+%    \begin{macrocode}
+\ifx\l@nohyphenation\undefined
+  \newlanguage\l@nohyphenation
+\fi
+%    \end{macrocode}
+%    
+%    \begin{macrocode}
+\DeclareRobustCommand\meta[1]{%
+%    \end{macrocode}
+%    Since the old implementation of |\meta| could be used in math we
+%    better ensure that this is possible with the new one as
+%    well. So we use |\ensuremath| around |\langle| and
+%    |\rangle|. However this is not enough: if |\meta@font@select|
+%    below expands to |\itshape| it will fail if used in math
+%    mode. For this reason we hide the whole thing inside an
+%    |\nfss@text| box in that case.
+%    \begin{macrocode}
+     \ensuremath\langle
+     \ifmmode \expandafter \nfss@text \fi
+     {%
+      \meta@font@select
+%    \end{macrocode}
+%    Need to keep track of what we changed just in case the user
+%    changes font inside the argument so we store the font explicitly.
+%    \begin{macrocode}
+      \edef\meta@hyphen@restore
+        {\hyphenchar\the\font\the\hyphenchar\font}%
+      \hyphenchar\font\m@ne
+      \language\l@nohyphenation
+      #1\/%
+      \meta@hyphen@restore
+     }\ensuremath\rangle
+}
+%    \end{macrocode}
+% 
+%
+%
+% begin{macro}{meta@font@select} 
+%  	We default the definition to upshape.
+%    \begin{macrocode}
+\def\meta@font@select{\upshape}
+%    \end{macrocode}
+% 
+%
+% begin{macro}{macro} 
+%	The \cs{macro} environment is straight out of the
+%	\pkg{doc} also. We redefine it here to allow usage in documents that have not 
+%	preloaded the package.
+%
+%    \begin{macrocode}
+\def\macro{\begingroup
+   \catcode`\\12
+   \MakePrivateLetters \m@cro@ \iftrue}
+%    \end{macrocode}
+% 
+%
+% begin{macro}{environment}
+%    The ``environment'' envrironment will be implemented just like the
+%    ``macro'' environment flagging any differences in the code by
+%    passing |\iffalse| or |\iftrue| to the |\m@cro@| environment
+%    doing the actual work.
+%    \begin{macrocode}
+\def\environment{\begingroup
+   \catcode`\\12
+   \MakePrivateLetters \m@cro@ \iffalse}
+%    \end{macrocode}
+% 
+%
+%    After scanning the argument we close the group to get the normal
+%    |\catcode|$\,$s back. Then we assign a special value to
+%    |\topsep| and start a \textsf{trivlist} environment. (Modified for normal indexing by YL)
+%
+%    \begin{macrocode}
+\long\def\m@cro@#1#2{\index{\string#2}\endgroup \topsep\MacroTopsep \trivlist
+%    \end{macrocode}
+% We also save the name being described in |\saved@macroname| for
+% 
+%    \begin{macrocode}
+   \edef\saved@macroname{\string#2}%
+%    \end{macrocode}
+%    Now there follows a variation of |\makelabel| which is used
+%    should the environment not be nested, or should it lie between
+%    two successive || instructions or explanatory
+%    text.  One can recognize this with the switch |\if@inlabel|
+%    which will be |true| in the case of successive |\item|
+%    commands.
+%
+%    \begin{macrocode}
+  \def\makelabel##1{\llap{##1}}%\llap
+%    \end{macrocode}
+%
+%    If |@inlabel| is |true| and if $\verb=\macro@cnt= > 0$
+%    then the above definition needs to be changed, because in this
+%    case \LaTeX{} would otherwise put the labels all on the same line
+%    and this would lead to them being overprinted on top of each
+%    other.  Because of this |\makelabel| needs to be redefined
+%    in this case.
+%    \begin{macrocode}
+  \if@inlabel
+%    \end{macrocode}
+%    If |\macro@cnt| has the value $1$, then we redefine
+%    |\makelabel| so that the label will be positioned in the
+%    second line of the margin.  As a result of this, two macro names
+%    appear correctly, one under the other.  It's important whilst
+%    doing this that the generated label box is not allowed to have
+%    more depth than a normal line since otherwise the distance
+%    between the first two text lines of \TeX{} will be incorrectly
+%    calculated. The definition should then look like:
+%\begin{verbatim}
+%     \def\makelabel##1{\llap{\vtop to \baselineskip
+%          {\hbox{\strut}\hbox{##1}\vss}}}
+%\end{verbatim}
+%    Completely analogous to this is the case where labels need to be
+%    placed one under the other.  The lines above are only an example
+%    typeset with the \textsf{verbatim} environment. To produce the real
+%    definition we save the value of |\macro@cnt| in
+%    |\count@| and empty the temp macro |\@tempa| for later
+%    use.
+%    \begin{macrocode}
+    \let\@tempa\@empty \count@\macro@cnt
+%    \end{macrocode}
+%    In the following loop we append for every already typeset label
+%    an |\hbox{\strut}| to the definition of |\@tempa|.
+%    \begin{macrocode}
+    \loop \ifnum\count@>\z@
+      \edef\@tempa{\@tempa\hbox{\strut}}\advance\count@\m@ne \repeat
+%    \end{macrocode}
+%    Now be put the definition of |\makelabel| together.
+%
+%    \begin{macrocode}
+    \edef\makelabel##1{\llap{\vtop to\baselineskip
+                               {\@tempa\hbox{##1}\vss}}}%
+%    \end{macrocode}
+%    Next we increment the value of the nesting depth counter.  This
+%    value inside the \textsf{macro} environment is always at least one
+%    after this point, but its toplevel definition is zero. Provided
+%    this environment has been used correctly, $|\macro@cnt|=0$
+%    should not occur when |@inlabel|=\textsf{true}.  It is
+%    however possible if this environment is used within other list
+%    environments (but this would have little point).
+%    \begin{macrocode}
+    \advance \macro@cnt \@ne
+%    \end{macrocode}
+%    If |@inlabel| is false we reset |\macro@cnt| assuming
+%    that there is enough room to print the macro name without
+%    shifting.
+%    \begin{macrocode}
+  \else  \macro@cnt\@ne  \fi
+%    \end{macrocode}
+%    Now the label will be produced using |\item|. The following
+%    line is only a hack saving the day until a better solution is
+%    implemented.  We have to face two problems: the argument might be
+%    a |\par| which is forbidden in the argument of other macros
+%    if they are not defined as |\long|, or it is something like
+%    |\iffalse| or |\else|, i.e.\ something which will be
+%    misinterpreted when \TeX{} is skipping conditional text. In both
+%    cases |\item| will bomb, so we protect the argument by using
+%    |\string|.
+%    \begin{macrocode}
+  \edef\@tempa{\noexpand\item[%
+%    \end{macrocode}
+%    Depending on whether we are inside a ``macro'' or ``environment''
+%    environment we use |\PrintMacroName| or |\PrintEnvName| to
+%    display the name.
+%    \begin{macrocode}
+     #1%
+       \noexpand\PrintMacroName
+     \else
+       \noexpand\PrintEnvName
+     \fi
+     {\string#2}]}%
+  \@tempa
+%    \end{macrocode}
+%    At this point we also produce an index entry.  Because it is not
+%    known which index sorting program will be used, we do not use the
+%    command |\index|, but rather a command
+%    |\SpecialMainIndex| after advancing the counter for indexing
+%    by line number.  This may be redefined by the user in
+%    order to generate an index entry which will be understood by the
+%    index program in use (note the definition of
+%    |\SpecialMainIndex| for our installation).
+%
+%    We advance the current codeline number and after producing an
+%    index entry revert to the original value
+%    \begin{macrocode}
+  \global\advance\c@CodelineNo\@ne
+%    \end{macrocode}
+%    Again the macro to call depends on the environment we are
+%    actually in.
+%    \begin{macrocode}
+   #1%
+      \nobreak
+      \DoNotIndex{#2}%
+   \else
+      \SpecialMainEnvIndex{#2}\nobreak
+   \fi
+  \global\advance\c@CodelineNo\m@ne
+%    \end{macrocode}
+%    The |\nobreak| is needed to prevent a page break after the
+%    |\write| produced by the |\SpecialMainIndex| macro.  We
+%    exclude the new macro in the cross-referencing feature, to
+%    prevent spurious non-main entry references.  Regarding possibly
+%    problematic arguments, the implementation takes
+%    care of |\par| and the conditionals are uncritical.
+%
+%    Because the space symbol should be ignored between the
+%    |{...}| and the following text we must take
+%    care of this with |\ignorespaces|.
+%    \begin{macrocode}
+  \ignorespaces}
+%    \end{macrocode}
+% 
+%	We now ready to define the code for the end of the environments.	
+%	
+% {endmacro}
+% {endenvironment}
+%     Older releases of this environment omit the |\endgroup| token,
+%     when being nested. This was done to avoid unnessary stack usage.
+%     However it does not work if \textsf{macro} and
+%     \textsf{environment} environments are mixed, therefore we now
+%     use a simpler approach.
+%
+%    \begin{macrocode}
+\let\endmacro \endtrivlist
+\let\endenvironment\endmacro
+%    \end{macrocode}
+%  
+%  
+%
+% {MacroTopsep}
+%    Here is the default value for the |\MacroTopsep| parameter
+%    used above.
+%    \begin{macrocode}
+\newskip\MacroTopsep     \MacroTopsep = 7pt plus 2pt minus 2pt
+%    \end{macrocode}
+% 
+%
+%
+% \subsection{Formatting the margin}
+%
+% The following three macros should be user definable.
+% Therefore we define those macros only if they have not already
+% been defined.
+%
+% begin{macro}{PrintMacroName}
+% egin{macro}{PrintEnvName}
+% begin{macro}{PrintDescribeMacro}
+% begin{macro}{PrintDescribeEnv}
+%    The formatting of the macro name in the left margin is done by
+%    these macros. We first set a |\strut| to get the height and
+%    depth of the normal lines. Then we change to the
+%    |\MacroFont| using |\string| to |\catcode| the
+%    argument to other (assuming that it is a macro name). Finally we
+%    print a space.  The font change remains local since this macro
+%    will be called inside an |\hbox|. NEED TO FIX
+%    \begin{macrocode}
+\@ifundefined{PrintMacroName}
+   {\def\PrintMacroName#1{\strut \MarginMacroFonts \string #1\ }}{\def\PrintMacroName#1{\strut \MarginMacroFonts \string #1\ }}
+%    \end{macrocode}
+%    We use the same formatting conventions when describing a macro.
+%    \begin{macrocode}
+\@ifundefined{PrintDescribeMacro}
+   {\def\PrintDescribeMacro#1{\strut \MacroFonts \string #1\ }}{\def\PrintDescribeMacro#1{\strut \MarginMacroFonts \string #1\ }}
+%    \end{macrocode}
+%    To format the name of a new environment there is no need to use
+%    |\string|.
+%    \begin{macrocode}
+\@ifundefined{PrintDescribeEnv}
+   {\def\PrintDescribeEnv#1{\strut \MacroFonts #1\ }}{\def\PrintDescribeEnv#1{\strut \MarginMacroFonts #1\ }}
+\@ifundefined{PrintEnvName}
+   {\def\PrintEnvName#1{\strut \MarginMacroFonts #1\ }}{\def\PrintEnvName#1{\strut \MarginMacroFonts #1\ }}
+%    \end{macrocode}
+
+%
+% begin{macro}{MarginMacroFont} As we dont care for older versions of LaTeX we simplify the
+%	code provide by \pkg{doc}. We also add a hook for color.
+%	as we do not expect that the package will be used in places with no colour support.
+%	The command used in the original \pkg{doc} is the same as the one used to
+% 	typeset the code for |macrocode|, however we wish to have the option to color
+%	the margin macros separately.
+%	
+%    \begin{macrocode}
+\ifxetex
+  \def\MarginMacroFonts{\color{spot!60}\ttfamily}
+\else
+  \ifluatex
+    \def\MarginMacroFonts{\color{spot!60}\ttfamily}
+  \else
+    \def\MarginMacroFonts{%
+                  \fontencoding\encodingdefault
+                   \fontfamily\ttdefault
+                   \fontseries\mddefault
+                   \fontshape\updefault
+                   \color{red}\small}%
+  \fi
+\fi
+ \let\citep\cite
+%    \end{macrocode}
+% \section{Documentation Macros}
+
+% This section defines commands for printing documentation
+% such as this one. It draws inspiration and plagiarizes pgf,
+% doc,symbols and many other packages for which I am grateful.
+% First some macros for indexing commands.
+% 
+%    \begin{macrocode}
+% Define a table environment that's similar to symtable except that it
+% floats and it doesn't write an entry into the Table of Contents.  This
+% is used for tables that contain something other than symbol lists.
+\def\oarg#1{%
+  \colOpt{{\ttfamily[}\meta{#1}{\ttfamily]}}}%
+%  
+\def\DescribeMacro{\leavevmode\@bsphack
+   \begingroup\MakePrivateLetters\Describe@Macro}
+\def\Describe@Macro#1{\endgroup
+              {\raggedleft\PrintDescribeMacro{#1}}%
+              \SpecialUsageIndex{#1}\@esphack\ignorespaces}
+
+
+\def\DescribeEnv{\leavevmode\@bsphack\begingroup\MakePrivateLetters
+  \Describe@Env}
+\def\Describe@Env#1{\endgroup
+              {\raggedleft\PrintDescribeEnv{#1}}{}%
+              \SpecialEnvIndex{#1}\@esphack\ignorespaces}
+\setlength\marginparpush{0pt}  
+
+
+
+\newlength{\atemp}
+ \def\PrintDescribeMacro#1{%
+  \settowidth\atemp{\string #1} 
+  \strut\MacroFont\color{thered}\normalsize\string#1}
+
+\def\Describe#1{%
+   \settowidth\atemp{\string #1}% 
+  \par\penalty-500\vskip3ex\noindent
+  \DescribeMacro{#1}\args}
+\def\DescribeOther{\vskip-4ex\Describe}
+
+\def\args#1{%
+  \def\bbl@tempa{#1}%
+  \ifx\bbl@tempa\@empty\else#1\vskip1ex\fi\ignorespaces}
+
+
+\newenvironment{nonsymtable}[1]{%
+  \begin{table}[htbp]
+  \centering
+  \caption{#1}\medskip
+}{%
+  \end{table}
+}
+%    \end{macrocode}
+%
+
+% Index "X Y" and "Y, X".  The "begin" and "end" variants are for page ranges.
+%    \begin{macrocode}
+\newcommand{\cmdI}[2][]{%
+  \def\first@arg{#1}%
+  \ifx\first@arg\@empty
+    \texttt{\verbatimfont\string#2}\indexcommand[#2]{#2}%
+  \else
+    \texttt{\verbatimfont\string#2}\indexcommand[#1]{#2}%
+  \fi
+}
+
+
+\newcommand{\cmdX}[1]{\cmdI[$\string#1$]{#1}}
+\newcommand{\cmdW}[1]{\cmdI[$\string\blackacc{\string#1}$]{#1}}
+\newcommand{\cmdIp}[1]{\texttt{\string#1}\indexpunct[$#1$]{#1}}
+%    \end{macrocode}
+
+% {CMDI}\oarg[symbol command]\marg{command}
+% This macro \#1 symbol to be typeset next to
+% \#2 in the index |\gothic (symbol)|
+%
+%    \begin{macrocode}
+\DeclareRobustCommand\CMDI[1]{%
+\bgroup%
+\smallskip 
+\noindent\texttt{\verbatimfont\string#1}%
+\indexcommand{#1}%
+\egroup%
+}
+
+\DeclareRobustCommand\luacmd[1]{%
+  \bgroup
+    \smallskip
+    \noindent\color{black}\textbf{\string#1}%
+    \indexcommand{#1}
+ \egroup%
+}
+
+\DeclareRobustCommand\luafunction[1]{%
+  \bgroup
+    \smallskip
+    \noindent\color{black}\textbf{\verbatimfont#1}%
+    \indexcommand{#1}
+ \egroup%
+}
+
+%    \end{macrocode}
+% 
+%</DOCS> 
