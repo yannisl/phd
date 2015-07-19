@@ -1,0 +1,699 @@
+%%
+%% This is file `phd-toc.sty',
+%% generated with the docstrip utility.
+%%
+%% The original source files were:
+%%
+%% phd-toc.dtx  (with options: `TOC')
+%% ----------------------------------------------------------------
+%% phd-runningheads
+%% A package to manage running heads in LaTeX
+%% E-mail: yannislaz@gmail.com
+%% Released under the LaTeX Project Public License v1.3c or later
+%% See http://www.latex-project.org/lppl.txt
+%% ----------------------------------------------------------------
+
+
+
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{phd-toc}%
+  [2015/13/06 v1.0 ToC styling]%
+
+\ExplSyntaxOn
+\newif\if@haschapter@cx\@haschapter@cxtrue
+\int_new:N \toc_depth
+\int_gset:Nn \toc_depth {\c@tocdepth}
+\bool_new:N \haschapter_bool \bool_gset_true:N \has_chapter_bool
+\bool_new:N \haspart_bool \bool_gset_true:N \haspart_bool
+\cs_if_exist:cTF {part}
+   { \bool_gset_true:N \haspart_bool   }
+   { \bool_gset_false:N \haspart_bool  }
+\ExplSyntaxOff
+\newif\if@koma@cx  \@koma@cxfalse
+\@ifclassloaded{scrartcl}{\@koma@cxtrue}{}
+\@ifclassloaded{scrreprt}{\@koma@cxtrue}{}
+\@ifclassloaded{scrbook}{\@koma@cxtrue}{}
+\newif\if@memoir@cx  \@memoir@cxfalse
+\@ifclassloaded{memoir}{\@memoir@cxtrue}{}
+\@ifundefined{chapter}{%
+  \@haschapter@cxfalse
+  \@ifundefined{section}{%
+    \PackageWarning{phd}%
+      {I don't recognize any sectional divisions so I'll do very little
+      and many things can break}
+    \renewcommand{\quit@cx}{\endinput}
+    }{\PackageInfo{phd}{The document has section divisions}}
+  }{\@haschapter@cxtrue
+    \PackageInfo{phd}{The document has chapter divisions}}
+\newcommand{\settocpagestyle}[1]{%
+  \def\tocpagestyle@cx{\thispagestyle{empty}}} %CHANGED
+
+\newlength{\tocparskip@cx}
+\setlength{\tocparskip@cx}{1pt}
+\ExplSyntaxOn
+
+\newtcolorbox {float_box} [1]
+  {
+    %size            = minimal,
+    enhanced,
+    colback         = \cs_if_exist_use:cTF {#1_background_color}{}{blue},
+    colframe        = \cs_if_exist_use:cTF {#1_frame_color}{}{blue},
+    rounded~corners = all,
+    arc=3mm,
+    auto~outer~arc,
+    boxsep          = 3pt,
+    \cs_if_exist_use:cTF {#1_shadow}{}{no~shadow},
+  }
+
+\cs_new:Npn \set_font_aux:n #1
+ {
+   \cs_if_exist_use:cTF { #1_fontfamily }{}{#1~Family}
+   \cs_if_exist_use:cTF { #1_fontweight }{}{#1~W}
+   \cs_if_exist_use:cTF { #1_fontshape  }{}{#1~Sh}
+   \cs_if_exist_use:cTF { #1_fontsize   }{}{#1~Siz}
+ }
+
+\cs_gset:Npn \format_toc_name:n #1
+  {
+ \begin{float_box}{toc_name}
+      \leavevmode
+      \cs_if_exist_use:cTF {#1_align}{}{F~#1}
+
+      %\toc_name_indent
+      \tcbox[size            = minimal,
+             nobeforeafter,
+             colback         = \cs_if_exist_use:cTF {#1_background_color}{}{blue},
+             colframe        = \cs_if_exist_use:cTF {#1_frame_color}{}{blue},
+             ]
+        {
+               \toc_name_before
+               \set_font_aux:n {toc_name}
+               %\color{\toc_name_color}
+               \cs_if_exist_use:cTF {#1_case}{}{F #1}
+               {
+                 \cs_if_exist_use:cTF {#1_contentsname}{}{F~#1}
+                }
+        }
+
+     \end{float_box}
+    \toc_name_after%
+ }
+\ExplSyntaxOff
+\let\ltxtableofcontents\tableofcontents
+\ExplSyntaxOn
+\cs_new:Npn \phd_toc_start:  { }
+\cs_new:Npn \phd_toc_finish: { }
+\ExplSyntaxOff
+\ExplSyntaxOn
+ \renewcommand{\tableofcontents}{%
+    \phd_toc_start:
+    \bgroup
+   % \hypersetup{linkcolor=spot}
+    \par
+    \begingroup
+      \parindent\z@
+      \parskip\tocparskip@cx
+      \phd_make_toc_title:n {toc_name}
+    \start_toc:n {toc}%
+    \endgroup
+    \egroup
+    \phd_toc_finish:
+}%
+\ExplSyntaxOff
+\ExplSyntaxOn
+ \cs_new:Npn \start_toc:n #1
+   {
+     \group_begin:
+     \makeatletter
+     \@input{\jobname.#1}%
+     \if@filesw
+       \expandafter\newwrite\csname tf@#1\endcsname
+       \immediate\openout \csname tf@#1\endcsname \jobname.#1\relax
+     \fi
+     \@nobreakfalse
+     \group_end:
+  }
+\ExplSyntaxOff
+\ExplSyntaxOn
+\cs_set:Npn \toc_number_before_box {}
+\cs_set:Npn \toc_number_before {}
+\cs_set:Npn \toc_number_after {}
+\cs_set:Npn \toc_number_after_box {}
+\dim_new:N \numberlineboxwidth
+\cs_gset:Npn \numberline #1
+  {
+   \toc_number_before_box
+   \hbox_to_wd:nn \numberlineboxwidth                   %\numberlineboxwidth
+     {
+       \toc_number_before\relax #1 \toc_number_after \hfil
+     }
+   \toc_number_after_box
+  }
+\ExplSyntaxOff
+\ExplSyntaxOn
+\pgfkeys
+ {/handlers/.case/.code =
+    \pgfkeysalso
+      {\pgfkeyscurrentpath/.code=
+         \str_case_x:nnTF {##1}
+             {
+               { none       } { \cs_gset:cpn {#1} { \empty             } }
+               { lower      } { \cs_gset:cpn {#1} { \MakeTextLowercase } }
+               { lowercase  } { \cs_gset:cpn {#1} { \MakeTextLowercase } }
+               { upper      } { \cs_gset:cpn {#1} { \MakeTextUppercase } }
+               { uppercase  } { \cs_gset:cpn {#1} { \MakeTextUppercase } }
+               { upper~case } { \cs_gset:cpn {#1} { \MakeTextUppercase } }
+             }
+             {                         }
+             { \cs_gset:cpn #1 {\MakeTextLowercase} }
+      }
+  }
+\ExplSyntaxOff
+\tcbset{halostyle/.style={fuzzy halo=2mm with magenta!5}}
+\ExplSyntaxOn
+ \pgfkeys
+ {/handlers/.shadow/.code =
+    \pgfkeysalso
+      {\pgfkeyscurrentpath/.code=
+         \str_case_x:nnTF {##1}
+             {
+               { none       }   { \cs_gset:cpn {#1} { {no~shadow}       } }
+               { drop~shadow  } { \cs_gset:cpn {#1} { drop~shadow       } }
+               { drop~lifted~shadow  } { \cs_gset:cpn {#1} {{##1         }} }
+               { fuzzy~halo}           { \cs_gset:cpn {#1} {halostyle } }
+             }
+             {                         }
+             { \cs_gset:cpn #1 {##1} }
+      }
+  }
+
+ \pgfkeys
+ {/handlers/.store/.code =
+    \pgfkeysalso
+      {\pgfkeyscurrentpath/.code=
+         \cs_gset:cpn {#1} {##1}
+      }
+  }
+\cs_new:Npn \new_toc_keys #1 #2
+{
+\cxset
+  {
+    #1/.store                                   = #2_contentsname,
+    #1~before/.store                            = #2_before,
+    #1~after/.store                             = #2_after,
+    #1~font-size/.fontsize                      = #2_fontsize,
+    #1~font-weight/.fontweight                  = #2_fontweight,
+    #1~font-family/.fontfamily                  = #2_fontfamily,
+    #1~font-shape/.fontstyle                    = #2_fontshape,
+    #1~color/.store                             = #2_color,
+    #1~background-color/.store                  = #2_background_color,
+    #1~frame-color/.store                       = #2_frame_color,
+    #1~shadow/.shadow                           = #2_shadow,
+    #1~case/.case                               = #2_case,
+    #1~afterskip/.store                         = #2_after_skip,
+    #1~align/.textalign                         = #2_align,
+
+    #1~indent/.store                            = #2_indent,
+    toc~pagestyle/.code                               =
+      \gdef\contentspagestyle@cx{\thispagestyle{empty}},%
+}
+
+}
+
+\ExplSyntaxOff
+\ExplSyntaxOn
+\cs_set:Npn \toc_set_key_defaults #1 #2
+  {
+    \cxset{
+       #1                   = #2,
+       #1~before            =,
+       #1~after             =,
+       #1~color             = black,
+       #1~background-color  = magenta!15,
+       #1~frame-color       = white,
+       #1~shadow            = drop shadow,
+       #1~font-weight       = normal,
+       #1~font-family       = sffamily,
+       #1~font-shape        = upshape,
+       #1~font-size         = LARGE,
+       #1~afterskip         = 10pt, %set as 40pt in LaTeX
+       #1~after        = ,
+       #1~align        = left,
+       #1~indent       = ,
+       #1~case         = none,
+       toc~pagestyle         = empty,
+  }%
+}
+\ExplSyntaxOff
+\ExplSyntaxOn
+\new_toc_keys {toc~name}{toc_name}
+\toc_set_key_defaults {toc~name}{Table~of~Contents}
+
+\new_toc_keys {lof~name}{lof_name}
+\toc_set_key_defaults {lof~name}{List~of~Figures}
+
+\new_toc_keys {lot~name}{lot_name}
+\toc_set_key_defaults {lot~name}{List~of~Tables}
+\ExplSyntaxOff
+\ExplSyntaxOn
+
+\cs_new:Npn \phd_make_toc_title:n #1
+{
+  \addpenalty\@secpenalty
+  \if@haschapter@cx
+    \vspace*{10pt}
+    \pdfbookmark[0]{\contentsname}{toc}
+  \else
+    \vspace{10pt}
+  \fi
+  \markboth{\contentsname}{\contentsname}%
+  %\contentspagestyle@cx CHECK THIS
+  \interlinepenalty\@M
+  \format_toc_name:n {#1}
+    \par\nobreak
+    \vskip\toc_name_after_skip\relax
+    \@afterheading
+ }
+\ExplSyntaxOff
+\ExplSyntaxOn
+  \let\sampletoctitle\phd_make_toc_title:n
+\ExplSyntaxOff
+\newcommand{\setpnumwidth@cx}[1]{\renewcommand{\@pnumwidth}{#1}}
+\newcommand{\settocmarg@cx}[1]{\renewcommand{\@tocrmarg}{#1}}
+\setpnumwidth@cx{25pt}
+\settocmarg@cx{20pt}
+\ExplSyntaxOn
+\cs_gset:Npn \dot@cx { - }
+\cs_gset:Npn \dot_fill #1
+  {
+    \leaders\hbox{$\m@th\mkern #1 mu\hbox{\dot@cx}\mkern #1 mu$}\hfill
+  }
+\ExplSyntaxOff
+\def\nodotfill@cx{}
+\cxset{toc dotfill/.is choice,
+       toc dotfill/none/.code = \nodotfill@cx,
+       toc dotfill symbol/.code= \renewcommand{\dot@cx}{#1},
+       toc dotfill sep/.store in=\dotfillsep@cx,
+}
+\cxset{toc dotfill symbol=.,
+       toc dotfill sep=4.5}
+\ExplSyntaxOn
+\newcommand{\parfillskip@CX}
+  {
+  \parfillskip=0pt plus1fil
+  }
+\ExplSyntaxOff
+\ExplSyntaxOn
+\cs_set:Npn \format_toc_entry:nn #1 #2 #3
+  {
+
+  %     \cs_set:Npn \tocindent
+         %\cs_if_exist_use:cTF {#1_indent}{TI}{0pt}
+
+ \begingroup
+ \hypersetup{linkcolor=magenta,
+             }
+ \begin{tcolorbox}[size=minimal,
+                   colback=white!10,
+                   width=\linewidth-1em]
+     \expandafter\leftskip \cs:w #1_indent\cs_end:
+     \renewcommand\@tocrmarg{3em}
+     \dim_set_eq:NN \tex_rightskip:D \@tocrmarg
+     \parfillskip -\rightskip
+     \dim_set_eq:NN \parindent {1em} %\tocindent
+     \interlinepenalty\@M
+     \leavevmode
+     \numberlineboxwidth 4.2em %\cs:w #1_number_width \cs_end:\relax
+     \let\toc_number_before \cftsecpresnum
+     \advance\leftskip \numberlineboxwidth
+     \null\nobreak\hskip -\leftskip
+
+         {
+            \set_font_aux:n  {#1}
+           % \cs_if_exist_use:cTF {#1_color}{T #1}{F #1}
+            \expandafter\color{\cs:w #1_color\cs_end:}
+            \cs_if_exist_use:cTF {#1_case}  {#2}{#2}
+         }
+       \cs_if_exist_use:cTF {toc_section_leader}{} {}
+       \begin{tcolorbox}
+       [
+          size=minimal,
+          nobeforeafter,
+          colback=\toc_section_page_background_color,
+          width=\toc_section_number_width-0.5em,
+          halign=center,
+          box~align = base,
+          boxsep    = 3pt,
+       ]
+       \tcbox
+        [
+          size=minimal,
+          nobeforeafter,
+          width=\toc_section_number_width-0.5em,
+          colback=\toc_section_page_background_color,
+          box~align = base,
+        ]
+         {
+         %\mbox{
+         \set_font_aux:n  {#1_page}
+         \toc_section_page_before #3 \toc_section_page_after
+         }
+       \end{tcolorbox}
+     \par
+    \end{tcolorbox}
+    \par
+    \group_end:
+     \@afterindentfalse
+     \nobreak
+ }
+  \ExplSyntaxOff
+\ExplSyntaxOn
+\cs_new:Npn \make_new_toc_entry_keys #1 #2
+{
+ \cxset
+  {
+    #1~beforeskip/.store            = #2_beforeskip,
+    #1~afterskip/.store             = #2_afterskip,
+    #1~indent/.store                = #2_indent,
+    #1~font-size/.fontsize          = #2_fontsize,
+    #1~font-family/.fontfamily      = #2_fontfamily,
+    #1~font-shape/.fontstyle        = #2_fontshape,
+    #1~font-weight/.fontweight      = #2_fontweight,
+    #1~color/.store                 = #2_color,
+    #1~numwidth/.store              = #2_number_width,
+    #1~case/.case                   = #2_case,
+    #1~page~font-size/.fontsize     = #2_page_fontsize,
+    #1~page~font-family/.fontfamily = #2_page_fontfamily,
+    #1~page~font-shape/.fontstyle   = #2_page_fontshape,
+    #1~page~font-weight/.fontweight = #2_page_fontweight,
+    #1~page~color/.store            = #2_page_color,
+    #1~page~background-color/.store = #2_page_background_color,
+  #1~dotsep/.store                = #2_dotsep,
+    #1~page~before/.store           = #2_page_before,
+    #1~page~after/.store            = #2_page_after,
+  }
+}
+
+\cs_new:Npn \make_new_toc_entry_key_defaults #1
+  {
+    \cxset
+    {%
+      #1~beforeskip  =\z@ \@plus.2\p@,
+      #1~afterskip   =0pt,
+      #1~indent=0em,
+      #1~font-family= sffamily,
+      #1~font-weight = bfseries,
+      #1~font-shape = upshape,
+      #1~color= spot,
+      #1~case = none,
+      #1~font-size= normal,
+      #1~numwidth = 3em,
+      #1~dotsep = 2.7,
+      #1~page~font-size          = normal,
+      #1~page~font-shape         = upshape,
+      #1~page~font-weight        =,
+      #1~page~font-family        = sffamily,
+      #1~page~color              = black,
+      #1~page~background-color   = spot!15,
+      #1~page~before             =,
+      #1~page~after              =,
+    }
+  }
+\ExplSyntaxOff
+\ExplSyntaxOn
+%%
+\make_new_toc_entry_keys {toc~part}{toc_part}
+\make_new_toc_entry_key_defaults {toc~part}
+\ExplSyntaxOff
+\cxset{toc part font-size=LARGE,
+       toc part color=spot,
+       toc part beforeskip=1em}
+\ExplSyntaxOn
+\newif\if@dopart@cx
+\newif\if@haspart@cx
+  \@ifundefined{part}{\@haspart@cxfalse}{\@haspart@cxtrue}
+\if@haspart@cx
+
+\cs_gset:Npn \l@part #1 #2
+  {
+    \bool_if:NT \haspart_bool
+      {
+        \bool_if:NTF \has_chapter_bool
+          {
+            \addpenalty{-\@highpenalty}
+          }
+          {
+            \addpenalty\@secpenalty
+          }
+          \addvspace{\toc_part_beforeskip}%
+          \format_toc_entry:nn {toc_part} {#1} {#2}
+           \nobreak
+           \bool_if:NT \has_chapter_bool
+             {
+               \global\@nobreaktrue
+               \tex_everypar:D { \global\@nobreakfalse\tex_everypar:D {} }%
+             }
+           %\group_end:
+    }
+   % \format_toc_entry:nn {toc_part} {#1} {#2}
+  } %end l@part
+
+\ExplSyntaxOff
+\ExplSyntaxOn
+  \newcommand{\partpresnum@cx}{}
+  \newcommand{\partaftersnum@cx}{..}
+  \def\cftnodots{2.7}
+  \newcommand{\partdotsep@cx}{\cftnodots}
+  \newcommand{\toc_part_leader}{\large\bfseries\dot_fill{\partdotsep@cx}}
+\ExplSyntaxOff
+  \newlength{\beforetocchapterskip@cx}
+  \setlength{\beforetocchapterskip@cx}{1.0em \@plus\p@}
+  \newlength{\cftchapindent}
+  \setlength{\cftchapindent}{0em}
+  \newlength{\cftchapnumwidth}\setlength{\cftchapnumwidth}{1.5em}
+  \newcommand{\cftchapfont}{\bfseries}
+  \newcommand{\cftchappresnum}{}
+  \newcommand{\cftchapaftersnum}{}
+  \newcommand{\cftchapaftersnumb}{}
+  \newcommand{\cftchapleader}{\dot_fill{\cftchapdotsep}}
+  \newcommand{\cftchapdotsep}{\toc_chapter_dot_sep}
+  \newcommand{\cftchappagefont}{\sffamily\bfseries\color{teal}}
+  \newcommand{\cftchapafterpnum}{}
+\ExplSyntaxOn
+  \make_new_toc_entry_keys {toc~chapter}{toc_chapter}
+  \make_new_toc_entry_key_defaults {toc~chapter}
+\ExplSyntaxOff
+\cxset{toc chapter font-size=LARGE,
+       toc chapter color=spot,
+       toc chapter beforeskip=1em,
+       toc chapter afterskip = 1em plus0.2pt minus .2pt}
+\ExplSyntaxOn
+  \newcommand{\toc_chapter_leader}{\normalfont\dot_fill{\toc_section_dotsep}}
+  \renewcommand*{\l@chapter}[2]{%
+     \ifnum \c@tocdepth >\m@ne
+       \addpenalty{-\@highpenalty}%
+       \vskip \toc_chapter_beforeskip\relax
+        {
+         \format_toc_entry:nn {toc_chapter}{#1}{#2}
+        %\format_toc_chapter_leaders:nn {#1} {#2}
+        }%
+       %\vskip \toc_chapterafter_skip
+    \fi
+ }%
+\ExplSyntaxOff
+\let\sampletocchapter\l@chapter
+\ExplSyntaxOn
+  \make_new_toc_entry_keys {toc~section}{toc_section}
+  \make_new_toc_entry_key_defaults {toc~section}
+\ExplSyntaxOff
+\ExplSyntaxOn
+\cs_gset:Npn \l@section #1 #2
+  {
+  \ifnum \c@tocdepth >\z@
+    \if@haschapter@cx
+      \skip_vertical:n \toc_section_beforeskip
+    \else
+      \addpenalty \@secpenalty
+      \addvspace{\toc_section_beforeskip}%
+    \fi
+    \format_toc_entry:nn {toc_section} {#1} {#2}
+  \fi
+  }
+\ExplSyntaxOff
+\ExplSyntaxOn
+\newcommand{\cftsecpresnum}{}
+\newcommand{\cftsecaftersnum}{}
+\newcommand{\cftsecaftersnumb}{}
+\newcommand{\toc_section_leader}  {\normalfont\dot_fill{\toc_section_dotsep}}
+\ExplSyntaxOff
+\ExplSyntaxOn
+\make_new_toc_entry_keys {toc~subsection}{toc_subsection}
+\make_new_toc_entry_key_defaults {toc~subsection}
+\ExplSyntaxOff
+\ExplSyntaxOn
+\cs_gset:Npn \l@subsection #1 #2
+  {%
+    \ifnum \c@tocdepth >\z@
+      \if@haschapter@cx
+        \skip_vertical:N \toc_subsection_beforeskip
+      \else
+        \addpenalty \@secpenalty
+        \addvspace{\toc_subsection_beforeskip}%
+    \fi
+      \format_toc_entry:nn {toc_subsection} {#1} {#2}
+  \fi
+}
+ \ExplSyntaxOff
+
+\ExplSyntaxOn
+\cs_new:Npn \toc_subsection_leader
+  {
+  \normalfont\dot_fill{\toc_subsection_dot_sep}
+  }
+\ExplSyntaxOff
+\ExplSyntaxOn
+\make_new_toc_entry_keys {toc~subsubsection}{toc_subsubsection}
+\make_new_toc_entry_key_defaults {toc~subsubsection}
+\ExplSyntaxOff
+\newcommand\tocsubsubsectionpagefont@cx{%
+\setfont@cx{\toc_subsubsection_page_fontweight}%
+       {\toc_subsubsection_page_fontfamily}{\toc_subsubsection_page_font_size}%
+       {\toc_subsubsection_page_fontshape}\color{\toc_subsubsection_page_color}
+}%
+\ExplSyntaxOn
+\cs_gset:Npn \l@subsubsection #1 #2
+{%
+  \ifnum \c@tocdepth >\z@
+    \if@haschapter@cx
+      \vskip \toc_subsubsection_beforeskip
+    \else
+      \addpenalty \@secpenalty
+      \addvspace{\toc_subsubsection_beforeskip}%
+    \fi
+
+  \format_toc_entry:nn {toc_subsubsection} {#1} {#2}
+  \fi
+}
+\ExplSyntaxOff
+\ExplSyntaxOn
+ \cs_new:Npn \toc_subsubsection_leader
+   {
+     \normalfont\dot_fill{\toc_subsubsection_dot_sep}
+   }
+\ExplSyntaxOff
+\newcommand{\tocsubsubsectionfillnum}[1]{%
+  {\tocsubsubsectionleader}\nobreak
+  \hb@xt@\@pnumwidth{\hfil\toc_subsubsection_page_font
+   \toc_subsubsection_page_before #1}%
+   \toc_subsubsection_page_after\par}%
+\ExplSyntaxOn
+\make_new_toc_entry_keys {toc~paragraph}{toc_paragraph}
+\make_new_toc_entry_key_defaults {toc~paragraph}
+
+\ExplSyntaxOff
+\ExplSyntaxOn
+\renewcommand*{\l@paragraph}[2]{%
+  \ifnum \c@tocdepth >\z@
+    \bool_if:NTF \has_chapter_bool
+      {
+        \skip_vertical:N \toc_paragraph_beforeskip
+      }
+      {
+        \addpenalty \@secpenalty
+        \addvspace{\toc_paragraph_beforeskip}%
+      }
+     \format_toc_entry:nn {toc_paragraph} {#1} {#2}
+  \fi
+  }
+\ExplSyntaxOff
+\ExplSyntaxOn
+\newcommand{\toc_paragraph_leader}{\normalfont\dot_fill{\tocparagraphdotsep@cx}}
+\ExplSyntaxOff
+\ExplSyntaxOn
+  \make_new_toc_entry_keys {toc~subparagraph}{toc_subparagraph}
+  \make_new_toc_entry_key_defaults {toc~subparagraph}
+\ExplSyntaxOff
+
+\ExplSyntaxOn
+\renewcommand*{\l@subparagraph}[2]{%
+  \ifnum \c@tocdepth >\z@
+    \if@haschapter@cx
+      \vskip \toc_subparagraph_beforeskip
+    \else
+      \addpenalty \@secpenalty
+      \addvspace{\toc_subparagraph_beforeskip}%
+    \fi
+    \format_toc_entry:nn {toc_subparagraph} {#1} {#2}
+  \fi
+  }
+\ExplSyntaxOff
+\ExplSyntaxOn
+\cs_new:Npn \toc_subparagraph_leader
+  {
+    \normalfont\dot_fill {\toc_subparagraph_dotsep}
+  }
+\ExplSyntaxOff
+
+\ExplSyntaxOn
+\renewcommand\listoffigures{%
+    \if@twocolumn
+      \@restonecoltrue\onecolumn
+    \else
+      \@restonecolfalse
+    \fi
+    \phd_make_toc_title:n {lof_name}
+    \start_toc:n {lof}%
+    \if@restonecol
+      \twocolumn
+    \fi
+    }
+\ExplSyntaxOff
+
+\cxset{lof name= Illustrations,}%
+\ExplSyntaxOn
+\def\phd_lof_start{}
+\def\phd_lof_end {}
+\cs_new:Npn \make_lof_title
+  {
+    \newpage
+    \phd_lof_start
+    \format_toc_name:n {lof_name}%
+    \@mkboth{\MakeUppercase\listfigurename}%
+            {\MakeUppercase\listfigurename}%
+    \phd_lof_end
+  }
+\ExplSyntaxOff
+
+\ExplSyntaxOn
+\make_new_toc_entry_keys {lof~entry}{lof_entry}
+\make_new_toc_entry_key_defaults {lof~entry}
+\ExplSyntaxOff
+\ExplSyntaxOn
+\renewcommand*{\l@figure}[2]
+  {
+    \vskip \lof_entry_beforeskip
+    {
+      \format_toc_entry:nn {lof_entry} {#1} {#2}
+    }
+ }
+\ExplSyntaxOff
+\ExplSyntaxOn
+\make_new_toc_entry_keys {lot~entry}{lot_entry}
+\make_new_toc_entry_key_defaults {lot~entry}
+\renewcommand\listoftables
+  {
+    \if@twocolumn
+      \@restonecoltrue\onecolumn
+    \else
+      \@restonecolfalse
+    \fi
+    \phd_make_toc_title:n {lot_name}
+    \start_toc:n {lot}%
+    \if@restonecol
+      \twocolumn
+    \fi
+   }
+\ExplSyntaxOff
+%%  Copyright (C) 2015 by Dr. Yiannis Lazarides <yannislaz@gmail.com>
+%%
+%% End of file `phd-toc.sty'.

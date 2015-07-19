@@ -7,5 +7,3 @@ See http://www.latex-project.org/lppl.txt
 ----------------------------------------------------------------
 This file provides a template for defining a class.
 
-%% \newpage
-
