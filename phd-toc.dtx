@@ -73,18 +73,22 @@ See http://www.latex-project.org/lppl.txt
   [2013/01/13 v1.0 ]%
 \documentclass[oneside,11pt,a4paper]{ltxdoc}
 \usepackage[bottom=4cm,footskip=3cm,
-            headsep=2cm]{geometry}
+            headheight=15pt, headsep=2cm]{geometry}
 \savegeometry{std}
+
 \usepackage{phd}
+\cxset{geometry units=mm}
 \usepackage{phd-toc}
 %\usepackage{phd-lowersections}
-%\usepackage{phd-runningheads}
+\usepackage{phd-runningheads}
 \input{defaults-chapters}
 \sethyperref
 \EnableCrossrefs
 \CodelineIndex
 \RecordChanges
-       
+%\def\toctitle#1{\protect\color{red}#1}
+%\def\addcontentsline#1#2#3{%
+% \addtocontents{#1}{\protect\contentsline{#2}{\protect\toctitle{#3}}{\thepage}}} 
 \begin{document}
   \coverpage{desert}{Book Design Monographs}{Camel Press}{ON CONTENTS PAGES}{AND THEIR DESIGN} 
  \secondpage
@@ -161,6 +165,7 @@ See http://www.latex-project.org/lppl.txt
 % \part{Package Implementation}
 % 
 % \chapter{Objectives and Design Philosophy}
+% ^^A\def\headhookleft{\agrid}
 %  
 % Before we start with the coding is importnat to outline the  package objectives:
 %
@@ -595,7 +600,7 @@ See http://www.latex-project.org/lppl.txt
 \ExplSyntaxOff  
 %    \end{macrocode}
 % \section{Shadows}
-%
+% 
 % Many components can be rendered with shadows. This can be done through the
 % tcolorbox shadowing commands or directly through \tikzname. The way parameters
 % are specified in both cases results in multi-argument keys, which is generally
@@ -820,7 +825,7 @@ See http://www.latex-project.org/lppl.txt
 %    \end{macrocode}
 % 
 % 
-%
+%\parskip=1pt plus0.2pt minus0.2pt
 %    \begin{macrocode}
 \def\nodotfill@cx{}
 \cxset{toc dotfill/.is choice,
@@ -959,8 +964,12 @@ See http://www.latex-project.org/lppl.txt
     #1~page~after/.store            = #2_page_after,
   }
 }
-
+%    \end{macrocode}
 %
+% Next we provide a function that sets keys to preset defaults. This makes
+% it less cumbersome to modify later.
+%
+%    \begin{macrocode}
 \cs_new:Npn \make_new_toc_entry_key_defaults #1 
   {
     \cxset
@@ -976,6 +985,13 @@ See http://www.latex-project.org/lppl.txt
       #1~font-size= normal,
       #1~numwidth = 3em,
       #1~dotsep = 2.7,
+%    \end{macrocode}
+%
+% The page number is a child of the |<toc><element>| and is provided to
+% as page, it has both box as well as textual properties. Settings
+% are what I thought were typical of documents.
+%
+%    \begin{macrocode}      
 %page parameters      
       #1~page~font-size          = normal,
       #1~page~font-shape         = upshape,  
@@ -1010,28 +1026,6 @@ See http://www.latex-project.org/lppl.txt
 %	{tocpartindent@cx}	 
 %    \begin{macrocode}
 \ExplSyntaxOn
-%\dim_new:N  \toc_part_indent
-%\dim_new:N  \toc_part_number_width_dim
-%\skip_new:N \toc_part_before_skip_dim
-%
-%\cxset
-%  {
-%    toc~part~indent/.code                     = \dim_gset:Nn\toc_part_indent { #1 },
-%    toc~part~numwidth/.code                   = 
-%      \dim_gset:Nn\toc_part_number_width_dim { #1 },
-%    toc~part~before~number/.store~in          = \tocpartbeforenumber@cx,
-%    toc~part~after~number/.store~in           = \partafterpnum@cx,
-%    toc~part~beforeskip/.code                 = 
-%      \skip_gset:Nn \toc_part_before_skip_dim {#1},
-%    toc~part~font-family/.fontfamily          =  toc_part_fontfamily,   
-%    toc~part~font-weight/.fontweight          =  toc_part_fontweight,
-%    toc~part~font-size/.fontsize              =  toc_part_fontsize,
-%    toc~part~font-shape/.fontstyle            =  toc_part_fontshape,
-%    toc~part~color/.store                     =  toc_part_color,
-%    toc~part~case/.case                       =  toc_part_case, 
-%%         
-%    toc~part~page~font-size/.store            = tocpartpagefontsize@cx,
-%}
 \make_new_toc_entry_keys {toc~part}{toc_part}  
 \make_new_toc_entry_key_defaults {toc~part}
 \ExplSyntaxOff
@@ -1059,7 +1053,11 @@ See http://www.latex-project.org/lppl.txt
 \newif\if@haspart@cx
   \@ifundefined{part}{\@haspart@cxfalse}{\@haspart@cxtrue}
 \if@haspart@cx
-
+%    \end{macrocode}
+% I am not too sure about the need of all the penalties, but will review
+% this part of the code before the final distribution.
+%
+%    \begin{macrocode}
 \cs_gset:Npn \l@part #1 #2
   {
     \bool_if:NT \haspart_bool
@@ -1146,15 +1144,18 @@ See http://www.latex-project.org/lppl.txt
 %    \begin{macrocode}
 \ExplSyntaxOn
   \newcommand{\toc_chapter_leader}{\normalfont\dot_fill{\toc_section_dotsep}}
+\ExplSyntaxOff
+%    \end{macrocode}  
+%    \begin{macrocode}  
+\ExplSyntaxOn
   \renewcommand*{\l@chapter}[2]{%
      \ifnum \c@tocdepth >\m@ne
        \addpenalty{-\@highpenalty}%
        \vskip \toc_chapter_beforeskip\relax 
         {
          \format_toc_entry:nn {toc_chapter}{#1}{#2}
-        %\format_toc_chapter_leaders:nn {#1} {#2}
         }%
-       %\vskip \toc_chapterafter_skip 
+       \vskip \toc_chapter_afterskip 
     \fi
  }%
 \ExplSyntaxOff 
@@ -1463,13 +1464,13 @@ See http://www.latex-project.org/lppl.txt
 % and list of tables and maybe others.
 %
 % \section{List of Figures}
-% \tcbdocmarginnote{U 30-06-2015}
+% 
 
 % The standard list of figures follows the same patterns
 % for the ToC. We need to redefine the standard macros
 % with adequate hooks for parameters. The parameters are
 % simpler than the ToC, as we do not have to care
-% about different heading levels.
+% about different heading levels.\tcbdocmarginnote{U 30-06-2015}
 %
 % \begin{docCommand}{format_lof_name:n} { \marg{name} }
 %   Formats and typesets the contents name part, in a LoF. 
@@ -1589,7 +1590,7 @@ See http://www.latex-project.org/lppl.txt
 \ExplSyntaxOff
 \endinput    
 %    \end{macrocode}
-
+% \drawlistdiagram
 % 
 % \subsection{Keys for Lists of Tables}
 
@@ -1636,6 +1637,21 @@ See http://www.latex-project.org/lppl.txt
 % \captionof{figure}{This is figure with caption of}
 %
 % \section{This is a very long heading to see.This is a very long heading to see.This is a very long heading to see.This is a very long heading to see.This is a very long heading to see.This is a very long heading to see.This is a very long heading to see. }
+
+% \meaning\contentsline
+%
+%
+% \meaning\numberline
+% \def\tst#1{\tcbox[nobeforeafter,box align=base,size=minimal]{#1}}
+%\contentsline {section}{\numberline {1\relax .1\relax }\tst{Introduction} }{1}{section.1.1}
+%\contentsline {section}{\numberline {1\relax .2\relax } \tst{Key values for Chapters}}{1}{section.1.2}
+%
+%
+%\makeatletter
+%\hyper@linkstart{link}{section.1.2}{12}\hyper@linkend
+%\makeatother
+
+
 %</TOC>      
 \endinput       
  %    \begin{macrocode}

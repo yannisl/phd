@@ -109,12 +109,12 @@ See http://www.latex-project.org/lppl.txt
   \from{\jobname.dtx}{package}
   \from{phd-pkgmanager.tex}{PKG}
   %\from{phd-sections.dtx}{SECT}
-  \from{phd-lowersections.dtx}{LSECT}
+  %\from{phd-lowersections.dtx}{LSECT}
   \from{phd-specials.dtx}{SPECIAL}
 %  \from{phd-toc.dtx}{TOC}
   \from{phd-docmacros.tex}{DOCS}
   \from{phd-images.dtx}{images}
-  \from{phd-runningheads.dtx}{RH}
+  %\from{phd-runningheads.dtx}{RH}
   \from{phd-epigraphs.dtx}{EPI} 
   \from{phd-logos.dtx}{LOG}
   \from{hyphenation.dtx}{hyphen}
@@ -191,6 +191,10 @@ See http://www.latex-project.org/lppl.txt
 % \usepackage[style=mla]{biblatex}
 \usepackage{phd}
 \usepackage{fontspec}
+\usepackage{phd-lowersections}
+\usepackage{phd-runningheads}
+%\usepackage{phd-toc}
+
 %\usepackage{pkgindoc}             %%% danger
 \sethyperref
 \makeindex
@@ -809,7 +813,31 @@ See http://www.latex-project.org/lppl.txt
       }
   }
   
+\pgfkeys
+ {/handlers/.case/.code = 
+    \pgfkeysalso
+      {\pgfkeyscurrentpath/.code=
+         \str_case_x:nnTF {##1}  
+             {
+               { none       } { \cs_gset:cpn {#1} { \empty             } } 
+               { lower      } { \cs_gset:cpn {#1} { \MakeTextLowercase } } 
+               { lowercase  } { \cs_gset:cpn {#1} { \MakeTextLowercase } } 
+               { upper      } { \cs_gset:cpn {#1} { \MakeTextUppercase } } 
+               { uppercase  } { \cs_gset:cpn {#1} { \MakeTextUppercase } } 
+               { upper~case } { \cs_gset:cpn {#1} { \MakeTextUppercase } } 
+             }
+             {                         }
+             { \cs_gset:cpn #1 {\MakeTextLowercase} }
+      }
+  }  
   
+ \pgfkeys
+ {/handlers/.store/.code = 
+    \pgfkeysalso
+      {\pgfkeyscurrentpath/.code=
+         \cs_gset:cpn {#1} {##1}
+      }
+  }   
 \ExplSyntaxOff  
 %    \end{macrocode}
 % \subsection{Alignment handler}
@@ -886,6 +914,42 @@ See http://www.latex-project.org/lppl.txt
   }
 \ExplSyntaxOff  
 %    \end{macrocode}
+% \section{Shadows}
+% 
+% Many components can be rendered with shadows. This can be done through the
+% tcolorbox shadowing commands or directly through \tikzname. The way parameters
+% are specified in both cases results in multi-argument keys, which is generally
+% against the philosophy of the mark-up semantics of the |phd| package. Most
+% of these keys required color specification and or size specification.
+% 
+% Since colors are linked to palettes, I decided that the color part would belong to
+% the palette settings rather than the shadow keys. Also any sizing of shadows has been
+% delegated to default macros. This simplifies the user interface tremendously. 
+% Should a template designer wish to provide a more complicated shadow, this can be
+% achieved through the style property of the element.
+%
+% Shadows are only available when the box rendering engine depend on tcolorbox. 
+%
+%    \begin{macrocode}  
+
+\ExplSyntaxOn
+ \pgfkeys
+ {/handlers/.shadow/.code = 
+    \pgfkeysalso
+      {\pgfkeyscurrentpath/.code=
+         \str_case_x:nnTF {##1}  
+             {
+               { none       }   { \cs_gset:cpn {#1} { {no~shadow}       } } 
+               { drop~shadow  } { \cs_gset:cpn {#1} { drop~shadow       } }
+               { drop~lifted~shadow  } { \cs_gset:cpn {#1} {{##1         }} } 
+               { fuzzy~halo}           { \cs_gset:cpn {#1} {halostyle } }
+             }
+             {                         }
+             { \cs_gset:cpn #1 {##1} }
+      }
+  } 
+\ExplSyntaxOff  
+%    \end{macrocode}  
 % \subsection{Sectioning format handler}
 %  This handler manages sectioning type formats. Not all of them are currently
 %  defined.
@@ -924,10 +988,10 @@ See http://www.latex-project.org/lppl.txt
       {\pgfkeyscurrentpath/.code=
         \clist_if_in:NnTF \allowed_color_options  {##1 } 
           {
-           \cs_gset:cpn {#1} {\color{spot}}
+           \cs_gset:cpn {#1} {\color{##1}}
           } 
           {
-           { \cs_gset:cpn {#1} {\color{spot}} } %FIRE MUST CATER FOR SPECIALS
+           { \cs_gset:cpn {#1} {\color{##1}} } %FIRE MUST CATER FOR SPECIALS
           } % to add that this is custom message and check if defined
       }
   }
@@ -1432,6 +1496,9 @@ See http://www.latex-project.org/lppl.txt
 \colorlet{thehyperlink}{theblue}
 \colorlet{preciscolor}{sweet}
 \colorlet{toccolor}{sweet}
+\definecolor{bgsexy}{HTML}{F060A8}
+%\definecolor{bgsexy}{HTML}{90D228}
+
 %\newcommand*{\defaultcolor}{\color{black}}
 %\newcommand*{\spotcolor}{\color{spot}}
 %    \end{macrocode}
@@ -1531,6 +1598,7 @@ See http://www.latex-project.org/lppl.txt
                         index quote = {!},
                         index german settings,
                    }
+\tcbset{halostyle/.style={fuzzy halo=2mm with magenta!5}}                   
 \let\cs\oldcs                
 %    \end{macrocode}                
 %
