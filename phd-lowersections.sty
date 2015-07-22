@@ -14,8 +14,6 @@
 
 
 
-
-
 \NeedsTeXFormat{LaTeX2e}[1994/12/01]%
 \ProvidesFile{phd-lowersections}[2015/1/13 v1.0 less preamble (YL)]%
 \let\ltxtoday\today
@@ -120,7 +118,7 @@
      #1~format/.format~in          = l_phd_#2_format_tl,
      #1~background-color/.store    = l_phd_#2_background_color_tl,
      #1~frame-color/.store         = l_phd_#2_frame_color_tl,
-     #1~color/.colorin               = l_phd_#2_color_tl,
+     #1~color/.colorin             = l_phd_#2_color_tl,
      #1~shadow/.shadow             = l_phd_#2_shadow_tl,
 
      #1~width/.store               = l_phd_#2_width,
@@ -128,7 +126,14 @@
      #1~grow~left/.store           = l_phd_#2_grow_left_dim,
      #1~grow~right/.store          = l_phd_#2_grow_right_dim,
      #1~rounded~corners/.store     = l_phd_#2_rounded_corners_tl,
-
+     #1~borderline~top/.store      = l_phd_#2_borderline_top_tl,
+     #1~borderline~right/.store    = l_phd_#2_borderline_right_tl,
+     #1~borderline~bottom/.store   = l_phd_#2_borderline_bottom_tl,
+     #1~borderline~left/.store     = l_phd_#2_borderline_left_tl,
+     #1~borderline~top-color/.store      = l_phd_#2_borderline_top_color_tl,
+     #1~borderline~right-color/.store    = l_phd_#2_borderline_right_color_tl,
+     #1~borderline~bottom-color/.store   = l_phd_#2_borderline_bottom_color_tl,
+     #1~borderline~left-color/.store     = l_phd_#2_borderline_left_color_tl,
      #1~border-top-width/.code     = \dim_set:cn {l_phd_#2_border_top_width_dim}    {##1},
      #1~border-right-width/.code   = \dim_set:cn {l_phd_#2_border_right_width_dim}  {##1},
      #1~border-bottom-width/.code  = \dim_set:cn {l_phd_#2_border_bottom_width_dim} {##1},
@@ -329,14 +334,22 @@
         #1~grow~right             = 0mm,
         #1~rounded~corners        = northeast,
         #1~shadow                 = drop~shadow,
-        #1~border-left-width      = 0pt,
-        #1~border-right-width     = 0pt,
-        #1~border-top-width       = 2pt,
-        #1~border-bottom-width    = 2pt,
-        #1~padding-left-width     = 0pt,
-        #1~padding-right-width    = 0pt,
-        #1~padding-top-width      = 0pt,
-        #1~padding-bottom-width   = 0pt,
+        #1~borderline~top          = 1pt,
+        #1~borderline~right        = 1pt,
+        #1~borderline~bottom       = 1pt,
+        #1~borderline~left         = 1pt,
+        #1~borderline~top-color    = black,
+        #1~borderline~right-color  = black,
+        #1~borderline~bottom-color = black,
+        #1~borderline~left-color   = black,
+        #1~border-left-width      = 1pt,
+        #1~border-right-width     = 1pt,
+        #1~border-top-width       = 1pt,
+        #1~border-bottom-width    = 1pt,
+        #1~padding-left-width     = 1pt,
+        #1~padding-right-width    = 1pt,
+        #1~padding-top-width      = 1pt,
+        #1~padding-bottom-width   = 1pt,
      }
   }
 
@@ -381,6 +394,46 @@
    \cs_if_exist_use:c { #1_fontsize_tl   }
  }
 
+\cs_new:Npn \set_borders_aux:nn #1 #2
+ {
+  \dim_use:c { l_phd_#1_border_#2_width_dim }
+ }
+
+\cs_new:Npn \set_color_aux:nn #1 #2
+ {
+   \cs:w l_phd_#1_#2_color_tl \cs_end:
+ }
+\ExplSyntaxOff
+\ExplSyntaxOn
+\cs_new:Npn \set_borderline_aux:nn #1 #2
+{
+   \tcbset{borderline~style/.style = {
+     borderline~west = {\cs:w l_phd_#1_borderline_left_tl \cs_end:}
+                       {-\set_borders_aux:nn {#1} {left}-0pt }
+                       {
+                        \cs:w l_phd_#1_borderline_left_color_tl \cs_end: ,
+                         solid,
+                       },
+     borderline~east = {\cs:w l_phd_#1_borderline_right_tl \cs_end:}
+                       {-\set_borders_aux:nn {#1} {right}-0pt }
+                       {
+                         \cs:w l_phd_#1_borderline_right_color_tl \cs_end:,
+                         solid
+                       },
+     borderline~north = {\cs:w l_phd_#1_borderline_top_tl \cs_end:}
+                       {-\set_borders_aux:nn {#1} {top}-0pt }
+                       { \cs:w l_phd_#1_borderline_top_color_tl \cs_end:,
+                        dashed},
+     borderline~south = {\cs:w l_phd_#1_borderline_bottom_tl \cs_end:}
+                       {-\set_borders_aux:nn {#1} {bottom}-0pt }
+                       {
+                         \cs:w l_phd_#1_borderline_bottom_color_tl \cs_end:,
+                         dashed
+                       },
+    }
+    }
+}
+
 \cs_set:Npn \format_inmargin:nnn #1#2#3
   {
      \tcbdocmarginnote
@@ -390,6 +443,7 @@
        #3
      }
   }
+
 \ExplSyntaxOff
 \ExplSyntaxOn
 \cs_set:Npn \format_hang:nn #1#2#3
@@ -397,101 +451,36 @@
       \interlinepenalty \@M #3\@@par}%
   }}
 \ExplSyntaxOff
-
 \ExplSyntaxOn
-\cs_set:Npn \make_box_style:n #1 #2
-  {
-    \phd_set_box_parameters:nn {#1}{#2} %section outer
-    \tcbset
-      {
-        #1~#2/.style=
-          {
-            size               = minimal, %resets
-            enhanced,
-            colback            = white, %fix\cs:w #1tcbbgcolor \cs_end:,
-            colframe           = black!80,
-            sharpish~corners,
-            sharp~corners      = all,
-            %arc                = 6mm,%\tcbarc_outer,
-            auto~outer~arc,
-            rounded~corners    = east,%\tcbroundedcorners,
-            %\tcbshadow,
-            fuzzy~shadow       = {2mm}{-1mm}{0mm}{0.1mm}{black!50!white},
-            right              = 10mm,%\cs:w #1tcbrightsepwidth  \cs_end:,
-            bottom             = 3mm,%\cs:w #1tcbbottomsepwidth \cs_end:,
-            top                = 3mm,%\cs:w #1tcbtopsepwidth    \cs_end:,
-            borderline~north   = {0pt}{-1pt}{red},
-            borderline~south   = {0pt}{-1pt}{red},
-            borderline~east    = {0pt}{0pt}{red},
-            borderline~west    = {0pt}{0pt}{red},
-       }
-    }
-  }
-\tcbset{
-  chapter/.style = {
-            borderline~north   = {0pt}{0pt}{orange},
-            borderline~south   = {0pt}{0pt}{orange},
-            borderline~east    = {0pt}{0pt}{orange},
-            borderline~west    = {0pt}{0pt}{orange},
-      }
-  }
-\tcbset{
-  _title/.style = {
-            borderline~north   = {0pt}{0pt}{yellow},
-            borderline~south   = {0pt}{0pt}{yellow},
-            borderline~east    = {0pt}{0pt}{yellow},
-            borderline~west    = {0pt}{0pt}{yellow},
-      }
-  }
-\tcbset{
-  _number/.style = {
-      }
-  }
-
- \tcbset{section/.style={chapter}}
- \tcbset{subsection/.style={chapter}}
- \tcbset{subsubsection/.style={chapter}}
-
 \bool_new:N \combo_if_bool \bool_gset_true:N \combo_if_bool
 
 \cs_set:Npn \format_block:nnnn #1#2#3#4
   {
     \bgroup
 
-    \leftskip-1.25in
+    %\leftskip-1.25in
+    \set_borderline_aux:nn {#1}{}
     \begin{tcolorbox}[enhanced,
-      width                          = \pdfpagewidth,
-      arc               = 0mm,
+      width       = \textwidth-4pt, %\pdfpagewidth-4cm,
+      arc         = 10mm,
       auto~outer~arc,
-                   %\cs_if_exist_use:cTF {l_phd_#1_shadow_tl}{}{},
-                   colback  = \cs:w l_phd_#1_background_color_tl \cs_end:,
-                   colframe = \cs:w l_phd_#1_frame_color_tl      \cs_end:,
-                   toprule  = \dim_use:c {l_phd_#1_border_top_width_dim},
-                   bottomrule  = \dim_use:c {l_phd_#1_border_bottom_width_dim},
-                   %rounded~corners=all,
-                   %drop~lifted~shadow=black,
-                  ]
+      \cs_if_exist_use:cTF {l_phd_#1_shadow_tl}{}{},
+        colback           = \set_color_aux:nn {#1}{background},
+        colframe          = \set_color_aux:nn {#1}{frame},
+        toprule           = \set_borders_aux:nn {#1} {top},
+        rightrule         = \set_borders_aux:nn {#1} {right},
+        bottomrule        = \set_borders_aux:nn {#1} {bottom},
+        leftrule          = \set_borders_aux:nn {#1} {left},
+        borderline~style,
+      rounded~corners=all,
+      drop~lifted~shadow=black,
+     ]
      \bool_if:NTF \combo_if_bool
      {
-       \phd_float_box:nnn {chapter_number} {}
-         {
-          \tcbox[size=minimal,
-           nobeforeafter,
-           colback=\cs:w l_phd_#1_background_color_tl \cs_end:,
-
-            ]
-            {
-              \set_font_aux:n {chapter}
-              \cs:w  l_phd_#1_label_color_tl \cs_end:
-              \cs:w #1name\cs_end:\space
-              \cs_if_exist_use:cTF
-                {l_phd_#1_number_color_tl}{
-                    \cs:w l_phd_#1_number_color_tl\cs_end:
-                }{F}
-                 \cs:w the#1\cs_end:
-
+       \phd_float_box:nnn {chapter_number} {}{
+         \tcbox{\cs:w #1name\cs_end:\space
+                \cs:w the#1\cs_end:}
            }
-        }
     }
     {
      \phd_float_box:nnn {#1}{}
@@ -508,34 +497,34 @@
  \par\nobreak\nointerlineskip
 }
 \cs_set:Npn \phd_float_box:nnn #1 #2 #3
-{
+{\set_borderline_aux:nn {#1}{}
   \begin{tcolorbox}
     [
       size=minimal,no~shadow,
-      colback  = \cs:w l_phd_#1_background_color_tl \cs_end:,
-      colframe = \cs:w l_phd_#1_frame_color_tl \cs_end:,
-      toprule  = 3pt,
-
-    ]
+      colback  = white,%\cs:w l_phd_#1_background_color_tl \cs_end:,
+      colframe = white,%\cs:w l_phd_#1_frame_color_tl \cs_end:,
+      toprule  = .1pt,
+      borderline~style,
+     ]
     \cs:w l_phd_#1_align_tl \cs_end:
     \begin{tcolorbox}
       [
         %#1~outer,
         size=minimal,
         no~shadow,
-        colback = \cs:w l_phd_#1_background_color_tl \cs_end:,
+        colback = black,%\cs:w l_phd_#1_background_color_tl \cs_end:,
         colframe=white,
         boxsep=10pt,
         %drop~shadow,
         width=0.7\textwidth,
+        borderline~style,
+       % halign = ,
        ]
        {   \language-1\relax
-      \cs:w  l_phd_#1_fontweight_tl  \cs_end:
-      \cs:w  l_phd_#1_fontfamily_tl  \cs_end:
-      \cs:w  l_phd_#1_fontsize_tl    \cs_end:
-      \cs:w  l_phd_#1_fontshape_tl   \cs_end:
+
+      \set_font_aux:n {l_phd_#1}
       \cs:w  l_phd_#1_color_tl       \cs_end:
-      \cs:w  l_phd_#1_align_tl       \cs_end:
+      \cs:w  l_phd_#1_align_tl  \cs_end:
        {#3}\relax %
        \par
 
@@ -1016,7 +1005,7 @@
     subparagraph shadow           = off,
   }
 \cxset{chapter title style/.style= {
-       chapter title align = Centering,}
+       chapter title align = left,}
  }
 \cxset{section title style/.style= {
        section title align = Centering,}

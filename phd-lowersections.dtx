@@ -160,11 +160,11 @@ See http://www.latex-project.org/lppl.txt
     chapter title margin-right-width  =  1cm,
     chapter title margin-bottom-width = 10pt,
     chapter title margin-left-width   = 0pt,
-    chapter align                     = RaggedLeft,
-    chapter title align               = Centering, %checked
+    chapter align                     = left,
+    chapter title align               = left, %checked
     chapter name                      = Chapter,
     chapter format                    = block,
-    chapter font-size                 = HHUGE,
+    chapter font-size                 = Huge,
     chapter font-weight               = bold,
     chapter font-family               = sffamily,
     chapter font-shape                = upshape,
@@ -203,14 +203,25 @@ See http://www.latex-project.org/lppl.txt
     chapter number align            = Centering,
     }
 \cxset{%    
-     chapter title font-size        = HHUGE,
+     chapter title font-size        = Huge,
      chapter title font-weight      = bold,
-     chapter title font-family      = sffamily,
+     chapter title font-family      = calligra,
      chapter title font-shape       = upshape,
-     chapter title color            = white,
+     chapter title color            = black,
      }    
 \end{filecontents}
 \input{defaults-chapters}  
+\definecolor{bgsexy}{HTML}{FF6927}
+
+\definecolor{creamy}{HTML}{FDEBD7}
+\cxset{chapter title color= creamy,
+       chapter label color = creamy,
+       chapter number color = creamy,
+       chapter number font-size = Huge,
+       subsection title color = creamy,
+       chapter name = CHAPTER,
+       chapter label case = upper,
+       chapter number align=left}
 \begin{document}
 %\coverpage{asia}{Book Design }{Camel Press}{HEADINGS}{DESIGN} 
 \pagestyle{empty}
@@ -324,22 +335,95 @@ See http://www.latex-project.org/lppl.txt
 % I was reflecting on the convoluted Java frameworks widely adopted at work. Those hefty frameworks brought coding structures and conventions to large engineering teams; meanwhile, they also sucked the fun of programming like a Pastafarian monster slurping all the tomato sauce on a plate of spaghetti.
 %}{\href{http://blog.zmxv.com/2015/07/code-golf-at-google.html}{Zhen Wang}}
 %
-% The original sectioning routines of the \latexe source are somewhat complicated by the
-% way optional commands were build. With expl3's xparse module these type of multi-switch commands can be simplified and the code made clearer.
-% 
-% The aim of this package is to provide:
+% We start by outlining what we are trying to achieve with this package:
+%
 % \begin{enumerate}
 % \item An extended key value interface to lower level sectioning functions.
-
 % \item To provide a compatibility mode, where documents wishing to test the package
 % can have an easy switch to switch in and out. This is also important for the testing of the package.
-
-% \item To provide a number of pre-canned templates that cover most of the typical use case.
-
+% \item To provide a number of templates that cover most of the typical use case.
 % \item To provide means for a plug-in architecture for extensions.
+
 % \end{enumerate}
 % 
+% \section{Terminology}
 %
+%  \begin{description}
+%  \item [document] Any written item, as a book, article, or letter, especially 
+%                  of a factual or informative nature.
+%  \item [heading] A division of a document or document series. For a normal
+%        book headings are chapters, sections etc. However we allow for
+%        specifying a more complex document divided into books, volumes
+%        parts etc. For example the Bible has Books, chapters and verses,
+%        where a legal document might require divisions such as clauses.
+%        In general these divisions are numbered. These document divisions
+%        are stored in the comma list \refCom{phd_book_divisions_clist}.
+%  \item [head] A typeset heading, such as chapter head, or section head.
+%        This can include a counter, label and title for example, 
+%        \emph{Chapter 1 Introduction}.
+%  \item [dom] This is a programming interface that provides a structured
+%        representation of the document (a tree) and it defines a way
+%        that the structure can be accessed. Although \latexe does not
+%        offer a standard way to build such a tree (mainly because
+%        \tex does not require the marking of paragraphs, it is 
+%        useful to think of the document as a tree structure. We also
+%        allow for a semi-automated way to build such a tree (with the 
+%        exception that paragraphs are not included).
+% \item [element] A part of the document tree that can be styled on
+%       its own. For example the chapter label, or the section number.
+%
+% \end{description}
+%
+% \section{Users}
+%  We classify users according to the \LaTeX3 terminology as a) programmers b) template designers
+%  and c) authors.
+% \subsection{Author}
+%  We assume that the author has an exising template which she is using but might want to do
+%  some minor modifications, for example use an italic shape for the font of the mark, but an 
+%  upright font for the page numbers. 
+%
+% {\obeylines 
+%~~ |\cxset|
+%~~~~~|{|
+%~~~~~~~~\textit{chapter number color}~~|format          = apa,|
+%~~~~~~~~\textit{section title font-size} |font-size   = Large,|
+%~~~~~|}|
+%}  
+%
+% We follow the idea of representing the basic elements of documents
+% as elements, each one having a parent in order to specify
+% the element we need to style as accurate as possible. One can think of
+% this approach being congruent with objects in other languages.
+% As a matter fact nothing stops us from defining a key value
+% interface as shown below.
+%
+% {\obeylines 
+%~~ |\cxset|
+%~~~~~|{| 
+%~~~~~~~~\textit{header.even.mark.font.size}   = |Large,|
+%~~~~~~~~\textit{header.even.mark.font.family} = |serif,|
+%~~~~~|}|
+%}  
+%
+% This would pehaps make it easier for the template designer, but I have rejected
+% the idea as my aim is to make it easy for the author, who can search the template
+% and just enter a couple of new proerty values.
+%
+% \subsection{Template designer}
+% \pagestyle{headings}
+% The template designer in the example above would have selected the format style
+% from a number of predefined formats (templates) or would have created a style
+% called \textit{apa} from an existing template and modified it using declarative
+% key style.
+%
+% \subsection{The programmer}
+%
+% The programmer in the example above could have created the basic format
+% \textit{apa} by using both declarative as well as defining or using existing
+% macros. To the programmer we offer an extension mechanism, where the contents
+% of a |ps@| command are defined. For example teh programmer can define a new
+% style using \tikzname, but without having to worry about defining full |ps@|
+% and their interface.
 % \section{Preliminaries}
 %
 %  Standard file identification. We first announce the package 
@@ -508,7 +592,7 @@ See http://www.latex-project.org/lppl.txt
 % Colors
      #1~background-color/.store    = l_phd_#2_background_color_tl,
      #1~frame-color/.store         = l_phd_#2_frame_color_tl,
-     #1~color/.colorin               = l_phd_#2_color_tl, 
+     #1~color/.colorin             = l_phd_#2_color_tl, 
      #1~shadow/.shadow             = l_phd_#2_shadow_tl,
 
 % Box
@@ -517,7 +601,16 @@ See http://www.latex-project.org/lppl.txt
      #1~grow~left/.store           = l_phd_#2_grow_left_dim,
      #1~grow~right/.store          = l_phd_#2_grow_right_dim,
      #1~rounded~corners/.store     = l_phd_#2_rounded_corners_tl,
-    
+% Borderlines     
+     #1~borderline~top/.store      = l_phd_#2_borderline_top_tl,
+     #1~borderline~right/.store    = l_phd_#2_borderline_right_tl, 
+     #1~borderline~bottom/.store   = l_phd_#2_borderline_bottom_tl, 
+     #1~borderline~left/.store     = l_phd_#2_borderline_left_tl, 
+% Borderline color
+     #1~borderline~top-color/.store      = l_phd_#2_borderline_top_color_tl,
+     #1~borderline~right-color/.store    = l_phd_#2_borderline_right_color_tl, 
+     #1~borderline~bottom-color/.store   = l_phd_#2_borderline_bottom_color_tl, 
+     #1~borderline~left-color/.store     = l_phd_#2_borderline_left_color_tl,           
 % Box borders
      #1~border-top-width/.code     = \dim_set:cn {l_phd_#2_border_top_width_dim}    {##1},  
      #1~border-right-width/.code   = \dim_set:cn {l_phd_#2_border_right_width_dim}  {##1}, 
@@ -751,16 +844,26 @@ See http://www.latex-project.org/lppl.txt
         #1~grow~right             = 0mm, 
         #1~rounded~corners        = northeast,
         #1~shadow                 = drop~shadow,
+% borderlines
+        #1~borderline~top          = 1pt,
+        #1~borderline~right        = 1pt,        
+        #1~borderline~bottom       = 1pt,        
+        #1~borderline~left         = 1pt, 
+% borderlines color
+        #1~borderline~top-color    = black,
+        #1~borderline~right-color  = black,        
+        #1~borderline~bottom-color = black,        
+        #1~borderline~left-color   = black,                 
 %    
-        #1~border-left-width      = 0pt,
-        #1~border-right-width     = 0pt,
-        #1~border-top-width       = 2pt,
-        #1~border-bottom-width    = 2pt,
+        #1~border-left-width      = 1pt,
+        #1~border-right-width     = 1pt,
+        #1~border-top-width       = 1pt,
+        #1~border-bottom-width    = 1pt,
 %    
-        #1~padding-left-width     = 0pt,
-        #1~padding-right-width    = 0pt,
-        #1~padding-top-width      = 0pt,
-        #1~padding-bottom-width   = 0pt,
+        #1~padding-left-width     = 1pt,
+        #1~padding-right-width    = 1pt,
+        #1~padding-top-width      = 1pt,
+        #1~padding-bottom-width   = 1pt,
      }
   }
 
@@ -805,7 +908,7 @@ See http://www.latex-project.org/lppl.txt
 % 
 %
 %
-% \chapter{Formatters}
+% \chapter{Formatters and Associated Functions}
 
 % We first define some formatters to tie up with using |format| in sectioning commands.
 %
@@ -819,6 +922,57 @@ See http://www.latex-project.org/lppl.txt
    \cs_if_exist_use:c { #1_fontsize_tl   }
  }
  
+\cs_new:Npn \set_borders_aux:nn #1 #2
+ {
+  \dim_use:c { l_phd_#1_border_#2_width_dim }
+ }
+ 
+\cs_new:Npn \set_color_aux:nn #1 #2
+ {
+   \cs:w l_phd_#1_#2_color_tl \cs_end:
+ }
+\ExplSyntaxOff 
+%    \end{macrocode}
+%  Borderlines are a bit problematic in a declarative interface. 
+%  Firstly they take four arguments. Following the shadows
+%  interface we offer predetermined, styles as well as allow 
+%  maximum flexibility through styles for the user.
+%
+%  To draw them they require offset, thikness, color and line type.
+%  The offset determines if they drawn away or inwards the original
+%  path.  
+%
+%    \begin{macrocode}
+\ExplSyntaxOn
+\cs_new:Npn \set_borderline_aux:nn #1 #2   
+{
+   \tcbset{borderline~style/.style = {
+     borderline~west = {\cs:w l_phd_#1_borderline_left_tl \cs_end:}
+                       {-\set_borders_aux:nn {#1} {left}-0pt }
+                       {
+                        \cs:w l_phd_#1_borderline_left_color_tl \cs_end: , 
+                         solid,
+                       }, 
+     borderline~east = {\cs:w l_phd_#1_borderline_right_tl \cs_end:}
+                       {-\set_borders_aux:nn {#1} {right}-0pt }
+                       { 
+                         \cs:w l_phd_#1_borderline_right_color_tl \cs_end:,
+                         solid
+                       },  
+     borderline~north = {\cs:w l_phd_#1_borderline_top_tl \cs_end:}
+                       {-\set_borders_aux:nn {#1} {top}-0pt }
+                       { \cs:w l_phd_#1_borderline_top_color_tl \cs_end:, 
+                        dashed},   
+     borderline~south = {\cs:w l_phd_#1_borderline_bottom_tl \cs_end:}
+                       {-\set_borders_aux:nn {#1} {bottom}-0pt }
+                       {
+                         \cs:w l_phd_#1_borderline_bottom_color_tl \cs_end:, 
+                         dashed
+                       },                                                    
+    }
+    }                       
+}
+      
 \cs_set:Npn \format_inmargin:nnn #1#2#3
   {
      \tcbdocmarginnote
@@ -828,6 +982,8 @@ See http://www.latex-project.org/lppl.txt
        #3
      } 
   }    
+  
+  
 \ExplSyntaxOff  
 %    \end{macrocode}
 %
@@ -849,91 +1005,6 @@ See http://www.latex-project.org/lppl.txt
 % elements. The following elements in block formats are contained in
 % their own boxes. Each box has its own style.
 %  
-
-% 
-% \begin{docCommand}{make_box_style:n}{ \meta{label name} \meta{style second name} }
-%   Every block formatted heading is contained in an outer box. This has
-%   a named style such as |outerbox section|. There is a lot of name swapping
-%   to generally abstract any element.
-% \end{docCommand}
-%
-%    \begin{macrocode}
-\ExplSyntaxOn 
-\cs_set:Npn \make_box_style:n #1 #2
-  {
-    \phd_set_box_parameters:nn {#1}{#2} %section outer
-    \tcbset
-      {
-        #1~#2/.style=
-          {
-            size               = minimal, %resets
-            enhanced,
-            colback            = white, %fix\cs:w #1tcbbgcolor \cs_end:, 
-            colframe           = black!80, 
-            sharpish~corners,
-            sharp~corners      = all,
-            %arc                = 6mm,%\tcbarc_outer,
-            auto~outer~arc,                   
-            rounded~corners    = east,%\tcbroundedcorners,
-            %\tcbshadow,   
-            fuzzy~shadow       = {2mm}{-1mm}{0mm}{0.1mm}{black!50!white},
-% padding           
-%            left               = \csname #1tcbleftsepwidth \endcsname,
-            right              = 10mm,%\cs:w #1tcbrightsepwidth  \cs_end:,
-            bottom             = 3mm,%\cs:w #1tcbbottomsepwidth \cs_end:,
-            top                = 3mm,%\cs:w #1tcbtopsepwidth    \cs_end:,
-% frame rules           
-%            toprule            = \tcbtoprulewidth,
-%            leftrule           = \tcbleftrulewidth,
-%            rightrule          = \tcbrightrulewidth,
-%            bottomrule         = \tcbbottomrulewidth,
-% border rules           
-%            grow~to~right~by   = 1cm,% \tcbgrowright,
-%            grow~to~left~by    = 1cm, %\tcbgrowleft,
-%            boxsep             = 10pt,
-%            valign~lower       = center,%not necessary?
-%           interior~style     = {left~color=blue!20!white,
-%                                 right~color=blue!30!white},
-%\if@debug
-            borderline~north   = {0pt}{-1pt}{red},  
-            borderline~south   = {0pt}{-1pt}{red},   
-            borderline~east    = {0pt}{0pt}{red},
-            borderline~west    = {0pt}{0pt}{red},                             
-%\fi%makestyle          
-       }
-    }   
-  }   
-\tcbset{
-  chapter/.style = {
-            borderline~north   = {0pt}{0pt}{orange},  
-            borderline~south   = {0pt}{0pt}{orange},   
-            borderline~east    = {0pt}{0pt}{orange},
-            borderline~west    = {0pt}{0pt}{orange},   
-      }
-  }
-\tcbset{
-  _title/.style = {
-            borderline~north   = {0pt}{0pt}{yellow},  
-            borderline~south   = {0pt}{0pt}{yellow},   
-            borderline~east    = {0pt}{0pt}{yellow},
-            borderline~west    = {0pt}{0pt}{yellow},   
-      }
-  }    
-\tcbset{
-  _number/.style = {
-%            borderline~north   = {0pt}{0pt}{blue},  
-%            borderline~south   = {0pt}{0pt}{blue},   
-%            borderline~east    = {0pt}{0pt}{blue},
-%            borderline~west    = {0pt}{0pt}{blue},   
-      }
-  }   
-
- \tcbset{section/.style={chapter}} 
- \tcbset{subsection/.style={chapter}} 
- \tcbset{subsubsection/.style={chapter}} 
-   
-%    \end{macrocode}
-%
 % \begin{docCommand}{format_block:nnnn} {\meta{}\meta{}\marg{}\marg{}}
 %   This function is the main function for block and fancy headings. It
 %   is also used for Chapter and part formatting. Depending on the 
@@ -946,7 +1017,8 @@ See http://www.latex-project.org/lppl.txt
 %
 % \end{docCommand}
 % 
-%    \begin{macrocode}    
+%    \begin{macrocode}   
+\ExplSyntaxOn 
 \bool_new:N \combo_if_bool \bool_gset_true:N \combo_if_bool
 
 
@@ -954,40 +1026,43 @@ See http://www.latex-project.org/lppl.txt
   {
     \bgroup
     
-    \leftskip-1.25in
+    %\leftskip-1.25in
+    \set_borderline_aux:nn {#1}{}
     \begin{tcolorbox}[enhanced,
-      width                          = \pdfpagewidth,
-      arc               = 0mm,
+      width       = \textwidth-4pt, %\pdfpagewidth-4cm,
+      arc         = 10mm,
       auto~outer~arc,
-                   %\cs_if_exist_use:cTF {l_phd_#1_shadow_tl}{}{},
-                   colback  = \cs:w l_phd_#1_background_color_tl \cs_end:,
-                   colframe = \cs:w l_phd_#1_frame_color_tl      \cs_end:,
-                   toprule  = \dim_use:c {l_phd_#1_border_top_width_dim},
-                   bottomrule  = \dim_use:c {l_phd_#1_border_bottom_width_dim},
-                   %rounded~corners=all,
-                   %drop~lifted~shadow=black,
-                  ] 
+      \cs_if_exist_use:cTF {l_phd_#1_shadow_tl}{}{},
+        colback           = \set_color_aux:nn {#1}{background},
+        colframe          = \set_color_aux:nn {#1}{frame},
+        toprule           = \set_borders_aux:nn {#1} {top},
+        rightrule         = \set_borders_aux:nn {#1} {right},
+        bottomrule        = \set_borders_aux:nn {#1} {bottom},
+        leftrule          = \set_borders_aux:nn {#1} {left},
+%       borderline        = {5pt}{5pt}{blue,double,dashed,line~join=bevel},
+%       borderline~north = {2pt}{-3pt}{dotted},
+%       borderline~south = {2pt}{-3pt}{dotted},
+%       borderline~east  = {2pt}{-3pt}{dotted},
+%       borderline~west  = {2pt}{-3pt}{dotted},      
+        borderline~style, 
+%       no~borderline,     
+%       show~bounding~box,
+%      {\cs:w l_phd_#1_borderline_left_tl \cs_end:
+%                         }
+%                         {
+%                         -\set_borders_aux:nn {#1} {left}-10pt
+%                         }
+%                         {bgsexy, dashed
+%                         },
+      rounded~corners=all,
+      drop~lifted~shadow=black,
+     ] 
      \bool_if:NTF \combo_if_bool 
      {
-       \phd_float_box:nnn {chapter_number} {}
-         { 
-          \tcbox[size=minimal,
-           nobeforeafter,
-           colback=\cs:w l_phd_#1_background_color_tl \cs_end:,
-             
-            ] 
-            { 
-              \set_font_aux:n {chapter}
-              \cs:w  l_phd_#1_label_color_tl \cs_end:
-              \cs:w #1name\cs_end:\space 
-              \cs_if_exist_use:cTF 
-                {l_phd_#1_number_color_tl}{
-                    \cs:w l_phd_#1_number_color_tl\cs_end:
-                }{F}
-                 \cs:w the#1\cs_end:
-            
+       \phd_float_box:nnn {chapter_number} {}{
+         \tcbox{\cs:w #1name\cs_end:\space 
+                \cs:w the#1\cs_end:}          
            }
-        } 
     }
     {         
      \phd_float_box:nnn {#1}{}
@@ -1020,34 +1095,34 @@ See http://www.latex-project.org/lppl.txt
 %
 %    \begin{macrocode}
 \cs_set:Npn \phd_float_box:nnn #1 #2 #3
-{
+{\set_borderline_aux:nn {#1}{}
   \begin{tcolorbox}
     [
       size=minimal,no~shadow,
-      colback  = \cs:w l_phd_#1_background_color_tl \cs_end:, 
-      colframe = \cs:w l_phd_#1_frame_color_tl \cs_end:, 
-      toprule  = 3pt,
-      
-    ]
+      colback  = white,%\cs:w l_phd_#1_background_color_tl \cs_end:, 
+      colframe = white,%\cs:w l_phd_#1_frame_color_tl \cs_end:, 
+      toprule  = .1pt,
+      borderline~style,
+     ]
     \cs:w l_phd_#1_align_tl \cs_end:
     \begin{tcolorbox}
       [
         %#1~outer,
         size=minimal, 
         no~shadow,
-        colback = \cs:w l_phd_#1_background_color_tl \cs_end:,
+        colback = black,%\cs:w l_phd_#1_background_color_tl \cs_end:,
         colframe=white,
         boxsep=10pt,
         %drop~shadow, 
         width=0.7\textwidth, 
+        borderline~style,
+       % halign = ,
        ]
        {   \language-1\relax
-      \cs:w  l_phd_#1_fontweight_tl  \cs_end:
-      \cs:w  l_phd_#1_fontfamily_tl  \cs_end:
-      \cs:w  l_phd_#1_fontsize_tl    \cs_end:
-      \cs:w  l_phd_#1_fontshape_tl   \cs_end:
+
+      \set_font_aux:n {l_phd_#1}
       \cs:w  l_phd_#1_color_tl       \cs_end:
-      \cs:w  l_phd_#1_align_tl       \cs_end:
+      \cs:w  l_phd_#1_align_tl  \cs_end:
        {#3}\relax %
        \par   
  
@@ -1059,7 +1134,11 @@ See http://www.latex-project.org/lppl.txt
 
 \ExplSyntaxOff
 %    \end{macrocode}
-% 
+%
+% ^^A\ExplSyntaxOn
+% ^^A\format_block:nnnn {chapter} {Demo Chapter} {} {Demo}
+% ^^A\ExplSyntaxOff
+%
 % \subsection{Display format}
 % The display format typesets a heading in a similar fashion to 
 % traditional chapters.
@@ -1799,7 +1878,7 @@ See http://www.latex-project.org/lppl.txt
 % \section{Styles}
 %    \begin{macrocode}  
 \cxset{chapter title style/.style= {
-       chapter title align = Centering,}
+       chapter title align = left,}
  } 
 \cxset{section title style/.style= {
        section title align = Centering,}
