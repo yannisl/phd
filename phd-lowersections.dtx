@@ -163,7 +163,7 @@ See http://www.latex-project.org/lppl.txt
     chapter align                     = left,
     chapter title align               = left, %checked
     chapter name                      = Chapter,
-    chapter format                    = block,
+    chapter format                    = hang,
     chapter font-size                 = Huge,
     chapter font-weight               = bold,
     chapter font-family               = sffamily,
@@ -173,7 +173,7 @@ See http://www.latex-project.org/lppl.txt
     chapter number suffix             = ,
     chapter numbering                 = arabic,
     chapter indent                    = 0pt,
-    chapter beforeskip                = -1sp,
+    chapter beforeskip                = -3cm,
     chapter afterskip                 = 30pt,
     chapter afterindent               = off,
     chapter number after              = ,
@@ -221,25 +221,31 @@ See http://www.latex-project.org/lppl.txt
        subsection title color = creamy,
        chapter name = CHAPTER,
        chapter label case = upper,
-       chapter number align=left}
+       chapter number align=left,
+       part format = traditional,
+       part background-color=spot,
+       part beforeskip                = -3cm,
+       part afterskip                 = 30pt,
+       }
 \begin{document}
+\parindent1em
 %\coverpage{asia}{Book Design }{Camel Press}{HEADINGS}{DESIGN} 
 \pagestyle{empty}
-\coverpage{habtoor-city}{Delay Claim}{HLS-DSE/JV}{HABTOOR CITY}{MEP CLAIM} 
-\secondpage
-\pagestyle{empty}
-\clearpage
+%\coverpage{habtoor-city}{Delay Claim}{HLS-DSE/JV}{HABTOOR CITY}{MEP CLAIM} 
+%\secondpage
+%\pagestyle{empty}
+%\clearpage
 \ExplSyntaxOn
-\tableofcontents
+%\tableofcontents
 \ExplSyntaxOff
 \pagestyle{empty}
 \setcounter{secnumdepth}{6}
 \parskip0pt
-\mainmatter
+%\mainmatter
 \pagenumbering{arabic}
 \pagestyle{headings}        
 %       
-\input{./sections/tikz}
+%\input{./sections/tikz}
 %\input{./mep/claim}  
 %\input{./mep/dewa} 
 %\input{./mep/busbar}
@@ -257,8 +263,10 @@ See http://www.latex-project.org/lppl.txt
 %\input{./styles/style05}
 % \input{./sections/lowerlevelheadings}
 \makeatletter
-\@debugtrue
+%\@debugtrue
+
 \makeatother
+
 \DocInput{\jobname.dtx}
 \input{test-sectioning}
 % \printindex
@@ -325,8 +333,8 @@ See http://www.latex-project.org/lppl.txt
 % \CodelineNumbered
 % \pagestyle{headings}
 % 
-%<*LSECT>
-% \part{IMPLEMENTATION}
+% 
+% ^^A\part{IMPLEMENTATION AND FRIENDS}
 % 
 %
 % \chapter{Code Implementation Objectives and Strategy}
@@ -421,22 +429,25 @@ See http://www.latex-project.org/lppl.txt
 % The programmer in the example above could have created the basic format
 % \textit{apa} by using both declarative as well as defining or using existing
 % macros. To the programmer we offer an extension mechanism, where the contents
-% of a |ps@| command are defined. For example teh programmer can define a new
+% of a |ps@| command are defined. For example the programmer can define a new
 % style using \tikzname, but without having to worry about defining full |ps@|
 % and their interface.
+%
 % \section{Preliminaries}
 %
 %  Standard file identification. We first announce the package 
 %	 and require that it be used with \LaTeX2e. 
-%
-%  \lorem
+% \iffalse
+%<*LSECT>
+% \fi
+%  
 %
 %    \begin{macrocode}
 \NeedsTeXFormat{LaTeX2e}[1994/12/01]%
 \ProvidesFile{phd-lowersections}[2015/1/13 v1.0 less preamble (YL)]%
 %    \end{macrocode}
 %
-% \cxset{section format=hang}
+% 
 % \section{Source2e Interface}
 % 
 % I am not very fond of mixing expl3 control sequences with source2e commands. Here
@@ -444,10 +455,13 @@ See http://www.latex-project.org/lppl.txt
 % This section can be revisited once expl3 code becomes available.
 %
 %    \begin{macrocode}
-\let\ltxtoday\today
-\newif\if@ltxcompat \@ltxcompattrue
-%
 \ExplSyntaxOn
+\let\ltxtoday\today
+\let\phd_hang_from:nn \@hangfrom
+\newif\if@ltxcompat \@ltxcompatfalse
+
+%
+
 \cs_if_exist:cTF {tikzi}
   {}
   {
@@ -480,10 +494,12 @@ See http://www.latex-project.org/lppl.txt
 \def\l_phd_subparagraph_number_prefix_tl{}
 \def\l_phd_subparagraph_number_suffix_tl{}
 %    \end{macrocode}
+%
 % \begin{docCommand} {phd_book_divisions_clist} { \meta{} }
 %   This clist contains all the book divisions, we later also
 %   provide an interface for the user to add new content to it.
 % \end{docCommand} 
+%
 %    \begin{macrocode} 
 \clist_new:N   \phd_book_divisions_clist
 \clist_gset:Nn \phd_book_divisions_clist
@@ -491,10 +507,8 @@ See http://www.latex-project.org/lppl.txt
     part,chapter,section,subsection,subsubsection,
     paragraph,subparagraph
   }
-
-%\dim_gzero_new:N \l_phd_section_title_border_left_width_dim
-
 %    \end{macrocode}
+%
 % \begin{docCommand} {phd_create_new_element:nn} { \marg{label}}
 %  Creates new dims for primary elements. The label is one of chapter, section
 %  etc. 
@@ -517,9 +531,11 @@ See http://www.latex-project.org/lppl.txt
     \dim_gzero_new:c {l_phd_#1_border_bottom_width_dim}
     \dim_gzero_new:c {l_phd_#1_border_left_width_dim}
  }
-
-
-  
+%    \end{macrocode}
+%
+% Next we create the secondary elements.
+%
+%    \begin{macrocode}  
 \clist_map_inline:Nn \phd_book_divisions_clist
   {
     \phd_create_new_element:nn {#1}
@@ -527,21 +543,36 @@ See http://www.latex-project.org/lppl.txt
 
  \clist_new:N \phd_secondary
  \clist_gset:Nn \phd_secondary 
- {
-   chapter_title,section_title,
-   subsection_title,subsubsection_title,
-   paragraph_title,subparagraph_title,
+ { 
+   part_label,
+   part_label_before,
+   part_number, 
+   part_title,
+   part_title_before   
+   part_number_before,
+   
+   chapter_title,
+   section_title,
+   subsection_title,
+   subsubsection_title,
+   paragraph_title,
+   subparagraph_title,
    chapter_title_before,
 %   
-   chapter_label,section_label,
-   subsection_label,subsubsection_label,
-   paragraph_label,subparagraph_label,
+   chapter_label,
+   section_label,
+   subsection_label,
+   subsubsection_label,
+   paragraph_label,
+   subparagraph_label,
    chapter_label_before,
-%   
+%  
    chapter_number,section_number,
    subsection_number,subsubsection_number,
    paragraph_number,subparagraph_number,
+   
    chapter_number_before,
+
  }    
  
 \clist_map_inline:Nn \phd_secondary
@@ -557,13 +588,14 @@ See http://www.latex-project.org/lppl.txt
 \ExplSyntaxOff  
 %    \end{macrocode}
 %
-%  \begin{docCommand} { l_phd_make_new_heading_keys:n } { \meta {element name} }
+%  \begin{docCommand} { l_phd_make_new_heading_keys:n} { \meta {element name} }
 %    Creates a new set of keys for an element for exmaple, chapter, section or 
 %    chapter title.
 %    Not all keys are applicable to all elements (for example numbering), hence the
 %    code is split into primary and secondary elements. A primary element is an
 %    element whose parent is |document|.
 %  \end{docCommand} 
+%
 %    \begin{macrocode}
 \ExplSyntaxOn
 \cs_new:Npn \l_phd_make_new_heading_keys:n #1 #2
@@ -578,7 +610,7 @@ See http://www.latex-project.org/lppl.txt
      #1~align/.textalign           = l_phd_#2_align_tl,       
 % spacing     
      #1~beforeskip/.store          = l_phd_#2_before_skip_tl,
-     #1~afterskip/.store           = l_phd_#2_after_skip_tl,
+     #1~afterskip/.store           = l_phd_#2_afterskip_tl,
      #1~indent/.store              = l_phd_#2_indent_tl,
 % fonts
      #1~font-size/.fontsize        = l_phd_#2_fontsize_tl,
@@ -589,6 +621,10 @@ See http://www.latex-project.org/lppl.txt
      #1~case/.case                 = l_phd_#2_case_tl,  
 % Format
      #1~format/.format~in          = l_phd_#2_format_tl,   
+%    \end{macrocode}
+% The following defaults are only applicable to css models.
+%
+%    \begin{macrocode}     
 % Colors
      #1~background-color/.store    = l_phd_#2_background_color_tl,
      #1~frame-color/.store         = l_phd_#2_frame_color_tl,
@@ -612,24 +648,27 @@ See http://www.latex-project.org/lppl.txt
      #1~borderline~bottom-color/.store   = l_phd_#2_borderline_bottom_color_tl, 
      #1~borderline~left-color/.store     = l_phd_#2_borderline_left_color_tl,           
 % Box borders
-     #1~border-top-width/.code     = \dim_set:cn {l_phd_#2_border_top_width_dim}    {##1},  
-     #1~border-right-width/.code   = \dim_set:cn {l_phd_#2_border_right_width_dim}  {##1}, 
-     #1~border-bottom-width/.code  = \dim_set:cn {l_phd_#2_border_bottom_width_dim} {##1},  
-     #1~border-left-width/.code    = \dim_set:cn {l_phd_#2_border_left_width_dim}   {##1}, 
+     #1~border-top-width/.store     =  {l_phd_#2_border_top_width_dim}    ,  
+     #1~border-right-width/.store   =  {l_phd_#2_border_right_width_dim}  , 
+     #1~border-bottom-width/.store  =  {l_phd_#2_border_bottom_width_dim} ,  
+     #1~border-left-width/.store    =  {l_phd_#2_border_left_width_dim}   , 
 % Box padding
-     #1~padding-top-width/.code    = \dim_set:cn {l_phd_#2_padding_top_width_dim}    {##1},  
-     #1~padding-right-width/.code  = \dim_set:cn {l_phd_#2_padding_right_width_dim}  {##1}, 
-     #1~padding-bottom-width/.code = \dim_set:cn {l_phd_#2_padding_bottom_width_dim} {##1},  
-     #1~padding-left-width/.code   = \dim_set:cn {l_phd_#2_padding_left_width_dim}   {##1}, 
+     #1~padding-top-width/.store    =  {l_phd_#2_padding_top_width_dim}    ,  
+     #1~padding-right-width/.store  =  {l_phd_#2_padding_right_width_dim}  , 
+     #1~padding-bottom-width/.store =  {l_phd_#2_padding_bottom_width_dim} ,  
+     #1~padding-left-width/.store   =  {l_phd_#2_padding_left_width_dim}   , 
 % Box margin        
-     #1~margin-top-width/.code     = \dim_set:cn {l_phd_#2_margin_top_width_dim}    {##1},  
-     #1~margin-right-width/.code   = \dim_set:cn {l_phd_#2_margin_right_width_dim}  {##1}, 
-     #1~margin-bottom-width/.code  = \dim_set:cn {l_phd_#2_margin_bottom_width_dim} {##1},  
-     #1~margin-left-width/.code    = \dim_set:cn {l_phd_#2_margin_left_width_dim}   {##1}, 
+     #1~margin-top-width/.store     =  {l_phd_#2_margin_top_width_dim}    ,  
+     #1~margin-right-width/.store   =  {l_phd_#2_margin_right_width_dim}  , 
+     #1~margin-bottom-width/.store  =  {l_phd_#2_margin_bottom_width_dim} ,  
+     #1~margin-left-width/.store    =  {l_phd_#2_margin_left_width_dim}   , 
    }
  }
-
-
+\ExplSyntaxOff 
+%    \end{macrocode}
+% \lorem\lorem\lorem
+%    \begin{macrocode}
+\ExplSyntaxOn
 \cs_new:Npn \l_phd_make_new_numbering_keys:n #1 
   {     
 % Numbering Wow!
@@ -732,12 +771,6 @@ See http://www.latex-project.org/lppl.txt
 %    \begin{macrocode}
 \ExplSyntaxOn
 %
-%\l_phd_make_new_heading_keys:n {chapter}{chapter}
-%\l_phd_make_new_heading_keys:n {section}{section}    
-%\l_phd_make_new_heading_keys:n {subsection}{subsection}    
-%\l_phd_make_new_heading_keys:n {subsubsection}{subsubsection}
-%\l_phd_make_new_heading_keys:n {paragraph}{paragraph}
-%\l_phd_make_new_heading_keys:n {subparagraph}{subparagraph}
 
 \clist_map_inline:Nn \phd_book_divisions_clist 
   {    
@@ -745,72 +778,33 @@ See http://www.latex-project.org/lppl.txt
     \l_phd_make_new_numbering_keys:n{#1}
   }
 
-
+\clist_map_inline:Nn \phd_book_divisions_clist 
+  {  \wlog{#1, }
+    \l_phd_make_new_heading_keys:n {#1~title}{#1_title} 
+    \l_phd_make_new_heading_keys:n {#1~title~before}{#1_title_before} 
+    \l_phd_make_new_heading_keys:n {#1~number}{#1_number}
+    \l_phd_make_new_heading_keys:n {#1~number~before}{#1_number_before}
+    \l_phd_make_new_heading_keys:n {#1~label}{#1_label}
+    \l_phd_make_new_heading_keys:n {#1~label~before}{#1_label_before}
+    \l_phd_make_new_heading_keys:n {#1~before}{#1_before}
+    \l_phd_make_new_heading_keys:n {#1~after}{#1_after}
+  }
   
-\l_phd_make_new_heading_keys:n {chapter~title}{chapter_title}
-\l_phd_make_new_heading_keys:n {section~title}{section_title}    
-\l_phd_make_new_heading_keys:n {subsection~title}{subsection_title}    
-\l_phd_make_new_heading_keys:n {subsubsection~title}{subsubsection_title}
-\l_phd_make_new_heading_keys:n {paragraph~title}{paragraph_title}
-\l_phd_make_new_heading_keys:n {subparagraph~title}{subparagraph_title} 
 
-\l_phd_make_new_heading_keys:n {chapter~number}{chapter_number}
-\l_phd_make_new_heading_keys:n {section~number}{section_number}    
-\l_phd_make_new_heading_keys:n {subsection~number}{subsection_number}    
-\l_phd_make_new_heading_keys:n {subsubsection~number}{subsubsection_number}
-\l_phd_make_new_heading_keys:n {paragraph~number}{paragraph_number}
-\l_phd_make_new_heading_keys:n {subparagraph~number}{subparagraph_number} 
-
-\l_phd_make_new_heading_keys:n {chapter~label}{chapter_label}
-\l_phd_make_new_heading_keys:n {section~label}{section_label}    
-\l_phd_make_new_heading_keys:n {subsection~label}{subsection_label}    
-\l_phd_make_new_heading_keys:n {subsubsection~label}{subsubsection_label}
-\l_phd_make_new_heading_keys:n {paragraph~label}{paragraph_label}
-\l_phd_make_new_heading_keys:n {subparagraph~label}{subparagraph_label} 
-
-\l_phd_make_new_heading_keys:n {chapter~before}{chapter_before}
-\l_phd_make_new_heading_keys:n {section~before}{section_before}    
-\l_phd_make_new_heading_keys:n {subsection~before}{subsection_before}    
-\l_phd_make_new_heading_keys:n {subsubsection~before}{subsubsection_before}
-\l_phd_make_new_heading_keys:n {paragraph~before}{paragraph_before}
-\l_phd_make_new_heading_keys:n {subparagraph~before}{subparagraph_before} 
-
-\l_phd_make_new_heading_keys:n {chapter~after}{chapter_after}
-\l_phd_make_new_heading_keys:n {section~after}{section_after}    
-\l_phd_make_new_heading_keys:n {subsection~after}{subsection_after}    
-\l_phd_make_new_heading_keys:n {subsubsection~after}{subsubsection_after}
-\l_phd_make_new_heading_keys:n {paragraph~after}{paragraph_after}
-\l_phd_make_new_heading_keys:n {subparagraph~after}{subparagraph_after} 
-%
-\l_phd_make_new_heading_keys:n {chapter~title~before}{chapter_title_before}
-\l_phd_make_new_heading_keys:n {section~title~before}{section_title_before}    
-\l_phd_make_new_heading_keys:n {subsection~title~before}{subsection_title_before}    
-\l_phd_make_new_heading_keys:n {subsubsection~title~before}{subsubsection_title_before}
-\l_phd_make_new_heading_keys:n {paragraph~title~before}{paragraph_title_before}
-\l_phd_make_new_heading_keys:n {subparagraph~title~before}{subparagraph_title_before} 
-
-  
 \ExplSyntaxOff
 %    \end{macrocode}
 % \section{Programmatically create key defaults}
+
+% With such a large list of properties, we create default values programmatically. Then
+% these are overwritten later to more appropriate values. This ensures that all keys are
+% created and that no errors occur.
+%
+% \begin{docCommand} {l_phd_set_headings_key_defaults:n } { \marg{element name} }
+%   This function takes one agument and inititalizes all the keys.
+% \end{docCommand}
+%
 %    \begin{macrocode}
 \ExplSyntaxOn
-\cxset{
-       chapter~numbering = arabic,
-       section~numbering = arabic,
-       subsection~numbering = arabic,
-       subsubsection~numbering = arabic,
-       paragraph~numbering = arabic,
-       subparagraph~numbering=arabic} 
-        
-\cxset{chapter~name = Chapter,
-       section~name = Section,
-       subsection~name = Subsection,
-       subsubsection~name = Subsubsection,
-       paragraph~name = paragraph,
-       subparagraph~name=subparagraph,
-       section~color=bgsexy}        
-       
 \cs_new:Npn \l_phd_set_headings_key_defaults:n #1 
   {
     \cxset
@@ -859,48 +853,41 @@ See http://www.latex-project.org/lppl.txt
         #1~border-right-width     = 1pt,
         #1~border-top-width       = 1pt,
         #1~border-bottom-width    = 1pt,
-%    
+    
         #1~padding-left-width     = 1pt,
         #1~padding-right-width    = 1pt,
         #1~padding-top-width      = 1pt,
         #1~padding-bottom-width   = 1pt,
+%        
      }
   }
-
-\cxset {
-    chapter~title~color                  = magenta!15,
-    chapter~title~padding-bottom-width   = 10pt,
-    chapter~title~case                   = upper,   
- }  
- 
-\l_phd_set_headings_key_defaults:n {chapter}  
-\l_phd_set_headings_key_defaults:n {chapter~title} 
-\l_phd_set_headings_key_defaults:n {chapter~title~before} 
-\l_phd_set_headings_key_defaults:n {chapter~label} 
-\l_phd_set_headings_key_defaults:n {chapter~number}
-
-\l_phd_set_headings_key_defaults:n {section}
-
-
-\cxset{
-  chapter~title~before~background-color = bgsexy,
-  chapter~number~color                  = black,
-  chapter~label~color                   = yellow,
-}
-
+%    \end{macrocode}
+% Next we map all the keys to defaults.
+%
+%    \begin{macrocode}
+\clist_map_inline:Nn \phd_book_divisions_clist
+  { \wlog{set defaults ... #1 ...,}
+    \l_phd_set_headings_key_defaults:n {#1}  
+    \l_phd_set_headings_key_defaults:n {#1~title} 
+    \l_phd_set_headings_key_defaults:n {#1~title~before} 
+    \l_phd_set_headings_key_defaults:n {#1~label} 
+    \l_phd_set_headings_key_defaults:n {#1~label~before}
+    \l_phd_set_headings_key_defaults:n {#1~number}
+    \l_phd_set_headings_key_defaults:n {#1~number~before}
+    \l_phd_set_headings_key_defaults:n {#1~before}
+    \l_phd_set_headings_key_defaults:n {#1~after}
+  }
 \ExplSyntaxOff
 %    \end{macrocode}
 %
 %    \begin{macrocode} 
 \ExplSyntaxOn 
-
 \cxset 
   { 
     section~spaceout/.is~choice,
     section~spaceout/soul/.code            = \@sectionspaceouttrue,
     section~spaceout/none/.code            = \@sectionspaceoutfalse,
  }  
- 
 \ExplSyntaxOff 
 %    \end{macrocode}
 % As described earlier boxed headings have numerous elements, each of which can be styled
@@ -910,8 +897,22 @@ See http://www.latex-project.org/lppl.txt
 %
 % \chapter{Formatters and Associated Functions}
 
-% We first define some formatters to tie up with using |format| in sectioning commands.
+% Formatters are functions that produce a layout and apply the properties
+% to a number of elements. There are is a formatter for each format
+% available as a property to a heading. The most comprehensive is the
+% css block formatter that can size individual boxes and also
+% float them as required. Special formatters can be added to the package
+% as extensions. 
 %
+% \section{Helper functions}
+%
+% The helper functions transfer properties form keys to
+% tikz or tcolorbox boxes or to plain macros for simpler formatters. They
+% are just convenient functions to keep the code for the formatters, shorter.
+%
+% \begin{docCommand} {set_font_aux:n} { \marg{element name} }
+%  This helper function sets the font properties.
+% \end{docCommand}
 %    \begin{macrocode}
 \ExplSyntaxOn
 \cs_new:Npn \set_font_aux:n #1
@@ -921,11 +922,13 @@ See http://www.latex-project.org/lppl.txt
    \cs_if_exist_use:c { #1_fontshape_tl  }
    \cs_if_exist_use:c { #1_fontsize_tl   }
  }
- 
+%    \end{macrocode} 
+% 
+%    \begin{macrocode}
 \cs_new:Npn \set_borders_aux:nn #1 #2
  {
-  \dim_use:c { l_phd_#1_border_#2_width_dim }
- }
+   \dim_if_exist:cTF{l_phd_#1_border_#2_width_dim } {8pt}{2pt}
+  }
  
 \cs_new:Npn \set_color_aux:nn #1 #2
  {
@@ -933,6 +936,10 @@ See http://www.latex-project.org/lppl.txt
  }
 \ExplSyntaxOff 
 %    \end{macrocode}
+%
+% \begin{docCommand} { set_borderline_aux:nn } { \marg{} \marg{}}
+%  Sets the borders of a tcolorbox or other box. For tcolorbox, there
+%  is an important difference between borderlines and rules.
 %  Borderlines are a bit problematic in a declarative interface. 
 %  Firstly they take four arguments. Following the shadows
 %  interface we offer predetermined, styles as well as allow 
@@ -940,13 +947,14 @@ See http://www.latex-project.org/lppl.txt
 %
 %  To draw them they require offset, thikness, color and line type.
 %  The offset determines if they drawn away or inwards the original
-%  path.  
-%
+%  path.
+% \end{docCommand}
 %    \begin{macrocode}
 \ExplSyntaxOn
 \cs_new:Npn \set_borderline_aux:nn #1 #2   
 {
-   \tcbset{borderline~style/.style = {
+   \tcbset{borderline~style/.style = 
+   {
      borderline~west = {\cs:w l_phd_#1_borderline_left_tl \cs_end:}
                        {-\set_borders_aux:nn {#1} {left}-0pt }
                        {
@@ -970,9 +978,17 @@ See http://www.latex-project.org/lppl.txt
                          dashed
                        },                                                    
     }
-    }                       
+  }                       
 }
-      
+\ExplSyntaxOff
+%    \end{macrocode}
+%
+% \begin{docCommand} {format_inmargin} {}{}{}
+%  This is a simple formatter that places the heading in the margin.
+%  Useful for old style books.
+% \end{docCommand}
+%    \begin{macrocode}      
+\ExplSyntaxOn
 \cs_set:Npn \format_inmargin:nnn #1#2#3
   {
      \tcbdocmarginnote
@@ -982,50 +998,138 @@ See http://www.latex-project.org/lppl.txt
        #3
      } 
   }    
-  
-  
 \ExplSyntaxOff  
 %    \end{macrocode}
 %
+% \section {Hanged formats}
+% Most books will have sections as hanged paragraphs. They can be indented or outdented
+% into the margins and can consist of a single line or more. We provide a genereric
+% formatter based on the one in \latexe first. 
+
+%
+% \lorem
+%
+% \begin{docCommand} {format_hang:nn} { \marg{element name} }
+%  This formatter renders the classic \latexe hanged paragraph. As all the 
+%  properties are available in the keys, we do not really need to concern ourselves
+%  with passing values from the main function to here. 
+% \end{docCommand}
+%  
 %    \begin{macrocode}
 \ExplSyntaxOn
 % 1 skip from left
 % 2 
+%\phd_hang_from:nn{#6\relax\@svsec}%
+%        \interlinepenalty\@M {#6#8}\par\xsect:n{#5} 
 \cs_set:Npn \format_hang:nn #1#2#3 
-  {{ \@hangfrom{#2\relax\@svsec%
-      \interlinepenalty \@M #3\@@par}%
-  }}
+  {
+    \phd_hang_from:nn
+        {
+         \set_font_aux:n {l_phd_#1}
+         {\hskip 0pt %indent
+           \cs:w the#1 \cs_end:
+           \hskip1em
+         }
+        }
+        {
+          \set_font_aux:n {l_phd_#1}
+          \cs:w 
+          l_phd_#1_color_tl 
+          \cs_end:
+          #3 
+        }
+    \interlinepenalty\@M   
+    \@@par
+%    \end{macrocode}
+%
+% In classic \latexe end of section action depends on the sign of the
+% afterskip. A negative sign is used to indicate an inline paragraph and a
+% positive a hanged section. All the post action being handled by |\@xsect|.
+% 
+% As this is not very intuitive, we move the xsect code below for the
+% hang paragraphs, with the intention to simplify the inline code in the
+% inline renderer later.
+%
+%    \begin{macrocode}  
+    \par \nobreak
+    \skip_vertical:c {l_phd_#1_afterskip_tl}
+    \@afterheading 
+    \tex_ignorespaces:D
+  }
 \ExplSyntaxOff
 %    \end{macrocode}
 %
-% \subsection{Block format}
+% \begin{docCommand} {format_hang_inmargin} { \marg{element name} \marg{text} }
+%  This is a variation to the hanged format, where the heading number is in the 
+%  margin.
+% \end{docCommand}
+%    \begin{macrocode}
+\ExplSyntaxOn
+\cs_set:Npn \format_hang_inmargin:nn #1#2 
+  {
+    \bgroup
+    \parindent0pt
+    \setbox\@tempboxb\hbox 
+     {
+       \set_font_aux:n {l_phd_#1}
+       \expandafter\@arabic\cs:w c@#1 \cs_end:
+     }
+     \makebox[0pt]{
+          \makebox[-\wd\@tempboxb][r]{%
+         \set_font_aux:n {l_phd_#1}
+         {
+           \tcbox[nobeforeafter,box~align=center,
+                  colback=bgsexy]
+                  {
+                    \cs:w the#1 \cs_end:
+                  }
+         }
+        }
+        }
+     \begin{tcolorbox}[size=minimal,nobeforeafter,box~align=center] 
+          \set_font_aux:n {l_phd_#1}
+          \cs:w 
+          l_phd_#1_color_tl 
+          \cs_end:
+          #2 
+    \end{tcolorbox}      
+    \egroup
+    \interlinepenalty\@M   
+    \@@par
+%    \end{macrocode}
 %
-% Before we start setting boxes within boxes, we need a function to rename
-% parameters to enable automatic creation of styles for all the boxed
-% elements. The following elements in block formats are contained in
-% their own boxes. Each box has its own style.
+%    \begin{macrocode}  
+    \par \nobreak
+    \skip_vertical:c {l_phd_#1_afterskip_tl}
+    \@afterheading 
+  }
+\ExplSyntaxOff
+%    \end{macrocode}
+% 
+% \section {This is a very long section to see how it will wrap and also to ensure that the afterindents perform as they should.}
+
+% \lorem\lorem
+% \section{Format block}
+%
 %  
-% \begin{docCommand}{format_block:nnnn} {\meta{}\meta{}\marg{}\marg{}}
-%   This function is the main function for block and fancy headings. It
-%   is also used for Chapter and part formatting. Depending on the 
-%   settings it contains the following boxes:\\
-%   1.0 Label box e.g., section\\
-%   2.0 Number box e.g., 1.12.24\\
-%   3.0 Title\\
-%   It also handles the before and after boxes that handle rules and 
+% \begin{docCommand}{format_block:nnnn} { \meta{element name} \meta{} \marg{} \marg{} }
+%   This function is the main function for block and fancy headings.
 %   ornamentation if any. 
-%
 % \end{docCommand}
 % 
+% We create a boolean that determines if the element label and its number are to
+% betypeset inline or not.
+%
 %    \begin{macrocode}   
 \ExplSyntaxOn 
 \bool_new:N \combo_if_bool \bool_gset_true:N \combo_if_bool
-
-
+%    \end{macrocode}
+%
+% We are now ready to define the function.
+%    \begin{macrocode}
 \cs_set:Npn \format_block:nnnn #1#2#3#4
   {
     \bgroup
-    
     %\leftskip-1.25in
     \set_borderline_aux:nn {#1}{}
     \begin{tcolorbox}[enhanced,
@@ -1044,18 +1148,11 @@ See http://www.latex-project.org/lppl.txt
 %       borderline~south = {2pt}{-3pt}{dotted},
 %       borderline~east  = {2pt}{-3pt}{dotted},
 %       borderline~west  = {2pt}{-3pt}{dotted},      
-        borderline~style, 
+        %borderline~style, 
 %       no~borderline,     
 %       show~bounding~box,
-%      {\cs:w l_phd_#1_borderline_left_tl \cs_end:
-%                         }
-%                         {
-%                         -\set_borders_aux:nn {#1} {left}-10pt
-%                         }
-%                         {bgsexy, dashed
-%                         },
-      rounded~corners=all,
-      drop~lifted~shadow=black,
+        rounded~corners=all,
+        drop~lifted~shadow=black,
      ] 
      \bool_if:NTF \combo_if_bool 
      {
@@ -1099,8 +1196,8 @@ See http://www.latex-project.org/lppl.txt
   \begin{tcolorbox}
     [
       size=minimal,no~shadow,
-      colback  = white,%\cs:w l_phd_#1_background_color_tl \cs_end:, 
-      colframe = white,%\cs:w l_phd_#1_frame_color_tl \cs_end:, 
+      colback  = \cs:w l_phd_#1_background_color_tl \cs_end:, 
+      colframe = \cs:w l_phd_#1_frame_color_tl \cs_end:, 
       toprule  = .1pt,
       borderline~style,
      ]
@@ -1110,8 +1207,8 @@ See http://www.latex-project.org/lppl.txt
         %#1~outer,
         size=minimal, 
         no~shadow,
-        colback = black,%\cs:w l_phd_#1_background_color_tl \cs_end:,
-        colframe=white,
+        colback = \cs:w l_phd_#1_background_color_tl \cs_end:,
+        colframe= \cs:w l_phd_#1_frame_color_tl \cs_end:,,
         boxsep=10pt,
         %drop~shadow, 
         width=0.7\textwidth, 
@@ -1124,8 +1221,7 @@ See http://www.latex-project.org/lppl.txt
       \cs:w  l_phd_#1_color_tl       \cs_end:
       \cs:w  l_phd_#1_align_tl  \cs_end:
        {#3}\relax %
-       \par   
- 
+         
       }
   \end{tcolorbox}
    \par
@@ -1174,6 +1270,31 @@ See http://www.latex-project.org/lppl.txt
    }    
 \ExplSyntaxOff  
 %    \end{macrocode}
+%    \begin{macrocode}
+\ExplSyntaxOn
+\cs_new:Npn \format_part_traditional:nn #1 #2 #3
+  {\par\leavevmode
+   \group_begin:
+    \centering
+     \interlinepenalty \@M
+     \normalfont
+     \cs:w l_phd_#1_number_tl\cs_end:
+     \set_font_aux:n {l_phd_#1_number}
+     \ifnum \c@secnumdepth >-2\relax
+       \partname\nobreakspace\thepart
+       \par
+       \vskip 20\p@
+     \fi
+     \group_begin:
+       %\set_color:nn {#1}{color}
+       \set_font_aux:n {l_phd_#1 }
+          #3
+     \group_end:
+     \par
+   \group_end:  
+  }
+\ExplSyntaxOff  
+%    \end{macrocode}  
 %
 % \chapter{Layout Engine Code}
 %
@@ -1190,25 +1311,6 @@ See http://www.latex-project.org/lppl.txt
 %  |#4| beforeskip
 %  |#5| afterskip
 %  |#6|  styling command
-%
-%    \begin{verbatim}
-% \def\@startsection#1#2#3#4#5#6{%
-%    \if@noskipsec \leavevmode \fi
-%    \par
-%    \@tempskipa #4\relax 
-%    \@afterindenttrue
-%    \ifdim \@tempskipa <\z@
-%        \@tempskipa -\@tempskipa\@afterindentfalse
-%    \fi
-%    \if@nobreak
-%    \everypar{}%
-%    \else
-%      \addpenalty\@secpenalty\addvspace\@tempskipa
-%    \fi
-%   \@ifstar
-%   {\@ssect{#3}{#4}{#5}{#6}}%defined in the kernel
-%   {\@dblarg{\@sect{#1}{#2}{#3}{#4}{#5}{#6}}}}
-%    \end{verbatim}
 %   
 %    \begin{macrocode}
 \ExplSyntaxOn
@@ -1241,7 +1343,7 @@ See http://www.latex-project.org/lppl.txt
                         {\@sect:  {#1} {#2} {#3} {#4} {#5} {#6} [{#8}] {#9} } %sends TF we get it later
       }   
   }
-\@ltxcompattrue
+\@ltxcompatfalse
 \if@ltxcompat 
   \else 
   \cs_gset_eq:NN \@startsection \start_section:nnnnnnnnn
@@ -1299,10 +1401,18 @@ See http://www.latex-project.org/lppl.txt
           { block   } { \format_block:nnnn  {#1 } { #3 } {#6} { {#8}       } 
                         \xsect:n {#5} 
                       } 
-          { plain   } { \format_hang:nn    {#1} { #3 } { #8 }         } 
-          { hang    } { \format_hang:nn    { #1 } { #3 } {{#6#8}} \xsect:n {#5}   }
-          { inline   } {  \xsect:n {-3.5ex} }%#5
-          { inmargin } {\format_inmargin:nnn {#1} {#3} {#6#8} }
+          { plain   } { \format_hang:nn    {#1} { #3 } { #8 } } 
+          { hang    } { 
+                        
+                        \format_hang:nn    { #1 } { #3 } {{#8}
+                         %\xsect:n {#5} 
+                          }    
+                      }
+          { hanginmargin } {\format_hang_inmargin:nn {#1} {#8}      }   
+          { leftmargin   } {\format_hang_inmargin:nn {#1} {#8}      }          
+          { inline       } {  \xsect:n {-3.5ex} }%#5
+          { inmargin     } {\format_inmargin:nnn {#1} {#3} {#6#8} }
+          { traditional  } {\format_part_traditional:nn {#1}{#3}{#8}}
       }
       {
       %{\if@debug~\tiny\csname#1format@cx\endcsname \fi }
@@ -1311,7 +1421,7 @@ See http://www.latex-project.org/lppl.txt
         { 
         %\if@debug~\tiny\csname#1format@cx\endcsname\fi
         }
-        \@hangfrom{#6\relax\@svsec}%
+        \phd_hang_from:nn{#6\relax\@svsec}%
         \interlinepenalty\@M {#6#8}\par\xsect:n{#5} 
       } %false code 
   %
@@ -1345,7 +1455,7 @@ See http://www.latex-project.org/lppl.txt
   \ifdim \@tempskipa>\z@
   \begingroup
     #4{
-    \@hangfrom{\hskip #1}%
+    \phd_hang_from:nn{\hskip #1}%
     \interlinepenalty \@M (#5)\@@par}%
     \endgroup
   \else
@@ -1365,8 +1475,9 @@ See http://www.latex-project.org/lppl.txt
 %  for both the star and unstarred versions of |\section|.
 % \end{docCommand}
 %
-%|\@noskipsec| A switch set true by a sectioning command when it is creating an
+% Note that |\@noskipsec| is a switch set true by a sectioning command when it is creating an
 %in-text heading with |\everypar|.
+%
 %    \begin{macrocode}
 \ExplSyntaxOn
 \cs_set:Npn \xsect:n #1 
@@ -1482,6 +1593,29 @@ See http://www.latex-project.org/lppl.txt
 %
 %    \begin{macrocode}
 \ExplSyntaxOn
+ \renewcommand\part {%
+   \newpage\null
+   \thispagestyle{empty}
+    \start_section:nnnnnnnnn{part}%
+      {-1}  %level check this conflicts with source2e
+      {\l_phd_part_indent_tl} %indent#2
+      
+      {\l_phd_part_before_skip_tl}%before skip#3
+      
+      {\l_phd_part_afterskip_tl}% after skip#4
+      
+      { 
+%        \setfont@cx
+%        {\l_phd_chapter_fontweight_tl}%
+%        {\l_phd_chapter_fontfamily_tl}
+%        {\l_phd_chapter_fontsize_tl}
+%        {\l_phd_chapter_fontshape_tl}%
+          %\expandafter\setfontparam@cx\l_phd_chapter_align_tl;%
+          \l_phd_part_color_tl %5
+      }
+ }%
+
+
 
  \renewcommand\chapter {%
    \newpage\null
@@ -1493,7 +1627,7 @@ See http://www.latex-project.org/lppl.txt
       
       {\l_phd_chapter_before_skip_tl}%before skip#3
       
-      {\l_phd_chapter_after_skip_tl}% after skip#4
+      {\l_phd_chapter_afterskip_tl}% after skip#4
       
       { 
 %        \setfont@cx
@@ -1523,7 +1657,7 @@ See http://www.latex-project.org/lppl.txt
       
       {\l_phd_section_before_skip_tl}%before skip#3
       
-      {\l_phd_section_after_skip_tl}% after skip#4
+      {\l_phd_section_afterskip_tl}% after skip#4
       
       {
         \set_font_aux:n {l_phd_section}
@@ -1545,7 +1679,8 @@ See http://www.latex-project.org/lppl.txt
 % \end{docCommand}  
 %     \begin{macrocode}
 \ExplSyntaxOn
-%\if@ltxcompat
+\if@ltxcompat
+\else
 %
  \renewcommand\subsection
     {
@@ -1553,15 +1688,15 @@ See http://www.latex-project.org/lppl.txt
         {1}
         {\l_phd_subsection_indent_tl}%indent
         {\l_phd_subsection_before_skip_tl}%before skip#3
-        {\l_phd_subsection_after_skip_tl}% after skip#4
+        {\l_phd_subsection_afterskip_tl}% after skip#4
       
         { 
         \set_font_aux:n {l_phd_subsection}
          % \expandafter\setfontparam@cx\l_phd_subsection_align_tl;%
-          \l_phd_subsection_color_tl  %5
+         \l_phd_subsection_color_tl  %5
         }
    }
-%\fi
+\fi
 \ExplSyntaxOff
 %\renewcommand\subsection{\@startsection{subsection}{2}{\z@}%
 %                                     {-3.25ex\@plus -1ex \@minus -.2ex}%
@@ -1577,13 +1712,15 @@ See http://www.latex-project.org/lppl.txt
 % \end{docCommand}
 %   \begin{macrocode}
 \ExplSyntaxOn
+\if@ltxcompat
+\else
 \renewcommand{\subsubsection}
 {
   \@startsection{subsubsection}%
     {3}%level
     {\l_phd_subsubsection_indent_tl}%indent
     {\l_phd_subsubsection_before_skip_tl}
-    {\l_phd_subsubsection_after_skip_tl}
+    {\l_phd_subsubsection_afterskip_tl}
     {
       \set_font_aux:n {l_phd_subsubsection}
 %%    {\l_phd_subsubsection_fontweight_tl }
@@ -1594,7 +1731,8 @@ See http://www.latex-project.org/lppl.txt
 %      %\l_phd_subsubsection_align_tl; not needed here
       \l_phd_subsubsection_color_tl
     }
-}       
+}  
+\fi     
 \ExplSyntaxOff
 %    \end{macrocode}
 % 
@@ -1628,7 +1766,7 @@ See http://www.latex-project.org/lppl.txt
      {4}%level
      {\l_phd_paragraph_indent_tl}%indent
      {\l_phd_paragraph_before_skip_tl}%
-     {\l_phd_paragraph_after_skip_tl}%
+     {\l_phd_paragraph_afterskip_tl}%
      {
       \set_font_aux:n {l_phd_paragraph}
 %      {\l_phd_paragraph_fontweight_tl}%
@@ -1655,13 +1793,14 @@ See http://www.latex-project.org/lppl.txt
                                        {2ex}%
                                        {-1em}%
                                       {\normalfont\normalsize\bfseries}}
+\else                                      
 \renewcommand\subparagraph
       {
          \@startsection{subparagraph}
          {5}%level
          {\l_phd_subparagraph_indent_tl}%indent
          {\l_phd_subparagraph_before_skip_tl}
-         {\l_phd_subparagraph_after_skip_tl}
+         {\l_phd_subparagraph_afterskip_tl}
          {
            \set_font_aux:n {l_phd_subparagraph}
            \expandafter\setfontparam@cx
@@ -1686,7 +1825,7 @@ See http://www.latex-project.org/lppl.txt
 %
 %    \begin{macrocode}
 \cxset { section name              = Section,
-    section format                 = block,
+    section format                 = leftmargin,
     section align                  = Centering,
     section title align            = Centering, %checked
 %    
@@ -1705,13 +1844,13 @@ See http://www.latex-project.org/lppl.txt
     section title font-family      = serif,
     section title font-shape       = upshape,
 %    
-    section color                  = bgsexy,
+    section color                  = black,
     section number prefix          = \thechapter.,
     section number suffix          =,
     section numbering              = arabic,
     section indent                 = 0pt,
     section beforeskip             = -3ex,
-    section afterskip              = 10pt,
+    section afterskip              = 1.5ex \@plus .1ex,
     section afterindent            = off,
     section number after           = \quad,
 %    
@@ -1741,7 +1880,7 @@ See http://www.latex-project.org/lppl.txt
 \cxset
   { 
     subsection name                   = Subsection,
-    subsection format                 = block, 
+    subsection format                 = hang, 
 %    
     subsection font-size              = large,  
     subsection font-weight            = bfseries,
@@ -1786,7 +1925,7 @@ See http://www.latex-project.org/lppl.txt
 \cxset
   { 
     subsubsection name                    = Subsubsection,
-    subsubsection format                  = block,  
+    subsubsection format                  = hang,  
     subsubsection background-color        = white!30, %checked
 %    
     subsubsection font-family             = rmfamily, 
@@ -1795,7 +1934,7 @@ See http://www.latex-project.org/lppl.txt
     subsubsection font-family             = tiresias,
     subsubsection font-shape              = upshape,
 %    
-    subsubsection font-family             = rmfamily, 
+    subsubsection font-family             = sffamily, 
     subsubsection font-size               = large,
     subsubsection font-weight             = bfseries,
     subsubsection font-family             = tiresias,
@@ -1898,7 +2037,7 @@ See http://www.latex-project.org/lppl.txt
  \cxset{subsubsection title style= raggedright}
 %    \end{macrocode}
 % \cxset{chapter afterskip=60pt}
-% \chapter[test]{Tests}
+% \chapter{Tests}
 %
 %  We prepare a number of tests to verify that all settings work as advertized.
 %
@@ -1921,21 +2060,21 @@ See http://www.latex-project.org/lppl.txt
 \cs_set_eq:NN \TestSections\testsections  
 \ExplSyntaxOff  
 %    \end{macrocode}
-% \testsections
-%  \cxset{section format = hang,
+%  \cxset{section format = block,
 %         section font-size=large,
 %         section font-weight=bold,
-%         subsection format=hang,
+%         subsection format=block,
+%         subsubsection format = block,
+%         paragraph format =block,
+%         subparagraph format = block,
 %         subsection font-family=sffamily,
 %         chapter title font-size=Huge,
 %         chapter number font-size=Huge,
 %         chapter number font-family =sffamily ,
 %         chapter align  = centering,
 %}
+% \testsections
 % 
-% \chapter{Another Test} 
-% \section{lorem}
-% \subsection{lorem}
-
+%
 %</LSECT>
 \endinput
