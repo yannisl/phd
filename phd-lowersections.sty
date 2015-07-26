@@ -5,6 +5,7 @@
 %% The original source files were:
 %%
 %% phd-lowersections.dtx  (with options: `LSECT')
+%% phd-specials.dtx  (with options: `SPECIAL')
 %% ----------------------------------------------------------------
 %% phd --- A package to beautify documents.
 %% E-mail: yannislaz@gmail.com
@@ -15,13 +16,14 @@
 
 
 \NeedsTeXFormat{LaTeX2e}[1994/12/01]%
+\RequirePackage[2014/05/01]{latexrelease}
 \ProvidesFile{phd-lowersections}[2015/1/13 v1.0 less preamble (YL)]%
 \ExplSyntaxOn
 \let\ltxtoday\today
 \let\phd_hang_from:nn \@hangfrom
 \newif\if@ltxcompat \@ltxcompatfalse
-
-
+\ExplSyntaxOff
+\ExplSyntaxOn
 \cs_if_exist:cTF {tikzi}
   {}
   {
@@ -30,7 +32,13 @@
    %\if@debug
     \tikz[remember~picture,overlay]
     \draw[<->] (0,0)--(0,.2)--++(-.5,0) node[left,fill=blue!15,text=black]%
-       {{\ttfamily\footnotesize #1}};%\space%
+       {
+         \parbox{2cm}
+         {
+           {\sffamily
+            \footnotesize #1}
+         }
+       };%\space%
    %\fi
     }
   }
@@ -426,11 +434,11 @@
           \cs_end:
           #3
         }
-    \interlinepenalty\@M
-    \@@par
+   { \interlinepenalty\@M
+    \@@par }
     \par \nobreak
     \skip_vertical:c {l_phd_#1_afterskip_tl}
-    \@afterheading
+    \phd_after_heading:
     \tex_ignorespaces:D
   }
 \ExplSyntaxOff
@@ -468,7 +476,7 @@
     \@@par
     \par \nobreak
     \skip_vertical:c {l_phd_#1_afterskip_tl}
-    \@afterheading
+    \phd_after_heading:
   }
 \ExplSyntaxOff
 
@@ -590,6 +598,7 @@
    \group_end:
   }
 \ExplSyntaxOff
+
 \ExplSyntaxOn
 \DeclareDocumentCommand \start_section:nnnnnnnnn {m m m m m m s o m}
   {
@@ -611,7 +620,7 @@
       {\@ssect {#3} {#4} {#5} {#6} {#9} }
       {
         \IfValueTF {#8} {\@sect:  {#1} {#2} {#3} {#4} {#5} {#6} [{#8}] {#9} }
-                        {\@sect:  {#1} {#2} {#3} {#4} {#5} {#6} [{#8}] {#9} } %sends TF we get it later
+                        {\@sect:  {#1} {#2} {#3} {#4} {#5} {#6} [{#8}] {#9} }
       }
   }
 \@ltxcompatfalse
@@ -625,7 +634,6 @@
 \ExplSyntaxOn
 \cs_set:Npn \@sect: #1 #2 #3 #4 #5 #6 [#7] #8
   {
-
     \int_compare:nTF {#2>\c@secnumdepth}
       {
          \let\@svsec\@empty
@@ -649,45 +657,46 @@
                 \protect\numberline{\csname the#1\endcsname}{#8}}
           }
       }
-
    \@tempskipa #5\relax
-   \gdef\@svsechd{
-   %\@seccntformat{#1}#6{\hskip #3\relax #8}
-   #8
-   }%
+   \gdef\@svsechd{#8}
 
+   \phd_format_router:nn {#1}{#8}
+}
+\ExplSyntaxOff
+\ExplSyntaxOn
+\cs_set:Npn \phd_format_router:nn #1 #2
+  {
     \str_case_x:nnTF {\cs:w l_phd_#1_format_tl \cs_end:}
       {
-          { display } {\format_display:nnnn { #1 } { #3 } {#6} { #8 }
-                        \xsect:n {#5}   }
-          { block   } { \format_block:nnnn  {#1 } { #3 } {#6} { {#8}       }
-                        \xsect:n {#5}
-                      }
-          { plain   } { \format_hang:nn    {#1} { #3 } { #8 } }
-          { hang    } {
-
-                        \format_hang:nn    { #1 } { #3 } {{#8}
-                         %\xsect:n {#5}
-                          }
-                      }
-          { hanginmargin } {\format_hang_inmargin:nn {#1} {#8}      }
-          { leftmargin   } {\format_hang_inmargin:nn {#1} {#8}      }
-          { inline       } {  \xsect:n {-3.5ex} }%#5
-          { inmargin     } {\format_inmargin:nnn {#1} {#3} {#6#8} }
-          { traditional  } {\format_part_traditional:nn {#1}{#3}{#8}}
+          { display      } {\format_display:nnnn { #1 } {  } {} { #2       }
+                             \xsect:n {3.5ex}   }
+          { block        } { \format_block:nnnn  {#1 } {  } {} { {#2}      }
+                             \xsect:n {3.5ex}
+                           }
+          { plain        } { \format_hang:nn    {#1} {  }   {#2}           }
+          { hang         } { \format_hang:nn    { #1 } {  } {#2}           }
+          { hanginmargin } {\format_hang_inmargin:nn {#1} {#2}             }
+          { leftmargin   } {\format_hang_inmargin:nn {#1} {#2}             }
+          { inline       } {  \xsect:n {-3.5ex}                            }
+          { inmargin     } {\format_inmargin:nnn {#1} {} {#2}              }
+          { traditional  } {\format_part_traditional:nn {#1}{}{#2}         }
       }
+      {       }
+
       {
-      %{\if@debug~\tiny\csname#1format@cx\endcsname \fi }
-      } %true code
-      {
-        {
-        %\if@debug~\tiny\csname#1format@cx\endcsname\fi
-        }
-        \phd_hang_from:nn{#6\relax\@svsec}%
-        \interlinepenalty\@M {#6#8}\par\xsect:n{#5}
-      } %false code
-  %
+        \cs_if_exist:cTF { l_phd_#1_format_tl }
+          {
+            \expandafter\cs:w
+               \cs:w l_phd_#1_format_tl
+               \cs_end:
+               \cs_end:
+               %\stewart
+               { #1 } { #2 }
+          }
+          { FALSE }
+      }
   }
+
 \ExplSyntaxOff
 \ExplSyntaxOn
 \cs_set:Npn \@ssect #1 #2 #3 #4 #5 {%
@@ -712,7 +721,7 @@
   \if_dim:w \l_tmpa_skip>0pt %WATCH better boolean
     \par \nobreak
     \vskip\l_tmpa_skip
-    \@afterheading
+    \phd_after_heading:
    \else:
     \@nobreakfalse
     \global\@noskipsectrue
@@ -742,28 +751,31 @@
  {
    \par \nobreak
     \vskip\l_tmpa_skip
-    \@afterheading
+    \phd_after_heading:
  }
-
 \ExplSyntaxOff
- \def\@afterheading{%
- \@nobreaktrue
- \everypar{%
-   \if@nobreak
-     \@nobreakfalse
-     \clubpenalty \@M
-     \if@afterindent
-     \else
-      {\setbox\z@\lastbox}%
-     %\tikzi[everypar]
-     \fi
- \else
- \clubpenalty \@clubpenalty
- \everypar{
-   %\tikzi[cleared]
- }%
- \fi}
- }
+\ExplSyntaxOn
+\cs_gset:Npn \phd_after_heading:
+  {
+    \@nobreaktrue
+    \tex_everypar:D
+      {
+        \if@nobreak
+          \@nobreakfalse
+          \clubpenalty \@M %1000 no orphans from this point onwards
+          \if@afterindent
+          \else
+            {\setbox\z@\lastbox}%
+          \fi
+       \else
+       \clubpenalty \@clubpenalty %150
+       \tex_everypar:D
+         {
+         }
+       \fi
+    }
+  }
+\ExplSyntaxOff
 \ExplSyntaxOn
  \cs_gset:Npn \@seccntformat #1
  {
@@ -798,8 +810,9 @@
           %\expandafter\setfontparam@cx\l_phd_chapter_align_tl;%
           \l_phd_part_color_tl %5
       }
- }%
-
+ }
+\ExplSyntaxOff
+\ExplSyntaxOn
  \renewcommand\chapter {%
    \newpage\null
    \thispagestyle{empty}
@@ -919,7 +932,7 @@
 \ExplSyntaxOff
 
 \cxset { section name              = Section,
-    section format                 = leftmargin,
+    section format                 = hang,
     section align                  = Centering,
     section title align            = Centering, %checked
     section font-size              = Large,
@@ -1108,6 +1121,356 @@
   }
 \cs_set_eq:NN \TestSections\testsections
 \ExplSyntaxOff
+\ExplSyntaxOn
+\cxset
+  {
+    steward/.style = {
+    offsety/.store in        = \soffsety,
+    image/.store in          = \image@cx,
+    texti/.store in          = \texti@cx,
+    textii/.store in         = \textii@cx,
+    chapter beforeskip       = -1sp,
+    chapter afterskip        = 1sp,
+  }
+}
+\ExplSyntaxOff
+
+
+\ExplSyntaxOn
+\newcommand\stewart[2]
+  {
+    \clearpage
+    \thispagestyle{empty}
+    \begin{tikzpicture}[remember~picture,overlay]
+      \node [xshift=5cm,yshift=-\paperheight] at (current~page.north~west)
+            [
+              text~width=\textwidth-1cm,
+              text~height=\paperheight,
+              fill=thecream!30,
+              rounded~corners,
+              above~right
+            ]
+            {};
+
+      \node [xshift=6.5cm,yshift=-1.5cm-\soffsety] at (current~page.north~west)
+            [text~width=0.7\textwidth,below~right]
+            {
+             \language-1
+             \sffamily \bfseries \huge #2
+            };
+
+     \node [xshift=3cm,yshift=-1.5cm] at (current~page.north~west)
+           [
+             text~width=3cm,
+             align=center,
+             minimum~height=2.5cm,
+             fill=blue,
+             below~right]
+           {
+
+             \text{\HHUGE\bfseries\sffamily\color{white}
+             \cs:w the#1 \cs_end:}
+
+             \par\vspace*{3pt}
+           };
+
+     \node [xshift=-0.2cm,yshift=-21.5cm] at (current~page.north~west)
+           [text~width=3cm,above~right]%
+           {\includegraphics[width=1.0\paperwidth,
+             height=\textheight,keepaspectratio]{\image@cx}};
+
+     \node [xshift=3cm,yshift=-19.5cm] at (current~page.north~west)
+           [text~width=9cm,minimum~height=2.5cm,
+           inner~sep=0.5em, fill=blue,below~right]
+           {\color{white}
+            \bfseries\sffamily\texti@cx
+           };
+
+     \node [xshift=6.5cm,yshift=-26cm] at (current~page.north~west)
+           [text~width=12cm,above~right]
+           {
+             \textii@cx
+           };
+\end{tikzpicture}
+\ExplSyntaxOff
+\par
+\clearpage
+}
+\ExplSyntaxOn
+\newcommand\hdr[2]
+  {
+    \clearpage
+    \thispagestyle{empty}
+    \begin{tikzpicture}[remember~picture,overlay]
+    \node [xshift=-12cm,yshift=3pt] at (current~page.north~west)
+           [below~right,minimum~height=\paperheight]
+           {\includegraphics[
+             height=\paperheight]{cockfight}};
+    \end{tikzpicture}
+
+    \clearpage
+    \thispagestyle{empty}
+    \begin{tikzpicture}[remember~picture,overlay]
+
+      \node [xshift=0cm,yshift=0] at (current~page.north~east)
+           [
+             text~width=3.5cm,
+             align=center,
+             minimum~height=2.5cm,
+             fill=bgsexy,
+             below~left]
+           {
+
+             \text{\HHUGE\bfseries\sffamily\color{white}
+             \cs:w the#1 \cs_end: }
+             \par\vspace*{3pt}
+           };
+
+\node [xshift=-2.7cm,yshift=-10pt] at (current~page.north~east)
+           [
+             below~right,rotate=-90]
+           {
+
+             {\footnotesize\bfseries\sffamily\color{white}
+             \expandafter\MakeTextUppercase{\cs:w #1name \cs_end:}
+             }
+             \par\vspace*{3pt}
+           };
+
+\node [xshift=-1.2cm, yshift=-3cm] at (current~page.north~east)
+           [
+             below~right,rotate=-90]
+           {
+
+             {\Huge\bfseries\sffamily
+              \color{bgsexy}
+             \MakeTextUppercase{#2}
+             }
+             \par\vspace*{3pt}
+           };
+
+\node [xshift=-\paperwidth-9cm,yshift=3pt] at (current~page.north~west)
+           [text~width=3cm,below~left]%
+           {\includegraphics[
+             height=\paperheight]{cockfight}};
+
+\end{tikzpicture}
+\ExplSyntaxOff
+\par
+\clearpage
+}
+
+\def\soffsety{2pt}
+\def\image@cx{hine01}
+\def\texti@cx{\lorem}
+\def\textii@cx{\lorem}
+
+\newcommand\stewartpart[1] {%
+
+ \clearpage
+
+\begin{tikzpicture}[remember picture,overlay]
+\node [xshift=5cm,
+       yshift=-\paperheight] at (current page.north west)
+      [text width=0.99\textwidth,
+      text height=\paperheight,
+      fill=thecream!30,
+      above right]
+{};
+\node [xshift=8.5cm,yshift=-1.5cm-\soffsety] at (current page.north west)
+[text width=0.9\textwidth,below right]{\sffamily \bfseries \HUGE \thechapter};
+\node [xshift=4cm,yshift=-1.5cm] at (current page.north west)
+[text width=4cm,align=center,minimum height=2.5cm, fill=blue,below right]
+{\color{white}\bfseries\sffamily \MakeTextUppercase{#1}
+\\ \text{\HHUGE\@Roman\c@part\relax}
+};
+\node [xshift=-0.2cm,yshift=-21.5cm] at (current page.north west)
+[text width=3cm,above right]%
+{\includegraphics[width=1.0\paperwidth,height=\textheight,keepaspectratio]{\image@cx}};
+\node [xshift=3cm,yshift=-19.5cm] at (current page.north west)
+[text width=9cm,minimum height=2.5cm,inner sep=0.5em, fill=blue,below right]
+{\color{white}
+  \bfseries\sffamily\texti@cx
+};
+\node [xshift=6.5cm,yshift=-26cm] at (current page.north west)
+[text width=12cm,above right]
+{\textii@cx
+};
+\end{tikzpicture}
+\par
+\clearpage
+}
+\ExplSyntaxOn
+\cxset{band~height/.store~in=\bandheight@cx}
+\cxset{band~height=5cm}
+
+\newcommand{\tikzspecial}[1]{%
+
+\clearpage
+\ExplSyntaxOn
+\let\titlefontfamily@cx\l_phd_title_font_family_tl
+\let\titlefontweight@cx\l_phd_title_font_weight_tl
+\ExplSyntaxOff
+
+\begin{tikzpicture}[remember~picture,overlay]
+    \node[yshift=-\bandheight@cx]~ at~ (current~page.north~west)
+      {\begin{tikzpicture}[remember~picture, overlay]
+        \draw[fill=bgsexy, draw=none] (0,0) rectangle (\paperwidth,\bandheight@cx);
+        \node[anchor=east,
+              xshift=.9\paperwidth,
+              rectangle,
+              rounded~corners=10pt,inner~sep=11pt,
+              text~width = 0.7\linewidth,
+              fill=black!80]{%
+          \LARGE
+          \bfseries
+          \sffamily
+             \lineskip2pt
+             \color{white}
+             \thechapter\
+             \textsc{#1}};
+       \end{tikzpicture}
+      };
+\end{tikzpicture}
+\mbox{}
+\vspace*{\bandheight@cx}\par
+\phd_after_heading:
+}
+\ExplSyntaxOff
+\cxset{image/.store in=\image@cx,
+       image caption/.store in=\caption@cx,
+       textiii/.store in=\textiii@cx}
+\cxset{image         = ./chapters/genetics-dogs,
+       image caption = Genetics,
+       textiii       = \lorem}
+
+\ExplSyntaxOn
+\newcommand\genetics[1]{%
+  %    \end{macrocode}
+\begin{minipage}[b][\textheight][t]{\textwidth}%
+\hbox{}%
+      \vbox to 0pt {%
+      \color{teal}%
+      \hbox{\rule{\textwidth}{0.4pt}}%
+      \hbox{\rule{0.4pt}{\textheight}\rule{4cm}{0.4pt}}%
+    }%
+\vspace*{10pt}%
+\begin{minipage}[b]{\linewidth}%
+\fboxsep0pt%
+\fboxrule0pt%
+\fbox{\begin{minipage}[b]{0.25\linewidth}%
+\lineskip0pt\topskip0pt%
+\leftskip0.5cm%
+\leavevmode%
+\bfseries\color{teal}\Large\sffamily%
+\caption@cx%
+\vspace*{2cm}%
+\par
+\includegraphics[width=\dimexpr\linewidth-0.5cm\relax,totalheight=3.8cm]{./images/chapterconcept-01.jpg}\llap{\raise20pt\hbox to \linewidth{\HHUGE \hskip1cm\color{lightgray!40}\thechapter}\hfill}%
+\end{minipage}%
+}%
+\fbox{\begin{minipage}[b]{0.75\linewidth}%
+\lineskip0pt%
+\leavevmode
+\includegraphics[width=1\linewidth]{\image@cx}%
+
+\includegraphics[width=\linewidth]{./images/chapterconcept-02.jpg}.%
+\end{minipage}}%
+\end{minipage}%
+\par
+\vspace{1.5cm  plus25pt minus25pt}
+\parbox[t]{0.3\linewidth}{%
+  \set_font_aux:n {l_phd_chapter}
+  \leftskip0.5em
+  \color{teal}#1%
+}%
+\begin{minipage}[t]{0.6\linewidth}%
+\vspace{-2\baselineskip}
+\textiii@cx
+\end{minipage}
+
+\end{minipage}
+}
+\ExplSyntaxOff
+\cxset{fashion image/.code           = \gdef\fashionimage@cx{#1}}
+\cxset{fashion image                 = shock.jpg}
+\cxset{subtitle font-color/.store in = \subtitlefontcolor@cx}
+\cxset{subtitle font-color           = black!45}
+
+\def\imagewidth@cx{5cm}
+\def\fashionnumberbg@cx{gray!30}
+\@debugtrue
+\if@debug
+   \tikzset{fashion/.style = rectangle, draw}
+\else
+\fi
+
+\DeclareDocumentCommand \storyi {}
+{
+  In antiquity men and women saw each other as different;
+  accordingly, they developed
+  complex taxonomies (philosophical explanations)
+  for understanding anatomical,
+  physiological, emotional, and rational differences. \par
+
+  Some of these differences seem profoundly odd to us moderns.
+  Modern discussions about erotic art have often concerned
+  the place of women: to what
+  extent are they objects of social manipulation, to what
+  extent can they be subjects?
+}
+\ExplSyntaxOn
+\DeclareDocumentCommand \fashion {m m} {%
+\begin{tikzpicture}
+
+\if@debug
+  \draw [help~lines,color=thelightgray] (0,-1) grid (16,-13);
+  \draw[fill=red]  (0,0) circle (1.5pt) ;
+  \draw[fill=red]  (0,-3) circle (1.5pt) ;
+\else
+\fi
+\node[fashion, right, baseline] (x) at (0,1) {\LARGE\color{black!30}{before}\relax};
+\draw[fill=red]  (0,1) circle (1.5pt) ;
+\node[fashion, right=1sp] at (0,0)
+  {
+    \LARGE\color{black!20} \so\chaptername\relax
+  };
+
+\node[rectangle,draw,
+      color=black!35,
+      below~left, drop~shadow,
+      fill=\fashionnumberbg@cx,
+      text=white,
+      rounded~corners] at +(15,-0.5) {\HHUGE\sffamily\bfseries \thechapter3};
+
+\node[fashion, text~width=9cm,below~right, yshift=-1pt] at (0,-3) {%
+        {\sffamily\RaggedRight\language-1
+        \Huge\bfseries\color{black}#2\par}
+         \bigskip
+         \Large%
+         \centering
+         \color{\subtitlefontcolor@cx}%
+         \RaggedRight
+        \storyi\par};
+        \IfFileExists{\fashionimage@cx}%
+           {\node[below~left,
+                  outer~sep=0pt,
+                  inner~sep=0pt,
+                  drop~shadow = {
+                  shadow~scale=1.0,
+                  shadow~xshift=10pt,
+                  shadow~yshift=-10pt,
+                  fill=thelightgray!50,
+                  opacity=0.2},
+                  rounded~corners
+                  ] at (15,-3) {\includegraphics[width=\imagewidth@cx]{\fashionimage@cx}};}%
+           {\node at (15,-9) {\includegraphics[width=7cm]{shock.jpg}};}%
+\end{tikzpicture}
+\expandafter\vskip\cs:w l_phd_chapter_afterskip_tl \cs_end:
+\par\phd_after_heading:
+}
+\ExplSyntaxOff
+
 \endinput
 %%
 %% End of file `phd-lowersections.sty'.

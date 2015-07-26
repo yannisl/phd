@@ -1,81 +1,211 @@
 % <*SPECIALS>
-% \section{Stewart Special Design}
+% \cxset{chapter beforeskip       = 0pt,}
+% \chapter{Custom Formatters}
+% Now what happens, if none of the formats can adequately describe a heading? 
+% How can we define a mark-up language for a more complex layout such as shown
+% above? The way proposed here is to use the formatter methods coded earlier.
+% So far all the formatters we have programmed used only textual elements. 
+% Many complex designs for headings incorporate images as well as additional
+% subtitles and even mini-table of contents.
 %
-%	We provide a number of predefined \textit{special designs} 
-%    to illustrate the
-%	technique. This special opening chapter page has been used in this document.
-%	In order to typeset it we need a number of additional fields. We need an
-%	image name and the text for two text blocks. We create fields for them.
+% To create a new format we need to code a templating command as well as create a set
+% of additional keys to cater for any component of the heading that is not adequately
+% covered by the generic keys.
 %
-%    The special designs, require that you define a new set
-%    of keys, if required and to create a command to typeset
-%	these.
+% As a convention each special format has a unique name. For example the |stewart| format
+% has an associated control sequence \refCom{stewart} and the one shown in this heading
+% is called \refCom{fashion}, as it started as such although I was tempted to name
+% it euro! Most of the additional templates provided by the \pkgname{phd} package use
+% \tikzname to render their output. This is not always necessary and any valid \tex code
+% can be used for templates.
+%
+% I have kept to the convention that values for all keys should be in lower case and hence
+% function names must follow suit.
+%
+%  \cxset{section format    = hang,
+%         subsection format = hang}
+%
+% \section{The stewart template}
+%
+% The stewart template has been named after Stewart's Calculus, where a similar design
+% gave me the inspiration. It uses an image as well as banded notes and comments. It is
+% ideal for textbooks, when used to render chapter heads. We first start by declaring 
+% some additional keys,
 %
 %    \begin{macrocode}
-\cxset{steward/.style={
-  custom = stewart,
-  offsety/.store in = \soffsety,
-  image/.store in = \image@cx,
-  texti/.store in = \texti@cx,
-  textii/.store in=\textii@cx,
-}}
-%
-\newcommand\stewart[2][]{%
-%   \fancypagestyle{fancy}{%
-%   \lhead{}\rhead{}%
-%   \chead{}%
-%   \cfoot{}%
-%   \lfoot{}%
-%   \rfoot{\thepage}%
-%   \def\footrule#1{{\color{blue}%
-%   \hrule width\paperwidth}\vskip3pt
-%}
-%
-%\renewcommand{\headrulewidth}{0pt}
-%\renewcommand{\footrulewidth}{0.4pt}}
+\ExplSyntaxOn
+\cxset
+  {
+    steward/.style = {
+    offsety/.store in        = \soffsety,
+    image/.store in          = \image@cx,
+    texti/.store in          = \texti@cx,
+    textii/.store in         = \textii@cx,
+    chapter beforeskip       = -1sp,
+    chapter afterskip        = 1sp,
+  }
+}
+\ExplSyntaxOff
+%    \end{macrocode}
+% 
 
-\clearpage
+% \begin{docCommand} {stewart} { \marg{element name} \marg{title} }
+%   Special formatter to style headings on a full page. 
+% \end{docCommand}
 
-\begin{tikzpicture}[remember picture,overlay]
-\node [xshift=5cm,yshift=-\paperheight] at (current page.north west)
-[text width=0.98\textwidth,text height=\paperheight, fill=thecream!30,rounded corners,above right]
-{};
-\node [xshift=6.5cm,yshift=-1.5cm-\soffsety] at (current page.north west)
-[text width=0.9\textwidth,below right]{\sffamily \bfseries \huge #2};
+%    \begin{macrocode}
+\ExplSyntaxOn
+\newcommand\stewart[2]
+  {
+    \clearpage
+    \thispagestyle{empty}
+    \begin{tikzpicture}[remember~picture,overlay]
+      \node [xshift=5cm,yshift=-\paperheight] at (current~page.north~west)
+            [
+              text~width=\textwidth-1cm,
+              text~height=\paperheight, 
+              fill=thecream!30,
+              rounded~corners,
+              above~right
+            ]
+            {};
+            
+      \node [xshift=6.5cm,yshift=-1.5cm-\soffsety] at (current~page.north~west)
+            [text~width=0.7\textwidth,below~right]
+            {
+             \language-1
+             \sffamily \bfseries \huge #2
+            };
 
-\node [xshift=3cm,yshift=-1.5cm] at (current page.north west)
-[text width=3cm,align=center,minimum height=2.5cm, fill=blue,below right]
-{\[\text{\HHUGE\bfseries\sffamily\color{white}\thechapter}\]
-\par\vspace*{3pt}
-};
+     \node [xshift=3cm,yshift=-1.5cm] at (current~page.north~west)
+           [
+             text~width=3cm,
+             align=center,
+             minimum~height=2.5cm, 
+             fill=blue,
+             below~right]
+           {
+           
+             \text{\HHUGE\bfseries\sffamily\color{white}
+             \cs:w the#1 \cs_end:}
+              
+             \par\vspace*{3pt}
+           };
 
-\node [xshift=-0.2cm,yshift=-21.5cm] at (current page.north west)
-[text width=3cm,above right]%
-{\includegraphics[width=1.0\paperwidth,height=\textheight,keepaspectratio]{\image@cx}};
-\node [xshift=3cm,yshift=-19.5cm] at (current page.north west)
-[text width=9cm,minimum height=2.5cm,inner sep=0.5em, fill=blue,below right]
-{\color{white}
-  \bfseries\sffamily\texti@cx
-};
-\node [xshift=6.5cm,yshift=-26cm] at (current page.north west)
-       [text width=12cm,above right]
-{\textii@cx
-};
+     \node [xshift=-0.2cm,yshift=-21.5cm] at (current~page.north~west)
+           [text~width=3cm,above~right]%
+           {\includegraphics[width=1.0\paperwidth,
+             height=\textheight,keepaspectratio]{\image@cx}};
+     
+     \node [xshift=3cm,yshift=-19.5cm] at (current~page.north~west)
+           [text~width=9cm,minimum~height=2.5cm,
+           inner~sep=0.5em, fill=blue,below~right]
+           {\color{white}
+            \bfseries\sffamily\texti@cx
+           };
+
+     \node [xshift=6.5cm,yshift=-26cm] at (current~page.north~west)
+           [text~width=12cm,above~right]
+           {
+             \textii@cx 
+           };
 \end{tikzpicture}
+\ExplSyntaxOff
+%    \end{macrocode}
+% Since we are using an overlay, there is no bounding box, hence we need
+% to issue a \cs{clearpage} explicitly.
+%    \begin{macrocode}
 \par
 \clearpage
 }
-
+%    \end{macrocode}
+%
+% \section{An interesting template}
+%
+% Many books, especially those rich in images tend to have main heading openings
+% with photo spreads. The following template code does this.
+%
+%    \begin{macrocode}
+\ExplSyntaxOn
+\newcommand\hdr[2]
+  {
+    \clearpage
+    \thispagestyle{empty}
+    \begin{tikzpicture}[remember~picture,overlay]
+    \node [xshift=-12cm,yshift=3pt] at (current~page.north~west)
+           [below~right,
+            minimum~height=\paperheight]
+           {\includegraphics[
+             height=\paperheight]{cockfight}}; 
+    \end{tikzpicture}
+    
+    \clearpage 
+    \thispagestyle{empty}        
+    \begin{tikzpicture}[remember~picture,overlay]
+         
+      \node [xshift=0cm,yshift=0] at (current~page.north~east)
+           [
+             text~width=3.5cm,
+             align=center,
+             minimum~height=2.5cm, 
+             fill=bgsexy,
+             below~left]
+           {
+           
+             \text{\HHUGE\bfseries\sffamily\color{white}
+             \cs:w the#1 \cs_end: }
+             \par\vspace*{3pt}
+           };
+           
+\node [xshift=-2.7cm,yshift=-10pt] at (current~page.north~east)
+           [
+             below~right,rotate=-90]
+           {
+           
+             {\footnotesize\bfseries\sffamily\color{white}
+             \expandafter\MakeTextUppercase{\cs:w #1name \cs_end:}
+             }
+             \par\vspace*{3pt}
+           };
+           
+\node [xshift=-1.2cm, yshift=-3cm] at (current~page.north~east)
+           [
+             below~right,rotate=-90]
+           {
+           
+             {\Huge\bfseries\sffamily
+              \color{bgsexy}
+             \MakeTextUppercase{#2}
+             }
+             \par\vspace*{3pt}
+           };
+           
+\node [xshift=-\paperwidth-9cm,yshift=3pt] at (current~page.north~west)
+           [below~left]%
+           {\includegraphics[
+             height=\paperheight]{cockfight}};           
+           
+\end{tikzpicture}
+\ExplSyntaxOff
+%    \end{macrocode}
+% Since we are using an overlay, there is no bounding box, hence we need
+% to issue a \cs{clearpage} explicitly.
+%    \begin{macrocode}
+\par
+\clearpage
+}
 %    \end{macrocode}
 
-%
+
 %    \begin{macrocode}
 \def\soffsety{2pt}
 \def\image@cx{hine01}
 \def\texti@cx{\lorem}
 \def\textii@cx{\lorem}
-% #1 part name #2 title
-\newcommand\stewartpart[2] {%
+%    \end{macrocode}
+
+%    \begin{macrocode}
+\newcommand\stewartpart[1] {%
 % need an additional clear as it is picture, overlay, otherwise text comes in
 % from the next page.
 
@@ -91,7 +221,7 @@
 {};
 % set title
 \node [xshift=8.5cm,yshift=-1.5cm-\soffsety] at (current page.north west)
-[text width=0.9\textwidth,below right]{\sffamily \bfseries \HUGE #2};
+[text width=0.9\textwidth,below right]{\sffamily \bfseries \HUGE \thechapter};
 % set part
 \node [xshift=4cm,yshift=-1.5cm] at (current page.north west)
 [text width=4cm,align=center,minimum height=2.5cm, fill=blue,below right]
@@ -119,51 +249,66 @@
 %
 % \subsection{tikzspecials}
 %    \begin{macrocode}
-\cxset{band height/.store in=\bandheight@cx}
-\cxset{band height=5cm}
+\ExplSyntaxOn
+\cxset{band~height/.store~in=\bandheight@cx}
+\cxset{band~height=5cm}
 
-\newcommand{\tikzspecials}[2][]{%
-\@specialtrue
+\newcommand{\tikzspecial}[1]{%
+
 \clearpage
 \ExplSyntaxOn
-\let\titlefontfamily@cx\title_font_family
-\let\titlefontweight@cx\title_font_weight
+\let\titlefontfamily@cx\l_phd_title_font_family_tl
+\let\titlefontweight@cx\l_phd_title_font_weight_tl
 \ExplSyntaxOff
 
-\begin{tikzpicture}[remember picture,overlay]
-    \node[yshift=-\bandheight@cx] at (current page.north west)
-      {\begin{tikzpicture}[remember picture, overlay]
-        \draw[fill=\fill@cx, draw=none] (0,0) rectangle (\paperwidth,\bandheight@cx);
-        \node[anchor=east,xshift=.9\paperwidth,rectangle,
-              rounded corners=10pt,inner sep=11pt,
-              fill=\fill@cx]{%
-        \titlefontcolor@cx
-        title_font_size\bfseries
-        \titlefontfamily@cx
-        \thechapter\
-        \textsc{#2}};
-      \draw [fill=\fill@cx] (0,10cm) -- (5cm,10cm);
+\begin{tikzpicture}[remember~picture,overlay]
+    \node[yshift=-\bandheight@cx]~ at~ (current~page.north~west)
+      {\begin{tikzpicture}[remember~picture, overlay]
+        \draw[fill=bgsexy, draw=none] (0,0) rectangle (\paperwidth,\bandheight@cx);
+        \node[anchor=east,
+              xshift=.9\paperwidth,
+              rectangle,
+              rounded~corners=10pt,inner~sep=11pt,
+              text~width = 0.7\linewidth,
+              fill=black!80]{%
+%        \titlefontcolor@cx
+%        title_font_size
+          \LARGE
+          \bfseries
+          \sffamily
+%        \titlefontfamily@cx
+             \lineskip2pt
+             \color{white}
+             \thechapter\
+             \textsc{#1}};
        \end{tikzpicture}
       };
 \end{tikzpicture}
 \mbox{}
 \vspace*{\bandheight@cx}\par
+\phd_after_heading:
 }
+\ExplSyntaxOff
 %    \end{macrocode}
 %
-% \subsection{The genetics special design}
+% \section{The genetics special design}
 %
 %    \begin{macrocode}
 \cxset{image/.store in=\image@cx,
        image caption/.store in=\caption@cx,
        textiii/.store in=\textiii@cx}
+\cxset{image         = ./chapters/genetics-dogs,
+       image caption = Genetics,
+       textiii       = \lorem}       
 %    \end{macrocode}
 %
 % 
+
 %	This macro is a special template that requires settings via
 %	a |\cxset| command. 
 %    \begin{macrocode}
-\newcommand\genetics[2][]{%
+\ExplSyntaxOn
+\newcommand\genetics[1]{%
   %    \end{macrocode}
 % 
 %
@@ -198,7 +343,7 @@
 \bfseries\color{teal}\Large\sffamily%
 \caption@cx%
 \vspace*{2cm}%
-
+\par
 \includegraphics[width=\dimexpr\linewidth-0.5cm\relax,totalheight=3.8cm]{./images/chapterconcept-01.jpg}\llap{\raise20pt\hbox to \linewidth{\HHUGE \hskip1cm\color{lightgray!40}\thechapter}\hfill}%
 \end{minipage}%
 }%
@@ -213,18 +358,12 @@
 \end{minipage}%
 %    \end{macrocode}
 %    \begin{macrocode}
-\ExplSyntaxOn
-\let\titlefontfamily@cx\title_font_family
-\let\titlefontweight@cx\title_font_weight
-\ExplSyntaxOff
 \par
 \vspace{1.5cm  plus25pt minus25pt}
 \parbox[t]{0.3\linewidth}{%
-  title_font_size
-  \titlefontweight@cx
-  \titlefontfamily@cx
+  \set_font_aux:n {l_phd_chapter}
   \leftskip0.5em 
-  \color{teal}#2%
+  \color{teal}#1%
 }%
 \begin{minipage}[t]{0.6\linewidth}%
 \vspace{-2\baselineskip}
@@ -233,6 +372,111 @@
 
 \end{minipage}
 }
+\ExplSyntaxOff
 %    \end{macrocode}
+% \begin{docCommand} {fashion} { \marg{element name} \marg{title text} }
+% \end{docCommand}
+%    \begin{macrocode}
+\cxset{fashion image/.code           = \gdef\fashionimage@cx{#1}}
+\cxset{fashion image                 = shock.jpg}
+\cxset{subtitle font-color/.store in = \subtitlefontcolor@cx}
+\cxset{subtitle font-color           = black!45}
+
+%
+%default value for the image width
+\def\imagewidth@cx{5cm}
+\def\fashionnumberbg@cx{gray!30}
+\@debugtrue
+\if@debug
+   \tikzset{fashion/.style = rectangle, draw}
+\else   
+\fi
+
+\DeclareDocumentCommand \storyi {} 
+{
+  In antiquity men and women saw each other as different; 
+  accordingly, they developed
+  complex taxonomies (philosophical explanations) 
+  for understanding anatomical,
+  physiological, emotional, and rational differences. \par
+
+  Some of these differences seem profoundly odd to us moderns. 
+  Modern discussions about erotic art have often concerned 
+  the place of women: to what
+  extent are they objects of social manipulation, to what 
+  extent can they be subjects?
+}
+\ExplSyntaxOn
+\DeclareDocumentCommand \fashion {m m} {%
+\begin{tikzpicture}
+
+\if@debug 
+  \draw [help~lines,color=thelightgray] (0,-1) grid (16,-13);
+  \draw[fill=red]  (0,0) circle (1.5pt) ;
+  \draw[fill=red]  (0,-3) circle (1.5pt) ;
+\else
+\fi
+% draw debug rectangles
+\node[fashion, right, baseline] (x) at (0,1) {\LARGE\color{black!30}{before}\relax};
+\draw[fill=red]  (0,1) circle (1.5pt) ;
+\node[fashion, right=1sp] at (0,0) 
+  {
+    \LARGE\color{black!20} \so\chaptername\relax
+  };
+
+% draw number
+\node[rectangle,draw, 
+      color=black!35, 
+      below~left, drop~shadow,
+      fill=\fashionnumberbg@cx, 
+      text=white,
+      rounded~corners] at +(15,-0.5) {\HHUGE\sffamily\bfseries \thechapter3};
+
+% The title of the block
+\node[fashion, text~width=9cm,below~right, yshift=-1pt] at (0,-3) {%
+        {\sffamily\RaggedRight\language-1
+        \Huge\bfseries\color{black}#2\par}
+         \bigskip
+         \Large% 
+         \centering
+         \color{\subtitlefontcolor@cx}%
+         \RaggedRight
+        \storyi\par}; 
+% Add the image        
+        \IfFileExists{\fashionimage@cx}%   
+           {\node[below~left,
+                  outer~sep=0pt,
+                  inner~sep=0pt,
+                  drop~shadow = {
+                  shadow~scale=1.0, 
+                  shadow~xshift=10pt,
+                  shadow~yshift=-10pt,
+                  fill=thelightgray!50,
+                  opacity=0.2},
+                  rounded~corners
+                  ] at (15,-3) {\includegraphics[width=\imagewidth@cx]{\fashionimage@cx}};}%
+           {\node at (15,-9) {\includegraphics[width=7cm]{shock.jpg}};}%
+\end{tikzpicture}
+\expandafter\vskip\cs:w l_phd_chapter_afterskip_tl \cs_end:
+%
+\par\phd_after_heading:
+}
+\ExplSyntaxOff
+%    \end{macrocode}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 % </SPECIALS>
 \endinput

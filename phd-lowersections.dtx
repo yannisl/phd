@@ -107,7 +107,9 @@ See http://www.latex-project.org/lppl.txt
 %\BaseDirectory{C:/users/admin/my documents/github/phd}
 %\usedir{MWE}
 \generate{\file{\jobname.sty}{
-  \from{\jobname.dtx}{LSECT}}
+  \from{\jobname.dtx}{LSECT}
+  \from{phd-specials.dtx}{SPECIAL}
+  }
   }
 
 %\nopreamble\nopostamble
@@ -162,8 +164,8 @@ See http://www.latex-project.org/lppl.txt
     chapter title margin-left-width   = 0pt,
     chapter align                     = left,
     chapter title align               = left, %checked
-    chapter name                      = Chapter,
-    chapter format                    = hang,
+    chapter name                      = hang,
+    chapter format                    = hdr,
     chapter font-size                 = Huge,
     chapter font-weight               = bold,
     chapter font-family               = sffamily,
@@ -178,13 +180,13 @@ See http://www.latex-project.org/lppl.txt
     chapter afterindent               = off,
     chapter number after              = ,
     chapter arc                       = 0mm,
-    chapter background-color       = bgsexy,
-    chapter afterindent            = off,
-    chapter grow left              = 0mm,
-    chapter grow right             = 0mm,
-    chapter rounded corners        = northeast,
-    chapter shadow                 = fuzzy halo,
-    chapter border-left-width      = 0pt,
+    chapter background-color          = bgsexy,
+    chapter afterindent               = off,
+    chapter grow left                 = 0mm,
+    chapter grow right                = 0mm, 
+    chapter rounded corners           = northeast,
+    chapter shadow                    = fuzzy halo,
+    chapter border-left-width         = 0pt,
     chapter border-right-width     = 0pt,
     chapter border-top-width       = 0pt,
     chapter border-bottom-width    = 0pt,
@@ -229,19 +231,19 @@ See http://www.latex-project.org/lppl.txt
        }
 \begin{document}
 \parindent1em
-%\coverpage{asia}{Book Design }{Camel Press}{HEADINGS}{DESIGN} 
+\coverpage{asia}{Book Design }{Camel Press}{HEADINGS}{DESIGN} 
 \pagestyle{empty}
 %\coverpage{habtoor-city}{Delay Claim}{HLS-DSE/JV}{HABTOOR CITY}{MEP CLAIM} 
-%\secondpage
-%\pagestyle{empty}
-%\clearpage
+\secondpage
+\pagestyle{empty}
+\clearpage
 \ExplSyntaxOn
-%\tableofcontents
+\tableofcontents
 \ExplSyntaxOff
 \pagestyle{empty}
 \setcounter{secnumdepth}{6}
-\parskip0pt
-%\mainmatter
+\parskip0pt plus.1ex minus.1ex
+\mainmatter
 \pagenumbering{arabic}
 \pagestyle{headings}        
 %       
@@ -261,13 +263,16 @@ See http://www.latex-project.org/lppl.txt
 %\input{./styles/style03}
 %\input{./styles/style04}
 %\input{./styles/style05}
-% \input{./sections/lowerlevelheadings}
+%\cxset{chapter format=block}
+%\input{./sections/chapterdesign}
+%\input{./sections/lowerlevelheadings}
 \makeatletter
 %\@debugtrue
 
 \makeatother
 
 \DocInput{\jobname.dtx}
+\DocInput{phd-specials.dtx}
 \input{test-sectioning}
 % \printindex
  %
@@ -346,7 +351,10 @@ See http://www.latex-project.org/lppl.txt
 % We start by outlining what we are trying to achieve with this package:
 %
 % \begin{enumerate}
-% \item An extended key value interface to lower level sectioning functions.
+% \item To provide a declarative interface to enable users to modify headings by
+%       setting keys, rather than writing macros.  
+% \item The interface must be able to manupulate properties of headings down to
+%       the last detail.
 % \item To provide a compatibility mode, where documents wishing to test the package
 % can have an easy switch to switch in and out. This is also important for the testing of the package.
 % \item To provide a number of templates that cover most of the typical use case.
@@ -444,6 +452,7 @@ See http://www.latex-project.org/lppl.txt
 %
 %    \begin{macrocode}
 \NeedsTeXFormat{LaTeX2e}[1994/12/01]%
+\RequirePackage[2014/05/01]{latexrelease}
 \ProvidesFile{phd-lowersections}[2015/1/13 v1.0 less preamble (YL)]%
 %    \end{macrocode}
 %
@@ -459,9 +468,11 @@ See http://www.latex-project.org/lppl.txt
 \let\ltxtoday\today
 \let\phd_hang_from:nn \@hangfrom
 \newif\if@ltxcompat \@ltxcompatfalse
-
+\ExplSyntaxOff
+%    \end{macrocode}
 %
-
+%    \begin{macrocode}
+\ExplSyntaxOn
 \cs_if_exist:cTF {tikzi}
   {}
   {
@@ -470,7 +481,13 @@ See http://www.latex-project.org/lppl.txt
    %\if@debug
     \tikz[remember~picture,overlay] 
     \draw[<->] (0,0)--(0,.2)--++(-.5,0) node[left,fill=blue!15,text=black]%
-       {{\ttfamily\footnotesize #1}};%\space%
+       {
+         \parbox{2cm} 
+         {
+           {\sffamily
+            \footnotesize #1}
+         }
+       };%\space%
    %\fi    
     }
   }
@@ -622,6 +639,7 @@ See http://www.latex-project.org/lppl.txt
 % Format
      #1~format/.format~in          = l_phd_#2_format_tl,   
 %    \end{macrocode}
+%
 % The following defaults are only applicable to css models.
 %
 %    \begin{macrocode}     
@@ -666,7 +684,11 @@ See http://www.latex-project.org/lppl.txt
  }
 \ExplSyntaxOff 
 %    \end{macrocode}
-% \lorem\lorem\lorem
+%
+% \begin{docCommand} {l_phd_make_new_numbering_keys:n} { \marg{element name} }
+%  Not all heading elements need to access a counter and associated fields, so
+%  we provide a function to specifically target these keys.
+% \end{docCommand}
 %    \begin{macrocode}
 \ExplSyntaxOn
 \cs_new:Npn \l_phd_make_new_numbering_keys:n #1 
@@ -1038,8 +1060,8 @@ See http://www.latex-project.org/lppl.txt
           \cs_end:
           #3 
         }
-    \interlinepenalty\@M   
-    \@@par
+   { \interlinepenalty\@M   
+    \@@par }
 %    \end{macrocode}
 %
 % In classic \latexe end of section action depends on the sign of the
@@ -1053,7 +1075,7 @@ See http://www.latex-project.org/lppl.txt
 %    \begin{macrocode}  
     \par \nobreak
     \skip_vertical:c {l_phd_#1_afterskip_tl}
-    \@afterheading 
+    \phd_after_heading: 
     \tex_ignorespaces:D
   }
 \ExplSyntaxOff
@@ -1101,7 +1123,7 @@ See http://www.latex-project.org/lppl.txt
 %    \begin{macrocode}  
     \par \nobreak
     \skip_vertical:c {l_phd_#1_afterskip_tl}
-    \@afterheading 
+    \phd_after_heading: 
   }
 \ExplSyntaxOff
 %    \end{macrocode}
@@ -1298,20 +1320,30 @@ See http://www.latex-project.org/lppl.txt
 %
 % \chapter{Layout Engine Code}
 %
-% The standard kernel factory commands, they are real locomotives. To hook into them
-% we need to dig deep.
+% 
+% 
+% The function is declared using |xparse| to simplify the switching between 
+% the various options of the headings commands.
 %
-% We also define \cs{@startsection} as somehow there are problems
-% with after indent false. valid |\section*{title}|, |\section[toc-entry]|, 
-% |\section [toc-entry] {title}|
+% \begin{docCommand} {start_section:nnnnnnnnn} { \marg{nine parameters}}
 %
-%  |#1| name i.e, section
-%  |#2| level number 2 section
-%  |#3| indent
-%  |#4| beforeskip
-%  |#5| afterskip
-%  |#6|  styling command
+% \end{docCommand}
+%
+%  |#1| name i.e, section\\
+%  |#2| level number 2 section\\
+%  |#3| indent\\
+%  |#4| beforeskip\\
+%  |#5| afterskip\\
+%  |#6|  styling command\\
 %   
+
+% \section{Test}
+% The first action is to
+%
+% \lorem\lorem\par
+%
+% \subsection{Test}
+%
 %    \begin{macrocode}
 \ExplSyntaxOn
 \DeclareDocumentCommand \start_section:nnnnnnnnn {m m m m m m s o m}      
@@ -1340,9 +1372,15 @@ See http://www.latex-project.org/lppl.txt
       {\@ssect {#3} {#4} {#5} {#6} {#9} }
       {
         \IfValueTF {#8} {\@sect:  {#1} {#2} {#3} {#4} {#5} {#6} [{#8}] {#9} }
-                        {\@sect:  {#1} {#2} {#3} {#4} {#5} {#6} [{#8}] {#9} } %sends TF we get it later
+                        {\@sect:  {#1} {#2} {#3} {#4} {#5} {#6} [{#8}] {#9} } 
       }   
   }
+%    \end{macrocode}
+%
+% If we are running in compatibility mode we totally ignore the function and revert 
+% back to normal \latexe.
+% 
+%    \begin{macrocode}  
 \@ltxcompatfalse
 \if@ltxcompat 
   \else 
@@ -1352,13 +1390,25 @@ See http://www.latex-project.org/lppl.txt
 \ExplSyntaxOff  
 %    \end{macrocode}
 %
+% \begin{docCommand} {@sect:} { \marg{8 args} }
+%   The auxiliary function to start the rendering process. 
+% \end{docCommand}
+%
 
+% The function takes now eight parameters, as we do not care about the star option of
+% the command.
+% 
+%
 %    \begin{macrocode}
 \ExplSyntaxOn
 \cs_set:Npn \@sect: #1 #2 #3 #4 #5 #6 [#7] #8 
   {
-
-%  Decide if we need to add the section in the toc.
+%    \end{macrocode}
+%
+% We check if the sction number depth allows for the heading to be added to the
+% toc, if not we let it to empty.
+%
+%    \begin{macrocode}
     \int_compare:nTF {#2>\c@secnumdepth} 
       {
          \let\@svsec\@empty
@@ -1383,49 +1433,67 @@ See http://www.latex-project.org/lppl.txt
                 \protect\numberline{\csname the#1\endcsname}{#8}}
           }
       } 
-     
-% 
-   \@tempskipa #5\relax
-   \gdef\@svsechd{
-   %\@seccntformat{#1}#6{\hskip #3\relax #8}
-   #8
-   }%
-%  \ifdim \@tempskipa>\z@
 %    \end{macrocode}
-
+%
+% The next part is basically a router that redirects rendering to the right
+% formatter. This allows for new formatters to be added by the user or in
+% future releases of this package.
+%
+%    \begin{macrocode}     
+   \@tempskipa #5\relax
+   \gdef\@svsechd{#8}
+   
+   \phd_format_router:nn {#1}{#8}
+}   
+\ExplSyntaxOff
+%    \end{macrocode}
+%
+% \begin{docCommand}{phd_format_router:nnn} { \marg{text} }
+%   The format router selects the format to be used to render the heading. It takes
+%   the text as its parameter. The rendering properties are picked up by the template.
+% \end{docCommand}
+%
 %    \begin{macrocode}
+\ExplSyntaxOn
+\cs_set:Npn \phd_format_router:nn #1 #2  
+  {
     \str_case_x:nnTF {\cs:w l_phd_#1_format_tl \cs_end:}  
       {
-          { display } {\format_display:nnnn { #1 } { #3 } {#6} { #8 } 
-                        \xsect:n {#5}   } 
-          { block   } { \format_block:nnnn  {#1 } { #3 } {#6} { {#8}       } 
-                        \xsect:n {#5} 
-                      } 
-          { plain   } { \format_hang:nn    {#1} { #3 } { #8 } } 
-          { hang    } { 
-                        
-                        \format_hang:nn    { #1 } { #3 } {{#8}
-                         %\xsect:n {#5} 
-                          }    
-                      }
-          { hanginmargin } {\format_hang_inmargin:nn {#1} {#8}      }   
-          { leftmargin   } {\format_hang_inmargin:nn {#1} {#8}      }          
-          { inline       } {  \xsect:n {-3.5ex} }%#5
-          { inmargin     } {\format_inmargin:nnn {#1} {#3} {#6#8} }
-          { traditional  } {\format_part_traditional:nn {#1}{#3}{#8}}
+          { display      } {\format_display:nnnn { #1 } {  } {} { #2       } 
+                             \xsect:n {3.5ex}   } 
+          { block        } { \format_block:nnnn  {#1 } {  } {} { {#2}      } 
+                             \xsect:n {3.5ex} 
+                           } 
+          { plain        } { \format_hang:nn    {#1} {  }   {#2}           } 
+          { hang         } { \format_hang:nn    { #1 } {  } {#2}           }                     
+          { hanginmargin } {\format_hang_inmargin:nn {#1} {#2}             }   
+          { leftmargin   } {\format_hang_inmargin:nn {#1} {#2}             }          
+          { inline       } {  \xsect:n {-3.5ex}                            }
+          { inmargin     } {\format_inmargin:nnn {#1} {} {#2}              }
+          { traditional  } {\format_part_traditional:nn {#1}{}{#2}         }
+      }  
+      {       } 
+%    \end{macrocode}
+%
+% We test for formatters provided as extensions. If they have been defined by the
+% user, they can either exist in a file or have been entered in the preamble. We first
+% test for the preamble. If they exist we load them.
+%    \begin{macrocode}
+ 
+      {       
+        \cs_if_exist:cTF { l_phd_#1_format_tl } 
+          { 
+            \expandafter\cs:w
+               \cs:w l_phd_#1_format_tl 
+               \cs_end:
+               \cs_end:
+               %\stewart 
+               { #1 } { #2 } 
+          }
+          { FALSE }
       }
-      {
-      %{\if@debug~\tiny\csname#1format@cx\endcsname \fi }
-      } %true code
-      { 
-        { 
-        %\if@debug~\tiny\csname#1format@cx\endcsname\fi
-        }
-        \phd_hang_from:nn{#6\relax\@svsec}%
-        \interlinepenalty\@M {#6#8}\par\xsect:n{#5} 
-      } %false code 
-  %
   }
+ 
 \ExplSyntaxOff  
 %    \end{macrocode}
 %
@@ -1452,6 +1520,9 @@ See http://www.latex-project.org/lppl.txt
 %  
 \cs_set:Npn \@ssect #1 #2 #3 #4 #5 {%
   \@tempskipa #3\relax
+%    \end{macrocode}
+% 
+%    \begin{macrocode}  
   \ifdim \@tempskipa>\z@
   \begingroup
     #4{
@@ -1486,7 +1557,7 @@ See http://www.latex-project.org/lppl.txt
   \if_dim:w \l_tmpa_skip>0pt %WATCH better boolean
     \par \nobreak
     \vskip\l_tmpa_skip
-    \@afterheading 
+    \phd_after_heading: 
    \else:
     \@nobreakfalse
     \global\@noskipsectrue
@@ -1516,31 +1587,56 @@ See http://www.latex-project.org/lppl.txt
  {
    \par \nobreak
     \vskip\l_tmpa_skip
-    \@afterheading
+    \phd_after_heading:
  }    
-  
-  
-\ExplSyntaxOff
- \def\@afterheading{%
- \@nobreaktrue
- \everypar{%
-   \if@nobreak
-     \@nobreakfalse
-     \clubpenalty \@M
-     \if@afterindent 
-     \else
-      {\setbox\z@\lastbox}%
-     %\tikzi[everypar]
-     \fi
- \else
- \clubpenalty \@clubpenalty
- \everypar{
-   %\tikzi[cleared]
- }%
- \fi}
- }  
-%    \end{macrocode}
+\ExplSyntaxOff 
+%    \end{macrocode} 
+% \begin{docCommand} {phd_after_heading:} { \meta{void} }
+%  This is an explorified version of the \latexe \docAuxCommand{@afterheading} control sequence.
+%  It has an interesting purpose. It is called after block headings to remove
+%  the indentation from the first line of the next paragraph. 
+% \end{docCommand}
 %
+% The nobreak hackery is used to ensure that there is no page break after a heading
+% (it will look very odd). We add some hooks for visual debugging. Note that
+% |\nobreak|, |\break| and |\allowbreak| are just macros holding penalty values.
+%
+% Also note the definitions of the kernel.
+%
+% |58 \def\@nobreakfalse{\global\let\if@nobreak\iffalse}|\\
+% |59 \def\@nobreaktrue {\global\let\if@nobreak\iftrue}|\\
+% |60 \@nobreakfalse|\\
+%
+%    \begin{macrocode}  
+\ExplSyntaxOn
+\cs_gset:Npn \phd_after_heading:
+  {
+    \@nobreaktrue
+    \tex_everypar:D
+      {
+        \if@nobreak
+          \@nobreakfalse
+          \clubpenalty \@M %1000 no orphans from this point onwards
+          \if@afterindent 
+          \else
+            {\setbox\z@\lastbox}%
+%             \tikzi[everypar in after heading,
+%               clubpenalty ...\\
+%               = \the\clubpenalty]
+          \fi
+       \else
+       \clubpenalty \@clubpenalty %150
+       \tex_everypar:D
+         {
+%           \tikzi[everypar in after heading cleared\\
+%                  clubpenalty\\ \the\clubpenalty
+%                 ]
+         }
+       \fi
+    }
+  }  
+\ExplSyntaxOff  
+%    \end{macrocode}
 % 
 % When LaTeX is typesetting the section number it calls |\@seccntformat|
 % to use it when typsetting a section heading number. This is common for
@@ -1586,8 +1682,9 @@ See http://www.latex-project.org/lppl.txt
 \ExplSyntaxOff
 %    \end{macrocode}
 %
-% \begin{docCommand}{chapter} { \meta{*} \oarg{arg1} \marg{arg2} }
-%   The standard \latexe chapter is renewed next. We avoid all the complications of
+% 
+% \begin{docCommand}{part} { \meta{*} \oarg{arg1} \marg{arg2} }
+%   The standard \latexe part is renewed next. We avoid all the complications of
 %   the kernel with different longish sections for chapters and parts.
 % \end{docCommand}  
 %
@@ -1613,10 +1710,16 @@ See http://www.latex-project.org/lppl.txt
           %\expandafter\setfontparam@cx\l_phd_chapter_align_tl;%
           \l_phd_part_color_tl %5
       }
- }%
-
-
-
+ }
+\ExplSyntaxOff 
+%    \end{macrocode}
+%
+% \begin{docCommand}{chapter} { \meta{*} \oarg{arg1} \marg{arg2} }
+%   The standard \latexe chapter is renewed next. We avoid all the complications of
+%   the kernel with different longish sections for chapters and parts.
+% \end{docCommand}
+%    \begin{macrocode}
+\ExplSyntaxOn
  \renewcommand\chapter {%
    \newpage\null
    \thispagestyle{empty}
@@ -1728,7 +1831,7 @@ See http://www.latex-project.org/lppl.txt
 %%    {\l_phd_subsubsection_fontsize_tl}
 %%    {\l_phd_subsubsection_fontshape_tl}
 %%      \expandafter\setfontparam@cx
-%      %\l_phd_subsubsection_align_tl; not needed here
+%      %\l_phd_subsubsection_align_tl; 
       \l_phd_subsubsection_color_tl
     }
 }  
@@ -1751,6 +1854,8 @@ See http://www.latex-project.org/lppl.txt
 %  KOMA classes. In our defaults we follow the European norm.
 % \end{docCommand}
 % 
+% Next we provide our definition for paragraphs. 
+%
 %    \begin{macrocode}
 \ExplSyntaxOn
 %\if@ltxcompat
@@ -1825,7 +1930,7 @@ See http://www.latex-project.org/lppl.txt
 %
 %    \begin{macrocode}
 \cxset { section name              = Section,
-    section format                 = leftmargin,
+    section format                 = hang,
     section align                  = Centering,
     section title align            = Centering, %checked
 %    
@@ -2073,7 +2178,7 @@ See http://www.latex-project.org/lppl.txt
 %         chapter number font-family =sffamily ,
 %         chapter align  = centering,
 %}
-% \testsections
+% ^^A\testsections
 % 
 %
 %</LSECT>
