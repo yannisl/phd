@@ -189,14 +189,16 @@ See http://www.latex-project.org/lppl.txt
 \savegeometry{std}
 
 % \usepackage[style=mla]{biblatex}
-\usepackage{phd}
+\usepackage[unicodemath=on]{phd}
 \usepackage{fontspec}
-\usepackage{phd-lowersections}
 \usepackage{phd-runningheads}
+\usepackage{phd-lowersections}
+
 %\usepackage{phd-toc}
 
 %\usepackage{pkgindoc}             %%% danger
 \sethyperref
+\usepackage{makeidx}
 \makeindex
 \cxset{part format=stewart}
 \begin{document}
@@ -210,8 +212,23 @@ See http://www.latex-project.org/lppl.txt
 \parindent1em
 %\input{./sections/lowerlevelheadings}
 \input{defaults-chapters}
-\input{./sections/symbols}
-
+%%\input{./sections/symbols}
+%\input{./sections/unicodemath}
+%  \input{./sections/i18n}
+%    \part{LuaTeX}
+%%   \input{./sections/luatex}
+%     \input{./lua/variadic}
+%     \input{./lua/strings}    
+%     \input{./lua/pattern-matching} 
+%     \input{./lua/modules}
+%     \input{lua/lua-objects}
+%     \input{./lua/lpeg} 
+%
+%     \input{./lua/nodes} 
+% %     \input{./lua/luaio}
+%  \input{./sections/chemistry} 
+%   \input{./lua/metatables} 
+% \input{./lua/modules}
 \DocInput{\jobname.dtx}
 \DocInput{phd-logos.dtx}
 \DocInput{phd-epigraphs.dtx}
@@ -221,7 +238,7 @@ See http://www.latex-project.org/lppl.txt
 %\DocInput{phd-sections.dtx}
 \DocInput{phd-pkgmanager.dtx}
 \bibliography{phd} 
- \PrintIndex
+\printindex
  \end{document}
  %
 % \input{./sections/OTR}
@@ -558,15 +575,15 @@ See http://www.latex-project.org/lppl.txt
         \tl_set:Nn\l_tmpa_str:N {##1}
            \str_case_x:nnTF {##1}  
              {
-               { none           } {   \cs_gset:cpn  {#1}   { \normalfont }     } 
-               { rmfamily      } {   \cs_gset:cpn  {#1}  {  \rmfamily}           } 
-               { serif             } {   \cs_gset:cpn  {#1}  { \rmfamily}          } 
-               { sans-serif     } {    \cs_gset:cpn {#1}   {\sffamily }            } 
-               {sffamily         } {   \cs_gset:cpn {#1}    {\sffamily}           }
-               { ttfamily        } {   \cs_gset:cpn  {#1}   { \ttfamily }    } 
+               { none       } { \cs_gset:cpn {#1} { \normalfont } } 
+               { rmfamily   } { \cs_gset:cpn {#1} { \rmfamily   } } 
+               { serif      } { \cs_gset:cpn {#1} { \rmfamily   } } 
+               { sans-serif } { \cs_gset:cpn {#1} { \sffamily   } } 
+               { sffamily   } { \cs_gset:cpn {#1} { \sffamily   } }
+               { ttfamily   } { \cs_gset:cpn {#1} { \ttfamily   } } 
               }
-             {                         }
-             {   \cs_gset:cpn {#1} {  \normalfont    }              }
+             {                                   }
+             { \cs_gset:cpn {#1} { \normalfont } }
      }   
    }    
    
@@ -1635,8 +1652,6 @@ See http://www.latex-project.org/lppl.txt
 % \pkg{tcolorbox} commands.
 % 
 %    \begin{macrocode}
-
-   
 \newtcolorbox{scriptexample}[2][shavian]{colback=thecodebackground,
 boxrule=0pt,toprule=0pt,colframe=white}
 
@@ -2554,6 +2569,14 @@ boxrule=0pt,toprule=0pt,colframe=white}
   \fi
   \egroup
 }
+
+\newenvironment{nonsymtable}[1]{%
+  \begin{table}[htbp]
+  \centering
+  \caption{#1}\medskip
+}{%
+  \end{table}
+}
 %    \end{macrocode}
 %
 % \chapter{Scripts and Languages }
@@ -3290,12 +3313,30 @@ boxrule=0pt,toprule=0pt,colframe=white}
 \ExplSyntaxOff
 %    \end{macrocode}
 %    
-%    
+% \begin{docCommand}{K} { \oarg{} \marg{cmd} }    
+%    Adds a symbol cmd to a table and the index.
+% \end{docCommand}
+%
 %    \begin{macrocode}
-\def\K@opt@arg[#1]#2{\incsyms\indexcommand[#1]{#2}#1 &\ttfamily\string#2}
-\def\K@no@opt@arg#1{\incsyms\indexcommand[#1]{#1}#1 &\ttfamily\string#1}
-\def\K{\@ifnextchar[{\K@opt@arg}{\K@no@opt@arg}}
-%    \end{macrocode}    
+\ExplSyntaxOn
+\cs_set:Npn \K@opt@arg#1#2 
+   {
+      \incsyms
+      \indexcommand[#1]{#2}#1 &\ttfamily\string#2
+   }
+   
+\cs_set:Npn \K@no@opt@arg#1
+  {
+    \incsyms\indexcommand[#1]{#1}#1 &\ttfamily\string#1
+  }
+
+\NewDocumentCommand {\K} { o m } 
+{
+  \IfNoValueTF {#1} { \K@no@opt@arg {#2} } {\K@opt@arg {#1}{#2}}
+}
+\ExplSyntaxOff
+%    \end{macrocode}
+%    
 %    \begin{macrocode}
 \def\Kp#1{\incsyms\indexpunct[$#1$]{#1}#1 &\ttfamily\string#1}
 
@@ -3305,35 +3346,87 @@ boxrule=0pt,toprule=0pt,colframe=white}
 \def\Kp#1{\incsyms\indexpunct[$#1$]{#1}#1 &\ttfamily\string#1}
 
 \def\Kpig#1{\incsyms\index{pigpenfont #1=\string\verb+{\string\pigpenfont\space#1}+\space(\string\CLSLpig{#1})}\CLSLpig{#1} &\ttfamily\string{\string\pigpenfont\space\string#1\string}}
-\def\Ks#1{\incsyms\indexcommand[\string\encone{\string#1}]{#1}{\encone{#1}} &\ttfamily\string#1$^*$}
 %    \end{macrocode}
-
-% 
+%
+%  \begin{docCommand} {Ks} { \marg{cmd} }
+%    Ks index and doc command, asterisk for note that is not available in |OT1|, as
+%    superscript.
+%  \end{docCommand}
+%
+%    \begin{macrocode}
+\ExplSyntaxOn
+  \cs_set:Npn \Ks #1
+    {
+      \incsyms
+      \indexcommand[\string\encone{\string#1}] {#1}
+      { \encone{#1} }  & \ttfamily\string#1$^*$
+    }
+\ExplSyntaxOff
+%    \end{macrocode}
 %
 % This macro is also from the comprehensive and takes
 % the symbol command as its only argument. It provides
 % |T1| encoding and also adds the command to the index.
-%    \begin{macrocode}   
-\newcommand\Kt[1]{%
-        \incsyms\indexcommand[\string\encone{\string#1}]{#1}{%
-        \encone{#1}} &\ttfamily\string#1}%
-%    \end{macrocode}
 % 
+%    \begin{macrocode}
+\ExplSyntaxOn   
+\cs_set:Npn \Kt #1
+  {
+    \incsyms
+    \indexcommand[\string\encone{\string#1}] {#1}
+    {\encone{#1}} & \ttfamily \string #1
+  }
+\ExplSyntaxOff  
+%    \end{macrocode}
+%
+%  \begin{docCommand} {Kv} { \marg{cmd} }
+%    T5 encoding
+%  \end{docCommand}
 %
 %    \begin{macrocode}
 \def\Kv#1{\incsyms\indexcommand[\string\encfive{\string#1}]{#1}{\encfive{#1}} &\ttfamily\string#1}
-
+%    \end{macrocode}
+%
+%    \begin{macrocode}
 \def\Kgr@opt@arg[#1]#2{\incsyms\indexcommand[\string\encgreek{\string#1}]{#2}{\encgreek{#1}} &\ttfamily\string#2}
   \def\Kgr@no@opt@arg#1{\incsyms\indexcommand[\string\encgreek{\string#1}]{#1}{\encgreek{#1}} &\ttfamily\string#1}
-  \def\Kgr{\@ifnextchar[{\Kgr@opt@arg}{\Kgr@no@opt@arg}}
-
+ 
+\def\Kgr{\@ifnextchar[{\Kgr@opt@arg}{\Kgr@no@opt@arg}}
 \def\KN[#1][#2]#3{\incsyms\indexcommand[\string#1]{#3} #1 & #2 & \ttfamily\string#3}
 \def\KNbig[#1][#2]#3{\incsyms\indexcommand[\string#2]{#3} #1 & #2 & \ttfamily\string#3}
+
 \def\Knoidx#1{\incsyms#1 &\ttfamily\string#1}
-%% N
- \def\N@opt@arg[#1]#2{\incsyms\indexcommand[$\string#1$]{#2}$#1$ & $\Big#1$ &\ttfamily\string#2}
-  \def\N@no@opt@arg#1{\incsyms\indexcommand[$\string#1$]{#1}$#1$ & $\Big#1$ &\ttfamily\string#1}
-  \def\N{\@ifnextchar[{\N@opt@arg}{\N@no@opt@arg}}
+%    \end{macrocode}
+%
+% \begin{docCommand}{N} {}
+%   Big delimiters auxiliary command for doc and index. 
+% \end{docCommand}
+%
+%    \begin{macrocode}
+\ExplSyntaxOn
+\cs_set:Npn \N@opt@arg #1 #2 
+  {
+    \incsyms
+    \indexcommand[$\string#1$]{#2}
+    $#1$ & $\Big#1$ &\ttfamily\string#2
+  }
+
+\cs_set:Npn \N@no@opt@arg#1 
+  {
+    \incsyms\indexcommand[$\string#1$]{#1}
+    $#1$ & $\Big#1$ &\ttfamily\string#1
+  }
+  
+\NewDocumentCommand {\N} { o m } 
+  {
+    \IfNoValueTF {#1} 
+      { \N@no@opt@arg {#2}  }
+      { \N@opt@arg {#1}{#2} }
+  }
+
+\ExplSyntaxOff  
+%    \end{macrocode}  
+%    \begin{macrocode}  
   \def\Nn[#1]#2{%
     \incsyms\indexcommand[$\string\nathdouble\string#1$]{#2}%
     $\nathdouble#1$ & $\nathdouble{\Big#1}$ & \ttfamily\string#2}
@@ -3347,31 +3440,65 @@ boxrule=0pt,toprule=0pt,colframe=white}
   \def\Np@no@opt@args#1{\incsyms\indexpunct[$\string#1$]{#1}$#1$ & $\Big#1$ &\ttfamily\string#1}
   \def\Np{\@ifnextchar[{\Np@opt@args}{\Np@no@opt@args}}
   \def\Nbig[#1]#2{\incsyms\indexcommand[$\string\Big\string#1$]{#2}$#1$ & $\Big#1$ &\ttfamily\string#2}
-%% Q commands
- \def\Q@opt@arg[#1]#2{\incsyms\indexaccent[\string\blackacchack{\string#1}]{#2}#1{A}#1{a} &
-           \ttfamily\string#2\string{A\string}\string#2\string{a\string}}
-  \def\Q@no@opt@arg#1{\incsyms\indexaccent[\string\blackacchack{\string#1}]{#1}#1{A}#1{a} &
-           \ttfamily\string#1\string{A\string}\string#1\string{a\string}}
-  \def\Q{\@ifnextchar[{\Q@opt@arg}{\Q@no@opt@arg}}
-
+%    \end{macrocode}
+%
+%  \begin{docCommand} {Q} {}
+%  \end{docCommand}
+%
+%    \begin{macrocode}  
+\ExplSyntaxOn
+\cs_set:Npn \Q@opt@arg#1#2
+  {
+    \incsyms\indexaccent[\string\blackacchack{\string#1}]{#2}#1{A}#1{a} &
+           \ttfamily\string#2\string{A\string}\string#2\string{a\string}
+  }
+  
+\cs_set:Npn \Q@no@opt@arg#1
+  {
+    \incsyms\indexaccent[\string\blackacchack{\string#1}]{#1}#1{A}#1{a} &
+    \ttfamily\string#1\string{A\string}\string#1\string{a\string}
+  }
+           
+\NewDocumentCommand {\Q} { o m }
+  {
+    \IfNoValueTF {#1}
+      { \Q@no@opt@arg {#2} }
+      { \Q@opt@arg    {#1}{#2} }
+  }
+\ExplSyntaxOff  
+%    \end{macrocode}
+%
+%    \begin{macrocode}
 \def\Qc#1{\incsyms\indexaccent[\string\blackacc{\string#1}]{#1}#1{A}#1{a} &
          \ttfamily\string#1\string{A\string}\string#1\string{a\string}}
+%    \end{macrocode}
+
+%    \begin{macrocode}         
 \def\Qe[#1][#2]#3{%
   \incsyms\incsyms\index{_=\string#2{} (\string\blackacchack{\string#1})}%
   #3{A}#3{a} &
   \ttfamily\string#3\string{A\string}\string#3\string{a\string}}
+%    \end{macrocode}
+%
+%    \begin{macrocode}  
 \def\Qt#1{\incsyms\indexaccent[\string\encone{\string\blackacc{\string#1}}]{#1}{\encone{#1{A}#1{a}}} &
           \ttfamily\string#1\string{A\string}\string#1\string{a\string}}
-
+%    \end{macrocode}
+%    \begin{macrocode}
 \def\Qpc#1#2{\incsyms\indexcommand{#2}{\raisebox{1pt}{\tiny[#1]}} &
              \ttfamily\string#2\string{A\string}\string#2\string{a\string}}
+%    \end{macrocode}
+%
+%    \begin{macrocode}             
 \def\Qpfc[#1]#2{\incsyms\indexaccent[\string\encfour{\string\blackacchack{\string#1}}]{#2}\encfour{#1{A}#1{a}} &
            \ttfamily\string#2\string{A\string}\string#2\string{a\string}}
-%% TODO
+%    \end{macrocode}
+%    \begin{macrocode}
 \newif\ifFC\FCfalse
 \ifFC
   \def\Qiv#1#2{\incsyms\indexaccent[\string\encfour{\string\blackacchack{\string#1}}]{#1}\encfour{#1{A}#1{a}} &
                \ttfamily\string#1\string{A\string}\string#1\string{a\string}$^#2$}
+               
   \def\QivBAR#1{\incsyms\index{_=\string\magicVertname{}
                 (\string\encfour{\string\blackacchack{\string\FCbar}})}
                 \encfour{\FCbar{A}\FCbar{a}} &
@@ -3380,7 +3507,8 @@ boxrule=0pt,toprule=0pt,colframe=white}
   \def\Qiv#1#2{\Qpc{T4}{#1}$^#2$}
   \def\QivBAR#1{\Qpc{T4}{\|}$^#1$}
 \fi
-
+%    \end{macrocode}
+%    \begin{macrocode}
 \newif\ifVIET\VIETfalse
 \ifVIET
   \def\Qv#1#2{\incsyms\indexaccent[\string\encfive{\string\blackacchack{\string#1}}]{#1}{\encfive{#1{A}#1{a}}} &
@@ -3388,11 +3516,35 @@ boxrule=0pt,toprule=0pt,colframe=white}
 \else
   \def\Qv#1#2{\Qpc{T5}{#1}$^#2$}\def\Qv#1#2{Err}%TODO
 \fi
-%% R Commands
-  % We use \cmd{displaystyle} so that variable-sized symbols will be big.
-  \def\R@opt@arg[#1]#2{\incsyms\indexcommand[$\string#1$]{#2}$#1$ & $\displaystyle#1$ &\ttfamily\string#2}
-  \def\R@no@opt@arg#1{\incsyms\indexcommand[$\string#1$]{#1}$#1$ & $\displaystyle#1$ &\ttfamily\string#1}
-  \def\R{\@ifnextchar[{\R@opt@arg}{\R@no@opt@arg}}
+%    \end{macrocode}
+%
+% \begin{docCommand}{R} { \oarg{ams cmd} \marg {cmd} }
+%   Used for variable size math operators
+% \end{docCommand}
+%
+%    \begin{macrocode}
+\ExplSyntaxOn
+\cs_set:Npn \R@opt@arg#1#2
+  {
+    \incsyms
+    \indexcommand[$\string#1$]{#2}
+     $#1$ & $\displaystyle#1$ &\ttfamily\string#2
+  }
+  
+\cs_set:Npn \R@no@opt@arg#1
+  {
+    \incsyms
+    \indexcommand[$\string#1$]{#1}
+    $#1$ & $\displaystyle#1$ &\ttfamily\string#1
+  }
+
+\NewDocumentCommand {\R} { o m}
+  {
+    \IfNoValueTF {#1}
+      { \R@no@opt@arg {#2}      }
+      { \R@opt@arg    {#1} {#2} }
+  }
+\ExplSyntaxOff
 %% T commands
 %    \end{macrocode}
 %
@@ -3432,18 +3584,26 @@ boxrule=0pt,toprule=0pt,colframe=white}
 }
 %    \end{macrocode}
 %
+% \begin{docCommand} {Vp} {}
+%  Commands that work both in math and text mode
+% \end{docCommand}
 %    \begin{macrocode}   
 \newcommand{\Vp}[2][]{\incsyms#1 & \indexpunct[$#2$]{#2}#2 &\ttfamily\string#2}
-%W
+%    \end{macrocode}
+%
+%    \begin{macrocode}
 \def\W@opt@arg[#1]#2#3{%
     \incsyms\indexaccent[$\string\blackacc{\string#1}$]{#2}%
     $#1{#3}$ &\ttfamily\string#2\string{#3\string}}
 
- \def\W@no@opt@arg#1#2{%
+\def\W@no@opt@arg#1#2{%
     \incsyms\indexaccent[$\string\blackacc{\string#1}$]{#1}%
     $#1{#2}$ &\ttfamily\string#1\string{#2\string}}
-  \def\W{\@ifnextchar[{\W@opt@arg}{\W@no@opt@arg}}
-
+    
+\def\W{\@ifnextchar[{\W@opt@arg}{\W@no@opt@arg}}
+%    \end{macrocode}
+%
+%    \begin{macrocode}
 \def\Wf#1#2{\incsyms\indexcommand{#1}$#1{#2}$ &\ttfamily\string#1\string{#2\string}}
 \def\Ww#1#2#3{\incsyms\indexcommand{#2}$#1{#3}$ &\ttfamily\string#2\string{#3\string}}
 \def\Wul#1#2#3{%
@@ -3458,7 +3618,7 @@ boxrule=0pt,toprule=0pt,colframe=white}
 %
 % \tcbdocmarginnote{U 25-6-2015}
 %    \begin{macrocode}
-\def\X@opt@arg[#1]#2{\incsyms\indexcommand[$\string#1$]{#2}$#1$ &\ttfamily\string#2}
+\def\X@opt@arg#1#2 {\incsyms\indexcommand[$\string#1$]{#2}$#1$ &\ttfamily\string#2}
 \def\X@no@opt@arg#1{\incsyms\indexcommand[$\string#1$]{#1}$#1$ &\ttfamily\string#1}
 
 %\def\X{\@ifnextchar[{\X@opt@arg}{\X@no@opt@arg}}
@@ -3466,8 +3626,8 @@ boxrule=0pt,toprule=0pt,colframe=white}
 \NewDocumentCommand {\X} { o m}
   {
     \IfNoValueTF{#1}
-      { \X@no@opt@arg  {#1}   }
-      { \X@opt@arg[#1] {#2}  }
+      { \X@no@opt@arg  {#2}   }
+      { \X@opt@arg {#1} {#2}  }
   }
 %    \end{macrocode}
 
@@ -3489,7 +3649,131 @@ boxrule=0pt,toprule=0pt,colframe=white}
   }
 \ExplSyntaxOff
 %    \end{macrocode}
+%
+% \section {Unicode math index functions}
+%
+% The functions that follow typeset unicode math tables.
+%
+%  \begin{docCommand} {showsymbolalpha} { \marg{cmd} \marg{unicode point} \marg{note symbol} }
+%    Indexes and typesets all the alphabetic letters available in math, 
+%    mostly greek and the dotless j and i.
+%  \end{docCommand}
+%
+%    \begin{macrocode}
+\newcommand\showsymbolalpha[3]
+  {
+    \par\noindent\hangindent=3em%
+    \makebox[2em][l]{$#1$} \makebox[3.5em][l]{\texttt{U+#2}} 
+    \cmd{#1}$^{#3}$
+    \indexmathcmd [Math alphabetics] {#1}
+  }
+%    \end{macrocode}
+
+%  \begin{docCommand} {showsymbol} { \marg{cmd} \marg{unicode point} \marg{note symbol} }
+%  \end{docCommand}
+%    \begin{macrocode}
+\newcommand\showsymbol[3]{\par\noindent\hangindent=3em%
+\makebox[2em][l]{$#1$} \makebox[3.5em][l]{\texttt{U+#2}} 
+\cmd{#1}$^{#3}$\indexmathcmd [Math ordinary] {#1}}
+%    \end{macrocode}
+%
+%  \begin{docCommand} {showsymbolbin} { \marg{cmd} \marg{unicode point} \marg{note symbol} }
+%  \end{docCommand}
+%    \begin{macrocode}
+\newcommand\showsymbolbin[3]{\par\noindent\hangindent=3em%
+\makebox[2em][l]{$#1$} \makebox[3.5em][l]{\texttt{U+#2}} 
+\cmd{#1}$^{#3}$\indexmathcmd [Math bin operators] {#1}}
+%    \end{macrocode}
+%
+%  \begin{docCommand} {showrelsymbol} { \marg{cmd} \marg{unicode point} \marg{note symbol} }
+%  \end{docCommand}
+%    \begin{macrocode}
+\newcommand\showrelsymbol[3]{\par\noindent\hangindent=3em%
+\makebox[2em][l]{$#1$} \makebox[3.5em][l]{\texttt{U+#2}} 
+\cmd{#1}$^{#3}$\indexmathcmd [Math relations] {#1}}
+%    \end{macrocode}
+%
+%  \begin{docCommand} {integralsymbol} { \marg{cmd} \marg{unicode point} \marg{note symbol} }
+%    Typesets and inserts into index integral symbols
+%  \end{docCommand}
+%    \begin{macrocode}
+\newcommand\integralsymbol[3]{\par\noindent\hangindent=3em%
+\makebox[2em][l]{$#1$} \makebox[3.5em][l]{\texttt{U+#2}} 
+\cmd{#1}$^{#3}$\indexmathcmd [Math integrals] {#1}}
+%    \end{macrocode}
+%
+%  \begin{docCommand} {showop} { \marg{cmd} \marg{unicode point} \marg{note symbol} }
+%    Typesets and inserts into index integral symbols
+%  \end{docCommand}
 % 
+%    \begin{macrocode}
+\newcommand\showop[3]{\par\noindent\hangindent=6em%
+  \makebox[5em][l]{$#1$\hfill$\displaystyle#1$\hfill}\makebox[3.5em][l]{\small\texttt{U+#2}} \cmd{#1}$^{#3}$ \indexmathcmd [Math big operators] {#1} }
+%    \end{macrocode}
+%
+%  \begin{docCommand} {showmbrace} { \marg{cmd} \marg{unicode point} \marg{note symbol} }
+%    Typesets and inserts middle brace symbols
+%  \end{docCommand}
+% 
+%    \begin{macrocode}
+\newcommand\showmbrace[3]{\par\noindent\hangindent=6em%
+  \makebox[5em][l]{${#1}{\bigm#1}{\Bigm#1}{\biggm#1}{\Biggm#1}$}\makebox[3.5em][l]{\small\texttt{U+#2}} \cmd{#1}$^{#3}$ \indexmathcmd [Math delimiters] {#1}  }
+%    \end{macrocode}
+%
+%  \begin{docCommand} {showlbrace} { \marg{cmd} \marg{unicode point} \marg{note symbol} }
+%    left braces
+%  \end{docCommand}
+%    \begin{macrocode}
+\newcommand\showlbrace[3]{\par\noindent\hangindent=6em%
+  \makebox[5em][l]{$\Biggl#1\biggl#1\Bigl#1\bigl#1#1$}
+  \makebox[3.5em][l]{\small\texttt{U+#2}} \cmd{#1}$^{#3}$
+  [Math delimiters] {#1}
+  }
+%    \end{macrocode}
+%
+%  \begin{docCommand} {showrbrace} { \marg{cmd} \marg{unicode point} \marg{note symbol} }
+%    right braces
+%  \end{docCommand}
+%    \begin{macrocode}
+\newcommand\showrbrace[3]{\par\noindent\hangindent=6em%
+  \makebox[5em][l]{$#1\bigr#1\Bigr#1\biggr#1\Biggr#1$}\makebox[3.5em][l]{\small\texttt{U+#2}} \cmd{#1}$^{#3}$
+  [Math delimiters] {#1}
+  }
+%    \end{macrocode}
+%
+%  \begin{docCommand} {wide accents} { \marg{cmd} \marg{unicode point} \marg{note symbol} }
+%    wide accents
+%  \end{docCommand}
+%
+%    \begin{macrocode}
+\DeclareDocumentCommand \showwideaccent { m m m} {\par\noindent\hangindent=4em%
+  \makebox[3em][l]{$#1{xxx}$}\makebox[3.5em][l]{\small\texttt{U+#2}} \cmd{#1}$^{#3}$
+  \indexmathcmd [Math accents] {#1{abc}}
+  }
+%    \end{macrocode}
+%
+%  \begin{docCommand} {showaccent} { \marg{cmd} \marg{unicode point} \marg{note symbol} }
+%    right braces
+%  \end{docCommand}
+%
+%    \begin{macrocode}
+\DeclareDocumentCommand\showaccent { m m m} {\par\noindent\hangindent=4em%
+  \makebox[3em][l]{$#1b$}\makebox[3.5em][l]{\small\texttt{U+#2}} \cmd{#1}$^{#3}$
+  \indexmathcmd [Math accents] {#1 b}
+  }
+%    \end{macrocode}
+%
+%  \begin{docCommand} {showrover} { \marg{cmd} \marg{unicode point} \marg{note symbol} }
+%   
+%  \end{docCommand}  
+%    \begin{macrocode}  
+\newcommand\showover[3]{\par\noindent\hangindent=6em%
+  \makebox[5em][l]{$#1{xxxxxx}$}\makebox[3.5em][l]{\small\texttt{U+#2}} \cmd{#1}$^{#3}$
+  \indexmathcmd [Math over and under brackets] {#1{xxxxxx}}
+  }
+%    \end{macrocode}  
+% 
+% \section{Miscellaneous doc commands}
 % \begin{docCommand} {docFile} { \marg{file name} }
 %   Typesets and index a file. 
 % \end{docCommand}
@@ -3656,27 +3940,27 @@ boxrule=0pt,toprule=0pt,colframe=white}
 
 
 
-%\def\index@prologue{\section*{Index}\addcontentsline{toc}{section}{Index}
-%  This index only contains automatically generated entries. A good
-%  index should also contain carefully selected keywords. This index is
-%  not a good index.
-%  \bigskip
-%}
-%\@ifundefined{c@IndexColumns}{\newcount\c@IndexColumns}{}
-%\c@IndexColumns=2
-%  \def\theindex{\@restonecoltrue
-%    \columnseprule \z@  \columnsep 29\p@
-%    \twocolumn[\index@prologue]%
-%       \parindent -30pt
-%       \columnsep 15pt
-%       \parskip 0pt plus 1pt
-%       \leftskip 30pt
-%       \rightskip 0pt plus 2cm
-%       \small
-%       \def\@idxitem{\par}%
-%    \let\item\@idxitem \ignorespaces}
-%  \def\endtheindex{\onecolumn}
-%\def\noindexing{\let\index=\@gobble}
+\def\index@prologue{\section*{Index}\addcontentsline{toc}{section}{Index}
+  This index only contains automatically generated entries. A good
+  index should also contain carefully selected keywords. This index is
+  not a good index.
+  \bigskip
+}
+\@ifundefined{c@IndexColumns}{\newcount\c@IndexColumns}{}
+\c@IndexColumns=2
+  \def\theindex{\@restonecoltrue
+    \columnseprule \z@  \columnsep 29\p@
+    \twocolumn[\index@prologue]%
+       \parindent -30pt
+       \columnsep 15pt
+       \parskip 0pt plus 1pt
+       \leftskip 30pt
+       \rightskip 0pt plus 2cm
+       \small
+       \def\@idxitem{\par}%
+    \let\item\@idxitem \ignorespaces}
+  \def\endtheindex{\onecolumn}
+\def\noindexing{\let\index=\@gobble}
 
 
 
@@ -4606,7 +4890,7 @@ SIXTY FIVE\or SIXTY SIX \or SIXTY SEVEN \or \else
 %</DEFAULTS>
 % \fi
 %
-%
+% \printindex
 % \Finale
 \endinput
 % \newpage
@@ -4624,7 +4908,7 @@ SIXTY FIVE\or SIXTY SIX \or SIXTY SEVEN \or \else
 % \label{tbl:listofpaks}
 %
 % \bibliography{phd}
-% ^^A\printindex
+
 
 
 

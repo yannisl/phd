@@ -174,15 +174,15 @@
         \tl_set:Nn\l_tmpa_str:N {##1}
            \str_case_x:nnTF {##1}
              {
-               { none           } {   \cs_gset:cpn  {#1}   { \normalfont }     }
-               { rmfamily      } {   \cs_gset:cpn  {#1}  {  \rmfamily}           }
-               { serif             } {   \cs_gset:cpn  {#1}  { \rmfamily}          }
-               { sans-serif     } {    \cs_gset:cpn {#1}   {\sffamily }            }
-               {sffamily         } {   \cs_gset:cpn {#1}    {\sffamily}           }
-               { ttfamily        } {   \cs_gset:cpn  {#1}   { \ttfamily }    }
+               { none       } { \cs_gset:cpn {#1} { \normalfont } }
+               { rmfamily   } { \cs_gset:cpn {#1} { \rmfamily   } }
+               { serif      } { \cs_gset:cpn {#1} { \rmfamily   } }
+               { sans-serif } { \cs_gset:cpn {#1} { \sffamily   } }
+               { sffamily   } { \cs_gset:cpn {#1} { \sffamily   } }
+               { ttfamily   } { \cs_gset:cpn {#1} { \ttfamily   } }
               }
-             {                         }
-             {   \cs_gset:cpn {#1} {  \normalfont    }              }
+             {                                   }
+             { \cs_gset:cpn {#1} { \normalfont } }
      }
    }
 
@@ -813,7 +813,6 @@
       includegraphics, newarray,readarray,of
 }}
 \lstloadlanguages{[LaTeX]TeX, [primitive]TeX, extras}
-
 \newtcolorbox{scriptexample}[2][shavian]{colback=thecodebackground,
 boxrule=0pt,toprule=0pt,colframe=white}
 
@@ -1361,6 +1360,14 @@ xrightmargin=5pt,
   \fi
   \egroup
 }
+
+\newenvironment{nonsymtable}[1]{%
+  \begin{table}[htbp]
+  \centering
+  \caption{#1}\medskip
+}{%
+  \end{table}
+}
 \ExplSyntaxOn
 \clist_new:N \g_phd_scripts_clist
 \clist_new:N \g_phd_noto_clist
@@ -1817,9 +1824,23 @@ xrightmargin=5pt,
     }
 }
 \ExplSyntaxOff
-\def\K@opt@arg[#1]#2{\incsyms\indexcommand[#1]{#2}#1 &\ttfamily\string#2}
-\def\K@no@opt@arg#1{\incsyms\indexcommand[#1]{#1}#1 &\ttfamily\string#1}
-\def\K{\@ifnextchar[{\K@opt@arg}{\K@no@opt@arg}}
+\ExplSyntaxOn
+\cs_set:Npn \K@opt@arg#1#2
+   {
+      \incsyms
+      \indexcommand[#1]{#2}#1 &\ttfamily\string#2
+   }
+
+\cs_set:Npn \K@no@opt@arg#1
+  {
+    \incsyms\indexcommand[#1]{#1}#1 &\ttfamily\string#1
+  }
+
+\NewDocumentCommand {\K} { o m }
+{
+  \IfNoValueTF {#1} { \K@no@opt@arg {#2} } {\K@opt@arg {#1}{#2}}
+}
+\ExplSyntaxOff
 \def\Kp#1{\incsyms\indexpunct[$#1$]{#1}#1 &\ttfamily\string#1}
 
 \def\KED[#1][#2][#3]#4{\incsyms\indexcommand[#1]{#2}#3 &\ttfamily\string#4}
@@ -1828,24 +1849,53 @@ xrightmargin=5pt,
 \def\Kp#1{\incsyms\indexpunct[$#1$]{#1}#1 &\ttfamily\string#1}
 
 \def\Kpig#1{\incsyms\index{pigpenfont #1=\string\verb+{\string\pigpenfont\space#1}+\space(\string\CLSLpig{#1})}\CLSLpig{#1} &\ttfamily\string{\string\pigpenfont\space\string#1\string}}
-\def\Ks#1{\incsyms\indexcommand[\string\encone{\string#1}]{#1}{\encone{#1}} &\ttfamily\string#1$^*$}
-
-\newcommand\Kt[1]{%
-        \incsyms\indexcommand[\string\encone{\string#1}]{#1}{%
-        \encone{#1}} &\ttfamily\string#1}%
+\ExplSyntaxOn
+  \cs_set:Npn \Ks #1
+    {
+      \incsyms
+      \indexcommand[\string\encone{\string#1}] {#1}
+      { \encone{#1} }  & \ttfamily\string#1$^*$
+    }
+\ExplSyntaxOff
+\ExplSyntaxOn
+\cs_set:Npn \Kt #1
+  {
+    \incsyms
+    \indexcommand[\string\encone{\string#1}] {#1}
+    {\encone{#1}} & \ttfamily \string #1
+  }
+\ExplSyntaxOff
 \def\Kv#1{\incsyms\indexcommand[\string\encfive{\string#1}]{#1}{\encfive{#1}} &\ttfamily\string#1}
-
 \def\Kgr@opt@arg[#1]#2{\incsyms\indexcommand[\string\encgreek{\string#1}]{#2}{\encgreek{#1}} &\ttfamily\string#2}
   \def\Kgr@no@opt@arg#1{\incsyms\indexcommand[\string\encgreek{\string#1}]{#1}{\encgreek{#1}} &\ttfamily\string#1}
-  \def\Kgr{\@ifnextchar[{\Kgr@opt@arg}{\Kgr@no@opt@arg}}
 
+\def\Kgr{\@ifnextchar[{\Kgr@opt@arg}{\Kgr@no@opt@arg}}
 \def\KN[#1][#2]#3{\incsyms\indexcommand[\string#1]{#3} #1 & #2 & \ttfamily\string#3}
 \def\KNbig[#1][#2]#3{\incsyms\indexcommand[\string#2]{#3} #1 & #2 & \ttfamily\string#3}
+
 \def\Knoidx#1{\incsyms#1 &\ttfamily\string#1}
-%% N
- \def\N@opt@arg[#1]#2{\incsyms\indexcommand[$\string#1$]{#2}$#1$ & $\Big#1$ &\ttfamily\string#2}
-  \def\N@no@opt@arg#1{\incsyms\indexcommand[$\string#1$]{#1}$#1$ & $\Big#1$ &\ttfamily\string#1}
-  \def\N{\@ifnextchar[{\N@opt@arg}{\N@no@opt@arg}}
+\ExplSyntaxOn
+\cs_set:Npn \N@opt@arg #1 #2
+  {
+    \incsyms
+    \indexcommand[$\string#1$]{#2}
+    $#1$ & $\Big#1$ &\ttfamily\string#2
+  }
+
+\cs_set:Npn \N@no@opt@arg#1
+  {
+    \incsyms\indexcommand[$\string#1$]{#1}
+    $#1$ & $\Big#1$ &\ttfamily\string#1
+  }
+
+\NewDocumentCommand {\N} { o m }
+  {
+    \IfNoValueTF {#1}
+      { \N@no@opt@arg {#2}  }
+      { \N@opt@arg {#1}{#2} }
+  }
+
+\ExplSyntaxOff
   \def\Nn[#1]#2{%
     \incsyms\indexcommand[$\string\nathdouble\string#1$]{#2}%
     $\nathdouble#1$ & $\nathdouble{\Big#1}$ & \ttfamily\string#2}
@@ -1859,31 +1909,44 @@ xrightmargin=5pt,
   \def\Np@no@opt@args#1{\incsyms\indexpunct[$\string#1$]{#1}$#1$ & $\Big#1$ &\ttfamily\string#1}
   \def\Np{\@ifnextchar[{\Np@opt@args}{\Np@no@opt@args}}
   \def\Nbig[#1]#2{\incsyms\indexcommand[$\string\Big\string#1$]{#2}$#1$ & $\Big#1$ &\ttfamily\string#2}
-%% Q commands
- \def\Q@opt@arg[#1]#2{\incsyms\indexaccent[\string\blackacchack{\string#1}]{#2}#1{A}#1{a} &
-           \ttfamily\string#2\string{A\string}\string#2\string{a\string}}
-  \def\Q@no@opt@arg#1{\incsyms\indexaccent[\string\blackacchack{\string#1}]{#1}#1{A}#1{a} &
-           \ttfamily\string#1\string{A\string}\string#1\string{a\string}}
-  \def\Q{\@ifnextchar[{\Q@opt@arg}{\Q@no@opt@arg}}
+\ExplSyntaxOn
+\cs_set:Npn \Q@opt@arg#1#2
+  {
+    \incsyms\indexaccent[\string\blackacchack{\string#1}]{#2}#1{A}#1{a} &
+           \ttfamily\string#2\string{A\string}\string#2\string{a\string}
+  }
 
+\cs_set:Npn \Q@no@opt@arg#1
+  {
+    \incsyms\indexaccent[\string\blackacchack{\string#1}]{#1}#1{A}#1{a} &
+    \ttfamily\string#1\string{A\string}\string#1\string{a\string}
+  }
+
+\NewDocumentCommand {\Q} { o m }
+  {
+    \IfNoValueTF {#1}
+      { \Q@no@opt@arg {#2} }
+      { \Q@opt@arg    {#1}{#2} }
+  }
+\ExplSyntaxOff
 \def\Qc#1{\incsyms\indexaccent[\string\blackacc{\string#1}]{#1}#1{A}#1{a} &
          \ttfamily\string#1\string{A\string}\string#1\string{a\string}}
+
 \def\Qe[#1][#2]#3{%
   \incsyms\incsyms\index{_=\string#2{} (\string\blackacchack{\string#1})}%
   #3{A}#3{a} &
   \ttfamily\string#3\string{A\string}\string#3\string{a\string}}
 \def\Qt#1{\incsyms\indexaccent[\string\encone{\string\blackacc{\string#1}}]{#1}{\encone{#1{A}#1{a}}} &
           \ttfamily\string#1\string{A\string}\string#1\string{a\string}}
-
 \def\Qpc#1#2{\incsyms\indexcommand{#2}{\raisebox{1pt}{\tiny[#1]}} &
              \ttfamily\string#2\string{A\string}\string#2\string{a\string}}
 \def\Qpfc[#1]#2{\incsyms\indexaccent[\string\encfour{\string\blackacchack{\string#1}}]{#2}\encfour{#1{A}#1{a}} &
            \ttfamily\string#2\string{A\string}\string#2\string{a\string}}
-%% TODO
 \newif\ifFC\FCfalse
 \ifFC
   \def\Qiv#1#2{\incsyms\indexaccent[\string\encfour{\string\blackacchack{\string#1}}]{#1}\encfour{#1{A}#1{a}} &
                \ttfamily\string#1\string{A\string}\string#1\string{a\string}$^#2$}
+
   \def\QivBAR#1{\incsyms\index{_=\string\magicVertname{}
                 (\string\encfour{\string\blackacchack{\string\FCbar}})}
                 \encfour{\FCbar{A}\FCbar{a}} &
@@ -1892,7 +1955,6 @@ xrightmargin=5pt,
   \def\Qiv#1#2{\Qpc{T4}{#1}$^#2$}
   \def\QivBAR#1{\Qpc{T4}{\|}$^#1$}
 \fi
-
 \newif\ifVIET\VIETfalse
 \ifVIET
   \def\Qv#1#2{\incsyms\indexaccent[\string\encfive{\string\blackacchack{\string#1}}]{#1}{\encfive{#1{A}#1{a}}} &
@@ -1900,11 +1962,28 @@ xrightmargin=5pt,
 \else
   \def\Qv#1#2{\Qpc{T5}{#1}$^#2$}\def\Qv#1#2{Err}%TODO
 \fi
-%% R Commands
-  % We use \cmd{displaystyle} so that variable-sized symbols will be big.
-  \def\R@opt@arg[#1]#2{\incsyms\indexcommand[$\string#1$]{#2}$#1$ & $\displaystyle#1$ &\ttfamily\string#2}
-  \def\R@no@opt@arg#1{\incsyms\indexcommand[$\string#1$]{#1}$#1$ & $\displaystyle#1$ &\ttfamily\string#1}
-  \def\R{\@ifnextchar[{\R@opt@arg}{\R@no@opt@arg}}
+\ExplSyntaxOn
+\cs_set:Npn \R@opt@arg#1#2
+  {
+    \incsyms
+    \indexcommand[$\string#1$]{#2}
+     $#1$ & $\displaystyle#1$ &\ttfamily\string#2
+  }
+
+\cs_set:Npn \R@no@opt@arg#1
+  {
+    \incsyms
+    \indexcommand[$\string#1$]{#1}
+    $#1$ & $\displaystyle#1$ &\ttfamily\string#1
+  }
+
+\NewDocumentCommand {\R} { o m}
+  {
+    \IfNoValueTF {#1}
+      { \R@no@opt@arg {#2}      }
+      { \R@opt@arg    {#1} {#2} }
+  }
+\ExplSyntaxOff
 %% T commands
 \ExplSyntaxOn
 \newcommand \indexDing [1]
@@ -1928,26 +2007,26 @@ xrightmargin=5pt,
     \incsyms\indexaccent[$\string\blackacc{\string#1}$]{#2}%
     $#1{#3}$ &\ttfamily\string#2\string{#3\string}}
 
- \def\W@no@opt@arg#1#2{%
+\def\W@no@opt@arg#1#2{%
     \incsyms\indexaccent[$\string\blackacc{\string#1}$]{#1}%
     $#1{#2}$ &\ttfamily\string#1\string{#2\string}}
-  \def\W{\@ifnextchar[{\W@opt@arg}{\W@no@opt@arg}}
 
+\def\W{\@ifnextchar[{\W@opt@arg}{\W@no@opt@arg}}
 \def\Wf#1#2{\incsyms\indexcommand{#1}$#1{#2}$ &\ttfamily\string#1\string{#2\string}}
 \def\Ww#1#2#3{\incsyms\indexcommand{#2}$#1{#3}$ &\ttfamily\string#2\string{#3\string}}
 \def\Wul#1#2#3{%
   \incsyms\indexaccent[$\string\blackacctwo{\string#1}$]{#1}%
   $#1{#2}{#3}$ &\ttfamily\string#1\string{#2\string}\string{#3\string}}
 
-\def\X@opt@arg[#1]#2{\incsyms\indexcommand[$\string#1$]{#2}$#1$ &\ttfamily\string#2}
+\def\X@opt@arg#1#2 {\incsyms\indexcommand[$\string#1$]{#2}$#1$ &\ttfamily\string#2}
 \def\X@no@opt@arg#1{\incsyms\indexcommand[$\string#1$]{#1}$#1$ &\ttfamily\string#1}
 
 
 \NewDocumentCommand {\X} { o m}
   {
     \IfNoValueTF{#1}
-      { \X@no@opt@arg  {#1}   }
-      { \X@opt@arg[#1] {#2}  }
+      { \X@no@opt@arg  {#2}   }
+      { \X@opt@arg {#1} {#2}  }
   }
 
 \def\Y#1{\incsyms\indexcommand[$\string\big\string#1$]{#1}$\big#1$ & $\Bigg#1$ &\ttfamily\string#1}
@@ -1960,6 +2039,51 @@ xrightmargin=5pt,
     \string #1
   }
 \ExplSyntaxOff
+\newcommand\showsymbolalpha[3]
+  {
+    \par\noindent\hangindent=3em%
+    \makebox[2em][l]{$#1$} \makebox[3.5em][l]{\texttt{U+#2}}
+    \cmd{#1}$^{#3}$
+    \indexmathcmd [Math alphabetics] {#1}
+  }
+
+\newcommand\showsymbol[3]{\par\noindent\hangindent=3em%
+\makebox[2em][l]{$#1$} \makebox[3.5em][l]{\texttt{U+#2}}
+\cmd{#1}$^{#3}$\indexmathcmd [Math ordinary] {#1}}
+\newcommand\showsymbolbin[3]{\par\noindent\hangindent=3em%
+\makebox[2em][l]{$#1$} \makebox[3.5em][l]{\texttt{U+#2}}
+\cmd{#1}$^{#3}$\indexmathcmd [Math bin operators] {#1}}
+\newcommand\showrelsymbol[3]{\par\noindent\hangindent=3em%
+\makebox[2em][l]{$#1$} \makebox[3.5em][l]{\texttt{U+#2}}
+\cmd{#1}$^{#3}$\indexmathcmd [Math relations] {#1}}
+\newcommand\integralsymbol[3]{\par\noindent\hangindent=3em%
+\makebox[2em][l]{$#1$} \makebox[3.5em][l]{\texttt{U+#2}}
+\cmd{#1}$^{#3}$\indexmathcmd [Math integrals] {#1}}
+\newcommand\showop[3]{\par\noindent\hangindent=6em%
+  \makebox[5em][l]{$#1$\hfill$\displaystyle#1$\hfill}\makebox[3.5em][l]{\small\texttt{U+#2}} \cmd{#1}$^{#3}$ \indexmathcmd [Math big operators] {#1} }
+\newcommand\showmbrace[3]{\par\noindent\hangindent=6em%
+  \makebox[5em][l]{${#1}{\bigm#1}{\Bigm#1}{\biggm#1}{\Biggm#1}$}\makebox[3.5em][l]{\small\texttt{U+#2}} \cmd{#1}$^{#3}$ \indexmathcmd [Math delimiters] {#1}  }
+\newcommand\showlbrace[3]{\par\noindent\hangindent=6em%
+  \makebox[5em][l]{$\Biggl#1\biggl#1\Bigl#1\bigl#1#1$}
+  \makebox[3.5em][l]{\small\texttt{U+#2}} \cmd{#1}$^{#3}$
+  [Math delimiters] {#1}
+  }
+\newcommand\showrbrace[3]{\par\noindent\hangindent=6em%
+  \makebox[5em][l]{$#1\bigr#1\Bigr#1\biggr#1\Biggr#1$}\makebox[3.5em][l]{\small\texttt{U+#2}} \cmd{#1}$^{#3}$
+  [Math delimiters] {#1}
+  }
+\DeclareDocumentCommand \showwideaccent { m m m} {\par\noindent\hangindent=4em%
+  \makebox[3em][l]{$#1{xxx}$}\makebox[3.5em][l]{\small\texttt{U+#2}} \cmd{#1}$^{#3}$
+  \indexmathcmd [Math accents] {#1{abc}}
+  }
+\DeclareDocumentCommand\showaccent { m m m} {\par\noindent\hangindent=4em%
+  \makebox[3em][l]{$#1b$}\makebox[3.5em][l]{\small\texttt{U+#2}} \cmd{#1}$^{#3}$
+  \indexmathcmd [Math accents] {#1 b}
+  }
+\newcommand\showover[3]{\par\noindent\hangindent=6em%
+  \makebox[5em][l]{$#1{xxxxxx}$}\makebox[3.5em][l]{\small\texttt{U+#2}} \cmd{#1}$^{#3}$
+  \indexmathcmd [Math over and under brackets] {#1{xxxxxx}}
+  }
 \ExplSyntaxOn
 \cs_set:Npn \docFile  #1
   {
@@ -2096,6 +2220,27 @@ xrightmargin=5pt,
   \index{#1@\protect\texttt{#1} class}%
   \index{Classes!#1@\protect\texttt{#1}}}
 
+\def\index@prologue{\section*{Index}\addcontentsline{toc}{section}{Index}
+  This index only contains automatically generated entries. A good
+  index should also contain carefully selected keywords. This index is
+  not a good index.
+  \bigskip
+}
+\@ifundefined{c@IndexColumns}{\newcount\c@IndexColumns}{}
+\c@IndexColumns=2
+  \def\theindex{\@restonecoltrue
+    \columnseprule \z@  \columnsep 29\p@
+    \twocolumn[\index@prologue]%
+       \parindent -30pt
+       \columnsep 15pt
+       \parskip 0pt plus 1pt
+       \leftskip 30pt
+       \rightskip 0pt plus 2cm
+       \small
+       \def\@idxitem{\par}%
+    \let\item\@idxitem \ignorespaces}
+  \def\endtheindex{\onecolumn}
+\def\noindexing{\let\index=\@gobble}
 
 \newcommand\symarrow[1]{
   \index{#1@\protect\texttt{#1} arrow tip}%

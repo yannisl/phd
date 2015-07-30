@@ -1,0 +1,717 @@
+%%
+%% This is file `phd-documentation.sty',
+%% generated with the docstrip utility.
+%%
+%% The original source files were:
+%%
+%% phd-documentation.dtx  (with options: `DOCUM')
+%% ----------------------------------------------------------------
+%% phd --- A package to beautify documents.
+%% E-mail: yannislaz@gmail.com
+%% Released under the LaTeX Project Public License v1.3c or later
+%% See http://www.latex-project.org/lppl.txt
+%% ----------------------------------------------------------------
+
+
+
+\NeedsTeXFormat{LaTeX2e}[1994/12/01]%
+\RequirePackage[2014/05/01]{latexrelease}
+\ProvidesFile{phd-documentation}[2015/1/13 v1.0 less preamble (YL)]%
+\ExplSyntaxOn
+\cs_if_exist:cTF {printindex}
+  { }
+  {
+    \RequirePackage{makeidx}[2000/03/29]
+  }
+\RequirePackage{refcount}[2011/10/16]
+
+\cs_set:Npn \colDef#1{\textcolor{\phdkv@col@command}{#1}}
+\cs_set:Npn \colOpt#1{\textcolor{\phdkv@col@opt}{#1}}
+\ExplSyntaxOff
+
+\lstdefinestyle{tcbdocumentation}{language={[LaTeX]TeX},
+    aboveskip={0\p@ \@plus 6\p@},
+    belowskip={0\p@ \@plus 6\p@},
+    columns=fullflexible,
+    keepspaces=true,
+    breaklines=true,
+    prebreak={\Righttorque},
+    postbreak={\space\Lefttorque},
+    breakatwhitespace=true,
+    basicstyle=\ttfamily\footnotesize,
+    extendedchars=true,
+    nolol,
+    inputencoding = \phdkv@listingencoding}
+\ExplSyntaxOn
+\DeclareRobustCommand\phdcs[1]{\texttt{\char`\\\detokenize{#1}}}
+
+\let\phd@doc@org@meta\meta%
+
+\cs_set:Npn \meta#1{{\rmfamily\phd@doc@org@meta{#1}}}
+
+\cs_set:Npn \marg #1
+  {
+    {\ttfamily\char`\{}\meta{#1}{\ttfamily\char`\}}
+  }
+
+\cs_set:Npn \oarg #1
+  {
+    \colOpt{{\ttfamily[}\meta{#1}{\ttfamily]}}
+  }
+\ExplSyntaxOff
+\newif\ifphd@doc@toindex
+\newif\ifphd@doc@colorize
+\newif\ifphd@doc@annotate
+
+\cxset{
+  pageshort/.store in=\phdkv@text@pageshort,
+  doclang/.cd,
+  color/.store in=\phdkv@text@color,
+  colors/.store in=\phdkv@text@colors,
+  environment content/.store in=\phdkv@text@envcontent,
+  environment/.store in=\phdkv@text@env,
+  environments/.store in=\phdkv@text@envs,
+  key/.store in=\phdkv@text@key,
+  keys/.store in=\phdkv@text@keys,
+  index/.store in=\phdkv@text@index,
+  pageshort/.store in=\phdkv@text@pageshort,
+  value/.store in=\phdkv@text@value,
+  values/.store in=\phdkv@text@values,
+}
+\cxset
+  {
+    documentation listing options/.store in=\phdkv@doclistingoptions,%
+    documentation listing style/.style={documentation listing options={style=#1}},%
+    documentation minted style/.store in=\phdkv@docmintstyle,
+    documentation minted options/.store in=\phdkv@docmintoptions,
+  }
+
+\cxset{
+    color command/.store in=\phdkv@col@command,
+    color environment/.store in=\phdkv@col@environment,
+    color key/.store in=\phdkv@col@key,
+    color value/.store in=\phdkv@col@value,
+    color color/.store in=\phdkv@col@color,
+    color definition/.style={color command={#1},color environment={#1},color key={#1},
+                           color value={#1},color color={#1}},
+    color option/.store in=\phdkv@col@opt,
+    color hyperlink/.store in=\phdkv@colhyper,
+    color frame/.store in=\phdkv@colhyper,
+    before example/.store in=\phdkv@beforeexample,
+    after example/.store in=\phdkv@afterexample,
+}
+\cxset{
+    index actual/.store in   = \idx@actual,
+    index quote/.store in    = \idx@quote,
+    index level/.store in    = \idx@level,
+    index format/.store in   = \idx@format,
+    index encap/.store in    = \idx@encap,
+    index colorize/.is if    = phd@doc@colorize,%
+    index annotate/.is if    = phd@doc@annotate,%
+  }
+\cxset{
+    doc left/.dimstore in=\phdkv@doc@left,
+    doc right/.dimstore in=\phdkv@doc@right,
+    doc left indent/.dimstore in=\phdkv@doc@indentleft,
+    doc right indent/.dimstore in=\phdkv@doc@indentright,
+    doc head command/.style={doc@head@command/.style={#1}},
+    doc head environment/.style={doc@head@environment/.style={#1}},
+    doc head key/.style={doc@head@key/.style={#1}},
+    doc head/.style={doc head command={#1},doc head environment={#1},doc head key={#1}},
+    doc description/.store in=\phdkv@doc@description,%
+    doc into index/.is if=phd@doc@toindex,%
+  }
+\cxset{
+  docexample/.style={colframe=ExampleFrame,colback=ExampleBack,fontlower=\footnotesize},
+  documentation minted style=,
+  documentation minted options={tabsize=2,fontsize=\small},
+  index default settings/.style={index actual={@},index quote={"},index level={!}},
+  index german settings/.style={index actual={=},index quote={!},index level={>}},
+  english language/.code={\cxset{doclang/.cd,
+    color=color,colors=Colors,
+    environment content=environment content,
+    environment=environment,environments=Environments,
+    key=key,keys=Keys,
+    index=Index,
+    pageshort={P.},
+    value=value,values=Values}},
+}
+
+\AtBeginDocument{%
+  \csname phd@doc@index@\idx@format\endcsname%
+  \hypersetup{
+  citecolor=\phdkv@colhyper,
+  linkcolor=\phdkv@colhyper,
+  urlcolor=\phdkv@colhyper,
+  filecolor=\phdkv@colhyper,
+  menucolor=\phdkv@colhyper
+}}
+
+
+
+\ExplSyntaxOn
+\cs_set:Npn \phdindexprintca #1#2#3 {%
+  \ifphd@doc@colorize
+    \textcolor{#2}
+    { \texttt{#1} }
+  \else
+    \texttt{#1}
+  \fi%
+  \ifphd@doc@annotate\
+   #3
+  \fi%
+}
+
+\cs_set:Npn \phd_index_print_c#1#2{%
+  \ifphd@doc@colorize
+    \textcolor{#2}{\texttt{#1}}
+  \else\texttt{#1}
+  \fi%
+}
+
+\newrobustcmd{\phdindexprintcomc}[1]
+  {
+    \phd_index_print_c {\phdcs{#1}}{\phdkv@col@command}
+  }
+\ExplSyntaxOff
+\ExplSyntaxOn
+\cs_new:Npn \phd_print_com #1
+  {
+    \textcolor{\phdkv@col@command}{\ttfamily\bfseries\phdcs{#1}}
+  }
+\ExplSyntaxOff
+
+\ExplSyntaxOn
+\newrobustcmd{\phdindexprintenvca}[1]
+  {
+    \phdindexprintca{#1}{\phdkv@col@environment}{\phdkv@text@env}
+  }
+
+\newrobustcmd{\phdindexprintenvc}[1]
+  {
+    \phd_index_print_c{#1}{\phdkv@col@environment}
+  }
+\ExplSyntaxOff
+\ExplSyntaxOn
+\cs_set:Npn \phd_print_env#1
+  {
+    \textcolor{\phdkv@col@environment}{\ttfamily\bfseries#1}
+  }
+
+\newrobustcmd{\phdindexprintkeyca}[1]
+  {
+    \phdindexprintca{#1}{\phdkv@col@key}{\phdkv@text@key}
+  }
+
+\newrobustcmd{\phdindexprintkeyc}[1]{\phd_index_print_c{#1}{\phdkv@col@key}}
+
+\cs_set:Npn \phd_print_key #1
+  {
+    \textcolor{\phdkv@col@key}{\ttfamily\bfseries#1}
+  }
+
+\newrobustcmd {\phdindexprintvalca}[1]
+  {
+    \phdindexprintca{#1}{\phdkv@col@value}{\phdkv@text@value}
+  }
+
+\newrobustcmd {\phdIndexPrintValC}[1]
+  {
+    \phd_index_print_c{#1}{\phdkv@col@value}
+  }
+
+\cs_set:Npn \phd@Print@Val #1
+  {
+    \textcolor {\phdkv@col@value} {\ttfamily\bfseries#1}
+  }
+
+\newrobustcmd{\phdindexprintcolca}[1]
+  {
+    \phdindexprintca{#1}{\phdkv@col@color}{\phdkv@text@color}
+  }
+
+\newrobustcmd{\phdindexprintcolc}[1]
+  {
+    \phd_index_print_c{#1}{\phdkv@col@color}
+  }
+
+\cs_set:Npn \phd_print_col #1
+  {
+    \textcolor{\phdkv@col@color}{\ttfamily\bfseries#1}
+  }
+
+\cs_set:Npn \phdindexcom #1
+  {
+    \ifphd@doc@toindex
+      \index
+       {
+         #1
+         \idx@actual
+         \phdindexprintcomc{#1}
+       }
+    \fi
+  }
+
+\cs_set:Npn \phd_index_env #1
+  {
+    \ifphd@doc@toindex
+      \index
+        {#1
+          \idx@actual
+          \phdindexprintenvca{#1}
+        }
+      \index
+        {
+          \phdkv@text@envs
+          \idx@level#1
+          \idx@actual
+          \phdindexprintenvc{#1}
+        }
+    \fi
+  }
+
+\cs_set:Npn \phd_index_key #1
+  {
+    \ifphd@doc@toindex
+      \index{#1\idx@actual\phdindexprintkeyca{#1}}
+      \index
+        {
+          \phdkv@text@keys
+          \idx@level#1
+          \idx@actual
+          \phdindexprintkeyc{#1}
+        }
+    \fi
+  }
+
+\cs_set:Npn \phd_index_key_path #1#2
+  {
+    \ifphd@doc@toindex\index{#2\idx@actual
+      \phdindexprintkeyca{#2}}
+      \index{\phdkv@text@keys\idx@level#1
+      \idx@actual
+      \phdindexprintkeyc{/#1/}
+      \idx@level#2
+      \idx@actual
+      \phdindexprintkeyc{#2}
+      }
+    \fi
+  }
+\cs_set:Npn \phd_index_val #1
+  {
+    \ifphd@doc@toindex
+      \index
+      {
+        #1\idx@actual
+        \phdindexprintvalca{#1}
+      }
+      \index
+        {
+          \phdkv@text@values
+          \idx@level #1
+          \idx@actual
+          \phdIndexPrintValC{#1}
+        }
+    \fi
+  }
+\cs_set:Npn \phd_index_col #1
+  {
+    \ifphd@doc@toindex
+    \index
+      {
+        #1
+        \idx@actual
+        \phdindexprintcolca{#1}
+      }
+    \index
+      {
+        \phdkv@text@colors \idx@level #1
+        \idx@actual\phdindexprintcolc {#1}
+      }
+    \fi
+  }
+
+\ExplSyntaxOff
+
+\ExplSyntaxOn
+\cs_set:Npn \phd_brackets #1
+  {
+    {\ttfamily\char`\{}#1{\ttfamily\char`\}}
+  }
+\ExplSyntaxOff
+\ExplSyntaxOn
+\newenvironment{phd@manual@entry}
+  {
+   \begin{list}{}
+    {
+     \setlength{\leftmargin}{\phdkv@doc@left}%
+     \setlength{\itemindent}{0pt}%
+     \setlength{\itemsep}{0pt}%
+     \setlength{\parsep}{0pt}%
+     \setlength{\rightmargin}{\phdkv@doc@right}%
+    }\item
+  }
+  {\end{list}}
+
+\cs_set:Npn \phd_manual_top #1
+  {
+    \itemsep=0pt
+    \parskip=0pt
+    \item\strut{#1}\par
+    \topsep=0pt
+  }
+
+\cs_set:Npn \phd_doc_do_description:
+  {
+    \ifx\phdkv@doc@description\@empty
+    \else\phdlower
+      \raggedleft(\phdkv@doc@description)
+    \fi
+  }
+\ExplSyntaxOff
+\ExplSyntaxOn
+\newtcolorbox{phd@doc@head}[1]
+ {
+  blank,
+  colback=white,
+  colframe=white,
+  code={\tcbdimto\tcb@temp@grow@left{-\phdkv@doc@indentleft}%
+        \tcbdimto\tcb@temp@grow@right{-\phdkv@doc@indentright}},
+  grow~to~left~by=\tcb@temp@grow@left,%
+  grow~to~right~by=\tcb@temp@grow@right,
+  sidebyside,
+  sidebyside~align=top,
+  sidebyside~gap=-\tcb@w@upper@real,
+  phantom=\phantomsection,%
+  enlarge~bottom~by=-0.2\baselineskip,
+  #1
+ }
+\ExplSyntaxOff
+\ExplSyntaxOn
+\newenvironment{docCmd}[3][]{
+  \cxset{#1}%
+  \begin{phd@manual@entry}%
+  \begin{phd@doc@head}{doc@head@command}%
+  \phd_print_com{#2}
+  \phdindexcom{#2}
+  \protected@edef\@currentlabel{\noexpand\phdcs{#2}}
+  \label{com:#2}{\ttfamily #3}%
+  \phd_doc_do_description:%
+  \end{phd@doc@head}}%
+  {\end{phd@manual@entry}}
+\ExplSyntaxOff
+
+\ExplSyntaxOn
+\newenvironment{docCmd*}
+  {
+    \bgroup
+    \phd@doc@toindexfalse
+    \begin{docCmd}
+  }
+  {
+    \end{docCmd}
+    \egroup
+  }
+
+\newenvironment{docEnv}[3][]{\cxset{#1}%
+  \begin{phd@manual@entry}%
+  \begin{phd@doc@head}{doc@head@environment}%
+  \strut
+  \phdcs{begin}
+  \phd_brackets{\phd_print_env{#2}}
+  \phd_index_env{#2}
+  \protected@edef\@currentlabel{#2}\label{env:#2}{\ttfamily #3}\par%
+  \strut~~\meta{\phdkv@text@envcontent}\par%
+  \strut\phdcs{end}
+  \phd_brackets{\phd_print_env{#2}}%
+  \phd_doc_do_description:%
+  \end{phd@doc@head}}%
+  {\end{phd@manual@entry}}
+\ExplSyntaxOff
+\newenvironment{docEnv*}
+  {
+    \bgroup
+    \phd@doc@toindexfalse
+    \begin{docEnv}
+  }
+  { \end{docEnv}\egroup }
+
+\ExplSyntaxOn
+\renewenvironment{docKey}[4][\@empty]{\begin{phd@manual@entry}%
+  \cxset{doc description={#4}}%
+  \begin{phd@doc@head}{doc@head@key}%
+  \ifx#1\@empty%
+ \phd_print_key{#2}
+  \phd_index_key{#2}
+  \protected@edef\@currentlabel{#2}
+  \label{key:#2}{\ttfamily #3}%
+  \else
+   \phd_print_key{/#1/#2}
+    \phd_index_key_path{#1}{#2}
+    \protected@edef\@currentlabel{/#1/#2}
+    \label{key:/#1/#2}{\ttfamily#3}%
+  \fi%
+  \phd_doc_do_description:%
+  \end{phd@doc@head}}%
+  {\end{phd@manual@entry}}
+
+\renewenvironment{docKey*}
+  {\bgroup\phd@doc@toindexfalse\begin{docKey}}
+  {\end{docKey}\egroup}
+
+\cs_set:Npn \phdmakedocSubKey#1#2{%
+  \newenvironment{#1}[4][\@empty]{%
+    \ifx##1\@empty
+      \cs_set:Npn \phd@key@path {#2}
+    \else
+     \cs_set:Npn \phd@key@path{#2/##1}
+    \fi%
+    \begin{docKey}[\phd@key@path]{##2}{##3}{##4}}%
+    {\end{docKey}}%
+  \newenvironment{#1*}{\bgroup\phd@doc@toindexfalse\begin{#1}}{\end{#1}\egroup}%
+}
+\ExplSyntaxOff
+
+\ExplSyntaxOn
+\cs_set:Npn \docAuxCmd: #1
+  {
+    \phdindexprintcomc {#1}
+    \phdindexcom{#1}
+  }
+
+\cs_set:Npn \docAuxCmd_star #1
+  {
+    \phdindexprintcomc {#1}
+  }
+
+\NewDocumentCommand \docAuxCmd { s m }
+  {
+    \IfBooleanTF {#1}
+    {\docAuxCmd_star {#2} }
+    {\docAuxCmd: {#2} }
+  }
+\ExplSyntaxOff
+\ExplSyntaxOn
+\cs_set:Npn \doc_aux_env: #1
+  {
+    \phd_print_env{#1}
+    \phd_index_env{#1}
+  }
+
+\cs_set:Npn \doc_aux_env_star #1
+  {
+    \phd_print_env{#1}
+  }
+\NewDocumentCommand\docAuxEnv { s m }
+  {
+    \IfBooleanTF {#1}
+    {\doc_aux_env_star{#2} }
+    {\doc_aux_env: {#2} }
+  }
+\ExplSyntaxOff
+\ExplSyntaxOn
+\NewDocumentCommand {\doc_aux_key:} {O{\@empty} m}
+  {%
+     \ifx#1\@empty%
+     \phd_print_key{#2}
+     \phd_index_key{#2}%
+     \else%
+     \phd_print_key{/#1/#2}\phd_index_key_path{#1}{#2}%
+  \fi
+  }%
+
+\newcommand{\doc_aux_key_star}[2][\@empty]{%
+  \ifx#1\@empty%
+   \phd_print_key {#2}%
+  \else%
+   \phd_print_key {/#1/#2}%
+  \fi}%
+
+\DeclareDocumentCommand {\docAuxKey} { s m }
+  {
+    \IfBooleanTF {#1}
+      { \doc_aux_key_star {#2} } { \doc_aux_key: [#1]{#2} }
+  }
+\ExplSyntaxOff
+\ExplSyntaxOn
+
+\cs_set:Npn \doc_color_aux #1
+  {
+    \phd_print_col {#1}
+    \phd_index_col {#1}
+  }
+
+\cs_set:Npn \doc_color_star: #1
+  {
+    \phd_print_col{#1}
+  }
+
+\DeclareDocumentCommand {\docColor} { s m }
+  {
+    \IfBooleanTF {#1}
+      { \doc_color_star: {#2} }
+      { \doc_color_aux {#2} }
+  }
+\ExplSyntaxOff
+
+\ExplSyntaxOn
+\cs_set:Npn \docValue@#1{\phd@Print@Val{#1}\phd_index_val{#1}}%
+\cs_set:Npn \docValue@star#1{\phd@Print@Val{#1}}%
+
+\DeclareDocumentCommand \docValue { s m }
+  {
+    \IfBooleanTF {#1}
+      { \docValue@star {#2} }
+      { \docValue@ {#2} }
+  }
+\ExplSyntaxOff
+\ExplSyntaxOn
+\setrefcountdefault{-1}
+
+\cs_set:Npn \phd_ref_doc #1
+{
+  \hyperref[#1]
+  {\texttt{\ref*{#1}}%
+    \ifnum\getpagerefnumber{#1}=\thepage
+  \else%
+    \textsuperscript
+    {
+      \ding{213}\,
+      \phdkv@text@pageshort\,
+     \pageref*{#1}}
+  \fi
+  }
+ }
+
+\cs_set:Npn \phd_ref_doc_star#1
+  {
+    \hyperref[#1]{\texttt{\ref*{#1}}}
+  }
+\ExplSyntaxOff
+\ExplSyntaxOn
+\cs_set:Npn \ref_com: #1
+  {
+    \phd_ref_doc{com:#1}
+  }
+
+\cs_set:Npn \ref_com_star #1
+  {
+    \phd_ref_doc_star{com:#1}
+  }
+
+\DeclareDocumentCommand {\refCmd} { s m }
+  {
+    \IfBooleanTF {#1}
+    { \ref_com_star {#2} } { \ref_com: {#2} }
+  }
+\ExplSyntaxOff
+\ExplSyntaxOn
+\cs_set:Npn \refEnv: #1 {\phd_ref_doc{env:#1}}
+\cs_set:Npn \refEnv_star#1{\phd_ref_doc_star{env:#1}}
+
+\DeclareDocumentCommand {\refEnv} { s m }
+  {
+    \IfBooleanTF {#1}
+      { \refEnv_star {#2} }
+      { \refEnv: {#2}     }
+  }
+\ExplSyntaxOff
+\ExplSyntaxOn
+\cs_set:Npn \refKey@#1{\phd_ref_doc{key:#1}}
+\cs_set:Npn \refKey@star#1{\phd_ref_doc_star{key:#1}}
+\DeclareDocumentCommand {\refKey} { s m }
+  {
+    \IfBooleanTF { #1 }
+      { \refKey@star {#2} }
+      { \refKey@ {#2}       }
+  }
+\ExplSyntaxOff
+\ExplSyntaxOn
+\cs_set:Npn \refAux#1{\textcolor{\phdkv@colhyper}{\ttfamily #1}}
+\cs_set:Npn \refAuxcs#1{\textcolor{\phdkv@colhyper}{\phdcs{#1}}}
+\ExplSyntaxOff
+\ExplSyntaxOn
+\cs_set:Npn \phd@doc@index@pgf@
+  {
+    \c@IndexColumns=2%
+    \cs_set:Npn \theindex
+      {
+        \@restonecoltrue
+        \columnseprule 0pt
+        \columnsep 28\p@
+        \twocolumn[\index@prologue]%
+        \parindent -30pt%
+        \columnsep 15pt%
+        \parskip 0pt plus 1pt%
+        \leftskip 30pt%
+        \rightskip 0pt plus 2cm%
+        \small%
+        \cs_set:Npn \@idxitem{\par}%
+        \let\item\@idxitem\ignorespaces
+      }
+    \cs_set:Npn \endtheindex{\onecolumn}%
+    \cs_set:Npn \noindexing{\let\index=\@gobble}%
+  }
+\cs_set:Npn \phd@doc@index@pgfsection{%
+  \cs_set:Npn \index@prologue
+    {
+      \section*{\phdkv@text@index}
+      \addcontentsline{toc}{section}{\phdkv@text@index}
+      \par\noindent%
+   }
+  \phd@doc@index@pgf@
+}
+\cs_set:Npn \phd@doc@index@pgfchapter{%
+  \cs_set:Npn \index@prologue{\ifdefined\phantomsection\phantomsection\fi
+  \@makeschapterhead{\phdkv@text@index}
+  \addcontentsline{toc}{chapter}{\phdkv@text@index}}%
+  \phd@doc@index@pgf@%
+}
+\let\phd@doc@index@pgf=\phd@doc@index@pgfsection%
+\cs_set:Npn \phd@doc@index@doc
+  {
+    \let\phdindexcom      = \SpecialMainIndex
+    \let\phd_index_env    = \SpecialMainEnvIndex
+    \cxset{index german settings}
+    \EnableCrossrefs
+    \PageIndex
+}
+
+\cs_set:Npn \phd@doc@index@off{}%
+\ExplSyntaxOff
+\cxset{%
+  reset@documentation/.style={%
+    index format=pgf,
+    english language,
+    documentation listing style = tcbdocumentation,
+    index default settings,
+    color option=Option,
+    color definition=Definition,
+    color hyperlink=Hyperlink,
+    before example=\par\smallskip,
+    after example=,
+    doc left=2em,
+    doc right=0pt,
+    doc left indent=-2em,
+    doc right indent=0pt,
+    doc head=,
+    doc description=,
+    doc into index=true,
+    index colorize = true,
+    index annotate= false,
+    },
+}
+\cxset{reset@documentation}
+\cxset{index format  =  pgfchapter,
+       index actual={=},
+       index level = {>},
+       index quote = {!},
+       index german settings,
+       color hyperlink = thelinkcolor,  % links with color palette
+       color definition =thelinkcolor,  % links with color palette
+       pageshort       = {$\sigma{}$},
+   }
+\def\main#1{\underline{#1}}
+\endinput
+%%
+%% End of file `phd-documentation.sty'.

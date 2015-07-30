@@ -38,8 +38,8 @@ attributes are easy to change and have a consistent and easy to remember interfa
 
 To set or add a key we only use one command:
 
-      \cxset{chapter name font-size: Huge,
-             chapter number font-size: HUGE}
+      \cxset{chapter name font-size = Huge,
+             chapter number font-size = HUGE}
 
 ### Future Development
 
@@ -52,5 +52,7 @@ that I have completed about 70% of the work that needs
 to be done.
 
 __The package as it stands is not production stable.__
+
+
 
 
