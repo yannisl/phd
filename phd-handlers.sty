@@ -1,0 +1,419 @@
+%%
+%% This is file `phd-handlers.sty',
+%% generated with the docstrip utility.
+%%
+%% The original source files were:
+%%
+%% phd-handlers.dtx  (with options: `HANDLER')
+%% ----------------------------------------------------------------
+%% phd --- A package to beautify documents.
+%% E-mail: yannislaz@gmail.com
+%% Released under the LaTeX Project Public License v1.3c or later
+%% See http://www.latex-project.org/lppl.txt
+%% ----------------------------------------------------------------
+
+
+
+\NeedsTeXFormat{LaTeX2e}[1994/12/01]%
+\RequirePackage[2014/05/01]{latexrelease}
+\ProvidesFile{phd-handlers}[2015/1/13 v1.0 less preamble (YL)]%
+\ExplSyntaxOn
+\let\ltxtoday\today
+\let\phd_hang_from:nn \@hangfrom
+\newif\if@ltxcompat \@ltxcompatfalse
+\ExplSyntaxOff
+\ExplSyntaxOn
+
+\clist_new:N \allowed_font_family_options
+\clist_gset:Nn \allowed_font_family_options
+  {
+    sffamily,rmfamily,ttfamily, normal,italic,oblique,
+    itshape,slshape,upshape,sans-serif,serif,monospace,
+    inherit,auto,normalfont
+  }
+\cs_gset_eq:cc {bold} {bfseries}
+
+  \pgfkeys{/handlers/.font-family~in/.code =
+    \pgfkeysalso
+      {\pgfkeyscurrentpath/.code=
+        \clist_if_in:NnTF \allowed_font_family_options {##1 }
+          {
+           \gdef #1 {##1}
+          }
+          {
+            \gdef #1 {\sffamily}
+          }
+      }
+  }
+   \pgfkeys{/handlers/.fontfamily/.code =
+    \pgfkeysalso
+      {\pgfkeyscurrentpath/.code=
+        \tl_set:Nn\l_tmpa_str:N {##1}
+           \str_case_x:nnTF {##1}
+             {
+               { none       } { \cs_gset:cpn {#1} { \normalfont } }
+               { rmfamily   } { \cs_gset:cpn {#1} { \rmfamily   } }
+               { serif      } { \cs_gset:cpn {#1} { \rmfamily   } }
+               { sans-serif } { \cs_gset:cpn {#1} { \sffamily   } }
+               { sffamily   } { \cs_gset:cpn {#1} { \sffamily   } }
+               { ttfamily   } { \cs_gset:cpn {#1} { \ttfamily   } }
+              }
+             {                                   }
+             { \cs_gset:cpn {#1} { \normalfont } }
+     }
+   }
+
+\ExplSyntaxOff
+\ExplSyntaxOn
+\clist_new:N \allowed_font_face_options
+\clist_gset:Nn \allowed_font_face_options
+  {
+    sffamily,rmfamily,ttfamily, normal,italic,oblique,
+    itshape,slshape,upshape,sans-serif,serif,monospace,
+    inherit,auto,tiresias,arial,pan
+  }
+
+  \pgfkeys{/handlers/.font-face~in/.code =
+    \pgfkeysalso
+      {\pgfkeyscurrentpath/.code=
+         \IfNoValueTF {##1} {\@empty}
+           {
+            \cs_if_exist:NTF { #1 }
+              { \gdef#1 {##1} }
+              { \gdef#1 {\rmfamily} } %add error trapping as well
+           }
+          }
+
+  }
+
+ \ExplSyntaxOff
+\ExplSyntaxOn
+ \pgfkeys{/handlers/.set~font-face/.code=\pgfkeysalso{\pgfkeyscurrentpath/.code=
+           \def\tempa{##1}%
+           \def\tempb{normal}%
+           \def#1{##1}%
+           \ifx\tempa\tempb%
+              \def#1{\normalfont}%
+           \fi%
+   }}%
+\ExplSyntaxOff
+\ExplSyntaxOn
+\clist_new:N \allowed_font_style_options
+\clist_gset:Nn \allowed_font_style_options {normal,upshape,itshape,oblique,slshape,italic}
+\cs_gset_eq:cc {normal}{upshape}
+\cs_gset_eq:cc {italic}{itshape}
+\cs_gset_eq:cc {oblique}{slshape}
+
+\pgfkeys{/handlers/.font-style~in/.code =
+    \global\let\bold\bfseries
+    \pgfkeysalso
+      {\pgfkeyscurrentpath/.code=
+        \clist_if_in:NnTF \allowed_font_style_options {##1 }
+          {
+           \gdef #1 {##1}
+          }
+          {
+            \gdef#1 {upshape} %Plus error message
+          }
+      }
+  }
+  \pgfkeys{/handlers/.fontstyle/.code =
+    \pgfkeysalso
+      {\pgfkeyscurrentpath/.code=
+        \tl_set:Nn\l_tmpa_str:N {##1}
+           \str_case_x:nnTF {##1}
+             {
+               {normal        } { \cs_gset:cpn {#1} { \upshape   } }
+               { upshape      } { \cs_gset:cpn {#1} { \upshape   } }
+               { itshape      } { \cs_gset:cpn {#1} { \itshape   } }
+               { italic       } { \cs_gset:cpn {#1} { \itshape   } }
+               { oblique      } { \cs_gset:cpn {#1} { \slshape   } }
+               { slshape      } { \cs_gset:cpn {#1} { \slshape   } }
+             }
+             {                                                     }
+             { \cs_gset:cpn {#1} {##1}                          }
+      }
+   }
+
+\ExplSyntaxOff
+\ExplSyntaxOn
+\clist_new:N \allowed_font_weight_options
+\clist_gset:Nn \allowed_font_weight_options
+  {
+    normal,bold,bfseries,mdseries,none
+  }
+ \pgfkeys{/handlers/.font-weight~in/.code =
+    \pgfkeysalso
+      {\pgfkeyscurrentpath/.code=
+        \tl_set:Nn\l_tmpa_str:N {##1}
+           \str_case_x:nnTF {##1}
+             {
+               { none        } { \cs_gset:Npn #1 { empty    } }
+               { bold        } { \cs_gset:Npn #1 { bfseries } }
+               { normal      } { \cs_gset:Npn #1 { mdseries } }
+               { bfseries    } { \cs_gset:Npn #1 { bfseries } }
+               { mdseries    } { \cs_gset:Npn #1 { mdseries } }
+              }
+             {                         }
+             { \cs_gset:Npn #1 {empty} }
+      }
+}
+    \pgfkeys{/handlers/.fontweight/.code =
+    \pgfkeysalso
+      {\pgfkeyscurrentpath/.code=
+        \tl_set:Nn\l_tmpa_str:N {##1}
+           \str_case_x:nnTF {##1}
+             {
+               { none       } { \cs_gset:cpn {#1} { \mdseries } }
+               { bold       } { \cs_gset:cpn {#1} { \bfseries } }
+               { normal     } { \cs_gset:cpn {#1} { \mdseries } }
+               { bfseries   } { \cs_gset:cpn {#1} { \bfseries } }
+               { mdseries   } { \cs_gset:cpn {#1} { \mdseries } }
+              }
+             {                               }
+             { \cs_gset:cpn {#1} {\mdseries} }
+      }
+   }
+\ExplSyntaxOff
+\ExplSyntaxOn
+
+  \clist_new:N   \allowed_keys_font_size
+  \clist_gset:Nn \allowed_keys_font_size
+    {
+      normal,tiny,footnotesize,small,scriptsize,
+      large,Large,LARGE,
+      huge,Huge,HUGE,HHUGE,
+      HHHUGE,auto,inherit,
+      autoscale,
+    }
+
+  \pgfkeys{/handlers/.font-size~in/.code =
+    \pgfkeysalso
+      {\pgfkeyscurrentpath/.code=
+        \clist_if_in:NnTF \allowed_keys_font_size {##1 }
+          {
+           \cs_gset:Npn #1  {##1}
+          } {normalsize}
+      }
+   }
+    \pgfkeys{/handlers/.fontsize/.code =
+    \pgfkeysalso
+      {\pgfkeyscurrentpath/.code=
+        \tl_set:Nn\l_tmpa_str:N {##1}
+           \str_case_x:nnTF {##1}
+             {
+               { normal     } { \cs_gset:cpn {#1} { \normalfont } }
+               { small      } { \cs_gset:cpn {#1} { \small      } }
+               { scriptsize } { \cs_gset:cpn {#1} { \scriptsize } }
+               { large      } { \cs_gset:cpn {#1} { \large      } }
+               { Large      } { \cs_gset:cpn {#1} { \Large      } }
+               { LARGE      } { \cs_gset:cpn {#1} { \LARGE      } }
+               { huge       } { \cs_gset:cpn {#1} { \huge       } }
+               { Huge       } { \cs_gset:cpn {#1} { \huge       } }
+               { HUGE       } { \cs_gset:cpn {#1} { \HUGE       } }
+               { HHUGE      } { \cs_gset:cpn {#1} { \HHUGE      } }
+               { HHHUGE     } { \cs_gset:cpn {#1} { \HHHUGE     } }
+              }
+             {                         }
+             { \cs_gset:cpn {#1} {##1} }
+      }
+   }
+\ExplSyntaxOff
+\ExplSyntaxOn
+  \clist_new:N  \allowed_options_case
+  \clist_gset:Nn \allowed_options_case
+    {
+      lower,upper,none
+    }
+
+  \pgfkeys{/handlers/.case~in/.code =
+    \pgfkeysalso
+      {\pgfkeyscurrentpath/.code=
+        \tl_set:Nn\l_tmpa_str:N {##1}
+           \str_case_x:nnTF {##1}
+             {
+               { none       } { \cs_gset:Npn #1 { empty             } }
+               { lower      } { \cs_gset:Npn #1 { MakeTextLowercase } }
+               { lowercase  } { \cs_gset:Npn #1 { MakeTextLowercase } }
+               { upper      } { \cs_gset:Npn #1 { MakeTextUppercase } }
+               { uppercase  } { \cs_gset:Npn #1 { MakeTextUppercase } }
+               { upper case } { \cs_gset:Npn #1 { MakeTextUppercase } }
+             }
+             {                         }
+             { \cs_gset:Npn #1 {empty} }
+      }
+  }
+
+\pgfkeys
+ {/handlers/.case/.code =
+    \pgfkeysalso
+      {\pgfkeyscurrentpath/.code=
+         \str_case_x:nnTF {##1}
+             {
+               { none       } { \cs_gset:cpn {#1} { \empty             } }
+               { lower      } { \cs_gset:cpn {#1} { \MakeTextLowercase } }
+               { lowercase  } { \cs_gset:cpn {#1} { \MakeTextLowercase } }
+               { upper      } { \cs_gset:cpn {#1} { \MakeTextUppercase } }
+               { uppercase  } { \cs_gset:cpn {#1} { \MakeTextUppercase } }
+               { upper~case } { \cs_gset:cpn {#1} { \MakeTextUppercase } }
+             }
+             {                         }
+             { \cs_gset:cpn #1 {\MakeTextLowercase} }
+      }
+  }
+
+ \pgfkeys
+ {/handlers/.store/.code =
+    \pgfkeysalso
+      {\pgfkeyscurrentpath/.code=
+         \cs_gset:cpn {#1} {##1}
+      }
+  }
+\ExplSyntaxOff
+\ExplSyntaxOn
+  \pgfkeys{/handlers/.textalign/.code =
+    \pgfkeysalso
+      {\pgfkeyscurrentpath/.code=
+        \tl_set:Nn\l_tmpa_str:N {##1}
+           \str_case_x:nnTF {##1}
+             {
+               { none        } { \cs_gset:cpn {#1} {}                }
+               { left        } {  \cs_gset:cpn {#1} { \RaggedRight } }
+               { RaggedLeft  } {  \cs_gset:cpn {#1} { \RaggedLeft  } }
+               { raggedleft  } { \cs_gset:cpn {#1}  { \raggedleft  } }
+               { right       } {  \cs_gset:cpn {#1} { \RaggedLeft  } }
+               { RaggedRight } {  \cs_gset:cpn {#1} { \RaggedRight } }
+               { raggedright } {  \cs_gset:cpn {#1} { \raggedright } }
+               { center      } {  \cs_gset:cpn {#1} { \Centering   } }
+               { centre      } {  \cs_gset:cpn {#1} { \Centering   } }
+               { centering   } {  \cs_gset:cpn {#1} { \centering   } }
+               { Centering   } {  \cs_gset:cpn {#1} { \Centering   } }
+               { flushleft   } {  \cs_gset:cpn {#1} { \flushleft   } }
+               { flushright  } {  \cs_gset:cpn {#1} { \flushright  } }
+             }
+             {                          }
+             { \cs_gset:cpn #1 {\empty} }
+      }
+  }
+\ExplSyntaxOff
+\ExplSyntaxOn
+  \pgfkeys{/handlers/.onoff/.code =
+    \pgfkeysalso
+      {\pgfkeyscurrentpath/.code=
+        \tl_set:Nn\l_tmpa_str:N {##1}
+           \str_case_x:nnTF {##1}
+             {
+               { on    }  { \cs_gset:cpn {#1} {##1} }
+               { off   }  { \cs_gset:cpn {#1} {##1} }
+               { true  }  { \cs_gset:cpn {#1} {##1} }
+               { false }  { \cs_gset:cpn {#1} {##1} }
+             }
+             {                           }
+             { \cs_gset:cpn {#1} {empty} }
+      }
+  }
+\ExplSyntaxOff
+
+
+\ExplSyntaxOn
+ \pgfkeys
+ {/handlers/.shadow/.code =
+    \pgfkeysalso
+      {\pgfkeyscurrentpath/.code=
+         \str_case_x:nnTF {##1}
+             {
+               { none               } { \cs_gset:cpn {#1} { {no~shadow} } }
+               { drop~shadow        } { \cs_gset:cpn {#1} { drop~shadow } }
+               { drop~lifted~shadow } { \cs_gset:cpn {#1} { {##1}       } }
+               { fuzzy~halo         } { \cs_gset:cpn {#1} { halostyle   } }
+             }
+             {                       }
+             { \cs_gset:cpn #1 {##1} }
+      }
+  }
+\ExplSyntaxOff
+\ExplSyntaxOn
+  \clist_new:N   \allowed_options_format
+  \clist_gset:Nn \allowed_options_format
+    {
+      plain, block, display, runin, leftmargin,
+      rightmargin, drop, wrap, frame, custom, inline, inmargin,
+      hanginmargin
+    }
+  \pgfkeys{/handlers/.format~in/.code =
+    \pgfkeysalso
+      {\pgfkeyscurrentpath/.code=
+        \clist_if_in:NnTF \allowed_options_format {##1 }
+          {
+           \cs_gset:cpn {#1} {##1}
+          }
+          {
+             \cs_gset:cpn {#1}  {##1} %FIRE MUST CATER FOR SPECIALS
+          } % to add that this is custom message and check if defined
+      }
+  }
+\ExplSyntaxOff
+\ExplSyntaxOn
+  \clist_new:N   \allowed_color_options
+  \clist_gset:Nn \allowed_color_options
+    {
+      auto,palette,
+    }
+  \pgfkeys{/handlers/.colorin/.code =
+    \pgfkeysalso
+      {\pgfkeyscurrentpath/.code=
+        \clist_if_in:NnTF \allowed_color_options  {##1 }
+          {
+           \cs_gset:cpn {#1} {\color{##1}}
+          }
+          {
+           { \cs_gset:cpn {#1} {\color{##1}} } %FIRE MUST CATER FOR SPECIALS
+          } % to add that this is custom message and check if defined
+      }
+  }
+\ExplSyntaxOff
+\ExplSyntaxOn
+  \cs_set:Npn \use_v:nnnnn #1#2#3#4#5 {#5}
+   \cs_new:Npn \remove_the:#1
+     {
+       \exp_after:wN \use_v:nnnnn \token_to_str:N #1
+     }
+   \cs_gset:Npn \make_the_cmd: #1#2
+     {
+       \cs_gset:Npn \countername { \remove_the:{#1} }
+       \cs_gset:Npn #1
+         {
+           \exp_after:wN \exp_after:wN \exp_after:wN #2
+           \exp_after:wN \cs:w c@\countername\cs_end:
+         }
+    }
+  \pgfkeys{/handlers/.numbering~in/.code =
+
+    \pgfkeysalso
+      {
+        \pgfkeyscurrentpath/.code=
+        \tl_set:Nn\l_tmpa_str:N {##1}
+           \str_case_x:nnTF {##1}
+             {
+               { none       } { \cs_gset:Npn #1     {}               }
+               { arabic     } { \make_the_cmd: {#1} { \@arabic     } }
+               { Alpha      } { \make_the_cmd: {#1} { \@Alph       } }
+               { alph       } { \make_the_cmd: {#1} { \@alph       } }
+               { Roman      } { \make_the_cmd: {#1} { \@Roman      } }
+               { roman      } { \make_the_cmd: {#1} { \@roman      } }
+               { WORDS      } { \make_the_cmd: {#1} { \WORDS@cx    } }
+               { Words      } { \make_the_cmd: {#1} { \Words@cx    } }
+               { words      } { \make_the_cmd: {#1} { \words@cx    } }
+               { ordinals   } { \make_the_cmd: {#1} { \ordinals@cx } }
+               { Ordinals   } { \make_the_cmd: {#1} { \ordinals@cx } }
+               { ORDINALS   } { \make_the_cmd: {#1} { \ORDINALS@cx } }
+               % add padzeroes later
+             }
+             {                         }
+             { \cs_gset:Npn #1 {##1}   }
+      }
+  }
+\ExplSyntaxOff
+\endinput
+%%
+%% End of file `phd-handlers.sty'.

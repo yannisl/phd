@@ -262,9 +262,9 @@ The next commands can be used for round off, absolute functions etc.
  
  \begin{texexample}{More on retrieving values}{ex:intuse}
  \ExplSyntaxOn
-   \int_new:c {somecounter}
-   \int_gadd:cn {somecounter}{263+223/23}
-   \int_use:c {somecounter}
+   \int_new:c   {somecounter}
+   \int_gadd:cn {somecounter} {(263+223)/23}
+   \int_use:c   {somecounter}
  \ExplSyntaxOff
  \end{texexample}
  
@@ -396,31 +396,30 @@ What have just happened in our example, we have emulated most of \latexe counter
 \textbf{Adding a prefix to the counters} So what we need to do first decide on some prefixes for counters or another similar convention. I will use a prefix |__counter_| to make the code readable. Although tempting to use |c@|  to make our counters compatible with \latexe counters, as stated earlier this would be against the central philosophy of \latex3 of keeping a onsistent syntax and function aiming conventions. All we have to do is add the prefixes and create the new counter to hold the rest counters and provide helper commands. We can also do some error capturing. 
 
 
-\begin{teXXX}
- \DeclareDocumentCommand\NewCounter{ o m } {
-  % create new counter if it does not exist and also its resets counters
-   \int_if_exist:NTF {__counter_#2}
-     {
-         \msg_error:nn { counters } { counter exists and cannot be created }
-     }
-     { 
-         \int_gzero_new:c {__counter_#2}
-         \int_gzero_new:c {__counter_resets_#2}
-     }
+\begin{phdverbatim}
+\DeclareDocumentCommand\NewCounter{ o m } {
+% create new counter if it does not exist and also its resets counters
+  \int_if_exist:NTF {__counter_#2}
+    {
+      \msg_error:nn { counters } { counter exists and cannot be created }
+    }
+    { 
+      \int_gzero_new:c {__counter_#2}
+      \int_gzero_new:c {__counter_resets_#2}
+    }
  
-  % handle the reset   
+% handle the reset   
   \IfNoValueF{#1}
-     {
-         \int_if_exist:NTF {__counter_resets_#1} 
-             {add to reset} {false code}
-     }    
- 
-  % create auxiliary functions  to be added later   
+    {
+      \int_if_exist:NTF {__counter_resets_#1} 
+                        {add to reset} {false code}
+    }    
+% create auxiliary functions  to be added later   
        
-   }
-\end{teXXX}
+  }
+\end{phdverbatim}
     
-This is a rough outline of the code we need to develop. It is considered bad practice to mix too many low level commands with high level commands and we should replace these with auxiliary functions. The auxiliary functions will create automated functions such as |thechapter| in \latexe.
+This is a rough outline of the code we need to develop. It is considered bad practice to mix too many low level commands with high level commands and we should replace these with auxiliary functions. The auxiliary functions will create automated functions such as |\thechapter| in \latexe.
 
 \begin{teXXX}
 \cs_new:Nn \phd_create_new_counter:n {
@@ -443,7 +442,7 @@ in Example~\ref{ex:createcounters}
 \cs_gset:Nx  \counter_prefix: {c@}
 \cs_gset:Nx  \counter_resets_prefix: {__counter_resets_prefix_}
 
-\cs_new:Nn  \phd_create_new_counter:n {
+\cs_gset:Nn  \phd_create_new_counter:n {
     \int_if_exist:cTF {\counter_prefix:#1}{ERROR~counter~exists}
         { 
             \int_gzero_new:c {\counter_prefix:#1}
@@ -455,11 +454,11 @@ in Example~\ref{ex:createcounters}
 
 \phd_create_new_counter:n {test2}
 
-\cs_new:Nn\stepacounter:n {
+\cs_gset:Nn\stepacounter:n {
   \int_gincr:c{\counter_prefix: #1}
 }
 
-\cs_new:Nn\setacounter:cn {
+\cs_gset:Nn\setacounter:cn {
   \int_set:cn {\counter_prefix: #1}{#2}
 }
 
@@ -467,14 +466,15 @@ in Example~\ref{ex:createcounters}
     \the\cs:w\counter_prefix: #1\cs_end:\relax
 }
 
-\newcommand{\makeauxiliaries}[1]{\mycommandaux#1\relax}
-    \def\mycommandaux#1#2\relax{%
+\def\makeauxiliaries#1 {\mycommandaux#1\relax}
+
+\def\mycommandaux#1#2\relax{%
        \uppercase{
        \expandafter\gdef\csname #1}
        #2Value
        \endcsname
        {\the\cs:w\counter_prefix: #1#2\cs_end:\relax}
-    }
+}
 
 \makeauxiliaries {test}
 
@@ -576,13 +576,13 @@ Now that we have developed the code for |\addtoreset:nn| we are ready to modify 
 
 \ExplSyntaxOn
 \NewDocumentCommand\NewCounter{ o m } {
-    \phd_create_new_counter:n {#2}
+  \phd_create_new_counter:n {#2}
     \IfNoValueF{#1}
       {
-         \int_if_exist:cT {\counter_resets_prefix:#1} 
+        \int_if_exist:cT {\counter_resets_prefix:#1} 
              {\addtoreset:nn{#1}{#2}} 
       }    
-    \makeauxiliaryfunctions {#1}
+  \makeauxiliaryfunctions {#1}
 }
 \ExplSyntaxOff
 
@@ -684,6 +684,7 @@ Comparing the values of two counters can be achieved with the use of conditional
    match then the \meta{false code} is inserted. The function
    \docAuxCommand*{int_case:nn}, which does nothing if there is no match, is also
    available. For example
+\end{docCommand}   
    \begin{texexample}{Case example}{ex:case}
    \makeatletter
    \ExplSyntaxOn
@@ -721,7 +722,7 @@ Comparing the values of two counters can be achieved with the use of conditional
      \makeatother
     \end{texexample}
     
- \end{docCommand}
+ 
  
  The next case example is from \href{https://github.com/wspr/fontspec/blob/master/fontspec.dtx}{fontspec.dtx}. It just wraps the official \latexe definition from \pkgname{fixltx2e} into the |expl| language. If you are going to utilize code from \latexe verbatim, it is always best to use it as is and only using a wrapper.
 

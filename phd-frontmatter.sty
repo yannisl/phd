@@ -1,0 +1,229 @@
+%%
+%% This is file `phd-frontmatter.sty',
+%% generated with the docstrip utility.
+%%
+%% The original source files were:
+%%
+%% phd-frontmatter.dtx  (with options: `FRONT')
+%% ----------------------------------------------------------------
+%% phd --- A package to beautify documents.
+%% E-mail: yannislaz@gmail.com
+%% Released under the LaTeX Project Public License v1.3c or later
+%% See http://www.latex-project.org/lppl.txt
+%% ----------------------------------------------------------------
+
+
+
+\NeedsTeXFormat{LaTeX2e}[1994/12/01]%
+\RequirePackage[2014/05/01]{latexrelease}
+\ProvidesFile{phd-frontmatter}[2015/7/13 v1.0 frontmatter management (YL)]%
+\ExplSyntaxOn
+\let\ltxtoday\today
+\let\phd_hang_from:nn \@hangfrom
+\newif\if@ltxcompat \@ltxcompatfalse
+\ExplSyntaxOff
+
+\ExplSyntaxOn
+\newif\if@mainmatter \@mainmattertrue
+\cxset{
+  mainmatter~numbering/.is~choice,
+  mainmatter~numbering/arabic/.code  = \cs_set:Npn \setpagenumbering
+                                         {
+                                           \pagenumbering{arabic}
+                                         },
+  mainmatter~numbering/roman/.code   = \cs_set:Npn \setpagenumbering
+                                         {
+                                           \pagenumbering{roman}
+                                         },
+  mainmatter~numbering/Roman/.code   = \cs_set:Npn \setpagenumbering
+                                         {
+                                           \pagenumbering{Roman}
+                                         },
+  }
+\ExplSyntaxOff
+\cxset{mainmatter numbering = arabic}
+\ExplSyntaxOn
+\cs_gset:Npn \frontmatter
+  {
+    %\cleardoublepage
+    \@mainmatterfalse
+    %\setpagenumbering%
+  }
+\cs_gset:Npn \mainmatter
+  {
+     \cleardoublepage
+      \@mainmattertrue
+     \setpagenumbering
+  }
+
+\def\backmatter{\if@openright\cleardoublepage\else\clearpage\fi
+      \@mainmatterfalse}
+\ExplSyntaxOff
+
+\def\@maketitle{%
+  %\newpage
+  \null
+  \vskip 2em%
+  \begin{center}%
+  \let \footnote \thanks
+    {\LARGE \@title \par}%
+    \vskip 1.5em%
+    {\large
+      \lineskip .5em%
+      \begin{tabular}[t]{c}%
+        \@author
+      \end{tabular}\par}%
+    \vskip 1em%
+    {\large \@date}%
+  \end{center}%
+  \par
+  \vskip 1.5em}
+  %fi CHECK
+\def\nonewpage{}
+\def\maketitle{\par
+      \begingroup \def \thefootnote {\fnsymbol {footnote}}%
+      \setcounter {footnote}\z@
+      \def\@makefnmark{\hbox to\z@{$\m@th^{\@thefnmark}$\hss}}%
+      \long\def\@makefntext##1{\parindent 1em\noindent
+            \hbox to1.8em{\hss$\m@th^{\@thefnmark}$}##1}%
+      \if@twocolumn \twocolumn [\@maketitle ]%
+      \else \nonewpage \global \@topnum \z@ \@maketitle \fi
+       \thispagestyle{titlepage}\@thanks \endgroup
+      \setcounter {footnote}\z@
+      \gdef\@date{\today}\gdef\@thanks{}%
+      \let\doctitle@cx\@title
+      \let\docauthor@cx\@author
+      \gdef\@author{}\gdef\@title{}%
+}
+%% headers and footers
+\cxset{
+  header style/.store in=\headerstyle@cx,
+  rule /.is choice,
+  rule on/.code={\gdef\rulewidth@cx{0.4pt}},
+  rule off/.code={\gdef\rulewidth@cx{0pt}},
+  lhead/.code ={\lhead{#1}},
+  rhead/.code={\rhead{#1}},
+  chead/.code={\chead{#1}},
+  lfoot/.code ={\lhead{#1}},
+  cfoot/.code={\chead{#1}},
+  rfoot/.code={\rhead{#1}},
+  headrulewidth/.code={\renewcommand\headrulewidth{#1}},
+  footrulewidth/.code={\renewcommand\footrulewidth{#1}},
+}
+\@ifundefined{ps@titlepage}
+    {\let\ps@titlepage=\ps@plain}{}
+\def\abstractname{Abstract}
+\@ifundefined{abstract}{%
+  \newenvironment{abstract}{%
+      \titlepage
+      \null\vfil
+      \@beginparpenalty\@lowpenalty
+      \begin{center}%
+        \bfseries \abstractname
+        \@endparpenalty\@M
+      \end{center}}%
+     {\par\vfil\null}
+}{}
+\def\chapterabstractname{Summary}
+
+\newenvironment{chapterabstract}{%
+   \center
+     {\bfseries \chapterabstractname\vspace{-.5em}\vspace{\z@}}
+   \endcenter\quotation
+}{\endquotation}
+\cxset{chapter abstractname/.store in =\chapterabstractname}
+\cxset{chapter abstractname= SUMMARY}
+\newcommand\precis[1]{%
+     \precis@cx{#1}%
+     \precistoc@cx{#1}%
+     \addvspace{20pt} % check this should be settable
+}
+\def\precis@cx#1{%
+\bgroup
+\small
+\centering
+\parbox{.8\textwidth}{#1}
+\par\medskip\egroup}
+
+\def\precistoc@cx#1{%
+    \addcontentsline{toc}{section}{%
+    \bgroup\bgroup#1\egroup\egroup
+    %
+  }
+}
+\long\def\addtocimage@cx#1#2#3{%
+\tikz[remember picture,overlay] {%
+\node[anchor=east,xshift=#1,yshift=#2] at (0,0) {\includegraphics[width=.15\linewidth]{#3}};}%
+}
+\def\addtocimage#1#2#3{%
+ \addtocontents{toc}{\protect\addtocimage@cx{#1}{#2}{#3}}%
+}
+ \ExplSyntaxOn
+\cxset
+  {
+    cover~font-size/.font-size~in = \cover_font_size,
+ }
+
+\cs_if_exist:NF \coverpage
+  {
+    \DeclareDocumentCommand {\coverpage}  { m m m m m }
+     {
+       \coverpage_aux:nnnnn {#1} {#2} { #3} {#4} {#5}
+     }
+
+     \cs_new:Npn \coverpage_aux:nnnnn #1 #2 #3 #4 #5
+      {
+      \gdef\secondpageimg{#1}
+      \vspace*{1.7cm}
+      \vbox{%
+         \vspace*{-8\baselineskip} %-1
+         \hskip-3.6cm\includegraphics[width=\paperwidth]{#1}\par %hine-02
+         \vspace*{.8\baselineskip} %3
+         \hbox to \hsize{%
+         \Huge \hfill\hfill{\MakeUppercase{\bfseries
+         \textsf{#4}}}}%
+         \vspace*{0.3cm}
+         \hbox to \hsize{\Huge \hfill\hfill{\MakeUppercase{\bfseries   \textsf{#5}}}}
+         \vspace*{1.8\baselineskip}
+         \hbox to \hsize{\huge \hfill\hfill\textsf{\hbox{#2}}}%
+         \vspace*{1.3cm}
+         \hbox to \hsize{\huge \hfill\hfill\textsf{\hbox{#3}}}%
+        }
+     }
+  }
+  { }
+\ExplSyntaxOff
+\DeclareDocumentCommand {\secondpageimgdescription} {}
+  {
+    The cover image shows Jo Bodeon, a back-roper in the mule room at
+    Chace Cotton Mill. Burlington, Vermont. This and other similar images
+    in this book were taken by Lewis W. Hine, in the period between
+    1908-1912. These images as well as social campaigns by many including
+    Hine, helped to formulate America's anti-child labour laws.
+  }
+\newcommand\secondpage{\clearpage\null\vfill\vfill
+  \begin{minipage}[b]{0.9\textwidth}
+    \includegraphics[width=3cm]{\secondpageimg}\par
+    \raggedright
+    \textit{Cover image: }
+    \secondpageimgdescription
+  \end{minipage}\par
+  \vspace*{\baselineskip}
+  \begin{minipage}[b]{0.9\textwidth}
+  \RaggedRight
+  \setlength{\parskip}{0.5\baselineskip}
+    Copyright \copyright 2015  Dr Yiannis Lazarides\par
+    Permission is granted to copy, distribute and\slash or modify this document
+    under the terms of the GNU Free Documentation License, version 1.2, with no
+    invariant sections, no front-cover texts, and no back-cover texts.\par
+    A copy of the license is included in the appendix.\par
+    This document is distributed in the hope that it will be useful, but without
+    any warranty; without even the implied warranty of merchantability or
+    fitness for a particular purpose.
+  \end{minipage}
+  \vspace*{2\baselineskip}
+  \clearpage
+}
+\endinput
+%%
+%% End of file `phd-frontmatter.sty'.

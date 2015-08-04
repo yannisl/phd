@@ -1,0 +1,290 @@
+%%
+%% This is file `phd-scriptsmanager.sty',
+%% generated with the docstrip utility.
+%%
+%% The original source files were:
+%%
+%% phd-scriptsmanager.dtx  (with options: `SCRIPTS')
+%% ----------------------------------------------------------------
+%% phd --- A package to beautify documents.
+%% E-mail: yannislaz@gmail.com
+%% Released under the LaTeX Project Public License v1.3c or later
+%% See http://www.latex-project.org/lppl.txt
+%% ----------------------------------------------------------------
+
+
+
+\NeedsTeXFormat{LaTeX2e}[1994/12/01]%
+\RequirePackage[2014/05/01]{latexrelease}
+\ProvidesFile{phd-lists}[2015/1/13 v1.0 less preamble (YL)]%
+\ifengine
+  {
+    \PassOptionsToPackage{italian,english}{polyglossia}
+    \RequirePackage{polyglossia}
+    \setdefaultlanguage{english}}
+  {%
+   \expandafter\PassOptionsToPackage{italian,english}{babel}
+    \RequirePackage[italian,english]{babel}
+  }
+  {\PassOptionsToPackage{italian,english }{babel}
+    \RequirePackage{babel}
+  }
+\RequirePackage[italian,english]{xlayouts}
+\ExplSyntaxOn
+\clist_new:N \g_phd_scripts_clist
+\clist_new:N \g_phd_noto_clist
+\prop_new:N \script_prop
+
+\cs_set:Npn \printnotofontlist
+  {
+    \begin{multicols}{2}
+      \clist_map_inline:Nn \g_phd_noto_clist
+        {
+          ##1\par
+  }
+    \end{multicols}
+  }
+\prop_put:Nnn \script_prop {name}{Armenian}
+\prop_put:Nnn \script_prop {fonts}{NotoArmenian-Regular.ttf, Others}
+\prop_get:NnN \script_prop {fonts}\l_tempa_tl
+\prop_put:Nnn \script_prop {group}{Europe}
+\prop_get:NnN \script_prop {group} \l_tempa_tl
+\NewDocumentCommand\SetPanUnicodeFont { m }
+  {
+     \gdef\panunicodefontface{#1}
+     \newfontfamily\panunicode[Scale=MatchUppercase]{#1}
+  }
+\SetPanUnicodeFont{code2000.ttf}
+
+\cs_gset:Npn \makepanfontfamily#1
+  {
+  \cs_gset_eq:cN {#1fontfamily} \panunicode
+  \cs_gset_eq:cc {#1} {#1fontfamily}
+}
+\cs_gset:Npn \add_a_script:n #1
+ {
+   \clist_gput_left:Nn \g_phd_scripts_clist {#1 }
+   \createscriptenvironment {#1}
+   \createtextscript {#1}
+ }
+
+ % add a script
+\NewDocumentCommand\addascript { m }
+  {
+    \add_a_script:n {#1}
+  }
+
+\gdef\createscriptenvironment #1{
+   \exp_after:wN\gdef\csname #1script\endcsname{\group_begin:
+      \csname #1fontfamily\endcsname}
+   \exp_after:wN\gdef\cs:w end#1script\cs_end:{\group_end: }
+}
+\ExplSyntaxOff
+\ExplSyntaxOn
+\cs_gset:Npn \createtextscript #1{
+   \long\exp_after:wN\gdef\csname text#1\endcsname ##1
+   {
+      \group_begin:
+      \cs:w #1fontfamily\cs_end:
+        ##1
+     \group_end:
+   }
+}
+\cs_gset:Npn \makefontfamily#1#2 {
+\if_meaning:w\panunicodefontface#2
+  \else:
+  \exp_after:wN
+  \newfontfamily\cs:w #1fontfamily\cs_end: { #2 }
+  \cs_gset_eq:cc {#1} {#1fontfamily}
+\fi:
+}
+
+\ExplSyntaxOff
+
+\NewDocumentCommand\AddScript { m } {
+    \cxset{script/.code=\addascript{##1}}
+    \cxset{#1 font/.code=\makefontfamily{#1}{##1}}
+    \cxset{script=#1}
+    \cxset{#1 font=\panunicodefontface}
+}
+\cxset{add script/.code = \AddScript{#1}}
+
+\ExplSyntaxOn
+\clist_gset:Nn \g_phd_scripts_clist
+  {
+      armenian,
+      %hebrew,
+      % arabic,
+      syriac,
+      thaana,
+      devanagari,
+      bamum,
+      bengali,
+      brahmi,
+      buhid,
+      bopomofo,
+      cham,
+      cherokee,
+      cjk,
+      coptic,
+      cypriot,
+      %e
+      ethiopic,
+      georgian,
+      glagolitic,
+      gurmukhi,
+      gujarati,
+      kayahli,
+      lao,
+      lisu,
+      kannada,
+      malayalam,
+      myanmar,
+      ogham,
+      oriya,
+      oldturkic,
+      phoenician,
+      runic,
+      tamil,
+      thai,
+      tibetan,
+      tifinagh,
+      telugu,
+      vai,
+      rejang,
+      saurashtra,
+      sinhala,
+      sylhetinagari,
+      sundanese,%check this
+      yi,%check
+      meitei,%check
+      mongolian,
+}
+
+\clist_map_inline:Nn\g_phd_scripts_clist
+  {
+    \AddScript{#1}
+    \makepanfontfamily {#1}
+  }
+\ExplSyntaxOff
+
+\newfontfamily\arabicfont[Script=Arabic]{Amiri}
+\newfontfamily\arabicfonttt[Script=Arabic,Scale=.75]{DejaVu   Sans Mono}
+\newenvironment{Arabic}
+   {\bgroup \arabicfont}
+   {\egroup}
+\newcounter{glyph@count}%counts glyphs
+\ExplSyntaxOn
+\def\textU#1{{\unicodenumberfam #1}}
+\ExplSyntaxOff
+\def\putunicode@label#1#2;{%
+\def\reformat@unicode@string##1{%
+   \textU{U+}%
+  \let\z\empty%
+  \expandafter\@tfor\expandafter\i\expandafter:\expandafter=#2;\do{%
+  \if\i;%
+    \textU{x}%
+  \else%
+    \textU{\z}%
+  \fi%
+  \edef\z{\i}%
+ }%
+}%
+  \makebox[5em]{\reformat@unicode@string{#2}\hfill}%
+}
+\def\putchar@cx#1{%
+\stepcounter{glyph@count}
+\let\oldactive@prefix\active@prefix
+\let\active@prefix\relax
+   \iffontchar\font\n
+     \char\the\n$_{\pgfmathparse{Hex(\the\r@cx)}\text{\pgfmathresult}}$%
+      %
+   \else
+    {\arial\graybox}
+   \fi
+\let\active@prefix\oldactive@prefix
+ }
+\def\urow@cx#1{%
+    \n=#1%
+    \r@cx=0%
+    \expandafter\putunicode@label#1;%
+    \loop%
+        \ifnum\n<\numexpr#1+16\relax%
+        \makebox[1.9em]{\expandafter\putchar@cx{#1}}%
+        \advance\r@cx by1%
+        \ifnum\r@cx>16\r@cx=1\relax\else\fi
+        \advance\n by1%
+    \repeat
+    \par
+}
+
+\def\typeseturows@cx#1{%
+\@for\next:=#1\do{%
+  \urow@cx\next\vskip3pt}%
+}
+
+\newcount\r@cx%
+\newcount\n%
+\newcommand\unicodetable[2]{%
+\bgroup
+  \par
+  \leavevmode%
+   \r@cx=0%
+   {\hbox to 5em{\ignorespaces}}%
+   \loop%
+    \ifnum\r@cx<16\ignorespaces
+    \makebox[1.9em]{\pgfmathparse{Hex(\the\r@cx)}\pgfmathresult}%
+    \advance\r@cx by\@ne%
+   \repeat
+   \vskip3pt\par
+   \@nameuse{#1}%
+   \typeseturows@cx{#2}%
+\egroup
+}
+\DeclareRobustCommand\unicodenumber[1]{{\ttfamily #1\xspace}}
+\def\putdescription#1:{%
+  {\parindent0pt
+  \begin{minipage}[t]{4cm}
+  \bgroup\aegean
+  \hangindent20pt
+  #1\par
+  \egroup
+  \end{minipage}
+  }
+}
+
+\long\def\parsefields #1:#2\@@{%
+    \ifx\par#1
+    \else
+        {\small\aegean U+#1}%
+         %%\iffontchar\font"#1 %
+          \makebox[2.1em]{\color{theunicodesymbolcolor}\symbol{"#1}}%
+          \expandafter\putdescription#2\vskip3pt
+        %%\else
+          %%{\aegean \makebox[2.1em]{} Unallocated\par}%
+        %%\fi
+    \fi
+  }%
+\newread\tempstream%s
+\DeclareDocumentCommand{\printunicodeblock}{O{2} m m }
+  {
+    \bgroup
+    \leavevmode\parindent0pt\par
+    \begin{multicols}{#1}%
+     #3
+      \openin\@inputcheck=#2
+      \loop\unless\ifeof\@inputcheck
+      \read\@inputcheck to\fileline %
+      \expandafter\parsefields \fileline:\@@
+      \repeat
+    \end{multicols}%
+      \immediate\closein\@inputcheck
+      \egroup
+  }
+\let\PrintUnicodeBlock\printunicodeblock
+\let\indicative\pan
+\newfontfamily\brahmi{Noto Sans Brahmi}
+\newfontfamily\bengal[Script=Bengali,Scale=1]{Shonar Bangla}
+\endinput
+%%
+%% End of file `phd-scriptsmanager.sty'.
