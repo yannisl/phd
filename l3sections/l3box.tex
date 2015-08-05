@@ -1,0 +1,626 @@
+\chapter{LaTeX3 Boxes}
+
+\epigraph{If you go far enough back, your genome connects you with bacteria, butterflies, and barracuda---the great chain of being linked together through DNA.}{---Spencer Wells}
+
+The \pkgname{l3box} package, provides numerous commands that deal with boxes. Before you delve in the code you should be familiar with \tex’s concepts of boxes such as \docAuxCommand*{hbox} and \docAuxCommand*{vbox}. The full repertoire of commands is available, as well as additional helper functions to reduce the number of commands necessary when storing content in boxes. There is also an additional package for handling the \latexe type |\fbox| and |\makebox| commands, still in experimental stage called \pkgname{xbox}. The latter also is attempting to provide some integration with the \pkgname{xcoffins} package which is an entirely new concept for box manipulation in \latex3. Most of the commands are just syntactic translations of the \latexe macros. 
+
+Do they offer any advantage? I am not too sure if they do at this stage. When it comes to boxes, which is such a fundamental typographic concept users expect much more than these basic commands, however one needs to build up from more basic commands and these have to be re-defined to keep up with the spirit of \latex3.
+
+\section{Storing content in boxes}
+
+\tex’s concept of storing content in boxes is fundamental to any programming effort, where the dimensions of typeset material needs to be determined before further processing.
+
+\subsection{Creating and initializing boxes}
+\begin{docCommand}{box_new:N} {  \meta{box}}
+   Creates a new \meta{box} or raises an error if the name is
+   already taken. The declaration is global. The \meta{box} will
+   initially be void.
+\end{docCommand}
+\begin{docCommand}{box_new:c}{\meta{box}}
+   Creates a new \meta{box} or raises an error if the name is
+   already taken. The declaration is global. The \meta{box} will
+   initially be void.
+\end{docCommand}
+
+Normally three operations are involved. Creating an empty box or using one of the available temporary one, setting the contents in a horizontal or vertical or a combination of both of them, measuring them if necessary 
+and then 
+
+\begin{texexample}{Storing content in boxes}{l3box}
+\ExplSyntaxOn
+\box_new:c { textbox }
+\hbox_set_to_wd:cnn { textbox } { 6cm } 
+  {
+    \tex_hsize:D 5cm
+    \colorbox{spot!10}{\vbox:n  
+       { \lorem }}
+  }
+\box_use:c {textbox}
+\ExplSyntaxOff
+\end{texexample}
+
+The naming schemes are a bit unintuitive but this is inherited from \tex itself. To restrict the |\vbox| you need to set the |\hsize|.  
+
+ \begin{docCommand}{box_move_right:nn}{\docAuxCommand*{box_move_right:nn} \marg{dimexpr} \marg{box function}}
+ This function operates in vertical mode, and inserts the
+  material specified by the \meta{box function}
+  such that its reference point is displaced horizontally by the given
+   \meta{dimexpr} from the reference point for typesetting, to the right
+   or left as appropriate. The \meta{box function} should be
+   a box operation such as |\box_use:N \<box>| or a \enquote{raw}
+   box specification such as |\vbox:n { xyz }|.
+ \end{docCommand}
+
+ \begin{docCommand}{box_move_up:nn}{\docAuxCommand*{box_move_up:nn} \marg{dimexpr} \marg{box function}}
+   This function operates in horizontal mode, and inserts the
+   material specified by the \meta{box function}
+   such that its reference point is displaced vertical by the given
+   \meta{dimexpr} from the reference point for typesetting, up
+   or down as appropriate. The \meta{box function} should be
+   a box operation such as |\box_use:N \<box>| or a \enquote{raw}
+   box specification such as |\vbox:n { xyz }|.
+ \end{docCommand}
+ 
+\begin{texexample}{Moving Boxes up or down}{l3boxdown}
+\ExplSyntaxOn
+\vbox_set:cn{textbox}{abcd}
+A \box_move_down:nn{10pt}{\box_use:c {textbox}} 
+\ExplSyntaxOff
+\end{texexample}
+
+ \section{Measuring and setting box dimensions}
+
+\begin{docCommand}{box_dp:N}{\docAuxCommand*{box_dp:N} \meta{box}}
+   Calculates the depth (below the baseline) of the \meta{box}
+   in a form suitable for use in a \meta{dimension expression}.
+\end{docCommand}
+
+\begin{docCommand}{box_ht:N}{\docAuxCommand*{box_ht:N} \meta{box}}
+   Calculates the height (above the baseline) of the \meta{box}
+   in a form suitable for use in a \meta{dimension expression}.
+  This is the \TeX{} primitive \docAuxCommand*{ht}.
+ \end{docCommand}
+
+% \begin{function}{\box_wd:N, \box_wd:c}
+%   \begin{syntax}
+%     \docAuxCommand*{box_wd:N} \meta{box}
+%   \end{syntax}
+%   Calculates the width of the \meta{box} in a form
+%   suitable for use in a \meta{dimension expression}.
+%   \begin{texnote}
+%     This is the \TeX{} primitive \tn{wd}.
+%   \end{texnote}
+% \end{function}
+
+\section{Horizontal Boxes}
+\label{l3:hboxes}
+
+So far we have discussed the boxing, unboxing and measuring of box dimensions. In the examples we have used
+the \latex3 form of |\hbox| and |\vbox|.  Now time to lose our  beloved |source2e| favoured command \docAuxCommand*{hb@xt@} and friends. 
+
+ \begin{docCommand}{hbox:n}{\docAuxCommand*{hbox:n} \marg{contents}}
+   Typesets the \meta{contents} into a horizontal box of line width and then includes this box in the current list for typesetting.
+   This is the \TeX{} primitive \docAuxCommand*{hbox}.
+ \end{docCommand}
+
+\begin{texexample}{Natural width boxes}{l3:hbox}
+\ExplSyntaxOn
+\hbox:n{\includegraphics[width=0.8\textwidth]{latex3}}
+\ExplSyntaxOff
+\end{texexample}
+
+\begin{texexample}{Natural width boxes}{l3:hbox}
+\ExplSyntaxOn
+\hbox:n{\includegraphics[width=0.8\textwidth]{latex3}}
+\ExplSyntaxOff
+\end{texexample}
+
+
+\begin{docCommand}{hbox_to_wd:nn}{\docAuxCommand*{hbox_to_wd:nn} \marg{dimexpr} \marg{contents}}
+   Typesets the \meta{contents} into a horizontal box of width
+   \meta{dimexpr} and then includes this box in the current list for
+   typesetting.
+\end{docCommand}
+
+\begin{texexample}{Natural width boxes}{l3:hbox}
+\ExplSyntaxOn
+\DeclareDocumentCommand\PutImage{o m}{
+  \IfNoValueTF{#1}
+      {\putimage{#2}}
+      {\putimage{#1}{#2}}
+}
+
+\noindent\hbox_to_wd:nn{0.3\textwidth}{\includegraphics[width=0.3\textwidth]{amato}}
+\hbox_to_wd:nn{0.3\textwidth}{\includegraphics[width=0.3\textwidth]{amato}}
+\ExplSyntaxOff
+
+\noindent\hbox to 0.3\textwidth{\includegraphics[width=0.3\textwidth]{amato}}%
+\hbox to 0.3\textwidth{\includegraphics[width=0.3\textwidth]{amato}}
+\end{texexample}
+
+Having set our goodbyes to |\hb@xt@| we also don’t feel very sorry for not having to type \% to eliminate wandering spaces. As we delve further into the intricacies of \latex3 we can also start appreciating its advantages.
+
+% \begin{function}{\hbox_to_zero:n}
+%   \begin{syntax} 
+%     \docAuxCommand*{hbox_to_zero:n} \Arg{contents}
+%   \end{syntax}
+%   Typesets the \meta{contents} into a horizontal box of zero width
+%   and then includes this box in the current list for typesetting.
+% \end{function}
+
+\section{Vertical Boxes}
+The vertical box equivalents to \tex’s |\vbox|, |\vtop| are provided, as well as helper functions to store contents in a box typeset zero width boxes or lap them left, right or center. The commands are mostly syntactic sugar to the primitive commands. 
+
+\begin{docCommand}{vbox:n}{\marg{contents}}
+Typesets the \meta{contents} into a vertical box of natural height and includes this box in the current list for typesetting.
+\end{docCommand}
+
+\begin{docCommand}{vbox_to_ht:nn}{\marg{dimexpr}\marg{contents}}
+Typesets the \meta{contents} into a vertical box of height \meta{dimexpr} and includes this box in the current list for typesetting.
+\end{docCommand}
+
+\begin{docCommand}{vbox_to_zero:n}{\marg{contents}}
+Typesets the \meta{contents} into a vertical box of zero height and includes this box in the current list for typesetting.
+\end{docCommand}
+
+%\tcbset{listing options={
+%              firstnumber=10, stepnumber=1, belowskip=0pt, 
+%              escapeinside={(*@}{@*)},
+%              backgroundcolor=\color{graphicbackground}
+%              }}
+\begin{texexample}{vboxes in LaTeX3}{l3:boxes}
+\ExplSyntaxOn
+    \fbox{\vbox:n{\lorem}}\par
+    \fbox{\vbox_to_ht:nn {1.5cm}{\lorem}}\par
+    \fbox{\vbox_to_zero:n {\lorem}}
+\ExplSyntaxOff
+\vspace*{1cm}
+\end{texexample}
+
+In Example~\ref{l3:boxes} we use \docAuxCommand*{vbox_to_ht:nn} and \docAuxCommand*{vbox_to_zero:n} to set text in two vertical boxes. The first one is typeset in a vertical box of 2cm height, whereas the second one in a box of zero height. The macro
+|\fbox| which we discussed earlier in the \latexe boxes chapter, is also available in \latex3 but as part of the still under trial package \pkgname{xbox}.\footnote{To make matters more complicated, the version used in this document has been redefined further!} 
+
+
+
+%\tcbset{listing options={
+%              firstnumber=last, stepnumber=1, belowskip=0pt, 
+%              escapeinside={(*@}{@*)},
+%              backgroundcolor=\color{graphicbackground},
+%              upquote=true,
+%          }}
+              
+\begin{texexample}{vboxes in LaTeX3}{l3:boxes}
+\ExplSyntaxOn
+    \fbox{\vbox:n{\lorem}}\par
+    \fbox{\vbox_to_ht:nn {1.5cm}{\lorem}}\par
+    \fbox{\vbox_to_zero:n {\lorem}}
+\ExplSyntaxOff
+\vspace*{1cm}
+\end{texexample}
+
+\chapter{LaTeX3 xcoffins, special boxes for special typesetting}
+
+\epigraph{The history of that name (as I remember it at least) goes way back to a stroll in some town in the UK sometime in the last century, probably 1997 (may have been Nottingham, but I don't remember) with David Carlisle and Chris Rowley and perhaps a few others on which we discussed those ideas about boxes with handles and somehow somebody came up with "rather like a coffin" and that is how it got born. And no, I don't remember whether it was David, Chris or myself.
+
+Somehow the name stuck; initially as a working title when we first implemented a prototype, but later I must confess I rather liked it -- a bit morbit for sure, but also catchy :-) ... and it made for few a great lines in my talk in San Francisco, such as: Now in 2010 coffins are back – exhumed, cleaned up – and ready for display
+what else can you hope for?}{---Frank Mittelbach}
+
+
+%\tcbset{listing options={
+%              firstnumber=10, stepnumber=1, belowskip=0pt, 
+%              escapeinside={(*@}{@*)},
+%              backgroundcolor=\color{graphicbackground},
+%              upquote=true,
+%          }}
+          
+ In \LaTeX3 terminology, a \enquote{coffin} is a box containing
+ typeset material.\footnote{The term `coffin’ was probably coined by Frank Mittelbach (see \protect\url{http://tex.stackexchange.com/questions/147738/origin-of-the-latex3-term-coffin})} Along with the box itself, the coffin structure
+ includes information on the size and shape of the box, which makes
+ it possible to align two or more coffins easily. This is achieved
+ by providing a series of `poles' for each coffin. These
+ are horizontal and vertical lines through the coffin at defined
+ positions, for example the top or horizontal centre. The points
+ where these poles intersect are called \enquote{handles}. Two
+ coffins can then be aligned by describing the relationship between
+ a handle on one coffin with a handle on the second. In words, an
+ example might then read
+ \begin{quote}
+   Align the top-left handle of coffin A with the bottom-right
+   handle of coffin B.
+ \end{quote}
+
+ The locations of coffin handles are much easier to understand
+ visually. Figure~\ref{fgr:handles} shows the standard handle
+ positions for a coffin typeset in horizontal mode (left) and in
+ vertical mode (right). Notice that the later case results in a greater
+ number of handles being available. As illustrated, each handle
+ results from the intersection of two poles. For example, the centre
+ of the coffin is marked |(hc,vc)|, \emph{i.e.}~it is the
+ point of intersection of the horizontal centre pole with the
+ vertical centre pole. New handles are generated automatically when
+ poles are added to a coffin: handles are \enquote{dynamic} entities.
+ \NewCoffin \ExampleCoffin
+\begin{figure}[htbp]
+   \hfil
+    \fboxsep2pc
+     \colorbox{black}{\color{white}\begin{minipage}{0.4\textwidth}
+     \SetHorizontalCoffin\ExampleCoffin
+       {\color{white}\rule{1 in}{1 in}}
+  \DisplayCoffinHandles\ExampleCoffin{yellow}
+   \end{minipage}}
+   \hfil
+   \begin{minipage}{0.4\textwidth}
+     \SetVerticalCoffin\ExampleCoffin{1 in}
+       {\color{black!10!white}\rule{1 in}{1 in}}
+     \DisplayCoffinHandles\ExampleCoffin{red}
+   \end{minipage}
+   \hfil
+   \caption{Standard coffin handles: left, horizontal coffin; right,
+     vertical coffin}
+   \label{fgr:handles}
+ \end{figure}
+
+
+All coffin operations are local to the current \tex group with the exception
+of coffin creation. Coffins are also “color safe”: in contrast to the code-level \docAuxCommand*{box_}\ldots.
+functions there is no need to add additional grouping to coffins when dealing with color.
+
+The user interface for the command is somewhat complicated. This is an area where the package
+can be enhanced in the future and the sole reason is being kept under the \emph{experimental}
+branch of \latex3.
+
+\section{Getting Started}
+
+Before a \meta{coffin} can be used, it must be allocated using \docAuxCommand*{NewCoffin}.
+
+\begin{docCommand}{NewCoffin}{\meta{coffin}}
+Before a \meta{coffin} can be used, it must be allocated using \docAuxCommand*{NewCoffin}. The name of the
+hcoffini should be a control sequence (starting with the escape character, usually \textbackslash ), for
+example
+
+\begin{verbatim}
+\NewCoffin\MyCoffin
+\end{verbatim}
+
+Coffins are allocated globally, and an error will be raised if the name of the \meta{coffin} is
+not globally-unique.
+\end{docCommand}
+
+\begin{texexample}{Coffins}{ex:coffins}
+  \NewCoffin \AnExampleCoffin
+  \NewCoffin\Rulei
+\end{texexample}
+
+ \begin{docCommand}{SetHorizontalCoffin}{\docAuxCommand*{SetHorizontalCoffin} \meta{coffin} \marg{material}}
+   Typesets the \meta{material} in horizontal mode, storing the result
+   in the \meta{coffin}. The standard poles for the \meta{coffin} are
+   then set up based on the size of the typeset material.
+ \end{docCommand}
+
+ \begin{docCommand}{SetVerticalCoffin}{\docAuxCommand*{SetVerticalCoffin} \meta{coffin} \marg{width} \marg{material}}
+   Typesets the \meta{material} in vertical mode constrained to the
+   given \meta{width} and stores the result in the \meta{coffin}. The
+   standard poles for the \meta{coffin} are then set up based on the
+   size of the typeset material.
+ \end{docCommand}
+
+In Example~\ref{ex:coffins2} we will create a horizontal coffin and then typeset it. 
+ 
+%\tcbset{listing options={
+%              firstnumber=last, stepnumber=1, belowskip=0pt, 
+%              escapeinside={(*@}{@*)},
+%              backgroundcolor=\color{graphicbackground},
+%              upquote=true,
+%          }}
+          
+\begin{texexample}{Creating coffins}{ex:coffins2}
+\SetHorizontalCoffin\ExampleCoffin
+   {\color{red}\rule{4cm}{1pc}}  
+\SetHorizontalCoffin\Rulei
+   {\color{blue}\rule{6cm}{1pc}}     
+   
+First coffin\hspace{0.9cm}\DisplayCoffinHandles\ExampleCoffin{black}\hspace{0.9cm}!
+  
+Second  coffin\hfill \DisplayCoffinHandles\Rulei{blue}
+
+\meaning\Rulei
+\end{texexample}
+  
+\paragraph{How to set the width } The rule was created using \latexe |\rule|  macro and then it was saved in a coffin box named |\ExampleCoffin|. The typesetting was done using |\DisplayCoffinHandles| 
+
+In the next example, we will create a second rule and then demonstrate the joining operation. We will need two more coffins, one to hold the results and the other to hold the material for the second box.
+
+\begin{texexample}{Joining Coffins}{ex:coffins3}
+\NewCoffin\ExampleCoffinTwo
+\NewCoffin\Result
+\SetHorizontalCoffin\ExampleCoffin
+   {\color{red}\rule{3cm}{1pc}} 
+\SetHorizontalCoffin\ExampleCoffinTwo
+   {\color{green}\rule{3cm}{1pc}}    
+\JoinCoffins\Result\ExampleCoffin   
+\JoinCoffins \Result[\ExampleCoffin-t,\ExampleCoffin-r] \ExampleCoffinTwo [b,l](0pt,2mm)
+\TypesetCoffin\Result
+\end{texexample}
+ 
+The interesting, but complicated command is |\JoinCoffins|. This takes two arguments, the coffins to be joined, which in turn have optional commands, specifying how the coffins are joined at their poles. 
+This is the key operation for coffins,  joining coffins to each other. This
+ is always carried out such that the first coffin is the
+ \enquote{parent}, and is updated by the alignment. The second
+ \enquote{child} coffin is not altered by the alignment process.
+
+ \begin{docCommand}{JoinCoffins}{ \docAuxCommand*{JoinCoffins} *
+     ~~\meta{coffin1} [ \meta{coffin1-pole1} , \meta{coffin1-pole2} ]
+     ~~\meta{coffin2} [ \meta{coffin2-pole1} , \meta{coffin2-pole2} ]
+     ~~( \meta{x-offset} , \meta{y-offset} )}
+   Joining of two coffins is carried out by the \docAuxCommand*{JoinCoffins}
+   function, which takes two mandatory arguments: the \enquote{parent}
+   \meta{coffin1} and the \enquote{child} \meta{coffin2}. All of the
+   other arguments shown are optional.
+ \end{docCommand}
+
+   The standard \docAuxCommand*{JoinCoffins} functions joins \meta{coffin2} to
+   \meta{coffin1} such that the bounding box of \meta{coffin1} after the
+   process will expand. The new bounding box will be the smallest
+   rectangle covering the bounding boxes of the two input coffins.
+   When the starred variant of \docAuxCommand*{JoinCoffins} is used, the bounding
+   box of \meta{coffin1} is not altered, \emph{i.e.}~\meta{coffin2} may
+   protrude outside of the bounding box of the updated \meta{coffin1}.
+   The difference between the two forms of alignment is best illustrated
+   using a visual example. In Figure~\ref{fgr:alignment}, the two
+   processes are contrasted. In both cases, the small red coffin has been
+   aligned with the large grey coffin. In the left-hand illustration,
+   the \docAuxCommand*{JoinCoffins} function was used, resulting in an expanded
+   bounding box. In contrast, on the right \docAuxCommand*{AttachCoffin} was used,
+   meaning that the bounding box does not include the area of the
+   smaller coffin.
+   
+\begin{texexample}{Joining Coffins}{ex:coffins4}
+\SetHorizontalCoffin\ExampleCoffin
+   {\color{red}\rule{3cm}{1pc}} 
+\SetHorizontalCoffin\ExampleCoffinTwo
+   {\color{green}\rule{3cm}{1pc}}    
+\JoinCoffins\Result\ExampleCoffin   
+\JoinCoffins*\Result[\ExampleCoffin-l,\ExampleCoffin-b] \ExampleCoffinTwo [t,l](0pt,2mm)
+\TypesetCoffin\Result
+\end{texexample}   
+   
+\section{Controlling coffin poles}
+
+ A number of standard poles are automatically generated when the coffin
+ is set or an alignment takes place. The standard poles for all coffins
+ are:
+ \begin{marglist}
+   \item[l] a pole running along the left-hand edge of the bounding
+     box of the coffin;
+   \item[hc] a pole running vertically through the centre of the coffin
+     half-way between the left- and right-hand edges of the bounding
+       box (\emph{i.e.}~the \enquote{horizontal centre});
+   \item[r] a pole running along the right-hand edge of the bounding
+     box of the coffin;
+   \item[b] a pole running along the bottom edge of the bounding
+     box of the coffin;
+   \item[vc] a pole running horizontally through the centre of the
+     coffin half-way between the bottom and top edges of the bounding
+     box (\emph{i.e.}~the \enquote{vertical centre});
+   \item[t] a pole running along the top edge of the bounding
+     box of the coffin;
+   \item[H] a pole running along the baseline of the typeset material
+     contained in the coffin.
+ \end{marglist}
+ In addition, coffins containing vertical-mode material also
+ feature poles which reflect the richer nature of these systems:
+ \begin{itemize}
+   \item[B] a pole running along the baseline of the material at the
+     bottom of the coffin.
+   \item[T] a pole running along the baseline of the material at the top
+     of the coffin.
+ \end{itemize}  
+ 
+\section{A larger example}
+
+Consider the book cover of Judy Estrin’s book, \emph{Closing the Innovation Gap} shown in Example~\ref{ex:covers}. The title elements have been carefully placed by the book designer. This sort
+of cover page is within the possibilities of what can be programmed via \latex~3 and the package \pkgname{xcoffins}.
+
+\begin{texexample}{Typesetting Cover Pages}{ex:covers}  
+\bgroup
+\parindent0pt
+% For each element declare a new  coffin
+\NewCoffin\ci
+\NewCoffin\cii
+\NewCoffin\ciii
+\NewCoffin\civ
+
+% Always better to give semantic names!
+\NewCoffin\slogan
+\NewCoffin\ImageCoffin
+\NewCoffin\AuthorCoffin
+
+% A convenient commant to set font a
+\DeclareDocumentCommand\fonta{}
+  {
+      \color{white}\LARGE\bfseries\sffamily
+  }
+
+% Similar command for font b    
+\DeclareDocumentCommand\fontb{}
+  {
+      \color{white}\large\bfseries\sffamily
+  }  
+\SetHorizontalCoffin\Result{}
+\SetHorizontalCoffin\ci{\fonta\space CLOSING} 
+\SetHorizontalCoffin\cii{\fontb THE}
+\SetHorizontalCoffin\ciii{\fonta INNOVATION}
+\SetHorizontalCoffin\civ{\fonta GAP}
+
+\SetVerticalCoffin\slogan{\CoffinWidth\ciii+30pt}{\vspace*{25pt}\centering
+\small\sffamily REIGNITING THE SPARK OF
+THE GLOBAL ECONOMY\par}
+
+% set the image coffin
+\SetHorizontalCoffin\ImageCoffin{\space\space
+  \includegraphics[width=100pt]{./images/innovation-book-cover.jpg}}
+  
+% set the author  
+\SetHorizontalCoffin\AuthorCoffin{\fontb\centering JUDY ESTRIN\par}
+
+% Now join all the coffins check the manual for the handles!    
+\JoinCoffins\Result\ci
+\JoinCoffins\Result[hc,b]    \cii[hc,t](0pt,-2mm)%the
+\JoinCoffins\Result[l,b]       \ciii[l,t](15pt,-2mm)%innovation
+\JoinCoffins\Result[\ciii-hc,\ciii-b] \civ[l,t](0pt,-2mm)
+\JoinCoffins\Result[l,b]      \slogan[l,t](0pt,-2mm)
+\JoinCoffins\Result[hc,b]   \AuthorCoffin[hc,t](0pt,-4mm)
+\JoinCoffins\Result[r,b]      \ImageCoffin[l,b](0pt, 0pt)
+   \fboxsep1pc
+  \colorbox{black}{\color{white}\TypesetCoffin\Result}
+
+% close the group we opened     
+\egroup
+\end{texexample}
+
+Of course my general advice to anyone programming \latex is to always get professional advice on designing a book cover. Mathematicians, programmers and scientists are not the best of people to design book covers. They can come up with the code, but hardly succeed with the graphics aspects. There are also other methods to design and typeset book covers. An excellent package using \tikzname is \pkgname{bookcover} by Tibor Tómács. 
+
+
+One tends to forget if the syntax requires to type \textit{t}, \textit{l} or \textit{l}, \textit{t} and this is a common issue with this type of commands. As we said before \latex stresses one’s memory to the limit. It can also be a bit confusing, as to when one needs to use a vertical rather than horizontal coffin.
+    
+If you stydy the code in Example~\ref{ex:covers} you will notice that the last box, has a width that was set using
+\docAuxCommand*{CoffinWidth}. The package provides commands that provide the value of the coffin dimensions. These are described in the next section that together with some other auxiliary helper functions concludes our discussion of the package.
+
+ \section{Measuring coffins}
+
+ There are places in the design process where it is useful to be able to
+ measure coffins outside of pole-setting procedures.
+
+ \begin{docCommand}{CoffinDepth}{ \docAuxCommand*{CoffinDepth} \meta{coffin}}
+   Calculates the depth (below the baseline) of the \meta{coffin}
+   in a form suitable for use in a \meta{dimension expression}, for example
+   |\setlength{\mylength}{\CoffinDepth\ExampleCoffin}|.
+ \end{docCommand}
+
+ \begin{docCommand}{CoffinHeight}{\docAuxCommand*{CoffinHeight} \meta{coffin}}
+   Calculates the height (above the baseline) of the \meta{coffin}
+   in a form suitable for use in a \meta{dimension expression}, for example
+   |\setlength{\mylength}{\CoffinHeight\ExampleCoffin}|.
+ \end{docCommand}
+
+ \begin{docCommand}{CoffinTotalHeight}{\docAuxCommand*{CoffinTotalHeight} \meta{coffin}}
+   Calculates the total height of the \meta{coffin}
+   in a form suitable for use in a \meta{dimension expression}, for example
+   |\setlength{\mylength}{\CoffinTotalHeight\ExampleCoffin}|.
+ \end{docCommand}
+
+ \begin{docCommand}{CoffinWidth}{\docAuxCommand*{CoffinWidth} \meta{coffin}}
+   Calculates the width of the \meta{coffin} in a form
+   suitable for use in a \meta{dimension expression}, for example
+   |\setlength{\mylength}{\CoffinWidth\ExampleCoffin}|.
+ \end{docCommand} 
+    
+\section{Debugging}
+
+Debugging code that includes |coffin| functions is made easier when you can view information on the
+poles. The pakage provides commands for both printing the information as well as viewing it on the screen.
+
+\begin{docCommand}{DisplayCoffinHandles}{\meta{coffin}meta{color}}
+This function first calculates the intersections between all of the hpolesi of the \meta{coffin} to
+give a set of \meta{handles}. It then prints the \meta{coffin} at the current location in the source,
+with the position of the \meta{handles} marked on the coffin. The \meta{handles} will be labelled
+as part of this process: the locations of the \meta{handles} and the labels are both printed in
+the \meta{color} specified. This is similar to the |\TypesetCoffin| function, except the former will also print
+the handles. 
+\end{docCommand}
+  
+\begin{docCommand}{MarkCoffinHandle}{\meta{coffin}\oarg[\meta{pole1}, \meta{pole2}] \marg{color}}  
+This function first calculates the \meta{handle} for the \meta{coffin} as defined by the intersection
+of \meta{pole1} and \meta{pole2}. It then marks the position of the \meta{handle} on the \meta{coffin}. The
+\meta{handle} will be labelled as part of this process: the location of the \meta{handle} and the
+label are both printed in the \meta{color} specified. If no \meta{poles} are give, the default (H,l) is
+used.
+\end{docCommand}
+  
+   \begin{figure}
+     \hfil
+     \SetHorizontalCoffin\ExampleCoffin
+       {%
+         \color{black!10!white}\rule{0.5 in}{1 in}^^A
+         \color{black!20!white}\rule{0.5 in}{1 in}^^A
+       }
+     \begin{minipage}{0.4\textwidth}
+       \DisplayCoffinHandles\ExampleCoffin{blue}
+     \end{minipage}
+     \hfil
+     \begin{minipage}{0.4\textwidth}
+       \RotateCoffin\ExampleCoffin{45}
+       \DisplayCoffinHandles\ExampleCoffin{red!50!black}
+     \end{minipage}
+     \hfil
+     \caption{Coffin rotation: left, unrotated; right, rotated by
+       $45$\textdegree.}
+     \label{fgr:rotation}
+   \end{figure}
+   
+%\newpage 
+%\newgeometry{margin=5pt,}  
+%\null
+%
+%\newcommand\cbox[2][.8]{{\setlength\fboxsep{0pt}\colorbox[gray]{#1}{#2}}}
+%
+%
+%  \NewCoffin \result
+%  \NewCoffin \aaa
+%  \NewCoffin \bbb
+%  \NewCoffin \ccc
+%  \NewCoffin \ddd
+%  \NewCoffin \eee
+%  \NewCoffin \fff
+%  \NewCoffin \rulei
+%  \NewCoffin \ruleii
+%  \NewCoffin \ruleiii
+%
+%\SetHorizontalCoffin \result {}
+%\SetHorizontalCoffin \aaa {\fontsize{52}{50}\sffamily\bfseries mep progress}
+%\SetHorizontalCoffin \bbb {\fontsize{52}{50}\sffamily\bfseries habtoor city}%typographische}habtoor city
+%\SetHorizontalCoffin \ccc {\fontsize{12}{10}\sffamily 
+%                      \quad zeitschrift des bildungsverbandes der
+%                      deutschen buchdrucker leipzig 
+%                     \textbullet{} oktoberheft 1925}
+%\SetHorizontalCoffin \ddd {\fontsize{28}{20}\sffamily report}%sonderheft}
+%\SetVerticalCoffin \eee {180pt}
+%                 {\raggedleft\fontsize{31}{36}\sffamily\bfseries 
+%                      elementare\\
+%                      typographie}
+%\SetVerticalCoffin \fff {140pt}
+%                 {\raggedright \fontsize{13}{14}\sffamily\bfseries 
+%                       yannis lazarides \\
+%                       nasser khalf \\
+%                       kyriacos savva \\
+%                       max burchartz \\
+%                       el lissitzky \\
+%                       ladislaus moholy-nagy \\
+%                       moln\'ar f.~farkas \\
+%                       johannes molzahn \\
+%                       kurt schwitters \\
+%                       mart stam \\
+%                       ivan tschichold}
+%
+%\RotateCoffin \bbb {90}
+%\RotateCoffin \ccc {270}
+%
+%\SetHorizontalCoffin \rulei  {\color{red}\rule{6.5in}{1pc}}
+%\SetHorizontalCoffin \ruleii {\color{red}\rule{1pc}{20.5cm}}
+%\SetHorizontalCoffin \ruleiii{\color{black}\rule{10pt}{152pt}}
+%
+%
+%\JoinCoffins \result                \aaa 
+%\JoinCoffins \result[\aaa-t,\aaa-r] \rulei   [b,r](0pt,2mm)
+%\JoinCoffins \result[\aaa-b,\aaa-l] \bbb     [B,r](2pt,0pt)
+%\JoinCoffins \result[\bbb-t,\bbb-r] \ruleii  [t,r](-2mm,0pt)
+%\JoinCoffins \result[\aaa-B,\aaa-r] \ccc     [B,l](66pt,14pc)
+%\JoinCoffins \result[\bbb-l,\ccc-B] \fff     [t,r](-2mm,0pt)
+%\JoinCoffins \result[\fff-b,\fff-r] \ruleiii [b,l](2mm,0pt)
+%\JoinCoffins \result[\ccc-r,\fff-l] \eee     [B,r]
+%\JoinCoffins \result[\eee-T,\eee-r] \ddd     [B,r](0pt,4pc)
+%
+%
+%
+%\TypesetCoffin \result
+%
+%\restoregeometry
