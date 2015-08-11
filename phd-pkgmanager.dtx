@@ -281,6 +281,8 @@ See http://www.latex-project.org/lppl.txt
 \NeedsTeXFormat{LaTeX2e}[1994/12/01]%
 \ProvidesFile{phd-packagemanager}[2015/1/13 v1.0 less preamble (YL)]%
 \let\ltxtoday\today
+\RequirePackage{expl3
+}
 %    \end{macrocode}
 
 % Load the package \pkgname{fixltx2e} to update \LaTeX2e for various fixes. The package fixes a number things in the LaTeX2e kernel. Due to LaTeX's stability policy, these corrections have not been incorporated into the LaTeX2e kernel, but this package does things most people would agree are bugfixes. So to load this package is always recommended for newly created documents. The corrections have no commonalities, but the package's description has a nice summary:
@@ -759,10 +761,10 @@ See http://www.latex-project.org/lppl.txt
 % |printonlyused| option is present. \FIRE loads relsize,suffix,xstring 
 % 
 %    \begin{macrocode}
-%\cxset{acronym keys/.store in = \acronymkeys@cx}
-%\cxset{acronym keys={smaller,printonlyused,withpage}}
-%\PassOptionsToPackage{\acronymkeys@cx}{acronym}
-%\RequirePackage{acronym}
+\cxset{acronym keys/.store in = \acronymkeys@cx}
+\cxset{acronym keys={smaller,printonlyused,withpage}}
+\PassOptionsToPackage{\acronymkeys@cx}{acronym}
+\RequirePackage{acronym}
 %    \end{macrocode}
 %
 % \subsection{mdframed}
@@ -3204,7 +3206,6 @@ ball was her favorite plaything.}%
 %    \begin{macrocode}
 \RequirePackage{drawstack}
 %    \end{macrocode}
-%    
 %
 % \section{Float}
 % 
@@ -3216,7 +3217,7 @@ ball was her favorite plaything.}%
 %    
 % \section{Newfloat} 
 %    
-% This package by people{Axel Sommerfelt} offers the command \cs{DeclareFloatingEnvironment} for
+% This package by \person{Axel}{Sommerfelt} offers the command \cs{DeclareFloatingEnvironment} for
 % defining new floating environments which behave like figure and table. It tries
 % to patch the |\chapter| or \refCom{tableofcontents} command, so we disable the option
 % \option{chapterlistgaps}. It is a better option than the \pkgname{float}, described
@@ -3244,7 +3245,7 @@ ball was her favorite plaything.}%
 % needs to be taken with certain packages.
 % 
 % 
-% \begin{docCommand}[doc updated=01-6-2015] { BeforeHyperrefHook} {\meta{seq list}}
+% \begin{docCommand}[doc updated=01-6-2015] { BeforeHyperrefHook} { \meta{seq list}}
 %  Holds packages that are required to go before Hyperref. Most packages actually have to 
 %  before hyperref, others are harmless.\FIRE
 % \end{docCommand}
@@ -3253,72 +3254,65 @@ ball was her favorite plaything.}%
 
 %    \begin{macrocode}
 \newcommand*{\BeforeHyperrefHook}
-  {%
+  {
  % \putbeforehyperhook
   \RequirePackage{float}%
   \RequirePackage{newfloat}
+  \RequirePackage[notes15,backend=bibtex,natbib]{biblatex-chicago}
   }
-
+% \RequirePackage{verse}} TO FIX  
+%    \end{macrocode}
  
-   % \RequirePackage{verse}} TO FIX
-
-\newcommand*{\AfterHyperrefHook}{%
+  
+%    \begin{macrocode}
+\ExplSyntaxOn
+\seq_new:N \after_hyperref_hook
+\seq_put_right:Nn \after_hyperref_hook {\RequirePackage{algorithm2e}}
+\seq_put_right:Nn \after_hyperref_hook {\RequirePackage{fancyhdr}}
+\clist_new:N \afterhyperpackages
+\clist_gset:Nn \afterhyperpackages {algorithm2e,fancyhdr,datetime,scrtime,datenumber,}
+\ExplSyntaxOff
+%\def\bibliomanager 
+%{
+%  \RequirePackage{natbib}
+%%  \bibliographystyle{cambridgeauthordate}
+%   \bibliographystyle{abbrvnat}
+%   \usepackage{bibentry} % needs checking
+%  %\bibpunct{(}{)}{;}{a}{,}{,}
+%  \@ifpackageloaded{natbib}{%
+%    \providecommand\refname{References} % internationalize?
+%    \providecommand\bibname{Bibliography}
+%\setlength\bibhang{1em}
+%\renewenvironment{thebibliography}[1]{%
+%% \bibsection\parindent \z@\bibpreamble\bibfont\list
+%  \bibsection\parindent \z@\bibpreamble\bibliosize\list
+%   {\@biblabel{\arabic{NAT@ctr}}}{\@bibsetup{##1}%changed
+%    \setcounter{NAT@ctr}{0}}%
+%    \ifNAT@openbib
+%      \renewcommand\newblock{\par}
+%    \else
+%      \renewcommand\newblock{\hskip .11em \@plus.33em \@minus.07em}%
+%    \fi
+%    \sloppy\clubpenalty4000\widowpenalty4000
+%    \sfcode`\.=1000\relax
+%    \let\citeN\cite \let\shortcite\cite
+%    \let\citeasnoun\cite
+% }{\def\@noitemerr{%
+%  \PackageWarning{natbib}
+%     {Empty `thebibliography' environment}}%
+%  \endlist\vskip-\lastskip}
+%}
+%}
+\newcommand{\AfterHyperrefHook}{%
   \RequirePackage{algorithm2e}%
   \RequirePackage{fancyhdr}
-
+  %\bibliomanager 
   \RequirePackage{datetime} %%scrtime
   \RequirePackage{scrtime}
   \RequirePackage{datenumber}
-  \RequirePackage{natbib}
-%  \bibliographystyle{cambridgeauthordate}
-   \bibliographystyle{abbrvnat}
-  \usepackage{bibentry} % needs checking
-  %\bibpunct{(}{)}{;}{a}{,}{,}
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%
-% 4. to bring natbib.sty into line with cambridge style
-%    and make 'References' the default
-%
-\@ifpackageloaded{natbib}{%
-    \providecommand\refname{References} % internationalize?
-    \providecommand\bibname{Bibliography}
-
-%\ifphd@multisty
-%  \def\NAT@sectionbib{on}% natbib will use \section* headings
-%\fi
-
-\setlength\bibhang{1em}
-\renewenvironment{thebibliography}[1]{%
-% \bibsection\parindent \z@\bibpreamble\bibfont\list
-  \bibsection\parindent \z@\bibpreamble\bibliosize\list
-   {\@biblabel{\arabic{NAT@ctr}}}{\@bibsetup{##1}%changed
-    \setcounter{NAT@ctr}{0}}%
-    \ifNAT@openbib
-      \renewcommand\newblock{\par}
-    \else
-      \renewcommand\newblock{\hskip .11em \@plus.33em \@minus.07em}%
-    \fi
-    \sloppy\clubpenalty4000\widowpenalty4000
-    \sfcode`\.=1000\relax
-    \let\citeN\cite \let\shortcite\cite
-    \let\citeasnoun\cite
- }{\def\@noitemerr{%
-  \PackageWarning{natbib}
-     {Empty `thebibliography' environment}}%
-  \endlist\vskip-\lastskip}
-
-
-%\ifphd@multisty
-%  \renewcommand\bibsection{\section{\refname %FIX ME FOR PARAMETERS
-%    %\ifx\@mkboth\@gobbletwo\else\markright{\refname}\fi
-%    }}%
-%\else
-%  \renewcommand\bibsection{\chapter{\refname %FIX ME STAR CHAPTER
-%    %\@mkboth{\refname}{\refname}
-%    }}%
-%\fi
-}{}
+%  \bibliomanager
 }
+
 %
 %    \end{macrocode}
 %
@@ -3335,38 +3329,33 @@ ball was her favorite plaything.}%
 % \end{docCommand}
 % 
 %    \begin{macrocode}
-\def\sethyperref{%
+\def\sethyperref
+{%
   \BeforeHyperrefHook
   \RequirePackage{hyperref}
-%% hyperdoc has a problem with tcolorboc documentation
-%% macros.
-%
+  \hypersetup 
+  {%
+    bookmarks,
+    raiselinks,
+    pageanchor,
+    hyperindex=true,
+    colorlinks,
+    linktocpage,
+    hyperfootnotes=true,
+    breaklinks=true,
+    anchorcolor= theanchorcolor,
+    filecolor=thefilecolor,
+    hypertexnames=true, %useguessable names for links
+    urlcolor= theurlcolor,
+    linkcolor= thelinkcolor,
+    pdftitle={My Title},
+    pdfauthor={Yiannis Lazarides},
+    pdfsubject={The phd LaTeX package},
+    pdfkeywords={LaTeX package management, document design},
+    plainpages=false%do page number anchors as plain Arabic
+ }
   \AfterHyperrefHook
 }
-
-\AtEndPackage{
-\AtBeginDocument{%
-\hypersetup {%
-  bookmarks,
-  raiselinks,
-  pageanchor,
-  hyperindex=true,
-  colorlinks,
-  linktocpage,
-  hyperfootnotes=true,
-  breaklinks=true,
-  anchorcolor= green,
-  filecolor=green,
-  hypertexnames=true, %useguessable names for links
-  urlcolor= green,
-  linkcolor= green,
-  pdftitle={My Title},
-  pdfauthor={Yiannis Lazarides},
-  pdfsubject={The phd LaTeX package},
-  pdfkeywords={LaTeX package management, document design},
-  plainpages=true%do page number anchors as plain Arabic
- }
-}} 
 %    \end{macrocode}
 % 
 % 
@@ -3937,6 +3926,9 @@ ball was her favorite plaything.}%
 % |texdoc tipaman| for the full manual if this is part of your field
 % of research.
 %
+%    \begin{macrocode}
+\RequirePackage{fontawesome}
+%    \end{macrocode}
 %</PKG>
 %
 \endinput

@@ -5,7 +5,7 @@
 %% The original source files were:
 %%
 %% phd.dtx  (with options: `package')
-%% phd-pkgmanager.tex  (with options: `PKG')
+%% phd-pkgmanager.dtx  (with options: `PKG')
 %% phd-images.dtx  (with options: `images')
 %% phd-epigraphs.dtx  (with options: `EPI')
 %% phd-logos.dtx  (with options: `LOG')
@@ -48,7 +48,7 @@
 \RequirePackage{phd-handlers}
  \RequirePackage{silence} %gives errors with varwidth
  \hfuzz=999pt % reduce overfull hbox errors
- \hbadness=10000 % reduce underfull hbox errors
+ \hbadness=9999 % reduce underfull hbox errors
 
 
 \newif\ifUNICODE \UNICODEfalse
@@ -126,6 +126,13 @@
      {false} {\bool_set_false:N \g_phd_debug_bool \@debugfalse}
    }
 
+ \phd_keys_choices:nn {bibpkg}
+   {
+     {biblatex} {\bool_set_true:N \g_phd_debug_bool  }
+     {natbib  } {\bool_set_false:N \g_phd_debug_bool \@debugfalse}
+     {none    } {\bool_set_false:N \g_phd_debug_bool \@debugfalse}
+   }
+
 \keys_define:nn {phd}
  {
    languages .tl_gset:N = \phd_languages_tl
@@ -135,7 +142,8 @@
   {
      asianscripts .default:n = on,
      debug        .default:n = on,
-     languages .default:n   = english,
+     languages    .default:n = english,
+     bibpkg       .default:n = biblatex,
  }
 
 \ProcessKeysOptions {phd}
@@ -376,25 +384,17 @@
     \RequirePackage{unicode-math}
     \setmathfont{xits-math.otf}
 \fi
-%%
-%% This is file `phd-pkgmanager.tex',
-%% generated with the docstrip utility.
-%%
-%% The original source files were:
-%%
-%% phd-pkgmanager.dtx  (with options: `PKG')
-%% ----------------------------------------------------------------
-%% phd --- A package to beautify documents.
-%% E-mail: yannislaz@gmail.com
-%% Released under the LaTeX Project Public License v1.3c or later
-%% See http://www.latex-project.org/lppl.txt
-%% ----------------------------------------------------------------
+
+
 
 \NeedsTeXFormat{LaTeX2e}[1994/12/01]%
 \ProvidesFile{phd-packagemanager}[2015/1/13 v1.0 less preamble (YL)]%
 \let\ltxtoday\today
+\RequirePackage{expl3
+}
 
 \RequirePackage{fixltx2e}[2006/03/24]
+\RequirePackage{phd-colorpalette}
 \@ifundefined{c@chapter}{%
       \newcounter{chapter}
       \def\thechapter{\@arabic\c@chapter}
@@ -743,6 +743,7 @@ ball was her favorite plaything.}%
     \vskip 8ex minus 2ex
   \fi
 }
+
 
 \newcommand{\ltindex}[1]{%
   \index{#1|(}%
@@ -1237,6 +1238,7 @@ ball was her favorite plaything.}%
   \DeclareUTFcharacter[\UTFencname]{x301A}{\textlbrackdbl}
   \DeclareUTFcharacter[\UTFencname]{x301B}{\textrbrackdbl}
 
+
   \DeclareUTFcharacter[\UTFencname]{xFF10}{\textzerooldstyle}
   \DeclareUTFcharacter[\UTFencname]{xFF11}{\textoneoldstyle}
   \DeclareUTFcharacter[\UTFencname]{xFF12}{\texttwooldstyle}
@@ -1247,6 +1249,7 @@ ball was her favorite plaything.}%
   \DeclareUTFcharacter[\UTFencname]{xFF17}{\textsevenoldstyle}
   \DeclareUTFcharacter[\UTFencname]{xFF18}{\texteightoldstyle}
   \DeclareUTFcharacter[\UTFencname]{xFF19}{\textnineoldstyle}
+
 
   \DeclareEncodedCompositeCharacter{\UTFencname}{\textcircled}{20DD}{25EF}
   \DeclareUTFcomposite[\UTFencname]{x2460}{\textcircled}{1}
@@ -1621,79 +1624,57 @@ ball was her favorite plaything.}%
 \ExplSyntaxOff
 
 \newcommand*{\BeforeHyperrefHook}
-  {%
+  {
  % \putbeforehyperhook
   \RequirePackage{float}%
   \RequirePackage{newfloat}
+  \RequirePackage[notes15,backend=bibtex,natbib]{biblatex-chicago}
   }
 
-   % \RequirePackage{verse}} TO FIX
-
-\newcommand*{\AfterHyperrefHook}{%
+\ExplSyntaxOn
+\seq_new:N \after_hyperref_hook
+\seq_put_right:Nn \after_hyperref_hook {\RequirePackage{algorithm2e}}
+\seq_put_right:Nn \after_hyperref_hook {\RequirePackage{fancyhdr}}
+\clist_new:N \afterhyperpackages
+\clist_gset:Nn \afterhyperpackages {algorithm2e,fancyhdr,datetime,scrtime,datenumber,}
+\ExplSyntaxOff
+%%  \bibliographystyle{cambridgeauthordate}
+%% \bibsection\parindent \z@\bibpreamble\bibfont\list
+\newcommand{\AfterHyperrefHook}{%
   \RequirePackage{algorithm2e}%
   \RequirePackage{fancyhdr}
-
+  %\bibliomanager
   \RequirePackage{datetime} %%scrtime
   \RequirePackage{scrtime}
   \RequirePackage{datenumber}
-  \RequirePackage{natbib}
-   \bibliographystyle{abbrvnat}
-  \usepackage{bibentry} % needs checking
-  %\bibpunct{(}{)}{;}{a}{,}{,}
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\@ifpackageloaded{natbib}{%
-    \providecommand\refname{References} % internationalize?
-    \providecommand\bibname{Bibliography}
-
-\setlength\bibhang{1em}
-\renewenvironment{thebibliography}[1]{%
-  \bibsection\parindent \z@\bibpreamble\bibliosize\list
-   {\@biblabel{\arabic{NAT@ctr}}}{\@bibsetup{##1}%changed
-    \setcounter{NAT@ctr}{0}}%
-    \ifNAT@openbib
-      \renewcommand\newblock{\par}
-    \else
-      \renewcommand\newblock{\hskip .11em \@plus.33em \@minus.07em}%
-    \fi
-    \sloppy\clubpenalty4000\widowpenalty4000
-    \sfcode`\.=1000\relax
-    \let\citeN\cite \let\shortcite\cite
-    \let\citeasnoun\cite
- }{\def\@noitemerr{%
-  \PackageWarning{natbib}
-     {Empty `thebibliography' environment}}%
-  \endlist\vskip-\lastskip}
-
-}{}
 }
-\def\sethyperref{%
+
+\def\sethyperref
+{%
   \BeforeHyperrefHook
   \RequirePackage{hyperref}
-%% hyperdoc has a problem with tcolorboc documentation
-%% macros.
-%%\usepackage{hypdoc}
-\hypersetup{
-  bookmarks,
-  raiselinks,
-  pageanchor,
-  hyperindex=true,
-  colorlinks,
-  allcolors=theblue,
-  linktocpage,
-  hyperfootnotes=true,
-  breaklinks=true,
-  anchorcolor= theblue,
-  filecolor=blue,
-  hypertexnames=true, %useguessable names for links
-  urlcolor= theblue,
-  linkcolor= theblue,
-  pdftitle={My Title},
-  pdfauthor={Yiannis Lazarides},
-  pdfsubject={The phd LaTeX package},
-  pdfkeywords={LaTeX package management, document design},
-  plainpages=true%do page number anchors as plain Arabic
+  \hypersetup
+  {%
+    bookmarks,
+    raiselinks,
+    pageanchor,
+    hyperindex=true,
+    colorlinks,
+    linktocpage,
+    hyperfootnotes=true,
+    breaklinks=true,
+    anchorcolor= theanchorcolor,
+    filecolor=thefilecolor,
+    hypertexnames=true, %useguessable names for links
+    urlcolor= theurlcolor,
+    linkcolor= thelinkcolor,
+    pdftitle={My Title},
+    pdfauthor={Yiannis Lazarides},
+    pdfsubject={The phd LaTeX package},
+    pdfkeywords={LaTeX package management, document design},
+    plainpages=false%do page number anchors as plain Arabic
  }
-\AfterHyperrefHook
+  \AfterHyperrefHook
 }
 \newif\ifALGORITHM
 \@ifpackageloaded{hyperref}{%
@@ -1702,6 +1683,7 @@ ball was her favorite plaything.}%
  {\typeout{Algorithm loaded}}
   \RequirePackage{algorithm2e}
 \RequirePackage{multicol}
+
 
 \newif\ifULEM
 \IfStyFileExists{ulem}
@@ -1932,6 +1914,19 @@ ball was her favorite plaything.}%
 \def\greektext#1{\greek{#1}}
  \newsavebox{\philobox}
  \savebox{\philobox}{\PHtitl Π}
+
+\newif\ifTIPA
+\newcommand\TIPA{\pkgname{tipa}}
+\newcommand\WIPA{\pkgname{wipa}}
+\ifxetex
+\else
+  \ifluatex
+  \else
+    \TIPAtrue
+    \RequirePackage[tone,extra,safe]{tipa}
+  \fi
+\fi
+\RequirePackage{fontawesome}
 \global\newlength{\miniwidthi}
 \global\newlength{\miniwidthii}
 \global\newlength{\sepmainhorizontal}

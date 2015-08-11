@@ -1,3 +1,4 @@
+\let\sidenote\footnote
 \chapter{How to Develop your Own Class or Package}
 
 \cxset {epigraph width=0.67\textwidth}
@@ -13,7 +14,7 @@ new things.}{Donald Knuth}
 \section{Introduction}
 
 
-To \emph{make} a book is an interesting and somewhat involved process \cite{town}. The text is set in type and printed on pages, the pages are gathered and folded into signatures and these are gathered and folded into signatures and these are then bound and covered. Many of the aspects of this process that has passed down to us by previous generations is discussed extensively in other sections of this book.  Class authors have to distill this knowledge in a set of typographical rules to be described in a class file. The first thing such an author must do is to describe the \emph{rationale} of developing such a class. The |octavo| \citep{octavo} class was developed to enable printing books in dimensions that follow traditional styles. The |memoir| \cite{memoir}  class to offer a flexible system on which other classes could be based. The |tufte-book| and |tufte-handout| classes to provide a style that resembles those found in Tufte books. Many Universities offer \emph{Thesis} classes to standardize the way these are produced. Many of these Universities, translated the styles previously typed and the results are a typographical disaster, only mitigated by the ability to display beautiful mathematics. As these are printed on standard \emph{photocopy paper} one cannot do much with the layout. 
+To \emph{make} a book is an interesting and somewhat involved process \cite{town}. The text is set in type and printed on pages, the pages are gathered and folded into signatures and these are gathered and folded into signatures and these are then bound and covered. Many of the aspects of this process that has passed down to us by previous generations is discussed extensively in other sections of this book.  Class authors have to distill this knowledge in a set of typographical rules to be described in a class file. The first thing such an author must do is to describe the \emph{rationale} of developing such a class. The |octavo| \citep{octavo} class was developed to enable printing books in dimensions that follow traditional styles. The \citep{memoir}  class to offer a flexible system on which other classes could be based and so does \citep{koma}. The |tufte-book| and |tufte-handout| classes to provide a style that resembles those found in Tufte books. Many Universities offer \emph{Thesis} classes to standardize the way these are produced. Many of these Universities, translated the styles previously typed and the results are a typographical disaster, only mitigated by the ability to display beautiful mathematics. As these are printed on standard \emph{photocopy paper} one cannot do much with the layout. 
 
 \section{Identifying your class}
 
@@ -700,26 +701,81 @@ Typography - fonts, indentations fontsize etc
 headers and footers
 
 
+\section{Declaring Options}
+
+Most classes or packages will have a good deal of options. These are declared using the
+\docAuxCmd{DeclareOption} command. In this part no package loading should take place.
+
+\begin{docCmd} {DeclareOption} { \marg{option} \marg{code}}
+  The argument option is the name of the option being declared and the \marg{code} is the
+  code that will execute if this option is requested.
+\end{docCmd}
 
 
+\begin{docCmd}{DeclareOption*} { \marg{code}}
+  The argument \meta{code} in the star version of the command specifies the action to be 
+  taken if an unknown option is specified. Within this argument the \docAuxCmd{CurrentOption}
+  refers to the name of the option in question. 
+  
+\end{docCmd}
+
+For example one could pass all such options
+  to another package, using:
+  \begin{verbatim}
+  \DeclareOption*{\PassOptionsToPackage{\CurrentOption}{A}}
+  \end{verbatim}
 
 
+\section{Executing Options}
 
+Normally after the options have been defined, one would need to provide default values and 
+the options need to be executed. 
 
+\begin{docCmd} {ExecuteOptions} { \marg{option list}}
+  
+\end{docCmd}
 
+You can also |\ExecuteOptions| when declaring other options. There is one caveat. This command
+can only be executed prior to executing the |\ProcessOptions| command because, as one of
+its last actions, the latter command reclaims all of the memory taken up by the code for
+the declared options.
 
+\begin{docCmd} {ProcessOptions*} {}
+\end{docCmd}
 
+For some packages it is preferable or essential to process options in the order they
+appear in the |usepackage| commands rather than using the order given through the
+sequence of the \refCmd{DeclareOption} commands. In this case it one has to use
+the star version of the command, i.e, |\ProcessOptions*| rather than |\ProcessOptions|.
 
+\section{Special Commands for class files}
 
+It is sometimes preferable to define a new class based on another and hence to extend it.
+To support this concept the \latexe kernel provides two commands, \docAuxCmd{LoadClass} and
+\docAuxCmd{PassOptionsToClass}. These two commands can then be used to develop a new class, by adding and extending the functionality of the loaded class.
 
+\begin{docCmd} {LoadClass}{ \oarg{option list}\marg{class}\oarg{release}}
+  
+\end{docCmd}
 
+For example the |ltxdoc| class loads the standard |article| class. The tufte-book class loads
+the |book| class and perhaps the best way to understand the concepts discussed here is to
+study these classes.
 
+\section{A minimal class}
 
+\begin{texexample}{Model Class}{ex:modelclass}
 
+\begin{filecontents}{phdexampleclass.cls}
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesClass{phdexampleclass}[2015/07/07]
+\renewcommand\normalsize{\fontsize{}{10pt}{12pt}\selectfont}
+\setlength\textwidth{6.5in}
+\setlength\textheight{Sin}
+\pagenumbering{arabic}
+\end{filecontents}
 
-
-
-
+\end{texexample}
 
 
 
