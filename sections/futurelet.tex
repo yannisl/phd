@@ -7,13 +7,15 @@
 \epigraph{Life can only be understood backwards; but it must be lived forwards.}{
 ---S Kierkegaard}
 
-The \docAuxCommand{futurelet} primitive deserves its own chapter, as most people have difficulty in understanding the command. The instruction allows the user to \textit{look ahead}. By look ahead we mean that \tex will look at a future token\footnote{remember that a token is either a single character or a macro command} without absorbing it, i.e, without removing that token from the token list. This operation allows the programmer to perform a test to check what token follows. You can read a couple of articles about it for example \citep{Eijkhout2001}, but generally they are difficult to follow. The information about the command is also very sparse in the \TeX Book.  Another TUGboat article is \citep{bechto88}, which gives pretty much the same example as we describe below. 
+The \docAuxCmd{futurelet} primitive deserves its own chapter, as most people have difficulty in understanding the command. The instruction allows the user to \textit{look ahead}. By look ahead we mean that \tex will look at a future token\footnote{remember that a token is either a single character or a macro command} without absorbing it, i.e, without removing that token from the token list. This operation allows the programmer to perform a test to check what token follows. There are a couple of articles about \cs{futurelet} in TUGBoat; for example \citetitle{Eijkhout2001} by \citeauthor{Eijkhout2001}\footcite{Eijkhout2001} and \citetitle{bechto88} by \citeauthor{bechto88}\footcite{bechto88}. Both articles are generally difficult to follow. 
 
-The token looked at through
-|\futurelet| will be removed later, typically as part
-of an argument of a later macro call as we will see shortly. It is important to note that it is not removed by the action of the |\futurelet| primitive.
+There are many applications of |\futurelet| but the most common one is that of scanning forward
+to find if a `[' is found to build \latexe macros with optional arguments. Here we will  present three examples in detail, including one from the |PGF| module |parser| that can be used to build Deterministic Finite Automata.
 
-Let us be more precise now; the |\futurelet|
+
+\section{The mechanics of futurelet}
+
+The |\futurelet|
 instruction has the following format:
 
 
@@ -94,20 +96,14 @@ We try again with spaces,
 As you can see from the examples we cannot capture the spaces. This might present a problem, if we enclose everything in other macros as \tex might leave extra spaces in the stream. Better to absorb them. We will see how later, using LaTeX. 
 
 
-\section{Applications}
 
-There are many applications of |\futurelet|.
-will here present only one example, although
-we will present it in quite some detail so the user
-will know how to apply |\futurelet| in different
-circumstances.
 
 \subsection{Using \textbackslash futurelet in Macros with Optional
 Arguments}
 
 A typical application of |\futurelet| is the handling
-of macros with optional arguments\cite{Becht1988} as they are used,
-for instance, in \latex. By "optional argument" we
+of macros with optional arguments\footcite{bechto1988} as they are used,
+for instance, in \latex. By ``optional argument" we
 mean an argument which in most cases is omitted,
 and is provided only occasionally in macro calls.\footnote{See also the discussion at \url{http://tex.stackexchange.com/questions/4557/how-to-use-futurelet-to-define-optional-parameters}}
 
@@ -363,18 +359,15 @@ The result would both be true,
 
 The package PGF has a module |parser| that can be used to be a DFA engine for parsing strings of single letter sequences and based on the letter perform some action. The manual is somehow cryptic on its usage, but as it is
 used in the |svg| library you can examine and study the code more carefully there.
-
-\begin{pgfmodule}{parser}
-  This module defines some commands for creating a simple
+The module defines some commands for creating a simple
   letter-by-letter parser.
-\end{pgfmodule}
 
 This module provides commands for defining a parser that scans some
 given text letter-by-letter. For each letter, some code is executed
 and, possibly a state-switch occurs. The parsing process ends when a
 final state has been reached.
 
-\begin{command}{\pgfparserparse\marg{parser name}\meta{text}}
+\begin{docCmd}{pgfparserparse}{ \marg{parser name}\meta{text}}
   This command is used to parse the \meta{text} using the (previously
   defined) parser named \meta{parser name}.
 
@@ -408,9 +401,9 @@ final state has been reached.
 \pgfparserparse{myparser}aabaabababbbbbabaabcccc
 There are \the\mycount\ a's.
 \end{texexample}
-\end{command}
+\end{docCmd}
 
-\begin{command}{\pgfparserdef\marg{parser name}\marg{state}\marg{symbol meaning}\marg{action}}
+\begin{docCmd}{pgfparserdef}{ \marg{parser name}\marg{state}\marg{symbol meaning}\marg{action}}
   This command should be used repeatedly to define a parser named
   \meta{parser name}. With a call to this command you specify that the
   \meta{parser name} should do the following: When it is in state
@@ -439,12 +432,12 @@ There are \the\mycount\ a's.
   When the parser encounters a letter for which nothing is specified
   in the current state (neither directly nor indirectly via |all|), an
   error occurs.
-\end{command}
+\end{docCmd}
 
-\begin{command}{\pgfparserswitch\marg{state}}
+\begin{docCmd}{pgfparserswitch}{ \marg{state}}
   This command can be called inside the action code of a parser to
   cause a state switch to \meta{state}.
-\end{command}
+\end{docCmd}
 
 Let us first use an example from the PGF manual (page 752) to understand better what we will try and do later with
 or parser that we intend to use.
@@ -493,11 +486,11 @@ Since we did not define any action for the case the user types |C N T;| rather t
           chapter numbering=arabic, chapter font-weight=bold}
           
 \pgfparserdef{headparser}{initial}{the letter C}
-{\boxanelement{\setchapterfont\chaptername}}
+{\boxanelement{\LARGE\chaptername}}
 \pgfparserdef{headparser}{initial}{the letter N}
-{\boxanelement{\setnumberfont\thechapter}} 
+{\boxanelement{\LARGE\thechapter}} 
 \pgfparserdef{headparser}{initial}{the letter T}
-{\boxanelement{\setchaptertitlefont title}} 
+{\boxanelement{\LARGE title}} 
 \pgfparserdef{headparser}{initial}{the letter p}
 {\breakline} 
 \pgfparserdef{headparser}{all}{the letter b}
