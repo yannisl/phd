@@ -1,12 +1,12 @@
 \chapter{maths}
 \label{ch:maths}
 
-\setquotation{quotation above=-2\baselineskip,
-                      }
+
+                      
 
 \parindent1em
 
-\cxset{subsection indent=0pt}\renewsubsection
+
 
 \starttemplate{kroll}
 \thispagestyle{empty}
@@ -119,7 +119,7 @@ may not be used for mathematics and vice-versa.\footnote{\texbook 135-136 }. See
 \section{Fractions}
 
 In the original \tex there are two ways of typesetting a fraction: it can be typeset as $1/8$ or in the form $\frac{1}{4}$. The first case is entered with no special control characters that is,  \verb+ $1/8$+. The second case is just entered with the control word \cmd{\over}.  Hence\verb+ ${1} \over {8}$+ gives ${1} \over {8}$. 
-Plain TeX also provided \docAuxCommand{frac}, which also was adopted by \LaTeX\  and \pkgname{amsmath}.
+Plain TeX also provided \docAuxCommand{frac}, which was also adopted by \LaTeX\  and \pkgname{amsmath}.
 The |\over| command led to numerous problems and its usage is frowned upon. So do not use it.
 
 A more complex example,
@@ -133,7 +133,7 @@ a+\gamma \over \delta^2
 
 
 
-One complication with using maths in-line with text is that of using different type of fonts. There is a very useful and interesting discussion regarding this in the package \pkg{xfrac} \cite{xfrac}. 
+One complication with using maths in-line with text is that of using different type of fonts. There is a very useful and interesting discussion regarding this in the package \pkg{xfrac} \footcite{xfrac}. 
 
 \begin{latexquotation}
  One of the first exercises in \emph{The \TeX Book} is to design a
@@ -177,44 +177,113 @@ issues:
     alphabet.
  \end{itemize}
 
-In short: \docpkg{nicefrac} doesn't attempt to be the answer to
+In short: \pkgname{nicefrac} doesn't attempt to be the answer to
 everything and so this is not a criticism of the package. It works
 quite well for Computer Modern which was pretty much what was widely
 available at the time it was developed. Users these days, however,
 have a choice of many fonts when they write their documents.
 
+\subsection{Inline fractions, changing fonts}
+
+When a fraction is displayed in inline text $\frac{a}{b}$, it is noticeably smaller than in
+displayed mathematics. The \docAuxCmd{tfrac} and \docAuxCmd{sfrac} force the use of the respective styles |\textstyle| and |\displaystyle| $\sfrac{a}{b}$ and $\tfrac{a}{b}$. 
+
 With |xfrac| we can switch fonts easily
 
  ``You take \sfrac[cmr2]{1}{2} cup of sugar, \ldots''
+``You take $\tfrac{1}{2}$ cup of sugar, \ldots''
 
 This is more of an issue if you are going to use |XeLaTeX| and 
 you are after specific fonts.
 
+\subsection{Continued fractions}
+
+Continued fractions can be written using the \docAuxCommand{cfrac} command from the \pkgname{amsmath} package.
+
+\begin{texexample}{Continued fractions}{ex:contfrac}
+\begin{equation}
+  x = a_0 + \cfrac{1}{a_1 
+          + \cfrac{1}{a_2 
+          + \cfrac{1}{a_3 + \cfrac{1}{a_4}}}}
+\end{equation}
+\end{texexample}
 
 \section{Square roots}
 
-The square root sign, historically derived from a dot but is now simply typeset in the familiar square root symbol.  it is only necessary to use the construction \cs{sqrt}. Hence
+The square root sign, historically derived from a dot but is now simply typeset in the familiar square root symbol.  it is only necessary to use the construction \refCom{sqrt}. Hence
 
 \begin{texexample}{Square Roots}{}
 $\sqrt{x^2+y^2}$
 \end{texexample}
 
-will give $\sqrt{x^2+y^2}$
-
 
 Notice that \tex takes care of the placement of
 symbols and the height and length of the radical. To make cube or other roots, the control
-words \cs{root} and \cs{of} are used.  
+words \cs{root} and \cs{of} are used. These two commands are \tex primitives. \latexe
+\cs{sqrt} takes an optional argument for the root.
 
 \begin{texexample}{}{}
-   $\root n \of  {1+x^n}$ 
+   \[\root n \of  {1+x^n}\]
+   
+   \[\sqrt[n]{1+x^n}\]
 \end{texexample}
 
-\begin{macro}{\surd}
+\begin{docCmd}{surd}{}
  A possible alternative is to use the control word \cs{surd}; the input  \verb+ \( \surd 2 \)+ will
-produce \(\surd 2\). When typesetting square roots care should be taken, to use struts appropriately to get the sizing right.
-\end{macro}
+produce \(\surd 2\). When typesetting square roots care should be taken, to use struts appropriately to get the sizing right. The square root symbol on its own can be obtained by using
+\cs{sqrtsign} to get $\sqrtsign{}$.
+\end{docCmd}
 
+When typesetting roots, sometimes there are issues with heights. The following example
+from \citetitle{mathmode}\footcite{mathmode} illustrates the point.
+
+\begin{equation}
+ \sqrt{a}\,%
+ \sqrt{T}\,%
+ \sqrt{2\alpha k_{B_1}T^i}\label{eq:root1}
+\end{equation}
+
+This can be corrected using \refCom{vphantom}. 
+
+\begin{texexample}{Correcting height issues}{ex:sqrtheights}
+\begin{equation}\label{eq:root2}
+ \sqrt{a\vphantom{k_{B_1}T^i}}\,%
+ \sqrt{T\vphantom{k_{B_1}T^i}}\,%
+ \sqrt{2\alpha k_{B_1}T^i}
+\end{equation}
+
+\begin{equation}
+x = \sqrt[3]{6+\sqrt[3]{6+\sqrt[3]{6+\sqrt[3]{6+\cdots}}}}
+\end{equation}
+\end{texexample}
+
+Using \pkgname{amsmath} \docAuxCommand{smash} can be used for even better results when
+using inline or displayed roots. It must be noted that \cs{smash} in \latexe is defined
+without such an optional argument.
+
+
+
+\makeatletter
+\renewcommand{\smash}[1][tb]{%
+\def\mb@t{\ht}\def\mb@b{\dp}\def\mb@tb{\ht\z@\z@\dp}%
+\edef\finsm@sh{\csname mb@#1\endcsname\z@\z@ \box\z@}%
+\ifmmode \@xp\mathpalette\@xp\mathsm@sh
+\else \@xp\makesm@sh
+\fi
+}
+\makeatother
+This is a test $\sqrt{\lambda_{ki}}$ and $\smash[tb]{\sqrt{\lambda_{ki}}} $ 
+\meaning\smash
+
+\begin{docCmd}{smash}{ \oarg{position}\marg{argument} }
+The optional argument for the position can take three values: \textbf{t} keeps the bottom and annihilates the top, \textbf{b} keeps the top and annihilates the bottom and \textbf{tb} which annihilates top and bottom. The latter is the default.
+\end{docCmd}
+
+The \pkgname{mathtools} interferes with some of these?
+
+\subsection{Other spacing adjustments}
+
+The root can also be moved right or left using \docAuxCommand{leftroot} and \docAuxCommand{uproot}.
 
 \section{Trigonometric and other Functions}
 
@@ -278,7 +347,7 @@ Notice the use of the |\Box| command to draw a square for  end of proof symbol. 
 
 \section{Partial derivatives}
 
-Partial derivatives can be typeset using the \latex{} command \CMDI{\partial}
+Partial derivatives can be typeset using the \latex{} command \cmd{\partial}
 
 \begin{texexample}{}{}
 
@@ -810,6 +879,8 @@ environment it must be itself inside math mode.
 
 \section{The cases environment}
 
+The \refEnv{cases} environment renders multiple lines with an extensible left curly-brace. It can be used for piecewise-defined functions. For this to work, you must have |\usepackage{amsmath}| in the preamble.
+
 \newlength{\boxla}
 \newlength{\boxlb}
 \newlength{\boxlc}
@@ -819,7 +890,7 @@ environment it must be itself inside math mode.
 \newcommand{\boxa}[1]{\makebox[\boxla]{\small #1\dotfill}}
 \newcommand{\boxb}[1]{\makebox[\boxlb]{\small #1\dotfill}}
 
-\begin{docEnvironment}{case}{\meta{contents}}
+\begin{docEnvironment}{cases}{}
 \end{docEnvironment}
 \begin{texexample}{The cases environment}{}
 \begin{align*}
@@ -1064,7 +1135,7 @@ tools.
 \index{maths>typography>notation}
 
 Some believe that mathematics is created others that it is discovered, \emph{notation} is certainly created and
-a matter that has occupied the minds of many mathematicians. Peterson \citeyearpar{peterson2009}  went as far as to claim  `that notation can direct the course of mathematics’ and perhaps rightly so.
+a matter that has occupied the minds of many mathematicians. Peterson\footcite{peterson2009} \citeyearpar{peterson2009}  went as far as to claim  `that notation can direct the course of mathematics’ and perhaps rightly so.
 
 Bad notation can make good exposition bad and bad exposition worse; ad hoc decisions about notation, made mid-sentence in the heat of composition, are almost certain to result in bad notation. Good notation has a kind of alphabetical harmony and avoids dissonance.
 
@@ -1511,7 +1582,7 @@ So lautet der Beweis des Satzes $2 \times 2 = 4$:
 \section{How to number equations either to the left or right?}
 \label{eqnochange}
 
-\latexe uses Plain TeX \docAuxCommand{eqno} but mostly uses it withing environment such as the equation with an automatic counter. This is something that as I have mentioned earlier best left for the document class.
+\latexe uses Plain TeX \docAuxCommand{eqno} and \docAuxCmd{leqno} to place the equation number either to the left or the right of the equation. The placement is done automatically and the recommended way is to set this through the documentclass declaration at the start of the document. This can also be set manually later on through the above control sequences, as shown in the Example~\ref{ex:eqno}.
 
 \begin{texexample}{Left or right numbering}{ex:eqno}
 \makeatletter
