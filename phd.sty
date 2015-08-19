@@ -525,7 +525,7 @@
 \newif\ifRAGGEDTWOE
 \newif\ifEVERYSEL
 \newif\ifFOOTMISC
-\PassOptionsToPackage{ragged2e}{footnotes,raggedrightboxes}
+\PassOptionsToPackage{footnotes,raggedrightboxes}{ragged2e}
 \RequirePackage{ragged2e}
 \newif\ifSOUL
 \IfStyFileExists{soul}
@@ -546,18 +546,20 @@
 {}
 \cxset{acronym keys/.store in = \acronymkeys@cx}
 \cxset{acronym keys={smaller,printonlyused,withpage}}
-\PassOptionsToPackage{\acronymkeys@cx}{acronym}
-\RequirePackage{acronym}
+\AtBeginDocument{\PassOptionsToPackage{\acronymkeys@cx}{acronym}
+\RequirePackage{acronym}}
 \RequirePackage{mdframed}
+
 \RequirePackage{adjustbox}
 \RequirePackage{fancybox}
 \RequirePackage{graphicx}[1999/02/16]
 \DeclareGraphicsExtensions{.jpg, .JPG, .jpeg, .png, .eps}
 \graphicspath{{graphics/}{graphics//}{../images/}{images//}{./images/}{./graphics/}%
    {../graphics/}{./pic/}{../pic}}
-\RequirePackage{wrapfig}
-\RequirePackage[quiet]{rotating}
 
+\RequirePackage{wrapfig}
+\PassOptionsToPackage{quiet}{rotating}
+\RequirePackage{rotating}
 \DeclareRobustCommand\thickrule{%
     \leavevmode \leaders \hrule height 2pt \hfill \kern \z@}
 \DeclareRobustCommand\thinrule{\vrule width\textwidth height0.4pt depth0pt\relax}%
@@ -591,7 +593,8 @@
  }
 \newif\ifLIPSUM
 \RequirePackage{lipsum}
-\RequirePackage{kantlipsum}
+
+\RequirePackage[par]{kantlipsum}
 \RequirePackage{blindtext}
 \DeclareDocumentCommand\lorem{ s }{Fusce adipiscing justo nec ante. Nullam in enim.
  Pellentesque felis orci, sagittis ac, malesuada et, facilisis in,
@@ -753,7 +756,6 @@ ball was her favorite plaything.}%
 
 \let\LT@array=\origLT@array
 \let\LT@start=\origLT@start
-
 \IfStyFileExists*{type1cm}
   {\usepackage{type1cm}}
   {}
@@ -789,7 +791,6 @@ ball was her favorite plaything.}%
   \patchcmd{\select@group}{\sixt@@n}{\@cclvi}{}{}
 \fi
 \fi
-
 \newif\ifAMS
 \AMStrue
 \ExplSyntaxOn
@@ -910,7 +911,6 @@ ball was her favorite plaything.}%
   \egroup
 }
 \renewcommand\U[1]{{\texttt{U+#1}}(\char"#1)\xspace}
-
 \newif\ifYH
 \newcommand\YH{yhmaths}
 \IfStyFileExists{yhmaths}
@@ -921,7 +921,6 @@ ball was her favorite plaything.}%
    \let\RequirePackage=\origRequirePackage
   }
   { \RequirePackage{yhmath}}
-
 \RequirePackage{multienum}
 \ExplSyntaxOn
 \newif\ifACCENTS
@@ -937,7 +936,6 @@ ball was her favorite plaything.}%
   }
   {}
 \ExplSyntaxOff
- %\RequirePackage {nath} DANGEROUS
 \IfStyFileExists{mathrsfs}
   {\newcommand{\mathscr}[1]{\mbox{\usefont{U}{rsfs}{m}{n}##1}}}
   {}
@@ -1082,8 +1080,9 @@ ball was her favorite plaything.}%
   }
   {}
 \ExplSyntaxOff
+\newif\ifEU \EUfalse
+
 \iffalse
-\newif\ifEU
 \IfStyFileExists{euscript}
   {\EUtrue\RequirePackage[mathcal]{euscript}
    \renewcommand{\mathcal}[1]{\mbox{\usefont{U}{eus}{m}{n}##1}}
@@ -1386,6 +1385,7 @@ ball was her favorite plaything.}%
      & \itshape\@nameuse{#2} \\}
 }
 %%  \tabitem{textcapitalcompwordmark}{textascendercompwordmark}
+
 \ExplSyntaxOn
 \newif\ifWASY
 \newcommand\WASY{\pkgname{wasysym}}
@@ -1555,20 +1555,26 @@ ball was her favorite plaything.}%
   {}
 \RequirePackage{phdfilecontents}
 \RequirePackage{changepage}
-
 \RequirePackage{keyval}
-\usepackage{xkvview}
+\RequirePackage{xkvview}
 \RequirePackage{ifmtarg}
+\PassOptionsToPackage{nomessages}{fp}
+\RequirePackage{fp}
+
 \RequirePackage{xspace}
 \RequirePackage{xstring}
 \RequirePackage{multido}
 \RequirePackage{etoolbox}
+
 \RequirePackage{parselines}
 \def\TRUE{ \meta{true code} }
 \def\FALSE{ \meta{false code} }
 \def\PASS{\par{\bfseries\textcolor{green!50!blue}{PASS}}\ ~}
 \def\FAIL{\par{\bfseries\textcolor{red!70!black}{FAIL}}\ ~}
-  \RequirePackage{calc}
+
+\RequirePackage{upquote}
+\RequirePackage{calc}
+
 \RequirePackage{pict2e}
 \RequirePackage{picture}
 \RequirePackage{tikz}
@@ -1642,15 +1648,19 @@ ball was her favorite plaything.}%
 \ExplSyntaxOff
 %%  \bibliographystyle{cambridgeauthordate}
 %% \bibsection\parindent \z@\bibpreamble\bibfont\list
-\newcommand{\AfterHyperrefHook}{%
-  \RequirePackage{algorithm2e}%
-  \RequirePackage{fancyhdr}
-  %\bibliomanager
-  \RequirePackage{datetime} %%scrtime
-  \RequirePackage{scrtime}
-  \RequirePackage{datenumber}
-}
+\ExplSyntaxOn
+\clist_new:N \after_hyperref_hook_clist
+\clist_gset:Nn \after_hyperref_hook_clist
+ {algorithm2e, fancyhdr, datetime, scrtime, datenumber}
 
+\cs_new:Npn \AfterHyperrefHook
+{%
+  \clist_map_inline:Nn \after_hyperref_hook_clist
+  {
+    \RequirePackage{##1}
+  }
+}
+\ExplSyntaxOff
 \def\sethyperref
 {%
   \BeforeHyperrefHook
@@ -1685,7 +1695,6 @@ ball was her favorite plaything.}%
  {\typeout{Algorithm loaded}}
   \RequirePackage{algorithm2e}
 \RequirePackage{multicol}
-
 
 \newif\ifULEM
 \IfStyFileExists{ulem}
@@ -1737,10 +1746,10 @@ ball was her favorite plaything.}%
   {}
 \RequirePackage{genealogytree}
 \RequirePackage{chngcntr}
-\RequirePackage{fourier-orns}
 \RequirePackage{eso-pic}
 \RequirePackage{alphalph}
 \RequirePackage{fmtcount}
+
 \RequirePackage{varwidth}
 \RequirePackage{comment}
 \RequirePackage{textcase}
@@ -1750,7 +1759,8 @@ ball was her favorite plaything.}%
 \RequirePackage{caption} % check
 \RequirePackage{subcaption}
 
-\RequirePackage[final]{pdfpages}
+\PassOptionsToPackage{final}{pdfpages}
+\RequirePackage{pdfpages}
 \newif\ifCCLIC
 \newcommand\CCLIC{\pkgname{cclicenses}}
 \IfStyFileExists{cclicenses}
@@ -1925,10 +1935,12 @@ ball was her favorite plaything.}%
   \ifluatex
   \else
     \TIPAtrue
-    \RequirePackage[tone,extra,safe]{tipa}
+    \PassOptionsToPackage{tone,extra,safe}{tipa}
+    \RequirePackage{tipa}
   \fi
 \fi
 \RequirePackage{fontawesome}
+
 \global\newlength{\miniwidthi}
 \global\newlength{\miniwidthii}
 \global\newlength{\sepmainhorizontal}

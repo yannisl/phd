@@ -14,7 +14,7 @@
 %
 %
 % \GetFileInfo{ltfssbas.dtx}
-% \title{A new font selection scheme for \TeX{} macro packages\\
+ \chapter{The new font selection scheme for \TeX{} macro packages}
 %        (Basic Macros)\thanks
 %       {This file has version number
 %       \fileversion\ dated \filedate}}
@@ -24,18 +24,18 @@
 % \MaintainedByLaTeXTeam{latex}
 % \maketitle
 %
-% This file contains the main implementation of the `low level' font
-% selection commands. See other parts of the \LaTeX\
-% distribution, or  \emph{The \LaTeX\ Companion} for higher level
-% documentation of the \LaTeX\ `New' Font Selection Scheme.
-%
-% \begin{quote}
-%   \textbf{Warning:}
-%  The macro documentation is still basically the documentation from the
-%  first NFSS release and therefore in some cases probably not
-%  completely accurate.
-% \end{quote}
-%
+ This file contains the main implementation of the `low level' font
+ selection commands. See other parts of the \LaTeX\
+ distribution, or  \emph{The \LaTeX\ Companion} for higher level
+ documentation of the \LaTeX\ `New' Font Selection Scheme.
+
+ \begin{quote}
+   \textbf{Warning:}
+  The macro documentation is still basically the documentation from the
+  first NFSS release and therefore in some cases probably not
+  completely accurate.
+ \end{quote}
+
 
 %
 % \changes{v3.0v}{1998/08/17}{(RmS) Documentation fixes.}
@@ -123,10 +123,10 @@
 %
 %
  \section{Preliminary macros}
-%
-% We define a number
-% of macros that will be used later.
-%
+
+ We define a number
+ of macros that will be used later.
+
 %
 % \begin{macro}{\@nomath}
 %    |\@nomath| is used by most macros that will have no effect
@@ -197,12 +197,25 @@
 % \end{macro}
 %
 %
-% \section{Macros for setting up the tables}
-%
-%  \begin{macro}{\DeclareFontShape}
-%
-% \changes{v1.9a}{1992/07/26}{Introduced \cs{DeclareFontShape}}
-%    The macro |\DeclareFontShape| takes $6$ arguments:
+ \section{Macros for setting up the tables}
+
+\begin{docCmd}{DeclareFontShape}{ \marg{encoding}\marg{family}\marg{series}\marg{shape}\marg{loading-info} \marg{loading-settings}}
+
+Declares a font shape combination; \meta{loading-info} contains the information
+that combines sizes with external fonts. The syntax is complex and is described
+in detail in Section 4.3 of \citetitle{fntguide}. 
+
+\begin{phdverbatim}
+\DeclareFontShape{OT1}{cmr}{m}{sl}{%
+<5-8> sub * cmr/m/n
+<8> cmsl8
+<9> cmsl9
+<10> <10.95> cmsl10
+<12> <14.4> <17.28> <20.74> <24.88> cmsl12
+}{}
+\end{phdverbatim}
+
+
 \begin{teX}
 \def\DeclareFontShape{\begingroup
 \end{teX}
@@ -212,20 +225,13 @@
 \begin{teX}
    \nfss@catcodes
 \end{teX}
-%    We use |\expandafter| |\endgroup| to restore catcode in case
-%    something goes wrong with the argument parsing (suggested by Tim
-%    Van Zandt)
-%  \end{macro}
-%
-%
-%
-%  \begin{macro}{\DeclareFontShape}
-% \changes{v2.1c}{1994/02/07}{revert catcode settings earlier}
-% \changes{v3.0m}{1995/11/01}
-%      {(DPC) Test for \cs{relax} not \cs{undefined}, internal/1933}
+    We use |\expandafter| |\endgroup| to restore catcode in case
+    something goes wrong with the argument parsing (suggested by Tim
+    Van Zandt)
 \begin{teX}
    \expandafter\endgroup
    \DeclareFontShape@}
+   
 \def\DeclareFontShape@#1#2#3#4#5#6{%
    \expandafter\ifx\csname #1+#2\endcsname\relax
      \@latex@error{Font family `#1+#2' unknown}\@eha
@@ -244,13 +250,21 @@
    \fi
   }
 \end{teX}
-%  \end{macro}
+\end{docCmd}
 %
 %
-%  \begin{macro}{\DeclareFixedFont}
-%    Define a direct font switch that avoids all overhead.
-% \changes{v2.1u}{1994/11/06}{Renamed
-%                        \cs{every@size} to \cs{every@math@size}.}
+\begin{docCmd}{DeclareFixedFont}{ \marg{cmd}\marg{encoding}\marg{family}\marg{series}\marg{shape}\marg{size}}
+ Define a direct font switch that avoids all overhead.
+Declares command hcmdi to be a font switch which selects the font that is
+specified by the attributes hencodingi, hfamilyi, hseriesi, hshapei, and hsizei.
+
+The font is selected without any adjustments to baselineskip and other surrounding
+conditions.
+
+This example makes |{\picturechar .}| select a small dot very quickly:
+
+|\DeclareFixedFont{\picturechar}{OT1}{cmr}{m}{n}{5}|
+
 \begin{teX}
 \def\DeclareFixedFont#1#2#3#4#5#6{%
    \begingroup
@@ -262,7 +276,7 @@
    \endgroup
   }
 \end{teX}
-%  \end{macro}
+\end{docCmd}
 %
 %
 %
@@ -278,21 +292,33 @@
             \noexpand\fontname\font
            \relax}%
 \end{teX}
-%    Calling |\subst@correction| after the current group means calling
-%    it after we have loaded the substitution font which is done
-%    inside a group.
+    Calling |\subst@correction| after the current group means calling
+    it after we have loaded the substitution font which is done
+    inside a group.
 \begin{teX}
        \aftergroup\subst@correction
 }
 \end{teX}
 %  \end{macro}
 %
-\begin{docCmd}{DeclareFontFamily}{}
+\begin{docCmd}{DeclareFontFamily}{ \marg{encoding}\marg{family}\marg{loading-settings}}
+Declares a font family \meta{family} to be available in encoding scheme \meta{encoding}.
+The \meta{loading-settings} are executed immediately after loading any font with this
+encoding and family.
+
+Checks that \meta{encoding} was previously declared.
+This example refers to the Computer Modern Typewriter font family in the
+Cork encoding:
+
+|\DeclareFontFamily{T1}{cmtt}{\hyphenchar\font=-1}|
+
+Each |.fd| file should contain exactly one \cs{DeclareFontFamily} combination.
+
 \begin{teX}
 \def\DeclareFontFamily#1#2#3{%
 \end{teX}
-%    If we want fast checking for the encoding scheme we can just
-%    check for |\T@..| being defined.
+    If we want fast checking for the encoding scheme we can just
+    check for |\T@..| being defined.
 \begin{teX}
 % \@tempswafalse
 % \def\reserved@b{#1}%
@@ -315,11 +341,11 @@
 \begin{teX}
      \def\reserved@a{#3}%
 \end{teX}
-%    We compare |\reserved@a| with |\@empty|
-%    If these two are the same we |\let| the `extra'
-%    macro equal to |\@empty| which is not the same a doing a |\let|
-%    to |\reserved@a| --- the latter would blow one extra memory
-%    location rather  then reusing the one from |\@empty|.
+    We compare |\reserved@a| with |\@empty|
+    If these two are the same we |\let| the `extra'
+    macro equal to |\@empty| which is not the same a doing a |\let|
+    to |\reserved@a| --- the latter would blow one extra memory
+    location rather  then reusing the one from |\@empty|.
 \begin{teX}
      \global
      \expandafter\let\csname #1+#2\expandafter\endcsname
@@ -351,16 +377,25 @@
 %
 %
 %
-% \begin{macro}{\DeclareFontEncoding}
+\begin{docCmd}{DeclareFontEncoding}{ \marg{encoding}\marg{text-settings}\marg{math-settings}}
+This function declares a new font encoding scheme.
+
+The \meta{text-settings} are declarations which are executed every time \cs{selectfont} changes
+the encoding to be \meta{encoding}.
+
+The \meta{math-settings} are similar but are for math alphabets. They are executed whenever a math alphabet with this encoding is called.
+
+The command also saves the value of \meta{encoding} in the macro \refCom{LastDeclaredEncoding}.
+
+Spaces within the arguments are ignored to avoid surplus spaces in the document.\footcite[See][for more details]{fntguide}
+
+
 \begin{teX}
 \def\DeclareFontEncoding{%
 \end{teX}
-%    First we start with ignoring all blanks and newlines since every
-%    surplus space in the second or third argument will come out in
-%    a weird place in the document.
-% \changes{v2.1c}{1994/02/07}{revert catcode settings earlier}
-% \changes{v2.1t}{1994/10/19}{Add missing \cs{relax}.}
-% \changes{v2.1z}{1994/12/06}{use \cs{nfss@catcodes}}
+    First we start with ignoring all blanks and newlines since every
+    surplus space in the second or third argument will come out in
+    a weird place in the document.
 \begin{teX}
    \begingroup
    \nfss@catcodes
@@ -379,8 +414,8 @@
                     {\default@family}{\default@series}%
                     {\default@shape}}%
 \end{teX}
-%    To support encoding dependent commands (like accents) we
-%    initialise the command
+    To support encoding dependent commands (like accents) we
+    initialise the command
 % |\|\meta{encoding}|-cmd| to be |\@changed@cmd|.
 %    (See \texttt{ltoutenc.dtx} for details.)
 % \changes{v2.1l}{1994/05/13}{Init encoding change command}
@@ -398,27 +433,45 @@
   \global\@namedef{T@#1}{#2}%
   \global\@namedef{M@#1}{\default@M#3}%
 \end{teX}
-%    Keep a record of the last encoding being declared:
-% \changes{v3.0w}{1999/01/06}{Added \cs{LastDeclaredEncoding} to
-%   support cyrillic integration (pr/2988)}
+    Keep a record of the last encoding being declared:
 \begin{teX}
   \xdef\LastDeclaredEncoding{#1}%
   }
 \@onlypreamble\DeclareFontEncoding@
 \end{teX}
-% \end{macro}
+\end{docCmd}
 %
 %
-% \begin{macro}{\LastDeclaredEncoding}
+ \begin{docCmd}{LastDeclaredEncoding}{}
 % \changes{v3.0w}{1999/01/06}{Added \cs{LastDeclaredEncoding} to
 %   support cyrillic integration (pr/2988)}
 %    The last encoding being declared by |\DeclareFontEncoding|.
 \begin{teX}
 \def\LastDeclaredEncoding{}
 \end{teX}
-% \end{macro}
+\end{docCmd}
 %
-% \begin{macro}{\DeclareFontSubstitution}
+\begin{docCmd}{DeclareFontSubstitution}{ \marg{encoding}\marg{family}\marg{series}\marg{shape}}
+Declares the default values for font substitution which will be used when a font
+with encoding hencodingi should be loaded but no font can be found with the
+current attributes.
+
+These substitutions are local to the encoding scheme because the encoding
+scheme is never substituted! They are tried in the order \meta{shape} then \meta{series}
+and finally \meta{family}.
+
+If no defaults are set up for an encoding, the values given by \refCom{DeclareErrorFont}
+are used.
+
+The font specification for hencodingihfamilyihseriesihshapei must have been de-
+fined by \refCom{DeclareFontShape} before the |\begin{document}| is reached.
+
+Example:
+
+\begin{phdverbatim}
+\DeclareFontSubstitution{T1}{cmr}{m}{n}
+\end{phdverbatim}
+
 \begin{teX}
 \def\DeclareFontSubstitution#1#2#3#4{%
   \expandafter
@@ -466,10 +519,10 @@
  }
 \@onlypreamble\DeclareFontSubstitution
 \end{teX}
-% \end{macro}
+\end{docCmd}
 %
 %
-% \begin{macro}{\DeclareFontEncodingDefaults}
+\begin{docCmd}{DeclareFontEncodingDefaults}{}
 \begin{teX}
 \def\DeclareFontEncodingDefaults#1#2{%
   \ifx\relax#1\else
@@ -487,7 +540,7 @@
 }
 \@onlypreamble\DeclareFontEncodingDefaults
 \end{teX}
-%  \end{macro}
+\end{docCmd}
 %
 %
 % \begin{macro}{\default@T}
@@ -500,7 +553,7 @@
 % \end{macro}
 %
 %
-% \begin{macro}{\DeclarePreloadSizes}
+\begin{docCmd}{DeclarePreloadSizes}{}
 \begin{teX}
 \def\DeclarePreloadSizes#1#2#3#4#5{%
  \@ifundefined{T@#1}%
@@ -573,7 +626,7 @@
 }
 \@onlypreamble\DeclarePreloadSizes
 \end{teX}
-% \end{macro}
+\end{docCmd}
 %
 %
 %
@@ -591,7 +644,7 @@
 %
 %
 %
-% \begin{macro}{\DeclareMathSizes}
+\begin{docCmd}{DeclareMathSizes}{}
 % \begin{macro}{\DeclareMathSizes*}
 %    |\DeclareMathSizes| takes the text size, math text size, math
 %    script size, and math scriptscript size as arguments and defines
@@ -604,7 +657,7 @@
 \@onlypreamble\DeclareMathSizes
 \end{teX}
 % \end{macro}
-% \end{macro}
+\end{docCmd}
 %
 % \begin{macro}{\@DeclareMathSizes}
 % \changes{v3.0p}{1996/07/26}{use faster \cs{if} test}
@@ -886,7 +939,9 @@
 %  \end{macro}
 %
 %
-% \begin{macro}{\mathversion}
+ \begin{docCmd}{mathversion}{ \marg{version}}
+ This command selects a math version; it can only be used outside math mode.
+For example, \cs{boldmath} is defined to be \cs{mathversion}|{bold}|.
 % \changes{v1.0h}{1989/04/29}{Test if version defined added.}
 % \changes{v1.0m}{1989/09/14}
 %     {Corrected typo: \cs{endscname} to \cs{endcsname}.}
@@ -909,50 +964,50 @@
           \@latex@error{Math version `#1' is not defined}\@eha\else
           \edef\math@version{#1}%
 \end{teX}
-%    We need to force a math font setup both now and at the point
-%    where we return to the previous math version.
-%    Forcing a math font setup can simply be done by setting
-%    |\glb@currsize| to an invalid value since this will trigger the
-%    setup when the formula starts.
+    We need to force a math font setup both now and at the point
+    where we return to the previous math version.
+    Forcing a math font setup can simply be done by setting
+    |\glb@currsize| to an invalid value since this will trigger the
+    setup when the formula starts.
 \begin{teX}
           \gdef\glb@currsize{}%
 \end{teX}
-%    When the scope of the current |\mathversion| ends we need to
-%    restore the old setup. However this time we need to force it
-%    directly at least if we are inside math, otherwise we could wait.
-%    Another way to enhance this code here is todo the setting only if
-%    the version really has changed after all. This might be
-%    interesting in case of \texttt{amstext} and \texttt{boldsymbol}.
+    When the scope of the current |\mathversion| ends we need to
+    restore the old setup. However this time we need to force it
+    directly at least if we are inside math, otherwise we could wait.
+    Another way to enhance this code here is todo the setting only if
+    the version really has changed after all. This might be
+    interesting in case of \texttt{amstext} and \texttt{boldsymbol}.
 % \changes{v2.1b}{1994/01/25}{Corrections for math setup}
 \begin{teX}
           \aftergroup\glb@settings
           \fi}
 \end{teX}
+\end{docCmd}
 % \end{macro}
-% \end{macro}
 %
 %
-% If \TeX{} would support a hook just before the end of a formula
-% (opposite of |\everymath| so to speak) the implementation of the
-% algorithm would be much simpler because in that case we would set up
-% the correct math fonts at this point without having to worry about
-% incorrect settings due to nesting. The same would be true if in
-% \LaTeX{} the use of |$| (as the primitive \TeX{} command) would be
-% impossible and instead only a higher-level interface would be
-% available. Note that this does not mean that a |$| couldn't be the
-% short-hand for starting and stopping that higher-level interface, it
-% only means that the direct \TeX{} function must be hidden.
-%
-% Anyway, since we don't have this and won't have it in \LaTeXe{} we
-% need to implement it in a somewhat slower way.
-%
-%
-% We test for the current math font setup on entry of a formula,
-% i.e., on the
-% hooks |\everymath| and |\everydisplay|. But since these hooks may
-% contain user data we provide ourselves with an internal version of
-% these hooks which stays frozen.
-%
+ If \TeX{} would support a hook just before the end of a formula
+ (opposite of |\everymath| so to speak) the implementation of the
+ algorithm would be much simpler because in that case we would set up
+ the correct math fonts at this point without having to worry about
+ incorrect settings due to nesting. The same would be true if in
+ \LaTeX{} the use of |$| (as the primitive \TeX{} command) would be
+ impossible and instead only a higher-level interface would be
+ available. Note that this does not mean that a |$| couldn't be the
+ short-hand for starting and stopping that higher-level interface, it
+ only means that the direct \TeX{} function must be hidden.
+
+ Anyway, since we don't have this and won't have it in \LaTeXe{} we
+ need to implement it in a somewhat slower way.
+
+
+ We test for the current math font setup on entry of a formula,
+ i.e., on the
+ hooks |\everymath| and |\everydisplay|. But since these hooks may
+ contain user data we provide ourselves with an internal version of
+ these hooks which stays frozen.
+
 %
 % \begin{macro}{\frozen@everymath}
 % \changes{v2.1a}{1994/01/17}{New math font setup}
@@ -965,7 +1020,7 @@
 % \end{macro}
 % \end{macro}
 %
-% \begin{macro}{\everymath}
+ \begin{docCmd}{everymath}{}
 % \changes{v2.1a}{1994/01/17}{New math font setup}
 % \begin{macro}{\everydisplay}
 % \changes{v2.1a}{1994/01/17}{New math font setup}
@@ -976,7 +1031,7 @@
 \newtoks\everydisplay
 \end{teX}
 % \end{macro}
-% \end{macro}
+\end{docCmd}
 %
 %
 % \begin{macro}{\frozen@everymath}
@@ -1012,34 +1067,34 @@
 %
 %
 %
-% \subsection{Macros for loading fonts}
+\section{Macros for loading fonts}
 %
-% \begin{macro}{\pickup@font}
-%    The macro |\pickup@font| which is used in
-%    |\selectfont| is very simple:
-%    if the font name is undefined (i.e.\ not known yet) it calls
-%    |\define@newfont| to load it.
+ \begin{docCmd}{pickup@font}{}
+    The macro |\pickup@font| which is used in
+    |\selectfont| is very simple:
+    if the font name is undefined (i.e.\ not known yet) it calls
+    |\define@newfont| to load it.
 \begin{teX}
 \def\pickup@font{%
     \expandafter \ifx \font@name \relax
        \define@newfont
     \fi}
 \end{teX}
-% \end{macro}
+\end{docCmd}
 %
-% \begin{macro}{\split@name}
-%    |\pickup@font| assumes that |\font@name| is set
-%    but it is sometimes called when |\f@family|, |\f@series|,
-%    |\f@shape|, or |\f@size| may have the wrong settings
-%    (see, e.g., the definition of |\getanddefine@fonts|).
-%    Therefore we need a macro to extract font \emph{family},
-%    \emph{series}, \emph{shape}, and \emph{size} from the font name.
-%    To this end we define |\split@name| which takes the font
-%    name as a list of characters of |\catcode| 12 (without the
-%    backslash at the beginning) delimited by the
-%    special control sequence |\@nil|.
-%    This is not very complicated: we first ensure that |/| has
-%    the right |\catcode|
+\begin{docCmd}{split@name}{}
+    |\pickup@font| assumes that |\font@name| is set
+    but it is sometimes called when |\f@family|, |\f@series|,
+    |\f@shape|, or |\f@size| may have the wrong settings
+    (see, e.g., the definition of |\getanddefine@fonts|).
+    Therefore we need a macro to extract font \emph{family},
+    \emph{series}, \emph{shape}, and \emph{size} from the font name.
+    To this end we define |\split@name| which takes the font
+    name as a list of characters of |\catcode| 12 (without the
+    backslash at the beginning) delimited by the
+    special control sequence |\@nil|.
+    This is not very complicated: we first ensure that |/| has
+    the right |\catcode|
 \begin{teX}
 {\catcode`\/=12
 \end{teX}
@@ -1054,37 +1109,44 @@
                                     \def\f@shape{#4}%
                                     \def\f@size{#5}}}
 \end{teX}
-% \end{macro}
+\end{docCmd}
 %
 %
-%  \begin{macro}{\curr@fontshape}
+\begin{docCmd}{curr@fontshape}{}
 %    Abbreviation which may get removed again for speed.
 % \changes{v1.9a}{1992/07/26}{}
 \begin{teX}
 \def\curr@fontshape{\f@encoding/\f@family/\f@series/\f@shape}
 \end{teX}
-%  \end{macro}
+\end{docCmd}
+
+\begin{texexample}{Currentfontshape}{ex:currentfontshape}
+\makeatletter
+\curr@fontshape
+\makeatother
+\end{texexample}
+
 %
-% \begin{macro}{\define@newfont}
+\begin{docCmd}{define@newfont}{}
 %    Now we can tackle the problem of defining a new font.
 % \changes{v1.9a}{1992/07/26}{}
 \begin{teX}
 \def\define@newfont{%
 \end{teX}
-%    We have already mentioned that the \textsf{token} list that
-%    |\split@name| will get as argument must not start with
-%    a backslash.
-%    To reach this goal we will set the |\escapechar| to $-1$ so
-%    that the |\string| primitive will not generate an
-%    escape character.
-%    To keep this change local we open a group.  We use
-%    |\begingroup| for this purpose since |\define@newfont|
-%    might be called in math mode, and an empty
-%    |\bgroup|\ldots|\egroup| would add an empty Ord atom
-%    to the math list and thus affect the spacing.
-%
-%    Also locally redefine |\typeout| so that `No file ...fd'
-%    Warnings become Font Info message just sent to the log file.
+    We have already mentioned that the \textsf{token} list that
+    |\split@name| will get as argument must not start with
+    a backslash.
+    To reach this goal we will set the |\escapechar| to $-1$ so
+    that the |\string| primitive will not generate an
+    escape character.
+    To keep this change local we open a group.  We use
+    |\begingroup| for this purpose since |\define@newfont|
+    might be called in math mode, and an empty
+    |\bgroup|\ldots|\egroup| would add an empty Ord atom
+    to the math list and thus affect the spacing.
+
+    Also locally redefine |\typeout| so that `No file ...fd'
+    Warnings become Font Info message just sent to the log file.
 % \changes{v1.0q}{1989/11/19}{Group added.}
 % \changes{v3.0m}{1995/11/17}{Redefine \cs{typeout} latex/1676}
 \begin{teX}
@@ -1176,24 +1238,24 @@
           {\@input@{\f@encoding\f@family.fd}}%
    \fi}
 \end{teX}
-% \end{macro}
+\end{docCmd}
 %
 %
-%  \begin{macro}{\nfss@catcodes}
+\begin{docCmd}{nfss@catcodes}{}
 % \changes{v2.1e}{1994/02/24}
-%     {Separate restoration of catcodes for fd cmds}
-%    This macro should contain the standard |\catcode| assignments to
-%    all characters which are used in the commands found in an
-%    \texttt{.fd} file and which might have special |\catcode|s in the
-%    middle of a document. If necessary, this list can be extended in
-%    a package file using a suitable number of |\expandafter|, i.e.,
-%\begin{verbatim}
-%  \expandafter\def\expandafter\nfss@catcodes
-%        \expandafter{\nfss@catcodes <additional settings>}
-%\end{verbatim}
-%    Note, that this macro might get executed several times since it
-%    is also called by |\DeclareFontShape|, thus it probably should
-%    not be misused as a general purpose hook.
+     {Separate restoration of catcodes for fd cmds}
+    This macro should contain the standard |\catcode| assignments to
+    all characters which are used in the commands found in an
+    \texttt{.fd} file and which might have special |\catcode|s in the
+    middle of a document. If necessary, this list can be extended in
+    a package file using a suitable number of |\expandafter|, i.e.,
+\begin{verbatim}
+  \expandafter\def\expandafter\nfss@catcodes
+        \expandafter{\nfss@catcodes <additional settings>}
+\end{verbatim}
+    Note, that this macro might get executed several times since it
+    is also called by |\DeclareFontShape|, thus it probably should
+    not be misused as a general purpose hook.
 \begin{teX}
 \def\nfss@catcodes{%
 \end{teX}
@@ -1239,14 +1301,14 @@
    \@makeother\"%
 }
 \end{teX}
-%  \end{macro}
+\end{docCmd}
 %
 %
-%  \begin{macro}{\DeclareErrorFont}
-%    Declare the last resort shape! We assume that in this fontshape
-%    there is a 10pt font but it doesn't really matter. We only loose
-%    one macro name if the assumption is false. But at least the font
-%    should be there!
+\begin{docCmd}{DeclareErrorFont}{}
+    Declare the last resort shape! We assume that in this fontshape
+    there is a 10pt font but it doesn't really matter. We only loose
+    one macro name if the assumption is false. But at least the font
+    should be there!
 \begin{teX}
 \def\DeclareErrorFont#1#2#3#4#5{%
       \xdef\error@fontshape{%
@@ -1276,7 +1338,7 @@
 }
 \@onlypreamble\DeclareErrorFont
 \end{teX}
-%  \end{macro}
+\end{docCmd}
 %
 %
 % \begin{macro}{\wrong@fontshape}
@@ -1754,16 +1816,16 @@
 \end{teX}
 % \end{macro}
 %
-% \begin{macro}{\showhyphens}
+\begin{docCmd}{showhyphens} { }
 % \changes{v1.2l}{1990/06/30}{Macro added.}
 % \changes{v2.0e}{1993/05/16}{Use \cs{reset@font}}
 % \changes{v3.0h}{1995/10/10}
 %    {Use \cs{normalfont} and make colour safe, and autoloadable}
 % \changes{v3.0u}{1998/03/25}
 %    {Suppress unnecessary error when used in preamble}
-%    The |\showhyphens| command must be redefined since the version in
-%    \texttt{plain.tex} uses |\tenrm|.  We have also made some further
-%    adjustments for its use in \LaTeX.
+    The |\showhyphens| command must be redefined since the version in
+    \texttt{plain.tex} uses |\tenrm|.  We have also made some further
+    adjustments for its use in \LaTeX.
 \begin{teX}
 \gdef\showhyphens#1{%
   \setbox0\vbox{%
@@ -1774,92 +1836,92 @@
     \pretolerance\m@ne\tolerance\m@ne\hbadness\z@\showboxdepth\z@\ #1%
     \color@endgroup}}
 \end{teX}
-% \end{macro}
+\end{docCmd}
 %
 %
-% \begin{macro}{\addto@hook}
+\begin{docCmd}{addto@hook}{}
 % \changes{v1.0u}{1989/12/05}{\cs{addto@hook} added.}
 % \changes{v2.1d}{1994/02/10}{Made \cs{addto@hook} long.}
-%    We need a macro to add tokens to a hook.
+ We need a macro to add tokens to a hook.
 \begin{teX}
 \long\def\addto@hook#1#2{#1\expandafter{\the#1#2}}
 \end{teX}
-% \end{macro}
+\end{docCmd}
 %
 %
-% \begin{macro}{\@vpt}
+\begin{docCmd}{@vpt}{}
 % \changes{v2.1v}{1994/11/09}{(DPC) macros added, from setsize.dtx}
 % \changes{v2.1v}{1994/11/09}{(DPC) reduce save stack usage latex/1742}
 \begin{teX}
  \def\@vpt{5}
 \end{teX}
-% \end{macro}
+\end{docCmd}
 %
-% \begin{macro}{\@vipt}
+\begin{docCmd}{@vipt}{}
 \begin{teX}
  \def\@vipt{6}
 \end{teX}
-% \end{macro}
+\end{docCmd}
 %
-% \begin{macro}{\@viipt}
+\begin{docCmd}{@viipt}{}
 \begin{teX}
  \def\@viipt{7}
 \end{teX}
-% \end{macro}
+\end{docCmd}
 %
-% \begin{macro}{\@viiipt}
+\begin{docCmd}{@viiipt}{}
 \begin{teX}
  \def\@viiipt{8}
 \end{teX}
-% \end{macro}
+\end{docCmd}
 %
-% \begin{macro}{\@ixpt}
+\begin{docCmd}{@ixpt}{}
 \begin{teX}
  \def\@ixpt{9}
 \end{teX}
-% \end{macro}
+\end{docCmd}
 %
-% \begin{macro}{\@xpt}
+\begin{docCmd}{@xpt}{}
 \begin{teX}
  \def\@xpt{10}
 \end{teX}
-% \end{macro}
+\end{docCmd}
 %
-% \begin{macro}{\@xipt}
+\begin{docCmd}{@xipt}{}
 \begin{teX}
  \def\@xipt{10.95}
 \end{teX}
-% \end{macro}
+\end{docCmd}
 %
-% \begin{macro}{\@xiipt}
+\begin{docCmd}{@xiipt}{}
 \begin{teX}
  \def\@xiipt{12}
 \end{teX}
-% \end{macro}
+\end{docCmd}
 %
-% \begin{macro}{\@xivpt}
+\begin{docCmd}{@xivpt}{}
 \begin{teX}
  \def\@xivpt{14.4}
 \end{teX}
-% \end{macro}
+\end{docCmd}
 %
-% \begin{macro}{\@xviipt}
+\begin{docCmd}{@xviipt}{}
 \begin{teX}
  \def\@xviipt{17.28}
 \end{teX}
-% \end{macro}
+\end{docCmd}
 %
-% \begin{macro}{\@xxpt}
+\begin{docCmd}{@xxpt}{}
 \begin{teX}
  \def\@xxpt{20.74}
 \end{teX}
-% \end{macro}
+\end{docCmd}
 %
-% \begin{macro}{\@xxvpt}
+\begin{docCmd}{@xxvpt}{}
 \begin{teX}
  \def\@xxvpt{24.88}
 \end{teX}
-% \end{macro}
+\end{docCmd}
 %
 \begin{teX}
 %</2ekernel>
