@@ -4,10 +4,12 @@ The `phd-documentation` latex package is part of the `phd` package bundle
 and the class with the same name which provide
 convenient methods to create new styles for books, reports
 and articles. It also loads the most commonly used packages
-and resolves conflicts.
+and resolves conflicts through the [phd-pkgmanager](https://github.com/yannisl/phd/blob/master/docs/phd-documentation.md.)
 
 This work consists of the file  
+
   `phd-documentation.dtx`,
+  
 and the derived files   
   `phd-documentation.ins`,  
   `phd-documentation.pdf`,
@@ -48,7 +50,7 @@ attributes are easy to change and have a consistent and easy to remember interfa
 
 To set or add a key we only use one command:
 
-      \cxset{chapter name font-size = Huge,
+      \cxset{chapter name font-size   = Huge,
              chapter number font-size = HUGE}
 
 ### Future Development
