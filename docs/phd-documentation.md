@@ -4,7 +4,7 @@ The `phd-documentation` latex package is part of the `phd` package bundle
 and the class with the same name which provide
 convenient methods to create new styles for books, reports
 and articles. It also loads the most commonly used packages
-and resolves conflicts through the [phd-pkgmanager](https://github.com/yannisl/phd/blob/master/docs/phd-documentation.md.)
+and resolves conflicts through the [phd-pkgmanager](https://github.com/yannisl/phd/blob/master/docs/phd-pkgmanager.md)
 
 This work consists of the file  
 
