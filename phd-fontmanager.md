@@ -1,19 +1,22 @@
 ###The `phd` LaTeX2e package
 
-The `phd-fontmanager` latex package and the class with the same name provide
+The `phd-fontmanager` latex package is part of the `phd` package
+and the class with the same name. The `phd` package provides
 convenient methods to create new styles for books, reports
 and articles. It also loads the most commonly used packages
-and resolves conflicts.
+and resolves conflicts. The `phd-fontmanager` provides functions
+and key values for managing font usage in documents.
 
-This work consists of the file  `phd.dtx`,
-and the derived files   `phd.ins`,  `phd.pdf`, and `phd.sty`.
+This work consists of the file  `phd-fontmanager.dtx`,
+and the derived files   `phd-fontmanager.ins`,  `phd-fontmanager.pdf`,
+and `phd-fontmanager.sty`.
 
 ###Installation
 
 run
           phd-lua.bat on windows
-           pdflatex phd.dtx
-           makeindex -s gind.ist -g phd
+          pdflatex phd.dtx
+          makeindex -s gind.ist -g phd
 
 If you have any difficulties with the package come and join us at
 http://tex.stackexchange.com and post a new question or
