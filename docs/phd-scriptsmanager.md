@@ -23,10 +23,38 @@ and the derived files
 
 The documentation of this package uses numerous fonts not available in a
 normal `TeX` distribution. Before you regenerate it, make sure you install these
-fonts first.
+fonts first. All fonts are with an open source license.
+
+The fonts we require for the `phd` system to be fully functional and capable
+to typeset almost _any_ script or language that existed or is still live are
+the following:
+
+- The [noto](https://www.google.com/get/noto/) fonts from Google. the fonts
+  are licenced under the [Apache License Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.html)  or the [SIL Open Font License, Version 1.1]. Download and
+  install all the fonts.
+
+- The ancient fonts provided by [George Douros](http://users.teilar.gr/~g1951d/).
+
+- The Tiresias PCfont font from  [Tiresias](http://www.tiresias.org/fonts/). This font
+  is not actually used for scripts, but for experiments in readability. It looks
+  very good for headings. The aim of this organization is to make Information
+  Communication Technologies accessible to blind and partially sighted people. This
+  I thought was a good chance to promote their work.
+
+- code2000.ttf and code2001.ttf
+
+- Shonar Bangla font.
+
+- Vrinda
+
+If you have Windows
+
+- Microsoft JhengHei and SimSun
+
+There are many more fonts, I will revisit these docs to provide full documentation.
 
 run
-      phd-lua.bat on windows
+      `phd-lua.bat` on windows
 
 If you have any difficulties with the package come and join us at
 http://tex.stackexchange.com and post a new question or
