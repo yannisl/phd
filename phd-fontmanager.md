@@ -1,15 +1,15 @@
 ###The `phd` LaTeX2e package
 
-The `phd-epigraphs` latex package is part of the `phd` package
-buddle and the class with the same name. The `phd` package provides
+The `phd-fontmanager` latex package is part of the `phd` package
+and the class with the same name. The `phd` package provides
 convenient methods to create new styles for books, reports
 and articles. It also loads the most commonly used packages
 and resolves conflicts. The `phd-fontmanager` provides functions
 and key values for managing font usage in documents.
 
-This work consists of the file  `phd-epigraphs.dtx`,
-and the derived files   `phd-epigraphs.ins`, `phd-epigraphs.pdf`,
-and `phd-epigraphs.sty`.
+This work consists of the file  `phd-fontmanager.dtx`,
+and the derived files   `phd-fontmanager.ins`,  `phd-fontmanager.pdf`,
+and `phd-fontmanager.sty`.
 
 This is version 0.10.0
 
@@ -59,5 +59,7 @@ that I have completed about 70% of the work that needs
 to be done.
 
 __The package as it stands is not production stable.__
+
+
 
 
