@@ -11,17 +11,21 @@ This work consists of the file  `phd-fontmanager.dtx`,
 and the derived files   `phd-fontmanager.ins`,  `phd-fontmanager.pdf`,
 and `phd-fontmanager.sty`.
 
+This is version 0.10.0
+
 ###Installation
 
 run
           phd-lua.bat on windows
           pdflatex phd.dtx
-          makeindex -s gind.ist -g phd
+          makeindex -s phd.ist -g phd.idx
 
 If you have any difficulties with the package come and join us at
-http://tex.stackexchange.com and post a new question or
-add a comment at http://tex.stackexchange.com/a/45023/963.
-or send me a message at  yannislaz at gmail.com
+http://tex.stackexchange.com and post a new question
+or send me a message at  yannislaz at gmail.com. Please note
+that at this stage the package is not production stable but close
+to completion. It will be released as a bundle with the `phd` package.
+The `phd` package loads `phd-fontmanager` automatically.
 
 ### Documentation
 
