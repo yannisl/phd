@@ -6,9 +6,9 @@ rem in order to use minted
 lualatex -shell-escape %~n1%~x1
 biber %1
 makeindex -s phd.ist %~n1.idx 
-lualatex -shell-escape %~n1.dtx
+lualatex -shell-escape %~n1%~x1
 makeindex -s phd.ist %~n1.idx
-lualatex -shell-escape %~n1.dtx
+lualatex -shell-escape %~n1%~x1
 
 rem do some clean up docstrip cannot fix this
 copy %~n1.md .\docs
