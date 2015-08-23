@@ -7,3 +7,6 @@ erase *.mtc***
 erase *.out
 erase *.glo
 erase *.ind
+erase *.synctex.gz
+erase *.mw
+erase *.ilg

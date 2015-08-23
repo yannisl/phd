@@ -1,0 +1,356 @@
+\makeatletter
+\long\def\hlshadi#1{\hl{#1}}
+\cxset{enumerate numberingi/.is choice,
+  enumerate numberingi/.code={\renewcommand\theenumi {\csname#1\endcsname{enumi}}},
+  enumerate numberingii/.code={\renewcommand\theenumii {\csname#1\endcsname{enumii}}},
+  enumerate numberingiii/.code={\renewcommand\theenumiii {\csname#1\endcsname{enumiii}}},
+  enumerate numberingiv/.code={\renewcommand\theenumiv {\csname#1\endcsname{enumiv}}},
+  enumerate labeli punctuation/.store in=\enumeratepunctuationi@cx,
+  enumerate labeli/.is choice,
+  enumerate labeli/brackets/.code={\renewcommand\labelenumi{(\theenumi\enumeratepunctuationi@cx)}},
+  enumerate labeli/square brackets/.code={\renewcommand\labelenumi{[\theenumi\enumeratepunctuationi@cx]}},
+  enumerate labeli/right bracket/.code={\renewcommand\labelenumi{\theenumi\enumeratepunctuationi@cx)}},
+  enumerate label left/.store in=\enumeratelabelleft@cx,
+  enumerate label right/.code=\renewcommand\labelenumi{\enumeratelabelleft@cx\theenumi\enumeratepunctuationi@cx#1},
+  enumerate leftmargini/.code={\setlength\leftmargini{#1}},
+  enumerate leftmarginii/.code={\setlength\leftmarginii{#1}},
+  enumerate leftmarginiii/.code={\setlength\leftmarginiii{#1}},
+  enumerate leftmarginiv/.code={\setlength\leftmarginiv{#1}},
+  listi topsep/.store in=\listitopsep@cx,
+  listi partopsep/.store in=\listipartopsep@cx,
+  listi itemsep/.store in=\listiitemsep@cx,
+  listi parsep/.store in=\listiparsep@cx,
+  listii topsep/.store in=\listiitopsep@cx,
+  listii partopsep/.store in=\listiipartopsep@cx,
+  listii itemsep/.store in=\listiiitemsep@cx,
+  listii parsep/.store in=\listiiparsep@cx,
+  listiii topsep/.store in=\listiiitopsep@cx,
+  listiii partopsep/.store in=\listiiipartopsep@cx,
+  listiii itemsep/.store in=\listiiiitemsep@cx,
+  listiii parsep/.store in=\listiiiparsep@cx,
+}
+\cxset{compact1/.style={%
+  enumerate numberingi=arabic,
+  enumerate numberingii=alph,
+  enumerate numberingiii=alph,
+  enumerate numberingiv=roman,
+  enumerate labeli punctuation=.,
+  enumerate label left=,
+  enumerate label right=,
+  enumerate leftmargini=2.2em,
+  enumerate leftmarginii=2.1em,
+  enumerate leftmarginiii=1.5em,
+  enumerate leftmarginiv=2em,
+  listi topsep=8\p@ \@plus2\p@ \@minus\p@,
+  listi itemsep=0\p@ \@plus2\p@ \@minus\p@,
+  listi parsep=0\p@ \@plus2\p@ \@minus\p@,
+  listii topsep=0\p@ \@plus2\p@ \@minus\p@,
+  listii itemsep=0\p@ \@plus2\p@ \@minus\p@,
+  listii parsep=0\p@ \@plus2\p@ \@minus\p@,
+  listiii topsep=0\p@ \@plus2\p@ \@minus\p@,
+  listiii itemsep=0\p@ \@plus2\p@ \@minus\p@,
+  listiii parsep=0\p@ \@plus2\p@ \@minus\p@,
+}}
+\cxset{compact2/.style={%
+  enumerate numberingi=alph,
+  enumerate numberingii=roman,
+  enumerate numberingiii=alph,
+  enumerate numberingiv=roman,
+  enumerate labeli punctuation=,
+  enumerate label left=(,
+  enumerate label right=),
+  enumerate leftmargini=2.2em,
+  enumerate leftmarginii=2.1em,
+  enumerate leftmarginiii=1.5em,
+  enumerate leftmarginiv=2em,
+  listi topsep   = 8\p@ \@plus2\p@ \@minus\p@,
+  listi itemsep = 0\p@ \@plus2\p@ \@minus\p@,
+  listi parsep   = 0\p@ \@plus2\p@ \@minus\p@,
+  listii topsep  = 0\p@ \@plus2\p@ \@minus\p@,
+  listii itemsep= 0\p@ \@plus2\p@ \@minus\p@,
+  listii parsep  = 0\p@ \@plus2\p@ \@minus\p@,
+  listiii topsep = 0\p@ \@plus2\p@ \@minus\p@,
+  listiii itemsep= 0\p@ \@plus2\p@ \@minus\p@,
+  listiii parsep  = 0\p@ \@plus2\p@ \@minus\p@,
+}}
+
+\ExplSyntaxOn
+\def\setenumerate#1{
+\cxset{#1}
+\def\@listi{%
+           \leftmargin\leftmargini
+            \parsep\listiparsep@cx
+            \topsep\listitopsep@cx\relax
+            \itemsep\listiitemsep@cx}
+            
+\def\@listii{\leftmargin\leftmarginii
+            \parsep\listiiparsep@cx
+            \topsep\listiitopsep@cx\relax
+            \itemsep\listiiitemsep@cx}
+            
+\def\@listiii{\leftmargin\leftmarginiii
+            \parsep\listiiiparsep@cx
+            \topsep\listiiitopsep@cx\relax
+            \itemsep\listiiiitemsep@cx}
+}
+\ExplSyntaxOff
+
+\setenumerate{compact1}
+\makeatother
+\def\delay{\textcolor{red}{\Fire}}
+
+\ExplSyntaxOn
+% Holds master fields for all ODBs
+\clist_new:c {DBSMASTER}
+
+% New DBS
+\clist_new:c {DBS}
+
+%% Create the DB. The DB can have any name
+%% 
+\NewDocumentCommand {\CreateDB} { m }
+  {
+    \clist_new:c {#1}
+    \clist_gput_left:cn {DBS} {#1}
+  }   
+
+% add only the number, and this only at the right,
+% expecting the user to type it in ascending order and thus make sorting 
+% easier
+% Note the elements are stores as 1,3,4,68,112 etc.
+% #1 DB name
+% #2 field index - integer
+% 
+\NewDocumentCommand \addtoDB { m m  }
+  {
+    \clist_gput_right:cx { #1 } { #2 }
+  }
+ 
+%% Generate some variants
+%%
+
+\cs_generate_variant:Nn \clist_sort:Nn {cn}   
+
+%% generalized sort DB
+\NewDocumentCommand \SortDB { m }
+{
+  % remove any duplicates before sorting out
+   \clist_remove_duplicates:c { #1 }
+   % make variant here
+   \clist_sort:cn {#1}
+     {
+       \int_compare:nNnTF { ##1 } < { ##2 }
+        { \sort_reversed: }
+        { \sort_ordered: }
+    }
+}
+
+% #1 DB #2 Suffix
+%
+ \NewDocumentCommand \printRFI { m m }
+  {
+  % sort the list in numerical order
+    \SortDB { #1 }
+     
+ % map and print only for category (one to many also possible here)   
+     \clist_map_inline:cn { #1 }
+      {  
+       \cs_if_exist:cT {RFI##1-#2}
+          {
+            \cs:w RFI##1-#2\cs_end:
+            \index {RFI~Mechanical>RFI-M-##1-#2}
+          }
+       
+      }
+  }
+\ExplSyntaxOff    
+
+
+ %#1 Number
+%#2 Hotel
+%#3 Impact
+%#4 Description
+%#5 Area
+
+\newenvironment {RFI} [3] {%
+  \vspace*{12pt}
+  \parindent0pt
+  \mbox{\bfseries\color{red!80!black}\textsf{RFI-M-#1}}
+        \textbf{#2} \textbf{#3} \par
+  \begin{enumerate}}
+ {\end{enumerate}}
+
+% Optional DB letters W - W hotel
+% WE - Westing
+% SR  - St Regis
+
+\NewDocumentCommand {\addRFI} { O{SR} +m +m +m +m +g  +g } 
+{%
+   \expandafter\gdef\csname RFI#2-#1\endcsname
+   {%
+      \begin{RFI}{#2} {#3} {#4} 
+      
+        #5
+      
+      \end{RFI}
+       
+      \IfNoValueTF{ #6 }{ #6 }{ } 
+       
+      \IfNoValueTF{ #7 }{ #7 }{ }
+    } 
+    \addtoDB {MRFI} {#2}
+   \par 
+}
+
+%% Create DB 
+\CreateDB {MRFI}   
+
+
+
+
+\chapter{Mechanical RFIs Related to St Regis}
+
+
+
+\addRFI {497} {7 Dec 14 received 19 Jan 2015} {St Regis, Podium 1, Main Kitchen}
+{
+\item The RFI referred to previous response to RFI, where the Engineer directed the Contractor 
+         to their comments on Shop Drawing AHC-HLS-SRH-SDM-AC-P1-0. Contractor re-iterated
+         that achievable ceiling in Kitchen area could only be 2300mm and at the kitchen extract hood 2m.
+\item This area was almost impossible to complete given the congestion to achieve this ceiling height.         
+}
+
+
+\addRFI {537} {18 Jan 2015 received 22 Jan 2015} {St Regis, Basement 1}%
+ {
+   \item Engineer issued instruction via drgs DU-1211-DU-00564 on 12 Jan 2014. 
+    Engineer issued revised layout for AC-4020.
+   \item Suggested re-arrangement blocked access to shaft 35-36/D-F.
+   \item No chilled water piping and valving was not shown.
+   \item Length of AHU-B2-02 is in excess of 5 meters plus a 500 mm plenum. 
+ }
+
+
+
+\addRFI{657}
+{20-Apr-2015, responded 27 April 2015} {St Regis, Mezzanine, Security Room} 
+{
+\index{CCU>Security Room}\index{Primary co-ordination>CCTV}
+\index{St Regis>Mezzanine>Security Room}
+
+\item The layouts were not matching with latest Architectural drawings.
+\item Layout not matching with HVAC Design.
+        \begin{enumerate}
+        \item The new layouts did not allow space for the CCUs.
+        \item The new layouts did not show any access flooring.
+        \end{enumerate}
+\item Location of CCU 
+\item Clear height not achievable.
+\item Kitchen extract passing through security room, clashing with Monitor/LED display.
+\item Uncertainty if there is access floor or not.
+\item Engineer responded to swap store room with security room. The response did not adequately cover all the 
+queries. The kitchen headroom or the access flooring was not responded to.
+\item The response was followed by workshop meetings. As of May 20 2015, the Main Contractor did not carry the architectural changes required. \delay\delay\delay
+}
+
+
+\addRFI{662} {12-Apr-2014, responded 13-Apr-2014} {St Regis Podium 1 Winter Garden} 
+{
+\item This RFI dealt with incomplete issues regarding ceilings in Podium 1 Winter Garden.
+\item The RFI requested details of return air grilles.
+}
+
+
+\addRFI {0646}{23 April 2015 responded 5 April 2015}{St Regis, Spa Area Podium 2}%
+ {
+ \index{St Regis>Spa>RFI-0646}
+ \item Contractor requested clarifications for discrepancies between BARR \& WRAY requirement drawings and MEP design layout.
+ \item Engineer responded to all queries and confirmed requirements.
+ \item Area affected Spa. \delay \hl{Shadi to report on nature of delay}
+ }{
+ The Spa area subcontractor was appointed late. The area at Podium 2, was one of the first areas to be
+ completed. The public areas around it, as well as the French Courtyard were designed very late.
+ 
+ The Spa area subcontractor was appointed late. The area at Podium 2, was one of the first areas to be
+ completed. The public areas around it, as well as the French Courtyard were designed very late.
+}{
+ Appointment took place only in January 15.
+}
+
+\addRFI [B] {0222}{10 Jun 2014 received 17 Jun 2014 }{Air and Dirt Separators, Boiler Room}
+{
+\item The Contractor requested clarification on additional air separators in the Boiler Room.
+\item Relevant drawings Ref: DU1211-WS2173 Westin Hotel \& DU1211-WS2024 for Basement-1
+   \begin{enumerate}
+      \item Air and dirt separators are shown in B-1 Boiler plant room for the central water heating. This was not shown on Tender drawings.
+      \item Air and Dirt separator is shown in Westin Hotel TE-3 plant room.
+      \item Contractor requested verification and noted that the additional equipment shown would lead to additional costs to the Client.
+      \item Engineer responded that they should be provided as shown on the revised drawings.
+   \end{enumerate}
+\item   Later Contractor made arrangements for submittals and for air-freighting later on these equipment. 
+}{}{}
+
+\addRFI [B] {0215}{2 Jun 2014 replied 12 Jun 2014} {Basement Duct clashes with Water Feature Plant Room}
+{
+\item Issues arose due to co-ordination of HV cables tray and ducting.
+\item Engineer instructed that the duct be re-sized and re-routed.
+}{}{}
+
+\addRFI [WE] {0247} {25 June 2014  returned 5 July 2014} {Westin, Ground Floor, Insufficient ceiling void}
+{
+   \item Contractor advised that the ID drawings show a gap between the ceiling and the duct of 60mm and that this was going to impede return air.
+   \item Please refer to attached modified ceiling levels.
+}
+
+\addRFI [B] {0655} {16 Apr 15 received 4 May 15 } {Basement 1, MEP Services in loading Bay}
+{
+  \item Contractor requested confirmation to Engineer's reply RFI: No. HLG-626-RFI-ME-0618 to proceed with capacity as mentioned in the RFI with one set of fans, one duty and one standby (total 2 fans). 
+  \item Engineer responded to refer to RFI reply dated 21 April 2015.
+}
+
+\addRFI [W] {0661} {12 Apr 2015 received 22 Apr 2015} {W Mezzanine Floor, Male and Female Accessible Toilets RCP}
+  {
+    \item Contractor requested co-ordinated RCP layout with diffuser size type and location for male/female and accessible toilet to finalize Shop Drawing.
+   \item Engineer responded by providing CAD and PDF files. 
+   
+   \hlshadi{Shadi to confirm if the drawings received were adequate. (Drawings were received by HLG Feb 15 2015.
+     They seem to me they were for a Tender package. We should request Subcontractor Shop Drawings from
+     Main Contractor.
+    } 
+  }
+  
+\addRFI[B] {0664}  {21 Apr 2015 received 28 Apr 2015} {Basement 1, Loading Bay Area}
+ {
+   \item Contractor requested clarifications and made proposals for additional fans.
+   \item Engineer responded with detailed reply, including tag-number. 
+ }
+ 
+\addRFI {0666} {28 April 2015 received 14 May 2015 } {St Regis, Festival Dining Kitchen Podium~1 }
+ {
+   \item Contractor highlighted that the drainage for this area are not available and would cause problems in finalizing Mezzanine below.
+   \item This was responded by CKP Who advised that designs have still not been received from AHG (FNB Division). These are AHG spaces (Specialty Restaurants). \delay\delay\delay
+ }
+
+
+\addRFI [WE] {0676} {7 May 2015 received 18 May 2015} {No access to shaft MR1 at Technical~2 Westin Hotel}
+{
+  \item Westin Hotel Technical 2 core wall penetration Builder's Works drawings (rev0 and rev1) we proposed 1700 x 950   opening. This was approved by the Engineer. This size has been revised due to the comment, changes were then incorporated in rev 1 layout. At Site the available opening is 2440 x 600. Contractor included an Annexure with proposals.
+  \item Engineer responded with proposal to reduce space further between pipes. \hl{Shadi to confirm what eventually was followed.}
+}
+
+\printRFI {MRFI} {SR} 
+
+%% Typeset all Chapters
+%% 
+\chapter {Mechanical RFIs Related to Westin Hotel}
+\printRFI {MRFI} {WE}
+
+
+\chapter{Mechanical RFIs Related to `W'~Hotel}
+\printRFI {MRFI} {W}
+
+\chapter{Mechanical RFIs Related to `Basements'  }
+\printRFI {MRFI} {B}
+  
+
+
