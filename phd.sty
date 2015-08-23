@@ -7,7 +7,6 @@
 %% phd.dtx  (with options: `package')
 %% phd-pkgmanager.dtx  (with options: `PKG')
 %% phd-images.dtx  (with options: `images')
-%% phd-epigraphs.dtx  (with options: `EPI')
 %% phd-logos.dtx  (with options: `LOG')
 %% hyphenation.dtx  (with options: `hyphen')
 %% ----------------------------------------------------------------
@@ -180,6 +179,7 @@
   %\RequirePackage{luatextra}
 \fi
 \RequirePackage{phd-fontmanager}
+\RequirePackage{phd-epigraphs}
 \@ifpackageloaded{xcolor}{}%
  {\PassOptionsToPackage{\xcolorkeys@cx}{xcolor}
   \RequirePackage{xcolor}}
@@ -546,8 +546,8 @@
 {}
 \cxset{acronym keys/.store in = \acronymkeys@cx}
 \cxset{acronym keys={smaller,printonlyused,withpage}}
-\AtBeginDocument{\PassOptionsToPackage{\acronymkeys@cx}{acronym}
-\RequirePackage{acronym}}
+\PassOptionsToPackage{smaller,printonlyused,withpage}{acronym}
+\RequirePackage{acronym}[2015/03/21]
 \RequirePackage{mdframed}
 
 \RequirePackage{adjustbox}
@@ -912,15 +912,15 @@ ball was her favorite plaything.}%
 }
 \renewcommand\U[1]{{\texttt{U+#1}}(\char"#1)\xspace}
 \newif\ifYH
+\ifUNICODE
+\else
 \newcommand\YH{yhmaths}
-\IfStyFileExists{yhmaths}
+\IfStyFileExists{yhmath}
   {\YHtrue
-   \let\origRequirePackage=\RequirePackage    % We don't want amsmath loaded.
-   \def\RequirePackage##1{}
-   \RequirePackage{yhmath}
-   \let\RequirePackage=\origRequirePackage
+    \RequirePackage{yhmath}
   }
-  { \RequirePackage{yhmath}}
+  {}
+\fi
 \RequirePackage{multienum}
 \ExplSyntaxOn
 \newif\ifACCENTS
@@ -1089,12 +1089,15 @@ ball was her favorite plaything.}%
   }
   {\let\CMcal\mathcal}
 \fi
+\ifUNICODE
+\else
   \newif\ifBM
   \IfStyFileExists{bm}
     {\BMtrue
       \RequirePackage{bm}
     }
    {}
+\fi
 \ifUNICODE
  \else
 \IfStyFileExists{bbm}
@@ -1694,6 +1697,12 @@ ball was her favorite plaything.}%
  }
  {\typeout{Algorithm loaded}}
   \RequirePackage{algorithm2e}
+\ExplSyntaxOn
+\cs_if_exist:cTF {printindex}
+  { }
+  {
+    \RequirePackage{makeidx}[2000/03/29]
+  }
 \RequirePackage{multicol}
 
 \newif\ifULEM
@@ -1717,7 +1726,6 @@ ball was her favorite plaything.}%
 \IfStyFileExists{staves}
   {\STAVEtrue\usepackage{staves}}
   {}
-
 \newif\ifSHUF
 \newcommand\SHUF{\pkgname{shuffle}}
 \IfStyFileExists{shuffle}
@@ -1733,7 +1741,6 @@ ball was her favorite plaything.}%
    \let\DeclareMathSymbol=\origDeclareMathSymbol
   }
   {}
-
 \RequirePackage{framed}
 \RequirePackage{varioref}
 \RequirePackage{setspace}
@@ -1744,6 +1751,7 @@ ball was her favorite plaything.}%
 \IfStyFileExists*{centernot}%
   {\havecenternottrue\RequirePackage{centernot}}
   {}
+
 \RequirePackage{genealogytree}
 \RequirePackage{chngcntr}
 \RequirePackage{eso-pic}
@@ -1899,7 +1907,7 @@ ball was her favorite plaything.}%
   {}
 \newif\ifOLMEC
 \newif\ifscriptolmec \scriptolmectrue
-\cxset{olmec/.is if=scriptolmec}
+\cxset{olmec/.is~if=scriptolmec}
 \cxset{olmec=true}
 \ifscriptolmec
 \RequirePackage{epiolmec}
@@ -2030,57 +2038,6 @@ ball was her favorite plaything.}%
 \end{minipage}
 }%\vspace*{\img@bottommargin}}%
 
-\NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{phd-epigraphs}%
-  [2015/13/06 v1.0 epigraph styling]%
-
-\@ifundefined{epigraph}
-  {%
-    \RequirePackage{epigraph}
-   %% Set up the epigraph to be a bit wider
-    \setlength{\epigraphwidth}{8cm}
-    \setlength{\epigraphrule}{0pt}
-    \newcommand{\theepigraph}[2]{\epigraphhead[30]{\epigraph{#1}{\textit{#2}}}}
-  }
-  {%for memoir
-   \setlength{\epigraphwidth}{8cm}
-   \setlength{\epigraphrule}{0pt}
-   \newcommand{\theepigraph}[2]{\epigraphhead[30]{\epigraph{#1}{\textit{#2}}}}%
-  }
-
-\cxset{
-  epigraph width/.code               = {\setlength\epigraphwidth{#1}},
-  epigraph font-size/.code           = {\renewcommand{\epigraphsize}{#1}},
-  epigraph beforeskip/.code          = {\setlength\beforeepigraphskip{#1}},
-  epigraph afterskip/.code           = {\setlength\afterepigraphskip{#1}},
-  epigraph align/.is choice,
-  epigraph align/center/.code        = {\renewcommand{\epigraphflush}{center}},
-  epigraph align/left/.code          = {\renewcommand{\epigraphflush}{flushleft}},
-  epigraph align/right/.code         = {\renewcommand{\epigraphflush}{flushright}},
-  epigraph source align/.is choice,
-  epigraph source align/left/.code   = {\renewcommand{\sourceflush}{flushleft}},
-  epigraph source align/right/.code  = {\renewcommand{\sourceflush}{flushright}},
-  epigraph source align/center/.code = {\renewcommand{\sourceflush}{center}},
-  epigraph text align/.is choice,
-  epigraph text align/left/.code     = {\renewcommand{\textflush}{flushleft}},
-  epigraph text align/right/.code    = {\renewcommand{\textflush}{flushright}},
-  epigraph text align/center/.code   = {\renewcommand{\textflush}{center}},
-  epigraph rule width/.code          = {\setlength\epigraphrule{#1}},
-  epigraph rule color/.store in      = \epigraphrulecolor@cx,
-  epigraph rule/.code={
- \renewcommand{\@epirule}{
- \color{\epigraphrulecolor@cx}\rule[.5ex]{\epigraphwidth}{\epigraphrule}}
-},
-}
-
-\cxset{epigraph width=0.7\linewidth,
-    epigraph font-size=\small,
-    epigraph rule width=0.4pt,
-    epigraph align=right,
-    epigraph source align=right,
-    epigraph text align=right,
-    epigraph rule color=black,
-    epigraph rule}
 
 \NeedsTeXFormat{LaTeX2e}
 \ProvidesPackage{phd-logos}%

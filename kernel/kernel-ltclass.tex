@@ -13,19 +13,19 @@
 
 \section{Introduction}
 
- This file implements the following declarations, which replace
- |\documentstyle| in  \LaTeXe\ documents.
+ This part of the kernel implements the class and package mechanisms,
+ including the handling of options. It replaced the \latex2.09
+ |\documentstyle| in  \LaTeXe\ documents. Provisions were made for
+ backwards compatibility so that old documents containing |\documentstyle| 
+ could still be run using a compatibility option. Backwards compatibility
+ has always been one of the primary objectives of the \latex Team making
+ \latex an excellent resource for archival purposes.
 
- Note that old documents containing |\documentstyle| will be run using
- a compatibility option---thus keeping everyone happy, we hope!
-
- The overall idea is that there are two types of `style files':
- `class files' which define elements and provide a default formatting
- for them;  and `packages' which provide extra functionality.  One
- difference between \LaTeXe\ and \LaTeX2.09 is that \LaTeXe\ packages
- may have options. Note that options to classes packages may be
- implemented such that they input files, but these file names are not
- necessarily directly related to the option name.
+ The \latexe kernel on its own does not provide the necessary functionality
+ to typeset a document. It is a framework upon which classes can define
+ the necessary elements and the instructions as to how they are formatted.
+ Packages can then be used to extend even further the functionality of the
+ classes or even the kernel. Classes and packages can be loaded with options.
 
  \section{User interface}
 
@@ -325,7 +325,7 @@
  extensions. Just hitting return causes the whole input to be skipped
  and entering |x| quits the current run,
 
- \DescribeMacro{\input}
+ \refCom{input}
  This has been redefined from the \LaTeX2.09 definition, in terms of
  the new commands |\InputIfFileExists| and |\@missingfileerror|.
 
@@ -636,8 +636,8 @@ is carried comparing to |\relax|.
 \end{docCmd}
 %
 \begin{docCmd}{ProvidesPackage}{}
-%    Checks that the current filename is correct, and defines
-%    |\ver@filename|.
+ Checks that the current filename is correct, and defines
+    |\ver@filename|.
 % \changes{v0.3c}{1994/03/12}
 %         {Add \cs{wlog}}
 % \changes{v0.3c}{1994/03/12}
@@ -746,6 +746,7 @@ is carried comparing to |\relax|.
 \end{docCmd}
 %
 \begin{docCmd}{DeclareOption}{}
+\end{docCmd}
 \begin{docCmd}{DeclareOption*}{}
     Adds an option as a |\ds@| command, or the default |\default@ds|
     command.
@@ -770,7 +771,7 @@ is carried comparing to |\relax|.
 \@onlypreamble\@declareoption
 \@onlypreamble\@defdefault@ds
 \end{teX}
-\end{docCmd}
+
 \end{docCmd}
 %
 \begin{docCmd}{OptionNotUsed}{}
@@ -1055,8 +1056,11 @@ is carried comparing to |\relax|.
 \end{teX}
 \end{docCmd}
 %
-\begin{docCmd}{NeedsTeXFormat}{}
- Check that the document is running on the correct system.
+\begin{docCmd}{NeedsTeXFormat}{ \marg{format name}\oarg{version}}
+ Check that the document is running on the correct system. The command
+ checks first that the format that is proceesing the file is the same
+ as that requested by the argument to |\NeedsTeXFormat| and if it passes
+ it calls \refCom{@needsformat} to process the argument in square brackets.
 % \changes{v0.2a}{1993/11/14}
 %         {made more robust for alternative syntax for other formats.}
 % \changes{v0.2c}{1993/11/17}
@@ -1076,8 +1080,8 @@ is carried comparing to |\relax|.
        because it was written for some other flavor of
        TeX.\MessageBreak\@ehd}%
 \end{teX}
-    If the file is not meant to be processed by \LaTeXe{} we stop
-    inputting it, but we do not end the run. We just end inputting
+    If the file is not meant to be processed by \LaTeXe{} 
+    inputting is stopped, without ending the run. It just ends inputting
     the current file.
 % \changes{v1.0h}{1994/05/23}
 %     {Don't stop completely when format is wrong}
@@ -1086,6 +1090,12 @@ is carried comparing to |\relax|.
 \@onlypreamble\NeedsTeXFormat
 \end{teX}
 %
+\begin{docCmd}{@needsformat}{}
+As described earlier |\@needsformat| process the `[]' by first checking it is
+available and then calling |\@needsf@rmat|. The latter compares the release
+and issues a warning if the version is not available and an earlier one is
+being used.
+\end{docCmd}
 \begin{teX}
 \def\@needsformat{%
   \@ifnextchar[%]
@@ -1255,9 +1265,9 @@ is carried comparing to |\relax|.
          {}%
          {\@missingfileerror\@currname\@currext}%
 \end{teX}
-% |\@unprocessedoptions| will generate an error for each specified
-% option in a package unless a |\ProcessOptions| has appeared in the
-% package file.
+ |\@unprocessedoptions| will generate an error for each specified
+ option in a package unless a |\ProcessOptions| has appeared in the
+ package file.
 % \changes{v0.2v}{1994/01/29}
 %         {All options raise error if no \cs{ProcessOptions} appears}
 % \changes{v0.2x}{1994/02/02}

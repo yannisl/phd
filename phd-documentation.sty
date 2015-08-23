@@ -17,7 +17,6 @@
 \NeedsTeXFormat{LaTeX2e}[1994/12/01]%
 \RequirePackage[2014/05/01]{latexrelease}
 \ProvidesFile{phd-documentation}[2015/1/13 v1.0 less preamble (YL)]%
-
 \RequirePackage[theorems, skins, documentation,
                 breakable,listings]{tcolorbox}
                 \tcbset{index format=pgfchapter,
@@ -296,8 +295,9 @@ xrightmargin=5pt,
   {
     \RequirePackage{makeidx}[2000/03/29]
   }
+\ExplSyntaxOff
 \RequirePackage{refcount}[2011/10/16]
-
+\ExplSyntaxOn
 \cs_set:Npn \colDef#1{\textcolor{\phdkv@col@command}{#1}}
 \cs_set:Npn \colOpt#1{\textcolor{\phdkv@col@opt}{#1}}
 \ExplSyntaxOff
@@ -953,7 +953,6 @@ xrightmargin=5pt,
        color definition =thelinkcolor,  % links with color palette
        pageshort       = {$\sigma{}$},
    }
-
 \newcommand\showsymbolalpha[3]
   {
     \par\noindent\hangindent=3em%
@@ -1447,14 +1446,12 @@ xrightmargin=5pt,
   \index{symbols>TeXbook=\TeX{}book}%
   \index{TeXbook, The=\TeX{}book, The>symbols from}%
 }
-
 \newcommand{\pkgname}[1]{%
   \href{http://ctan.org/pkg/#1}{\bfseries{#1}}%
   \index{#1=\texttt{#1} (package)}%
   \index{packages>#1=\texttt{#1}}}
 \let\pkg\pkgname
-
-\newcommand*{\Lpack}[1]{\textsf {#1}}
+\let\Lpack\pkgname
 
 \newcommand{\optname}[2]{%
   \textsf{#2}%
@@ -1463,6 +1460,9 @@ xrightmargin=5pt,
 \newcommand{\docfilename}[1]{%
   \texttt{#1}
   \index{#1=\texttt{#1} (file)}}
+
+\let\docFile\docfilename
+\let\docFilename\docfilename
 \newcommand{\docfileextension}[1]{%
   \texttt{#1}%
   \index{#1=\texttt{#1} (file extension)}}
@@ -1960,6 +1960,32 @@ narrow/.style={width=6.9cm},
 \def\colOpt#1{\textcolor{theoption}{#1}}
 
 \newcommand{\option}[1]{\colOpt{#1}}
+\begingroup \catcode `|=0 \catcode `[= 1
+\catcode`]=2 \catcode `\{=12 \catcode `\}=12
+\catcode`\\=12 |gdef|@xsmallverbatim#1\end{smallverbatim}[#1|end[smallverbatim]]
+|gdef|@sxsmallverbatim#1\end{smallverbatim*}[#1|end[smallverbatim*]]
+|endgroup
+\def\@smallverbatim{\trivlist \item\relax
+  \if@minipage\else\vskip\parskip\fi
+  \leftskip\@totalleftmargin\rightskip\z@skip
+  \parindent\z@\parfillskip\@flushglue\parskip\z@skip
+  \@@par
+  \@tempswafalse
+  \def\par{%
+    \if@tempswa
+      \leavevmode \null \@@par\penalty\interlinepenalty
+    \else
+      \@tempswatrue
+      \ifhmode\@@par\penalty\interlinepenalty\fi
+    \fi}%
+  \let\do\@makeother \dospecials
+  \obeylines \small \@noligs%\smallverbatim@font to FIX
+  \hyphenchar\font\m@ne
+  \everypar \expandafter{\the\everypar \unpenalty}%
+}
+\def\smallverbatim{\@smallverbatim \frenchspacing\@vobeyspaces \@xsmallverbatim}
+\def\endsmallverbatim{\if@newlist \leavevmode\fi\endtrivlist}
+\def\smallverbatim@font{\normalfont\smallverbatimsize\ttfamily}
 \endinput
 %%
 %% End of file `phd-documentation.sty'.

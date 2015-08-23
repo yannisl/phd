@@ -153,8 +153,12 @@ See http://www.latex-project.org/lppl.txt
 \usepackage{phd-runningheads}
 \usepackage{phd-documentation}
 \pagestyle{headings}
-\sethyperref
 
+
+\sethyperref
+\usepackage{minted}
+\addbibresource{phd.bib}% Syntax f
+\cxset{palette bbc}
 \begin{filecontents}{defaults-chapters}
 %%    General Defaults for Chapters
 \cxset{%    
@@ -275,7 +279,8 @@ See http://www.latex-project.org/lppl.txt
 \input{./sections/indices}
 \input{./sections/unicodemath}
 \DocInput{\jobname.dtx}
-
+\nocite{*}
+\printbibliography
 
 \printindex 
  %
@@ -409,13 +414,14 @@ See http://www.latex-project.org/lppl.txt
 %  some minor modifications, for example use an italic shape for the font of the mark, but an 
 %  upright font for the page numbers. 
 %
-% {\obeylines 
-%~~ |\cxset|
-%~~~~~|{|
-%~~~~~~~~\textit{chapter number color}~~|format          = apa,|
-%~~~~~~~~\textit{section title font-size} |font-size   = Large,|
-%~~~~~|}|
+%\begin{minted}[gobble=1,fontsize=\footnotesize]{TeX}
+%\cxset
+%   {
+%     chapter number color          = thechapternumbercolor,
+%     section title font-size       = Large,
+%   }
 %}  
+% \end{minted}
 %
 % We follow the idea of representing the basic elements of documents
 % as elements, each one having a parent in order to specify
@@ -479,9 +485,6 @@ See http://www.latex-project.org/lppl.txt
 \ProvidesFile{phd-documentation}[2015/1/13 v1.0 less preamble (YL)]%
 %    \end{macrocode}
 %
-% Check that and index package has been loaded otherwise load the \pkgname{makeidx}.
-% We do this by checking that \docAuxCmd{printindex} has been defined.
-%
 % We also need the \pkgname{refcount}. 
 %
 % \section{tcolorbox}
@@ -495,7 +498,6 @@ See http://www.latex-project.org/lppl.txt
 % documentation, but they seem to be working for the moment.
 % 
 %    \begin{macrocode}
-
 \RequirePackage[theorems, skins, documentation,
                 breakable,listings]{tcolorbox}
 %                
@@ -719,7 +721,7 @@ boxrule=0pt,toprule=0pt,colframe=white}
 {}
 
 %    \end{macrocode}
-% \section{Code demo environments}
+% \section{LaTeX code demo environments}
 %
 %	To demonstrate LaTeX code it is sometimes desirable to have the code
 %	be executed. This was pioneered in a number of packages. One of
@@ -901,10 +903,9 @@ boxrule=0pt,toprule=0pt,colframe=white}
 %	  \def\demomacro{Hello World!}
 %	\end{example}
 %
-%
-%
-%    
-%	
+% \section{makeidx}    
+%\docAuxCmd{printindex} has been defined. If the test is positive then an indexing package has been loaded, otherwise we load the \pkgname{makeidx}\footcite{makeidx}.
+%  
 %    \begin{macrocode}
 \ExplSyntaxOn
 \cs_if_exist:cTF {printindex}
@@ -912,9 +913,21 @@ boxrule=0pt,toprule=0pt,colframe=white}
   {
     \RequirePackage{makeidx}[2000/03/29]
   }
+\ExplSyntaxOff  
+%    \end{macrocode}
+% \section{Refcount}
+%References are not numbers, however they often store numerical data
+%such as section or page numbers. \cs{ref} or \cs{pageref} cannot be used for
+%counter assignments or calculations because they are not expandable, generate
+%warnings, or can even be links. The package provides expandable macros
+%to extract the data from references. Packages \pkgname{hyperref}, \pkgname{nameref}\footcite{nameref}, 
+% \pkgname{titleref}, and
+% \pkgname{babel} are supported.
+%    \begin{macrocode}  
 \RequirePackage{refcount}[2011/10/16]
-%
-
+%    \end{macrocode}
+%    \begin{macrocode}
+\ExplSyntaxOn
 \cs_set:Npn \colDef#1{\textcolor{\phdkv@col@command}{#1}}
 \cs_set:Npn \colOpt#1{\textcolor{\phdkv@col@opt}{#1}}
 \ExplSyntaxOff
@@ -1816,7 +1829,7 @@ boxrule=0pt,toprule=0pt,colframe=white}
 \cxset{reset@documentation}
 %    \end{macrocode}
 %
-% We set the \docAuxKey*{index format}=\docVal{pgf}  and the rest of the keys to the
+% We set the \docAuxKey{index format}=\docValue{pgf}  and the rest of the keys to the
 % |german| settings that are suitable for |doc|.
 %
 %    \begin{macrocode}
@@ -1831,7 +1844,7 @@ boxrule=0pt,toprule=0pt,colframe=white}
    }      
 %\def\main#1{\underline{#1}}
 %    \end{macrocode}
-
+%
 % \section {Unicode math index functions}
 %
 % The functions that follow typeset unicode math tables.
@@ -2704,16 +2717,19 @@ boxrule=0pt,toprule=0pt,colframe=white}
   \index{symbols>TeXbook=\TeX{}book}% 
   \index{TeXbook, The=\TeX{}book, The>symbols from}%
 }
-
-% Index logical styles.
+%    \end{macrocode}
+%
+% \begin{docCmd}{pkgname}{ \marg{package name}}
+% Typesets and indexes a \latex package.
+% \end{docCmd}
+%    \begin{macrocode}
 \newcommand{\pkgname}[1]{%
   \href{http://ctan.org/pkg/#1}{\bfseries{#1}}%
   \index{#1=\texttt{#1} (package)}%
   \index{packages>#1=\texttt{#1}}}
 \let\pkg\pkgname
+\let\Lpack\pkgname
 
-\newcommand*{\Lpack}[1]{\textsf {#1}}  
-%\let\package\Lpack
 
 \newcommand{\optname}[2]{%
   \textsf{#2}%
@@ -2726,13 +2742,23 @@ boxrule=0pt,toprule=0pt,colframe=white}
 % typeset their argument and also add the argument to the 
 % index.
 %
+% \begin{docCmd}{docfilename}{ \marg{file name}}
+% Typesets and indexes a file name.
+% \end{docCmd}
 %    \begin{macrocode}
 \newcommand{\docfilename}[1]{%
   \texttt{#1}
   \index{#1=\texttt{#1} (file)}}
+  
+\let\docFile\docfilename
+\let\docFilename\docfilename  
 %    \end{macrocode}
 % 
 % 
+% \begin{docCmd}{docfileextension}{ \marg{file extension}}
+% Typesets and indexes a file extension, such as \refCmd{docfileextension}\marg{.tex}  (\docfileextension{.tex}). You type
+% the dot if you want it to appear in the index, which is a good idea.
+% \end{docCmd}
 %    \begin{macrocode}
 \newcommand{\docfileextension}[1]{%
   \texttt{#1}%

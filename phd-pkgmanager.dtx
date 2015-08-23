@@ -157,7 +157,6 @@ See http://www.latex-project.org/lppl.txt
 \makeindex
  
 \begin{document}
-\let\bold\bfseries
 
 \frontmatter
 \tableofcontents
@@ -759,14 +758,16 @@ See http://www.latex-project.org/lppl.txt
 % options it loads the |relsize| package. My recommendation is to
 % load the package with the options |smaller, printonly| and 
 % |withpage|. Please note that the |withpage| option only works, if the
-% |printonlyused| option is present. \FIRE loads relsize,suffix,xstring 
+% |printonlyused| option is present. The package loads relsize, \pkgname{suffix}\footnote{suffix} and xstring.
+% At the latest update gave a problem, so we enforcing it to be loaded
+% with the latest version.
 % 
 %    \begin{macrocode}
 \cxset{acronym keys/.store in = \acronymkeys@cx}
 \cxset{acronym keys={smaller,printonlyused,withpage}}
 %
-\AtBeginDocument{\PassOptionsToPackage{\acronymkeys@cx}{acronym}
-\RequirePackage{acronym}}
+\PassOptionsToPackage{smaller,printonlyused,withpage}{acronym}
+\RequirePackage{acronym}[2015/03/21]
 %    \end{macrocode}
 %
 % \subsection{mdframed}
@@ -1623,15 +1624,15 @@ ball was her favorite plaything.}%
 % not loaded? 
 %    \begin{macrocode}
 \newif\ifYH
+\ifUNICODE
+\else
 \newcommand\YH{yhmaths}
-\IfStyFileExists{yhmaths}
+\IfStyFileExists{yhmath}
   {\YHtrue
-   \let\origRequirePackage=\RequirePackage    % We don't want amsmath loaded.
-   \def\RequirePackage##1{}
-   \RequirePackage{yhmath}
-   \let\RequirePackage=\origRequirePackage
+    \RequirePackage{yhmath}
   }
-  { \RequirePackage{yhmath}}
+  {}
+\fi  
 %    \end{macrocode}
 %
 % \section{multienum}
@@ -2198,15 +2199,15 @@ ball was her favorite plaything.}%
 % ^^A$M_{\mathbbm{i}}$. The package is the work of \person{Torsten}{Hilbrich}
 %
 %    \begin{macrocode}
-%\ifUNICODE
-%\else
+\ifUNICODE
+\else
   \newif\ifBM
   \IfStyFileExists{bm}
     {\BMtrue
       \RequirePackage{bm}
     }
    {}  
-%\fi   
+\fi   
 %    \end{macrocode}
 %
 % \section{bbm}
@@ -3456,8 +3457,11 @@ ball was her favorite plaything.}%
 % 
 % 
 % \subsection{algorithms}
-% 
-% This package must always be loaded after |hyperref|
+% The \pkgname{algorithm2e}\footcite{algorithm2e} provides an environment for writing algorithms in \latex2e. An algorithm is defined as a
+% floating object like figures. It provides macros that allow you to create different sorts of 
+% key words,
+% thus a set of predefined key words is given. You can also change the typography of the keywords
+% The package must always be loaded after |hyperref|
 %
 %    \begin{macrocode} 
 \newif\ifALGORITHM
@@ -3470,6 +3474,17 @@ ball was her favorite plaything.}%
 %     
 % \section{Common packages for structuring documents}
 %
+% \section{makeidx}    
+%\docAuxCmd{printindex} has been defined. If the test is positive then an indexing package has been loaded, otherwise we load the \pkgname{makeidx}\footcite{makeidx}.
+%  
+%    \begin{macrocode}
+\ExplSyntaxOn
+\cs_if_exist:cTF {printindex}
+  { }
+  {
+    \RequirePackage{makeidx}[2000/03/29]
+  }
+%    \end{macrocode}
 % The structuring commands, should ideally be loaded by the class. In case the class
 % does not loaded them. We use the \pkg{multicol}, for multiple columns.\footcite{multicol}
 %    \begin{macrocode}
@@ -3565,8 +3580,8 @@ ball was her favorite plaything.}%
 %
 % \chapter{Archaic}
 % \section{staves}
-%
-% This is a peculiar package providing some old Icelandic runes.
+% \label{staves}
+% The \pkgname{staves}\footcite{staves} package by \citeauthor{staves} provides a font and support macros for old Icelandic runes.
 % \runictext{\alphabet}
 % \staveXXXV \staveVI \runictext{abcdef}
 %    \begin{macrocode}
@@ -3576,8 +3591,10 @@ ball was her favorite plaything.}%
   {\STAVEtrue\usepackage{staves}}
   {}
 %    \end{macrocode}
-
-% No point wasting a math alphabet on shuffle.
+%
+% \subsection{shuffle}
+% No point wasting a math alphabet on the \pkgname{shuffle}.\footcite{shuffle} The bundle provides a LaTeX package and a font (as MetaFont source) for the shuffle product which is used in some part of mathematics and physics.
+% It provides \docAuxCmd{shuffle}(\shuffle) for the shuffle product and \docAuxCmd{cshuffle} (\cshuffle) for the complete shuffle product.
 %    \begin{macrocode}
 \newif\ifSHUF
 \newcommand\SHUF{\pkgname{shuffle}}
@@ -3595,12 +3612,34 @@ ball was her favorite plaything.}%
   }
   {}
 %    \end{macrocode}
-
-
-
+%
+% \subsection{framed}
 %    \begin{macrocode}
 \RequirePackage{framed}
+%    \end{macrocode}
+%
+% \subsection{varioref}
+%The package \pkgname{varioref}\footcite{varioref} defines the commands \docAuxCmd{vref}, 
+%\docAuxCmd{vpageref}, \docAuxCmd{vrefrange}, and
+%\docAuxCmd{vpagerefrange}. |\vref| is similar to |\ref| but adds an 
+%additional page reference, like `on the facing page' or `on page 27' whenever the
+%corresponding |\label| is not on the same page. The command |\vpageref|
+%is a variation to |\pageref| with a similar functionality. The |\v|...range
+%commands take two labels as arguments and produce strings which depend
+%on whether or not these labels fall onto a single page or on different pages.
+%Generated strings are customizable so that these commands are usable with
+%various languages. see \fullref{staves}
+%    \begin{macrocode}
 \RequirePackage{varioref}
+%    \end{macrocode}
+%
+% \subsection{cleveref}
+% 
+% The package \pkgname{cleveref}\footcite{cleveref} requires that it is the last package
+% in the preamble. 
+%
+%    \begin{macrocode}
+%\AtBeginDocument{\RequirePackage{cleveref}}
 %    \end{macrocode}
 %
 % \subsection{setspace}
@@ -3637,15 +3676,32 @@ ball was her favorite plaything.}%
 %
 %
 % We include here everything that does not fit into the other categories.
-% 
+
+% \subsection{genealogytree} 
+%
+% The \pkgname{genealogytree}\footcite{genealogytree} package provides a set of tools to typeset  % genealogy trees
+% or, more precisely, to typeset a set of special graphs for the description of family-like
+% structures. The package uses an auto-layout algorithm which can be customized to
+% e.g. prioritize certain paths.
 %    \begin{macrocode} 
 \RequirePackage{genealogytree}
 %    \end{macrocode}  
+%
+% \subsection{chngcntr}
+% 
+% It is sometimes desireable to change a counter that has been defined by 
+% |\newcounter{〈ctr〉}| to act as though it had been defined as
+% |\newcounter{〈ctr〉}[〈within〉]|. The \pkgname{chngcntr}\footcite{chngcntr} by \person{Peter}{Wilson}
+% provides the \docAuxCmd{counterwithin} and \docAuxCmd{counterwithout} to do this.
+% This is really not necessary, as the |phd| package provides settings to set these
+% counters. However, if you use them do use the star version of the commands.
+%
 %    \begin{macrocode}
 \RequirePackage{chngcntr}
 %    \end{macrocode}
 %
 % \subsection{eso-pic}
+%
 % Since we loading pgf, many of the things that \pkgname{eso-pic}\footcite{eso-pic} does can be taken over by |pgf|. I am not too sure
 % if we should leave this in the long-term.
 %
@@ -3991,7 +4047,7 @@ ball was her favorite plaything.}%
 %    \begin{macrocode}
 \newif\ifOLMEC
 \newif\ifscriptolmec \scriptolmectrue
-\cxset{olmec/.is if=scriptolmec}
+\cxset{olmec/.is~if=scriptolmec}
 \cxset{olmec=true}
 % 
 \ifscriptolmec

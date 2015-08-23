@@ -1,0 +1,296 @@
+\def\Go{\texttt{go}\xspace}
+\lstdefinelanguage{Golang}%
+  {morekeywords=[1]{package,import,func,type,struct,return,defer,panic,%
+     recover,select,var,const,iota,},%
+   morekeywords=[2]{string,uint,uint8,uint16,uint32,uint64,int,int8,int16,%
+     int32,int64,bool,float32,float64,complex64,complex128,byte,rune,uintptr,%
+     error,interface},%
+   morekeywords=[3]{map,slice,make,new,nil,len,cap,copy,close,true,false,%
+     delete,append,real,imag,complex,chan,},%
+   morekeywords=[4]{for,break,continue,range,goto,switch,case,fallthrough,if%
+     else,default,},%
+   morekeywords=[5]{Println,Printf,Error,},%
+   sensitive=true,%
+   morecomment=[l]{//},%
+   morecomment=[s]{/*}{*/},%
+   morestring=[b]',%
+   morestring=[b]",%
+   morestring=[s]{`}{`},%
+   }
+   
+\lstset{ % add your own preferences
+    frame=single,
+    basicstyle=\footnotesize\verbatimfont,
+    keywordstyle=\color{red},
+    numbers=left,
+    numbersep=5pt,
+    showstringspaces=false, 
+    stringstyle=\color{blue},
+    tabsize=4,
+    language=Golang % this is it !
+}
+   
+\chapter{Getting Started}
+
+\section{Workspaces}
+
+The \Go tool is designed to work with open source code maintained in public repositories,
+such as |github.com|. Although you don't need to publish your code, the suggested method
+as to how to set your workspace is the same whether you do or not.\footnote{The Go rendering is done with listings and \protect\url{https://github.com/julienc91/listings-golang}}
+
+Go code must be kept into a \emph{workspace}. A workspace is a directory hierarchy with
+three directories at its root:
+
+\begin{itemize}
+\item |src| contains Go source files organized into packages (one package per directory)
+\item |pkg| contains package objects, and
+\item |bin| contains executable commands
+\end{itemize}
+
+The \Go tool builds source packages and installs the resulting binaries to the |pkg| and
+|bin| directories.
+
+\begin{teX}
+bin/
+    hello                          # command executable
+    outyet                         # command executable (*@\label{outyet}@*)
+pkg/
+    linux_amd64/
+        github.com/golang/example/
+            stringutil.a           # package object
+src/
+    github.com/golang/example/
+        .git/                      # Git repository metadata
+	hello/
+	    hello.go                     # command source
+	outyet/
+	    main.go                      # command source
+	    main_test.go                 # test source
+	stringutil/
+	    reverse.go                   # package source
+	    reverse_test.go              # test source
+\end{teX}	    
+
+This workspace contains one repository (\texttt{example}) comprising two commands (\texttt{hello} and \texttt{outyet}) and one library (\texttt{stringutil}).
+
+A typical workspace would contain many source repositories containing many packages and commands. Most Go programmers keep all their Go source code and dependencies in a single workspace.\ref{outyet}
+
+Commands and libraries are built from different kinds of source packages.
+Although at first you might think having a set way to organize your workspace is restricting, using a fixed file layout for builds means less configuration. As a fact it also means no configuration. No Makefile, no build.xml. With everyone in the community using the same layout, it makes it easier to
+share code and helpd build the Go community.
+
+
+\section{The \texttt{GOPATH} environment variable}
+
+The \texttt{GOPATH} environment variable specifies the location of your workspace. It is likely the only environment variable you'll need to set when developing Go code.
+
+To get started, create a workspace directory and set |GOPATH| accordingly. Your workspace can be located wherever you like, but we'll use |$HOME/go| in this document. Note that this must not be the same path as your |Go| installation.
+
+
+
+For convenience, add the workspace's bin subdirectory to your PATH:
+
+\begin{teX}
+$ export PATH=$PATH:$GOPATH/bin
+\end{teX}
+
+\begin{lstlisting}
+REM modified version of brainman's batch file at https://groups.google.com/forum/#!topic/golang-nuts/QVPKm7pbhds
+ 
+REM setting goroot to my go installation folder.
+set GOROOT=C:\go
+ 
+REM setting gopath to my go playground folder
+set GOPATH=C:\Users\****\goplayground
+Set GOBIN=%GOPATH%\bin
+set PATH=%PATH%;c:\go\bin;%GOBIN%
+ 
+REM finally make my playground source folder as my PWD, write your hello.go here and execute "go install" and check GOBIN folder for exe.
+cd %GOPATH%\src
+CMD
+\end{lstlisting}
+
+
+
+\section{Hello World at last}
+
+To compile and run a simple program, first choose a package path (we'll use |github.com/user/hello|) and create a corresponding package directory inside your workspace:
+
+\begin{teX}
+$ mkdir $GOPATH/src/github.com/user/hello
+mkdir %GOPATH%\src\github.com\yannisl\hello
+\end{teX}
+
+Next create a file named |hello.go| inside the directory, containing the
+following |Go| code.
+
+\begin{lstlisting}
+package main
+
+import "fmt"
+
+func main() {
+    fmt.Println("Hello World!")
+}
+\end{lstlisting}
+
+Now we are ready to install the program with the \Go tool.
+
+\begin{teX}
+go install github.com/yannisl/hello
+\end{teX}
+
+Note that you can run this command from anywhere on your system. The go tool finds the source code by looking for the |github.com/user/hello| package inside the workspace specified by |GOPATH|.
+
+This command builds the hello command, producing an executable binary. It then installs that binary to the workspace's bin directory as hello (or, under Windows, hello.exe). In our example, that will be |$GOPATH/bin/hello|, which is |$HOME/go/bin/hello|.
+
+The go tool will only print output when an error occurs, so if these commands produce no output they have executed successfully.
+
+You can now run the program by typing its full path at the command line:
+
+Or, as you have added |$GOPATH/bin| to your |PATH|, just type the binary name:
+
+\begin{teX}
+$ hello
+Hello, world.
+\end{teX}
+
+\section{Add the source to git}
+
+Since we will be using a source control system, this is also a good time
+to initialize a repository, add the files, and commit your first change.
+Again this is not necessary, but it is considered good practice.
+
+\begin{minted}[fontsize=\footnotesize,linenos,escapeinside=VV]{bash}
+echo # go >> README.md V\label{readme}V
+git init
+git add README.md 
+git commit -m "first commit"
+git remote add origin https://github.com/yannisl/go.git 
+git push -u origin master
+\end{minted}
+
+
+We first use the |echo| command to create a |README.md| file in line~\ref{readme}. This is always good practice, not only for open source projects or projects
+that have many collaborators, but also for your older self that might not remember
+what the younger you did.
+ 
+\section{Your first library}
+
+Let's write a library and use it from the hello program.
+
+Again, the first step is to choose a package path (we'll use github.com/user/stringutil) and create the package directory:
+
+\begin{minted}[fontsize=\footnotesize,linenos,firstnumber=last]{bash}
+$ mkdir $GOPATH/src/github.com/user/stringutil
+\end{minted}
+
+\section{Package names}
+
+The first statement in a Go source file must be
+
+\begin{minted}[fontsize=\footnotesize,linenos,firstnumber=last,style=friendly,escapeinside=VV]{go}
+package name
+\end{minted}
+
+where \emph{name} is the package default name for imports. (All files
+in a package must use the same \emph{name}.)
+
+Executable commands must always use |package main|.
+
+There is no requirement that package names be unique across all packages linked into a single binary, only that the import paths (their full file names) be unique.
+
+\section{Testing}
+
+|Go| has a lightweight test framework composed of the |go test| command
+and the |testing| package. 
+
+Yo can write a test by creating a file with a name ending in |_test.go|
+that contains functions named |TestXXX| with a signature |(t *testing.T)|. The test framework runs each such function; if the function calls a failure function such as |t.Error| or |t.Fail|, the test is considered to have failed.
+
+\setminted[go]{fontsize=\footnotesize,linenos,firstnumber=last,style=friendly,escapeinside=VV}
+\setminted[bash]{fontsize=\footnotesize,linenos,firstnumber=last,style=friendly,escapeinside=VV}
+
+
+\begin{minted}{go}
+package stringutil
+
+import "testing"
+
+func TestReverse(t *testing.T) {V\label{testing}V
+	cases := []struct {
+		in, want string
+	}{
+		{"Hello, world", "dlrow ,olleH"},
+		{"Hello, 世界", "界世 ,olleH"},
+		{"", ""},
+	}
+	for _, c := range cases {
+		got := Reverse(c.in)
+		if got != c.want {
+			t.Errorf("Reverse(%q) == %q, want %q", c.in, got, c.want)
+		}
+	}
+}
+\end{minted}
+
+The test at line~\ref{testing} can be run with |go test|:
+
+\begin{teX}
+$ go test github.com/user/stringutil
+ok  	github.com/user/stringutil 0.165s
+\end{teX}
+
+As always, if you are running the go tool from the package directory, you can omit the package path:
+
+\begin{teX}
+$ go test
+ok  	github.com/user/stringutil 0.165s
+\end{teX}
+
+
+\section{Remote packages}
+
+An import path can describe how to obtain the package source code using a revision control system such as Git or Mercurial. The go tool uses this property to automatically fetch packages from remote repositories. For instance, the examples described in this document are also kept in a Git repository hosted at GitHub |github.com/golang/example|. If you include the repository |URL| in the package's import path, go get will fetch, build, and install it automatically:
+
+\begin{minted}{bash}
+$ go get github.com/golang/example/hello
+$ $GOPATH/bin/hello
+Hello, Go examples!
+\end{minted}
+
+If the specified package is not present in a workspace, go get will place it inside the first workspace specified by GOPATH. (If the package does already exist, go get skips the remote fetch and behaves the same as go install.)
+
+After issuing the above go get command, the workspace directory tree should now look like this:
+
+\begin{minted}{bash}
+bin/
+    hello                           # command executable
+pkg/
+    linux_amd64/
+        github.com/golang/example/
+            stringutil.a            # package object
+        github.com/user/
+            stringutil.a            # package object
+src/
+    github.com/golang/example/
+	.git/                             # Git repository metadata
+        hello/
+            hello.go                # command source
+        stringutil/
+            reverse.go              # package source
+            reverse_test.go         # test source
+    github.com/user/
+        hello/
+            hello.go                # command source
+        stringutil/
+            reverse.go              # package source
+            reverse_test.go         # test source
+\end{minted}
+
+This convention is the easiest way to make your Go packages available for others to use. The Go Wiki and godoc.org provide lists of external Go projects.
+
+For more information on using remote repositories with the go tool, see go help \href{https://golang.org/cmd/go/\#hdr-Remote_import_paths}{importpath}.
+
+
+
