@@ -1,6 +1,7 @@
 ###The `phd-lists` LaTeX2e package (version 0.08.0)
 
 The `phd-lists` latex package forms part of a suite of packages
+<<<<<<< HEAD
 that are bundled with the `phd` package and the class with the
 same name which provide convenient methods to create new styles
 for books, reports and articles. It also loads the most commonly used packages
@@ -13,13 +14,31 @@ and the derived files
 
    `phd-lists.ins`,
    `phd-lists.pdf`,
+=======
+that are bundled with the `phd` package and the class with the 
+same name which provide convenient methods to create new styles 
+for books, reports and articles. It also loads the most commonly used packages
+and resolves conflicts.
+
+This work consists of the file  
+   `phd-lists.dtx`,
+   
+and the derived files   
+
+   `phd-lists.ins`,  
+   `phd-lists.pdf`, 
+>>>>>>> origin/master
    `phd-lists.sty`.
 
 ###Installation
 
 run
+<<<<<<< HEAD
 
     `phd-lua  phd-lists.dtx`   on windows
+=======
+          phd-lua  phd-lists.dtx   on windows
+>>>>>>> origin/master
 
 If you have any difficulties with the package come and join us at
 http://tex.stackexchange.com and post a new question or
