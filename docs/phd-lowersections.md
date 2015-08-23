@@ -1,17 +1,19 @@
 ###The `phd` LaTeX2e package
 
-The `phd` latex package and the class with the same name provide
+The `phd-lowersections` latex package forms part of the `phd` bundle of packages
+and the class with the same name which provide
 convenient methods to create new styles for books, reports
 and articles. It also loads the most commonly used packages
 and resolves conflicts.
 
-This work consists of the file  `phd.dtx`,
-and the derived files   `phd.ins`,  `phd.pdf`, and `phd.sty`.
+This work consists of the file  `phd-lowersections.dtx`, `phd-specials.dtx`,
+and the derived files   `phd-lowersections.ins`,  `phd-lowersections.pdf`,
+and `phd-lowersections.sty`.
 
 ###Installation
 
 run
-          phd-lua.bat on windows
+           phd-lua.bat on windows
            pdflatex phd.dtx
            makeindex -s gind.ist -g phd
 

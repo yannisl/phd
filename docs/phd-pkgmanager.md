@@ -1,19 +1,19 @@
 ###The `phd` LaTeX2e package
 
-The `phd` latex package and the class with the same name provide
+The `phd-pkgmanager` latex package is part of the `phd` budle and the class
+with the same name provide
 convenient methods to create new styles for books, reports
-and articles. It also loads the most commonly used packages
+and articles. It package loads a suite of commonly used packages
 and resolves conflicts.
 
-This work consists of the file  `phd.dtx`,
-and the derived files   `phd.ins`,  `phd.pdf`, and `phd.sty`.
+This work consists of the file  `phd-pkgmanager.dtx`,
+and the derived files   `phd-pkgmanager.ins`,  `phd-pkgmanager.pdf`, and `phd-pkgmanager.sty`.
 
 ###Installation
 
-run
-          phd-lua.bat on windows
-           pdflatex phd.dtx
-           makeindex -s gind.ist -g phd
+run the script `phd-lua`
+
+           phd-lua phd-pkgmanager.dtx on windows
 
 If you have any difficulties with the package come and join us at
 http://tex.stackexchange.com and post a new question or
@@ -38,8 +38,8 @@ attributes are easy to change and have a consistent and easy to remember interfa
 
 To set or add a key we only use one command:
 
-      \cxset{chapter name font-size = Huge,
-             chapter number font-size = HUGE}
+      \cxset{chapter name font-size: Huge,
+             chapter number font-size: HUGE}
 
 ### Future Development
 
