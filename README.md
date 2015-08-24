@@ -24,9 +24,10 @@ They consist of:
 3.0  The [phd-handlers](https://github.com/yannisl/phd/blob/master/docs/phd-handlers.md). As we use
      extensively automatic key generation via code, this package provides numerous handlers.
 
-4.0  The [phd-headings](https://github.com/yannisl/phd/blob/master/docs/phd-headings.md)
+4.0  The [phd-lowerlevelheadings](https://github.com/yannisl/phd/blob/master/docs/phd-lowerlevelheadings.md)
 
-5.0  The [phd-toc](https://github.com/yannisl/phd/blob/master/docs/phd-toc.md)
+5.0  The [phd-toc](https://github.com/yannisl/phd/blob/master/docs/phd-toc.md) package.
+     Manages all aspects of Table of Contents via a key value interface.
 
 6.0  The [phd-counters](https://github.com/yannisl/phd/blob/master/docs/phd-counters.md)
 
@@ -55,6 +56,12 @@ They consist of:
 
 13.0 The [phd-quote](https://github.com/yannisl/phd/blob/master/docs/phd-quote.md)
      package. Provides some additional commands for filler text.
+
+14.0 The [phd-lists](https://github.com/yannisl/phd/blob/master/docs/phd-lists.md)
+     package. Provides some additional commands and a key value interface for lists.
+
+15.0 The [phd-logos](https://github.com/yannisl/phd/blob/master/docs/phd-logos.md)
+     package. Supplementary commands for logos.
 
 ###Installation
 
