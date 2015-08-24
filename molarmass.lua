@@ -1,7 +1,9 @@
 -- Computes the mollar mass from simple chemical formulae
 --    like H2O, NH3, CuSO4, Si(OH)4, 
 --
--- Based on code at Media Wikitr  
+-- Based on code at Media Wiki
+-- Y Lazarides
+-- Lua Module to calculate molar mass  
 
 local c = {} -- module's table
 
