@@ -43,6 +43,19 @@ They consist of:
      Provides numerous commands and keys for typesetting code. It also provides indexing shortcuts,
      including math symbols etc.
 
+10.0 The [phd-epigraphs](https://github.com/yannisl/phd/blob/master/docs/phd-epigraphs.md).
+     This package manages the typesetting of epigraphs.
+
+11.0 The [phd-frontmatter](https://github.com/yannisl/phd/blob/master/docs/phd-epigraphs.md)
+     package for the typesetting of frontmatter such as coverpages, copyright pages and title
+     pages.
+
+12.0 The [phd-lorems](https://github.com/yannisl/phd/blob/master/docs/phd-lorems.md)
+     package. Provides some additional commands for filler text.
+
+13.0 The [phd-quote](https://github.com/yannisl/phd/blob/master/docs/phd-quote.md)
+     package. Provides some additional commands for filler text.
+
 ###Installation
 
 run
