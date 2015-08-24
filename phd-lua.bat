@@ -1,8 +1,11 @@
 echo PHD-LUA COMMAND LINE 
 rem primarily for using dtx files with shell shell-escape
 rem in order to use minted  
-
-
+:::::::::::::::::::::::::::::::::::::::::
+:: Compile using -shell-escape
+:::::::::::::::::::::::::::::::::::::::::
+@echo off
+CLS
 lualatex -shell-escape %~n1%~x1
 biber %1
 makeindex -s phd.ist %~n1.idx 
