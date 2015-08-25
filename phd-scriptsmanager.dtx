@@ -121,6 +121,9 @@ __The package as it stands is not production stable.__
 1.  Document fully all fonts not availabe at CTAN and provide links or folder for download.
 2.  More selective de-activation of scripts via keys.
 3.  Messaging and errors need to be extended.
+4.  Scripts DB and fonts DB for same.
+5.  Test Module.
+6.  On Demand loading of fonts.
 %</TODO>
 %<*internal>
 \fi
@@ -185,7 +188,9 @@ See http://www.latex-project.org/lppl.txt
 \savegeometry{std}
 % \usepackage[style=mla]{biblatex}
 \usepackage{phd}
+\let\HUGE\Huge %Needs fixing
 \usepackage{phd-documentation}
+\usepackage{minted}
 \usepackage{phd-toc}
 \usepackage{phd-runningheads}
 \usepackage{phd-lowersections}
@@ -300,14 +305,21 @@ See http://www.latex-project.org/lppl.txt
 %\newfontfamily\cypriote{Aegean.ttf}
 \let\lineara\aegean
 \let\cypriote\aegean
+%\newfontfamily\lycian{Aegean.ttf}
+\let\lycian\aegean
+\let\lydian\lycian
+\let\lydianfont\aegean
+\let\carian\lydianfont
 \newfontfamily\oldpersian{Noto Sans Old Persian}
 \newfontfamily\inscriptionalpahlavi{Noto Sans Inscriptional Pahlavi}
 \newfontfamily\imperialaramaic{NotoSansImperialAramaic-Regular.ttf}
-\input{./sections/languages}
-\input{./languages/ancient-and-historic-scripts}
+\newfontfamily\avestan{NotoSansAvestan-Regular.ttf}
+%\input{./sections/languages} OK
+%\input{./languages/ancient-and-historic-scripts} OK
 %\input{./languages/greek}
-%\input{./languages/middle-eastern-scripts}
-%\input{./languages/south-east-asian-scripts}
+%\input{./languages/middle-eastern-scripts} OK
+\input{./languages/elbasan}
+\input{./languages/south-east-asian-scripts}
 %\input{./languages/east-asian-scripts}
 %\input{south-asian-scripts}
 %\input{./languages/modern-scripts}
@@ -855,8 +867,12 @@ See http://www.latex-project.org/lppl.txt
   \end{minipage} 
   }
 }
+%    \end{macrocode}
 
-
+% \begin{docCmd}{parsefields}{ \marg{unicode number, delimited with:}{rest of line}}
+%   parses a line of text of the form \texttt{10900: Phoenician Letter Alf}
+% \end{docCmd}
+%    \begin{macrocode}
 \long\def\parsefields #1:#2\@@{%
     \ifx\par#1
     \else 
@@ -875,7 +891,11 @@ See http://www.latex-project.org/lppl.txt
 %
 % \begin{docCommand}{printunicodeblock}{ \oarg{no columns} \marg{filename} \marg{fontcmd}}
 %  The macro prints a unicode table from a file of definitions. This is
-%   printed in a two column environment by default. 
+%   printed in a two column environment by default. \Fire fails on Carian
+%
+%  The lines have the form of:
+%
+%  \texttt{10900: Phoenician Letter Alf}
 % \end{docCommand}
 % 
 %    \begin{macrocode}
@@ -889,6 +909,7 @@ See http://www.latex-project.org/lppl.txt
       \openin\@inputcheck=#2
       \loop\unless\ifeof\@inputcheck
       \read\@inputcheck to\fileline %
+      %\fileline
       \expandafter\parsefields \fileline:\@@ 
       \repeat
     \end{multicols}%
