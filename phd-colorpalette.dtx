@@ -9,7 +9,7 @@ E-mail: yannislaz@gmail.com
 Released under the LaTeX Project Public License v1.3c or later
 See http://www.latex-project.org/lppl.txt
 ----------------------------------------------------------------
-This file provides a phd for defining a class.
+This file provides provides the file phd-colorpalette.sty
 %</readme>
 %<*readmemd>
 ###The `phd-colorpalette` LaTeX2e package
@@ -27,8 +27,8 @@ and `phd-colorpalette.sty`.
 
 run
           phd-lua.bat on windows
-           pdflatex phd.dtx
-           makeindex -s gind.ist -g phd 
+          pdflatex phd.dtx
+          makeindex -s gind.ist -g phd 
 
 If you have any difficulties with the package come and join us at
 http://tex.stackexchange.com and post a new question or
@@ -135,6 +135,10 @@ See http://www.latex-project.org/lppl.txt
   \file{TODO.tex}{\from{\jobname.dtx}{TODO}}
 }
 
+\generate{\file{tikz-page.sty}{\from{\jobname.dtx}{PAGE}}}
+
+%\generate{\file{shellesc.sty}{\from{shellesc.dtx}{package}}}
+
 \ifx\fmtname\nameofplainTeX
   \expandafter\endbatchfile
 \else
@@ -145,17 +149,22 @@ See http://www.latex-project.org/lppl.txt
 
 %\listfiles
 %gdef\@onlypreamble{} % TO BE REMOVED NEEDED FOR TUTS
-\documentclass[twoside,11pt,a4paper]{ltxdoc}
+\NeedsTeXFormat{LaTeX2e}[2017/04/15]%
+\RequirePackage[2017/04/15]{latexrelease}
+\documentclass[oneside,10pt,a4paper]{ltxdoc}
 \usepackage[bottom=2cm]{geometry}
 \savegeometry{std}
 % \usepackage[style=mla]{biblatex}
+\let\HUGE\huge 
 \usepackage{phd}
-\usepackage{phd-lowersections}
 \usepackage{phd-runningheads}
-\pagestyle{headings}
+\usepackage{phd-toc}
+\usepackage{phd-lowersections}
+
+
 \sethyperref
 \addbibresource{phd.bib}% Syntax f
-\cxset{palette bbc}
+\cxset{palette zealous}
 \begin{filecontents}{defaults-chapters}
 %%    General Defaults for Chapters
 \cxset{%    
@@ -218,7 +227,8 @@ See http://www.latex-project.org/lppl.txt
 \end{filecontents}
 \input{defaults-chapters}  
 
-\cxset{chapter title color= creamy,
+\cxset{chapter format=plain,
+       chapter title color= creamy,
        chapter label color = creamy,
        chapter number color = creamy,
        chapter number font-size = Huge,
@@ -236,31 +246,54 @@ See http://www.latex-project.org/lppl.txt
        }
 \usepackage{makeidx}      
 \usepackage{phd-documentation}
+\usepackage{phd-toc}
 \makeindex
-\setcounter{tocdepth}{6}
-\usepackage{minitoc}
-\mtcsetdepth{minitoc}{6} 
-\begin{document}
+\setcounter{tocdepth}{4}
+\usepackage{microtype}
+\usepackage{tikz-page}
+%\fancypagestyle{plain}{
+%  \fancyhf{}
+%  \chead{\tikzpage}
+%}
+%\fancypagestyle{titlepage}{
+%  \fancyhf{}
+%  \chead{\tikzpage}
+%}
 
+\begin{document}
+\pagestyle{plain}
 \parindent1em
-\coverpage{asia}{Book Design }{Camel Press}{HEADINGS}{DESIGN} 
+\coverpage{asia}{Book Design }{Camel Press}{COLOR PALETTES}{} 
 \pagestyle{empty}
 %\coverpage{habtoor-city}{Delay Claim}{HLS-DSE/JV}{HABTOOR CITY}{MEP CLAIM} 
 \secondpage
 \pagestyle{empty}
 \clearpage
-\ExplSyntaxOn
-
-\dominitoc
 
 \tableofcontents
-\ExplSyntaxOff
+
 \pagestyle{empty}
 \setcounter{secnumdepth}{6}
 \parskip0pt plus.1ex minus.1ex
 \mainmatter
 \pagenumbering{arabic}
-\pagestyle{headings}        
+\pagestyle{plain} 
+\newcommand{\tikzpagelayout}{%
+\tpshowframes
+\tikzpageputanchors
+}
+\pagestyle{empty}
+\tikzpage
+\begin{tikzpicture}[remember picture, overlay] 
+  \node[text width=0.5\textwidth] at (page.body center){\includegraphics[width=\textwidth]{balthus-11} This is the caption. \lorem };
+   \node[text width=0.3\textwidth, below] at (page.top south){\includegraphics[width=\textwidth]{balthus-11} This is the caption. \lorem };
+\end{tikzpicture}  
+
+
+%\input{./sections/chapterdesign}
+
+%\input{./sections/pages} 
+%\input{./sections/geometry-chapter}     
 %       
 %\input{./sections/tikz}
 %\input{./mep/claim}  
@@ -284,12 +317,16 @@ See http://www.latex-project.org/lppl.txt
 \newfontfamily\aegean{Aegean.ttf}
 \makeatletter
 %\@debugtrue
-
 \makeatother
-
+%\input{./languages/ancient-and-historic-scripts}
+%\input{./languages/hieroglyphics}
 \DocInput{\jobname.dtx}
-\input{./tests/test-colorpalette}
-\input{./languages/ancient-and-historic-scripts}
+%\input{./tests/test-colorpalette}
+
+%\input{./languages/european-alphabetic}
+%\input{./languages/modern-scripts}
+%\input{./languages/middle-eastern-scripts}
+
 \nocite{*}
 \printbibliography
 \printindex
@@ -349,10 +386,10 @@ See http://www.latex-project.org/lppl.txt
 % \raggedbottom
 %  \OnlyDescription
 %
-%  ^^A\StopEventually{\printindex}
+% ^^A\StopEventually{\printindex}
 
 % \CodelineNumbered
-% \pagestyle{headings}
+% \pagestyle{plain}
 % 
 % 
 % ^^A\part{IMPLEMENTATION AND FRIENDS}
@@ -383,7 +420,6 @@ See http://www.latex-project.org/lppl.txt
 %       specifications as groups rather than individual elements..  
 % \item To provide a number of predefined color schemes.
 % \item To provide a plug-in architecture for extensions.
-
 % \end{enumerate}
 % 
 % \section{Terminology}
@@ -397,7 +433,7 @@ See http://www.latex-project.org/lppl.txt
 %        parts etc. For example the Bible has Books, chapters and verses,
 %        where a legal document might require divisions such as clauses.
 %        In general these divisions are numbered. These document divisions
-%        are stored in the comma list \refCom{phd_book_divisions_clist}.
+%        are stored in the comma list 
 %  \item [head] A typeset heading, such as chapter head, or section head.
 %        This can include a counter, label and title for example, 
 %        \emph{Chapter 1 Introduction}.
@@ -422,13 +458,6 @@ See http://www.latex-project.org/lppl.txt
 %  some minor modifications, for example use an italic shape for the font of the mark, but an 
 %  upright font for the page numbers. 
 %
-% {\obeylines 
-%~~ |\cxset|
-%~~~~~|{|
-%~~~~~~~~\textit{chapter number color}~~|format          = apa,|
-%~~~~~~~~\textit{section title font-size} |font-size   = Large,|
-%~~~~~|}|
-%}  
 %
 % We follow the idea of representing the basic elements of documents
 % as elements, each one having a parent in order to specify
@@ -437,20 +466,13 @@ See http://www.latex-project.org/lppl.txt
 % As a matter fact nothing stops us from defining a key value
 % interface as shown below.
 %
-% {\obeylines 
-%~~ |\cxset|
-%~~~~~|{| 
-%~~~~~~~~\textit{header.even.mark.font.size}   = |Large,|
-%~~~~~~~~\textit{header.even.mark.font.family} = |serif,|
-%~~~~~|}|
-%}  
 %
 % This would pehaps make it easier for the template designer, but I have rejected
 % the idea as my aim is to make it easy for the author, who can search the template
 % and just enter a couple of new proerty values.\url{http:\\test}
 %
 % \subsection{Template designer}
-% \pagestyle{headings}
+% \
 % The template designer in the example above would have selected the format style
 % from a number of predefined formats (templates) or would have created a style
 % called \textit{apa} from an existing template and modified it using declarative
@@ -464,23 +486,30 @@ See http://www.latex-project.org/lppl.txt
 % of a |ps@| command are defined. For example the programmer can define a new
 % style using \tikzname, but without having to worry about defining full |ps@|
 % and their interface.
+%
 % \section{Color Palettes}
 %
 % Although documents would normally have only a small number of colors, the
 % number of variables that need a color setting is quite large. In this package
-% we introduce the option of a color plaette, where all color settings can be
-% in one place.
+% we introduce the option of a \textit{color palette}, where all color settings can be
+% in one place.\index{color palette}
+%
+
+% \begin{dispListing}
+% \cxset{palette bbc}
+% \end{dispListing}
+%
 %
 % \section{Preliminaries}
 %
 %  Standard file identification. We first announce the package 
-%	 and require that it be used with \LaTeX2e. 
+%	 and require that it be used with \LaTeX2e. \tcbdocmarginnote{need to upgrade}
 % \iffalse
 %<*PLT>
 % \fi
 %    \begin{macrocode}
-\NeedsTeXFormat{LaTeX2e}[1994/12/01]%
-\RequirePackage[2014/05/01]{latexrelease}
+\NeedsTeXFormat{LaTeX2e}[2017/04/15]%
+\RequirePackage[2017/04/15]{latexrelease}
 \ProvidesFile{phd-colorpalette}[2015/1/13 v1.0 color palettes (YL)]%
 %    \end{macrocode}
 %
@@ -524,6 +553,7 @@ See http://www.latex-project.org/lppl.txt
 \colorlet{preciscolor}{sweet}
 \colorlet{toccolor}{sweet}
 \definecolor{creamy}{HTML}{FDEBD7}
+\definecolor{tofu}{HTML}{e7e3d8}
 % check this
 \newcommand{\TODO}{\textcolor{red}{\bf TODO!}\xspace}
 %    \end{macrocode}
@@ -549,6 +579,7 @@ See http://www.latex-project.org/lppl.txt
   { \tl_gset:cn {auxpalette#1_tl} {} 
     \addtotl {#1}{#2}{#3}
     \cxset{palette~#1/.code  = \cs:w auxpalette#1_tl \cs_end: }
+    \definecolor{primary}{HTML}{#2}
 }
 
 \cs_set:Npn \addtotl #1 #2 #3 
@@ -569,8 +600,9 @@ See http://www.latex-project.org/lppl.txt
         \colorlet{thecommentstyle}{thegray}
         \colorlet{thestringstyle}{bgsexy}
         \colorlet{thekeywordstyle}{spot!90}
+        % code
         \colorlet{thecodebackground}{bgsexy!10}
-        % used for option
+        \colorlet{thecodeframe}{bgsexy!20}
         \colorlet{theoption}{black}
         % headers
         \colorlet{theplainoddheaderbgcolor}{white}
@@ -600,12 +632,16 @@ See http://www.latex-project.org/lppl.txt
         \colorlet{theitemvcolor}{bgsexy}
         \colorlet{theitemvicolor}{bgsexy}
         % phd doc specific
-       \colorlet{theunicodesymbolcolor}{bgsexy}
+        \colorlet{theunicodesymbolcolor}{bgsexy}
+        \colorlet{thecmdcolor}{bgsexy}
+        % epigraph rule
+        \colorlet{theepigraphrulecolor}{bgsexy}
     }
 }
-  
-
-
+% We now create a number of color palettes for convenience.  
+% These are given various names, mostly from magazines or the web
+% that have inspired the color schemes.
+%
 \createpalette {esquire}       {D11C23} {}  % red shade
 \createpalette {fortune}       {EA8A4E} {}  % brick color
 \createpalette {oprah}         {F060A8} {}  % nice pinkish modern
@@ -620,8 +656,7 @@ See http://www.latex-project.org/lppl.txt
 \createpalette {instyle}       {227CE8} {}  % blue shade    
 \createpalette {smithsonian}   {60A8C0} {}  % milky blue 
 \createpalette {blueprint}     {486090} {}  % dark milky blue
-
-  
+%
 % green shades
 \createpalette {knoll}         {88A65E} {}  % nice sweet green
 \createpalette {living}        {678756} {}  % green shade
@@ -636,16 +671,26 @@ See http://www.latex-project.org/lppl.txt
 \createpalette {brown~red}     {8D2420} {}  % brown red, serious luxury
 % purples
 \createpalette {black~tulip}   {420943} {}  % darkish purple 
-\createpalette {helvetica}     {404547} {}  % darkish purple   
+\createpalette {helvetica}     {404547} {}  % darkish purple 
+%
+\createpalette {cerulean}      {9bb7d6} {}  % pantone light milky bluish  
+\createpalette {sealife }      {7c7d89} {}  % sea life from https://www.benjaminmoore.com/en-us/color-overview/color-collections/color-trends-2017
+\createpalette {rouge}         {D2476F} {}  %rouge like in hot lips
+\createpalette{unorange}       {FE6B08} {}  %unbelievable orange 
 %  
-
+%  
+\tl_put_right:cn {auxpalettecerulean_tl}  
+  {
+    \colorlet{thecodebackground}{tofu}
+  }
+  
 \tl_put_right:cn {auxpaletteblueprint_tl}  
   {
     \colorlet{theunicodesymbolcolor}{bgsexy}
     \colorlet{thecodebackground}{thelightgray!20}
   }
 \ExplSyntaxOff
-\cxset{palette bbc}    
+\cxset{palette orange sakura}    
 %    \end{macrocode}
 
 % \section{Hyperlinks}
@@ -654,7 +699,7 @@ See http://www.latex-project.org/lppl.txt
 % color for all hyperlinks
 %
 %    \begin{macrocode}
-\colorlet{thelinkcolor}{bgsexy}   %linkcolor
+\colorlet{thelinkcolor}{bgsexy}   %linkcolor (also used in toc)
 \colorlet{theanchorcolor}{bgsexy} %anchorcolor
 \colorlet{thecitecolor}{bgsexy}   %citecolor
 \colorlet{thefilecolor}{bgsexy}   %filecolor
@@ -677,16 +722,17 @@ See http://www.latex-project.org/lppl.txt
 %\definecolor{thecodebackground}{HTML}{F2F2EA}
 %\definecolor{thecodebackground}{HTML}{DED4B9}
 %\definecolor{thecodebackground}{HTML}{F3EFE3} % light 
-%\definecolor{thekeywordstyle}{HTML}{000000}
-%\definecolor{thecommentstyle}{HTML}{DF8743}
-%\definecolor{thestringcolor}{HTML}{DF8743}
+\definecolor{thekeywordstyle}{HTML}{000000}
+\definecolor{thecommentstyle}{HTML}{DF8743}
+\definecolor{thestringcolor}{HTML}{DF8743}
 \definecolor{theemphasiscolor}{HTML}{DF8743}
 \definecolor{theframerulecolor}{HTML}{FF6927}
 \definecolor{theframefillcolor}{HTML}{000000}
 \definecolor{theidentifiercolor}{HTML}{000000}
+
 % tcolorbox commands
 \definecolor{themacro}{rgb}{0.784,0.06,0.176}
-\colorlet{thecmdcolor}{bgsexy}
+
 %    \end{macrocode}
 % 
 %    \begin{macrocode}
@@ -695,7 +741,555 @@ See http://www.latex-project.org/lppl.txt
 \def\hcyan#1{{\color{teal} #1}}
 %    \end{macrocode}
 %</PLT>
+
+
+% If you want to simulate the default |fancyhdr| behaviour you can define the
+% \docAuxCommand{tikzpagelayout} as following:
+% \iffalse
+%<*PAGE>
+% \fi
+\def\pkgfileversion{1.0}
+\def\pkgfiledate{2016/08/22}
+% \iffalse
+%</PAGE>
+% \fi
+%
+% \title{the \textsc{tikz-page} package }
+% \author {Sébastien Gross <seb chezwam org>}
+% \date{This file describes version \pkgfileversion\  (\pkgfiledate)}
+% \maketitle
+% \tableofcontents
+% \section{Implementation}
+% \iffalse
+%<*PAGE>
+% \fi
+%
+%    \begin{macrocode}
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{tikz-page}[\pkgfiledate\space (v\pkgfileversion)]
+%    \end{macrocode}
+
+% The \meta{textpos} option can be used if you want to use |textpos|
+% \meta{overlay} option instead of |current page| to position the page
+% layout. Beware that |textpos| with \meta{overlay} option maybe incompatible
+% with some other packages. On the other hand |tikz| |current page| requires
+% at least 2 compilation to work correctly. Thus you might want to use
+% \meta{textpos} at conception time and remove this option for your final
+% build or if you have incompatibility issues.
+
+%    \begin{macrocode}
+\newif\if@tp@use@textpos\@tp@use@textposfalse
+\DeclareOption{textpos}{\@tp@use@textpostrue}
+\ProcessOptions
+
+\if@tp@use@textpos
+\RequirePackage[absolute]{textpos}
+\fi
+%    \end{macrocode}
+
+%    \begin{macrocode}
+\RequirePackage{fancyhdr}
+\RequirePackage{tikz}
+\usetikzlibrary{plotmarks,calc,shapes,positioning,decorations.text}
+\RequirePackage{graphicx}
+\RequirePackage{calc}
+%    \end{macrocode}
+
+
+\makeatletter
+
+% All margin sizes are defined in\docLength{@tp@left@margin},
+% \docLength{@tp@right@margin}, \docLength{@tp@top@margin},
+% \docLength{@tp@bottom@margin} their values are computed by the
+% \refCom{tp@compute@margins}.
+
+%    \begin{macrocode}
+\newlength{\@tp@left@margin}
+\newlength{\@tp@right@margin}
+\newlength{\@tp@top@margin}
+\newlength{\@tp@bottom@margin}
+%    \end{macrocode}
+
+% \begin{docCommand}{@tp@create@length}{\marg{block name}\marg{length name}}
+
+% Generate a \cs{tp@\meta{block name}@\meta{length name}} length. This
+% command is intended to be only used to create block length defined below.
+
+%    \begin{macrocode}
+\newcommand\@tp@create@length[2]{%
+  \expandafter\newskip\csname tp@#1@#2\endcsname%
+}%
+%    \end{macrocode}
+% \end{docCommand}
+% 
+
+% For each standard blocks in the page (|page|, |body|, |marginpar|,
+% |header|, |footer|) and additionnal blocks (|top|, |right|, |bottom|,
+% |left|), 6 lenths are computed in order to define their anchors. Each
+% length is defined using the \refCom{@tp@create@length} macro.
+
+%    \begin{macrocode}
+\foreach\@@tp@element in {page,body,marginpar,header,footer,top,right,bottom,left}{%
+  \foreach\@@tp@len in {xmin,xmax,xmid,ymin,ymax,ymid}{%
+    \@tp@create@length{\@@tp@element}{\@@tp@len}%
+}}%
+%    \end{macrocode}
+
+% \begin{docCommand}{tcflip}{\marg{odd page code}\marg{even page code}}
+% Execute \meta{odd page even code} on odd pages and \meta{even page code}
+% on even ones.
+% \end{docCommand}
+%    \begin{macrocode}
+\newcommand{\tpflip}[2]{\ifodd\thepage#1\else#2\fi}
+%    \end{macrocode}
+
+% \begin{docCommand}{tp@compute@margins}{}
+%
+% This is where the magic happens. This command sets all \cs{tp@\meta{block
+% name}@\meta{length name}} lengths.
+%
+% \end{docCommand}
+
+%    \begin{macrocode}
+\def\tp@compute@margins{%
+  \setlength{\tp@page@xmin}{0pt}%
+  \setlength{\tp@page@ymin}{0pt}%
+  \setlength{\tp@page@xmax}{\paperwidth}%
+  \setlength{\tp@page@ymax}{\paperheight}%
+  \setlength{\tp@page@xmid}{\dimexpr(\tp@page@xmin+\tp@page@xmax)/2\relax}%
+  \setlength{\tp@page@ymid}{\dimexpr(\tp@page@ymin+\tp@page@ymax)/2\relax}%
+  %
+  \setlength\@tp@left@margin{\dimexpr(1in+\hoffset+\tpflip{\oddsidemargin}{\evensidemargin})\relax}%
+  \setlength\@tp@right@margin{\dimexpr(\paperwidth-\@tp@left@margin-\textwidth)\relax}%
+  \setlength\@tp@top@margin{\dimexpr(1in+\voffset+\topmargin+\headheight+\headsep)\relax}%
+  \setlength\@tp@bottom@margin{\dimexpr(\paperheight-(\textheight+\@tp@top@margin))\relax}%
+  %% Body computation
+  \setlength\tp@body@xmin{\dimexpr\tp@page@xmin+\@tp@left@margin\relax}%
+  \setlength\tp@body@xmax{\dimexpr\tp@page@xmax-\@tp@right@margin\relax}%
+  \setlength\tp@body@xmid{\dimexpr((\tp@body@xmax+\tp@body@xmin)/2)\relax}%
+  \setlength\tp@body@ymax{\dimexpr(\tp@page@ymax-\@tp@top@margin)\relax}%
+  \setlength\tp@body@ymin{\dimexpr\tp@body@ymin+\@tp@bottom@margin\relax}%
+  \setlength\tp@body@ymid{\dimexpr(\tp@body@ymin+(\tp@body@ymax-\tp@body@ymin)/2)\relax}%
+  %
+  %% Margin computation
+  %
+  \tpflip{%
+    \setlength\tp@marginpar@xmin{\dimexpr\tp@body@xmax+\marginparsep\relax}
+    \setlength\tp@marginpar@xmax{\dimexpr\tp@marginpar@xmin+\marginparwidth\relax}%
+  }{%
+    \setlength\tp@marginpar@xmax{\dimexpr\tp@body@xmin-\marginparsep\relax}%
+    \setlength\tp@marginpar@xmin{\dimexpr\tp@marginpar@xmax-\marginparwidth\relax}%
+  }%
+  \setlength\tp@marginpar@xmid{\dimexpr((\tp@marginpar@xmax+\tp@marginpar@xmin)/2)\relax}%
+  \setlength\tp@marginpar@ymax{\tp@body@ymax}%
+  \setlength\tp@marginpar@ymin{\tp@body@ymin}%
+  \setlength\tp@marginpar@ymid{\tp@body@ymid}%
+  %
+  %% header
+  %
+  \setlength\tp@header@xmax{\tp@body@xmax}%
+  \setlength\tp@header@xmin{\tp@body@xmin}%
+  \setlength\tp@header@xmid{\tp@body@xmid}%
+  \setlength\tp@header@ymin{\dimexpr\tp@body@ymax+\headsep\relax}%
+  \setlength\tp@header@ymax{\dimexpr\tp@header@ymin+\headheight\relax}%
+  \setlength\tp@header@ymid{\dimexpr((\tp@header@ymax+\tp@header@ymin)/2)\relax}%
+  %
+  %% footer
+  %
+  \setlength\tp@footer@xmax{\tp@body@xmax}%
+  \setlength\tp@footer@xmin{\tp@body@xmin}%
+  \setlength\tp@footer@xmid{\tp@body@xmid}%
+  \setlength\tp@footer@ymin{\dimexpr\tp@body@ymin-\footskip\relax}%
+  \setlength\tp@footer@ymax{\tp@footer@ymin}%
+  \setlength\tp@footer@ymid{\dimexpr((\tp@footer@ymax+\tp@footer@ymin)/2)\relax}%
+  %%
+  %% blocks%
+  %%
+  \setlength\tp@top@xmin{\tp@page@xmin}%
+  \setlength\tp@top@xmax{\tp@page@xmax}%
+  \setlength\tp@top@xmid{\dimexpr((\tp@top@xmax+\tp@top@xmin)/2)\relax}%
+  \setlength\tp@top@ymin{\tp@body@ymax}%
+  \setlength\tp@top@ymax{\tp@page@ymax}%
+  \setlength\tp@top@ymid{\dimexpr((\tp@top@ymax+\tp@top@ymin)/2)\relax}%
+  %%
+  \setlength\tp@bottom@xmin{\tp@page@xmin}%
+  \setlength\tp@bottom@xmax{\tp@page@xmax}%
+  \setlength\tp@bottom@xmid{\dimexpr((\tp@bottom@xmax+\tp@bottom@xmin)/2)\relax}%
+  \setlength\tp@bottom@ymin{\tp@page@ymin}%
+  \setlength\tp@bottom@ymax{\tp@body@ymin}%
+  \setlength\tp@bottom@ymid{\dimexpr((\tp@bottom@ymax+\tp@bottom@ymin)/2)\relax}%
+  %%
+  \setlength\tp@left@xmin{\tp@page@xmin}%
+  \setlength\tp@left@xmax{\tp@body@xmin}%
+  \setlength\tp@left@xmid{\dimexpr((\tp@left@xmax+\tp@left@xmin)/2)\relax}%
+  \setlength\tp@left@ymin{\tp@body@ymin}%
+  \setlength\tp@left@ymax{\tp@body@ymax}%
+  \setlength\tp@left@ymid{\dimexpr((\tp@left@ymax+\tp@left@ymin)/2)\relax}%
+  %%
+  \setlength\tp@right@xmin{\tp@body@xmax}%
+  \setlength\tp@right@xmax{\tp@page@xmax}%
+  \setlength\tp@right@xmid{\dimexpr((\tp@right@xmax+\tp@right@xmin)/2)\relax}%
+  \setlength\tp@right@ymin{\tp@body@ymin}%
+  \setlength\tp@right@ymax{\tp@body@ymax}%
+  \setlength\tp@right@ymid{\dimexpr((\tp@right@ymax+\tp@right@ymin)/2)\relax}%
+}%%    \end{macrocode}
+%
+% \section*{Generate Anchors}
+%
+% \begin{docCommand}{@tp@genanchors}{\marg{block name}}
+% Generate all 9 anchors (|northwest|, |north|, |northest|, |west|,
+% |center|, |east|, |southwest|, |south|, |southest|) for \meta{block name}.
+% \end{docCommand}
+
+%    \begin{macrocode}
+\def\@tp@genanchors#1{%
+  \anchor{#1 north}{\pgf@x=\csname tp@#1@xmid\endcsname  
+                    \pgf@y=\csname tp@#1@ymax\endcsname}%
+  \anchor{#1 south}{\pgf@x=\csname tp@#1@xmid\endcsname 
+                    \pgf@y=\csname tp@#1@ymin\endcsname}%
+  \anchor{#1 west}{\pgf@x=\csname tp@#1@xmin\endcsname 
+                   \pgf@y=\csname tp@#1@ymid\endcsname}%
+  \anchor{#1 northwest}{\pgf@x=\csname tp@#1@xmin\endcsname 
+                        \pgf@y=\csname tp@#1@ymax\endcsname}%
+  \anchor{#1 southwest}{\pgf@x=\csname tp@#1@xmin\endcsname 
+                        \pgf@y=\csname tp@#1@ymin\endcsname}%
+  \anchor{#1 east}{\pgf@x=\csname tp@#1@xmax\endcsname 
+                   \pgf@y=\csname tp@#1@ymid\endcsname}%
+  \anchor{#1 northeast}{\pgf@x=\csname tp@#1@xmax\endcsname 
+                        \pgf@y=\csname tp@#1@ymax\endcsname}%
+  \anchor{#1 southeast}{\pgf@x=\csname tp@#1@xmax\endcsname 
+                        \pgf@y=\csname tp@#1@ymin\endcsname}%
+  \anchor{#1 center}{\pgf@x=\csname tp@#1@xmid\endcsname 
+                     \pgf@y=\csname tp@#1@ymid\endcsname}%
+}% 
+%    \end{macrocode}
+%
+%    \begin{macrocode}
+\newcommand\tp@pgfdeclareanchoralias[3]{%
+  \expandafter\def\csname pgf@anchor@#1@#3\expandafter\endcsname
+    \expandafter{\csname pgf@anchor@#1@#2\endcsname}}
+%    \end{macrocode}
+% 
+% \section*{Declare the page shape}
+% \pgfname provides methods to declare new shapes. There are a number of special commands defined
+% that can be used for declaring a shape (See PGF manual page 1039). Our shape will be called page.
+% We will used this as a key.
+% 
+% Next we declare the page shape
+% \begin{docCommand}{pgfdeclareshape}{}
+%
+% \end{docCommand}
+%    \begin{macrocode}
+\pgfdeclareshape{page}{
+  \backgroundpath{
+    \pgfpathmoveto{\pgfpoint{\tp@page@xmin}{\tp@page@ymin}}
+    \pgfpathlineto{\pgfpoint{\tp@page@xmin}{\tp@page@ymax}}
+    \pgfpathlineto{\pgfpoint{\tp@page@xmax}{\tp@page@ymax}}
+    \pgfpathlineto{\pgfpoint{\tp@page@xmax}{\tp@page@xmin}}
+    \pgfpathclose
+  }
+  %% basic anchors
+  \anchor{north}{\pgf@x=\tp@page@xmid \pgf@y=\tp@page@ymax}%
+  \anchor{south}{\pgf@x=\tp@page@xmid \pgf@y=\tp@page@ymin}%
+  \anchor{west}{\pgf@x=\tp@page@xmin \pgf@y=\tp@page@ymid}%
+  \anchor{northwest}{\pgf@x=\tp@page@xmin \pgf@y=\tp@page@ymax}%
+  \anchor{southwest}{\pgf@x=\tp@page@xmin \pgf@y=\tp@page@ymin}%
+  \anchor{east}{\pgf@x=\tp@page@xmax \pgf@y=\tp@page@ymid}%
+  \anchor{northeast}{\pgf@x=\tp@page@xmax \pgf@y=\tp@page@ymax}%
+  \anchor{southeast}{\pgf@x=\tp@page@xmax \pgf@y=\tp@page@ymin}%
+  %\anchor{center}{\pgfpointorigin}
+  \anchor{center}{\pgf@x=\tp@page@xmid \pgf@y=\tp@page@ymid}
+  \anchor{origin}{\pgfpointorigin}%\pgf@x=0pt \pgf@y=0pt}
+  \@tp@genanchors{page}
+  %% Body anchors
+  \@tp@genanchors{body}
+  \@tp@genanchors{marginpar}
+  \@tp@genanchors{header}
+  \@tp@genanchors{footer}
+  \@tp@genanchors{top}
+  \@tp@genanchors{bottom}
+  \@tp@genanchors{left}
+  \@tp@genanchors{right}
+}
+%    \end{macrocode}
+%
+%
+%Create a new |tpx| mark to show anchor location when using
+%\refCom{tikzpageputanchors} to display anchors on the page.
+%
+%    \begin{macrocode}
+\newdimen\tp@linewidth
+\newdimen\tp@marksize
+\setlength\tp@marksize{3pt}
+\pgfdeclareplotmark{tpx}{
+  \setlength{\tp@linewidth}{\pgflinewidth}
+  \pgfsetlinewidth{0.1pt}
+  \pgfpathmoveto{\pgfpoint{-\tp@marksize}{-\tp@marksize}}
+  \pgfpathlineto{\pgfpoint{\tp@marksize}{\tp@marksize}}
+  \pgfpathmoveto{\pgfpoint{-\tp@marksize}{\tp@marksize}}
+  \pgfpathlineto{\pgfpoint{\tp@marksize}{-\tp@marksize}}
+  \pgfusepathqstroke
+  \setlength{\pgflinewidth}{\tp@linewidth}
+}
+%    \end{macrocode}
+
+
+% Anchors can be displayed block by block (using
+% \cs{tikzpageputanchorsdefaults}, \cs{tikzpageputanchors}
+% \cs{tikzpageputanchorsmarginpar}, \cs{tikzpageputanchorsheader},
+% \cs{tikzpageputanchorsfooter}, \cs{tikzpageputanchorstop},
+% \cs{tikzpageputanchorsright}, \cs{tikzpageputanchorsbottom},
+% \cs{tikzpageputanchorsleft}) or globally (using \refCom{tikzpageputanchors}).
+
+%    \begin{macrocode}
+\def\tikzpageputanchorsdefaults{
+  \foreach \anchor/\placement in {%
+    northwest/below right%
+    ,north/below%
+    ,northeast/below left%
+    ,west/right%
+    ,center/below%
+    ,east/left%
+    ,southwest/above right%
+    ,south/above%
+    ,southeast/above left%
+  } \draw[red,shift=(page.\anchor)] plot[mark=tpx%% my plot mark
+  ] coordinates{(0,0)}
+  node[blue,\placement] {\scriptsize\texttt{(page.\anchor)}};
+}
+
+\def\tikzpageputanchorsbody{
+  \foreach \anchor/\placement in {%
+    body northwest/below right%
+    ,body north/below%
+    ,body northeast/below left%
+    ,body west/right%
+    ,body center/below%
+    ,body east/left%
+    ,body southwest/above right%
+    ,body south/above%
+    ,body southeast/above left%
+  } \draw[red,shift=(page.\anchor)] plot[mark=tpx%% my plot mark
+  ] coordinates{(0,0)}
+  node[blue,\placement] {\scriptsize\texttt{(page.\anchor)}};
+}
+
+
+\def\tikzpageputanchorsmarginpar{
+  \foreach \anchor/\placement in {%
+    marginpar northwest/below left%
+    ,marginpar north/left%
+    ,marginpar northeast/above left%
+    ,marginpar west/below%
+    ,marginpar center/below%
+    ,marginpar east/above%
+    ,marginpar southwest/below right%
+    ,marginpar south/right%
+    ,marginpar southeast/above right%
+  } \draw[red,shift=(page.\anchor)] plot[mark=tpx%% my plot mark
+  ] coordinates{(0,0)}
+  node[blue,\placement, rotate=90] {\scriptsize\texttt{(page.\anchor)}};
+}
+
+
+\def\tikzpageputanchorsheader{
+  \foreach \anchor/\placement in {%
+    header northwest/above right%
+    ,header north/above%
+    ,header northeast/above left%
+    ,header west/right%
+    ,header center/right%
+    ,header east/left%
+    ,header southwest/below right%
+    ,header south/below%
+    ,header southeast/below left%
+  } \draw[red,shift=(page.\anchor)] plot[mark=tpx%% my plot mark
+  ] coordinates{(0,0)}
+  node[blue,\placement] {\scriptsize\texttt{(page.\anchor)}};
+}
+
+
+\def\tikzpageputanchorsfooter{
+  \foreach \anchor/\placement in {%
+    footer northwest/above right%
+    ,footer north/above%
+    ,footer northeast/above left%
+    ,footer west/right%
+    ,footer center/right%
+    ,footer east/left%
+    ,footer southwest/below right%
+    ,footer south/below%
+    ,footer southeast/below left%
+  } \draw[red,shift=(page.\anchor)] plot[mark=tpx%% my plot mark
+  ] coordinates{(0,0)}
+  node[blue,\placement] {\scriptsize\texttt{(page.\anchor)}};
+}
+
+\def\tikzpageputanchorstop{
+  \foreach \anchor/\placement in {%
+    top northwest/below right%
+    ,top north/below%
+    ,top northeast/below left%
+    ,top west/right%
+    ,top center/below%
+    ,top east/left%
+    ,top southwest/above right%
+    ,top south/above%
+    ,top southeast/above left%
+  } \draw[red,shift=(page.\anchor)] plot[mark=tpx%% my plot mark
+  ] coordinates{(0,0)}
+  node[blue,\placement] {\scriptsize\texttt{(page.\anchor)}};
+}
+
+
+\def\tikzpageputanchorsbottom{
+  \foreach \anchor/\placement in {%
+    bottom northwest/below right%
+    ,bottom north/below%
+    ,bottom northeast/below left%
+    ,bottom west/right%
+    ,bottom center/below%
+    ,bottom east/left%
+    ,bottom southwest/above right%
+    ,bottom south/above%
+    ,bottom southeast/above left%
+  } \draw[red,shift=(page.\anchor)] plot[mark=ball%% my plot mark
+  ] coordinates{(0,0)}
+  node[blue,\placement] {\scriptsize\texttt{(page.\anchor)}};
+}
+
+
+\def\tikzpageputanchorsleft{
+  \foreach \anchor/\placement in {%
+    left northwest/below left%
+    ,left north/left%
+    ,left northeast/above left%
+    ,left west/below%
+    ,left center/below%
+    ,left east/above%
+    ,left southwest/below right%
+    ,left south/right%
+    ,left southeast/above right%
+  } \draw[red,shift=(page.\anchor)] plot[mark=ball%% my plot mark
+  ] coordinates{(0,0)}
+  node[blue,\placement, rotate=90] {\scriptsize\texttt{(page.\anchor)}};
+}
+
+\def\tikzpageputanchorsright{
+  \foreach \anchor/\placement in {%
+    right northwest/below left%
+    ,right north/left%
+    ,right northeast/above left%
+    ,right west/below%
+    ,right center/below%
+    ,right east/above%
+    ,right southwest/below right%
+    ,right south/right%
+    ,right southeast/above right%
+  } \draw[red,shift=(page.\anchor)] plot[mark=10-pointed star %%tpx%% my plot mark
+  ] coordinates{(0,0)}
+  node[blue,\placement, rotate=90] {\scriptsize\texttt{(page.\anchor)}};
+}
+%    \end{macrocode}
+
+% \begin{docCommand}{tikzpageputanchors}{}
+% A simple short hand to display all anchors at once.
+% \end{docCommand}
+%    \begin{macrocode}
+\def\tikzpageputanchors{
+  \tikzpageputanchorsdefaults
+  \tikzpageputanchorsbody
+  \tikzpageputanchorsmarginpar
+  \tikzpageputanchorsheader
+  \tikzpageputanchorsfooter
+  \tikzpageputanchorstop
+  \tikzpageputanchorsbottom
+  \tikzpageputanchorsleft
+  \tikzpageputanchorsright
+}
+%    \end{macrocode}
+
+
+
+% \begin{docCommand}{tpshowframes}{}
+% 
+% Display |top|, |right|, |bottom| and |left| block using a specific
+% background. This can be used in conjunction with \refCom{tikzpageputanchors} for
+% debuging purposes.
+% 
+% \end{docCommand}
+%    \begin{macrocode}
+\tikzset{bottom style/.style={fill=blue!10, opacity=.3, draw}}
+\tikzset{top style/.style={fill=blue!10, opacity=.3, draw}}
+\def\tpshowframes{
+  \draw[top style] (page.bottom northwest) rectangle (page.bottom southeast);
+  \draw[fill=yellow!50, opacity=.3, draw] (page.top northwest) rectangle (page.top southeast);
+  \draw[fill=red!50, opacity=.3, draw] (page.left northwest) rectangle (page.left southeast);
+  \draw[bottom style] (page.right northwest) rectangle (page.right southeast);
+}
+%    \end{macrocode}
+
+
+% \begin{docCommand}{tpfancyhdrdefault}{}
+% An example to display headers and footer as |fancyhdr| does.
+% \end{docCommand}
+%    \begin{macrocode}
+\def\tpfancyhdrdefault{
+  \node [outer sep=0,inner sep=0, anchor=mid] at (page.header center) {};
+  \node [outer sep=0,inner sep=0, anchor=mid east] at (page.header east) {\tpflip{\sl\leftmark}{\sl\rightmark}};
+  \node [outer sep=0,inner sep=0, anchor=mid west] at (page.header west) {\tpflip{\sl\rightmark}{\sl\leftmark}};
+  \node [outer sep=0,inner sep=0, anchor=base east] at (page.footer east) {};
+  \node [,outer sep=0,inner sep=0,anchor=base] at (page.footer center) {\thepage};
+  \node [outer sep=0,inner sep=0, anchor=base west] at (page.footer west) {};
+}
+%    \end{macrocode}
+
+% \begin{docCommand}{tikzpage}{}
+% Generate a |tikzpicture| for the whole page. if a \cs{tikzpagelayout}
+% command exists, it will be executed.
+% \end{docCommand}
+%    \begin{macrocode}
+\newcommand{\tikzpage}{
+  \if@tp@use@textpos
+  \begin{textblock*}{\textwidth}[0,0](0pt,0pt)%
+    \fi
+    \tp@compute@margins%
+    \if@tp@use@textpos
+    \begin{tikzpicture}[]%
+      \clip (0,0) rectangle (\paperwidth, \paperheight);
+      \else
+      \begin{tikzpicture}[remember picture, overlay]%
+      \fi
+      \if@tp@use@textpos
+      \node[anchor=origin,shape=page] (page) {};
+      \else
+      \node[anchor=origin,shape=page] (page) at (current page.south west) {};
+      \fi
+      \@ifundefined{tikzpagelayout}{}{\tikzpagelayout}
+    \end{tikzpicture}%
+  \if@tp@use@textpos
+  \end{textblock*}%
+  \fi
+}
+%    \end{macrocode}
+%
+\makeatother
+% \iffalse
+%</PAGE>
+% \fi
+%
+% \Finale
+%
+% \begin{thebibliography}{9}
+
+% \bibitem{Graphical Decoration} Trying to do graphical decorations in
+% “ClassicThesis style” \url{http://tex.stackexchange.com/questions/86294}
+% \end{thebibliography}
+%
+% 
+% 
 \endinput
+
 
 
 
