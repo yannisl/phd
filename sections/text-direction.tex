@@ -1,0 +1,345 @@
+\chapter{Directionality of Scripts}
+
+Most of the languages around the world are printed horizontally, from left-to-right, with the first
+line of the page at the top of the page. In the Middle East, Arabic, Hebrew and several other scripts are
+written horizontally, from right-to-left. In East Asia, traditional writing and printing is done vertically,
+with the first line of the page on the right-hand side; in Japan, this practice is still common for literature.
+Uighur and Mongolian writing is also vertical, but the first line of the page is on the left.
+
+The general problem does not consist in simply printing a text in each of the different directions.
+A typesetting system to be used for multilingual documents needs to be able to print, on the same
+page, multiple languages using different direction combinations, as needed. This means that headers,
+footers, columns, tables, paragraphs, and everything else appearing on a page can potentially appear in
+the different directions.
+
+Genkō yōshi {\panunicode (原稿用紙}, \enquote{manuscript paper}) is a type of Japanese paper used for writing. It is printed with squares, typically 200 or 400 per sheet, each square designed to accommodate a single Japanese character or punctuation mark. Genkō yōshi may be used with any type of writing instrument (pencil, pen or ink brush), and with or without a shitajiki (protective \enquote{under-sheet}).
+
+\begin{figure}[htbp]
+\includegraphics[width=0.9\textwidth]{genkoyoshi}
+
+\bgroup
+\footnotesize
+Correct use of genkō yōshi (400 square sheet shown):
+\narrower\narrower
+\begin{enumerate}
+\item Title on the 1st column, first character in the 4th square.
+\item Author's name on the 2nd column, with 1 square between the family name and the given name, and 1 empty square below.
+\item First sentence of the essay begins on the 3rd column, in the 2nd square. Each new paragraph begins on the 2nd square.
+\item Subheadings have 1 empty column before and after, and begin on the 3rd square of a new column.
+\item Punctuation marks normally occupy their own square, except when they will occur at the top of a column, in which case they share a square with the last character of the previous column.
+\end{enumerate}
+\egroup
+
+\caption{Correct use of genkō yōshi (credit: wikimedia)}
+\end{figure}
+
+The difficulty of both entering text, as well as integrating such a system with \tex is obvious. \xetex and \luatex both provide capabilities of switchin the text direction based on three letter combinations, following a text direction command.
+
+\section{Historical overview}
+A historical overview is given by Plaice\footcite{plaice2013} and summarizes the state of the art as of 2013. Most of what follows in this overview is based on this article.
+
+\subsection{TeX–XeT}
+In the TEX world, the first work [5] in multidirectionality
+was made by Donald Knuth and Pierre
+MacKay, who developed TEX– XET, which allowed
+the mixing of left-to-right and right-to-left horizontal
+texts in the same paragraph. This was done by using
+nested |\beginL–\endL| and |\beginR–\endR| pairs
+to, respectively, embed left-to-right and right-to-left
+texts. However, their work supposes that all pages
+are left-to-right, so it is not suitable for true right-to-left
+documents.
+
+\subsection{pTEX}
+
+Mixed horizontal and vertical typesetting was introduced
+in the TEX world with pTEX [2], a tool
+developed at ASCII Corporation in Japan. Still used
+in Japan, pTEX allows a vertical or a horizontal list
+to be begun with either of the |\yoko| and |\tate|
+primitives. In |\yoko| mode, horizontal and vertical
+boxes have the same meaning as in standard TEX. In
+|\tate| mode, |\hboxes| are vertical and |\vboxes| are
+horizontal.
+
+\subsection{CSS}
+
+The work on supporting multiple directions in Cascading
+Style Sheets (CSS) for HTML [1] has introduced
+some useful terminology:
+
+\textbf{Block flow direction}: from first to last line;\\
+\textbf{Inline base direction}: from first to last glyph;\\
+\textbf{Line orientation}: direction towards “top” of line.
+
+\subsection{Omega}
+
+Omega was the first successor to \tex to attempt to solve the multidirectional problem in its generality [3,
+4, 8]. It assumes that a box or a font’s direction can be designated by three characters, where each is one
+of Top, Bottom, Left, and Right. These characters absolutely designate one of the edges of the physical
+page. Then a writing direction must designate:
+
+\begin{description}
+\item [Primary part] The \enquote{top} of each page.
+\item [Secondary part] The \enquote{left} of each line.
+\item [Tertiary part] The \enquote{top} of each character.
+\end{description}
+
+The secondary direction must be orthogonal to the
+primary direction. The tertiary direction can take all
+four values. Hence there are 32 possible directions.
+Here are the most common ones:
+
+TLT — Left-right (LR) scripts, horizontal CJK.
+
+TRT — Right-left (RL) scripts.
+
+RTT — Vertical CJK, upright LR scripts in vertical
+CJK.
+
+LTL — Mongolian and Uighur (MU).
+
+RTL —MU scripts in vertical CJK.
+
+RTR — Rotated LR scripts in vertical CJK.
+
+LTR — Rotated LR scripts in MU.
+
+LTT — Vertical CJK in MU.
+
+Notwithstanding the impressive number of possible
+writing directions, the proposed solution was not
+sufficiently general, as it did not make provisions for
+phenomena such as typesetting to a curve. Furthermore,
+it required different fonts for different writing
+directions, despite the fact that many of them simply
+involved rotating text.
+
+
+
+
+\section{LuaTeX's Direction identifiers}
+
+The \luatex manual is terse and short in providing examples and difficult sometimes to understand how to use. Most of the discussion that follows is based on an explanation by David Carlisle.
+
+The luatex system distinguishes four different directions,
+TLT, TRT, RTT, LTL.
+The three letters in the name denote three aspects of the typesetting direction behavior.
+
+\begin{enumerate}
+\item
+The direction towards the \enquote{top} of the paragraph
+(that is, the start of the vertical mode direction)
+is one of 
+
+T(top), L(left), R(right).
+
+For English and Arabic, the beginning of the paragraph is \textbf{T};
+
+for Japanese vertical text it is \textbf{R};
+
+for Mongolian it is \textbf{L}.
+
+
+\item 
+The direction towards the beginning of the line
+(that is, the start of the horizontal mode direction)
+is one of
+T(top), L(left), R(right).
+
+Defines  where  each  line  begins.
+
+For  English, it is L;
+
+for Arabic, it is R;
+
+for Japanese and Mongolian, it is T.
+
+
+\item 
+The top of the glyphs within the line
+is one of
+T(top), L(left).
+
+\bigskip
+
+These result in the following typical settings:
+
+TLT for English,
+
+TRT for  Arabic,
+
+RTT for  Japanese,
+
+LTL for  Mongolian.
+
+\end{enumerate}
+
+
+
+\section{Direction registers}
+
+The direction state is stored in five registers as listed below
+
+\halign{&# \hfil\cr
+page &|tex.pagedir|& |\pagedir|\cr
+text &|tex.textdir|& |\textdir|, |\linedir|\cr
+mathematics &|tex.mathdir|& |\mathdir|\cr
+body &|tex.bodydir|& |\bodydir|\cr
+paragraph &|tex.pardir|& |\pardir|\cr}
+
+
+
+Each of these primitives takes as primitive one of the above four writing directions.
+
+
+
+\begin{docCommand}{pagedir}{\meta{direction}}
+\end{docCommand}
+
+
+Can |\bodydir| be different to |\pagedir|? If it is different get warning
+warning  (backend):
+  pagedir differs from bodydir, the output may be placed wrongly on the page.
+
+
+\begin{docCommand}{pardir}{\meta{writing direction code}}
+Sets the paragraph direction.
+\end{docCommand}
+
+
+This defines the direction of the paragraph building.\par
+In the default |\pagedir| TLT |\bodydir| TLT |\textdir| TLT then
+
+TLT:
+paragraph indentation left of first line, at top.
+|\rightskip| fills from the right and |\parfillskip| fills the bottom line, from the right
+
+TRT:
+paragraph indentation left of first line, at top.
+|\rightskip| fills from the left and |\parfillskip| fills the bottom line from the left,
+
+LTL
+paragraph indentation left of first line, at top.
+|\rightskip| is a vertical skip after each line
+
+RTT
+paragraph indentation vertical above first line, at top.
+|\rightskip| is a vertical skip after each line
+
+
+\begin{docCommand}{textdir}{\meta{direction}}
+\end{docCommand}
+
+This primitive can appear anywhere in a text.
+Grouping is respected, so it is possible to have inserts within a
+paragraph.
+
+\begin{docCommand}{linedir}{\meta{direction}}
+\end{docCommand}
+
+The |\linedir| primitive sets the same text direction parameter but
+with a modified positioning of the direction nodes with respect to white
+space, which is convenient in some cases. Compare the two examples below.
+
+
+|abc {\textdir TRT xyz \textdir TLT 123} abc|
+
+abc {\textdir TRT xyz \textdir TLT 123} abc
+
+|abc {\linedir TRT xyz \linedir TLT 123} abc|
+
+abc {\linedir TRT xyz \linedir TLT 123} abc
+
+
+Note how in the first case the space after |xyz| in the source
+is affected by the direction and so ends up visually adjacent to the
+space after |abc|, with no space visible between xyz and 123.
+|\linedir| adjusts the position of inserted direction nodes relative
+to adjacent space characters so that text runs remain separated by the
+spaces.
+
+
+\begin{texexample}{Lua text direction}{ex:textdir}
+\bgroup
+\panunicode
+\linedir TRT
+\pardir TRT
+كنت أريد أن أقرأ كتابا عن تاريخ المرأة في فرنسا‬
+
+\begin{luacode*}
+  tex.print(tex.pagedir, tex.linedir)
+    
+\end{luacode*}
+\egroup
+\end{texexample}
+
+\begin{docCommand}{mathdir}{\meta{direction}}
+Sets the direction for math typesetting.
+\end{docCommand}
+Normally mathematics is done in the same direction as English, namely
+TLT There have been situations where it has been written TRT.
+
+TLT: left to right\par
+TRT: Right to left\par
+LTL: down with superscripts to the left\par
+RTT: down with superscripts to the right\par
+
+
+
+\section{Box directions}
+
+\begin{description}
+
+\item [\cs{boxdir}]
+
+The |\boxdir| primitive allows the direction of a previously
+constructed box register to be altered.
+
+For example:
+
+|\newbox\bxA|\par
+|\setbox\bxA\hbox{abc}|\par
+|1 \box\bxA\ 2 \boxdir\bxA TRT\ box\bxA|
+
+Produces
+%  1 abc 2 cba
+
+\newbox\bxA
+\setbox\bxA\hbox{abc}
+1 \copy\bxA\ 2 \boxdir\bxA TRT\ \copy\bxA
+
+Note that this only specifies the initial direction, any direction
+nodes that were saved in the box are retained with their original values.
+
+|\newbox\bxB|\par
+|\setbox\bxB\hbox{\textdir TLT abc}|\par
+|1 \copy\bxB\ 2 \boxdir\bxB TRT\ \copy\bxB|
+
+Produces
+% 1 abc 2 abc
+
+\newbox\bxB
+\setbox\bxB\hbox{\textdir TLT abc}
+1 \copy\bxB\ 2 \boxdir\bxB TRT\ \copy\bxB
+
+\end{description}
+
+\section{Direction nodes}
+
+to be added\dots
+
+\section{Balancing the direction stack}
+
+Something about how direction nodes are constructed to add |+| or |-|
+prefixed direction nodes to generate a balanced stack for the back end
+processing\dots
+
+
+\section{ local\textunderscore par nodes}
+
+Perhaps, add something, as far as they relate to directionality\dots
+
+\section{Paragraph Shape}
+
+Something about |\parshape| and |\shapemode| to be added\dots

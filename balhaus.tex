@@ -1,0 +1,317 @@
+\documentclass[twoside,11pt,latin]{book}
+\usepackage{microtype}
+\let\HUGE\huge
+\usepackage{phd}
+%\usepackage[paperheight=10.04in, paperwidth=9.25in, top=1.5cm, bottom=1.5cm]{geometry}
+
+\usepackage[paperheight=8.61in, paperwidth=6.83in, top=1.0cm, bottom=2cm, margin=1.5cm, nohead, nofoot, heightrounded, verbose]{geometry}
+%\usepackage{xlayouts}
+%\cxset{geometry units=pt}
+%\pagestyle{grid}
+%\setmainfont{Century Schoolbook}
+\usepackage{phd-fontmanager}
+\usepackage{phd-colorpalette}
+\usepackage{phd-documentation}
+
+%\usepackage{phd-runningheads}
+\usepackage{phd-lowersections}
+\usetikzlibrary{shapes.geometric}
+\usetikzlibrary{math}
+\usepackage{marginnote}
+\cxset{palette bbc}
+\begin{document}
+\pagecolor{thecodebackground}
+\color{black!80}
+\mainmatter
+\cxset{chapter format=traditional}
+\chapter{The Full Page Pictures}
+
+\begin{multicols}{2}
+These are more difficult to achieve, firstly as we need to ensure that the pages do not contain any floats, which we need to flush before we typeset them.
+
+Mark-up for such pages, bothered me for a while. It has to be as simple as possible, but at the same time as flexible as possible. We also face problems of rounding off that now and then the edges have small white spaces.
+
+The aspect ratio of the page and the picture must be the same. We need to measure the image, which is not difficult.
+\end{multicols}
+
+\newsavebox{\mybox}
+\savebox{\mybox}{\includegraphics[width=1.5\textwidth]{balthus-19}}
+width \the\wd\mybox \\
+height \the\ht\mybox\\
+depth \the\dp\mybox\\
+\ifdim\ht\mybox>\textheight
+  has no margins \the\textheight
+  \else
+  does have margins \the\textheight
+\fi
+
+\newlength\mydim
+
+A
+
+\mydim = \the\dimexpr \the\ht\mybox / \the\wd\mybox \relax
+
+B
+\the\mydim
+
+
+\the\dimexpr 12pt / 2.0pt\relax
+\newpage
+
+%% Double Page spread with text
+\thispagestyle{empty}
+
+
+\tikz[remember picture, overlay] \node[below right,xshift=1cm, yshift=-1cm] at (current page.north west){\includegraphics[width=1.5\paperwidth]{balthus-19}}; 
+
+\newpage
+\thispagestyle{empty}
+\tikz[remember picture, overlay] \node[below left,xshift=-0.5\paperwidth, yshift=0.0cm] at (current page.north east){\includegraphics[width=1.5\paperwidth]{balthus-19}};
+
+%% Las tres gracias
+\clearpage
+\pagecolor{white}
+\tikz[remember picture, overlay] \node[below right,xshift=-0.2cm, yshift=0.2cm] at (current page.north west){\includegraphics[width=1.5\paperwidth]{las-tres-gracias}}; 
+
+\newpage
+\thispagestyle{empty}
+\tikz[remember picture, overlay] \node[below left,xshift=-0.5\paperwidth-0.2cm, yshift=0.2cm] at (current page.north east){\includegraphics[width=1.5\paperwidth]{las-tres-gracias}};
+
+
+\bgroup
+\leftskip3.5in
+
+The output routines possible with \tex are inadequate for books that have a modern style. Should we be able to measure the text and prohibit certain regions of the page from allowing text, i.e. only allow images, then everything is possible with minimum effort. \thepage\par
+\egroup
+
+\newpage
+
+% reflect for better composition
+\noindent\tikz[remember picture, overlay] \node[above right,xshift=-0.15cm, yshift=0.0cm] at (current page.south west) {
+      \reflectbox{\includegraphics[height=1.01\paperheight]{balthus-01}}};
+
+
+
+
+
+\def\balthus#1{\newpage
+ \pagecolor{creamy} 
+ \checkoddpage
+ \ifoddpage
+  \tikz[remember picture, overlay] \node[above right,xshift=0.0cm, yshift=0.0cm, inner sep=0pt] at (current page.south west)    {\includegraphics[height=1.02\paperheight]{#1}};
+  \else
+  \tikz[remember picture, overlay] \node[above left,xshift=0.0cm, yshift=0.0cm, inner sep=0pt] at (current page.south east)  {\includegraphics[height=1.02\paperheight]{#1}};
+ \fi
+} 
+
+%% This are for normal figures with caption in margin
+\NewDocumentCommand\balthusin{ m m}{%
+  \newpage
+  \parindent=0pt
+  \par\leavevmode
+  \thispagestyle{empty}
+  \parindent=0pt
+  \pagecolor{white} 
+  \checkoddpage
+  \ifoddpage
+    \imageclassio{#1}{#2}%
+  \else
+    \imageclassie{#1}{#2}
+  \fi
+} 
+
+
+% The image kayout types are defined as classes, using roman letters. The letters `e' and `o', denote
+% even and odd pages.
+% #1 image file
+% #2 caption text
+% Full width image caption below in the margin
+\def\imageclassie#1#2{%
+  \leavevmode
+  \noindent
+    \tikz \node[below right,xshift=0.0cm, yshift=0.0cm, inner sep=0pt, baseline=X.base] 
+     at (0,0)   {\includegraphics[width=1.02\linewidth]{#1}};
+    \par
+    \noindent\tikz[remember picture, overlay] \node[below right, baseline=X.base, inner sep=0pt] 
+    at (0.67\linewidth+7pt, 0) {\parbox{4.4cm}{\scriptsize #2 page \thepage}};\par
+}
+
+
+%% Ceheck odd page
+\makeatletter
+\def\imageclassio#1#2{%
+ \leavevmode
+ \noindent
+ \tikz \node[below right,xshift=0.0cm, yshift=0.0cm, inner sep=0pt] 
+      at (0,0)  {\includegraphics[width=1.02\linewidth]{#1}};\par
+  \noindent
+  \tikz[remember picture, overlay] \node[below right, baseline=X.base, inner sep=0pt] at +(0pt,-7pt) 
+  {\parbox{\dimexpr(0.33\textwidth-7pt)}{\scriptsize #2 page \thepage odd~page\meaning\@ptsize}};\par
+}
+
+
+\tikzset{imageclassiciie/.style = {below right,xshift=0.0cm, yshift=0.0cm, inner sep=0pt}}
+\def\imageclassiie#1#2{%
+ \leavevmode
+ \noindent
+ \tikz \node[imageclassiciie] 
+      at (0,0)  {\includegraphics[width=0.67\linewidth]{#1}};\par
+  %    
+  \tikz[remember picture, overlay] \node[above right,inner sep=0pt] at +(0.67\linewidth+10pt, +2\topskip) 
+  {\parbox[b]{\dimexpr(0.33\textwidth-7pt)}{\scriptsize #2 page \thepage evenpage\meaning\@ptsize}\par };
+  %
+}
+% The auxiliary macro iio puts a line width drawing and places the sidecaption at left of the image
+%    \begin{macrocode}
+\def\imageclassiio#1#2{%
+ \leavevmode
+ \noindent
+  \hspace*{0.33\linewidth} \tikz \node[below right,xshift=0.0cm, yshift=0.0cm, inner sep=0pt] 
+      at (0,0)  {\includegraphics[width=0.67\linewidth]{#1}};
+      
+  \tikz[remember picture, overlay] \node[above right,inner sep=0pt] at (0.0, +\topskip) 
+  {\parbox{\dimexpr(0.33\textwidth-7pt)}{\scriptsize #2 page \thepage evenpage\meaning\@ptsize}};\par
+
+}
+%    \end{macrocode}
+\makeatother
+
+% always fullheight & centered, with margins. If image is smaller align at top
+% caption appears on next page.
+\def\imageclassiii#1{
+\leavevmode
+ \noindent
+ \centering
+  \tikz \node[below right,xshift=1.0cm, yshift=0.0cm, inner sep=0pt] 
+      at (0, 0){\includegraphics[height=\textheight]{#1}};\par
+}
+
+
+\balthus{balthus-02}
+%
+\balthus{balthus-03}
+%
+\balthus{balthus-05}
+%
+\balthus{balthus-04}
+%
+%
+%
+\balthus{balthus-07}
+\bgroup
+\small
+\vfill\vfill
+\vbox{\centering
+\textit{\textbf{The Guitar Lesson}}, 1934\\
+Oil on canvas, 161 x 138.5cm\\
+Private collection\par\clubpenalty=10000}
+\vfill
+\egroup
+
+\newpage
+%
+
+\ExplSyntaxOn
+\def\sometext{
+\par\leavevmode
+\bgroup
+\checkoddpage
+\ifoddpage
+  \leftskip=.33\textwidth
+\else
+  \rightskip=.33\textwidth
+\fi  
+\lipsum[1]
+\egroup
+}
+\ExplSyntaxOff
+
+
+\balthusin{balthus-09}{\lorem}
+\sometext
+
+\balthusin{balthus-06}{The nude woman on a couch and other nonsense.}
+\sometext
+
+\balthusin{balthus-08}{}
+\sometext
+
+\balthusin{balthus-11}{}
+\sometext
+
+\balthusin{balthus-12}{}
+\sometext
+
+	% max fraction of floats at top
+   % \renewcommand{\bottomfraction}{0.8}	% max fraction of floats at bottom
+\newpage
+\balthusin{balhus-10}{}
+
+\balthusin{balthus-09}{}
+A \sometext
+
+\balthusin{balthus-13}{}
+\sometext
+
+\newpage
+
+\imageclassiio{balthus-14}{CLASS 2, ODD \lorem}
+\sometext
+
+\newpage
+
+\imageclassiie{balthus-15}{}
+\sometext
+
+\newpage
+% page 62 nude in repose
+\imageclassiio{balthus-16}{Surprise}
+\sometext
+
+\newpage
+% page 62 nude in repose
+\imageclassiio{balthus-17}{}
+\sometext
+
+\newpage
+\imageclassiie{balthus-18}{}
+
+\newpage
+\imageclassio{amanda-charchian}{Amanda Charchian\\ \lorem}
+\sometext
+
+
+
+\newpage
+\imageclassio{amanda-charchian-01}{Amanda Charchian}
+
+\newpage
+\thispagestyle{grid}
+\imageclassie{amanda-charchian-02}{Amanda Charchian}
+\tikz[remember picture, overlay, outer sep=0pt, inner sep=0pt] \node[above right, xshift=1in+\evensidemargin-\oddsidemargin] at (current page.south west)  {\includegraphics[width=3.5cm]{amanda-charchian-01}};
+
+		\begin{tikzpicture}[remember picture, overlay, outer sep=0pt, inner sep=0pt, scale=1.05, transform shape] 
+		  \node[above right, xshift=1.5cm, yshift=4cm, text width=3.8cm] at (current page.south west) {%
+		      \RaggedRight\scriptsize\lorem
+		     \vspace*{3pt}  
+		      \includegraphics[width=3.8cm]{amanda-charchian}
+		   };
+			\end{tikzpicture}  
+\sometext
+\newpage
+\imageclassiii{m-martin-01.png}{M Martin}
+
+\newpage
+\cxset{geometry units=mm}
+\thispagestyle{grid}
+\imageclassiio{balthus-20}{}
+
+% New type with centered full height image has top and bottom margins
+\newpage
+\imageclassiii{balthus-21}
+
+
+\newpage
+\balthusin{fishy}{Fishy }
+\onelinecaption{Fishy}{\lorem}
+\end{document}

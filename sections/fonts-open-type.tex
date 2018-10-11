@@ -1,0 +1,222 @@
+\chapter{Using Open Type Fonts}
+
+\section{Introduction}
+
+OpenType is a format for scalable computer fonts. It was built on its predecessor TrueType, retaining TrueType's basic structure and adding many intricate data structures for prescribing typographic behavior. OpenType is a registered trademark of Microsoft Corporation.
+
+The specification germinated at Microsoft, with Adobe Systems also contributing by the time of the public announcement in 1996.
+
+Because of wide availability and typographic flexibility, including provisions for handling the diverse behaviors of all the world's writing systems, OpenType fonts are used commonly today on the major computer platforms.
+
+
+
+OpenType fonts (and other \enquote{smart} font technologies such as AAT and Graphite) can change the appearance of text in many different ways.
+These changes are referred to as font features.
+When the user applies a feature~--- for example, small capitals~--- to a run of text, the code inside the font makes appropriate substitutions and small capitals appear in place of lowercase letters.
+However, the use of such features does not affect the underlying text.
+In our small caps example, the lowercase letters are still stored in the document; only the appearance has been changed by the OpenType feature.
+This makes it possible to search and copy text without difficulty.
+If the user selected a different font that does not support small caps, the `plain' lowercase letters would appear instead.
+
+Some OpenType features are required to support particular scripts, and these features are often applied automatically.
+The Indic scripts, for example, often require that characters be reshaped and reordered after they are typed by the user, in order to display them in the traditional ways that readers expect.
+Other features can be applied to support a particular language.
+The Junicode font for medievalists uses by default the Old English shape of the letter thorn, while in modern Icelandic thorn has a more rounded shape.
+If a user tags some text as being in Icelandic, Junicode will automatically change to the Icelandic shape through an OpenType feature that localises the shapes of letters.
+
+There are a large group of OpenType features, designed to support high quality typography a multitude of languages and writing scripts.
+
+Examples of some font features have already been shown in previous sections; the complete set of OpenType font features supported by \pkg{fontspec} is described below in \ref{sec:ot-feat}.
+
+The OpenType specification provides four-letter codes (e.g., \texttt{smcp} for small capitals) for each feature.  The four-letter codes are given below along with the \pkg{fontspec} names for various features, for the benefit of people who are already familiar with OpenType.  You can ignore the codes if they don't mean anything to you.
+
+
+
+
+
+\begin{texexample}{}{}
+\ifxetex
+  %\usepackage{fontspec}
+  %\defaultfontfeatures{Mapping=tex-text}
+  %\setmainfont{Times New Roman}
+  %\setsansfont{Myriad Pro}
+  Running XeTeX
+\else
+  \ifluatex
+  %\usepackage{lmodern}
+  %\usepackage[T1]{fontenc}
+    Running LuaTeX
+  \else
+    Running pdfLaTeX
+  \fi
+\fi
+\end{texexample}
+
+For free fonts there exist a few resources that can be used with \LaTeX.
+\url{http://tex.stackexchange.com/questions/53416/using-a-good-non-default-font}. Integrating them within a new document can be a nightmare but is the job of the class and book designer.
+
+\section{Terminology}
+
+With the Open Type fonts a number of new terms have been introduced to deal with the many
+options available when using Open fonts. 
+
+The best source of information for XeTeX is the \ctan{fontspec} manual. It is not an easy read, but if you are going to micromanage fonts, it is advisable to do so.
+
+
+The font-family property specifies the font for an element.
+
+The font-family property can hold several font names as a "fallback" system. If the browser does not support the first font, it tries the next font.
+
+There are two types of font family names:
+
+family-name - The name of a font-family, like "times", "courier", "arial", etc.
+
+generic-family - The name of a generic-family, like "serif", "sans-serif", "cursive", "fantasy", "monospace".
+
+There is though a fundamental difference that one needs to keep in mind, \TeX\ exists in order to always typeset the same on any machine. CSS endeavours to run in any browser and any system, disregarding typography. Nevertheless I decided to provide the interface so at least as to enable document compilation at all times, well almost all times.
+
+
+\section{General font selection with fontspec}
+
+\begin{trivlist}
+\item [\cs{fontspec}\oarg{font features}\marg{font name}]
+\item [\cs{setmainfont}\oarg{font features}\marg{font name}]
+\item [\cs{setsansfont}\oarg{font features}\marg{font name}]
+\item [\cs{setmonofont}\oarg{font features}\marg{font name}]
+\item [\cs{newfontfamily}\marg{cmd}\oarg{font features}\marg{font name}]
+\end{trivlist}
+
+These are the main font-selecting commands of this package. The \cs{fontspec}
+command selects a font for one-time use; all others should be used to deﬁne the
+standard fonts used in a document. They will be described later in this section.
+The font features argument accepts comma separated \marg{font feature}=\marg{option}
+lists; these are described in later:
+
+
+\ifxetex
+\begin{texexample}{}{}
+\bgroup
+\fontspec{Verdana}
+\raggedright
+\knutext
+
+\newfontfamily\calibri{Calibri}
+  \calibri 
+
+
+\def\setchapterfont{\calibri\huge}
+
+\textsf{\large \lorem}
+\egroup
+\end{texexample}
+\fi
+
+\begin{quote}
+\begin{verbatim}
+\DeclareTextFontCommand{\textsf}{\calibri}
+\end{verbatim}
+\end{quote}
+
+\subsection{fontspec commands to select font families}
+
+In many cases there is only a need to define a new font for specific case, for example only for a chapter head. It is 
+
+\begin{docCmd} {newfontfamily} { \marg{font-switch}\oarg{font features}\marg{font name}}
+  Creates a new font-family, using the \pkgname{fontspec} package.
+\end{docCmd}
+
+For cases when a specific font with a specific feature set is going to be re-used
+many times in a document, it is inefficient to keep calling \cs{fontspec} for every use. For this reason, new commands can be created for loading a particular font family
+
+While the \cs{fontspec} command does not define a new font instance after the first
+call, the feature options must still be parsed and processed.
+\cs{newfontfamily}. The example that follows, defines a new font family to be used only for chapterheads. This is more efficient and also provides a semantic interface for the author.
+
+\begin{texexample}{newfontfamily}{ex:newfontfamily}
+ 
+\newfontfamily\calibri{Calibri}
+\def\setchapterfont{%
+   \calibri\huge\bfseries}
+
+\bgroup
+\setchapterfont CHAPTER 10
+\egroup
+\end{texexample}
+
+\begin{teX}
+15 \DeclareTextFontCommand{\textrm}{\rmfamily}
+16 \DeclareTextFontCommand{\textsf}{\sffamily}
+17 \DeclareTextFontCommand{\texttt}{\ttfamily}
+18 \DeclareTextFontCommand{\textnormal}{\normalfont}
+\end{teX}
+
+\subsection{How to select font features}
+
+Font features are selected by a series of \meta{feature}=\meta{option}
+selections. Features are (usually) grouped logically; for example, all
+font features relating to ligatures are accessed by writing \verb|Ligatures={...}| with the appropriate argument(s), which could be \texttt{TeX}, \texttt{Rare}, etc., as shown below in \ref{sec:ot-feat-liga}.
+
+Multiple options may be given to
+any feature that accepts non-numerical input, although doing so will
+not always work. Some options will override others in generally
+obvious ways; \Verb|Numbers={OldStyle,Lining}| doesn't make much
+sense because the two options are mutually exclusive, and \XeTeX\
+will simply use the last option that is specified (in this case
+using \opt{Lining} over \opt{OldStyle}).
+
+If a feature or an option is requested that the font does not have,
+a warning is given in the console output. As mentioned in \vref{sec:quiet-warnings}
+these warnings can be suppressed by selecting the \texttt{[quiet]} package option.
+
+\subsection{How do I know what font features are supported by my fonts?}
+
+Although I've long desired to have a feature within \pkg{fontspec} to display the OpenType features within a font, it's never been high on my priority list.
+One reason for that is the existence of the document |opentype-info.tex|, which is available on \textsc{ctan} or typing |kpsewhich opentype-info.tex| in a Terminal window.
+Make a copy of this file and place it somewhere convenient.
+Then open it in your regular \TeX\ editor and change the font name to the font you'd like to query; after running through plain \XeTeX, the output \textsc{pdf} will look something like this:
+
+
+
+\subsection{Setting font features}
+\index{fontspec>font features}
+
+The \pkgname{fontspec} package enables the selection of font features during run-time; font features are items such as colors, proportional OldStyle numbers and other similar items. Some of the examples that follow have been extracted from the fontspec documentation.
+
+\ifxetex\else\ifluatex
+\begin{texexample}{}{}
+\fontspec[Numbers={Proportional,OldStyle}]
+{TeX Gyre Adventor}
+`In 1842, 999 people sailed 97 miles in
+13 boats. In 1923, 111 people sailed 54
+miles in 56 boats.' \bigskip
+
+\fontspec{TeX Gyre Adventor}
+`In 1842, 999 people sailed 97 miles in
+13 boats. In 1923, 111 people sailed 54
+miles in 56 boats.' \bigskip
+\end{texexample}
+
+Accessing Raw Features explicitly is perhaps better suited to people that like to investigate under the hood and can also provide a clearer way to understand what is going on.
+ 
+\begin{texexample}{}{}
+\fontspec[RawFeature=+onum;+zero]{TeX Gyre Adventor}
+`In 1842, 999 people sailed 97 miles in
+13 boats. In 1923, 1110 people sailed 54
+miles in 56 boats.' \bigskip
+
+\fontspec[RawFeature=+tnum;+zero]{TeX Gyre Adventor}
+00001761 tabular figures \fox \bigskip
+
+\fontspec[RawFeature=+pnum;+zero]{TeX Gyre Adventor}
+00001761 proportional figures \bigskip
+
+\fontspec[RawFeature=+onum;+zero]{TeX Gyre Adventor}
+00001761 old numerals\bigskip
+
+\fontspec[RawFeature=+lnum;+zero]{TeX Gyre Adventor}
+00001761 lining figures\bigskip
+\end{texexample}
+
+Not all \OpenType\footnote{See \protect\url{https://www.microsoft.com/typography/otspec/featurelist.htm}} fonts provide all font features and some will only work in combination with others, for example the |onum| feature will only work with the |pnum| number features. Some experimentation and viewing the font features with a utility is essential.
+
+\fi\fi

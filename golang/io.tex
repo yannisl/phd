@@ -1,0 +1,185 @@
+\newfontfamily\aegyptus{AegyptusR.ttf}
+
+
+\chapter{The io Package}
+
+Go is a programming language built for working with bytes. Whether you have lists of bytes, streams of bytes, or individual bytes, Go makes it easy to process. From these simple primitives we build our abstractions and services.
+
+The io package is one of the most fundamental packages within the standard library. It provides a set of interfaces and helpers for working with streams of bytes.
+
+\section{Reading bytes}
+
+There are two fundamental operations when working with bytes: reading and writing. Let’s take a look at reading bytes first.
+
+Reader interface
+The basic construct for reading bytes from a stream is the Reader interface:
+
+\begin{minted}[bgcolor=black!3!white, fontsize=\small]{go}
+type Reader interface {
+        Read(p []byte) (n int, err error)
+}
+\end{minted}
+
+This interface is implemented throughout the standard library by everything from network connections to files to wrappers for in-memory slices.
+
+The Reader works by passing a buffer, p, to the Read() method so that we can reuse the same bytes. If Read() returned a byte slice instead of accepting one as an argument then the reader would have to allocate a new byte slice on every Read() call. That would wreak havoc on the garbage collector.
+
+One problem with the Reader interface is that it comes with some subtle rules. First, it returns an io.EOF error as a normal part of usage when the stream is done. This can be confusing for beginners. Second, your buffer isn’t guaranteed to be filled. If you pass an 8-byte slice you could receive anywhere between 0 and 8 bytes back. Handling partial reads can be messy and error prone. Fortunately there are helpers functions for this problem.
+
+
+\section{Use Readers as Much as Possible for flexibility}
+
+When designing a utility (even if it is only for you) try and use a reader rather than a variable in functions. Think of the reader as your datasource, for example if w wanted to reverse a string, we could write:
+
+\begin{minted}{go}
+func Reverse(s string) (string, error)
+\end{minted}
+
+but this is better written as:
+
+\begin{minted}[bgcolor=black!3!white, fontsize=\small]{go}
+func Reverse(r io.Reader) io.Reader
+\end{minted}
+
+Then, if we want to reverse a string we could write:
+
+\begin{minted}[bgcolor=black!3!white, fontsize=\small]{go}
+r = Reverse(strings.NewReader("Make me backwards"))
+\end{minted}
+
+and for a file:
+
+\begin{minted}{go}
+f, err := os.Open("file.txt")
+if err != nil {
+  log.Fatalln(err)
+}
+r = Reverse(f)
+\end{minted}
+
+We could even use the same interface for a web request:
+
+\begin{minted}[bgcolor=black!3!white, fontsize=\small]{go}
+func handle(w http.ResponseWriter, r *http.Request) {
+  rev := Reverse(r.Body)
+  // etc...
+}
+\end{minted}
+
+
+Use io.Reader (and io.Writer) whenever you’re dealing with streams of data. And this goes for all single method interfaces from the standard library.
+
+
+Some of the examples here were taken from \href{https://medium.com/@matryer/golang-advent-calendar-day-seventeen-io-reader-in-depth-6f744bb4320b}{Mat Ryer's} Medium article.
+
+
+
+\section{A Longer Example}
+
+Consider the following Ancient Egyptian text, rendered using a unicode font.
+\medskip
+
+{\aegyptus\centering
+
+\scalebox{1.5}{𓇓𓏏𓊵𓏙𓊩𓁹𓏃𓋀𓅂𓊹𓉻𓎟𓍋𓈋𓃀𓊖𓏤𓄋𓈐𓏦𓎟𓇾𓈅𓏤𓂦𓈉}
+\par
+}
+
+\medskip
+
+Consider the following fully encoded, machine readable version of the hieroglyphic text, using the standard of encoding the text in a more easy way by hand:
+
+
+\begin{minted}[bgcolor=black!3!white, fontsize=\small]{go}
+M23-X1:R4-X8-Q2:D4-W17-R14-G4-R8-O29:V30-U23-
+N26-D58-O49:Z1-F13:N31-Z2-V30:N16:N21*Z1-D45:N25
+\end{minted}
+
+
+We start by defining what we want to achieve:
+
+\begin{enumerate}
+\item Create a package to encode and decode hieroglyphics as per the Manuel de Codage.
+\item The package can read the input from the keyboard, string or file or specially marked \latexe file.
+\item Output must be compiled to ether HTML or LATEX.
+\item The rendered output to be viewed in a browser, as pdf, if it has been compiled to \latexe or as HTML, by using a simple server.
+\end{enumerate}
+
+
+What we could use here is a Reader to start with from the bufio package. 
+
+\newenvironment{go}{\minted[bgcolor=primary!5!white,fontsize=\small, tabsize=2]{go}%
+}{\endminted}
+
+
+\begin{go}
+// Playing with hieroglyphics
+package main
+
+import (
+	"bufio"
+
+	"fmt"
+
+	"strings"
+)
+
+func main() {
+	// See http://www.catchpenny.org/codage/ for Manuel de Codage
+	const input = `M23-X1:R4-X8-Q2:D4-W17-R14-G4-R8-O29:V30-U23-
+	               N26-D58-O49:Z1-F13:N31-Z2-V30:N16:N21*Z1-D45:N25!`
+	scanner := bufio.NewScanner(strings.NewReader(input))
+
+	// Always good to state what the function is.
+	split := bufio.ScanRunes
+
+	// Set the split function for the scanning operation.
+	scanner.Split(split)
+	// Validate the input
+start:	
+	for scanner.Scan() {
+		c:= scanner.Text()
+		switch c {
+		  case "\n", "\r", " ", "\t": 
+		  case "!": goto start // ignore EOL or EOF
+		  case "-" : fmt.Println("")
+		  default: fmt.Printf("%s", scanner.Text())
+		}
+	}
+
+	if err := scanner.Err(); err != nil {
+		fmt.Printf("Invalid input: %s", err)
+	}
+
+}
+\end{go}
+
+This results in the following output,
+
+\begin{go}
+M23
+X1:R4
+X8
+Q2:D4
+W17
+R14
+G4
+R8
+O29:V30
+U23
+N26
+D58
+O49:Z1
+F13:N31
+Z2
+V30:N16:N21*Z1
+D45:N25
+\end{go}
+
+\href{https://play.golang.org/p/dARWJnLi6Tz}{playground}
+
+There are many other ways we could have achived the tokenization, since we have not put any particular rules for this.
+
+More on Scanners
+
+%https://medium.com/@farslan/a-look-at-go-scanner-packages-11710c2655fc

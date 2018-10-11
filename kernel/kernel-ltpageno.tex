@@ -1,0 +1,127 @@
+% \iffalse meta-comment
+%
+% Copyright 1993-2016
+% The LaTeX3 Project and any individual authors listed elsewhere
+% in this file.
+%
+% This file is part of the LaTeX base system.
+% -------------------------------------------
+%
+% It may be distributed and/or modified under the
+% conditions of the LaTeX Project Public License, either version 1.3c
+% of this license or (at your option) any later version.
+% The latest version of this license is in
+%    http://www.latex-project.org/lppl.txt
+% and version 1.3c or later is part of all distributions of LaTeX
+% version 2005/12/01 or later.
+%
+% This file has the LPPL maintenance status "maintained".
+%
+% The list of all files belonging to the LaTeX base distribution is
+% given in the file `manifest.txt'. See also `legal.txt' for additional
+% information.
+%
+% The list of derived (unpacked) files belonging to the distribution
+% and covered by LPPL is defined by the unpacking scripts (with
+% extension .ins) which are part of the distribution.
+%
+% \fi
+%
+% \iffalse
+%%% From File: ltpageno.dtx
+%
+%<*driver>
+% \fi
+%\ProvidesFile{ltpageno.dtx}
+%             [1994/05/19 v1.1a LaTeX Kernel (Page Numbering)]
+%% \iffalse
+%\documentclass{ltxdoc}
+%\GetFileInfo{ltpageno.dtx}
+%\title{\filename}
+%\date{\filedate}
+% \author{%
+%  Johannes Braams\and
+%  David Carlisle\and
+%  Alan Jeffrey\and
+%  Leslie Lamport\and
+%  Frank Mittelbach\and
+%  Chris Rowley\and
+%  Rainer Sch\"opf}
+%
+%\begin{document}
+% \MaintainedByLaTeXTeam{latex}
+% \maketitle
+% \DocInput{\filename}
+%\end{document}
+%</driver>
+% \fi
+%
+%
+% \changes{v1.0c}{1994/03/29}
+%     {Create file ltcntlen from parts of ltmiscen and ltherest.}
+% \changes{v1.1a}{1994/05/19}
+%     {Extract file ltpageno from ltcntlen.}
+%
+\chapter{Page Number}
+\label{kernel:ltpageno}
+\section{Page Numbering}
+
+It is rather strange that this short piece of code is in its own dtx file. One would
+have expected it to perhaps be found in the file for counters. 
+As expected page numbers are produced by a page counter, used just like any other
+ counter.  The only difference is that |\c@page| contains the number of
+ the next page to be output (the one currently being produced), rather
+ than one minus it.  Thus, it is normally initialized to~1 rather
+ than~0.  |\c@page| is defined to be |\count0|, rather than a count
+ assigned by |\newcount|.
+
+\refCom{pagenumbering}  The user sets the pagenumber style with the \cs{pagenumbering}\marg{foo}
+ command, which sets the page counter to 1 and defines |\thepage| to be
+ |\foo|.  For example, |\pagenumbering{roman}| causes pages to be
+ numbered  i, ii, etc.
+
+
+% 
+%
+\begin{teX}
+%<*2ekernel>
+\message{page nos.,}
+\end{teX}
+%
+
+The \docAuxCommand{cl@page} is set to empty. This is a list of counters to be reset, when the page
+is reset.  If we had used the |\newcounter| control sequence from the Chapter on counters (see page \pageref{kernel:ltcounts}) this would have been created automatically. 
+
+\begin{teXXX}
+\countdef\c@page=0 \c@page=1
+\def\cl@page{}
+\end{teXXX}
+
+\begin{docCommand}{pagenumbering}{\marg{name}}
+Sets the page numbering style. This will be called later in the output routine, when \latexe is building up the
+page and getting it ready to be typeset.
+\end{docCommand}
+\begin{teXXX}
+\def\pagenumbering#1{%
+  \global\c@page \@ne \gdef\thepage{\csname @#1\endcsname
+   \c@page}}
+\end{teXXX}
+%
+\begin{teX}
+%</2ekernel>
+\end{teX}
+%
+\section{Modifications and additions by packages}
+
+The package \pkg{perpage} developed by David Kastrup  adds the ability to reset counters per page and/or keep their
+occurences sorted in order of appearance on the page. 
+It works by attaching itself to the code for \refCom{stepcounter} and will then modify
+the given counter according to information written to the |.aux| file, which means
+that multiple passes may be needed. Since it uses the internals of the \label
+mechanism, the need for additional passes will get announced by \latexe as ``labels
+may have changed''.
+
+The package provides commands to get the absolute number of a counter (even if it is reset) by creating a command |c@abs|\meta{counter}. For example if we call, |AddAbsoluteCounter{page}| it will create the counter |c@abspage|, which can later be used as we require. This can be used for example to get the total pages of a document rather than the actual. The package \pkg{babel} might also interfere with counters. 
+
+% \Finale
+%

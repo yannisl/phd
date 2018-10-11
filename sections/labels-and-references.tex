@@ -1,0 +1,109 @@
+\chapter{Labels and Cross References}
+\cxset{palette spring onion}
+\section{Introduction}
+
+In LaTeX you can easily reference almost anything that is numbered (sections, figures, formulas), and LaTeX will take care of numbering, updating it whenever necessary. The commands to be used do not depend on what you are referencing, and they are:
+
+\begin{docCommand}{label}{\marg{marker}}
+you give the object you want to reference a marker, you can see it like a name.
+\end{docCommand}
+
+\begin{docCommand}{ref}{\marg{marker}}
+you can reference the object you have marked before. This prints the number that was assigned to the object.
+\end{docCommand}
+
+\begin{docCommand}{pageref}{\marg{marker}}
+It will print the number of the page where the object is.
+\end{docCommand}
+
+LaTeX will calculate the right numbering for the objects in the document; the marker you have used to label the object will not be shown anywhere in the document. Then LaTeX will replace the string "\docAuxCommand{ref}\marg{marker}" with the right number that was assigned to the object. If you reference a marker that does not exist, the compilation of the document will be successful but LaTeX will return a warning:\footnote{Some of the contents in this chapter have been copied from \href{https://en.wikibooks.org/wiki/LaTeX/Labels_and_Cross-referencing}{wikipedia}.}
+
+LaTeX Warning: There were undefined references.
+and it will replace "|\ref{unknown-marker}|" with \enquote{??} (so it will be easy to find in the document).
+
+As you may have noticed reading how it works, it is a two-step process: first the compiler has to store the labels with the right number to be used for referencing, then it has to replace the \ref with the right number. That is why, when you use references, you have to compile your document twice to see the proper output. If you compile it only once, LaTeX will use the older information it collected in previous compilations (that might be outdated), but the compiler will inform you printing on the screen at the end of the compilation:
+
+LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.
+Using the command \cs{pageref}\{\} you can help the reader to find the referenced object by providing also the page number where it can be found. You could write something like:
+
+\begin{quote}
+See figure~\cs{ref}\marg{fig:test} on page~\cs{pageref}\marg{fig:test}.
+\end{quote}
+
+Since you can use exactly the same commands to reference almost anything, you might get a bit confused after you have introduced a lot of references. It is common practice among LaTeX users to add a few letters to the label to describe what you are referencing. Some packages, such as \pkg{fancyref}, rely on this meta information. Here is an example:
+
+\vskip\abovedisplayskip
+
+\begin{longtable}{l|l}
+\hline
+ch:	&chapter\\
+sec:	&section\\
+subsec:	&subsection\\
+fig:	& figure\\
+tab:	& table\\
+eq:	& equation\\
+lst:	& code listing\\
+itm:	& enumerated list item\\
+alg:	& algorithm\\
+app:	&appendix subsection \\
+\bottomrule
+\end{longtable}
+
+\vskip\belowdisplayskip
+
+For a more technical discussion, as to how \latexe achieves the referencing see \autoref{ch:ltxref}.
+
+\begin{texexample}{Referencing Equations}{ex:maths}
+\begin{equation} 
+x^2 - 5 x + 6 = 0
+\end{equation}
+
+\begin{equation}
+x_1 = \frac{5 + \sqrt{25 - 4 \times 6}}{2} = 3
+\end{equation}
+
+\begin{equation}\phantomsection \label{eq:solve}
+x_2 = \frac{5 - \sqrt{25 - 4 \times 6}}{2} = 2
+\end{equation}
+
+and so we have solved equation~\ref{eq:solve}
+\end{texexample}
+
+The amsmath package adds a new command for referencing formulae; it is \cs{eqref}\{\}. It works exactly like \cs{ref}\{\}, but it adds parentheses so that, instead of printing a plain number as 5, it will print \eqref{eq:solve}. This can be useful to help the reader distinguish between formulae and other things, without the need to repeat the word \enquote{formula} before any reference. Its output can be changed as desired; for more information see the amsmath documentation.
+
+\paragraph{varioref} The varioref package introduces a new command called \docAuxCommand{vref}\meta{label}. This command is used exactly like the basic |\ref|, but it has a different output according to the context. If the object to be referenced is in the same page, it works just like |\ref|; if the object is far away it will print something like "5 on page 25", i.e. it adds the page number automatically. If the object is close, it can use more refined sentences like "on the next page" or "on the facing page" automatically, according to the context and the document class.
+
+This command has to be used very carefully. It outputs more than one word, so it may happen its output falls on two different pages. In this case, the algorithm can get confused and cause a loop. Let's make an example. You label an object on page 23 and the |\vref| output happens to stay between page 23 and 24. If it were on page 23, it would print like the basic ref, if it were on page 24, it would print "on the previous page", but it is on both, and this may cause some strange errors at compiling time that are very hard to be fixed. You could think that this happens very rarely; unfortunately, if you write a long document it is not uncommon to have hundreds of references, so situations like these are likely to happen. One way to avoid problems during development is to use the standard ref all the time, and convert it to vref when the document is close to its final version, and then making adjustments to fix possible problems.
+
+\paragraph{hyperref}
+
+The hyperref package introduces another useful command; |\autoref|{}. This command creates a reference with additional text corresponding to the target's type, all of which will be a hyperlink. For example, the command |\autoref|{sec:intro} would create a hyperlink to the \label{sec:intro} command, wherever it is. Assuming that this label is pointing to a section, the hyperlink would contain the text \enquote{section 3.4}, or similar (the full list of default names can be found here). Note that, while there's an |\autoref*| command that produces an unlinked prefix (useful if the label is on the same page as the reference), no alternative |\Autoref| command is defined to produce capitalized versions (useful, for instance, when starting sentences); but since the capitalization of autoref names was chosen by the package author, you can customize the prefixed text by redefining |\typeautorefname| to the prefix you want, as in:
+
+|\def\sectionautorefname{Section}|
+
+This renaming trick can, of course, be used for other purposes as well.
+
+If you would like a hyperlink reference, but do not want the predefined text that |\autoref{}| provides, you can do this with a command such as |\hyperref[sec:intro]{Appendix~\ref*{sec:intro}}|. Note that you can disable the creation of hyperlinks in hyperref, and just use these commands for automatic text.
+
+Keep in mind that the |\label| must be placed inside an environment with a counter, such as a table or a figure. Otherwise, not only the number will refer to the current section, as mentioned above, but the name will refer to the previous environment with a counter. For example, if you put a label after closing a figure, the label will still say "figure n", on which n is the current section number.
+
+
+
+\paragraph{nameref} The hyperref package also automatically includes the nameref package, and a similarly named command. It is similar to |\autoref{}|, but inserts text corresponding to the section name, for example.
+
+\begin{texexample}{nameref}{ex:nameref}
+\section{MyFirstSection} \label{sec:marker}
+\section{MySecondSection}
+In section~\nameref{sec:marker} we defined...
+\end{texexample}
+
+
+
+
+
+
+
+
+
+
+

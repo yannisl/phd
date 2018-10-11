@@ -1,0 +1,358 @@
+
+
+\chapter{Sqlite3}
+
+Some limitations does not drop columns with the TABLE ALTER command.
+
+\section{Introduction}
+
+Before we even try and install all the prerequisites yo can try the examples at
+\href{http://sqlfiddle.com/about.html}{sqlfiddle}. At the beginning I suggest you type in the examples. Later on we can use
+some open data databases for example |https://github.com/Microsoft/sql-server-samples/releases/tag/adventureworks|
+
+
+
+\section{CSV Import}
+
+Use the ".import" command to import CSV (comma separated value) data into an SQLite table. The ".import" command takes two arguments which are the name of the disk file from which CSV data is to be read and the name of the SQLite table into which the CSV data is to be inserted.
+
+Note that it is important to set the "mode" to "csv" before running the ".import" command. This is necessary to prevent the command-line shell from trying to interpret the input file text as some other format.
+
+
+\begin{minted}{batch}
+sqlite> .mode csv
+sqlite> .import C:/work/somedata.csv tab1
+\end{minted}
+
+.import demb
+
+There are two cases to consider: (1) Table "tab1" does not previously exist and (2) table "tab1" does already exist.
+
+In the first case, when the table does not previously exist, the table is automatically created and the content of the first row of the input CSV file is used to determine the name of all the columns in the table. In other words, if the table does not previously exist, the first row of the CSV file is interpreted to be column names and the actual data starts on the second row of the CSV file.
+
+For the second case, when the table already exists, every row of the CSV file, including the first row, is assumed to be actual content. If the CSV file contains an initial row of column labels, that row will be read as data and inserted into the table. To avoid this, make sure that table does not previously exist.
+
+Make sure the CSV header row does not contain any duplicated header field names.\footnote{Sometimes when exporting from excel it inserts additional empty columns that can create this type of issue.}
+
+\section{Export SQLite Database to a CSV file using sqlite3 tool}
+
+
+SQLite project provides you with a command-line program called |sqlite3| or |sqlite3.exe| on Windows. By using the |sqlite3| tool, you can use the SQL statements and dot-commands to interact with the SQLite database.
+
+To export data from the SQLite database to a CSV file, you use these steps:
+
+Turn on the header of the result set using the .header on command.
+
+\begin{enumerate}
+\item Set the output mode to CSV to instruct the sqlite3 tool to issue the result in the CSV mode.
+\item Send the output to a CSV file.
+\item Issue the query to select data from the table to which you want to export.
+\end{enumerate}
+
+
+The following commands select data from the customers table and export it to the \docFile{data.csv} file.
+
+%\begin{tcolorbox}
+\begin{minted}{SQL}
+>sqlite3 c:/sqlite/staff.db
+sqlite> .headers on
+sqlite> .mode csv
+sqlite> .output data.csv
+sqlite> SELECT name,
+   ...>        firstname,
+   ...>        lastname,
+   ...>        separtment
+   ...>   FROM employee;
+sqlite> .quit
+\end{minted}
+%\end{tcolorbox}
+
+Do not forget to add the semicolon [;] at the end of the statement.
+
+\section{Special commands to sqlite3 (dot-commands)}
+
+Most of the time, sqlite3 just reads lines of input and passes them on to the SQLite library for execution. But input lines that begin with a dot (".") are intercepted and interpreted by the sqlite3 program itself. These "dot commands" are typically used to change the output format of queries, or to execute certain prepackaged query statements.
+
+For a listing of the available dot commands, you can enter "|.help|" at any time. For example:
+
+\begin{minted}{tex}
+sqlite> .help
+.archive ...           Manage SQL archives: ".archive --help" for details
+.auth ON|OFF           Show authorizer callbacks
+.backup ?DB? FILE      Backup DB (default "main") to FILE
+.bail on|off           Stop after hitting an error.  Default OFF
+.binary on|off         Turn binary output on or off.  Default OFF
+.cd DIRECTORY          Change the working directory to DIRECTORY
+.changes on|off        Show number of rows changed by SQL
+.check GLOB            Fail if output since .testcase does not match
+.clone NEWDB           Clone data into NEWDB from the existing database
+.databases             List names and files of attached databases
+.dbinfo ?DB?           Show status information about the database
+.dump ?TABLE? ...      Dump the database in an SQL text format
+                         If TABLE specified, only dump tables matching
+                         LIKE pattern TABLE.
+.echo on|off           Turn command echo on or off
+.eqp on|off|full       Enable or disable automatic EXPLAIN QUERY PLAN
+.excel                 Display the output of next command in a spreadsheet
+.exit                  Exit this program
+.expert                EXPERIMENTAL. Suggest indexes for specified queries
+.fullschema ?--indent? Show schema and the content of sqlite_stat tables
+.headers on|off        Turn display of headers on or off
+.help                  Show this message
+.import FILE TABLE     Import data from FILE into TABLE
+.imposter INDEX TABLE  Create imposter table TABLE on index INDEX
+.indexes ?TABLE?       Show names of all indexes
+                         If TABLE specified, only show indexes for tables
+                         matching LIKE pattern TABLE.
+.iotrace FILE          Enable I/O diagnostic logging to FILE
+.limit ?LIMIT? ?VAL?   Display or change the value of an SQLITE LIMIT
+.lint OPTIONS          Report potential schema issues. Options:
+                         fkey-indexes     Find missing foreign key indexes
+.load FILE ?ENTRY?     Load an extension library
+.log FILE|off          Turn logging on or off.  FILE can be stderr/stdout
+.mode MODE ?TABLE?     Set output mode where MODE is one of:
+                         ascii    Columns/rows delimited by 0x1F and 0x1E
+                         csv      Comma-separated values
+                         column   Left-aligned columns.  (See .width)
+                         html     HTML <table> code
+                         insert   SQL insert statements for TABLE
+                         line     One value per line
+                         list     Values delimited by "|"
+                         quote    Escape answers as for SQL
+                         tabs     Tab-separated values
+                         tcl      TCL list elements
+.nullvalue STRING      Use STRING in place of NULL values
+.once (-e|-x|FILE)     Output for the next SQL command only to FILE
+                         or invoke system text editor (-e) or spreadsheet (-x)
+                         on the output.
+.open ?OPTIONS? ?FILE? Close existing database and reopen FILE
+                         The --new option starts with an empty file
+.output ?FILE?         Send output to FILE or stdout
+.print STRING...       Print literal STRING
+.prompt MAIN CONTINUE  Replace the standard prompts
+.quit                  Exit this program
+.read FILENAME         Execute SQL in FILENAME
+.restore ?DB? FILE     Restore content of DB (default "main") from FILE
+.save FILE             Write in-memory database into FILE
+.scanstats on|off      Turn sqlite3_stmt_scanstatus() metrics on or off
+.schema ?PATTERN?      Show the CREATE statements matching PATTERN
+                          Add --indent for pretty-printing
+.selftest ?--init?     Run tests defined in the SELFTEST table
+.separator COL ?ROW?   Change the column separator and optionally the row
+                         separator for both the output mode and .import
+.session CMD ...       Create or control sessions
+.sha3sum ?OPTIONS...?  Compute a SHA3 hash of database content
+.shell CMD ARGS...     Run CMD ARGS... in a system shell
+.show                  Show the current values for various settings
+.stats ?on|off?        Show stats or turn stats on or off
+.system CMD ARGS...    Run CMD ARGS... in a system shell
+.tables ?TABLE?        List names of tables
+                         If TABLE specified, only list tables matching
+                         LIKE pattern TABLE.
+.testcase NAME         Begin redirecting output to 'testcase-out.txt'
+.timeout MS            Try opening locked tables for MS milliseconds
+.timer on|off          Turn SQL timer on or off
+.trace FILE|off        Output each SQL statement as it is run
+.vfsinfo ?AUX?         Information about the top-level VFS
+.vfslist               List all available VFSes
+.vfsname ?AUX?         Print the name of the VFS stack
+.width NUM1 NUM2 ...   Set column widths for "column" mode
+                         Negative values right-justify
+sqlite>
+
+\end{minted}
+
+
+You should try and memorize the most useful dot commands. I find the export and import related commands very useful. Depending on the version of your sqlite3 some might not be available.
+
+
+
+\section{CREATE TABLE AS SELECT}
+
+Create Table - By Copying all columns from another table
+Syntax
+The syntax for the \sql{CREATE TABLE AS} statement when copying all of the columns in SQL is:
+
+\begin{minted}{SQL}
+CREATE TABLE new_table
+  AS (SELECT * FROM old_table);
+\end{minted}  
+  
+Example
+Let's look at an example that shows how to create a table by copying all columns from another table.
+
+For Example:
+
+\begin{minted}{SQL}
+CREATE TABLE suppliers
+AS (SELECT *
+    FROM companies
+    WHERE id > 1000);
+\end{minted}
+    
+This would create a new table called suppliers that included all columns from the companies table.
+
+If there were records in the companies table, then the new suppliers table would also contain the records selected by the SELECT statement
+
+\begin{minted}{SQL}
+PRAGMA foreign_keys = 0;
+
+CREATE TABLE sqlitestudio_temp_table AS SELECT *
+                                          FROM evaluations_march_2018;
+
+DROP TABLE evaluations_march_2018;
+
+CREATE TABLE evaluations_march_2018 (
+    rowid INTEGER PRIMARY KEY,
+    code  TEXT    REFERENCES staff (code) ON DELETE NO ACTION
+                                          ON UPDATE NO ACTION
+                                          MATCH SIMPLE,
+    name  TEXT,
+    score DECIMAL,
+    q1    DECIMAL,
+    q2    DECIMAL,
+    q3    DECIMAL,
+    q4    DECIMAL,
+    q5    DECIMAL,
+    q6    DECIMAL,
+    q7    DECIMAL,
+    q8    DECIMAL,
+    q9    DECIMAL,
+    q10   DECIMAL,
+    q11   DECIMAL,
+    q12   DECIMAL,
+    q13   DECIMAL,
+    q14   DECIMAL,
+    q15   DECIMAL
+);
+
+INSERT INTO evaluations_march_2018 (
+                                       rowid,
+                                       code,
+                                       name,
+                                       score,
+                                       q1,
+                                       q2,
+                                       q3,
+                                       q4,
+                                       q5,
+                                       q6,
+                                       q7,
+                                       q8,
+                                       q9,
+                                       q10,
+                                       q11,
+                                       q12,
+                                       q13,
+                                       q14
+                                   )
+                                   SELECT rowid,
+                                          code,
+                                          name,
+                                          score,
+                                          q1,
+                                          q2,
+                                          q3,
+                                          q4,
+                                          q5,
+                                          q6,
+                                          q7,
+                                          q8,
+                                          q9,
+                                          q10,
+                                          q11,
+                                          q12,
+                                          q13,
+                                          q14
+                                     FROM sqlitestudio_temp_table;
+
+DROP TABLE sqlitestudio_temp_table;
+
+PRAGMA foreign_keys = 1;
+\end{minted}
+
+
+
+\section{Views}
+
+\begin{minted}{SQL}
+CREATE VIEW view_cad_department AS
+    SELECT name,
+           nationality,
+           department,
+           profession,
+           band,
+           appraisals
+      FROM staff
+     WHERE department = 'CAD';
+\end{minted}
+
+
+\section{How do I replace text?}
+
+Many times, especially if importing from an excel csv file, one has to do a bit of search and replace. Although this can be done 
+easily from excel before importing the data, this can also be achived via standard SQL commands.
+
+\begin{minted}{SQL}
+sqlite> UPDATE table_name SET field = replace (field, 'Draughtsman','CAD Operator' );
+sqlite> UPDATE staff 
+...>    SET job_title = replace (job_title, 'Draughtsman','CAD Operator' );
+\end{minted}
+
+
+\section{How do I create an auto increment field?}
+
+Short answer: A column declared |INTEGER PRIMARY KEY| will autoincrement.
+
+Longer answer: If you declare a column of a table to be \sql{INTEGER PRIMARY KEY}, then whenever you insert a \sql{NULL} into that column of the table, the \sql{NULL} is automatically converted into an integer which is one greater than the largest value of that column over all other rows in the table, or 1 if the table is empty. Or, if the largest existing integer key 9223372036854775807 is in use then an unused key value is chosen at random. For example, suppose you have a table like this:
+
+
+\begin{minted}{SQL}
+CREATE TABLE t1(
+  a INTEGER PRIMARY KEY,
+  b INTEGER
+);
+\end{minted}
+
+
+With this table, the statement
+
+
+\begin{minted}{SQL}
+INSERT INTO t1 VALUES(NULL,123);
+\end{minted}
+
+is logically equivalent to saying:
+
+\begin{minted}{SQL}
+INSERT INTO t1 VALUES((SELECT max(a) FROM t1)+1,123);
+\end{minted}
+
+
+There is a function named |sqlite3_last_insert_rowid()| which will return the integer key for the most recent insert operation.
+
+Note that the integer key is one greater than the largest key that was in the table just prior to the insert. The new key will be unique over all keys currently in the table, but it might overlap with keys that have been previously deleted from the table. To create keys that are unique over the lifetime of the table, add the \sql{AUTOINCREMENT} keyword to the \sql{INTEGER PRIMARY KEY} declaration. Then the key chosen will be one more than the largest key that has ever existed in that table. If the largest possible key has previously existed in that table, then the \sql{INSERT} will fail with an |SQLITE_FULL| error code.
+
+\section{Cleaning Your Data}
+
+Many times when importing from an excel spreadsheet your data needs to be \enquote{cleaned}. One annoying habit of many Engineers is to mix capitalized values with lower case or title case values. My preference is to use good typographical conventions and write the values in title case. This can be fixed easily, but carefully as it is not reversible using the \sql{UPDATE} and \sql{SELECT} keyword as follows:
+
+\begin{minted}{SQL}
+UPDATE fcu_specified 
+SET serving_area = "Female Lockers" 
+WHERE serving_area= "FEMALE LOCKERS"
+\end{minted}
+
+Another common error is to import fields from a formatted excel spreadsheet where the strings were centered or right justified. This results in blank spaces before and after the strings. YOu can trim the space characters using as similar approach to the above and the trim function:
+
+\begin{minted}{SQL}
+UPDATE fcu_specified 
+SET serving_area = trim(serving_area) 
+\end{minted}
+
+
+
+
+
+
+

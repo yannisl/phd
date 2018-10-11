@@ -1,0 +1,130 @@
+\chapter{Goroutines and Channels}
+
+Goroutines are one of the most basic units of organization in a Go program, so it’s
+important we understand what they are and how they work. In fact, every Go program
+has at least one goroutine: the main goroutine, which is automatically created
+and started when the process begins. In almost any program you’ll probably find
+yourself reaching for a goroutine sooner or later to assist in solving your problems. So
+what are they?
+
+Put very simply, a goroutine is a function that is running concurrently (remember:
+not necessarily in parallel!) alongside other code. You can start one simply by placing
+the go keyword before a function:
+
+
+\begin{minted}{go}
+func main() {
+    go sayHello()
+// continue doing other things
+}
+
+func sayHello() {
+    fmt.Println("hello")
+}
+\end{minted}
+
+
+We could also use an anonymous function. The only caveat with an anoymous function is that it will have to be self-executing function.
+
+\begin{minted}{go}
+go func() {
+  fmt.Println("hi!")
+}()
+\end{minted}
+
+This type of functions are very common in JavaScript and they are called IIFE (pronounced "iffy"). Immediately-invoked function expressions.
+
+Alternatively, we can assign the function to a variable and call the anonymous function like this:
+
+
+\begin{minted}{go}
+sayHi := func() {
+	fmt.Println("hi!")
+}
+\end{minted}
+
+
+
+
+\section{Blocking of Channels}
+
+
+Go channels by default communicate \textit{synchronously} and \textit{unbuffered}. Messages send do not complete until there is a receiver to accept the value. Channel send and receive operations \textit{block} until the other side is ready to reply. 
+
+
+\begin{minted}[fontsize=\small]{go}
+package main
+
+import "fmt"
+
+func main() {
+    ch := make(chan int)
+    go generate(ch)
+	 fmt.Println(<-ch)
+}
+
+func generate(ch chan int) {
+    for i:=0; ; i++ {
+        ch <- i
+    }
+
+}
+\end{minted}
+
+The above program has no receiver we have only indicated <-ch. To unblock the channel we can define a function that will read from the channel in an infinite loop and we start this go routine in main(). 
+
+
+\begin{lstlisting}
+package main
+
+import (
+	"fmt"
+	"time"
+)
+
+func main() {
+	ch := make(chan int)
+	go generator(ch)
+	go suck(ch)
+	time.Sleep(1e9)
+	//fmt.Println(<-ch)
+}
+
+func generator(ch chan int) {
+	for i := 0; ; i++ {
+		ch <- i
+	}
+}
+
+func suck(ch chan int) {
+	for {
+		fmt.Println(<-ch)
+	}
+	
+}
+
+\end{lstlisting}
+
+Now the program will output to the console integers for one minute. We have to block the main routine from exiting.
+
+This simple program demonstrates clearly Rob Pike's mantra. By letting the channels communicate we have managed to synchronize them.
+
+
+\section{Asynchronous channels (buffered)}
+
+An unbuffered channel can only contain one item at a time. We can provide for a buffer in a channel by modifying the make statement.
+
+
+\begin{lstlisting}
+buf := 50
+ch : make(chan string buf)
+\end{lstlisting}
+
+\docAuxCommand{buf} is the mumber of elements of type string that the channel can hold.
+
+
+
+
+
+
+

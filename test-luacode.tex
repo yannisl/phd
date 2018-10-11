@@ -1,0 +1,176 @@
+\documentclass{article}
+\usepackage{graphicx}
+\usepackage{tikz}
+\usepackage{luacode}
+\usepackage{booktabs}
+\usepackage{fontspec}
+\usepackage{lipsum}
+\newfontfamily\pan{code2000}
+\begin{document}
+%\long\def\italianmonthtable{
+
+
+\pan\small
+\begin{luacode} 
+
+c = require("i18n.irish")
+d = require("i18n.russian")
+e = require("i18n.latin")
+f = require("i18n.german")
+g = require("i18n.kannada")
+h = require("i18n.lao")
+j = require("i18n.turkish")
+k = require("i18n.albanian")
+
+local count=0
+
+local months_irish = c.irish.months
+local months_russian = d.russian.months
+local months_latin = e.latin.months 
+local months_german = f.german.months
+local months_kannada = g.kannada.months
+local months_lao    = h.lao.months
+local months_turkish = j.turkish.months
+local months_albanian = k.albanian.months
+
+local tabular = function() 
+	tex.print("\\begin{tabular}{clllllll}")
+	tex.sprint("\\toprule")
+end	
+
+local endtabular = function()
+	tex.print("\\bottomrule")
+	tex.print("\\end{tabular}")
+	tex.print("\\medskip")
+end
+
+local eol = function()
+  return("\\\\")
+end
+
+local defmonths = function(lng)
+   local lang="kannada"
+	tex.print("\\gdef\\"..lng.."month".."#1".."{"..months_kannada[3].."}")  
+end
+
+tabular()
+tex.sprint("Month","&Irish", "&Russian", "&Latin", "&Kannada", "&Lao","&Turkish","&Albanian", eol())
+tex.sprint("\\midrule")
+for i = 1, 12 do
+   count = i
+   tex.sprint(i.."&", months_irish[i],
+                 "&",months_russian[i], 
+                 "&",months_latin[i], 
+                 "&", months_kannada[i], 
+                 "&"..months_lao[i], 
+                 "&"..months_turkish[i],
+                 "&"..months_albanian[i],
+                 eol() )
+end  
+endtabular()
+
+--tex.print(defmonths())
+--tex.print("\\gdef\\kannada{"..months_kannada[3].."}")
+defmonths("kannada")
+\end{luacode}  
+ 
+MyVal=\kannadamonth{1}
+
+\begin{luacode}
+function LineBreaks(T1,T2)
+ local a = T1 .. "\\\\" .. T2 .. "\\par" -- T1\\\\T2\\par
+ local b = [[ T1\\T2 ]]                  -- "T1"\\\\"T2"
+ local c = T1 .. "\\newline " .. T2      -- T1\\newline T2
+ local d = [[ T1\string\newline T2 ]]    -- "T1"\\newline "T2"
+ tex.print(a,b,c,d)
+ 
+end
+\end{luacode}
+
+A first look at metatables
+
+\luadirect{dofile("./i18n/metatables-1.lua")}
+\newdimen\foo \foo1in
+\newdimen\bar \bar=15pt
+\newcount\ncount
+\newskip\barr
+\ncount=12
+\begin{luacode}
+local d = tex.getdimen("foo")
+if tex.isdimen("bar") then
+    tex.setdimen("bar",d)
+end
+
+
+tex.setcount("ncount", 500)
+e=tex.getcount("ncount")
+
+tex.print("The ncount counter is", e)
+
+tex.print("")
+tex.print(d/65000)
+
+tex.print(tex.day)
+tex.print(tex.month)
+tex.print(tex.year)
+
+tex.print(tex.binoppenalty,"\\par")
+
+tex.print(tex.pretolerance)
+tex.print(tex.pagegoal/(65000*72))
+
+tex.print(tex.romannumeral(2017))
+tex.print(tex.lastypos)
+
+tex.cprint( 1," 1: $&{\\foo}") tex.print("\\par") -- a lot of 
+tex.cprint( 2," 2: $&{\\foo}") tex.print("\\par") -- matching egroup s
+tex.cprint( 9," 9: $&{\\foo}") tex.print("\\par") -- all get ignored
+tex.cprint(10,"10: $&{\\foo}") tex.print("\\par") -- all become spaces
+tex.cprint(11,"11: $&{\\foo}") tex.print("\\par") -- letters
+tex.cprint(12,"12: $&{\\foo}") tex.print("\\par") -- other characters
+tex.cprint(14,"12: $&{\\foo}") tex.print("\\par") -- comment triggers
+
+tex.write("\\test")
+
+--for i,v in pairs (tex.hashtokens()) do 
+ 
+--tex.print(-2, v, "\\\\") 
+--end
+
+f = kpse.find_file("phd.ist")
+
+r = kpse.expand_path("phd.ist")
+
+info = fontloader.info("c://windows/fonts/Arial.ttf")
+if info then
+  tex.print(info.fontname)
+  --tex.print(fullname)
+  --tex.print(familyname)
+  --tex.print(weight)
+  --tex.print(version)
+  --tex.print(italicangle)
+  --tex.print(pfminfo)
+end
+
+pdf.setorigin(tex.sp("-1.065in"))
+tex.print(pdf.getorigin()/(65000*72.3)) -- sets both to 0pt
+
+
+
+\end{luacode}
+
+
+\includegraphics[width=\paperwidth]{./images/amato.jpg}
+
+
+\newpage
+\luadirect{pdf.setorigin(tex.sp("1.0in"))}
+
+
+Testing\lipsum[1-15]
+
+\ttfamily
+\luadirect{tex.print(pdf.getorigin()/(65000*72.3))} -- sets both to 0pt
+\end{document}
+
+

@@ -1,0 +1,150 @@
+
+
+\chapter{SQLite Triggers}
+
+SQLite Triggers are database callback functions, which are automatically performed/invoked when a specified database event occurs. Following are the important points about SQLite triggers: 
+
+SQLite trigger may be specified to fire whenever a \mintinline{SQL}{DELETE}, \mintinline{SQL}{INSERT} or 
+\sql{UPDATE} of a particular database table occurs or whenever an 
+\sql{UPDATE} occurs on one or more specified columns of a table.
+
+At this time, SQLite supports only \sql{FOR EACH ROW} triggers, not \sql{FOR EACH STATEMENT} triggers. Hence, explicitly specifying \sql{FOR EACH ROW} is optional. However, it is best to provide it to avoid issues if you decide to use another |SQL| database. 
+
+Both the \sql{WHEN} clause and the trigger actions may access elements of the row being inserted, deleted, or updated using references of the form NEW.column-name and OLD.column-name, where column-name is the name of a column from the table that the trigger is associated with.
+
+If a \sql{WHEN} clause is supplied, the |SQL| statements specified are only executed for rows for which the \sql{WHEN} clause is true. If no \sql{WHEN} clause is supplied, the |SQL| statements are executed for all rows.
+
+The \sql{BEFORE} or \sql{AFTER} keyword determines when the trigger actions will be executed relative to the insertion, modification, or removal of the associated row.
+
+Triggers are automatically dropped when the table that they are associated with is dropped.
+
+The table to be modified must exist in the same database as the table or view to which the trigger is attached and one must use just tablename not database.tablename.
+
+A special SQL function \sql{RAISE()} may be used within a trigger-program to raise an exception.
+
+
+Following is the basic syntax of creating a trigger.
+
+\begin{minted}{SQL}
+CREATE TRIGGER trigger_name [BEFORE|AFTER] event_name 
+ON table_name
+BEGIN
+ -- Trigger logic goes here....
+END;
+\end{minted}
+
+
+
+Here, |event_name| could be INSERT, DELETE, and UPDATE database operation on the mentioned table |table_name|. You can optionally specify \sql{FOR EACH ROW} after table name.
+
+Following is the syntax for creating a trigger on an UPDATE operation on one or more specified columns of a table.
+
+
+\begin{minted}{SQL}
+CREATE TRIGGER trigger_name [BEFORE|AFTER] UPDATE OF column_name 
+ON table_name
+BEGIN
+   -- Trigger logic goes here....
+END;
+\end{minted}
+
+Example
+
+Let us consider a case where we want to keep audit trial for every record being inserted in \sql{COMPANY} table, which we create newly as follows (Drop COMPANY table if you already have it).
+
+
+\begin{minted}{SQL}
+sqlite> CREATE TABLE COMPANY(
+   ID INT PRIMARY KEY     NOT NULL,
+   NAME           TEXT    NOT NULL,
+   AGE            INT     NOT NULL,
+   ADDRESS        CHAR(50),
+   SALARY         REAL
+);
+\end{minted}
+
+
+To keep audit trial, we will create a new table called AUDIT where the log messages will be inserted, whenever there is an entry in \sql{COMPANY} table for a new record.
+
+\begin{minted}{SQL}
+sqlite> CREATE TABLE AUDIT(
+   EMP_ID INT NOT NULL,
+   ENTRY_DATE TEXT NOT NULL
+);
+\end{minted}
+
+Here, ID is the AUDIT record ID, and |EMP_ID| is the ID which will come from COMPANY table and DATE will keep timestamp when the record will be created in COMPANY table. Now let's create a trigger on COMPANY table as follows −
+
+\begin{minted}{SQL}
+sqlite> CREATE TRIGGER audit_log AFTER INSERT 
+ON COMPANY
+BEGIN
+   INSERT INTO AUDIT(EMP_ID, ENTRY_DATE) VALUES (new.ID, datetime('now'));
+END;
+\end{minted}
+
+Now, we will start actual work, Let's start inserting record in COMPANY table which should result in creating an audit log record in AUDIT table. Create one record in COMPANY table as follows −
+
+\begin{minted}{batch}
+sqlite> INSERT INTO COMPANY (ID,NAME,AGE,ADDRESS,SALARY)
+VALUES (1, 'Paul', 32, 'California', 20000.00 );
+This will create one record in COMPANY table, which is as follows −
+
+ID          NAME        AGE         ADDRESS     SALARY
+----------  ----------  ----------  ----------  ----------
+1           Paul        32          California  20000.0
+\end{minted}
+
+Same time, one record will be created in AUDIT table. This record is the result of a trigger, which we have created on INSERT operation in COMPANY table. Similarly, you can create your triggers on UPDATE and DELETE operations based on your requirements.
+
+\begin{minted}{batch}
+EMP_ID      ENTRY_DATE
+----------  -------------------
+1           2013-04-05 06:26:00
+\end{minted}
+
+
+
+\section{Listing Triggers}
+
+You can list down all the triggers from |sqlite_master| table as follows −
+
+
+\begin{minted}{SQL}
+sqlite> SELECT name FROM sqlite_master
+WHERE type = 'trigger';
+The above SQLite statement will list down only one entry as follows −
+
+name
+----------
+audit_log
+\end{minted}
+
+
+
+If you want to list down triggers on a particular table, then use \sql{AND} clause with table name
+
+\begin{minted}{SQL}
+sqlite> SELECT name FROM sqlite_master
+WHERE type = 'trigger' AND tbl_name = 'COMPANY';
+
+The above SQLite statement will also list down only one entry as follows −
+
+name
+----------
+audit_log
+Dropping Triggers
+\end{minted}
+
+
+To \sql{DROP} a trigger us the following syntax.
+
+\begin{minted}{SQL}
+sqlite> DROP TRIGGER trigger_name;
+\end{minted}
+
+Note the type = 'trigger'. 
+
+
+
+

@@ -1,0 +1,390 @@
+
+
+
+
+
+
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{tikz-page}[\pkgfiledate\space (v\pkgfileversion)]
+
+
+\newif\if@tp@use@textpos\@tp@use@textposfalse
+\DeclareOption{textpos}{\@tp@use@textpostrue}
+\ProcessOptions
+
+\if@tp@use@textpos
+\RequirePackage[absolute]{textpos}
+\fi
+
+\RequirePackage{fancyhdr}
+\RequirePackage{tikz}
+\usetikzlibrary{plotmarks,calc,shapes,positioning,decorations.text}
+\RequirePackage{graphicx}
+\RequirePackage{calc}
+
+\makeatletter
+
+
+\newlength{\@tp@left@margin}
+\newlength{\@tp@right@margin}
+\newlength{\@tp@top@margin}
+\newlength{\@tp@bottom@margin}
+
+
+
+\newcommand\@tp@create@length[2]{%
+  \expandafter\newskip\csname tp@#1@#2\endcsname%
+}%
+
+
+\foreach\@@tp@element in {page,body,marginpar,header,footer,top,right,bottom,left}{%
+  \foreach\@@tp@len in {xmin,xmax,xmid,ymin,ymax,ymid}{%
+    \@tp@create@length{\@@tp@element}{\@@tp@len}%
+}}%
+
+\newcommand{\tpflip}[2]{\ifodd\thepage#1\else#2\fi}
+
+
+\def\tp@compute@margins{%
+  \setlength{\tp@page@xmin}{0pt}%
+  \setlength{\tp@page@ymin}{0pt}%
+  \setlength{\tp@page@xmax}{\paperwidth}%
+  \setlength{\tp@page@ymax}{\paperheight}%
+  \setlength{\tp@page@xmid}{\dimexpr(\tp@page@xmin+\tp@page@xmax)/2\relax}%
+  \setlength{\tp@page@ymid}{\dimexpr(\tp@page@ymin+\tp@page@ymax)/2\relax}%
+  %
+  \setlength\@tp@left@margin{\dimexpr(1in+\hoffset+\tpflip{\oddsidemargin}{\evensidemargin})\relax}%
+  \setlength\@tp@right@margin{\dimexpr(\paperwidth-\@tp@left@margin-\textwidth)\relax}%
+  \setlength\@tp@top@margin{\dimexpr(1in+\voffset+\topmargin+\headheight+\headsep)\relax}%
+  \setlength\@tp@bottom@margin{\dimexpr(\paperheight-(\textheight+\@tp@top@margin))\relax}%
+  %% Body computation
+  \setlength\tp@body@xmin{\dimexpr\tp@page@xmin+\@tp@left@margin\relax}%
+  \setlength\tp@body@xmax{\dimexpr\tp@page@xmax-\@tp@right@margin\relax}%
+  \setlength\tp@body@xmid{\dimexpr((\tp@body@xmax+\tp@body@xmin)/2)\relax}%
+  \setlength\tp@body@ymax{\dimexpr(\tp@page@ymax-\@tp@top@margin)\relax}%
+  \setlength\tp@body@ymin{\dimexpr\tp@body@ymin+\@tp@bottom@margin\relax}%
+  \setlength\tp@body@ymid{\dimexpr(\tp@body@ymin+(\tp@body@ymax-\tp@body@ymin)/2)\relax}%
+  %
+  %% Margin computation
+  %
+  \tpflip{%
+    \setlength\tp@marginpar@xmin{\dimexpr\tp@body@xmax+\marginparsep\relax}
+    \setlength\tp@marginpar@xmax{\dimexpr\tp@marginpar@xmin+\marginparwidth\relax}%
+  }{%
+    \setlength\tp@marginpar@xmax{\dimexpr\tp@body@xmin-\marginparsep\relax}%
+    \setlength\tp@marginpar@xmin{\dimexpr\tp@marginpar@xmax-\marginparwidth\relax}%
+  }%
+  \setlength\tp@marginpar@xmid{\dimexpr((\tp@marginpar@xmax+\tp@marginpar@xmin)/2)\relax}%
+  \setlength\tp@marginpar@ymax{\tp@body@ymax}%
+  \setlength\tp@marginpar@ymin{\tp@body@ymin}%
+  \setlength\tp@marginpar@ymid{\tp@body@ymid}%
+  %
+  %% header
+  %
+  \setlength\tp@header@xmax{\tp@body@xmax}%
+  \setlength\tp@header@xmin{\tp@body@xmin}%
+  \setlength\tp@header@xmid{\tp@body@xmid}%
+  \setlength\tp@header@ymin{\dimexpr\tp@body@ymax+\headsep\relax}%
+  \setlength\tp@header@ymax{\dimexpr\tp@header@ymin+\headheight\relax}%
+  \setlength\tp@header@ymid{\dimexpr((\tp@header@ymax+\tp@header@ymin)/2)\relax}%
+  %
+  %% footer
+  %
+  \setlength\tp@footer@xmax{\tp@body@xmax}%
+  \setlength\tp@footer@xmin{\tp@body@xmin}%
+  \setlength\tp@footer@xmid{\tp@body@xmid}%
+  \setlength\tp@footer@ymin{\dimexpr\tp@body@ymin-\footskip\relax}%
+  \setlength\tp@footer@ymax{\tp@footer@ymin}%
+  \setlength\tp@footer@ymid{\dimexpr((\tp@footer@ymax+\tp@footer@ymin)/2)\relax}%
+  %%
+  %% blocks%
+  %%
+  \setlength\tp@top@xmin{\tp@page@xmin}%
+  \setlength\tp@top@xmax{\tp@page@xmax}%
+  \setlength\tp@top@xmid{\dimexpr((\tp@top@xmax+\tp@top@xmin)/2)\relax}%
+  \setlength\tp@top@ymin{\tp@body@ymax}%
+  \setlength\tp@top@ymax{\tp@page@ymax}%
+  \setlength\tp@top@ymid{\dimexpr((\tp@top@ymax+\tp@top@ymin)/2)\relax}%
+  %%
+  \setlength\tp@bottom@xmin{\tp@page@xmin}%
+  \setlength\tp@bottom@xmax{\tp@page@xmax}%
+  \setlength\tp@bottom@xmid{\dimexpr((\tp@bottom@xmax+\tp@bottom@xmin)/2) \relax}%
+  \setlength\tp@bottom@ymin{\tp@page@ymin}%
+  \setlength\tp@bottom@ymax{\tp@body@ymin}%
+  \setlength\tp@bottom@ymid{\dimexpr((\tp@bottom@ymax+\tp@bottom@ymin)/2) \relax}%
+  %%
+  \setlength\tp@left@xmin{\tp@page@xmin}%
+  \setlength\tp@left@xmax{\tp@body@xmin}%
+  \setlength\tp@left@xmid{\dimexpr((\tp@left@xmax+\tp@left@xmin)/2) \relax}%
+  \setlength\tp@left@ymin{\tp@body@ymin}%
+  \setlength\tp@left@ymax{\tp@body@ymax}%
+  \setlength\tp@left@ymid{\dimexpr((\tp@left@ymax+\tp@left@ymin)/2) \relax}%
+  %%
+  \setlength\tp@right@xmin{\tp@body@xmax}%
+  \setlength\tp@right@xmax{\tp@page@xmax}%
+  \setlength\tp@right@xmid{\dimexpr((\tp@right@xmax+\tp@right@xmin)/2) \relax}%
+  \setlength\tp@right@ymin{\tp@body@ymin}%
+  \setlength\tp@right@ymax{\tp@body@ymax}%
+  \setlength\tp@right@ymid{\dimexpr((\tp@right@ymax+\tp@right@ymin)/2) \relax}%
+}%%    \end{macrocode}
+
+
+\def\@tp@genanchors#1{%
+  \anchor{#1 north}{\pgf@x=\csname tp@#1@xmid\endcsname \pgf@y=\csname tp@#1@ymax\endcsname}%
+  \anchor{#1 south}{\pgf@x=\csname tp@#1@xmid\endcsname \pgf@y=\csname tp@#1@ymin\endcsname}%
+  \anchor{#1 west}{\pgf@x=\csname tp@#1@xmin\endcsname \pgf@y=\csname tp@#1@ymid\endcsname}%
+  \anchor{#1 northwest}{\pgf@x=\csname tp@#1@xmin\endcsname \pgf@y=\csname tp@#1@ymax\endcsname}%
+  \anchor{#1 southwest}{\pgf@x=\csname tp@#1@xmin\endcsname \pgf@y=\csname tp@#1@ymin\endcsname}%
+  \anchor{#1 east}{\pgf@x=\csname tp@#1@xmax\endcsname \pgf@y=\csname tp@#1@ymid\endcsname}%
+  \anchor{#1 northeast}{\pgf@x=\csname tp@#1@xmax\endcsname \pgf@y=\csname tp@#1@ymax\endcsname}%
+  \anchor{#1 southeast}{\pgf@x=\csname tp@#1@xmax\endcsname \pgf@y=\csname tp@#1@ymin\endcsname}%
+  \anchor{#1 center}{\pgf@x=\csname tp@#1@xmid\endcsname \pgf@y=\csname tp@#1@ymid\endcsname}%
+}%
+
+\newcommand\tp@pgfdeclareanchoralias[3]{%
+  \expandafter\def\csname pgf@anchor@#1@#3\expandafter\endcsname
+    \expandafter{\csname pgf@anchor@#1@#2\endcsname}}
+
+\pgfdeclareshape{page}{
+  \backgroundpath{
+    \pgfpathmoveto{\pgfpoint{\tp@page@xmin}{\tp@page@ymin}}
+    \pgfpathlineto{\pgfpoint{\tp@page@xmin}{\tp@page@ymax}}
+    \pgfpathlineto{\pgfpoint{\tp@page@xmax}{\tp@page@ymax}}
+    \pgfpathlineto{\pgfpoint{\tp@page@xmax}{\tp@page@xmin}}
+    \pgfpathclose
+  }
+  %% basic anchors
+  \anchor{north}{\pgf@x=\tp@page@xmid \pgf@y=\tp@page@ymax}%
+  \anchor{south}{\pgf@x=\tp@page@xmid \pgf@y=\tp@page@ymin}%
+  \anchor{west}{\pgf@x=\tp@page@xmin \pgf@y=\tp@page@ymid}%
+  \anchor{northwest}{\pgf@x=\tp@page@xmin \pgf@y=\tp@page@ymax}%
+  \anchor{southwest}{\pgf@x=\tp@page@xmin \pgf@y=\tp@page@ymin}%
+  \anchor{east}{\pgf@x=\tp@page@xmax \pgf@y=\tp@page@ymid}%
+  \anchor{northeast}{\pgf@x=\tp@page@xmax \pgf@y=\tp@page@ymax}%
+  \anchor{southeast}{\pgf@x=\tp@page@xmax \pgf@y=\tp@page@ymin}%
+  %\anchor{center}{\pgfpointorigin}
+  \anchor{center}{\pgf@x=\tp@page@xmid \pgf@y=\tp@page@ymid}
+  \anchor{origin}{\pgfpointorigin}%\pgf@x=0pt \pgf@y=0pt}
+  \@tp@genanchors{page}
+  %% Body anchors
+  \@tp@genanchors{body}
+  \@tp@genanchors{marginpar}
+  \@tp@genanchors{header}
+  \@tp@genanchors{footer}
+  \@tp@genanchors{top}
+  \@tp@genanchors{bottom}
+  \@tp@genanchors{left}
+  \@tp@genanchors{right}
+}
+
+\newdimen\tp@linewidth
+\newdimen\tp@marksize
+\setlength\tp@marksize{3pt}
+\pgfdeclareplotmark{tpx}{
+  \setlength{\tp@linewidth}{\pgflinewidth}
+  \pgfsetlinewidth{0.1pt}
+  \pgfpathmoveto{\pgfpoint{-\tp@marksize}{-\tp@marksize}}
+  \pgfpathlineto{\pgfpoint{\tp@marksize}{\tp@marksize}}
+  \pgfpathmoveto{\pgfpoint{-\tp@marksize}{\tp@marksize}}
+  \pgfpathlineto{\pgfpoint{\tp@marksize}{-\tp@marksize}}
+  \pgfusepathqstroke
+  \setlength{\pgflinewidth}{\tp@linewidth}
+}
+
+
+\def\tikzpageputanchorsdefaults{
+  \foreach \anchor/\placement in {%
+    northwest/below right%
+    ,north/below%
+    ,northeast/below left%
+    ,west/right%
+    ,center/below%
+    ,east/left%
+    ,southwest/above right%
+    ,south/above%
+    ,southeast/above left%
+  } \draw[red,shift=(page.\anchor)] plot[mark=tpx%% my plot mark
+  ] coordinates{(0,0)}
+  node[blue,\placement] {\scriptsize\texttt{(page.\anchor)}};
+}
+
+\def\tikzpageputanchorsbody{
+  \foreach \anchor/\placement in {%
+    body northwest/below right%
+    ,body north/below%
+    ,body northeast/below left%
+    ,body west/right%
+    ,body center/below%
+    ,body east/left%
+    ,body southwest/above right%
+    ,body south/above%
+    ,body southeast/above left%
+  } \draw[red,shift=(page.\anchor)] plot[mark=tpx%% my plot mark
+  ] coordinates{(0,0)}
+  node[blue,\placement] {\scriptsize\texttt{(page.\anchor)}};
+}
+
+\def\tikzpageputanchorsmarginpar{
+  \foreach \anchor/\placement in {%
+    marginpar northwest/below left%
+    ,marginpar north/left%
+    ,marginpar northeast/above left%
+    ,marginpar west/below%
+    ,marginpar center/below%
+    ,marginpar east/above%
+    ,marginpar southwest/below right%
+    ,marginpar south/right%
+    ,marginpar southeast/above right%
+  } \draw[red,shift=(page.\anchor)] plot[mark=tpx%% my plot mark
+  ] coordinates{(0,0)}
+  node[blue,\placement, rotate=90] {\scriptsize\texttt{(page.\anchor)}};
+}
+
+\def\tikzpageputanchorsheader{
+  \foreach \anchor/\placement in {%
+    header northwest/above right%
+    ,header north/above%
+    ,header northeast/above left%
+    ,header west/right%
+    ,header center/right%
+    ,header east/left%
+    ,header southwest/below right%
+    ,header south/below%
+    ,header southeast/below left%
+  } \draw[red,shift=(page.\anchor)] plot[mark=tpx%% my plot mark
+  ] coordinates{(0,0)}
+  node[blue,\placement] {\scriptsize\texttt{(page.\anchor)}};
+}
+
+\def\tikzpageputanchorsfooter{
+  \foreach \anchor/\placement in {%
+    footer northwest/above right%
+    ,footer north/above%
+    ,footer northeast/above left%
+    ,footer west/right%
+    ,footer center/right%
+    ,footer east/left%
+    ,footer southwest/below right%
+    ,footer south/below%
+    ,footer southeast/below left%
+  } \draw[red,shift=(page.\anchor)] plot[mark=tpx%% my plot mark
+  ] coordinates{(0,0)}
+  node[blue,\placement] {\scriptsize\texttt{(page.\anchor)}};
+}
+
+\def\tikzpageputanchorstop{
+  \foreach \anchor/\placement in {%
+    top northwest/below right%
+    ,top north/below%
+    ,top northeast/below left%
+    ,top west/right%
+    ,top center/below%
+    ,top east/left%
+    ,top southwest/above right%
+    ,top south/above%
+    ,top southeast/above left%
+  } \draw[red,shift=(page.\anchor)] plot[mark=tpx%% my plot mark
+  ] coordinates{(0,0)}
+  node[blue,\placement] {\scriptsize\texttt{(page.\anchor)}};
+}
+
+\def\tikzpageputanchorsbottom{
+  \foreach \anchor/\placement in {%
+    bottom northwest/below right%
+    ,bottom north/below%
+    ,bottom northeast/below left%
+    ,bottom west/right%
+    ,bottom center/below%
+    ,bottom east/left%
+    ,bottom southwest/above right%
+    ,bottom south/above%
+    ,bottom southeast/above left%
+  } \draw[red,shift=(page.\anchor)] plot[mark=tpx%% my plot mark
+  ] coordinates{(0,0)}
+  node[blue,\placement] {\scriptsize\texttt{(page.\anchor)}};
+}
+
+\def\tikzpageputanchorsleft{
+  \foreach \anchor/\placement in {%
+    left northwest/below left%
+    ,left north/left%
+    ,left northeast/above left%
+    ,left west/below%
+    ,left center/below%
+    ,left east/above%
+    ,left southwest/below right%
+    ,left south/right%
+    ,left southeast/above right%
+  } \draw[red,shift=(page.\anchor)] plot[mark=tpx%% my plot mark
+  ] coordinates{(0,0)}
+  node[blue,\placement, rotate=90] {\scriptsize\texttt{(page.\anchor)}};
+}
+
+\def\tikzpageputanchorsright{
+  \foreach \anchor/\placement in {%
+    right northwest/below left%
+    ,right north/left%
+    ,right northeast/above left%
+    ,right west/below%
+    ,right center/below%
+    ,right east/above%
+    ,right southwest/below right%
+    ,right south/right%
+    ,right southeast/above right%
+  } \draw[red,shift=(page.\anchor)] plot[mark=tpx%% my plot mark
+  ] coordinates{(0,0)}
+  node[blue,\placement, rotate=90] {\scriptsize\texttt{(page.\anchor)}};
+}
+
+\def\tikzpageputanchors{
+  \tikzpageputanchorsdefaults
+  \tikzpageputanchorsbody
+  \tikzpageputanchorsmarginpar
+  \tikzpageputanchorsheader
+  \tikzpageputanchorsfooter
+  \tikzpageputanchorstop
+  \tikzpageputanchorsbottom
+  \tikzpageputanchorsleft
+  \tikzpageputanchorsright
+}
+
+\def\tpshowframes{
+  \draw[fill=blue!50, opacity=.3, draw] (page.bottom northwest) rectangle (page.bottom southeast);
+  \draw[fill=yellow!50, opacity=.3, draw] (page.top northwest) rectangle (page.top southeast);
+  \draw[fill=red!50, opacity=.3, draw] (page.left northwest) rectangle (page.left southeast);
+  \draw[fill=green!50, opacity=.3, draw] (page.right northwest) rectangle (page.right southeast);
+}
+
+\def\tpfancyhdrdefault{
+  \node [outer sep=0,inner sep=0, anchor=mid] at (page.header center) {};
+  \node [outer sep=0,inner sep=0, anchor=mid east] at (page.header east) {\tpflip{\sl\leftmark}{\sl\rightmark}};
+  \node [outer sep=0,inner sep=0, anchor=mid west] at (page.header west) {\tpflip{\sl\rightmark}{\sl\leftmark}};
+  \node [outer sep=0,inner sep=0, anchor=base east] at (page.footer east) {};
+  \node [,outer sep=0,inner sep=0,anchor=base] at (page.footer center) {\thepage};
+  \node [outer sep=0,inner sep=0, anchor=base west] at (page.footer west) {};
+}
+
+\newcommand{\tikzpage}{
+  \if@tp@use@textpos
+  \begin{textblock*}{\textwidth}[0,0](0pt,0pt)%
+    \fi
+    \tp@compute@margins%
+    \if@tp@use@textpos
+    \begin{tikzpicture}[]%
+      \clip (0,0) rectangle (\paperwidth, \paperheight);
+      \else
+      \begin{tikzpicture}[remember picture, overlay]%
+      \fi
+      \if@tp@use@textpos
+      \node[anchor=origin,shape=page] (page) {};
+      \else
+      \node[anchor=origin,shape=page] (page) at (current page.south west) {};
+      \fi
+      \@ifundefined{tikzpagelayout}{}{\tikzpagelayout}
+    \end{tikzpicture}%
+  \if@tp@use@textpos
+  \end{textblock*}%
+  \fi
+}
+\makeatother
+

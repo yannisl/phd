@@ -1,0 +1,115 @@
+\documentclass{article}
+\usepackage{tikz}
+\usepackage{lipsum}
+\usepackage{phd-lorems,varwidth}
+\usetikzlibrary{positioning}
+\begin{document}
+
+\pgfdeclarelayer{background layer}
+\pgfdeclarelayer{foreground layer}
+\pgfsetlayers{background layer,main,foreground layer}
+
+{\leftskip-3cm\rightskip-2cm
+\parindent=0pt Testing \begin{tikzpicture}
+% On main layer:
+\fill[blue] (0,0) circle (1cm);
+\begin{pgfonlayer}{background layer}
+\fill[yellow] (-2,-1) rectangle (2,1);
+\end{pgfonlayer}
+
+\begin{pgfonlayer}{foreground layer}
+\node[black, anchor=base] {CHAPTER 567};
+\node[black, anchor=base] at (3,3) {CHAPTER 567};
+\end{pgfonlayer}
+
+\begin{pgfonlayer}{background layer}
+\fill[black] (-.8,-.8) rectangle (.8,.8);
+\end{pgfonlayer}
+% On main layer again:
+\fill[blue!50] (-.5,-1) rectangle (.5,1);
+\end{tikzpicture}\hskip3pt\lorem
+}
+
+\lipsum[2]
+\section{One}
+
+\makeatletter
+\def\foo{foo}
+\pgfdeclareshape{simple shape}{%
+\savedanchor{\center}{%
+\pgfpointorigin}
+\anchor{center}{\center}
+
+\savedanchor{\anchorfoo}{%
+  \pgf@x=1cm
+\  pgf@y=0cm}
+
+\deferredanchor{anchor \foo}{\anchorfoo}}
+\begin{tikzpicture}
+\node[simple shape] (Test1) at (0,0) {};
+\fill (Test1.anchor foo) circle (2pt) node[below] {anchor foo anchor};
+%
+\def\foo{bar}
+\node[simple shape] (Test2) at (4,0) {};
+\fill (Test2.anchor bar) circle (2pt) node[below] {anchor bar anchor};
+\end{tikzpicture}
+
+\makeatletter
+%\leftskip-4cm
+\newbox\titlebox
+\setbox\titlebox=\hbox{\begin{varwidth}[c]{10cm}\bf\lorem\end{varwidth}}
+\leavevmode\hbox to \linewidth{\hss \begin{tikzpicture}[node distance=0ex,inner sep=0pt,outer sep=0pt,anchor=base west]
+\draw[help lines] (0,0) grid (12,2);
+\node[circle,inner sep=3pt,draw,fill] (X) at (0,1){\Huge\color{white}1};
+\node (a) [base right=of X] {};
+\node[anchor=base west] (y) at (a.base east)[xshift=0mm,yshift=0mm, align=left] {\usebox\titlebox};
+\end{tikzpicture}}
+\hss
+\makeatother
+
+
+\def\pdfliteral#1{\special{pdf:literal #1}}
+
+
+\def\sqPDF#1#2{0 0 m #1 0 l #1 #1 l 0 #1 l h}
+\def\trianPDF#1#2{0 0 m #1 0 l #2 4.5 l h}
+\def\uptrianPDF#1#2{#2 0 m #1 4.5 l 0 4.5 l h}
+\def\circPDF#1#2{#1 0 0 #1 #2 #2 cm .1 w .5 0 m
+   .5 .276 .276 .5 0 .5 c -.276 .5 -.5 .276 -.5 0 c
+   -.5 -.276 -.276 -.5 0 -.5 c .276 -.5 .5 -.276 .5 0 c h}
+\def\diaPDF#1#2{#2 0 m #1 #2 l #2 #1 l 0 #2 l h}
+
+\def\credCOLOR   {.54 .14 0}
+\def\cblueCOLOR  {.06 .3 .54}
+\def\cgreenCOLOR {0 .54 0}
+
+\def\genbox#1#2#3#4#5#6{% #1=0/1, #2=color, #3=shape, #4=raise, #5=width, #6=width/2
+    \leavevmode\raise#4bp\hbox to#5bp{\vrule height#5bp depth0bp width0bp
+    \pdfliteral{q .5 w \csname #2COLOR\endcsname\space RG
+                       \csname #3PDF\endcsname{#5}{#6} S Q
+             \ifx1#1 q \csname #2COLOR\endcsname\space rg 
+                       \csname #3PDF\endcsname{#5}{#6} f Q\fi}\hss}}
+
+                                    % shape     raise width  width/2
+\def\sqbox      #1#2{\genbox{#1}{#2}  {sq}       {0}   {4.5}  {2.25}}
+\def\trianbox   #1#2{\genbox{#1}{#2}  {trian}    {0}   {5}    {2.5}}
+\def\uptrianbox #1#2{\genbox{#1}{#2}  {uptrian}  {0}   {5}    {2.5}}
+\def\circbox    #1#2{\genbox{#1}{#2}  {circ}     {0}   {5}    {2.5}}
+\def\diabox     #1#2{\genbox{#1}{#2}  {dia}      {-.5} {6}    {3}}
+
+%% usage:
+
+squares: \sqbox0{cgreen}, \sqbox1{cred}, \sqbox0{cblue}.
+
+triangles: \trianbox0{cgreen}, \trianbox1{cred}, \trianbox0{cblue}.
+
+triangles: \uptrianbox0{cgreen}, \uptrianbox1{cred}, \uptrianbox0{cblue}.
+
+circles: \circbox0{cgreen}, \circbox1{cred}, \circbox0{cblue}.
+
+diamonds: \diabox0{cgreen}, \diabox1{cred}, \diabox0{cblue}.
+
+
+
+
+\end{document}

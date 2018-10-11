@@ -1,0 +1,62 @@
+%% Source File: shellesc.dtx
+%% Copyright 2015-2016 LaTeX3 project
+%%
+%% This file may be distributed under the terms of the LPPL.
+%% See README for details.
+\ifx\ProvidesPackage\undefined
+\def\next#1#2[#3]{\wlog{#2 #3}}
+\ifx\PackageInfo\undefined\def\PackageInfo#1#2{\wlog{#1: #2}}\fi
+\ifx\PackageWarning\undefined\def\PackageWarning#1#2{\wlog{#1: #2}}\fi
+\expandafter\next\fi
+\ProvidesPackage{shellesc}
+       [2016/06/07 v0.02a unified shell escape interface for LaTeX]
+\ifcase
+  \ifx\pdfshellescape\@undefined
+    \ifx\shellescape\@undefined
+      \ifx\directlua\@undefined
+        \z@
+      \else
+        \directlua{%
+          tex.sprint((status.shell_escape or os.execute()) .. " ")}
+      \fi
+    \else
+      \shellescape
+    \fi
+  \else
+    \pdfshellescape
+  \fi
+  \PackageWarning{shellesc}{Shell escape disabled}
+\or
+  \PackageInfo   {shellesc}{Unrestricted shell escape enabled}
+\else
+  \PackageInfo   {shellesc}{Restricted shell escape enabled}
+\fi
+\ifx\lastsavedimageresourcepages\@undefined
+  \protected\def\ShellEscape{\immediate\write18 }
+\else
+  \protected\def\ShellEscape#1{%
+    \directlua{os.execute("\luaescapestring{#1}")}}
+\fi
+\ifx\lastsavedimageresourcepages\@undefined
+  \protected\def\DelayedShellEscape{\relax\write18 }
+\else
+  \protected\def\DelayedShellEscape#1{%
+    \latelua{os.execute("\luaescapestring{#1}")}}
+\fi
+\ifx\lastsavedimageresourcepages\@undefined\expandafter\endinput\fi
+\directlua{%
+shellesc = shellesc or {}
+local function write_or_execute()
+  local s = token.scan_int()
+  if (s==18) then
+     tex.sprint(\the\numexpr\catcodetable@atletter\relax,
+                "\string\\ShellEscape ")
+  else
+     tex.sprint(\the\numexpr\catcodetable@atletter\relax,
+                "\string\\shellesc@write " .. s)
+  end
+end
+shellesc.write_or_execute=write_or_execute
+}
+\let\shellesc@write\write
+\protected\def\write{\directlua{shellesc.write_or_execute()}}
