@@ -28,21 +28,21 @@ strings.german = {
   rightname         = "recht",
   bindingcorrectionname = "Bindekorrektur",
   name              = "Deutsch",
-    months = {
-      january            = "Januar",
-      february           = "Februar",
-      march              = [[M\"arz]],
-      april              = "April",
-      may                = "Mai",
-      june               = "Juni",
-      july               = "Juli",
-      august             = "August",
-      september          = "September",
-      october            = "Oktober",
-      november           = "November",
-      december           = "Dezember",
-      name               = "Deutche"
-    }
+  months = {
+       "Januar",
+       "Februar",
+       [[M\"arz]],
+       "April",
+       "Mai",
+       "Juni",
+       "Juli",
+       "August",
+       "September",
+       "Oktober",
+       "November",
+       "Dezember",
+       "Deutche"
+  }
  }
 
 return strings

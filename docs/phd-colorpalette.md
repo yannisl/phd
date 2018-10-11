@@ -13,8 +13,8 @@ and `phd-colorpalette.sty`.
 
 run
           phd-lua.bat on windows
-           pdflatex phd.dtx
-           makeindex -s gind.ist -g phd
+          pdflatex phd.dtx
+          makeindex -s gind.ist -g phd
 
 If you have any difficulties with the package come and join us at
 http://tex.stackexchange.com and post a new question or
@@ -53,6 +53,8 @@ that I have completed about 70% of the work that needs
 to be done.
 
 __The package as it stands is not production stable.__
+
+
 
 
 

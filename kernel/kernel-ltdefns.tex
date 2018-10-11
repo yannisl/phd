@@ -22,9 +22,9 @@
 
   \medskip  
 
-\begin{docCommand}{two@digits}{\marg{number}}
+\begin{docCommand*}{two@digits}{\marg{number}}
 Prefix a number less than 10 with `0'.
-\end{docCommand}
+\end{docCommand*}
 
 \begin{teX}
 \def\two@digits#1{\ifnum#1<10 0\fi\number#1}
@@ -41,13 +41,15 @@ Prefix a number less than 10 with `0'.
     \immediate\write\@unused{#1}\endgroup}
 \end{teX}
  
-\begin{docCommand} {newlinechar}{ }
+\begin{docCommand*} {newlinechar}{ }
     A char to be used as new-line in output to files.
-\end{docCommand}
+\end{docCommand*}
 
 \begin{teX}
 \newlinechar`\^^J
 \end{teX}
+
+
  \section{Saved versions of \TeX{} primitives}
 
 
@@ -167,26 +169,31 @@ The next one is another 100 tokens worth.
 
  This section defines the following commands:
 
- \DescribeMacro
-  {\@namedef}\marg{NAME}\\ Expands to |\def\|\marg{NAME},
+\begin{docCommands} 
+ \refCom{@namedef}{\marg{NAME}}
+  Expands to |\def\|\marg{NAME},
    except name can contain any characters.
 
- \DescribeMacro
-  {\@nameuse}\marg{NAME}\\
-   Expands to |\|\marg{NAME}.
+ 
+ \refCom{@nameuse}{\marg{name}}
+   Expands to |\|\meta{name}.
 
- \DescribeMacro
-  {\@ifnextchar} X\marg{YES}\marg{NO}\\
-    Expands to \meta{YES} if next character is an `X',
+
+ 
+\refCom{docCommand}{@ifnextchar}{X\marg{YES}\marg{NO}}
+Expands to \meta{YES} if next character is an `X',
           and to \meta{NO} otherwise.
           (Uses |\reserved@a|--|\reserved@c|.)
           NOTE: GOBBLES ANY SPACE FOLLOWING IT.
+    
 
- \DescribeMacro
-  {\@ifstar}\marg{YES}\marg{NO}\\
-          Gobbles following spaces and then tests if next the
-          character is a '*'.  If it is, then it gobbles the
-   `*' and expands to \meta{YES}, otherwise it expands to \meta{NO}.
+\refCom{docCommand}{@ifstar}{\marg{YES}\marg{NO}}
+  Gobbles following spaces and then tests if the next
+ character is a '*'.  If it is, then it gobbles the
+ star  (`*') and expands to \meta{YES}, otherwise it expands to \meta{NO}.
+
+
+\end{docCommands}
 
  \DescribeMacro
   {\@dblarg}\marg{CMD}\marg{ARG}\\
@@ -282,7 +289,7 @@ The next one is another 100 tokens worth.
 \subsection{csname abstractions }
 
 \begin{docCommand}{@namedef}{}
-The \CMDI{\@namedef} and \CMDI{\@nameuse} are used to define or use \cs{csname}. You need to watch
+The \refCom{@namedef} and \refCom{@nameuse} are used to define or use \cs{csname}. You need to watch
 that the arguments are \emph{names} i.e, they are not preceded by a backslash or other active character.
 (See example~\ref{ex:namedef}).
 
@@ -305,16 +312,19 @@ that the arguments are \emph{names} i.e, they are not preceded by a backslash or
 
 \section{List helper macros}
 
+These helper macros are primarily for constructing and manipulating lists. 
+
 \begin{docCommand}{@cons} {}
 The command \cmd{\@cons} is used for the construction of lists. Its unique
 characteristic being that it constsructs \emph{elt} lists. What this means is that each entry in the list is
 preceded by another as yet undefined command |\@elt|. This can be later used to grub the element as
 its argument and do something about it.
+\end{docCommand}
 
 \begin{teX}
 \def\@cons#1#2{\begingroup\let\@elt\relax\xdef#1{#1\@elt #2}\endgroup}
 \end{teX}
-\end{docCommand}
+
 
 Assume we have a list \cmd{\mylist} which has been defined as |\mylist{\@elt one \@elt two ...}|.
 We can use |\@cons| to append more elements as shown in the next example,
@@ -366,11 +376,9 @@ lisp |car|, |cdr| and |cons| are fundamental functions. The |cons|  function is 
     disabled after |\begin{document}|. These commands are redefined
     to generate |\@notprerr| at this point
 \end{docCommand}
+
 \begin{docCommand}{@preamblecmds}{}
 \end{docCommand}
-
-.
-    
 \begin{teX}
 \def\@preamblecmds{}
 \def\@onlypreamble#1{%
@@ -503,6 +511,7 @@ The command simply checks if it is long or short and the calls \refCom{new@comma
 
 %
 \begin{docCommand}{@testopt}{ }
+\end{docCommand}
  This macro encapsulates the most common call to |\@ifnextchar|, saving
  several tokens each time it is used in the definition of a command
  with an optional argument.
@@ -513,7 +522,7 @@ The command simply checks if it is long or short and the calls \refCom{new@comma
  definitions then |#1| would be a single token and the braces could
  be omitted from |{#1}| in the definition below, saving a bit of
  memory.
-\end{docCommand}
+
 \begin{teX}
 \long\def\@testopt#1#2{%
   \kernel@ifnextchar[{#1}{#1[{#2}]}}
@@ -613,8 +622,9 @@ The command simply checks if it is long or short and the calls \refCom{new@comma
     message. Then temporarily
     disable |\@ifdefinable| then call |\newcommand|. (Previous
     version |\let#1=\relax| but this does not work too well if |#1|
+    is |\@temp|
 \end{docCommand}
-%    is |\@temp|\emph{a--e}.)
+%    \emph{a--e}.)
 % \changes{LaTeX2e}{1993/11/23}{Macro reimplemented and extended}
 % \changes{v1.1f}{1994/05/2}{Removed surplus \cs{space} in error}
 \begin{teX}
@@ -838,14 +848,15 @@ The \cmd{\newif} is defined in a very clever way.
 
 \begin{docCommand}{@if}{\meta{name of newif}\meta{|ifalse or iftrue|} }
 The auxiliary macro for the |\newif| command.
-
+\end{docCommand}
 \begin{phdverbatim}
+
 \def\@if#1#2{% 
   \expandafter\def\csname\expandafter\@gobbletwo\string#1%
                     \expandafter\@gobbletwo\string#2\endcsname
                        {\let#1#2}}
 \end{phdverbatim}
-\end{docCommand}
+
 
 %\begin{texexample}{Newif}{ex:newif}
 %\def\Newif#1{%  \iftest 
@@ -1195,7 +1206,7 @@ A category code 12 backslash. See also \refCom{textbackslash}  which is a better
 \end{docCommand}
 \end{docCommand}
 \begin{docCommand}{unrestored@protected@xdef}{}
-\begin{docCommand}{restore@protect}
+\begin{docCommand}{restore@protect}{}
     The commands |\protected@edef| and |\protected@xdef| perform
     `safe' |\edef|s and |\xdef|s, saving and restoring |\protect|
     appropriately.  For cases where restoring |\protect| doesn't

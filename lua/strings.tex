@@ -1,19 +1,177 @@
+\chapter{Strings}
+
+Strings in Lua represent text. They can contain a single letter or an entire book. Programs that manipulate 1 M characters are not unusual in Lua. \cite{roberto}
+
+\tex never provided any mechanisms for the manipulation of strings and neither did \latex. This is a serious limitation for libraries that have to deal mostly with the manipulation and typesetting of textual data and one of the reasons to use \LUA. 
+
+The double quote characters (") mark the beginning and end of the string. Marking the beginning and
+end is all they do; they are not actually part of the string, which is why print doesn't print them, as in
+this example:
+
+\begin{texexample}{Strings}{lua:strings}
+\directlua{
+    tex.sprint("This is a string")
+}
+\end{texexample}
+
+Like numbers, strings are values, which means they can be assigned to variables. Here's an example
+
+\begin{texexample}{Strings are values}{lua:svalues}
+\directlua{
+  local  name, phone = "Jane X. Doe", "248-555-5898"
+  tex.sprint(name, phone)
+}
+\end{texexample}
+
+\subsection{Quoting Strings with Square Brackets}
+
+\begin{texexample}{Multiline strings}{lua:multilinestrings}
+\directlua{
+ tex.sprint([[
+    There are some 
+    funky  characters in this
+    string. 
+]])
+}
+\end{texexample}
+
+Now what do you do if you want to print to square brackets together?
+
+\begin{texexample}{Comments}{}
+\ttfamily \directlua{
+ tex.sprint([=[
+    [[There]] are some 
+    funky  characters in this
+    string. 
+]=])
+}
+\end{texexample}
+
+\subsection{Escaping Characters}
+
+\begin{texexample}{Escaping characters}{ex:esc1}
+\ttfamily \directlua{
+ tex.sprint([=[
+    [[There]] are some 
+    funky \string\\ characters in this \string\\
+    string. 
+]=])
+}
+\end{texexample}
+
+
+\begin{texexample}{Escaping}{ex:esc}
+\ttfamily \directlua{
+ tex.sprint("2"+21)
+}
+\end{texexample}
+
+\subsection{Concatenation operator}
+
+\begin{texexample}{Concatenation operator}{ex:concatop}
+\ttfamily \directlua{
+ tex.sprint("99" ..  21) -- this is a comment
+}
+\end{texexample}
+
+\section{Comments}
+\begin{texexample}{comments}{ex:comment}
+\ttfamily \directlua{
+ tex.sprint("99"..21) -- this is a comment
+}
+\end{texexample}
+
+
+\section{The kpse library}
+
+This library provides two separate, but nearly identical interfaces to the kpathsea file search
+functionality: there is a \enquote{normal} procedural interface that shares its kpathsea instance with
+LuaTEX itself, and an object oriented interface that is completely on its own.
+
+\subsection{find\textunderscore file}
+
+The most often used function in the librar is \textsf{find\_file}:
+
 \chapter{Lua Strings Library}
 
 \section{Introduction}
 
 
-\tex never provided any mechanisms for the manipulation of strings and neither did \latex. This is a serious limitation for libraries that have to deal mostly with the manipulation and typesetting of textual data and one of the reasons to use \LUA. 
-
 The \LUA string library in \LUA\tex has been extended to provide a number of additional functions: a very useful function is \luacmd{string.explode} which returns a table with the exploded string. 
 
 
-\luacmd{string.len(string)} can be used to find the length of a string.
-The \luafunction{string.len} function is not unicode aware and the slunicode library which be used for cases where utf characters above unicode codepoint 127 is required.
+\begin{docLua}{string.len(string)} 
+can be used to find the length of a string.
+The |string.len| function is not unicode aware and the slunicode library which be used for cases where utf characters above unicode codepoint 127 is required.
+\end{docLua}
+
+
+\begin{docLua}{string.upper(argument)}
+Returns a capitalized representation of the argument.
+\end{docLua}
+\begin{texexample}{Finding the length of a string}{}
+We can get the length of a string using the length operator (denoted by \#):
+\begin{luacode}
+a = "hello"
+tex.print(#a) --> 5
+tex.print(#"good bye") --> 8
+\end{luacode}
+\end{texexample}
+
+
+
+\begin{docLua}{string.lower(argument)}
+Returns a lower case representation of the argument.
+\end{docLua}
+
+\begin{docLua}{string.gsub(mainString,findString,replaceString)}
+Returns a string by replacing occurrences of findString with replaceString.
+\end{docLua}
+
+\begin{docLua}{string.reverse(arg)}
+Returns a string by reversing the characters of the passed string.
+\end{docLua}
+
+\begin{docLua}{string.char(arg)} 
+and string.byte(arg)
+Returns internal numeric and character representations of input argument.
+\end{docLua}
+
+\begin{docLua}{string.rep(string, n))}
+Returns a string by repeating the same string n number times.
+\end{docLua}
+
+
+
+\begin{docLua}{string.format(format,string,...,stringn)}
+Returns a formatted string.
+\end{docLua}
+
+
+\begin{texexample}{Formatting strings}{}
+\begin{luacode}
+string1 = "Lua"
+string2 = "Tutorial"
+number1 = 10
+number2 = 20
+-- Basic string formatting
+print(string.format("Basic formatting %s %s",string1,string2))
+
+-- Date formatting
+date = 2; month = 1; year = 2014
+print(string.format("Date formatting %02d/%02d/%03d", date, month, year))
+
+-- Decimal formatting
+print(string.format("%.4f",1/3))
+\end{luacode}
+\end{texexample}
+
+
+
 
 \begin{texexample}{Exploding strings}{}
 \begin{luacode}
-local z = string.explode("a b c d ", " ")
+local z = string.explode("abcd", " ")
 local   writeln = function (v) 
    return   tex.print("key = ", v, "\\par")
 end
@@ -21,10 +179,12 @@ end
 for _,v in ipairs (z) do
   writeln(v)
 end
+
+tex.print(unicode.utf8.len("résumé"))
 \end{luacode}
 \end{texexample}
 
-If you notice in the example above the space at the end of "d" was captured and inserted into the return table. The \luafunction{string.trim} trims a string and removes and spaces from the beginning and the end of a string.
+If you notice in the example above the space at the end of "d" was captured and inserted into the return table. The string.trim trims a string and removes and spaces from the beginning and the end of a string.
 
 \begin{texexample}{Trimming strings}{}
 \begin{luacode*}
@@ -59,12 +219,12 @@ One of the advantages of Lua, is that any library is just a table and hence can 
 
 \begin{texexample}{Finding the length  of a string}{}
 \begin{luacode*}
-local z = "ąΒβ"
-tex.print(string.len(z),"\\par")
-tex.print(unicode.utf8.len(z))
-str="äöABCäö"
- i = font.id("pan")
- tex.print(i, font.current())
+ local z = "ąΒβ"
+ tex.print(string.len(z),"\\par")
+ tex.print(unicode.utf8.len(z))
+ str="äöABCäö"
+ i = font.id("arial")
+ tex.print(i, font.current(), str)
 \end{luacode*}
 \end{texexample}
 

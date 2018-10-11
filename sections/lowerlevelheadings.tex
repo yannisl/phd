@@ -12,6 +12,10 @@
 % }
 
 
+\cxset{defaults, chapter format=traditional, 
+       chapter opening = left, 
+       }
+
 
 \chapter{Lower Level Headings}
 
@@ -179,14 +183,16 @@ In our first example we will use a predefined style for the chapter headings, so
  section indent=0em,
  section align= centering,
  section beforeskip=20pt,
- section afterskip=10pt,,
+ section afterskip=10pt,
+ subsection afterskip=3pt,
+ subsubsection afterskip=3pt,
  section align=right}
 \chapter{A First Look at the Sectioning Keys}
 \section{First section}
 \lorem
   % adjust counter number so it does not affect the
   % rest of the document
-\addtocounter{section}{-1}
+%\addtocounter{section}{-1}
 \end{texexample}
 
 
@@ -196,6 +202,7 @@ One notable thing to keep in mind is that the numbering of the chapter is indepe
 
 
 \cxset{section numbering=arabic}
+
 \subsection{Adjusting vertical spaces}
 
 Perhaps the most important issues we need to consider is the adjusting of vertical spaces; example~\ref{ex:latex}, that follows illustrates settings from the Octavo class and compare them with those of standard the \LaTeXe\ book class. The Octavo class through settings that are based on baselineskip fractions and multiples endeavours to achieve a grid layout. The class also tones down the `loudness' of some of the headings compared to those of the book class.
@@ -269,8 +276,8 @@ Perhaps the most important issues we need to consider is the adjusting of vertic
  subsubsection font-weight=,
  subsubsection indent = 0em,
  subsubsection align= raggedright,
- subsubsection beforeskip=-0.666\baselineskip\@minus -2\p@,
- subsubsection afterskip=0.333\baselineskip \@minus 2\p@,
+ subsubsection beforeskip= 0.666\baselineskip\@minus -.2\p@,
+ subsubsection afterskip= 3pt, %1.5\baselineskip \@minus .2\p@,
  subsubsection color=spot!50,
  paragraph numbering=none,
  paragraph font-family= rmfamily,
@@ -285,7 +292,7 @@ Perhaps the most important issues we need to consider is the adjusting of vertic
 }}
 \makeatother
 
-\cxset{octavo headings}
+%\cxset{octavo headings}
 
 
 %\begin{texexample}{Octavo class headings, settings}{}
@@ -361,9 +368,10 @@ The following example was set using the |style| |\cxset{Octavo headings}| with s
 
 \begin{texexample}{\LaTeXe\ book class headings settings}{ex:latex}
 \makeatletter
+\bgroup
 \cxset{book/.style={
- section numbering prefix = \thechapter.,
- section numbering=arabic,
+ section number prefix = \thechapter.,
+ section numbering=Roman,
  section number after=,
  section font-size= Large,
  section font-weight=bfseries,
@@ -381,11 +389,12 @@ The following example was set using the |style| |\cxset{Octavo headings}| with s
  subsection font-size=large,
  subsection font-shape=upshape,
  subsection font-weight=bfseries,
- subsection numbering prefix=\thesection.,
+ subsection number prefix=\thesection.,
  subsection numbering = arabic,
  subsection beforeskip=-3.5ex \@plus -1ex\@minus -0.2ex,
  subsection indent= 0pt,
  subsection afterskip= 1.5ex \@plus .2ex,
+ subsubsection color=black,
 }}
 
 \cxset{book}
@@ -395,6 +404,9 @@ The following example was set using the |style| |\cxset{Octavo headings}| with s
 \lorem
 \subsection{A subsection}
 \lorem
+\subsubsection{A subsubsection}
+\egroup
+
 \makeatother
 \end{texexample}
 
@@ -425,10 +437,12 @@ One problem sometimes is that the sectioning commands create problems with grid 
  subsection afterskip= -.35\baselineskip,
  subsubsection font-shape=itshape,
  subsubsection font-weight=bfseries,
- subsubsection numbering= none,
+ subsubsection numbering= roman,
+ subsubsection number prefix = (,
+ subsubsection number suffix =),
  subsubsection indent=0pt,
  subsubsection beforeskip=1\baselineskip,
- subsubsection afterskip= -.35\baselineskip,
+ subsubsection afterskip= 3pt, %1\baselineskip,
 }}
 \cxset{grid}
 
@@ -440,9 +454,9 @@ One problem sometimes is that the sectioning commands create problems with grid 
 \lorem
 \subsection{Grid  subsection.}
 \lorem
-\subsubsection{A subsection grid.}
+\subsubsection{A subsubsection heading.}
 \lorem
-\subsubsection{Another subsection grid.}
+\subsubsection{Another subsection heading.}
 \lorem
 \end{multicols}
 \makeatother
@@ -450,11 +464,12 @@ One problem sometimes is that the sectioning commands create problems with grid 
 
 
 
-The key \option{\bfseries section numbering custom}=\marg{code} is quite powerfull and can be used to define any type of section number style. Just remember that the numbering so far depends on two counters, the c@chapter and c@section. What the section numbering does, it redefines the macro \cs{thesection} to the new definition provided as argument for the key.
+The key \option{\bfseries section numbering custom}=\marg{code} is quite powerfull and can be used to define any type of section number style. Just remember that the numbering so far depends on two counters, the \docCounter{c@chapter} and \docCounter{c@section}. What the section numbering does, it redefines the macro \docAuxCommand{thesection} to the new definition provided as argument for the key.
 
 Although the temptation to define a lot of key combinations one would rather define new styles as a more user friendly approach.
 
 \cxset{section numbering=arabic, section align= RaggedRight, section font-shape=upshape, section font-family=rmfamily}
+
 \section{Handling Other Section Levels}
 
 Other sectioning commands such as \cs{subsubsection}, \cs{paragraph} and \cs{subparagraph} have equivalent keys. Examples can be found in the chapters that follow for specific styles.
@@ -608,7 +623,7 @@ As mentioned earlier there is an additional way to introduce formatting for sect
           
 \section{Custom headings}
 
-\begin{docCommand*}{@secdef}{}
+\begin{docCommand*}{@secdef}{\marg{star command} \marg{unstar command}}
 So far we have used the |phd|’s keys to set keys that are affecting the standard commands used by
 \latexe to set headings. Another way to achieve this,  is to use the macro
  \cs{@secdef}. Therefore, if you wish to use different definitions of \cs{@seccntformat}
@@ -618,9 +633,9 @@ definition.
 
 
 
-\begin{phdverbatim}
+\begin{teXXX}
 \newcommand\part{\secdef\starcmd\unstarcmd}
-\end{phdverbatim}
+\end{teXXX}
 
 The |part| and |chapter| and sometimes |appendix| are defined this way, but nothing stops us from doing the same for other sectioning commands. What the \cs{secdef} command does it will produce the definitions required for a star or unstarred version of the sectioning command, such as |\section|.\footnote{See \ttfamily File F: ltsect.dtx Date: 2014/09/29 Version v1.0z 360} 
 

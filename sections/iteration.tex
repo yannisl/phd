@@ -6,57 +6,43 @@ TeX and LaTeX.}
 
 \newthought{Knuth in the TeXBook} provided a simple loop macro that can be used for iteration. It must be pointed out that there are no real looping structures in \tex other than pure recursion (including tail recursion). All looping mechanisms are build on top of these.
 
-\begin{docCmd}{loop}{}
+\begin{docCommand}{loop}{\meta{body}\docAuxCommand*{repeat}}
 The |\loop...\repeat| construction is defined in Plain TeX and works like this:
 You say `|\loop| $\alpha$ |\if|\dots $\beta$  |\repeat|', where $\alpha$ and $\beta$ are any sequences of
 commands, and where |\if...| is any conditional test (without a matching |\fi|). 
-\end{docCmd}
+Note that the |repeat| is just a marker in the argument specification of the macro. It can in essence be anything.
+\end{docCommand}
 
 \tex
 will first do $\alpha$; then if the condition is true, \tex will do $\beta$ and repeat the whole process
 again starting with $\alpha$. If the condition ever turns out to be false, the loop will stop.
-
-\emphasis{loop,repeat}
-\begin{texexample}{Knuth's Loop}{}
-\bgroup
-\newcount\n
-\n=0
-\loop
-   \advance\n by1
-     \number\n,   
-   \ifnum\n<30
-\repeat
-\egroup
-\end{texexample}
-
-
 
 
 The \cmd{\loop} macro that does all these wonderful things is actually quite simple.
 It puts the code that's supposed to be repeated into a control sequence called
 \cmd{\body}, and then another control sequence iterates until the condition is false:
 
-\begin{teX}
+\begin{teXXX}
 \def\loop#1\repeat{\def\body{#1}\iterate}
 \def\iterate{\body\let\next=\iterate\else\let\next=\relax\fi\next}
-\end{teX}
+\end{teXXX}
 
 
-\noindent\colorbox{gray!10}{\parbox{10cm}{\noindent
+\begin{texexample}{loop...repeat}{ex:loop}
 \newcount\n
 \n=0
 \loop
-   \advance\n by1
-     \texttt{\number\n, } 
-   \ifnum\n<30
+  \advance\n by1
+    \texttt{\number\n, } 
+  \ifnum\n<30
 \repeat
-}}
-\bigskip
+\end{texexample}
 
 Just observe that the |\loop| arguments are delimited by |\repeat|. We could as well named it |\endloop| (a repeat at the end of a loop somehow sounds wrong!)
 
-\emphasis{for,endfor}
-\begin{teX}
+
+\begin{texexample}{Rename loop}{ex:renloop}
+\bgroup
 \def\for#1\endfor{\def\body{#1}\iterate}
 \def\iterate{\body\let\next=\iterate\else\let\next=\relax\fi\next}
 \newcount\n
@@ -67,45 +53,14 @@ Just observe that the |\loop| arguments are delimited by |\repeat|. We could as 
      \texttt{\number\n, }  
    \ifnum\n<30
 \endfor
-\end{teX}  
-
-\begin{texexample}{For}{}
-\bgroup
-\def\for#1\endfor{\def\body{#1}\iterate}
-\def\iterates{\body\let\next=\iterates\else\let\next=\relax\fi\next}
-
-\noindent\colorbox{gray!10}{\parbox{10cm}{\noindent
-\newcount\n
-\n=0
-\for%
-   \advance\n by1
-     \texttt{\number\n, }%  
-   \ifnum\n<30%
-\endfor%
-}}
 \egroup
-\end{texexample}
+\end{texexample}  
+
 
 \subsection{Breaking out of a loop}
 
 \index{Iteration!break}\index{\protect\textbackslash break}
 Although the loop macros are fairly simple, breaking out of them or using conditionals needs some work.
-
-\emphasis{let,iterate,relax}
-\begin{teXXX}
-\newcount\mycount
-\mycount=0
-\loop\ifnum\mycount<13
-A 
-\ifnum\mycount>5
-    \let\iterate\relax
- \fi
- \advance\mycount by1\relax
-\repeat
-\end{teXXX}
-\medskip
-producing:
-\medskip
 
 \begin{texexample}{Iteration}{ex:loop}
 \newcount\mycount
@@ -119,24 +74,28 @@ producing:
 \repeat
 \end{texexample}
 
-One can define a command \cmd{\break}, so as to have a better structure and make the code more readable:
+We can define a command \docAuxCommand{break}, so as to have better semantics and make the code more readable:
 
-\emphasis{def,break,let,iterate,relax}
-\begin{teXXX}
-\def\break{\let\iterate\relax}
+\emphasize{break,loop,repeat,}
+
+\begin{texexample}{Iteration}{ex:loop1}
+\def\break{\let\iterate\relax}% (*@ \dcircle{1} @*)
 \newcount\mycount
-\mycount=0
-\loop\ifnum\mycount<13
-\the\mycount, 
-\ifnum\mycount>5
-    \break    
-\fi
-\advance\mycount by1\relax
+\mycount=1
+\loop
+  \ifnum\mycount<13 % (*@ \dcircle{2} @*)
+    %\the\mycount, 
+    \ifnum\mycount>5
+    % we break here
+    \break %     
+   \fi
+   \the\mycount,\space% (*@ \dcircle{3} @*)
+   \advance\mycount by1\relax
 \repeat
-\end{teXXX}
+\end{texexample}
 
 
-
+Once we define what a |break| is supposed to do at \dcircle{1}, we use it at \dcircle{2} to let |\iterate| to |relax|. Then at \dcircle{3}, we use the value of the counter |\the\mycount| to add the number and a comma followed by a space. 
 
 
 \section{Iteration over comma delimited lists}
@@ -240,17 +199,19 @@ To use it we need to define a list:
 \end{teX}
 
 
-\def\mathList{\alpha;\beta;\gamma;\delta;\epsilon;\zeta;\theta}
 
-Using the |@for| loop we can iterate over the list as follows:
+Using the \refCom{@for} loop we can iterate over the list as follows:
 
-\begin{teX}
+\begin{texexample}{For constructs}{ex:forloop}
+\makeatletter
+\def\mathList{\alpha,\beta,\gamma,\delta,\epsilon,\zeta,\theta}
 \@for\i:=\mathList\do{%
-  \ensuremath \i  \space 
+  \ensuremath\i\space 
  }
-\end{teX}
+\makeatother 
+\end{texexample}
 
-\parindent0pt
+
 
 Running the example we simply get the list but now without the comma
 
@@ -294,13 +255,13 @@ the variable holding the list \atestiii
 The iteration does not have the proper meaning that you would normally expect in other programming languages, it is defined as follows:
 
 
-\begin{verbatim}
+\begin{teXXX}
 \@for(*@\textsubscript{all~elements of the list to }@*)\i:=\mathList\do{%
   \ensuremath \i  \space 
  }
-\end{verbatim}
+\end{teXXX}
 
-The other interesting thing to note as well as watch out is `:=', which is just a delimiter. I have used |\i| for simplicity, but \cmd{\i}, is a reserved word, meaning a \textit{dotless} i, which is found in some language like Turkish. If you going to use it in your writings you will need to save it and restore it afterwards. A lot of macro writers also use |\ii| or |\@i| or other similar variables. It is simply a temporary variable that at the end of the iteration gets the value |\@nil| and since |@nil| is undefined it essentially destroys it. 
+The other interesting thing to note as well as watch out is `:=', which is just a delimiter. I have used |\i| for simplicity, but \cmd{\i}, is a reserved word, meaning a \textit{dotless} \i, which is found in some language like Turkish. If you going to use it in your writings you will need to save it and restore it afterwards. A lot of macro writers also use |\ii| or |\@i| or other similar variables. It is simply a temporary variable that at the end of the iteration gets the value |\@nil| and since |@nil| is undefined it essentially destroys it. 
 
 We need to remind ourselves again about |##|
 20.5. The |##| feature is indispensable when the replacement text of a definition
@@ -339,6 +300,12 @@ important for alignments; see, for example, the definition of \matrix in Appendi
 
 
 \section{Recursion}
+\epigraph{“I love you,” said Bekka.
+
+“I know,” I said.
+
+“I know you know,” she said. “But I didn’t know that you knew I knew you knew. And now I do.” }
+{Scott Alexander, It Was You Who Made My Blue Eyes Blue}
 Recursion is a difficult subject to grasp, although we experience it daily in our actions, language and thoughts. 
 The main characteristic of recursion, is that it can take its own output as the next input, a loop that can be extended indefinitely to create sequences of structures of unbounded length or complexity. In language we understand that a sentence can in principle be extended indefinitely, even though in practice it cannot be---although the novelist Henry James had a damn good try in the \emph{The Figure in the Carpet}. Of course what we are interested here is to study how we can write recursive macros in \tex rather than the more interesting aspects of recursion as it applies to thoughts and language. 
 
@@ -353,23 +320,82 @@ The macro will expand itself indefinitely. As it does not save anything in memor
 If we slightly modify the above macro to |\def\mymacro{a \mymacro}| during expansion the macro will typeset and then call itself again, typeset a and call itself again forever. After a while, it overflows the computer’s memory. The reason for this is that we never finish a paragraph. The letters accumulate in main memory as part of the same paragraph.
 
 
-\begin{teXXX}
+\begin{texexample}{Parsing lists}{ex:parselist}
+\bgroup
 \def\parselist#1;{\pickup#1,;,}
 \def\pickup#1,{% Note that #1 may be \null
-\if;#1\let\next=\relax(*@\label{test}@*)
+\if;#1
+  \let\next=\relax
 \else\let\next=\pickup
-    #1% use #1 in any way
+   #1% use #1 in any way
 \fi\next}
-\parselist $a_1$, $a_2$, $a_3$, $a_4$, $a_5$;
-\end{teXXX}
+\parselist $a_1$, $a_2$, $a_3$, $a_4$, $a_5$; 
+\egroup
+\end{texexample}
 
 The macro \cmd{\pickup} expects its argument to be delimited by `,’, so it ends up
 getting the first component of the original argument. It uses it in any desired way and
 then expands itself recursively. The process ends when the current argument becomes the `;’. The compound argument may have any number of components (even zero).\ref{test}
 
-\section{LaTeX3 Recursion}
+\emphasize{makebox,obeylines}
+\begin{texexample}{Longer Example}{ex:mheadings}
+\makebox[\linewidth]{\hfill
+\begin{minipage}{.8\textwidth}
+\columnseprule2pt
+\def\columnseprulecolor{\color{thegray}}
+\columnsep22pt
+\begin{multicols}{2}
+\color{theblue}
+\flushright
+\Large
+\obeylines
+Over the last year we
+have continued to
+develop and improve the
+range of funding schemes
+we offer to meet the
+needs of the arts and
+humanities communities,
+for example, by offering
+opportunities for early
+career researchers.
+\columnbreak
+\color{thegray}
+
+\small
+\flushleft
+
+\obeylines %(*@\textcolor{blue}{\dcircle{1}}  @*)
+\arial
+We have engaged both
+individuals and groups to
+build a vision for our strategic
+initiatives and our museums
+and galleries strategy, have
+opened up opportunities
+for the arts and humanities
+in cross-Council funding
+initiatives and undertaken
+to represent the needs of our
+communities in arenas such
+as the Research Councils’
+project on the Efficiency and
+Effectiveness of Peer Review
+Journals
+initiatives and undertaken
+to represent the needs of our
+communities in arenas such
+as the Research Councils’
+project on the Efficiency and
+Effectiveness of Peer Review
+Journals
+\end{multicols} %(*@\textcolor{blue}{\dcircle{2}}  @*)
+\end{minipage} %(*@\textcolor{blue}{\dcircle{3}}  @*)
+}
+\end{texexample}
 
 
+Obviously this does not make for a good user interface. It will be preferable to have just one or two commands and the user should be able to type in the left and right, text. All setting will be preferable to be done via keys, which map to macros. 
 
 %%endinput iteration.tex
 

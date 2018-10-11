@@ -1,31 +1,20 @@
-###The `phd-documentation` LaTeX2e package (version 0.10.0)
+###The `phd-documentation` LaTeX2e package
 
-The `phd-documentation` latex package is part of the `phd` package bundle 
-and the class with the same name which provide
+The `phd` latex package and the class with the same name provide
 convenient methods to create new styles for books, reports
 and articles. It also loads the most commonly used packages
-and resolves conflicts through the [phd-pkgmanager](https://github.com/yannisl/phd/blob/master/docs/phd-pkgmanager.md)
+and resolves conflicts.
 
-This work consists of the file  
-
-  `phd-documentation.dtx`,
-  
-and the derived files   
-  `phd-documentation.ins`,  
-  `phd-documentation.pdf`,
-  `phd-documentation.sty`.
-  
-The `phd-documentation` package provides convenient commands
-for documenting computer code, either `TeX/LaTeX` or other
-common languages.
+This work consists of the file  `phd-documentation.dtx`,
+and the derived files   `phd-documentation.ins`,  `phd-documentation.pdf`,
+and `phd-documentation.sty`.
 
 ###Installation
 
-run the provided script (requires you have Lua installed)
-
+run
           phd-lua.bat on windows
-
-There is no script at the moment for other OSs.
+           pdflatex phd.dtx
+           makeindex -s gind.ist -g phd
 
 If you have any difficulties with the package come and join us at
 http://tex.stackexchange.com and post a new question or
@@ -50,7 +39,7 @@ attributes are easy to change and have a consistent and easy to remember interfa
 
 To set or add a key we only use one command:
 
-      \cxset{chapter name font-size   = Huge,
+      \cxset{chapter name font-size = Huge,
              chapter number font-size = HUGE}
 
 ### Future Development

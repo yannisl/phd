@@ -9,7 +9,7 @@ function M.chickens ()
 end
 
 function M.ancient_chickens ()
-  return "\\bgroup\\hiero\\char\"13171 \\egroup"
+  return "\\bgroup\\symbola\\char\"13171 \\egroup"
 end
 
 return M

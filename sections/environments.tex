@@ -1,3 +1,193 @@
+\chapter{Environments}
+\label{ch:environments}
+
+\section{Defining Environments}
+Environments are used to format blocks of text in \latex2e documents. 
+Knuth's design of macro definition commands makes use of delimited arguments. Using this one could device a way to create blocks of text enclosed in an environment.\tcbdocmarginnote{1 Jun 20018. \\New example\\ added.}
+
+\begin{texexample}{Knuthian Environments}{ex:knuthianenvironments}
+\long\def\startenvironment#1\stopenvironment{
+\bgroup
+ \hsize=\linewidth 
+ \vskip10pt
+  \centering 
+  \leavevmode #1\par
+ \egroup 
+}
+% use the environment
+\startenvironment
+\lorem
+\stopenvironment
+\end{texexample}
+
+Defining environments this way, is not recommended, as \latexe provides a consistent and familiar interface to users. The environment definition commands also provided by \latexe are more sophisticated, check that the command name has not been defined earlier, as well as carry out a number of other usefull house-keeping tasks.
+
+To define the same environment as use in \ref{ex:knuthianenvironments} we will use the following:
+
+
+\begin{texexample}{LaTeX Environments}{ex:ltxenvironments}
+\newenvironment{loremenvironment}[1]{
+   \vskip10pt
+ 
+  \centering 
+  \leavevmode #1\par
+ }% 
+{}
+% use the environment
+\begin{loremenvironment}
+ \lorem
+\end{loremenvironment}
+\end{texexample}
+
+
+
+
+
+
+
+
+\subsection{The \protect\latex way}
+LaTeX implements macros |\begin| and |\end|. These are a generic pair whose argument determines the environment that's being begun or ended.
+
+LaTeX makes it much easier to code environments. Here's a generic environment definition:
+
+\begin{docCommand}{newenvironment}{\marg{environment name}\marg{stuff to do before text} \marg{stuff to do after text}}
+Creates a new environment
+\end{docCommand}
+
+
+The \docAuxCommand{newenvironment} macro takes three arguments:
+
+\begin{enumerate}
+\item The name of the environment being created
+\item The stuff to do before the text being assigned that environment
+\item The stuff to do after the text being assigned that environment
+\end{enumerate}
+
+The resemblance to \tex paired macros is obvious, but \latex  environments make it generic across all environments, and place the beginning and ending code in one place. Not only that, but because the environment has one name instead of two different names, it's very easy for a front end like LyX to assign environments to highlighted stretches of text.
+
+The |\newenvironment|  macro works only when the environment name is undefined. If there's already an environment with that name, use \docAuxCommand{renewenvironment} instead. 
+
+The \pkg{phd} package defines a number of environments for general use:
+
+\begin{docEnvironment}{absolutequote}{}
+\end{docEnvironment}
+
+The Example~\ref{ex:absolutequote} illustrates the redefinition of this environment to set its margins a bit more in.
+
+\begin{texexample}{Absolute quote example}{ex:absolutequote}
+\makeatletter
+\renewenvironment{absolutequote}
+               {\list{}{\listparindent 1.5em%
+                  \itemindent \listparindent
+                  \leftmargin2cm\rightmargin\leftmargin
+                  \parsep 0pt plus 0pt%
+                  }%
+                  \item\relax\footnotesize
+                }%
+               {\endlist}               
+\makeatother  
+\lipsum[1]
+\begin{quotation}
+\lipsum[3]
+\end{quotation}
+\lipsum[1]
+
+\end{texexample}
+
+\subsection{Using xparse}
+
+With the \pkg{xparse} from the \latex3 suite, we can use the |NewDocumentEnvironment| to define environments. This is very useful, if we have a mixture of optional and mandatory commands, as well as when we need to access the end code.
+
+\begin{docCommand}{NewDocumentEnvironment}{\marg{environment}\marg{arg spec}\marg{start code}\marg{end code}}
+Creates new environments.
+\end{docCommand}
+
+An advantage of the command is that both the \meta{start code}
+and \meta{end code} can access the arguments as defined by \meta{arg spec}. You can learn more about these commands in the LaTeX3 Monograph. 
+
+
+\begin{texexample}{Absolute quote example}{ex:absolutequote2}
+\makeatletter
+\NewDocumentEnvironment{absolutequotation}{ o }
+               {\list{}{\listparindent 1.5em%
+                  \itemindent \listparindent
+                  \leftmargin2cm\rightmargin\leftmargin
+                  \parsep 0pt plus 0pt%
+                  }%
+                  \item\relax\footnotesize
+                }%
+               {\endlist}               
+\makeatother  
+\lipsum[1]
+\begin{absolutequotation}
+\lipsum[3]
+\end{absolutequotation}
+\lipsum[1]
+
+\end{texexample}
+
+Lamport, cleverly defined macros that automatically, create the necessary \tex \cs{begingroup} and \cs{endgroup} commands. You can find the code in the |source2e| file and which is shown below:\footnote{You can find the full code in \texttt{File y, for ltmiscen.dtx}}
+
+\begin{teXXX}
+\def\begin#1{%
+  \@ifundefined{#1}%
+  {\def\reserved@a{\@latex@error{Environment #1 undefined}\@eha}}%
+  {\def\reserved@a{\def\@currenvir{#1}%
+  \edef\@currenvline{\on@line}%
+  \csname #1\endcsname}}%
+  \@ignorefalse
+  \begingroup\@endpefalse\reserved@a}
+
+
+\def\end#1{%
+  \csname end#1\endcsname\@checkend{#1}%
+  \expandafter\endgroup\if@endpe\@doendpe\fi
+  \if@ignore\@ignorefalse\ignorespaces\fi}
+\end{teXXX}
+
+In \latex environments are defined as 
+|\begin{foo}| and |\end{foo}| which are are used to delimit environment |foo|.
+|\begin{foo}| starts a group and calls |\foo| if it is defined, otherwise it does
+nothing.
+
+|\end{foo}| checks to see that it matches the corresponding |\begin| and if so,
+it calls |\endfoo| and does an |\endgroup|. Otherwise, |\end{foo}| does nothing.
+If |\end{foo}| needs to ignore blanks after it, then |\endfoo| should globally set
+the |@ignore| switch true with |\@ignoretrue| (this will automatically be global).
+
+NOTE: |\@@end| is defined to be the |\end| command of TEX82.
+|\enddocument| is the user's command for ending the manuscript file.
+|\stop| is a panic button to end \tex in the middle.
+
+
+\section{Checking the environment}
+
+An interesting aspect of \latexe is that we can use \docAuxCommand{@currenvir} to check if a command is within a particular environment. The following code will be used to typeout the environment.
+
+\begin{texexample}{Checking for an Environment}{ex:currenenvir}
+\makeatletter
+The current environment is \@currenvir
+\makeatother
+\end{texexample}
+
+
+The \cs{@checkend} \index{Latex kernel=@checkend} uses the \cs{@currenvir}\index{Latex kernel=@currenvir} to see if there is a matching
+begin environment and if it cannot find it produces an error.
+
+\begin{teX}
+\def\@checkend#1{%
+   \def\reserved@a{#1}
+   \ifx\reserved@a\@currenvir 
+   \else
+     \@badend{#1}
+   \fi
+}
+\end{teX}
+
+It is a pity that there is no real guide for explaining the \latex macros, other than just reading through them. Lamport and later his associates managed to produce code that offers the user a friendly API. Besides the scenes of this API, it also offers the package writers hundreds of useful commands.
+
+\endinput
 \newlength{\egwidth}\setlength{\egwidth}{0.48\textwidth}
 
 \newenvironment{ega}%
@@ -21,27 +211,21 @@
 
 
 \egstart
-\begin{verbatim}
 Here is some advice to remember:
 \begin{quotation}
 Environments for making
 ...other things as well.
-
 Many problems
 ...environments.
 \end{quotation}
-\end{verbatim}
 \egmid%
-Here is some advice to remember:
-\begin{quotation}
 Environments for making quotations
 can be used for other things as well.
-
 Many problems can be solved by
 novel applications of existing
 environments.
-\end{quotation}
 \egend
+
 
 The \cs{tabbing} environment overcomes this problem. Within it you set
 tabstops and tab to them much like you do on a typewriter.  Tabstops are
@@ -51,150 +235,17 @@ next stop.  The
 produces no output, and can be used to set tabstops:
 
 
-\begin{teX}
+\begin{texexample}{Tabbing Example}{ex:tabbing}
 \begin{tabbing}
  Income \=Expenditure \= \kill
  Income \>Expenditure \>Result\\
  20s 0d  \>19s 11d \>Happiness\\
  20s 0d  \>20s 1d  \>Misery \\
 \end{tabbing}
-\end{teX}
+\end{texexample}
 
-\smallskip
-
-\begin{tabbing}
-Income \=Expenditure \=    \kill
-Income \>Expenditure \>Result \\
-20s 0d \>19s 11d \>Happiness   \\
-20s 0d \>20s 1d  \>Misery    \\
-\end{tabbing}
 
 
 Unlike a typewriter's tab key, the |\>| command always moves to the next
 tabstop in sequence, even if this means moving to the left.  This can cause
 text to be overwritten if the gap between two tabstops is too small.
-
-
-\begin{comment}
-\section{Environment}
-
-\begin{teX}
-\def\beginstory{
-  \vskip 0.5in                 % Skip down 1/2 before story
-   \begingroup                  % Start of formatting properties
-   \leftskip 1in\rightskip 1in  % Wider margins for narrower text
-   \itshape                     % Italic font
-   \noindent{.\dotfill{}.\par}  % Make dotted line
-	% Text after close of \beginstory will be story formatted
-}
-
-\def\endstory{
-  \par\noindent{.\dotfill{}.\par}  % Make dotted line
-  \endgroup                        % End of formatting properties
-  \vskip 0.5in                    % Skip final 1/2 inch
-}
-
-\beginstory 
-
-  Just a short story 
-
-\endstory
-
-\end{teX}
-
-
-
-Here's a story about the formative era of personal computing. I
-originally wrote it in 1999, but the point it makes is still valid.
-Hope you like it.
-
-
-
-\subsection*{The \protect\latex way}
-LaTeX implements macros |\begin| and |\end|. These are a generic pair whose argument determines the environment that's being begun or ended.
-
-LaTeX makes it much easier to code environments. Here's a generic environment definition:
-
-|\newenvironment{environment_name}{stuff to do before text}{stuff to do after text}|
-
-That's it -- the \cs{newenvironment} macro takes three arguments:
-The name of the environment being created
-The stuff to do before the text being assigned that environment
-The stuff to do after the text being assigned that environment
-
-The resemblance to \tex paired macros is obvious, but \latex  environments make it generic across all environments, and place the beginning and ending code in one place. Not only that, but because the environment has one name instead of two different names, it's very easy for a front end like LyX to assign environments to highlighted stretches of text.
-
-The |\newenvironment|  macro works only when the environment name is undefined. If there's already an environment with that name, use|\renewenvironment|  instead. If you don't know, there are ways to test.
-
-The following is a LaTeX version of the |\beginstory| \ldots | \endstory| example, with the two macros folded into the definition of one environment called story.
-
-
-Lamport, cleverly defined macros that automatically, create the necessary \tex \cs{begingroup} and \cs{endgroup} commands. You can find the code in the |source2e| file and which is shown below:\footnote{You can find the full code in \texttt{File y, for ltmiscen.dtx}}
-
-\begin{teX}
-\def\begin#1{%
-  \@ifundefined{#1}%
-  {\def\reserved@a{\@latex@error{Environment #1 undefined}\@eha}}%
-  {\def\reserved@a{\def\@currenvir{#1}%
-  \edef\@currenvline{\on@line}%
-  \csname #1\endcsname}}%
-  \@ignorefalse
-  \begingroup\@endpefalse\reserved@a}
-
-
-\def\end#1{%
-  \csname end#1\endcsname\@checkend{#1}%
-  \expandafter\endgroup\if@endpe\@doendpe\fi
-  \if@ignore\@ignorefalse\ignorespaces\fi}
-\end{teX}
-
-In \latex environments are defined as 
-|\begin{foo}| and |\end{foo}| which are are used to delimit environment |foo|.
-|\begin{foo}| starts a group and calls |\foo| if it is defined, otherwise it does
-nothing.
-
-|\end{foo}| checks to see that it matches the corresponding |\begin| and if so,
-it calls |\endfoo| and does an |\endgroup|. Otherwise, |\end{foo}| does nothing.
-If |\end{foo}| needs to ignore blanks after it, then |\endfoo| should globally set
-the |@ignore| switch true with |\@ignoretrue| (this will automatically be global).
-
-NOTE: |\@@end| is defined to be the |\end| command of TEX82.
-|\enddocument| is the user's command for ending the manuscript file.
-|\stop| is a panic button to end \tex in the middle.
-
-
-\section*{Checking the environment}
-
-This is interesting in that we can use \cs{@currenvir} to check if a command is within a particular environment. The following code will be used to typeout the environment.
-
-\begin{teX}
-\begin{enumerate}
-   \item Check environment with |@currenvir|
-   \makeatletter
-   \item The current environment is \@currenvir
-   \makeatother
-\end{enumerate} 
-\end{teX}
-
-\begin{enumerate}
-\item Check environment with |@currenvir|
-\makeatletter
- \item The current environment is \@currenvir
-\makeatother
-\end{enumerate}
-
-The \cs{@checkend} \index{Latex kernel=@checkend} uses the \cs{@currenvir}\index{Latex kernel=@currenvir} to see if there is a matching
-begin environment and if it cannot find it produces an error.
-
-\begin{teX}
-\def\@checkend#1{%
-   \def\reserved@a{#1}
-   \ifx\reserved@a\@currenvir 
-   \else
-     \@badend{#1}
-   \fi
-}
-\end{teX}
-
-It is a pity that there is no real guide for explaining the \latex macros, other than just reading through them. Lamport and later his associates managed to produce code that offers the user a friendly API. Besides the scenes of this API, it also offers the package writers hundreds of useful commands.
-\end{comment}

@@ -26,4 +26,4 @@ function generate_random_string(len, charset)
   return concat(t)
 end
 
-print(generate_random_string(150,{'a','b','c',';','d','e',',','f.'}))
+print(generate_random_string(10,{'a','b','c',';','d','e',',','f.'}))

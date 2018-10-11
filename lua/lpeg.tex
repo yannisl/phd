@@ -1,27 +1,78 @@
+\makeatletter
+\long\def\auxm#1(#2);{%
+  \def\Xtemp{#1}
+  \def\Ytemp{#2}
+  \parindent=0pt
+  \par\leavevmode
+  \hangafter=1\relax   \hangindent=1em\relax
+  \bgroup  
+   \bfseries\sffamily\color{red}\Xtemp\,\color{black}(\texttt{\Ytemp})\hskip0.8em
+  \egroup
+}
+
+   
+\newenvironment{docLpeg}[1]{
+  \auxm#1;
+  }  
+{%
+\@@par
+\smallskip\parindent=1em }
+\makeatother
+
 \chapter{Lua LPeg}
 
 \section{Pattern Matching}
 
-LPeg is a powerful notation for matching text data, which is more capable than Lua string patterns and standard regular expressions. However, like any language you need to know the basic words and how to combine them. These patterns like their ugly cousins regular expressions in languages like Perl or Javascript have a steep learning curve, so this Chapter is rather long. 
+LPeg is a powerful notation for matching text data, which is more capable than Lua string patterns and standard regular expressions. However, like any language you need to know the basic words and how to combine them. These patterns like their ugly cousins the regular expressions in languages like Perl or Javascript have a steep learning curve. The Lpeg name derives from the acronym PEG which stands for Parsing Expression Grammars. 
+
+A reference to this is \href{http://www.inf.puc-rio.br/~roberto/lpeg/}{Parsing Expression Grammars For Lua}. 
+
+\subsection{String Equality}
+
+The simplest pattern we can write is one that checks if a string is equal to another string. If there is no match L
+
+\begin{texexample}{String Equality}{ex:strequality}
+\bgroup
+\catcode`\#=11
+\begin{luacode}
+if type(tex) == 'table' then print = tex.print end
+local temp = (lpeg.P("hello"):match("world")) 
+if temp then
+   print(z)
+   else print('no match returned nil') 
+end   
+local temp1 = (lpeg.P("+hello"):match("+hello world")) 
+print(temp1)
+\end{luacode}
+\egroup
+\end{texexample}
+
+
+Always when we use an |lpeg| expression and pass it to the \tex engine, we need to check for a nil value. We can handle errors
+in a more sophisticated way later on.
+
 
 \emphasis{lpeg, match,P}
-\begin{scriptexample}{}{}
-\begin{teX}
-   local match = lpeg.match   (*@ \label{lin:match} @*)
-   local P = lpeg.P                  (*@ \label{lin:match1} @*)
-   tex.print(match(P'Za', 'Zaza'))
-   if match(P'za', 'Zaza') then 
-      tex.print(match(P'za', 'Zaza')) 
+\startnumberat{10}
+\begin{texexample}{}{}
+\begin{luacode}
+   local match = lpeg.match   
+   local P = lpeg.P           
+   tex.print(match(P('Za'), 'Zaza'))
+   if match(P('za'), 'Zaza') then 
+      tex.print(match(P('za'), 'Zaza')) 
    else tex.print('nil') 
    end
-\end{teX}
-\end{scriptexample}
+\end{luacode}
+\end{texexample}
 
-To match a pattern against a block of text, we need to first define a \emph{pattern} or as it is sometimes referred in the literature a needle, as in `find the needle in haystack'. We first start by defining some shorthands in line~\ref{lin:match}-\ref{lin:match1}
+To match a pattern against a block of text, we need to first define a \emph{pattern} or as it is sometimes referred in the literature a needle, as in `find the needle in haystack'. We first start by defining some shorthands in line~\ref{match}-\ref{match1}
 
-The \luacmd{lpeg.P} is an operator and operates on the string, whereas \luacmd{lpeg.match} is a function. The LPeg patterns are first class objects. These patterns are regular Lua values (represented by userdata). In the example above the match matches a string exactly. The verbosity of the code must not discourage you as the aptterns are composable. All the operators are represented by single letters.  The above pattern matches at the beginning of the string and returns the end position of the string. 
 
-To capture a range of characters, for example the lower case letters of the English alphabet  ['a-z'] we have to use \luacmd{lpeg.R}. Notice the \textbf{R} for range.
+
+The \luacmd{lpeg.P} is an \emph{operator} and operates on the string, whereas \luacmd{lpeg.match} is a function. The LPeg patterns are first class objects. These patterns are regular Lua values (represented by userdata). In the example above the match matches a string exactly. The verbosity of the code must not discourage you as the aptterns are composable. All the operators are represented by single letters.  The above pattern matches at the beginning of the string and returns the end position of the string. 
+
+To capture a range of characters, for example the lower case letters of the English alphabet  ['a-z'] we have to use \luacmd{lpeg.R}. Notice the \textbf{R} stands for range.
 
 \emphasis{R}
 \begin{texexample}{Matching Patterns lpeg.P}{}
@@ -39,7 +90,56 @@ To capture a range of characters, for example the lower case letters of the Engl
 
 What happened in the example, we defined the letters |R'az\^1 * -1|. Lots of symbols but they will start making more sense in a minute. The  |(\^1)| means a sequence of at least one. Unlike with Lua patterns or regular expressions, you don't have to worry about escaping 'magic' characters - every character in a string stands for itself: '(','+','*', '\%', etc are just their ASCII equivalents. 
 
-Earlier I have mentioned that patterns are composable. The + operator means \emph{either} one or the other pattern.
+Earlier I have mentioned that patterns are composable. The + operator means \emph{either} one or the other pattern. There are numerous operators, covering all the cases as shown in Table~\ref{tbl:peg}
+
+\medskip
+
+\bgroup
+\captionof{table}{Basic operations for creating patterns}\label{tbl:peg}
+\begin{longtable}[c]{lp{8cm}}
+\toprule
+Operator	          &Description\\
+\midrule
+|lpeg.P(string)|	  &Matches string literally\\
+|lpeg.P(n)|	       &Matches exactly \meta{n} characters\\
+|lpeg.S(string)|  &Matches any character in string (Set)\\
+|lpeg.R("xy")|	   &Matches any character between \meta{x} and \meta{y} (Range)\\
+|patt^n|	         &Matches at least \meta{n} repetitions of |patt|\\
+|patt^-n|	       &Matches at most n repetitions of |patt|\\
+|patt1 * patt2|	 &Matches |patt1| followed by |patt2|\\
+|patt1 + patt2|	 &Matches |patt1| or |patt2| (ordered choice)\\
+|patt1 - patt2|	 &Matches |patt1| if |patt2| does not match\\
+|-patt|	          &Equivalent to ("" - patt)\\
+|#patt|	          &Matches patt but consumes no input\\
+|lpeg.B(patt)|	 &Matches patt behind the current position, consuming no input\\
+\bottomrule
+\end{longtable}
+\egroup
+
+
+\section{Functions}
+
+\begin{docLpeg}{lpeg.match (pattern, subject [, init])}
+The matching function. It attempts to match the given pattern against the subject string. If the match succeeds, returns the index in the subject of the first character after the match, or the captured values (if the pattern captured any value).
+\end{docLpeg}
+
+An optional numeric argument init makes the match start at that position in the subject string. As usual in Lua libraries, a negative value counts from the end.
+
+Unlike typical pattern-matching functions, match works only in anchored mode; that is, it tries to match the pattern with a prefix of the given subject string (at position init), not with an arbitrary substring of the subject. So, if we want to find a pattern anywhere in a string, we must either write a loop in Lua or write a pattern that matches anywhere. This second approach is easy and quite efficient; see examples.
+
+
+\begin{docLpeg}{lpeg.type (value)}
+If the given value is a pattern, returns the string "pattern". Otherwise returns nil.
+\end{docLpeg}
+
+\begin{docLpeg}{lpeg.version ()}
+Returns a string with the running version of LPeg.
+\end{docLpeg}
+
+\begin{docLpeg}{lpeg.setmaxstack (max)}
+Sets a limit for the size of the backtrack stack used by LPeg to track calls and choices. (The default limit is 400.) Most well-written patterns need little backtrack levels and therefore you seldom need to change this limit; before changing it you should try to rewrite your pattern to avoid the need for extra space. Nevertheless, a few useful patterns may overflow. Also, with recursive grammars, subjects with deep recursion may also need larger limits.
+\end{docLpeg}
+
 
 \begin{texexample}{Matching Patterns lpeg.P}{}
 \begin{luacode}
@@ -77,6 +177,7 @@ print(lpeg.match(lpeg.patterns.sign, str))
 \end{luacode}
 \end{texexample}
 
+
 It attempts to match the given pattern against the subject string. If the match succeeds, returns the index in the subject of the first character \emph{after} the match, or the values of captured values (if the pattern captured any value).
 
 An optional numeric argument init makes the match starts at that position in the subject string. As usual in Lua libraries, a negative value counts from the end.
@@ -85,23 +186,23 @@ Unlike typical pattern-matching functions, match works only in anchored mode; th
 
 The lualibs library which we load by default when LuaLaTeX is detected comes with dozens of predefined patterns and a number of utilities.
 
-\CMDI{\lpegreplace(table, text)}
+\section[\textbackslash lpegreplace]{\textbackslash lpegreplace(table, text)}
 
-lpeg.replacer(table) Accepts a list of pairs and returns a pattern that substitutes any first elements of a given pair by its second element. The latter can be a string, a hashtable, or a function (whatever is permissible with |lpegs.Cs|).
+\begin{docLpeg}{lpeg.replacer(table)}
+Accepts a list of pairs and returns a pattern that substitutes any first elements of a given pair by its second element. The latter can be a string, a hashtable, or a function (whatever is permissible with |lpegs.Cs|).
 The order of the elements of a table is important, as lpeg's match the leftmost element of a disjunction first.
-
+\end{docLpeg}
 
 
 \section{Basic Captures}
 
 Getting the index after a match is all very well, and you can then use \luacmd{string.sub} to extract the strings. But there are ways of explicitly asking for captures:
 
-\begin{verbatim}
+\begin{phdverbatim}
 > C = lpeg.C  -- captures a match
 > Ct = lpeg.Ct -- a table with all captures from the pattern
-\end{verbatim}
+\end{phdverbatim}
 
-The first is equivalent to how '(...)' is used in Lua patterns or '(...)' in regular expressions.
 
 \begin{texexample}{Matching Patterns lpeg.P}{}
 \begin{luacode}
@@ -110,9 +211,69 @@ The first is equivalent to how '(...)' is used in Lua patterns or '(...)' in reg
  digit = lpeg.R'09'  --  anything from '0' to '9'
  digits = digit^1    --  a sequence of at least one digit
  cdigits= C(digits)  --  capture digits
- tex.print(cdigits:match '1239AAAA')
+ tex.print(cdigits:match '123A9AAAA')
 \end{luacode}
 \end{texexample}
+
+
+A capture is a pattern that produces values (the so called semantic information) according to what it matches. LPeg offers several kinds of captures, which produces values based on matches and combine these values to produce new values. Each capture may produce zero or more values.
+
+The following table summarizes the basic captures:
+\captionof{table}{Basic operations for creating patterns}\label{tbl:peg}
+\nobreak
+\begin{longtable}[c]{|l|p{8cm}|}
+\hline
+Operation	   &What it Produces\\
+\hline
+
+lpeg.Cf(patt, func)	&a folding of the captures from patt\\
+lpeg.Cg(patt [, name])	&the values produced by patt, optionally tagged with name\\
+lpeg.Cp()	&the current position (matches the empty string)\\
+lpeg.Cs(patt)	&the match for patt with the values from nested captures replacing their matches\\
+lpeg.Ct(patt)	&a table with all captures from patt\\
+patt / string	&string, with some marks replaced by captures of patt\\
+patt / number	&the n-th value captured by patt, or no value when number is zero.\\
+patt / table	&table[c], where c is the (first) capture of patt\\
+patt / function	&the returns of function applied to the captures of patt\\
+lpeg.Cmt(patt, function)	&the returns of function applied to the captures of patt; the application is done at match time\\
+\hline
+\end{longtable}
+
+
+
+
+
+\begin{docLpeg}{lpeg.C(patt)}
+the match for |patt| plus all captures made by patt
+\end{docLpeg} 
+
+\begin{docLpeg}{lpeg.Carg(n)}	
+The value of the nth extra argument to lpeg.match (matches the empty string).
+\end{docLpeg}
+
+\begin{docLpeg}{lpeg.Cb(name)}
+The values produced by the previous group capture named name (matches the empty string)
+\end{docLpeg}
+
+\begin{docLpeg}{lpeg.Cc(values)}
+The given values (matches the empty string)
+\end{docLpeg}
+
+\begin{docLpeg}{lpeg.Cf(patt, func)}
+a folding of the captures from patt
+\end{docLpeg}
+
+\begin{docLpeg}{lpeg.Cg(patt [, name])}
+the values produced by patt, optionally tagged with name
+\end{docLpeg}
+
+\begin{docLpeg}{lpeg.Cp()}
+the current position (matches the empty string)
+\end{docLpeg}
+
+\begin{docLpeg}{lpeg.Cs(patt)}
+the match for patt with the values from nested captures replacing their matches
+\end{docLpeg}
 
 
 \section{Built in patterns}
@@ -120,12 +281,15 @@ The first is equivalent to how '(...)' is used in Lua patterns or '(...)' in reg
 The following is an extract from the |ConTeXt| guide. The example captures all words in square brackets. 
 
 \begin{texexample}{Matching Patterns lpeg.P}{}
+
 \begin{luacode}
 if type(tex) == 'table' then print = tex.print end
 local P, R, C, Ct = lpeg.P, lpeg.R, lpeg.C, lpeg.Ct
 local pattern = Ct((P("[") * C(R("az")^0) * P(']') + P(1))^0)
-local words = lpeg.match(pattern,"a [first] and [second] word, some utf [third]")
+local words = lpeg.match(pattern,"a [ first ] and [second] word, some utf [third]")
 tex.print(words)  
+
+ 
 \end{luacode}
 \end{texexample}
 
@@ -133,3 +297,13 @@ tex.print(words)
 
 
 \footnote{\protect\url{http://www.inf.puc-rio.br/~roberto/lpeg/lpeg.html\#intro}}
+
+\endinput
+
+local alpha, cntrl, digit, graph, lower, punct, space, upper, alnum, xdigit =
+   lpeg.alpha, lpeg.cntrl, lpeg.digit, lpeg.graph, lpeg.lower, lpeg.punct,
+   lpeg.space, lpeg.upper, lpeg.alnum, lpeg.xdigit
+
+local pattern = lpeg.Ct(lpeg.upper)   
+local upwords = lpeg.match(pattern "Some words") 
+

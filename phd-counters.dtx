@@ -150,11 +150,13 @@ See http://www.latex-project.org/lppl.txt
 
 %\listfiles
 %gdef\@onlypreamble{} % TO BE REMOVED NEEDED FOR TUTS
+\NeedsTeXFormat{LaTeX2e}[2017/04/15]%
+\RequirePackage[2017/04/15]{latexrelease}
 \documentclass[twoside,11pt,a4paper]{ltxdoc}
 \usepackage[bottom=2cm]{geometry}
 \savegeometry{std}
 % \usepackage[style=mla]{biblatex}
-\usepackage{phd}
+\usepackage[microtype=on]{phd}
 \usepackage{phd-documentation}
 \usepackage{phd-counters}
 \usepackage{phd-toc}
@@ -240,7 +242,9 @@ See http://www.latex-project.org/lppl.txt
        part background-color=spot,
        part beforeskip                = -3cm,
        part afterskip                 = 30pt,
+       subsection afterindent         = off,
        }
+       
 \ExplSyntaxOn
 \makeatletter
 \tl_map_inline:nn
@@ -262,6 +266,8 @@ See http://www.latex-project.org/lppl.txt
 \ExplSyntaxOff  
 %\usepackage[perpage]{footmisc}        
 \begin{document}
+\let\citep\footcite
+\DEBUGOFF
 \parindent1em
 \def\secondpageimgdescription {Failaka Islad, Kuwait, building wall showing bullet
   holes, from the Iraqi invasion a quarter-century ago. (Megan O'Toole Al Jazeera }
@@ -298,6 +304,9 @@ See http://www.latex-project.org/lppl.txt
 %\input{./l3sections/l3xtemplate}
 %\input{./l3sections/l3main}
 \DocInput{\jobname.dtx}
+\MakePercentComment
+\appendix
+\input{./kernel/kernel-ltcounts}
 \printbibliography 
 \printindex
  %
@@ -471,21 +480,30 @@ See http://www.latex-project.org/lppl.txt
 %
 % \section{State of the art}
 %
-% \subsection{Resetting and adding or removing to reset}
+% \paragraph{Reset a counter}
 %
 % Counters can be reset to an initial value when another counter is reset. For
-% example a section is reset when a chapter counter is incremented.
+% example a section is reset when a chapter counter is incremented and hence
+% this is difficult to determine. This functionality is offered by \latexe
 %
-% \subsection{Determining the total of a counter}
+% \paragraph{Add to reset} This functionality is offered by the \pkg{chngcntr}\footcite{chngcntr} or you can use the 
+% \latexe command \refCom{@addtoreset}. The |chngcntr|
+%     package just adds it to the list kept by \latexe for resetting.
 %
+% \paragraph{Total number of counters}
+%     Sometimes it can be useful to know the total number of elements (e.g. sections,
+%     pages, citations, etc.) in a \latex document. 
+% 
 % There are numerous packages that deal with counters one way or another on \ctan.
 % Packages such as \pkgname{totpages} (\citep{totpages}), \pkgname{lastpage} \citep{lastpage}, \pkgname{pageslts} \citep{pageslts}, \pkgname{count1to} \citep{count1to} and \pkgname{TotCount} \citep{totcount}
 % provide user level commands for accessing the last count of either special
 % counters, such as |\page| or in the case of the \pkgname{TotCount} of creating
 % counters that enable the computation and display of the last counter inside a
-% document (usually the maximum value of the counter). Another package that can be
+% document (usually the maximum value of the counter). 
+
+% Another package that can be
 % used by programmers to access, such is information is Heiko Oberdiek's package
-% \pkgname{zref} \citep{zref}. I have  a preference for the last one and its modules,
+% \pkgname{zref}\footcite{zref}. I have  a preference for the last one and its modules,
 % as we are using it elsewhere as well and it is likely that if you are using 
 % \pkgname{hyperref} this would have been loaded automatically. 
 
@@ -498,9 +516,12 @@ See http://www.latex-project.org/lppl.txt
 % is last chapter is \zref[chapter]{LastPage}  \zref[thepage]{LastPage}. The absolute
 % total pages are \ztotpages. 
 %
-% \subsection{Integer representation as Alph, Ordinals, Cardinals and Internationalization}
+% \paragraph{Integer representation as Alph, Ordinals, Cardinals, symbols.}
+% The counters can be represented as ordinals or cardinals. There is
+% limited support in \latexe, including symbols used in footnotes.
 % 
-% 
+% Internationalization is handled by fmcount, babel, polyglossia.
+%
 % \subsection{The expl3 l3int package}
 %
 %
@@ -513,9 +534,9 @@ See http://www.latex-project.org/lppl.txt
 % \fi
 %  
 %    \begin{macrocode}
-\NeedsTeXFormat{LaTeX2e}[1994/12/01]%
-\RequirePackage[2014/05/01]{latexrelease}
-\ProvidesFile{phd-lists}[2015/1/13 v1.0 less preamble (YL)]%
+\NeedsTeXFormat{LaTeX2e}[2017/04/15]%
+\RequirePackage[2017/04/15]{latexrelease}
+\ProvidesFile{phd-counters}[2017/04/15 v1.0 less preamble (YL)]%
 %    \end{macrocode}
 %
 % We load the \pkgname{zref} with a number of options including the 
@@ -523,7 +544,8 @@ See http://www.latex-project.org/lppl.txt
 % to avoid name clashes with macros of the same functionality. \zlabel{zref}
 %
 %    \begin{macrocode}
-\RequirePackage[thepage,abspage,lastpage,totpages, user,savepos,xr,pagelayout]{zref}
+\RequirePackage[thepage,abspage,%
+                lastpage,totpages, user,savepos,xr,pagelayout]{zref}
 %    \end{macrocode}
 %
 % The \pkgname{zref} is a programmer's toolbox for referencing, hence we
@@ -584,7 +606,11 @@ See http://www.latex-project.org/lppl.txt
 %    \begin{macrocode}
 \cs_gset:Nn  \phd_create_new_counter:n 
   {
-    \int_if_exist:cTF {\phd_counter_prefix_tl#1}{ERROR~counter~exists}
+    \int_if_exist:cTF 
+      {\phd_counter_prefix_tl#1}
+            {
+            \msg_error:nnn { phd-counters } { counter-exists }{#1}
+            }
       { 
         \int_gzero_new:c {\phd_counter_prefix_tl#1}
         \seq_new:c {\counter_resets_prefix:#1}
@@ -667,7 +693,7 @@ See http://www.latex-project.org/lppl.txt
 %  \end{docCmd}
 %
 %    \begin{macrocode}
-\DeclareDocumentCommand\newCounter { o m } 
+\DeclareDocumentCommand\NewCounter { o m } 
   {
     \phd_create_new_counter:n {#2}
       \IfNoValueF {#1}
@@ -680,9 +706,9 @@ See http://www.latex-project.org/lppl.txt
 \ExplSyntaxOff
 %    \end{macrocode}
 %
-%  \newCounter {exam}
-%  \newCounter [exam]{problem}
-%  \setcounter{exam}{135}  \ExamValue
+%  
+%  
+%  
 %
 % \section{Ordinal and Cardinal Numbers}
 %
@@ -818,8 +844,14 @@ See http://www.latex-project.org/lppl.txt
  \int_gzero_new:N \int_tens
  \int_gzero_new:N \int_units
  \int_gzero_new:N \int_to_be_converted
- 
-\cs_new:Npn \int_to_cardinal_aux_en:n #1
+%    \end{macrocode}
+%
+% \begin{docCommand}{int_to_cardinal_aux_en:n}{\marg{integer}}
+%  Converts an integer number to a cardinal number. The suffix \_en indicates
+% the short language code.
+% \end{docCommand}
+%    \begin{macrocode} 
+\cs_gset:Npn \int_to_cardinal_aux_en:n #1
   {
 %    \end{macrocode}
 %

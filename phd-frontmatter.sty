@@ -14,8 +14,8 @@
 
 
 
-\NeedsTeXFormat{LaTeX2e}[1994/12/01]%
-\RequirePackage[2014/05/01]{latexrelease}
+\NeedsTeXFormat{LaTeX2e}[2017/04/15]%
+\RequirePackage[2017/04/15]{latexrelease}
 \ProvidesFile{phd-frontmatter}[2015/7/13 v1.0 frontmatter management (YL)]%
 \ExplSyntaxOn
 \let\ltxtoday\today
@@ -26,6 +26,19 @@
 \ExplSyntaxOn
 \newif\if@mainmatter \@mainmattertrue
 \cxset{
+  frontmatter~numbering/.is~choice,
+  frontmatter~numbering/arabic/.code  = \cs_set:Npn \setfrontpagenumbering
+                                         {
+                                           \pagenumbering{arabic}
+                                         },
+  frontmatter~numbering/roman/.code   = \cs_set:Npn \setfrontpagenumbering
+                                         {
+                                           \pagenumbering{roman}
+                                         },
+  frontmatter~numbering/Roman/.code   = \cs_set:Npn \setfrontpagenumbering
+                                         {
+                                           \pagenumbering{Roman}
+                                         },
   mainmatter~numbering/.is~choice,
   mainmatter~numbering/arabic/.code  = \cs_set:Npn \setpagenumbering
                                          {
@@ -39,15 +52,17 @@
                                          {
                                            \pagenumbering{Roman}
                                          },
+
   }
 \ExplSyntaxOff
-\cxset{mainmatter numbering = arabic}
+\cxset{mainmatter numbering = arabic,
+       frontmatter numbering = roman}
 \ExplSyntaxOn
 \cs_gset:Npn \frontmatter
   {
     %\cleardoublepage
     \@mainmatterfalse
-    %\setpagenumbering%
+    \setfrontpagenumbering%
   }
 \cs_gset:Npn \mainmatter
   {
@@ -151,6 +166,17 @@
     %
   }
 }
+\newdimen\phdparindent
+\setlength{\phdparindent}{12\p@}
+\parindent\phdparindent
+\newenvironment{dedication}
+{\clearemptydoublepage
+\thispagestyle{empty}
+\vspace*{13\baselineskip}
+\large\itshape
+\let\\\@centercr\@rightskip\@flushglue \rightskip\@rightskip
+\leftskip4cm\parindent\z@\relax
+\everypar{\parindent=\phdparindent\let\everypar\empty}}{\clearpage}
 \long\def\addtocimage@cx#1#2#3{%
 \tikz[remember picture,overlay] {%
 \node[anchor=east,xshift=#1,yshift=#2] at (0,0) {\includegraphics[width=.15\linewidth]{#3}};}%
@@ -166,32 +192,38 @@
 
 \cs_if_exist:NF \coverpage
   {
-    \DeclareDocumentCommand {\coverpage}  { m m m m m }
+    \DeclareDocumentCommand {\coverpage}  {+O{Y Lazarides} m m m m m }
      {
-       \coverpage_aux:nnnnn {#1} {#2} { #3} {#4} {#5}
+       \thispagestyle{empty}
+       \coverpage_aux:nnnnn {#1} {#2} { #3} {#4} {#5} {#6}
      }
 
-     \cs_new:Npn \coverpage_aux:nnnnn #1 #2 #3 #4 #5
+     \cs_new:Npn \coverpage_aux:nnnnn #1 #2 #3 #4 #5 #6
       {
-      \gdef\secondpageimg{#1}
-      \vspace*{1.7cm}
-      \vbox{%
-         \vspace*{-8\baselineskip} %-1
-         \hskip-3.6cm\includegraphics[width=\paperwidth]{#1}\par %hine-02
+      %\pagecolor{black!80}
+      \gdef\secondpageimg{#2}
+      \vspace*{-3.0cm}
+      \parbox[t][0pt]{\textwidth}{%
+         \color{black}
+         \hbox to \hsize{\hfill\hfill \huge \bfseries\textsf{#1}}
+         \vspace*{0.1cm}
+         \hskip-3cm\includegraphics[width=\paperwidth]{#2}\par %hine-02
          \vspace*{.8\baselineskip} %3
          \hbox to \hsize{%
          \Huge \hfill\hfill{\MakeUppercase{\bfseries
-         \textsf{#4}}}}%
+         \textsf{\textls{#5}}}}}%
          \vspace*{0.3cm}
-         \hbox to \hsize{\Huge \hfill\hfill{\MakeUppercase{\bfseries   \textsf{#5}}}}
-         \vspace*{1.8\baselineskip}
-         \hbox to \hsize{\huge \hfill\hfill\textsf{\hbox{#2}}}%
-         \vspace*{1.3cm}
+         \hbox to \hsize{\Huge \hfill\hfill{\MakeUppercase{\bfseries \textsf{\textls{#6}}}}}
+         \vspace*{0.3cm}
          \hbox to \hsize{\huge \hfill\hfill\textsf{\hbox{#3}}}%
+         \vspace*{0.3cm}
+         \hbox to \hsize{\huge \hfill\hfill\textsf{\hbox{#4}}}%
+
         }
      }
+
   }
-  { }
+  {\thispagestyle{empty} }
 \ExplSyntaxOff
 \DeclareDocumentCommand {\secondpageimgdescription} {}
   {
@@ -201,7 +233,9 @@
     1908-1912. These images as well as social campaigns by many including
     Hine, helped to formulate America's anti-child labour laws.
   }
-\newcommand\secondpage{\clearpage\null\vfill\vfill
+\newcommand\secondpage{\clearpage
+  \pagecolor{white}
+  \null\vfill\vfill
   \begin{minipage}[b]{0.9\textwidth}
     \includegraphics[width=3cm]{\secondpageimg}\par
     \raggedright

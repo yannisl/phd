@@ -1,6 +1,11 @@
 \chapter{Kernel Lengths}
+
+\epigraph{A sign that my vision, rapid like all visions, if it had not lasted the space of an ``amen,'' as the
+saying goes, had lasted almost the length of a ``\textit{Dies irae}.''}{Umbeco Eco, ``The Name of the Rose'', 1983}
+
 \label{kernel:lengths}
 \index{LaTeX kernel classes!File n  ltlength.dtx}
+
 \section{File n, lengths and the ltlength.dtx}
 
 This class defines a number of user commands for manipulating lengths. the code is straightforward. The |\newlength| command allocates a new internal skip register using the \docAuxCommand{newskip} command from the allocations module.
@@ -22,43 +27,75 @@ This class defines a number of user commands for manipulating lengths. the code 
 \medskip
 
 \startlineat{3}
-\begin{docCommand}{newlength} {}
-\begin{docCommand}{setlength} {}
-\begin{docCommand}{addtolength} {}
+\begin{docCommand}{newlength} {\marg{command name}} 
+
 The \docAuxCommand{newlength} is just syntactic sugar for PlainTeX’s \docAuxCommand{newskip}. The |\@ifdefinable| will produce an
-error message if the command has already been set.
+error message if the command has already been set.  
 \end{docCommand}
+
+\begin{teXXX}
+\def\newlength#1{\@ifdefinable#1{\newskip#1}}
+\end{teXXX}
+
+\begin{docCommand}{setlength} {}
 \end{docCommand}
+\begin{teXXX}
+\def\setlength#1#2{#1#2\relax}
+\end{teXXX}
+
+\begin{docCommand}{addtolength} {}
 \end{docCommand}
-\begin{minted}{TeX}
-  \def\newlength#1{\@ifdefinable#1{\newskip#1}}
-  \def\setlength#1#2{#1#2\relax}
-  \def\addtolength#1#2{\advance#1 #2\relax}
-\end{minted}
+
+\begin{teXXX}
+\def\addtolength#1#2{\advance#1 #2\relax}
+\end{teXXX}
 
 
-The \mintinline{TeX}{\setto} commands use a temporary box \docAuxCommand{@tempboxa} to store the contents and then 
-measure them using the internal macro |\@settodim|,
+\begin{texexample}{Lengths}{ex:length}
+\bgroup
+\newlength\alength
+\setlength\alength{123.12pt}
+\the\alength
 
-\medskip
+\addtolength\alength{12.0pt}
+\the\alength
+\egroup
+\end{texexample}
+
+The \docAuxCommand{setto} commands use a temporary box \docAuxCommand{@tempboxa} to store the contents and then 
+measure them using the internal macro |\@settodim| which boxes the contents and then uses \tex's |ht| and|wd|.
+
+\begin{docCommand}{@settodim}{\marg{}\marg{}\marg{}}
+Sets a length to another
+\end{docCommand}
+
 \startlineat{6}
-\begin{minted}{TeX}
-  \def\@settodim#1#2#3{\setbox\@tempboxa\hbox{{#3}}#2#1\@tempboxa
+\begin{teXXX}
+\def\@settodim#1#2#3{\setbox\@tempboxa\hbox{{#3}}#2#1\@tempboxa
 %  Clear the memory afterwards (which might be a lot).
-        \setbox\@tempboxa\box\voidb@x}
-  \def\settoheight{\@settodim\ht}
+  \setbox\@tempboxa\box\voidb@x}
   \def\settodepth {\@settodim\dp}
-\end{minted}
+\end{teXXX}
 
-\begin{docCommand}{settowidth}{ \marg{arg}\marg{box}}
+\begin{docCommand}{settoheight}{\marg{dimen}}
+Sets the given length to the height of the box.
 \end{docCommand}
-\begin{minted}{TeX}  
+
+\begin{teXXX}
+\def\settoheight{\@settodim\ht}
+\end{teXXX}
+
+\begin{docCommand}{settowidth}{ \marg{arg}\marg{material}}
+Sets the width to be equal to the boxed content..
+\end{docCommand}
+\begin{teXXX}  
   \def\settowidth {\@settodim\wd}
-\end{minted}
+\end{teXXX}
 
 
 
 \begin{docCommand}{@settopoint} {\marg{skip register}}
+
 The \docAuxCommand{@settopoint}\marg{skip register}
  macro takes the contents of the skip register that is supplied as its argument
 and removes the fractional part to make it a whole number of points. This can be
@@ -82,8 +119,8 @@ here for use with the standard classes (it is used to round off dimensions for p
 
 \section{Redefinitions and Extensions by Packages}
 
-The commands \cmd{\settolength} and \cmd{\addtolength}, \cmd{\@settodim} have been reimplemented by the \pkgname{calc} to enable infix calculations.\footcite{calc} The package also implements a number of other useful
-commands which are described below. 
+The commands \refCom{setlength} and \refCom{addtolength}, \refCom{@settodim} have been reimplemented by the package \pkgname{calc} to enable infix calculations.\footfullcite[See ][The pgf package does not redefine teh original commands, but rather provides numerous commands prefixed with pgfmath]{calc,pkg-pgf}The package also implements a number of other useful
+commands which are described below. The \pkg{pgf} prefixes all the commands, so it has no impact on the kernel commands which can still be used. This is a much better approach. 
 
 \medskip
 \begin{tabular}{ll}

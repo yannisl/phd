@@ -27,15 +27,45 @@ and then
 
 \begin{texexample}{Storing content in boxes}{l3box}
 \ExplSyntaxOn
-\box_new:c { textbox }
-\hbox_set_to_wd:cnn { textbox } { 6cm } 
+\box_new:c {temp_textbox}
+
+
+\hbox_set_to_wd:cnn { temp_textbox } { 5cm } 
   {
     \tex_hsize:D 5cm
+    
     \colorbox{spot!10}{\vbox:n  
-       { \lorem }}
+       { 
+         {\lorem }
+       }
+       }
   }
-\box_use:c {textbox}
+\medskip
+
+\leavevmode\vbox{ \box_use:c {temp_textbox  }}\vbox{\box_use:c {temp_textbox  }}\par
+
+\leavevmode\hbox{ \box_use:c {temp_textbox  } \box_use:c {temp_textbox  }}
+\medskip
+
+The~box~height~is~\the\box_ht:c {temp_textbox}~and~the~box~width~is~\the\box_wd:c {temp_textbox}.\par
+\ExplSyntaxOff  
+\end{texexample}
+
+As this is is the \tex primitive |copy| we can use the box as many times as we want.
+
+\begin{texexample}{Measuring the contents}{ex: measure contents}
+
+\ExplSyntaxOn
+
+\box_use:c {temp_textbox}
+
+The~box~height~is~\the\box_ht:c {temp_textbox}~and~the~box~width~is~\the\box_wd:c {temp_textbox}.\par
+
+\box_use:c {temp_textbox}
+
 \ExplSyntaxOff
+
+\tikz\node[draw, fill=spot!20, text width=142.26378pt-10pt, inner sep=5pt, outer sep=0pt, baseline=X.base]{\lorem};
 \end{texexample}
 
 The naming schemes are a bit unintuitive but this is inherited from \tex itself. To restrict the |\vbox| you need to set the |\hsize|.  
@@ -62,8 +92,8 @@ The naming schemes are a bit unintuitive but this is inherited from \tex itself.
  
 \begin{texexample}{Moving Boxes up or down}{l3boxdown}
 \ExplSyntaxOn
-\vbox_set:cn{textbox}{abcd}
-A \box_move_down:nn{10pt}{\box_use:c {textbox}} 
+\vbox_set:cn{temp_textbox}{abcd}
+A \box_move_down:nn{10pt}{\box_use:c { temp_textbox }} 
 \ExplSyntaxOff
 \end{texexample}
 
@@ -104,7 +134,13 @@ the \latex3 form of |\hbox| and |\vbox|.  Now time to lose our  beloved |source2
 
 \begin{texexample}{Natural width boxes}{l3:hbox}
 \ExplSyntaxOn
-\hbox:n{\includegraphics[width=0.8\textwidth]{latex3}}
+\cs_new:Npn \put_image:n #1{
+  \par\leavevmode
+  \centering
+  \hbox:n{\includegraphics[width=#1\textwidth]{latex3}}
+  \par
+}
+\put_image:n {0.6}
 \ExplSyntaxOff
 \end{texexample}
 
@@ -114,6 +150,8 @@ the \latex3 form of |\hbox| and |\vbox|.  Now time to lose our  beloved |source2
 \ExplSyntaxOff
 \end{texexample}
 
+\definecolor{nice}{HTML}{48CCD8}
+{\fboxsep3pt \sffamily \Huge \colorbox{nice}{\color{white}TEXT}}
 
 \begin{docCommand}{hbox_to_wd:nn}{\docAuxCommand*{hbox_to_wd:nn} \marg{dimexpr} \marg{contents}}
    Typesets the \meta{contents} into a horizontal box of width

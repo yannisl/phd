@@ -1,7 +1,107 @@
 \chapter{Lua i/o}
 \label{ch:luaio}
-\newfontfamily\hiero{NotoSansEgyptianHieroglyphs-Regular.ttf}
 
+
+The I/O library is used for reading and manipulating files in Lua. Like most programming languages there are two kinds of file operations in Lua namely implicit file descriptors and explicit file descriptors.
+
+For the following examples, we will use a sample file test.lua as shown below.
+
+\begin{phdverbatim}
+-- sample test.lua
+-- sample2 test.lua
+\end{phdverbatim}
+
+A simple file open operation uses the following statement.
+
+
+\begin{docLua}{io.open (filename [, mode])}
+A simple file open operation uses the following statement.\\
+file = io.open (filename [, mode])
+\end{docLua}
+
+The various file modes are listed in the following table.
+
+\begin{longtable}{ll}
+Mode	& Description\\
+"r"	& Read-only mode and is the default mode where an existing file is opened.\\
+"w"	& Write enabled mode that overwrites the existing file or creates a new file.\\
+"a"	& Append mode that opens an existing file or creates a new file for appending.\\
+"r+"	& Read and write mode for an existing file.\\
+"w+"	& All existing data is removed if file exists or new file is created with read write permissions.\\
+"a+"	& Append mode with read mode enabled that opens an existing file or creates a new file.\\
+\end{longtable}
+
+\section{Implicit file descriptors}
+
+Implicit file descriptors use the standard input/ output modes or using a single input and single output file. A sample of using implicit file descriptors is shown below.
+
+\begin{texexample}{I/O Operations}{ex:iolua}
+\begin{luacode}
+fileHandle =io.open("file.txt", "w+")
+tex.print(io.type(fileHandle).."\\par")
+fileHandle:write("Hello world")
+io.close(fileHandle)
+tex.print(io.type(fileHandle).."\\par")
+\end{luacode}
+\end{texexample}
+
+\begin{docLua}{io.flush()}
+This function runs |file:flush()| on the default file. When a file is in buffered mode, the data is not
+written to the file immediately; it remains in the buffers and is written when the buffer nears getting
+full. This function forces the buffers to write to file and clear up.
+\end{docLua}
+
+\begin{docLua}{io.input([file])}
+This function returns the current default input file when called without any parameters. The parameter
+passed can be either a filename or a file handle. When the function is called with a filename, it sets
+the handle to this named file as the default input file. If it is called with a file handle, it just sets the
+default input file handle to this passed file handle.
+\end{docLua}
+
+
+\begin{docLua}{io.tmpfile()}
+This function returns a handle for a temporary file; the file is opened in update mode and removed
+automatically when the program ends.
+\end{docLua}
+
+The use of a temporary file, is useful in many situations, where we need to write something temporarily
+and then read it later on in the program. 
+
+\begin{texexample}{Temporary files}{}
+\begin{luacode}
+if type(tex)==table then print=print.tex end
+fh = io.tmpfile()
+fh:write("some sample data on page \\thepage ")
+fh:flush()
+-- Now let's read the data we just wrote
+fh:seek("set", 0)
+content = fh: read("*a")
+print("We got: ", content)
+\end{luacode}
+\end{texexample}
+
+\begin{docLua}{io.type(obj)}
+This function returns the result if the handle specified by obj is a valid file handle. It returns the string
+``file'' if |obj| is an open file handle and the string ``closed file'' if |obj| is a closed file handle. It
+returns |nil| if |obj| is not a file handle.
+\end{docLua}
+
+\begin{texexample}{Checking the type}{}
+\begin{luacode}
+if type(tex)==table then print=print.tex end
+fh = io.input()
+if fh then
+    tex.print(io.type(fh)) 
+  else
+    tex.print("nil")
+end
+\end{luacode}
+\end{texexample}  
+
+\endinput
+%\newfontfamily\hiero{NotoSansEgyptianHieroglyphs-Regular.ttf}
+
+\section{A more practical example}
 In the sections of the documentation, where we describe
 the use of unicode for scripts, we provide files with almost
 all unicode blocks we describe. For example the file
@@ -153,6 +253,25 @@ Getting the TeX side of things right is also important, as we may need to scale 
 \end{center}
 
 Once the font sizing commands are ready, it is a simple matter to use a stacking mechanism to stack them. If you recall from a parbox can be displayed inline--as far as \tex is concerned it is just another box to be typeset.  
+
+\section{boxes}
+
+\begin{texexample}{Reading values of a box}{}
+\bgroup
+\setbox0=\hbox{A\hskip 5pt B\hskip 10pt C}
+\noindent Using \TeX{} code, box 0 has width \number\wd0\relax \space sp\par
+\noindent We can also use Lua and call one of Lua\TeX's functions to get the same
+information.\vskip10mm
+\noindent From Lua code, box 0 has width 
+
+\directlua{
+local boxwidth = tex.box[0].width
+tex.print(boxwidth.." sp")
+} which, of course, is identical to the value obtained from \TeX{} code.
+
+\egroup
+\end{texexample}
+
 
 
 

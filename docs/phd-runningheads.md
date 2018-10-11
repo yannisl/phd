@@ -36,7 +36,7 @@ workings of TeX and LaTeX2e. However, you don't need to know much
 to use it.
 
       \usepackage{phd}
-      \input{style13}
+      \include{style13}
 
 All choices, are made via an extended key-value interface.
 Although not a compliment, it resembles CSS and the keys are a bit verbose but

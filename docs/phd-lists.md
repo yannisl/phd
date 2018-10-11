@@ -13,25 +13,11 @@ and the derived files
 
    `phd-lists.ins`,
    `phd-lists.pdf`,
-
-that are bundled with the `phd` package and the class with the 
-same name which provide convenient methods to create new styles 
-for books, reports and articles. It also loads the most commonly used packages
-and resolves conflicts.
-
-This work consists of the file  
-   `phd-lists.dtx`,
-   
-and the derived files   
-
-   `phd-lists.ins`,  
-   `phd-lists.pdf`, 
    `phd-lists.sty`.
 
 ###Installation
 
 run
-
 
     `phd-lua  phd-lists.dtx`   on windows
 

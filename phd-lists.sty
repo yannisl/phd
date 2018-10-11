@@ -14,18 +14,169 @@
 
 
 
-\NeedsTeXFormat{LaTeX2e}[1994/12/01]%
-\RequirePackage[2014/05/01]{latexrelease}
-\ProvidesFile{phd-lists}[2015/1/13 v1.0 less preamble (YL)]%
+
+
+\NeedsTeXFormat{LaTeX2e}[2017/04/15]%
+\RequirePackage[2017/04/15]{latexrelease}
+\ProvidesFile{phd-lists}[2017/04/15 v1.0 less preamble (YL)]%
 \ExplSyntaxOn
 \let\ltxtoday\today
 \let\phd_hang_from:nn \@hangfrom
 \newif\if@ltxcompat \@ltxcompatfalse
 \ExplSyntaxOff
-
-\RequirePackage{enumerate}
 \ExplSyntaxOn
+
 \clist_gset:Nn \phd_enumerate_list_levels_clist {i,ii,iii,iv,v,vi}
+
+\bool_new:N \continuouslist \bool_set_false:N \continuouslist
+\def\labelprefixi{}
+\def\labelprefixii{}
+\def\labelprefixiii{}
+\def\labelprefixiv{}
+
+\def\labelpuncti{0}
+\def\labelpunctii{}
+\def\labelpunctiii{}
+\def\labelpunctiv{}
+\cs_new:Npn \phd_make_label_enum #1
+  {
+    \cs_set:cpn {phd_labelenum#1} {\cs:w theenum#1\cs_end:}
+  }
+\clist_map_inline:Nn \phd_enumerate_list_levels_clist
+ {
+   \phd_make_label_enum {#1}
+ }
+\DeclareDocumentCommand \enumerate { o }
+  {
+    \IfNoValueTF {#1}
+       {\cxset{enumerate~defaults}}
+       {\cxset{enumerate~defaults, #1}}
+
+    \if_bool:N \continuouslist
+     \cs_set:Npn \usecounter##1{\@nmbrlisttrue\def\@listctr{##1}}
+    \else:
+     \cs_set:Npn \usecounter##1
+       {
+         \@nmbrlisttrue
+         \cs_set:Npn \@listctr { ##1 }
+         \setcounter{##1}\z@
+       }
+    \fi:
+
+    \ifnum
+      \@enumdepth >\thr@@
+        \@toodeep
+    \else
+      \advance\@enumdepth\@ne
+
+      \cs_set:Npx \l_phd_enumctr {enum\romannumeral\the\@enumdepth}
+      \cs_set:Npx \l_phd_prefix  {prefix\romannumeral\the\@enumdepth}
+      \cs_set:Npx \l_phd_suffix  {suffix\romannumeral\the\@enumdepth}
+      \cs_set:Npx \l_phd_punct   {punct\romannumeral\the\@enumdepth}
+
+
+      \exp_after:wN
+      \list
+        \cs:w phd_label\l_phd_enumctr\cs_end:
+        {
+           \usecounter\l_phd_enumctr
+           \cs_set:Npn \makelabel ##1
+             {
+               \hss\llap {
+                 \cs:w label\l_phd_prefix\cs_end:
+                 ##1
+                 \cs:w label\l_phd_punct \cs_end:
+                 \cs:w label\l_phd_suffix \cs_end:
+              }
+           }
+        }
+    \fi
+  }
+\let\endenumerate =\endlist
+
+\skip_zero_new:c {topsepi}
+\skip_zero_new:c {topsepii}
+\skip_zero_new:c {topsepiii}
+\skip_zero_new:c {topsepiv}
+\skip_zero_new:c {topsepv}
+\skip_zero_new:c {topsepvi}
+
+\skip_zero_new:c {partopsepi}
+\skip_zero_new:c {partopsepii}
+\skip_zero_new:c {partopsepiii}
+\skip_zero_new:c {partopsepiv}
+\skip_zero_new:c {partopsepv}
+\skip_zero_new:c {partopsepvi}
+
+\skip_zero_new:c {itemsepi}
+\skip_zero_new:c {itemsepii}
+\skip_zero_new:c {itemsepiii}
+\skip_zero_new:c {itemsepiv}
+\skip_zero_new:c {itemsepv}
+\skip_zero_new:c {itemsepvi}
+
+\skip_zero_new:c {parsepi}
+\skip_zero_new:c {parsepii}
+\skip_zero_new:c {parsepiii}
+\skip_zero_new:c {parsepiv}
+\skip_zero_new:c {parsepv}
+\skip_zero_new:c {parsepvi}
+
+\dim_zero_new:c {parindenti}
+\dim_zero_new:c {parindentii}
+\dim_zero_new:c {parindentiii}
+\dim_zero_new:c {parindentiv}
+\dim_zero_new:c {parindentv}
+\dim_zero_new:c {parindentvi}
+
+\gdef\@listi{%
+            \dim_set_eq:cc  {listparindent}{parindenti}
+            \dim_set_eq:cc  {leftmargin}{leftmargini}
+            \skip_set_eq:cc {parsep}{parsepi}
+            \skip_set_eq:cc {topsep}{topsepi}
+            \skip_set_eq:cc {itemsep}{itemsepi}~
+           }
+
+\gdef\@listii{%
+            \dim_set_eq:cc  {listparindent}{parindentii}
+            \dim_set_eq:cc  {leftmargin}{leftmarginii}
+            \skip_set_eq:cc {parsep}{parsepii}
+            \skip_set_eq:cc {topsep}{topsepii}
+            \skip_set_eq:cc {itemsep}{itemsepii}~
+           }
+
+ \gdef\@listiii{%
+            \dim_set_eq:cc  {listparindent}{parindentiii}
+            \dim_set_eq:cc  {leftmargin}{leftmarginiii}
+            \skip_set_eq:cc {parsep}{parsepiii}
+            \skip_set_eq:cc {topsep}{topsepiii}
+            \skip_set_eq:cc {itemsep}{itemsepiii}~
+           }
+
+\gdef\@listiv{%
+            \dim_set_eq:cc  {listparindent}{parindentiv}
+            \dim_set_eq:cc  {leftmargin}{leftmarginiv}
+            \skip_set_eq:cc {parsep}{parsepiv}
+            \skip_set_eq:cc {topsep}{topsepiv}
+            \skip_set_eq:cc {itemsep}{itemsepiv}~
+           }
+
+\gdef\@listv{%
+            \dim_set_eq:cc  {listparindent}{parindentv}
+            \dim_set_eq:cc  {leftmargin}{leftmarginv}
+            \skip_set_eq:cc {parsep}{parsepv}
+            \skip_set_eq:cc {topsep}{topsepv}
+            \skip_set_eq:cc {itemsep}{itemsepv}~
+           }
+
+\gdef\@listvi{%
+            \dim_set_eq:cc  {listparindent}{parindentvi}
+            \dim_set_eq:cc  {leftmargin}{leftmarginvi}
+            \skip_set_eq:cc {parsep}{parsepvi}
+            \skip_set_eq:cc {topsep}{topsepvi}
+            \skip_set_eq:cc {itemsep}{itemsepvi}~
+           }
+
 \cs_new:Npn  \phd_create_enumerate_list_keys #1
   {
   \cxset
@@ -33,46 +184,55 @@
       enumerate~numbering#1/.is~choice,
 
       enumerate~numbering#1/arabic/.code                        =
-        \cs_gset:cpn {theenum#1}
+        \cs_set:cpn {theenum#1}
           {
             \@arabic \cs:w c@enum#1 \cs_end:\relax
           },
 
-      enumerate~numbering#1/alpha/.code                         =
-        \cs_gset:cpn {theenum#1}
+      enumerate~numbering#1/decimal/.code                        =
+        \cs_set:cpn {theenum#1}
           {
-             \exp_after:wN \alphalph \cs:w c@enum#1 \cs_end: \relax
+            \@arabic \cs:w c@enum#1 \cs_end:.0
+          },
+
+      enumerate~numbering#1/alpha/.code                         =
+        \cs_set:cpn {theenum#1}
+          {
+             %\exp_after:wN \alphalph \cs:w c@enum#1 \cs_end: \relax
+             \int_to_alph:n {\cs:w c@enum#1 \cs_end:}
           },
 
       enumerate~numbering#1/alph/.code                          =
-        \cs_gset:cpn {theenum#1}
+        \cs_set:cpn {theenum#1}
           {
-            \exp_after:wN \alphalph {\cs:w c@enum#1 \cs_end: \relax}
+            %\exp_after:wN \alphalph {\cs:w c@enum#1 \cs_end: \relax}
+            \int_to_alph:n {cs:w c@enum#1 \cs_end:}
           },
 
       enumerate~numbering#1/Alpha/.code                         =
-        \cs_gset:cpn {theenum#1} {
-          \exp_after:wN \AlphAlph{\cs:w c@enum#1 \cs_end:}
-
-           \relax
+        \cs_set:cpn {theenum#1} {
+          \int_to_Alph:n {\cs:w c@enum#1 \cs_end:}
         },
 
       enumerate~numbering#1/roman/.code                         =
-        \cs_gset:cpn {theenum#1} {\@roman \cs:w c@enum#1 \cs_end:\relax},
+        \cs_set:cpn {theenum#1} {\@roman \cs:w c@enum#1 \cs_end:\relax},
 
       enumerate~numbering#1/Roman/.code                         =
-        \cs_gset:cpn {theenum#1} {\@Roman {\cs:w c@enum#1 \cs_end:\relax}},
+        \cs_set:cpn {theenum#1} {\@Roman {\cs:w c@enum#1 \cs_end:\relax}},
 
       enumerate~numbering#1/none/.code                          =
-        \cs_gset:cpn {theenum#1} {},
+        \cs_set:cpn {theenum#1} {},
 
-
-      enumerate~leftmargin#1/.code                             = {\global\setlength\leftmargini{##1}},
-      list#1~topsep/.store                                     = list#1topsep@cx,
-      list#1~partopsep/.store                                  = list#1partopsep@cx,
-      list#1~itemsep/.store                                    = list#1itemsep@cx,
-      list#1~parsep/.store                                     = list#1parsep@cx,
-      list#1~parindent/.store                                  = list#1parindent@cx,
+    enumerate~leftmargin#1/.code          = { \dim_gset:cn {leftmargin#1}  {##1}},
+    enumerate~rightmargin#1/.code         = { \dim_gset:cn {rightmargin#1} {##1}},
+    list#1~topsep/.code                   = { \skip_gset:cn {topsep#1} {##1}},
+    list#1~partopsep/.code                = { \skip_gset:cn {partopsep#1} {##1}},
+    list#1~itemsep/.code                  = { \skip_gset:cn {itemsep#1}{##1}},
+    list#1~parsep/.code                   = { \skip_gset:cn {parindent#1}{##1}},
+    list#1~parindent/.code                = { \dim_gset:cn {parindent#1}{##1}},
+    enumerate~label#1~punctuation/.code   = \cs_set:cpn {labelpunct#1}{##1},
+    enumerate~label#1~prefix/.code        = \cs_set:cpn{labelprefix#1}{##1},
+    enumerate~label#1~suffix/.code        = \cs_set:cpn{labelsuffix#1}{##1},
   }
 }
 
@@ -81,260 +241,397 @@
     \phd_create_enumerate_list_keys {#1}
   }
 
+\cxset{enumerate~leftmargin/.code= \global\setlength\leftmargin{#1},
+       enumerate~rightmargin/.code= \global\setlength\rightmargin{#1},
+       enumerate~continuous~numbering/.is~choice,
+       enumerate~continuous~numbering/true/.code = \bool_set_true:N \continuouslist,
+       enumerate~continuous~numbering/false/.code = \bool_set_false:N \continuouslist}
+
+\cs_set:Npn \resetlist{\setcounter{enumi}{0}}
+
 \ExplSyntaxOff
-\cxset{
-  enumerate labeli punctuation/.store in=\enumeratepunctuationi@cx,
-  enumerate labeli/.is choice,
-  enumerate labeli/brackets/.code={\renewcommand\labelenumi{(\theenumi\enumeratepunctuationi@cx)}},
-  enumerate labeli/square brackets/.code={\renewcommand\labelenumi{[\theenumi\enumeratepunctuationi@cx]}},
-  enumerate labeli/right bracket/.code={\renewcommand\labelenumi{\theenumi\enumeratepunctuationi@cx)}},
-  enumerate label left/.store in=\enumeratelabelleft@cx,
-  enumerate label right/.code=\renewcommand\labelenumi{\enumeratelabelleft@cx\theenumi\enumeratepunctuationi@cx#1},
-}
+\cxset{%
+  %enumerate labeli punctuation=$bullet$,
+  enumerate defaults/.style={
+  enumerate continuous numbering=false,
+  enumerate numberingi=arabic,
+  enumerate numberingii=alpha,
+  enumerate numberingiii=Roman,
+  enumerate numberingiv=roman,
+  enumerate labeli punctuation=.,
+  enumerate labeli prefix=,
+  enumerate labeli suffix=,
+  enumerate labelii suffix=),
+  enumerate leftmargini=2.2em,
+  enumerate rightmargin=1.2em,
+  enumerate leftmarginii=2.1em,
+  enumerate leftmarginiii=1.5em,
+  enumerate leftmarginiv=2em,
+  listi topsep= 0pt,%\smallskipamount, %10pt plus2pt minus0pt,
+  listi itemsep=0pt plus2pt minus0pt,
+  listi parsep=0pt plus2pt minus0pt,
+  listi partopsep=0pt plus1pt minus0pt,
+  listii topsep=2pt plus2pt minus0pt,
+  listii itemsep=0pt plus2pt minus0pt,
+  listii parsep=0pt plus2pt minus0pt,
+  listiii topsep=2pt plus2pt minus0pt,
+  listiii itemsep=0pt plus2pt minus0pt,
+  listiii parsep=0pt plus2pt minus0pt + 0pt,
+  listiv topsep=2pt plus2pt minus0pt,
+  listiv itemsep=0pt plus2pt minus0pt,
+  listiv parsep=0pt plus2pt minus0pt,
+}}
+\cxset{enumerate defaults}
 \cxset{compact1/.style={%
   enumerate numberingi=alpha,
   enumerate numberingii=Roman,
   enumerate numberingiii=alpha,
   enumerate numberingiv=roman,
-  enumerate labeli punctuation=.,
-  enumerate label left=,
-  enumerate label right=,
+  enumerate labeli punctuation=!,
+  %enumerate label left=,
+  %enumerate label right=,
   enumerate leftmargini=2.2em,
   enumerate leftmarginii=2.1em,
   enumerate leftmarginiii=1.5em,
   enumerate leftmarginiv=2em,
-  listi topsep=10\p@ \@plus2\p@ \@minus\p@,
-  listi itemsep=0\p@ \@plus2\p@ \@minus\p@,
-  listi parsep=0\p@ \@plus2\p@ \@minus\p@,
+  listi topsep=10pt plus2pt minus0pt,
+  listi itemsep=0pt plus2pt minus0pt,
+  listi parsep=0pt plus2pt minus0pt,
   listi partopsep=0pt plus1pt minus0pt,
-  listii topsep=0\p@ \@plus2\p@ \@minus\p@,
-  listii itemsep=0\p@ \@plus2\p@ \@minus\p@,
-  listii parsep=0\p@ \@plus2\p@ \@minus\p@,
-  listiii topsep=0\p@ \@plus2\p@ \@minus\p@,
-  listiii itemsep=0\p@ \@plus2\p@ \@minus\p@,
-  listiii parsep=0\p@ \@plus2\p@ \@minus\p@,
-  listiv topsep=0\p@ \@plus2\p@ \@minus\p@,
-  listiv itemsep=0\p@ \@plus2\p@ \@minus\p@,
-  listiv parsep=0\p@ \@plus2\p@ \@minus\p@,
+  listii topsep=0pt plus2pt minus0pt,
+  listii itemsep=0pt plus2pt minus0pt,
+  listii parsep=0pt plus2pt minus0pt,
+  listiii topsep=0pt plus2pt minus0pt,
+  listiii itemsep=0pt plus2pt minus0pt,
+  listiii parsep=0pt plus2pt minus0pt,
+  listiv topsep=0pt plus2pt minus0pt,
+  listiv itemsep=0pt plus2pt minus0pt,
+  listiv parsep=0pt plus2pt minus0pt,
 }}
 
 \cxset{compact2/.style={%
-  enumerate numberingi=Alpha,
+  enumerate numberingi=arabic,
   enumerate numberingii=roman,
   enumerate numberingiii=alph,
   enumerate numberingiv=roman,
-  enumerate labeli punctuation=,
-  enumerate label left=(,
-  enumerate label right=),
-  enumerate leftmargini=2.2em,
+  enumerate labeli punctuation={!},
+   enumerate leftmargini=2.2em,
   enumerate leftmarginii=2.1em,
   enumerate leftmarginiii=1.5em,
-  enumerate leftmarginiv=0em,
+  enumerate leftmarginiv=1em,
   listi parindent=1em,
   listii parindent=1em,
   listiii parindent=1em,
   listiv parindent=1em,
-  listi topsep   = 8\p@ \@plus2\p@ \@minus\p@,
-  listi itemsep = 0\p@ \@plus2\p@ \@minus\p@,
-  listi parsep   = 0\p@ \@plus2\p@ \@minus\p@,
-  listii topsep  = 0\p@ \@plus2\p@ \@minus\p@,
-  listii itemsep= 0\p@ \@plus2\p@ \@minus\p@,
-  listii parsep  = 0\p@ \@plus2\p@ \@minus\p@,
-  listiii topsep = 0\p@ \@plus2\p@ \@minus\p@,
-  listiii itemsep= 0\p@ \@plus2\p@ \@minus\p@,
-  listiii parsep  = 0\p@ \@plus2\p@ \@minus\p@,
+  listi topsep   = 8pt plus2pt minus0pt,
+  listi itemsep = 0pt plus2pt minus0pt,
+  listi parsep   = 0pt plus2pt minus0pt,
+  listii topsep  = 0pt plus2pt minus0pt,
+  listii itemsep= 0pt plus2pt minus0pt,
+  listii parsep  = 0pt plus2pt minus0pt,
+  listiii topsep = 0pt plus2pt minus0pt,
+  listiii itemsep= 0pt plus2pt minus0pt,
+  listiii parsep  = 0pt plus2pt minus0pt,
 }}
-
 \ExplSyntaxOn
-\gdef\setenumerate#1
-  {
-    \cxset{#1}
-      \gdef\@listi{%
-            \listparindent\listiparindent@cx
-            \leftmargin\leftmargini
-            \parsep\listiparsep@cx
-            \topsep\listitopsep@cx\relax
-            \itemsep\listiitemsep@cx}
 
-      \gdef\@listii{
-           \listparindent\listiiparindent@cx
-            \leftmargin\leftmarginii
-            \parsep\listiiparsep@cx
-            \topsep\listiitopsep@cx\relax
-            \itemsep\listiiitemsep@cx}
+\msg_new:nnnn {phd_lists}{too-deep}{List~is~too~deep}
+  { Increase~itemize~depth~limit; use~
+    \string\cxset\{itemize~depth~ limit= depth\}}
 
-      \gdef\@listiii{
-            \listparindent\listiiiparindent@cx
-            \leftmargin\leftmarginiii
-            \parsep\listiiiparsep@cx
-            \topsep\listiiitopsep@cx\relax
-            \itemsep\listiiiitemsep@cx}
-     \gdef\@listiv{
-            \listparindent\listivparindent@cx
-            \leftmargin\leftmarginiv
-            \parsep\listivparsep@cx
-            \topsep\listivtopsep@cx\relax
-            \itemsep\listivitemsep@cx}
+\cs_set_eq:NN \phd_item_depth_int \@itemdepth
+
+\int_new:N \phd_item_depth_limit_int
+\int_set:Nn \phd_item_depth_limit_int {3}
+
+\newif\if@runin \@runinfalse
+
+\DeclareDocumentCommand\itemize{ o }{
+  \int_compare:nTF { \phd_item_depth_int > \phd_item_depth_limit_int }
+   { \msg_error:nnn { phd_lists } { too-deep } { #1 } }
+   {
+
+    \int_incr:N  \phd_item_depth_int
+    %edef
+    \cs_set:Npx \@itemitem{labelitem\int_to_roman:n \phd_item_depth_int}
+    \exp_after:wN
+    \list
+    \csname\@itemitem\endcsname
+      {%
+        %
+        \if@runin
+          \labelwidth=0pt
+          \itemindent=-0.5em
+          \labelsep=0.2em
+          \listparindent=\dimexpr(1em+0.5em+0.2em)
+          \cs_set:Npn \makelabel ##1{\kern2em##1}%
+        \else
+          \cs_set:Npn \makelabel ##1{\hss\llap{##1}}
+       \fi
+      }%
+  }
 }
+{\endlist}
 
-\ExplSyntaxOff
 
-\ExplSyntaxOn
+\newfontfamily\symbola{symbola.ttf}
+\def\makesymbol#1{
+        \tl_set:Nn\l_tmpa_str:N {#1}
+           \str_case_x:nnTF {#1}
+             {
+               { endash   } { \textendash    }
+               { emdash   } {  \textemdash    }
+               { asterisk } {  \textasteriskcentered    }
+               { bullet   } { \textbullet     }
+               { open~bullet  } { \textopenbullet    }
+               { florette    } {\symbola \char"273F   }
+               { white~florette } {\symbola \char"2740  }
+               { arrowhead}{\symbola \char"27A4 }
+               { arrowhead~light }{\symbola \char"27A6} %check
+               { arrowhead~3D}{\symbola \char"27A3}
+               { arrow~curved}{\symbola \char"27A5}
+               { square     }{ \symbola \char"25FE}
+             }
+             {                                                     }
+             % drop anythin else int the false, say just a cut and paste symbol
+             {
+             % Check if it is a number
+                 #1
+             }
+          }
+
 \cxset
   {
-     labelitemi/.code     = \cs_set:Npn \labelitemi   { \color{theitemicolor} #1   },
-     labelitemii/.code    = \cs_set:Npn \labelitemii  { \color{theitemiicolor} #1  },
-     labelitemiii/.code   = \cs_set:Npn \labelitemiii { \color{theitemiiicolor} #1 },
-     labelitemiv/.code    = \cs_set:Npn \labelitemiv  { \color{theitemivcolor} #1  },
+     label~itemi/.code    = \cs_set:Npn \labelitemi {\symbola  \makesymbol{#1}   },
+     label~itemii/.code   = \cs_set:Npn \labelitemii {\symbola \makesymbol{#1}   },
+     label~itemiii/.code  = \cs_set:Npn \labelitemiii {\symbola \makesymbol{#1}  },
+     label~itemiv/.code   = \cs_set:Npn  \labelitemiv  {\symbola \makesymbol{#1} },
   }
+
+ \cxset{compact2,
+        label~itemi=square,
+        label~itemii=arrowhead~light,
+        label~itemiii=arrowhead~3D,
+        label~itemiv=✻}
+
 \ExplSyntaxOff
 \def\imgtest{
-   \tikz[remember picture,overlay]\node[xshift=0cm, yshift=10pt, below left] (0,0) {\includegraphics[width=\labelwidth]{amato}};
+   \tikz[remember picture,overlay]\node[xshift=0cm, yshift=0pt,
+      below left] (0,0) {\includegraphics[width=\labelwidth]{amato}};
    }
-\def\dingpoint{\ding{217}}
-\def\dingpointi{\ding{226}}
-\def\dingpointii{\ding{229}}
-\def\dingpointiii{\ding{110}}
 
-\cxset
-  {
-    labelitemi    = \dingpointi,%\imgtest,%\dingpointi,
-    labelitemii   = \dingpointii,
-    labelitemiii  = $\iiint$,
-    labelitemiv   = \textbullet,
-  }
 
 
 \ExplSyntaxOn
+\def\makedescriptionkeys#1{
+\dim_zero_new:c {l_phd_description_leftmargin_dim}
+\dim_zero_new:c {l_phd_description_rightmargin_dim}
+\dim_zero_new:c {l_phd_description_labelwidth_dim}
+\dim_zero_new:c {l_phd_description_labelsep_dim}
 \cxset
   {
-    description~label~font-size/.fontsize     = l_phd_description_label_fontsize,
-    description~label~font-weight/.fontweight = l_phd_description_label_fontweight,
-    description~label~font-family/.fontfamily = l_phd_description_label_fontfamily,
-    description~label~font-shape/.fontstyle   = l_phd_description_label_fontshape,
-    description~label~color/.store            = l_phd_description_label_color,
-    description~label~sep/.store              = l_phd_description_label_sep,
-    description~label~width/.store            = l_phd_description_label_width,
-    description~margin~left/.store            = l_phd_description_margin_left,
-    description~margin~right/.store           = l_phd_description_margin_right,
-    description~item~indent/.store            = l_phd_description_item_indent,
-    list~parindent/.store                     = l_phd_description_list_parindent,
+    #1~label~font-size/.fontsize     = l_phd_#1_label_fontsize,
+    #1~label~font-weight/.fontweight = l_phd_#1_label_fontweight,
+    #1~label~font-family/.fontfamily = l_phd_#1_label_fontfamily,
+    #1~label~font-shape/.fontstyle   = l_phd_#1_label_fontshape,
+    #1~label~color/.store            = l_phd_#1_label_color,
+    #1~margin~left/.code          =
+          { \dim_gset:cn {l_phd_#1_leftmargin_dim}  {##1}},
+    #1~margin~right/.code         =
+          { \dim_gset:cn {l_phd_#1_rightmargin_dim} {##1}},
+    #1~label~sep/.code              =
+          {\dim_gset:cn {l_phd_#1_labelsep_dim}{##1}},
+    #1~label~width/.store            = l_phd_#1_label_width,
+    #1~item~indent/.store            = l_phd_#1_item_indent,
+    list~parindent/.store            = l_phd_#1_list_parindent,
+    #1~label~format/.store           = l_phd_#1_labelformat,
   }
+
+\cxset
+  {
+    #1~label~font-size=normal,
+   #1~label~font-weight=normal,
+    #1~label~font-family=sffamily,
+    #1~label~font-shape=upshape,
+    #1~label~color=bgsexy,
+    #1~label~sep=0em,
+    #1~label~width=3em,
+    #1~margin~left=0pt,    % second line parshape
+    #1~margin~right=0pt,   % second line parshape
+    #1~item~indent = 0em,  % how much it  grows into the label
+    list~parindent=0em,
+    #1~label~format=centered,
+  }
+}
+
+\makedescriptionkeys{description}
+
 \ExplSyntaxOff
 \ExplSyntaxOn
-\cs_set:Npn \setdescription #1
+\def\pgfkeysifstyledefined#1#2#3{%
+  \pgfkeys@ifcsname pgfk@#1/.@cmd\endcsname#2\else#3\fi}
+\cs_set:Npn \description_label:n #1
   {
-    \cxset{#1}%
-    \renewenvironment{description}
-      {
-        \list{}
-          {
-            \listparindent = \l_phd_description_list_parindent
-            \leftmargin    = \l_phd_description_margin_left
-            \rightmargin   = \l_phd_description_margin_right
-            \itemindent    = \l_phd_description_item_indent
-            \labelwidth    = \l_phd_description_label_width
-            \labelsep      = \l_phd_description_label_sep
-            \cs_set_eq:NN \makelabel \description_label:n
-          }
-      }
-      { \endlist }
-    \cs_set:Npn \description_label:n ##1
-    {
-      \hspace\l_phd_description_label_sep
+      \hskip\cs:w l_phd_description_labelsep_dim\cs_end:
     {
       \color{\l_phd_description_label_color}%
-      \normalfont\bfseries\raggedleft##1\thickspace%
+      \normalfont
+      \l_phd_description_label_fontsize
+      \l_phd_description_label_fontweight
+      \l_phd_description_label_fontshape
+        \str_case:onTF {\l_phd_description_labelformat}
+          {
+            { fbox         } { \fbox{#1\hss}          }
+            { inline       } { \hbox{#1\hss}          }
+            { inmargin     } { \inmargin {#1}         }
+            { centered     } { \centered {#1}         }
+            { parbox       } { \phd_parbox {#1}       }
+            { parbox~right } { \phd_parbox_right {#1} }
+            { tikzbox      } { \phd_tikzbox {#1}      }
+            { heading      } { \phd_heading {#1}      }
+            { nextlinelabel} { \nextlinelabel {#1}     }
+          }
+          {  }
+          { \arial \default {#1}} \ignorespaces%
     }
-   }
-}%
-\ExplSyntaxOff
-\setdescription{
- description label font-size=normal,
- description label font-weight=bfseries,
- description label font-family=sffamily,
- description label font-shape=upshape,
- description label color=bgsexy,
- description label sep=0sp\relax,
- description label width=100pt,
- description margin left=20pt,
- description margin right=20pt,
- description item indent=90pt,
- list parindent=5em,
-}
-\ExplSyntaxOn
-\NewDocumentCommand \NewDescriptionEnvironment { o m }
-  {
-    \cxset{#1}
-    \newenvironment{#2}
-     {\list{}{\listparindent\l_phd_description_list_parindent
-                       \leftmargin=\l_phd_description_margin_left
-                       \rightmargin=\l_phd_description_margin_right
-                       \itemindent\l_phd_description_item_indent
-                       \labelwidth\l_phd_description_label_width
-                       \labelsep=\l_phd_description_label_sep
-                       \let\makelabel\description_label:n}}%
-               {\endlist}%
-     \cs_set:Npn \description_label:n ##1
-       {
-
-         \hspace\l_phd_description_label_sep
-         \color{\l_phd_description_label_color}
-         \cs_if_exist_use:cTF {l_phd_description_label_fontfamily}{}{family}
-         \cs_if_exist_use:cTF {l_phd_description_label_fontweight}{}{weight}
-         \cs_if_exist_use:cTF {l_phd_description_label_fontshape}{}{shape}
-         \cs_if_exist_use:cTF {l_phd_description_label_fontsize}{}{size}
-        \hbox_to_wd:nn \l_phd_description_label_width {\hss##1\hskip0.5em}%
-}}%
-
-\ExplSyntaxOff
-
-
-\def\phd@item[#1]{%
-  \if@noitemarg
-    \@noitemargfalse
-    \if@nmbrlist
-      \refstepcounter{\@listctr}%
-    \fi
-  \fi
-  \settowidth{\@tempdima}{#1}%
-  \ifdim\@tempdima>\z@
-    \makelabel{{#1}}
-    \nobreakspace
-  \fi
-  \ignorespaces
   }
-\ExplSyntaxOn
-\cs_set:Npn \inparaenum
+\cs_set:cpn   { inmargin } #1 { \llap{#1} }
+
+\cs_set:cpn   { default  } #1 { \hskip1em\hbox{#1 \hss} }
+
+\cs_set:cpn   { centered } #1 { \hbox_to_wd:nn \textwidth{\hss#1\hss} }
+
+\cs_set:cpn   { phd_heading } #1 { \hbox_to_wd:nn \textwidth{#1\hss} }
+
+\cs_set_eq:cc { inline   } { default }
+
+\cs_set:cpn   { phd_parbox } #1 {
+   \tcbox[size=minimal,
+             on~line,
+             colback=blue!1,
+             coltext=black]%
   {
-    \ifnum\@enumdepth>3
-      \@toodeep
-    \else
-      \int_incr:N \@enumdepth
-      \cs_set:Npx \@enumctr
-         {
-           enum\romannumeral\the\@enumdepth
-         }
-    \fi
-    \@ifnextchar[{\@enumlabel@}{\list_in_paragraph_aux:}
+   \sbox{0}{\parbox[t]{2.5cm}{\RaggedLeft #1}}
+    \ht0=0pt\dp0=0pt
+   \llap{\language-1\RaggedLeft \hbox{\usebox{0}}}
+  }
 }
 
-\cs_set:Npn \list_in_paragraph_aux:
-  {
-    \usecounter{\@enumctr}
-    \cs_set:Npn \@itemlabel
-      {
-        \cs:w label\@enumctr \cs_end:
-      }
-    \cs_set_eq:NN \@item \phd@item
-    \cs_set:Npn \makelabel ##1 {##1}
-    \ignorespaces
-  }
+\cs_set:cpn   { phd_parbox_right } #1 {
+   \sbox{0}{\parbox[t]{2.5cm}{\RaggedRight #1}}
+    \ht0=0pt\dp0=0pt
+   \llap{\language-1\RaggedLeft \hbox{\usebox{0}}}
+}
+\cs_set:cpn   { phd_tikzbox } #1 {
 
-\let\endinparaenum\ignorespacesafterend
+\tikz[remember~picture,overlay]\node at (-5pt,0pt) [base~left,inner~sep=0pt,outer~sep=0pt,baseline,
+           text~width=2.6cm,align=flush~right,fill=blue!2]{#1};%
+}
+\cs_set:cpn   { nextlinelabel  } #1 {
+     \sbox\z@{#1}
+     \ifdim\wd\z@>\labelwidth%
+       \setbox\z@\vbox{\box\z@\hbox{}}%
+       \wd\z@\z@%
+       \box\z@%
+     \else
+       \unhbox\z@%
+     \fi
+     \hfil%
+}
 \ExplSyntaxOff
 
+\cxset{phd defaults/.style={%
+   description label font-size=normal,
+   description label font-weight=bold,
+   description label font-family= calligra,
+   description label font-shape=itshape,
+   description label color=bgsexy,
+   description label sep=0.5em,
+   description label width=0cm,
+   description margin left= 2em,    % second line parshape
+   description margin right=2em,   % second line parshape
+   description item indent = 2em,  % how much it  grows into the label
+   list parindent=1em,
+   description label format=default, %parbox right,
+ }}
+ \cxset{nextlinelabel/.style={%
+   description label font-size=normal,
+   description label font-weight=bold,
+   description label font-family= calligra,
+   description label font-shape=itshape,
+   description label color=bgsexy,
+   description label sep=.25em,
+   description label width=\evensidemargin,
+   description margin left= 0em,   % zero to align with left margin of page
+   description margin right=2em,   % second line parshape
+   description item indent= 5em,  % how much it  grows into the label
+   list parindent=1em,
+   description label format=nextlinelabel, %parbox right,
+ }}
+ \cxset{inmargin/.style={%
+   description label font-size=normal,
+   description label font-weight=bold,
+   description label font-family= calligra,
+   description label font-shape=itshape,
+   description label color=bgsexy,
+   description label sep=0em,
+   description label width=0cm,
+   description margin left= 0pt,
+   description margin right=25pt,
+   description item indent = 0pt,
+   list parindent=1em,
+   description label format=tikzbox,
+ }}
+\ExplSyntaxOn
+\DeclareDocumentCommand\NewDescriptionList { m o }
+{
+  \DeclareDocumentEnvironment{#1} { o }
+    {
+      \IfNoValueTF {##1}
+        {
+          \cs:w phd_#1_list_do_aux\cs_end: {#2,}
+        }
+        {
+          \cs:w phd_description_list_do_aux\cs_end: {#2,##1}
+        }
+    }
+    {\endlist}
+    \DeclareDocumentEnvironment{#1*} { }
+     {
+      \cs_if_exist:cTF {}{}{}
+      \latexlist
+     }
+     {\endlist}
+}
 
+\NewDescriptionList{testlist}[tikzbox]
+\NewDescriptionList{description}[phd~defaults]
+
+\def\latexlist {
+\list{}{
+       \labelwidth\z@
+       \itemindent-\leftmargin
+       \let\makelabel\descriptionlabel
+       }
+  }
+\cs_set:cpn {phd_description_list_do_aux} #1 {
+   \list{}
+          { \cxset{#1}%
+            \listparindent = \l_phd_description_list_parindent
+            \leftmargin    = \l_phd_description_leftmargin_dim
+            \rightmargin   = \l_phd_description_rightmargin_dim
+            \itemindent    = \l_phd_description_item_indent
+            \labelwidth    = \l_phd_description_label_width
+            \labelsep      = \l_phd_description_labelsep_dim
+            \parsep        = 3pt\relax
+            \itemsep       = 5pt\relax
+            \itemindent-\leftmargin
+
+            \cs_set_eq:NN \makelabel \description_label:n
+          }
+}
+
+\ExplSyntaxOff
 \endinput
 %%
 %% End of file `phd-lists.sty'.

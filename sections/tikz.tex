@@ -1,6 +1,20 @@
+\def\storyi{The best graphics package ever developed is the TikZ package. 
+Its parent package is PGF which is short of a miracle that has been programmed
+using \tex, a more than thirty years old program. This has taken over almost all other
+packages and is very popular with newcomers to \latex. It is frustrating at first, but once 
+you over the basic ideas and concepts it opens infinite possibilities for typesetting
+great articles and books.}
+
+
+
+\cxset{chapter format=stewart,
+       texti=\storyi,
+       textii=\storyi}
+
 \newcommand\seepgfmanual[1]{%
     \textit{see} the PGFmanual page #1}%
     
+%\cxset{chapter format = traditional}    
 \chapter{TikZ}
 
 \section{The \protect\texttt{TikZ} package}
@@ -12,18 +26,579 @@ its ability to blend \tex fonts, symbols, and mathematics within the generated
 graphics.
 
 
+
+
+TikZ commands can be used inline using \docAuxCommand{tikz} or within the \docAuxCommand{tikzpicture} environment. When we want to use captions and labels, we enclose it in the figure environment or use \docAuxCommand{captionof}, but it can be called anywhere in the text or math of a Tex document:
+
+\begin{teXXX}
+\begin{figure}
+\centering
+%\tikzset{external/force remake}
+\begin{tikzpicture}
+... TikZ commands ...
+\end{tikzpicture}
+\caption{A diagram drawn with TikZ.}
+\label{Fig:_diagram1}
+\end{figure}
+\end{teXXX}
+
+We can also use them in math:
+
+\begin{teXXX}
+\begin{align*}
+\int dx\; f(x) =
+\alpha
+%\tikzset{external/force remake}
+\begin{tikzpicture}
+... TikZ commands ...
+\end{tikzpicture}
+\end{align*}
+\end{teXXX}
+
+
+
+\section{Draw simple lines}
+
+\begin{texexample}{Draw a Line}{ex:line}
+\begin{tikzpicture}
+\node[draw] (S1) at (0,0) {Paris};
+\node[draw] (S2) at (3,0) {Stratsbourg};
+\draw (S1) -- (S2);
+\end{tikzpicture}
+\end{texexample}
+
+
+The syntax of the command is:
+
+|\node|\oarg{options} (\meta{name}) at (\meta{position}) |{|\meta{contents}|}|
+
+If we look
+ carefully, we see that the two writings give
+Slightly different results:
+- In the first case, node is an operation executed on a path. We
+Can consider each node as a decoration of the point at which it
+is associated. The line drawn by the draw command joins two points, the
+Nodes are objects added later and centered on points. The option
+Draw of the node trace operation the node outline.
+- In the second case, \ node is a TikZ command which allows to define
+A node, to name it and to draw it. One can then consider the
+Nodes as pre-existing objects that will then be linked with the \docAuxCommand{node}.
+
+
+\begin{texexample}{Draw a Line}{ex:line}
+\begin{tikzpicture}
+\node[draw] (S1) at (0,0) {Paris};
+\node[draw] (S2) at (0,3) {Stratsbourg};
+\draw[->] (S1) -- (S2);
+\end{tikzpicture}
+\end{texexample}
+
+The basic building block of all pictures in \tikzname is the path. A path is a series of straight lines and curves
+that are connected (that is not the whole picture, but let us ignore the complications for the moment). You
+start a path by specifying the coordinates of the start position as a point in round brackets, as in (0,0).
+This is followed by a series of \enquote{path extension operations.}
+
+
+\begin{texexample}{Draw a Line}{ex:line}
+\begin{tikzpicture}
+\draw[->] (0,0) -- (1.5,0) -- (0, 1.2);
+\end{tikzpicture}
+\end{texexample}
+
+
+\subsection*{Adding Text} 
+
+So far we have seen how to draw lines and arcs. However, an important component is still missing the addition of text. When
+\tikzname is constructing a path and it encounters the keyword |node| typically followed by some options  it reads a \textit{node specification}. Options can typically follow and then it terminates by curly brackets. 
+ 
+
+\begin{texexample}{Draw a Line}{ex:line}
+\begin{tikzpicture}
+\draw[->] (0,0) -- (1.5,0) node {First Node} -- (0, 1.2) node[shape = circle] {Second Node};
+\end{tikzpicture}
+\end{texexample}
+
+
+The \docAuxCommand*{node} can be used to abbreviate the operation. A longer example can demonstrate this better. How can we draw the following figure?
+
+\begin{tikzpicture}
+\node[circle,fill=black,inner sep=0.8pt,draw] (a) at (0,0) {};
+\node[circle,fill=black,inner sep=0.8pt,draw] (b) at (1.5,0) {};
+\node[circle,fill=black,inner sep=1.5pt,draw] (c) at (.75,2) {};
+\node[circle,fill=black,inner sep=0.8pt,draw] (d) at (0.75,.75) {};
+\node[circle,fill=black,inner sep=0.8pt,draw] (e) at (2,1) {};
+
+
+\node () at (-0.3,0) {\tiny$1$};
+\node () at (0.75,0.45) {\tiny$2$};
+\node () at (0.75,2.3) {\tiny$4$};
+\node () at (2,1.3) {\tiny$-1$};
+\node () at (1.8,0) {\tiny$-1$};
+
+\draw (a)--(b)--(e)--(c) --(a)--(d)--(b)--(c);
+\draw (c)--(d);
+
+\node at (3,1) {\Large{$\sim$}};
+
+\begin{scope}[shift={(+4,0)}]
+\node[circle,fill=black,inner sep=0.8pt,draw] (a) at (0,0) {};
+\node[circle,fill=black,inner sep=0.8pt,draw] (b) at (1.5,0) {};
+\node[circle,fill=black,inner sep=0.8pt,draw] (c) at (.75,2) {};
+\node[circle,fill=black,inner sep=0.8pt,draw] (d) at (0.75,.75) {};
+\node[circle,fill=black,inner sep=0.8pt,draw] (e) at (2,1) {};
+
+
+\node () at (-0.3,0) {\tiny$2$};
+\node () at (0.75,0.45) {\tiny$3$};
+\node () at (0.75,2.3) {\tiny$0$};
+\node () at (2,1.3) {\tiny$0$};
+\node () at (1.8,0) {\tiny$0$};
+
+\draw (a)--(b)--(e)--(c) --(a)--(d)--(b)--(c);
+\draw (c)--(d);
+
+\end{scope}
+\end{tikzpicture}
+
+\begin{texexample}{A larger example}{ex:larger}
+\begin{tikzpicture}
+\node[circle,fill=black,inner sep=0.8pt,draw] (a) at (0,0) {};
+\node[circle,fill=black,inner sep=0.8pt,draw] (b) at (1.5,0) {};
+\node[circle,fill=black,inner sep=1.5pt,draw] (c) at (.75,2) {};
+\node[circle,fill=black,inner sep=0.8pt,draw] (d) at (0.75,.75) {};
+\node[circle,fill=black,inner sep=0.8pt,draw] (e) at (2,1) {};
+
+
+\node () at (-0.3,0) {\tiny$1$};
+\node () at (0.75,0.45) {\tiny$2$};
+\node () at (0.75,2.3) {\tiny$4$};
+\node () at (2,1.3) {\tiny$-1$};
+\node () at (1.8,0) {\tiny$-1$};
+
+\draw (a)--(b)--(e)--(c) --(a)--(d)--(b)--(c);
+\draw (c)--(d);
+
+\node at (3,1) {\Large{$\sim$}};
+
+\begin{scope}[shift={(+4,0)}]
+\node[circle,fill=black,inner sep=0.8pt,draw] (a) at (0,0) {};
+\node[circle,fill=black,inner sep=0.8pt,draw] (b) at (1.5,0) {};
+\node[circle,fill=black,inner sep=0.8pt,draw] (c) at (.75,2) {};
+\node[circle,fill=black,inner sep=0.8pt,draw] (d) at (0.75,.75) {};
+\node[circle,fill=black,inner sep=0.8pt,draw] (e) at (2,1) {};
+
+
+\node () at (-0.3,0) {\tiny$2$};
+\node () at (0.75,0.45) {\tiny$3$};
+\node () at (0.75,2.3) {\tiny$0$};
+\node () at (2,1.3) {\tiny$0$};
+\node () at (1.8,0) {\tiny$0$};
+
+\draw (a)--(b)--(e)--(c) --(a)--(d)--(b)--(c);
+\draw (c)--(d);
+
+\end{scope}
+\end{tikzpicture}
+\captionof{figure}{The larger vertex fires once to move from the left configuration to the right configuration.}
+\end{texexample}
+
+Behind the scenes pgf uses the basic system command \docAuxCommand{pgfnode} to create the nodes. The syntax of the command is given on \seepgfmanual{1026} as:
+
+\begin{docCommand}{pgfnode}{\marg{shape}\marg{anchor}\marg{label text}\marg{name}\marg{path usage command}}
+This command creates a new node. The \marg{shape} of the node must have been declared previously using
+\lstinline{pgfdeclareshape}.
+
+The shape is shifted such that the \marg{anchor} is at the origin. In order to place the shape somewhere else,
+use the coordinate transformation prior to calling this command.
+The hnamei is a name for later reference. If no name is given, nothing will be “saved” for the node, it
+will just be drawn.
+
+The \marg{path usage command} is executed for the background and the foreground path (if the shape defines
+them).
+\end{docCommand}
+
+
+A good workflow, is to first define the nodes, next label them and then draw any connecting lines.
+
+\begin{texexample}{Named nodes}{ex:named} 
+\begin{tikzpicture}
+\node[circle,fill=black,inner sep=0.8pt,draw] (a) at (0,0) {};
+\node[circle,fill=black,inner sep=0.8pt,draw] (b) at (1.5,0) {};
+\node[circle,fill=black,inner sep=1.5pt,draw] (c) at (.75,2) {};
+\node[circle,fill=black,inner sep=0.8pt,draw] (d) at (0.75,.75) {};
+\node[circle,fill=black,inner sep=0.8pt,draw] (e) at (2,1) {};
+\end{tikzpicture}
+\end{texexample}
+
+\begin{texexample}{Named nodes}{ex:named} 
+\begin{tikzpicture}
+\node[circle,fill=black,inner sep=0.8pt,draw] (a) at (0,0) {};
+\node[circle,fill=black,inner sep=0.8pt,draw] (b) at (1.5,0) {};
+\node[circle,fill=black,inner sep=1.5pt,draw] (c) at (.75,2) {};
+\node[circle,fill=black,inner sep=0.8pt,draw] (d) at (0.75,.75) {};
+\node[circle,fill=black,inner sep=0.8pt,draw] (e) at (2,1) {};
+% absolute labelling
+\node () at (-0.3,0) {\tiny$1$};
+\node () at (0.75,0.45) {\tiny$2$};
+\node () at (0.75,2.3) {\tiny$4$};
+\node () at (2,1.3) {\tiny$-1$};
+\node () at (1.8,0) {\tiny$-1$};
+\end{tikzpicture}
+\end{texexample}
+
+\begin{texexample}{Named nodes}{ex:named} 
+\begin{tikzpicture}
+\pgfdeclarelayer{background}
+\pgfdeclarelayer{foreground}
+\pgfsetlayers{background,main,foreground}
+\node[circle,fill=black,inner sep=0.8pt,draw] (a) at (0,0) {};
+\node[circle,fill=black,inner sep=0.8pt,draw] (b) at (1.5,0) {};
+\node[circle,fill=black,inner sep=1.5pt,draw] (c) at (.75,2) {};
+\node[circle,fill=black,inner sep=0.8pt,draw] (d) at (0.75,.75) {};
+\node[circle,fill=black,inner sep=0.8pt,draw] (e) at (2,1) {};
+% absolute labelling
+\node () at (-0.3,0) {\tiny$1$};
+\node () at (0.75,0.45) {\tiny$2$};
+\node () at (0.75,2.3) {\tiny$4$};
+\node () at (2,1.3) {\tiny$-1$};
+\node () at (1.8,0) {\tiny$-1$};
+% draw connecting lines
+\draw (a)--(b)--(e)--(c) --(a)--(d)--(b)--(c);
+\draw (c)--(d);
+%\begin{pgfonlayer}{background}
+\begin{scope}[on background layer={color=blue!10}]
+\node [fill=blue!10,fit=(a) (b) (c)
+(d) (e)] {};
+\end{scope}
+%\end{pgfonlayer}
+\end{tikzpicture}
+\end{texexample}
+
+Just to recap, using \docAuxCommand*{node} and the \textbf{at} we can position accurately any node. We could have used the much longer command |path node|, but in our case above this is unecessary (\seepgfmanual{49}), for more explanations if you are still unsure.
+
+Nodes can be named or unnamed. There are two ways to name them, with the key \docValue{name} or within brackets. The second method is to be preferred. Names for nodes can be pretty arbitrary, but they should not contain commas, periods, parentheses, colons, and some other special characters. However, they can contain underscores and hyphens
+
+\subsection{Layers and Scope}
+
+We can add a backround layer, using the library \textit{backgrounds}, which provides key values for adding backgrounds. \pgfname\ provides a layering mechanism for composing graphics from
+multiple layers. (This mechanism is not to be confused with the
+conceptual ``software layers'' the \pgfname\ system is composed of.)
+Layers are often used in graphic programs. The idea is that you can
+draw on the different layers in any order. So you might start drawing
+something on the ``background'' layer, then something on the
+``foreground'' layer, then something on the ``middle'' layer, and then
+something on the background layer once more, and so on. At the end, no
+matter in which ordering you drew on the different layers, the layers
+are ``stacked on top of each other'' in a fixed ordering to produce
+the final picture. Thus, anything drawn on the middle layer would come
+on top of everything of the background layer.
+
+Normally, you do not need to use different layers since you will have
+little trouble ``ordering'' your graphic commands in such a way that
+layers are superfluous. However, in certain situations you only
+``know'' what you should draw behind something else after the
+``something else'' has been drawn.
+
+For example, suppose you wish to draw a yellow background behind your
+picture. The background should be as large as the bounding box of the
+picture, plus a little border. If you know the size of the bounding box
+of the picture at its beginning, this is easy to accomplish. However,
+in general this is not the case and you need to create a
+``background'' layer in addition to the standard ``main'' layer. Then,
+at the end of the picture, when the bounding box has been established,
+you can add a rectangle of the appropriate size to the picture.
+
+\subsection{Declaring Layers}
+
+In \pgfname\ layers are referenced using names. The standard layer,
+which is a bit special in certain ways, is called |main|. If nothing
+else is specified, all graphic commands are added to the |main|
+layer. You can declare a new layer using the following command:
+
+\begin{docCommand}{pgfdeclarelayer}{\marg{name}}
+  This command declares a layer named \meta{name} for later
+  use. Mainly, this will set up some internal bookkeeping.
+\end{docCommand}
+
+The next step toward using a layer is to tell \pgfname\ which layers
+will be part of the actual picture and which will be their
+ordering. Thus, it is possible to have more layers declared than are
+actually used.
+
+\begin{docCommand}{pgfsetlayers}{\marg{layer list}}
+  This command tells \pgfname\ which layers will be used in
+  pictures. They are stacked on top of each other in the order
+  given. The layer |main| should always be part of the list. Here is
+  an example:
+\begin{codeexample}[code only]
+\pgfdeclarelayer{background}
+\pgfdeclarelayer{foreground}  
+\pgfsetlayers{background,main,foreground}
+\end{codeexample}
+
+  This command should be given either outside of any picture or ``directly inside'' of a picture.
+  Here, the ``directly inside'' means that there should be no further level of \TeX\ grouping between |\pgfsetlayers| and the matching |\end{pgfpicture}| (no closing braces, no |\end{...}|). It will also work if |\pgfsetlayers| is provided before |\end{tikzpicture}| (with similar restrictions).
+\end{docCommand}
+
+
+\subsection{Using Layers}
+
+Once the layers of your picture have been declared, you can start to
+``fill'' them. As said before, all graphics commands are normally
+added to the |main| layer. Using the |{pgfonlayer}| environment, you
+can tell \pgfname\ that certain commands should, instead, be added to
+the given layer.
+
+\begin{docEnvironment}{pgfonlayer}{\marg{layer name}}
+\end{docEnvironment}
+
+The whole \meta{environment contents} is added to the layer with the
+name \meta{layer name}. This environment can be used anywhere inside
+a picture. Thus, even if it is used inside a |{pgfscope}| or a \TeX\
+group, the contents will still be added to the ``whole'' picture.
+Using this environment multiple times inside the same picture will
+cause the \meta{environment contents} to accumulate.
+
+  \emph{Note:} You can \emph{not} add anything to the |main| layer
+  using this environment. The only way to add anything to the main
+  layer is to give graphic commands outside all |{pgfonlayer}|
+  environments. 
+
+
+
+\begin{codeexample}[]
+\pgfdeclarelayer{background layer}
+\pgfdeclarelayer{foreground layer}
+\pgfsetlayers{background layer,main,foreground layer}
+\begin{tikzpicture}
+  % On main layer:
+  \fill[blue] (0,0) circle (1cm);
+  
+  \begin{pgfonlayer}{background layer}
+    \fill[yellow] (-1,-1) rectangle (1,1);
+  \end{pgfonlayer}
+  
+  \begin{pgfonlayer}{foreground layer}
+    \node[white] {foreground};
+  \end{pgfonlayer}
+  
+  \begin{pgfonlayer}{background layer}
+    \fill[black] (-.8,-.8) rectangle (.8,.8);
+  \end{pgfonlayer}
+
+  % On main layer again:
+  \fill[blue!50] (-.5,-1) rectangle (.5,1);
+\end{tikzpicture}
+\end{codeexample}
+
+
+
+\long\gdef\mytriangle{
+\node[circle,fill=black,inner sep=0.8pt,draw] (a) at (0,0) {};
+\node[circle,fill=black,inner sep=0.8pt,draw] (b) at (1.5,0) {};
+\node[circle,fill=black,inner sep=1.5pt,draw] (c) at (.75,2) {};
+\node[circle,fill=black,inner sep=0.8pt,draw] (d) at (0.75,.75) {};
+\node[circle,fill=black,inner sep=0.8pt,draw] (e) at (2,1) {};
+% absolute labelling
+\node () at (-0.3,0) {\tiny$1$};
+\node () at (0.75,0.45) {\tiny$2$};
+\node () at (0.75,2.3) {\tiny$4$};
+\node () at (2,1.3) {\tiny$-1$};
+\node () at (1.8,0) {\tiny$-1$};
+% draw connecting lines
+\draw (a)--(b)--(e)--(c) --(a)--(d)--(b)--(c);
+\draw (c)--(d);
+}
+
+\begin{texexample}{Adding backgrouns}{ex:backgrounds}
+\begin{tikzpicture}
+\pgfdeclarelayer{background}
+\pgfdeclarelayer{foreground}
+\pgfsetlayers{background,main,foreground}
+\mytriangle
+%\begin{pgfonlayer}{background}
+\begin{scope}[on background layer={color=blue!10}]
+\mytriangle
+\node [fill=blue!10,fit=(a) (b) (c)
+(d) (e)] {};
+\end{scope}
+%\end{pgfonlayer}
+\end{tikzpicture}
+\end{texexample}
+
+
+\begin{texexample}{Adding backgrouns}{ex:backgrounds}
+\begin{tikzpicture}
+\pgfdeclarelayer{background}
+\pgfdeclarelayer{foreground}
+\pgfsetlayers{background,main,foreground}
+\mytriangle
+%\begin{pgfonlayer}{background}
+\begin{scope}[on background layer={color=blue!10}]
+\node [fill=blue!10,fit=(a) (b) (c)
+(d) (e)] {};
+\end{scope}
+
+\begin{scope}[shift={(+4,0)}]
+\mytriangle
+\begin{pgfonlayer}{background}
+\node [pattern=checkerboard light gray,fit=(a) (b) (c)
+(d) (e)] {};
+\end{pgfonlayer}
+\end{scope}
+\end{tikzpicture}
+\end{texexample}
+
+This brings us to the end of our discussion. Time for a coffee and a break.                
+
+\section{Adding styles}
+
+In our previous example, we cut and pasted many of the repetitive keys. \pgfname offers a way to set a new key to the values of other keys using the handler |.style|. This is a very powerful way of redefining new keys, but also simplifying the code. Styles in \tikzname can be considered similar to macros in standard LaTeX. When I made a drawing, we can still tweak the styles and look how the drawing changes, until it's perfect. You should never have to tweak each node.
+
+\begin{texexample}{Using styles}{ex:usingstyles}
+\tikzset{BN/.style = {circle,fill=black,inner sep=0.8pt,draw},
+         tiny/.style = {font=\tiny}, 
+}
+\begin{tikzpicture}
+\node[BN] (a) at (0,0) {};
+\node[BN] (b) at (1,0) {};
+\node[BN] (c) at (1,1) {};
+\node[BN] (d) at (0,1) {};
+\node[BN] (e) at (-1,0) {};
+
+\node () at (-1.3,0) [tiny]{$v_1$};
+\node () at (-.3,1)  [tiny]{$v_2$};
+\node () at (1.3,0)  [tiny]{$w_1$};
+\node () at (1.3,1)  [tiny]{$w_2$};
+
+\node[tiny] () at (0.5,-0.2) {$a$};
+\node[tiny] () at (0.5,1.2) {$b$};
+\node[tiny] () at (0.2,0.5) {$c$};
+\node[tiny] () at (-0.5,-.2) {$d$};
+
+\draw (e) -- (a) -- (b) -- (c) -- (d) -- (a);
+\draw (e) -- (d);
+
+\end{tikzpicture}
+\end{texexample}
+
+
+
+\section{Arcs and options for lines}
+
+\begin{texexample}{Draw a Line}{ex:line}
+\begin{tikzpicture}
+\draw[->] (0,0) -- (1.5,0) node[draw, ellipse] {First Node} -| (0, 1.2) node[draw,ellipse,rotate=45] {Second Node};
+\end{tikzpicture}
+\end{texexample}
+
+\begin{texexample}{Drawing arcs}{ex:matharcs}
+We define 
+\begin{gather*}
+    \bar{d}_{k,l}:=\hspace{6pt}
+    \begin{tikzpicture}[baseline=(current bounding box.center)]
+    \draw[->] (3,2) arc (-180:180:5mm);
+	  \fill (3.95,2.2) circle [radius=2pt];
+    \draw (3.95,1.8) circle [radius=2pt];
+    \node at (4.2,1.8) {$l$};
+    \node at (4.2,2.2) {$k$};
+    \end{tikzpicture}
+    \hspace{0.5cm}
+    \text{and}
+    \hspace{0.5cm}
+    d_{k,l}:=\hspace{6pt}
+    \begin{tikzpicture}[baseline=(current bounding box.center)]
+    \draw[<-] (3,2) arc (-180:180:5mm);
+    \fill (3.95,2.2) circle [radius=2pt];
+    \draw (3.95,1.8) circle [radius=2pt];
+    \node at (4.2,1.8) {$l$};
+    \node at (4.2,2.2) {$k$};
+    \end{tikzpicture}
+    \hspace{0.5cm}
+    \text{for}
+    \hspace{2mm} k,l\in\mathbb{Z}_{\geq 0}.
+\end{gather*}
+\end{texexample}
+
+
+Here is a figure that you should try and reproduce.
+\newcommand{\G}{\Gamma}
+
+\begin{tikzpicture}
+\draw (-3.5,-1)--(-2.5,0); \draw (-2.5,-1)--(-3.5,0); \draw (-1.5,-1)--(-1.5,0);\draw[fill=black] (-3,-0.5) circle (0.1cm); \draw (-3.5,0)--(-3.5,1); \draw (-2.5,0)--(-1.5,1); \draw (-1.5,0)--(-2.5,1);\draw[fill=black] (-2,0.5) circle (0.1cm); \draw[->] (-3.5,1)--(-2.5,2); \draw[->] (-2.5,1)--(-3.5,2); \draw[->] (-1.5,1)--(-1.5,2); \draw[fill=black] (-3,1.5) circle (0.1cm); \draw (-3.6,0)--(-3.4,0);\draw (-2.6,0)--(-2.4,0);\draw (-1.6,0)--(-1.4,0); \draw (-3.6,1)--(-3.4,1);\draw (-2.6,1)--(-2.4,1);\draw (-1.6,1)--(-1.4,1); \node at (-3.5,-1.2) {$x_1$};\node at (-2.5,-1.2) {$x_2$};\node at (-1.5,-1.2) {$x_3$}; \node at (-3.5,2.2) {$y_1$};\node at (-2.5,2.2) {$y_2$};\node at (-1.5,2.2) {$y_3$}; \node at (-3.8,0) {$t_1$};\node at (-2.2,0) {$t_2$};\node at (-1.2,0) {$t_3$}; \node at (-3.8,1) {$t_4$};\node at (-2.8,1) {$t_5$};\node at (-1.2,1) {$t_6$}; \node at (-2.5,-1.65) {$\Gamma$};
+\draw[->] (0,0)--(1,1); \draw[->] (1,0)--(0,1); \draw[fill=black] (0.5,0.5) circle (0.1cm); \draw[->] (2,0)--(3,1); \draw[->] (3,0)--(2,1); \draw[fill=black] (2.5,0.5) circle (0.1cm); \draw[->] (4,0)--(5,1); \draw[->] (5,0)--(4,1); \draw[fill=black] (4.5,0.5) circle (0.1cm); \draw[->] (6,0)--(6,1); \draw[->] (7,0)--(7,1); \draw[->] (8,0)--(8,1);
+\node at (0,-.2) {$x_1$};\node at (1,-.2) {$x_2$}; \node at (2,-.2) {$t_2$};\node at (3,-.2) {$t_3$}; \node at (4,-.2) {$t_4$};\node at (5,-.2) {$t_5$}; \node at (6,-.2) {$x_3$}; \node at (7,-.2) {$t_1$}; \node at (8,-.2) {$t_6$};
+\node at (0,1.2) {$t_1$};\node at (1,1.2) {$t_2$}; \node at (2,1.2) {$t_5$};\node at (3,1.2) {$t_6$}; \node at (4,1.2) {$y_1$};\node at (5,1.2) {$y_2$}; \node at (6,1.2) {$t_3$}; \node at (7,1.2) {$t_4$}; \node at (8,1.2) {$y_3$};
+\node at (0.5,-0.65) {$\G_1$}; \node at (2.5,-0.65) {$\G_2$}; \node at (4.5,-0.65) {$\G_3$}; \node at (6,-0.65) {$\G_4$};\node at (7,-0.65) {$\G_5$};\node at (8,-0.65) {$\G_6$}; 
+\end{tikzpicture}
+
+This brings us to the end.
+
+
+
+
+The |node| can take numerous options who are then used to set the typesetting of the text that follows:
+
+
+\begin{texexample}{Draw a Line}{ex:line}
+\begin{tikzpicture}
+\draw[->] (0,0) -- (1.5,0) node[draw, ellipse] {First Node} -| (0, 1.2) node[draw,ellipse,rotate=45, text width=3cm, fill=creamy, text justified] {\lorem};
+\end{tikzpicture}
+\end{texexample}
+
+
+\begin{texexample}{Draw a Line}{ex:line}
+\begin{tikzpicture}[funny ellipse/.style = {draw,ellipse,rotate=45, text width=3cm, fill=creamy, text justified} ]
+\draw[->] (0,0) -- (1.5,0) node[draw, ellipse] {First Node} -| (0, 1.2) node[funny ellipse] {\lorem};
+\end{tikzpicture}
+\end{texexample}
+
+This can also be written by using \docAuxCommand{tikzset} for setting out all the keys. This can written just before the environment or within the scope of the environment. See \href{https://tex.stackexchange.com/questions/52372/should-tikzset-or-tikzstyle-be-used-to-define-tikz-styles}{TX.SX discussion}, for the option to set |\tikzstyle| which should not be used, even if it is quicker to write.
+
+
+\begin{texexample}{Draw a Line}{ex:line}
+\tikzset{funny ellipse/.style = {draw,ellipse,rotate=45, text width=3cm, fill=creamy, text justified} }
+\begin{tikzpicture}
+\draw[->] (0,0) -- (1.5,0) node[draw, ellipse] {First Node} -| (0, 1.2) node[funny ellipse] {\lorem};
+\end{tikzpicture}
+\end{texexample}
+
+A |node| can possibly be rendered with a choice from a list of over 720 keys.
+
+ed. 
+
+
+
 Using the |TikZ| package you can draw figures and intermingle them with text. To draw a simple diamond as shown in \fref{fig:diamond} we use
-the following commands. The package comes with a very comprehensive manual of 560 pages long. One can state that there is nothing that you cannot draw with PGF/TikZ, if you have the patience and perseverance. TikZ's language has a syntax of its own with very little connection to what we have used so far. You will need to set aside adequate time to study this, especially if your work has a lot of specially drawn figures that you need. The result like anything else in \tex make the effort worthwhile.
+the following commands. The package comes with a very comprehensive manual of over 500 pages long. One can state that there is nothing that you cannot draw with PGF/TikZ, if you have the patience and perseverance. TikZ's language has a syntax of its own with very little connection to what we have used so far. You will need to set aside adequate time to study this, especially if your work has a lot of specially drawn figures that you need. The result like anything else in \tex make the effort worthwhile.
 
-
-\begin{center}
+\begin{texexample}{Draw a Diamond}{fig:diamond}
 \begin{tikzpicture}
  \draw (1,0) -- (0,1) -- (-1,0) -- (0,-1) -- cycle;
 \end{tikzpicture}
-\end{center}
-\captionof{figure}{Diamond drawn using \protect\texttt{TikZ}}
-\label{fig:diamond}
+\end{texexample}
 
+
+\begin{texexample}{Text long path}{ex:decorations}
+\begin{tikzpicture}
+\draw [help lines] grid (3,2);
+\draw [red, dashed]
+[postaction={decoration={text along path, text={a big juicy apple},
+text align=fit to path}, decorate}]
+(0,0) .. controls (0,2) and (3,2) .. (3,0);
+\node (A) at (1.5,0) {!};
+\end{tikzpicture}
+\end{texexample}
+
+
+\begin{texexample}{Text long path}{ex:decorations}
+
+Hello \begin{pgfpicture}
+\pgfpathrectangle{\pgfpointorigin}{\pgfpoint{2ex}{1ex}}
+\pgfusepath{stroke}
+\end{pgfpicture} World!
+
+\end{texexample}
 
 
 \emphasis{-,draw,begin,end,tikzpicture}
@@ -32,6 +607,37 @@ the following commands. The package comes with a very comprehensive manual of 56
 \draw (1,0) -- (0,1) -- (-1,0) -- (0,-1) -- cycle;
 \end{tikzpicture}
 \end{teXXX}
+
+
+
+\makeatletter
+The value of $x$ is \pgfsys@markposition{here}important.
+
+Lots of text.
+\hbox{\pgfsys@markposition{myorigin}%
+\begin{pgfpicture}
+% Switch of size protocol
+\pgfpathmoveto{\pgfpointorigin}
+\pgfusepath{use as bounding box}
+\pgfsys@getposition{here}{\hereposition}
+\pgfsys@getposition{myorigin}{\thispictureposition}
+\pgftransformshift{\pgfpointscale{-1}{\thispictureposition}}
+\pgftransformshift{\hereposition}
+\pgfpathcircle{\pgfpointorigin}{1cm}
+\pgfusepath{draw}
+\end{pgfpicture}}
+
+\makeatother
+
+
+You cannot write directly into a picture environment. The command \docAuxCommand{pgftext} can be used. 
+
+\begin{texexample}{Using text directly}{ex:pgftext}
+\tikz{\draw[help lines] (0,0) grid (3,2);
+\pgftext[base,x=1cm,y=0.5cm] {lovely}}
+\end{texexample}
+
+
 
 
 
@@ -77,7 +683,7 @@ specification for the color of the grid lines, using the \docpkg{xcolor} package
 \draw[color=bgsexy] (origin) -- (P0) (origin) -- (P1) (origin) -- (P2)
 (origin) -- (P3) (origin) -- (P4);
 \end{tikzpicture}
-\caption{Drawing a complicated polygon, using paths and the \texttt{draw} command}
+\captionof{figure}{Drawing a complicated polygon, using paths and the \texttt{draw} command}
 \end{texexample}
 
 
@@ -91,7 +697,9 @@ can be specified in any of the following ways:
 \item  Relative points
 \end{enumerate}
 
-\subsection*{coordinates}
+
+
+\subsection{coordinates}
 The cartesian coordinates can be defined and named using the following syntax.
 
 %\emphasis{begin,end,coordinate,at,draw}
@@ -111,7 +719,8 @@ The cartesian coordinates can be defined and named using the following syntax.
 \end{tikzpicture}
 
 
-We can add labels to the points by using the |label| option.
+We can add labels to the points by using the |label| option. A label is distinct from the text of a |node|.
+
 \begin{tikzpicture}
 \coordinate [label=left:\textcolor{orange}{$A$}] (A) at (0,0);
 \coordinate [label=right:\textcolor{orange}{$B$}]  (B) at (1.15,0.25);
@@ -139,8 +748,427 @@ If you tempted to write \texttt{label=top:} it will not work, as the command acc
 \end{tikzpicture}
 
 
+\section{Graphic Parameters: Line Width, Line Cap, and Line Join}
+
+The width of lines can be specified using the key:
+
+\begin{docKey}[tikz]{line width}{=\marg{dimension}} {no default, initially 0.4pt}
+Specifies the line width \seepgfmanual{166}
+\end{docKey}
 
 
+
+\bgroup
+\def\mkl#1{\tikz \draw[#1] (0,0)--(1.0, 1.5ex);}
+\scriptsize\arial
+\begin{tabular}{|l|l|l|l|l|l|l|l|}
+\hline
+\mkl{line width=2pt}& \mkl{ultra thin} &\mkl{very thin} & \mkl{thin} & \mkl{semithick} & \mkl{thick} &\mkl{very thick} &\mkl{ultra thick} \\
+\hline
+line width=2pt &ultra thin & very thin & thin &semithick & thick & very thick & ultra thick \\
+\hline
+\end{tabular}
+\egroup
+
+\begin{docKey}[tikz]{line cap}{=\marg{dimension}} {no default, initially 0.4pt}
+Specifies how lines “end.” Permissible types are round, rect, and butt \seepgfmanual{167}. 
+\end{docKey}
+
+\bgroup
+\def\mkl#1{\begin{tikzpicture} \draw[line width=10pt, line cap=#1] (0,0)--(1.0, 1.5ex);\draw[white,line width=2pt]
+(0,0 )--(1.0,1.5ex);\end{tikzpicture}}
+\scriptsize\arial
+\begin{tabular}{|l|l|l|}
+\hline
+\mkl{rect}& \mkl{butt} &\mkl{round}  \\
+\hline
+rect &butt & round \\
+\hline
+\end{tabular}
+\egroup
+
+
+
+
+\begin{docKey}[tikz]{line join}{=\marg{type}}{no default, initially miter}
+Specifies how lines “join.” Permissible type are round, bevel, and miter. They have the following
+effects:
+\end{docKey}
+
+\begin{texexample}{Joining Lines}{es:joinlines}
+\begin{tikzpicture}[line width=10pt]
+\draw[line join=round] (0,0) -- ++(.5,1) -- ++(.5,-1);
+\draw[line join=bevel] (1.25,0) -- ++(.5,1) -- ++(.5,-1);
+\draw[line join=miter] (2.5,0) -- ++(.5,1) -- ++(.5,-1);
+\end{tikzpicture}
+\end{texexample}
+
+
+\begin{docKey}[tikz]{dash pattern}{=\marg{dash pattern}}{no default}
+Sets the dashing pattern. The syntax is the same as in \metafontlogo. For example following pattern on
+2pt off 3pt on 4pt off 4pt means \enquote{draw 2pt, then leave out 3pt, then draw 4pt once more, then
+leave out 4pt again, repeat}.
+\end{docKey}
+
+\bgroup
+\def\ml#1{\tikz \draw[ #1] (0pt,0pt) -- (50pt,0pt);}
+\def\alist{solid, dotted, densely dotted, loosely dotted,% 
+           dashed,densely dashed, loosely dashed, %
+           dash dot, densely dash dot, loosely dash dot, %
+           dash dot dot, densely dash dot dot, loosely dash dot dot.}
+
+For patterns there are numerous settings {\arial \alist }
+
+
+\scriptsize
+\begin{tabular}{lll}
+\hline
+\ml{solid} &  & \\
+solid      &  & \\
+\hline
+\ml{dotted} &\ml{densely dotted} & \ml{loosely dotted}\\
+\textit{dotted} & densely dotted  &loosely dotted \\
+\hline
+\ml{dashed} & \ml{densely dashed} & \ml{loosely dashed}  \\
+\textit{dashed}      & densely dashed & loosely dashed            \\
+\hline
+
+\ml{dash dot} & \ml{densely dash dot} & \ml{loosely dash dot} \\
+\textit{dash dot} & densely dash dot & loosely dash dot \\
+\hline
+
+\ml{dash dot dot} & \ml{densely dash dot dot} & \ml{loosely dash dot dot} \\
+\textit{dash dot dot} & densely dash dot dot & loosely dash dot dot \\
+\hline
+\end{tabular}
+\egroup
+
+
+\subsection{Pattern Library}
+
+The library patterns can be used to draw predetermined patterns. This will be a longer than usual section as it explains how to create new patterns. Most of the content is straight from the \pgfname manual. Before we start with the creation f a new pattern let us examine how a pattern is used.
+
+\begin{texexample}{Using Library Patterns}{ex:libpatterns}
+\begin{tikzpicture}
+\pattern [path fading=west,pattern=checkerboard light gray]
+      (0,0) rectangle (5cm,2em);
+\end{tikzpicture}
+\end{texexample}
+
+
+\label{section-library-patterns}
+
+
+The package defines patterns for filling areas. \docAuxCommand*{usetikzlibrary}\marg{patterns}.
+
+
+%% Macros taken fro PGF manual
+\newcommand\patternindex[1]{%
+  \index{#1@\protect\texttt{#1} pattern}%
+  \index{Patterns!#1@\protect\texttt{#1}}%
+  \texttt{#1}& 
+  \begin{tikzpicture}[baseline=.5ex]
+
+    % Background
+    \pattern [path fading=west,pattern=checkerboard light gray]
+      (0,0) rectangle (5cm,2em);
+    
+    \pattern [pattern=#1,pattern color=black] (0,0) rectangle +(1.5cm,2em);
+    \pattern [pattern=#1,pattern color=blue] (1.75,0) rectangle +(1.5cm,2em);
+    \pattern [pattern=#1,pattern color=red] (3.5,0) rectangle +(1.5cm,2em);
+  \end{tikzpicture} \\[1ex]
+}
+
+\newcommand\patternindexinherentlycolored[1]{%
+  \index{#1@\protect\texttt{#1} pattern}%
+  \index{Patterns!#1@\protect\texttt{#1}}%
+  \arial #1 & 
+  \begin{tikzpicture}[baseline=.5ex]
+
+    % Background
+    \pattern [path fading=west,pattern=checkerboard light gray]
+      (0,0) rectangle (5cm,2em);
+    
+    \pattern [pattern=#1,pattern color=blue] (0,0) rectangle +(5cm,2em);
+  \end{tikzpicture} \\[1ex]
+}
+
+\subsection{Form-Only Patterns}
+
+\begin{tabular}{ll}
+  \emph{Pattern name} & \emph{Example (pattern in black, blue, and red
+    on faded checkerboard)} \\ 
+  \patternindex{horizontal lines} 
+  \patternindex{vertical lines} 
+  \patternindex{north east lines} 
+  \patternindex{north west lines} 
+  \patternindex{grid} 
+  \patternindex{crosshatch} 
+  \patternindex{dots} 
+  \patternindex{crosshatch dots} 
+  \patternindex{fivepointed stars} 
+  \patternindex{sixpointed stars} 
+  \patternindex{bricks}
+  \patternindex{checkerboard}
+\end{tabular}
+  
+\subsection{Inherently Colored Patterns}
+
+
+\begin{tabular}{ll}
+  \emph{Pattern name} & \emph{Example} \\
+  \patternindexinherentlycolored{checkerboard light gray} 
+  \patternindexinherentlycolored{horizontal lines light gray} 
+  \patternindexinherentlycolored{horizontal lines gray} 
+  \patternindexinherentlycolored{horizontal lines dark gray} 
+  \patternindexinherentlycolored{horizontal lines light blue} 
+  \patternindexinherentlycolored{horizontal lines dark blue} 
+  \patternindexinherentlycolored{crosshatch dots gray} 
+  \patternindexinherentlycolored{crosshatch dots light steel blue} 
+\end{tabular}
+  
+
+
+% Copyright 2006 by Till Tantau
+%
+% This file may be distributed and/or modified
+%
+% 1. under the LaTeX Project Public License and/or
+% 2. under the GNU Free Documentation License.
+%
+% See the file doc/generic/pgf/licenses/LICENSE for more details.
+
+
+\section{Creating Patterns}
+
+\label{section-patterns}
+
+\subsection{Overview}
+
+There are many ways of filling a path. First, you can fill it using a
+solid color and this is also the fastest method. Second, you can also
+fill it using a shading, which means that the color changes smoothly
+between two (or more) different colors. Third, you can fill it using a
+tiling pattern and it is explained in the following how this is done.
+
+A tiling pattern can be imagined as a rectangular tile (hence the
+name) on which a small picture is painted. There is not a single tile,
+but (conceptually) an infinite number of tiles, all showing the same
+picture, and these tiles are arranged horizontally and vertically to
+fill the plane. When you use a tiling pattern to fill a path, what
+happens is that the path clips out a ``window'' through which we see
+part of this infinite plane.
+
+Patterns come in two versions: \emph{inherently colored patterns} and
+\emph{form-only patterns}. (These are often called ``color patterns''
+and ``uncolored patterns,'' but these names are misleading since
+uncolored patterns do have a color and the color changes. As I said,
+the name is misleading\dots) An inherently colored pattern is just a
+colored tile like, say, a red star with a black outline. A form-only
+pattern can be imagined as a tile that is a kind of rubber stamp. When
+this pattern is used, the stamp is used to print copies of the stamp
+picture onto the plane, but we can use a different stamp color each
+time we use a form-only pattern.
+
+\pgfname\ provides a special support for patterns. You can declare a
+pattern and then use it very much like a fill color. \pgfname\
+directly maps patterns to the pattern facilities of the underlying
+graphic languages (PostScript, \textsc{pdf}, and \textsc{svg}). This
+means that filling a path using a pattern will be nearly as fast as if
+you used a uniform color.
+
+There are a number of pitfalls and restrictions when using
+patterns. First, once a pattern has been declared, you cannot change
+it anymore. In particular, it is not possible to enlarge it or change
+the line width. Such flexibility would require that the repeating of
+the pattern were not done by the graphic language, but on the
+\pgfname\ level. This would make patterns orders of magnitude slower
+to produce and to render. However, \pgfname{} does provide a
+more-or-less successful emulation of ``mutable'' patterns, although
+internally, a new (fixed) instance of a pattern is declared when
+the parameters of a pattern change.
+
+Second, the phase of patterns is not well-defined, that is, it is not
+clear where the origin of the ``first'' tile is. To be more precise,
+PostScript and \textsc{pdf} on the one hand and \textsc{svg} on the
+other hand define the origin differently. PostScript and \textsc{pdf}
+define a fixed origin that is independent of where the path lies. This
+has the highly desirable effect that if you use the same pattern to
+fill multiple paths, the outcome is the same as if you had filled a single path consisting of the union of all these paths. By
+comparison, \textsc{svg} uses the upper-left (?) corner of the path to
+be filled as the origin. However, the \textsc{svg} specification is a
+bit vague on this question.
+
+
+\subsection{Declaring a Pattern}
+
+Before a pattern can be used, it must be declared. The following
+command is used for this:
+
+\begin{docCommand}{pgfdeclarepatternformonly}{%
+	\oarg{variables}%
+	\marg{name}%
+	\marg{bottom left}%
+	\marg{top right}%
+	\marg{tile size}%
+	\marg{code}}
+
+	This command declares a new form-only pattern. The \meta{name} is a
+  name for later reference. The two parameters \meta{lower left} and
+  \meta{upper right} must describe a bounding box that is large enough
+  to encompass the complete tile.
+\end{docCommand}
+
+  The size of a tile is given by \meta{tile size}, that is, a tile is
+  a rectangle whose lower left   corner is the origin and whose upper
+  right corner is given by \meta{tile size}. This might make you
+  wonder why the second and third parameters are needed. First, the
+  bounding box might be smaller than the tile size if the tile is
+  larger than the picture on the tile. Second, the bounding box might
+  be bigger, in which case the picture will ``bleed'' over the tile.
+
+  The \meta{code} should be \pgfname\ code than can be protocolled. It
+  should not contain any color code.
+
+
+\begin{codeexample}[]
+\pgfdeclarepatternformonly{stars}
+{\pgfpointorigin}{\pgfpoint{1cm}{1cm}}
+{\pgfpoint{1cm}{1cm}}
+{
+  \pgftransformshift{\pgfpoint{.5cm}{.5cm}}
+  \pgfpathmoveto{\pgfpointpolar{0}{4mm}}
+  \pgfpathlineto{\pgfpointpolar{144}{4mm}}
+  \pgfpathlineto{\pgfpointpolar{288}{4mm}}
+  \pgfpathlineto{\pgfpointpolar{72}{4mm}}
+  \pgfpathlineto{\pgfpointpolar{216}{4mm}}
+  \pgfpathclose%
+  \pgfusepath{fill}
+}
+\begin{tikzpicture}
+  \filldraw[pattern=stars] (0,0)   rectangle (1.5,2);
+  \filldraw[pattern=stars,pattern color=red]
+                           (1.5,0) rectangle (3,2);
+\end{tikzpicture}
+\end{codeexample}
+
+	The optional argument \meta{variables} consists of a comma
+	separated	list of macros,	registers or keys, representing the
+	parameters of the pattern that may vary. If a variable is a key,
+	then the full path name must be used (specifically, it must start
+	with |/|).
+	As an example, a list might look like the following:
+	|\mymacro,\mydimen,/pgf/my key|. Note that macros and keys should
+	be ``simple''. They should only store values in themselves.
+	
+	The effect of \meta{variables}, is the following:
+  Normally, when this argument is empty, once a pattern has been
+  declared, it becomes ``frozen''. This means that it is not possible
+  to enlarge the pattern or change the line width later on.
+  By specifying \meta{variables}, no pattern is actually created.
+  Instead, the arguments are stored away
+  (so the macros,	registers or keys do not have to be defined in advance).
+
+  When the fill pattern is set, \pgfname{} checks if the pattern has
+  already been created with the \meta{variables} set to their current
+  values (\pgfname{} is usually ``smart enough'' to distinguish between
+  macros, registers and keys). If so, this already-declared-pattern
+  is used as the fill pattern.
+  If not, a new instance of the pattern (which will have a
+  unique internal name) is declared using the current values of
+  \meta{variables}. These values are then saved and the fill pattern
+  set accordingly.
+	
+	The following shows an example of a pattern which varies
+	according to the values of the macro |\size|, the key |/tikz/radius|,
+	and the \TeX{} dimension |\thickness|.
+
+\begin{texexample}{New Pattern Example}{ex:newpattern}
+\pgfdeclarepatternformonly[/tikz/radius,\thickness,\size]{rings}
+{\pgfpoint{-0.5*\size}{-0.5*\size}}
+{\pgfpoint{0.5*\size}{0.5*\size}}
+{\pgfpoint{\size}{\size}}
+{
+  \pgfsetlinewidth{\thickness}
+  \pgfpathcircle\pgfpointorigin{\pgfkeysvalueof{/tikz/radius}}
+  \pgfusepath{stroke}
+}
+\newdimen\thickness
+\tikzset{
+  radius/.initial=4pt,
+  size/.store in=\size, size=20pt,
+  thickness/.code={\thickness=#1},
+  thickness=0.75pt
+}
+\begin{tikzpicture}[rings/.style={pattern=rings}]
+  \filldraw [rings, radius=2pt, size=6pt]      (0,0)   rectangle +(1.5,2);
+  \filldraw [rings, radius=2pt, size=8pt]      (2,0)   rectangle +(1.5,2);
+  \filldraw [rings, radius=6pt, thickness=2pt] (0,2.5) rectangle +(1.5,2);
+  \filldraw [rings, radius=8pt, thickness=4pt] (2,2.5) rectangle +(1.5,2);
+\end{tikzpicture}
+\end{texexample}
+
+
+
+\begin{docCommand}{pgfdeclarepatterninherentlycolored}{\oarg{variables}
+    \marg{name}
+    \marg{lower left}
+    \marg{upper right}
+    \marg{tile size}
+    \marg{code}}
+  This command works like |\pgfdeclarepatternuncolored|, only the
+  pattern will have an inherent color. To set the color, you should
+  use \pgfname's color commands, not the |\color| command, since this
+  fill is not protocolled.
+\end{docCommand}
+
+\begin{texexample}{Inherently Colored}{ex:ingerentlycolored}
+\pgfdeclarepatterninherentlycolored{green stars}
+{\pgfpointorigin}{\pgfpoint{1cm}{1cm}}
+{\pgfpoint{1cm}{1cm}}
+{
+  \pgfsetfillcolor{green!50!black}
+  \pgftransformshift{\pgfpoint{.5cm}{.5cm}}
+  \pgfpathmoveto{\pgfpointpolar{0}{4mm}}
+  \pgfpathlineto{\pgfpointpolar{144}{4mm}}
+  \pgfpathlineto{\pgfpointpolar{288}{4mm}}
+  \pgfpathlineto{\pgfpointpolar{72}{4mm}}
+  \pgfpathlineto{\pgfpointpolar{216}{4mm}}
+  \pgfpathclose%
+  \pgfusepath{stroke,fill}
+}
+\begin{tikzpicture}
+  \filldraw[pattern=green stars] (0,0) rectangle (3,2);
+\end{tikzpicture}
+\end{texexample}
+
+
+
+\subsection{Setting a Pattern}
+
+Once a pattern has been declared, it can be used.
+
+\begin{docCommand}{pgfsetfillpattern}{\marg{name}\marg{color}}
+  This command specifies that paths that are filled should be filled
+  with the ``color'' by the pattern \meta{name}. For an inherently
+  colored pattern, the \meta{color} parameter is ignored. For
+  form-only patterns, the \meta{color} parameter specifies the color
+  to be used for the pattern.
+\end{docCommand}
+  
+\begin{codeexample}[]
+\begin{tikzpicture}
+  \pgfsetfillpattern{stars}{red}
+  \filldraw (0,0) rectangle (1.5,2);
+
+  \pgfsetfillpattern{green stars}{red}
+  \filldraw (1.5,0) rectangle (3,2);
+\end{tikzpicture}
+\end{codeexample}
+
+
+
+\endinput
 %To summarize, what we have been doing so far is to learn a set of primitive TikZ commands for drawing paths, drawing shapes and labeling them. All TikZ command work by passing options to them. For example to change the above line to an arrow, we just pass the option |->| to the |draw| command.
 %
 
@@ -332,7 +1360,7 @@ If you have many nodes another way of achieving the example outlined above is to
 \end{tikzpicture}
 \end{texexample}
 
-\subsection{Drawing shapes}
+\subsection*{Drawing shapes}
 
 PGF abd \tikzname\ come with a number of predefined shapes:
 \begin{itemize}
@@ -341,7 +1369,7 @@ PGF abd \tikzname\ come with a number of predefined shapes:
 \item coordinate
 \end{itemize}
 
-\begin{centering}
+
 \begin{tikzpicture}
 \draw (0,0) circle (1cm);
 \draw (0.5,0) circle (0.5cm);
@@ -349,8 +1377,7 @@ PGF abd \tikzname\ come with a number of predefined shapes:
 \draw (-0.5,0) circle (0.5cm);
 \draw (0,-0.5) circle (0.5cm);
 \end{tikzpicture}
-\captionof{figure}{Drawing multiple circles, using mutiple \texttt{draw} commands}
-\end{centering}
+
 
 
 A circle is specified by providing its center point and the desired radius. The
@@ -404,10 +1431,10 @@ You  can use one |\draw| command to draw multiple circles as shown in \fref{fig:
 circle (0.6cm)
 circle (0.2cm);
 \end{tikzpicture}
-\caption{You can use one draw command to draw multiple circles}
+\captionof{figure}{You can use one draw command to draw multiple circles}
 \label{fig:circles}
 \end{center}
-\caption{Drawing multiple circles, using mutiple \texttt{circle} commands}
+\captionof{figure}{Drawing multiple circles, using mutiple \texttt{circle} commands}
 
 
 \subsection{Drawing ellipses}
@@ -612,6 +1639,8 @@ to keep your work tidy.
     \setchartwidth{3.9cm}%
     \def\chartcolor{#1}
     \newcommand\addTitle[2][test]{
+    
+    
 %% For the chart title we set it in a minipage for
 %% better control
     \def\charttitle{\minipage{4cm}%

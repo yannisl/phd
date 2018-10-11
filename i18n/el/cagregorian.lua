@@ -452,4 +452,11 @@ local cagregorian = cagregorian or {}
     }
   }
   
+  
 return cagregorian
+--local months=cagregorian.el.dates.calendars.gregorian.months.formats
+--for i=1,12 do
+--  print(i,"&", months.wide[i],"\\\\")
+--end
+--print("\\end{tabular}")
+

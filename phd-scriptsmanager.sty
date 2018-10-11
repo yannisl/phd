@@ -13,23 +13,31 @@
 %% ----------------------------------------------------------------
 
 
-
-\NeedsTeXFormat{LaTeX2e}[1994/12/01]%
-\RequirePackage[2014/05/01]{latexrelease}
+\NeedsTeXFormat{LaTeX2e}[2017/04/15]%
+\RequirePackage[2017/04/15]{latexrelease}
 \ProvidesFile{phd-lists}[2015/1/13 v1.0 less preamble (YL)]%
 \ifengine
   {
-    \PassOptionsToPackage{italian,english}{polyglossia}
+    \PassOptionsToPackage{shorthands=off,italian,french,spanish,greek,ngerman,%
+                                                 UKenglish}{polyglossia}
     \RequirePackage{polyglossia}
-    \setdefaultlanguage{english}}
+    \setdefaultlanguage{UKenglish}
+  }
   {%
-   \expandafter\PassOptionsToPackage{italian,english}{babel}
-    \RequirePackage[italian,english]{babel}
+   \PassOptionsToPackage{shorthands=off,italian,french,spanish,greek,ngerman,%
+                                                UKenglish}{babel}
+   \RequirePackage{babel}
+   %babel
+   \selectlanguage{UKenglish}
   }
-  {\PassOptionsToPackage{italian,english }{babel}
+  {\PassOptionsToPackage{shorthands=off,italian,french,spanish,greek,UKenglish }{babel}
     \RequirePackage{babel}
+    \setdefaultlanguage{UKenglish}
   }
-\RequirePackage[italian,english]{xlayouts}
+\begin{otherlanguage}{french}
+\global\let\frenchenumerate\enumerate
+\end{otherlanguage}
+\RequirePackage[italian,UKenglish]{xlayouts}
 \ExplSyntaxOn
 \clist_new:N \g_phd_scripts_clist
 \clist_new:N \g_phd_noto_clist
@@ -107,6 +115,7 @@
     \cxset{script=#1}
     \cxset{#1 font=\panunicodefontface}
 }
+
 \cxset{add script/.code = \AddScript{#1}}
 
 \ExplSyntaxOn
@@ -192,18 +201,20 @@
 }%
   \makebox[5em]{\reformat@unicode@string{#2}\hfill}%
 }
+
+\bgroup \catcode`\"=12
 \def\putchar@cx#1{%
+
 \stepcounter{glyph@count}
-\let\oldactive@prefix\active@prefix
-\let\active@prefix\relax
    \iffontchar\font\n
      \char\the\n$_{\pgfmathparse{Hex(\the\r@cx)}\text{\pgfmathresult}}$%
       %
    \else
     {\arial\graybox}
    \fi
-\let\active@prefix\oldactive@prefix
  }
+\global \let\putchar@cx\putchar@cx
+\egroup
 \def\urow@cx#1{%
     \n=#1%
     \r@cx=0%
@@ -227,6 +238,8 @@
 \newcount\n%
 \newcommand\unicodetable[2]{%
 \bgroup
+  % added to ensure csquotes does not interfere
+  %\catcode`\"=12
   \par
   \leavevmode%
    \r@cx=0%
@@ -245,7 +258,7 @@
 \def\putdescription#1:{%
   {\parindent0pt
   \begin{minipage}[t]{4cm}
-  \bgroup\aegean
+  \bgroup\panunicode
   \hangindent20pt
   #1\par
   \egroup
@@ -285,7 +298,6 @@
 \let\PrintUnicodeBlock\printunicodeblock
 \let\indicative\pan
 \newfontfamily\brahmi{Noto Sans Brahmi}
-\newfontfamily\bengal[Script=Bengali,Scale=1]{Shonar Bangla}
 \endinput
 %%
 %% End of file `phd-scriptsmanager.sty'.

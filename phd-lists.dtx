@@ -12,7 +12,7 @@ See http://www.latex-project.org/lppl.txt
 This file provides a phd for defining a class.
 %</readme>
 %<*readmemd>
-###The `phd-lists` LaTeX2e package (version 0.08.0)
+###The `phd-lists` LaTeX2e package (version 1.0.0)
 
 The `phd-lists` latex package forms part of a suite of packages
 that are bundled with the `phd` package and the class with the 
@@ -33,7 +33,7 @@ and the derived files
 
 run
     
-    `phd-lua  phd-lists.dtx`   on windows
+    `phd-lua  phd-lists.dtx`  on windows
 
 If you have any difficulties with the package come and join us at
 http://tex.stackexchange.com and post a new question or
@@ -126,18 +126,15 @@ See http://www.latex-project.org/lppl.txt
   \file{\jobname.ins}{\from{\jobname.dtx}{install}}
 }
 \nopreamble\nopostamble
-
 \generate{
 	\file{README.txt}{\from{\jobname.dtx}{readme}}
   }
-
 \generate{
   \file{\jobname.md}{\from{\jobname.dtx}{readmemd}}
 }
 \generate{
   \file{\jobname-todo.tex}{\from{\jobname.dtx}{TODO}}
 }
-
 \ifx\fmtname\nameofplainTeX
   \expandafter\endbatchfile
 \else
@@ -145,14 +142,17 @@ See http://www.latex-project.org/lppl.txt
 \fi
 %</internal>
 %<*driver>
-
 %\listfiles
 %gdef\@onlypreamble{} % TO BE REMOVED NEEDED FOR TUTS
-\documentclass[twoside,11pt,a4paper]{ltxdoc}
-\usepackage[bottom=2cm]{geometry}
-\savegeometry{std}
+\NeedsTeXFormat{LaTeX2e}[2017/04/15]%
+%\RequirePackage[2017/04/15]{latexrelease}
+\documentclass[side,10pt,a4paper,book]{ltxdoc}
+\usepackage[bottom=3cm,includefoot,foot=2\baselineskip,footskip=2cm,footnotesep=1cm]{geometry}
+
 % \usepackage[style=mla]{biblatex}
-\usepackage{phd}
+\usepackage[microtype=on]{phd}
+\usepackage{phd-fontmanager}
+\cxset{main font-size=11pt}
 \usepackage{phd-documentation}
 \usepackage{phd-toc}
 \usepackage{phd-runningheads}
@@ -162,6 +162,7 @@ See http://www.latex-project.org/lppl.txt
 \pagestyle{headings}
 \sethyperref
 \cxset{palette bbc}
+\addbibresource{phd.bib}
 \makeindex
 \begin{filecontents}{defaults-chapters}
 %%    General Defaults for Chapters
@@ -236,16 +237,26 @@ See http://www.latex-project.org/lppl.txt
        part background-color=spot,
        part beforeskip                = -3cm,
        part afterskip                 = 30pt,
+       subsection afterindent =off,
+       section format=hang,
+       section afterindent=off,
        }
+\usepackage{bera} 
+\let\citep\footcite      
 \begin{document}
+
+\parskip=0pt plus10pt minus 10pt
+\vbadness=100
+\sloppy
+\emergencystretch=30em
+\savegeometry{std}
 \parindent1em
 \coverpage{asia}{Book Design Monographs}{Camel Press}{LISTS}{DESIGN} 
 \pagestyle{empty}
-%\coverpage{habtoor-city}{Delay Claim}{HLS-DSE/JV}{HABTOOR CITY}{MEP CLAIM} 
 \secondpage
 \pagestyle{empty}
 \clearpage
-
+\cxset{palette orange sakura}
 \tableofcontents
 
 \pagestyle{empty}
@@ -254,12 +265,27 @@ See http://www.latex-project.org/lppl.txt
 \mainmatter
 \pagenumbering{arabic}
 \pagestyle{headings}        
-\makeatletter
-%\@debugtrue
 
-\makeatother
+\DEBUGOFF
+%\input{./sections/paragraphs}
+%\input{./sections/dedication}
+%\input{./sections/acknow}
+%\input{./sections/labels-and-references}
+%\input{./kernel/kernel-ltxref}
+\input{./sections/lists-tex}
+%\input{./kernel/kernel-h-ltpar}
 \input{./sections/lists}
+\input{./sections/i18n}
+\input{./sections/solar}
+\appendix
 \DocInput{\jobname.dtx}
+\MakePercentComment
+\input{./kernel/kernel-ltlists}
+\input{./kernel/kernel-classes}
+%\@@input{./sections/book-class}
+%\makeatletter
+%\@@input{./kernel/kernel-ltlists}
+%\makeatother
 \printindex
  %
 % 
@@ -319,7 +345,7 @@ See http://www.latex-project.org/lppl.txt
 % \raggedbottom
 %  \OnlyDescription
 %
-%  ^^A\StopEventually{\printindex}
+% ^^A \StopEventually{\printindex}
 
 % \CodelineNumbered
 % \pagestyle{headings}
@@ -327,43 +353,96 @@ See http://www.latex-project.org/lppl.txt
 % 
 % ^^A\part{IMPLEMENTATION AND FRIENDS}
 % 
+% \long\def\storyi{Lists in LaTeX have survived many attempts to make them more user friendly,
+%       and to offer a better user and programmer interface. This is my attempt in improving
+%       the user interface as well as making them more flexible. The picture
+%       at the right is a hermaphrodite ancient Roman statute (probably a copy of a Greek original) and now in the Louvre.%
+%       By analogy the coding style here is by necessity a mixture of core \tex commands (very little), \latex2e (more),
+%       expl3 (more and more) and PGF (more and more). 
 %
-% \chapter{Lists Package Code Implementation Objectives and Strategy}
+% }
 % 
-% \epigraph{
-% I was reflecting on the convoluted Java frameworks widely adopted at work. Those hefty frameworks brought coding structures and conventions to large engineering teams; meanwhile, they also sucked the fun of programming like a Pastafarian monster slurping all the tomato sauce on a plate of spaghetti.
-%}{\href{http://blog.zmxv.com/2015/07/code-golf-at-google.html}{Zhen Wang}}
+% \cxset{fashion image=shock.png}
+% \chapter{Lists Package Code Implementation, Objectives and Specification}
+% 
+% \epigraph{The human animal differs from the lesser primates in his passion for lists.}{---H. Allen Smith}
 %
-% We start by outlining what we are trying to achieve with this package:
+% \section{Specification}
 %
+% \noindent We start by outlining what we are trying to achieve with this package:
+% 
+% \resetlist
 % \begin{enumerate}
-% \item To provide a declarative interface to enable users to modify headings by
-%       setting keys, rather than writing macros.  
-% \item The interface must be able to manupulate properties of headings down to
-%       the last detail.
+% \item To provide a declarative interface to enable users to modify lists through
+%       a key value interface.  
+% \item The interface must be able to set all the properties of a list block as
+%       shown in the list diagram later on.
 % \item To provide a compatibility mode, where documents wishing to test the package
 % can have an easy switch to switch in and out. This is also important for the testing of the package.
-% \item To provide a number of templates that cover most of the typical use case.
+% \item To provide a number of templates that cover most of the typical use cases.
 % \item To provide means for a plug-in architecture for extensions.
-
+%    \begin{enumerate}
+%      \item This is possible using styles.
+%      \item Also possible at a higher level with \pgfname keys.
+%    \end{enumerate}
+% \item To provide the list programmer a number of macros to create new list
+%      environments.
+%      \begin{quote}\small
+%         |\NewEnumerateList{}|\\
+%         |\NewItemizeList{}|\\
+%         |\NewDescriptionList{}[]|\\
+%      \end{quote}
+% \item To improve on the current \latexe functionality, by adding the following additional features:
+%        \begin{enumerate}
+%           \item Provide the ability to switch counters on and off, so one can have continuous list
+%                 numbering.
+%           \item Be able to set suffixes and prefixes to labels, via the key system.
+%           \item Be able to internationalize the numbering.
+%        \end{enumerate}
 % \end{enumerate}
 % 
-% \section{Terminology}
+% The following methodology will be applied:
 %
-%  \begin{description}
-%  \item [document] Any written item, as a book, article, or letter, especially 
+% \begin{enumerate}
+% \item Define keys
+%     \begin{enumerate}[enumerate continuous numbering=false]
+%       \item Define keys within a macro.
+%       \item Map suffixes through all the keys, so we have all the definitions automated.
+%       \item Define a function to create enumerated environments.
+%       \item Call the function with appropriate names.
+%     \end{enumerate}
+% \item Another consideration is..
+% \end{enumerate}
+% \section{Terminology}
+% The terminology offered below, is common to all the phd packages. It might differ
+% slightly from other \latex texts.\tcbdocmarginnote{Revised\\13-06-2018} 
+% I have tried to keep as close as possible to the terminology being used firstly
+% by other authors and secondly as commonly used to describe html documents.
+%
+%  \begin{description}[phd defaults]
+%
+%  \item [Document] Any publication such as a book, article, or letter, especially 
 %                  of a factual or informative nature.
-%  \item [heading] A division of a document or document series. For a normal
+%        
+%
+%  ^^A \input{./sections/docinput-test}
+%  \def\tikzitem{{%
+%  \tikzpicture[remember picture,overlay,black] 
+%     \draw[<-](0,0)--(0,12pt)--+(1em,0pt);
+%     \node at (1em, 12pt) [right](1em,13pt){\normalfont\tiny \string\labelwidth-\string\itemindent};   
+%  \endtikzpicture}}
+% 
+%  \item [Heading] A division of a document or document series. For a normal
 %        book headings are chapters, sections etc. However we allow for
 %        specifying a more complex document divided into books, volumes
 %        parts etc. For example the Bible has Books, chapters and verses,
 %        where a legal document might require divisions such as clauses.
 %        In general these divisions are numbered. These document divisions
 %        are stored in the comma list \refCom{phd_book_divisions_clist}.
-%  \item [head] A typeset heading, such as chapter head, or section head.
+%  \item [Head] A typeset heading, such as chapter head, or section head.
 %        This can include a counter, label and title for example, 
 %        \emph{Chapter 1 Introduction}.
-%  \item [dom] This is a programming interface that provides a structured
+%  \item [Document Object Model] This is a programming interface that provides a structured
 %        representation of the document (a tree) and it defines a way
 %        that the structure can be accessed. Although \latexe does not
 %        offer a standard way to build such a tree (mainly because
@@ -371,18 +450,47 @@ See http://www.latex-project.org/lppl.txt
 %        useful to think of the document as a tree structure. We also
 %        allow for a semi-automated way to build such a tree (with the 
 %        exception that paragraphs are not included).
-% \item [element] A part of the document tree that can be styled on
+% \item [Element] A part of the document tree that can be styled on
 %       its own. For example the chapter label, or the section number.
+%
+% \item [List] A set of items marked with a marker (unordered lists)
+%              or ordered lists with the list items marked with numbers or 
+%              letters or combinations of the two.
+%              Lists can either be of type \emph{display} or \emph{inline}. The
+%              latter term is used when they are within paragraphs, e.g.,
+%            a) first item, b) second c) etc.
+%
+% \item [LaTeX Style List]A list that is shaped with \cs{parshape} and a set
+%         of dimensions set at user defined values. The figure below shows
+%         these parameters. The figure is aware of the surrounding lists
+%         and has to be inserted within one, as a paragraph. It prints
+%         the parameter values as set; it can be useful for debugging.
+% \medskip
+%
+% {\cxset{palette spring onion}
+%  \centering
+% 
+% \drawlistdiagram
+%
+%
+% \captionof{figure}{\latexe list diagram.}
+% }
+% \medskip
 %
 % \end{description}
 %
-% \section{Users}
-%  We classify users according to the \LaTeX3 terminology as a) programmers b) template designers
+% \section{User Interface}
+%
+%    We classify users according to the \LaTeX3 terminology as a) programmers b) template designers
 %  and c) authors.
-% \subsection{Author}
-%  We assume that the author has an exising template which she is using but might want to do
-%  some minor modifications, for example use an italic shape for the font of the mark, but an 
-%  upright font for the page numbers. 
+%
+% \begin{description}
+%                     
+%
+% \item [Author]
+%     We generally assume that the author has an exising template which she is using but 
+%  might want to do some minor modifications, for example use an italic shape for the font 
+%  of the mark, but an upright font for the page numbers. 
 %
 % {\obeylines 
 %~~ |\cxset|
@@ -411,111 +519,55 @@ See http://www.latex-project.org/lppl.txt
 % the idea as my aim is to make it easy for the author, who can search the template
 % and just enter a couple of new proerty values.
 %
-% \subsection{Template designer}
+% \item [designer]
+
 % \pagestyle{headings}
 % The template designer in the example above would have selected the format style
 % from a number of predefined formats (templates) or would have created a style
 % called \textit{apa} from an existing template and modified it using declarative
 % key style.
 %
-% \subsection{The programmer}
+% 
 %
-% The programmer in the example above could have created the basic format
-% \textit{apa} by using both declarative as well as defining or using existing
-% macros. To the programmer we offer an extension mechanism, where the contents
-% of a |ps@| command are defined. For example the programmer can define a new
-% style using \tikzname, but without having to worry about defining full |ps@|
-% and their interface.
+% \item[The programmer interface]
 %
-% \section{Preliminaries}
+% 		The programmer in the example above could have created the basic format
+% 		\textit{apa} by using both declarative as well as defining or using existing
+% 		macros. To the programmer we offer an extension mechanism, where the contents
+% 		of a |ps@| command are defined. For example the programmer can define a new
+% 		style using \tikzname, but without having to worry about defining full |ps@|
+% 		and their interface.
+% \end{description}
 %
-%  Standard file identification. We first announce the package 
-%	 and require that it be used with \LaTeX2e. 
+%		Although the divisions above are what one would normally expect, most regular
+%  users of \latex grow from authors to programmers.
+%
+%
+%
 % \iffalse
 %<*LISTS>
 % \fi
-%  
-%
-%    \begin{macrocode}
-\NeedsTeXFormat{LaTeX2e}[1994/12/01]%
-\RequirePackage[2014/05/01]{latexrelease}
-\ProvidesFile{phd-lists}[2015/1/13 v1.0 less preamble (YL)]%
-%    \end{macrocode}
-%
+
+% \cxset{palette oprah}
 % 
-% \section{Source2e Interface}
-% 
-% I am not very fond of mixing expl3 control sequences with source2e commands. Here
-% we provide an interface for all these commands we might use. 
-% This section can be revisited once expl3 code becomes available.
+% \long\def\storyi{\parskip3pt \par\leavevmode The package defines numerous keys to enable the user to set all the list parameters
+%  as key values. First we define lists according to the LaTeX conventions and later we provide additional
+%  commands to redirect the typesetting to custom formats, if required.
 %
-%    \begin{macrocode}
-\ExplSyntaxOn
-\let\ltxtoday\today
-\let\phd_hang_from:nn \@hangfrom
-\newif\if@ltxcompat \@ltxcompatfalse
-\ExplSyntaxOff
-%    \end{macrocode}
+% All standard LaTeX environments have been extended. The star form of the environments, revert back to
+% using the environments as originally defined by the class.
 %
+% New named environments can be created, although my recommendation is to stay with what users know best, enumerate, itemize and description.
+% }
+% \cxset{fashion image=dotty-01.png}
+% \chapter{Code}
 %
-% \chapter{List Management}
 % 
 % Lists like tables, have always been difficult to devise a syntax for setting them. 
 % We first start from enumerated lists.
 %
-% \section{Current status}
 %
-% Most journals develped their own lists and hard-wired them. Current packages are:
-% \pkgname{enumitem} , \pkgname{enumerate}, \pkgname{paralist}.
-%
-% \subsection{enumerate}
-% This package gives the \refEnv{enumerate} an optional argument which determines
-% the style in which the counter is printed. An occurence of one of the tokens 
-% \textbf{A a I i } or \textbf{1} produces the value of the counter printed with
-% (respectively) \cmd{\Alph} \cmd{\alph} \cmd{\Roman} \cmd{\roman} or \cmd{\arabic}. 
-% These letters may be surrounded by any string involving any other \tex expressions, 
-% however the tokens \textbf{A a I i 1} must be inside a \{\} group if they are
-% not to be taken as special.
-%
-%    \begin{macrocode}
-% \begin{enumerate}[EX i.]
-%   \item one one one one one one one
-%         one one one one\label{LA}
-%   \item two
-%      \begin{enumerate}[{example} a)]
-%        \item one of two one of two
-%          one of two\label{LB}
-%        \item two of two
-%       \end{enumerate}
-%   \item two of two
-% \end{enumerate}
-% 
-
-% \begin{enumerate}[{A}-1]
-% \item one\label{LC}
-% \item two
-% \end{enumerate}
-%    \end{macrocode}
-%
-% This package minimally changes the original \latexe definitions. It is very convenient when you
-% want now and then to change labels in a document.
-%
-% The enumerate environment uses four counters: \docCounter{enumi}, \docCounter{enumii}, 
-% \docCounter{enumiii}, \docCounter{enumiv}. These control the numbering of the $n^{th}$ level
-% enumeration.
-%
-% \section{User Level}
-%
-% At the user level we want to simplify things as much as possible. Since we are going to provide
-% styles, we can provide some very flexible environments, including a |newlist| environment.
-%
-% \subsection{Requirements}
-%
-% The keys will be set at two levels. At the User Level we will provide an optional argument to
-% the standard or non-standard environments to enable them to be redefined on the fly. Once they
-% are redefined they will stay in force until another directive is used.
-%
-% \subsubsection {Vertical spacing}
+% \subsection {Vertical spacing}
 %
 %  The options |topsep, partopsep, parsep, itemsep| will be offered.\footnote{This will be inline with
 %   the enumitem, so users familiar with its syntax can continue using it.}
@@ -550,7 +602,7 @@ See http://www.latex-project.org/lppl.txt
 %  automate it by mapping the counters to a function.
 %
 %    \begin{macrocode}
-\RequirePackage{enumerate}
+%\RequirePackage{enumerate}
 %    \end{macrocode}
 %
 % \begin{docCmd}{phd_enumerate_list_levels_clist} { \meta{clist} }
@@ -558,9 +610,228 @@ See http://www.latex-project.org/lppl.txt
 %   of keys.
 % \end{docCmd}
 %
+%
+% \section{Preliminaries}
+%
+%  Standard file identification. We first announce the package 
+%	 and require that it be used with \LaTeX2e. 
+
+%  
+%
+%    \begin{macrocode}
+\NeedsTeXFormat{LaTeX2e}[2017/04/15]%
+\RequirePackage[2017/04/15]{latexrelease}
+\ProvidesFile{phd-lists}[2017/04/15 v1.0 less preamble (YL)]%
+%    \end{macrocode}
+%
+% 
+% \section{Source2e Interface}
+% 
+% I am not very fond of mixing expl3 control sequences with source2e commands. Here
+% we provide an interface for all these commands we might use. 
+% This section can be revisited once expl3 code becomes available.
+%
 %    \begin{macrocode}
 \ExplSyntaxOn
+\let\ltxtoday\today
+\let\phd_hang_from:nn \@hangfrom
+\newif\if@ltxcompat \@ltxcompatfalse
+\ExplSyntaxOff
+%    \end{macrocode}
+% \section{Enumerated lists}
+%
+% We slightly modify the |enumerate| environment in order that we can allow for
+% continuous numbering of labels, as well as as an optional parameter to allow settings.
+% The star version of the command resets the list to the \latex default values.
+%
+%    \begin{macrocode}
+\ExplSyntaxOn
+
 \clist_gset:Nn \phd_enumerate_list_levels_clist {i,ii,iii,iv,v,vi}
+
+\bool_new:N \continuouslist \bool_set_false:N \continuouslist
+%    \end{macrocode}
+%
+% The definition is made using xparse commands. Note we do not create it using an environment
+% but rather keeping to the original LaTeX style.
+%
+%    \begin{macrocode}
+\def\labelprefixi{}
+\def\labelprefixii{}
+\def\labelprefixiii{}
+\def\labelprefixiv{}
+%
+%\def\enumsuffixi{}
+%\def\enumpsuffixii{}
+%\def\enumsuffixiii{}
+%\def\enumsuffixiv{}
+
+% Default punctuation to empty
+\def\labelpuncti{0}
+\def\labelpunctii{}
+\def\labelpunctiii{}
+\def\labelpunctiv{}
+%    \end{macrocode}
+% The \latexe classes define |\labelenum| which is called to render the label of a bare |\item|
+% command. We don't touch it but rather define our own.
+% We simply render |theenum|, which is set by the key value system.
+%    \begin{macrocode}
+%
+\cs_new:Npn \phd_make_label_enum #1
+  {
+    \cs_set:cpn {phd_labelenum#1} {\cs:w theenum#1\cs_end:}
+  }
+%
+\clist_map_inline:Nn \phd_enumerate_list_levels_clist
+ {
+   \phd_make_label_enum {#1}
+ }
+%
+%    \end{macrocode}
+% We are now ready to define the environment.
+% If there is no optional command we default to the \emph{enumerate defaults}, set of keys
+%    \begin{macrocode}
+\DeclareDocumentCommand \enumerate { o } 
+  {
+    \IfNoValueTF {#1}
+       {\cxset{enumerate~defaults}}
+       {\cxset{enumerate~defaults, #1}}
+       
+    \if_bool:N \continuouslist
+     \cs_set:Npn \usecounter##1{\@nmbrlisttrue\def\@listctr{##1}}
+    \else:
+     \cs_set:Npn \usecounter##1
+       {
+         \@nmbrlisttrue
+         \cs_set:Npn \@listctr { ##1 }
+         \setcounter{##1}\z@
+       }  
+    \fi: 
+    
+    \ifnum 
+      \@enumdepth >\thr@@
+        \@toodeep
+    \else
+      \advance\@enumdepth\@ne
+      
+      \cs_set:Npx \l_phd_enumctr {enum\romannumeral\the\@enumdepth}
+      \cs_set:Npx \l_phd_prefix  {prefix\romannumeral\the\@enumdepth}
+      \cs_set:Npx \l_phd_suffix  {suffix\romannumeral\the\@enumdepth}
+      \cs_set:Npx \l_phd_punct   {punct\romannumeral\the\@enumdepth}
+      
+%    \end{macrocode}  
+%
+% Call the |\list| and set the prefix, suffix, punctuation, counter and
+% define the |\makelabel| macro.
+%   
+%    \begin{macrocode} 
+     
+      \exp_after:wN
+      \list 
+        \cs:w phd_label\l_phd_enumctr\cs_end:
+        {
+           \usecounter\l_phd_enumctr
+           \cs_set:Npn \makelabel ##1
+             {
+               \hss\llap {
+                 \cs:w label\l_phd_prefix\cs_end:
+                 ##1
+                 \cs:w label\l_phd_punct \cs_end: 
+                 \cs:w label\l_phd_suffix \cs_end:   
+              }
+           }
+        }  
+    \fi
+  }
+\let\endenumerate =\endlist
+
+%    \end{macrocode}
+% \paragraph{Space parameter keys}
+%    \begin{macrocode}
+\skip_zero_new:c {topsepi}
+\skip_zero_new:c {topsepii}
+\skip_zero_new:c {topsepiii}
+\skip_zero_new:c {topsepiv}
+\skip_zero_new:c {topsepv}
+\skip_zero_new:c {topsepvi}
+
+\skip_zero_new:c {partopsepi}
+\skip_zero_new:c {partopsepii}
+\skip_zero_new:c {partopsepiii}
+\skip_zero_new:c {partopsepiv}
+\skip_zero_new:c {partopsepv}
+\skip_zero_new:c {partopsepvi}
+
+\skip_zero_new:c {itemsepi}
+\skip_zero_new:c {itemsepii}
+\skip_zero_new:c {itemsepiii}
+\skip_zero_new:c {itemsepiv}
+\skip_zero_new:c {itemsepv}
+\skip_zero_new:c {itemsepvi}
+
+\skip_zero_new:c {parsepi}
+\skip_zero_new:c {parsepii}
+\skip_zero_new:c {parsepiii}
+\skip_zero_new:c {parsepiv}
+\skip_zero_new:c {parsepv}
+\skip_zero_new:c {parsepvi}
+
+\dim_zero_new:c {parindenti}
+\dim_zero_new:c {parindentii}
+\dim_zero_new:c {parindentiii}
+\dim_zero_new:c {parindentiv}
+\dim_zero_new:c {parindentv}
+\dim_zero_new:c {parindentvi}
+
+\gdef\@listi{%
+            \dim_set_eq:cc  {listparindent}{parindenti}
+            \dim_set_eq:cc  {leftmargin}{leftmargini}
+            \skip_set_eq:cc {parsep}{parsepi}          
+            \skip_set_eq:cc {topsep}{topsepi}  
+            \skip_set_eq:cc {itemsep}{itemsepi}~
+           }
+
+\gdef\@listii{%
+            \dim_set_eq:cc  {listparindent}{parindentii}
+            \dim_set_eq:cc  {leftmargin}{leftmarginii}
+            \skip_set_eq:cc {parsep}{parsepii}          
+            \skip_set_eq:cc {topsep}{topsepii}  
+            \skip_set_eq:cc {itemsep}{itemsepii}~
+           }
+           
+ \gdef\@listiii{%
+            \dim_set_eq:cc  {listparindent}{parindentiii}
+            \dim_set_eq:cc  {leftmargin}{leftmarginiii}
+            \skip_set_eq:cc {parsep}{parsepiii}          
+            \skip_set_eq:cc {topsep}{topsepiii}  
+            \skip_set_eq:cc {itemsep}{itemsepiii}~
+           }          
+           
+\gdef\@listiv{%
+            \dim_set_eq:cc  {listparindent}{parindentiv}
+            \dim_set_eq:cc  {leftmargin}{leftmarginiv}
+            \skip_set_eq:cc {parsep}{parsepiv}          
+            \skip_set_eq:cc {topsep}{topsepiv}  
+            \skip_set_eq:cc {itemsep}{itemsepiv}~
+           }  
+           
+\gdef\@listv{%
+            \dim_set_eq:cc  {listparindent}{parindentv}
+            \dim_set_eq:cc  {leftmargin}{leftmarginv}
+            \skip_set_eq:cc {parsep}{parsepv}          
+            \skip_set_eq:cc {topsep}{topsepv}  
+            \skip_set_eq:cc {itemsep}{itemsepv}~
+           }   
+           
+\gdef\@listvi{%
+            \dim_set_eq:cc  {listparindent}{parindentvi}
+            \dim_set_eq:cc  {leftmargin}{leftmarginvi}
+            \skip_set_eq:cc {parsep}{parsepvi}          
+            \skip_set_eq:cc {topsep}{topsepvi}  
+            \skip_set_eq:cc {itemsep}{itemsepvi}~
+           }                            
+           
+
 %    \end{macrocode}
 % 
 %  \begin{docCmd}{phd_create_enumerate_list_keys} { \marg{level} }
@@ -574,61 +845,77 @@ See http://www.latex-project.org/lppl.txt
       enumerate~numbering#1/.is~choice,
       
       enumerate~numbering#1/arabic/.code                        = 
-        \cs_gset:cpn {theenum#1} 
+        \cs_set:cpn {theenum#1} 
           {
             \@arabic \cs:w c@enum#1 \cs_end:\relax
           },
       
-      enumerate~numbering#1/alpha/.code                         = 
-        \cs_gset:cpn {theenum#1} 
+      enumerate~numbering#1/decimal/.code                        = 
+        \cs_set:cpn {theenum#1} 
           {
-             \exp_after:wN \alphalph \cs:w c@enum#1 \cs_end: \relax
+            \@arabic \cs:w c@enum#1 \cs_end:.0 
+          },
+      
+      enumerate~numbering#1/alpha/.code                         = 
+        \cs_set:cpn {theenum#1} 
+          {
+             %\exp_after:wN \alphalph \cs:w c@enum#1 \cs_end: \relax
+             \int_to_alph:n {\cs:w c@enum#1 \cs_end:} 
           },
         
       enumerate~numbering#1/alph/.code                          =  
-        \cs_gset:cpn {theenum#1} 
+        \cs_set:cpn {theenum#1} 
           { 
-            \exp_after:wN \alphalph {\cs:w c@enum#1 \cs_end: \relax}
+            %\exp_after:wN \alphalph {\cs:w c@enum#1 \cs_end: \relax}
+            \int_to_alph:n {cs:w c@enum#1 \cs_end:}
           },                                              
       
       enumerate~numbering#1/Alpha/.code                         = 
-        \cs_gset:cpn {theenum#1} {
-          \exp_after:wN \AlphAlph{\cs:w c@enum#1 \cs_end:}
-          
-           \relax
+        \cs_set:cpn {theenum#1} {
+          \int_to_Alph:n {\cs:w c@enum#1 \cs_end:}
         },
       
       enumerate~numbering#1/roman/.code                         = 
-        \cs_gset:cpn {theenum#1} {\@roman \cs:w c@enum#1 \cs_end:\relax},
+        \cs_set:cpn {theenum#1} {\@roman \cs:w c@enum#1 \cs_end:\relax},
       
       enumerate~numbering#1/Roman/.code                         = 
-        \cs_gset:cpn {theenum#1} {\@Roman {\cs:w c@enum#1 \cs_end:\relax}},
+        \cs_set:cpn {theenum#1} {\@Roman {\cs:w c@enum#1 \cs_end:\relax}},
       
       enumerate~numbering#1/none/.code                          =  
-        \cs_gset:cpn {theenum#1} {},
+        \cs_set:cpn {theenum#1} {},
       
-%      enumerate~list-style-type/.is~choice,
-%      enumerate~list-style-type/decimal/.code                  = 
-%      \cs_gset:Npn \theenum#1 {\@arabic\c@enum#1},                                                   
-%      enumerate~list-style-type/upper-roman/.code              = 
-%      \cs_gset:Npn \theenum#1 {\@Roman\c@enum#1}\relax,
-%      enumerate~list-style-type/lower-roman/.code              = 
-%      \cs_gset:Npn \theenum#1 {\@roman\c@enum#1}\relax,                                             
-%      enumerate~list-style-type/lower-alpha/.code              = 
-%      \cs_gset:Npn \theenum#1 {\@alph\c@enum#1}\relax,                                                                                          
-%      enumerate~list-style-type/uper-alpha/.code               = 
-%      \cs_gset:Npn \theenum#1 {\@Alph\c@enum#1}\relax,                                                                                                                                       
-%      enumerate~list-style-type/Diamond/.code                  = 
-%      \cs_gset:Npn \theenum#1 {\Diamond},                                                                                                                                                                                        
-%      enumerate~list-style-type/.unknown/.code                 =  
-%      \cs_gset:Npn \theenum#1 {\@Alph\c@enum#1},                                                                                                                                                                                                                                             
-      
-      enumerate~leftmargin#1/.code                             = {\global\setlength\leftmargini{##1}},
-      list#1~topsep/.store                                     = list#1topsep@cx,
-      list#1~partopsep/.store                                  = list#1partopsep@cx,
-      list#1~itemsep/.store                                    = list#1itemsep@cx,
-      list#1~parsep/.store                                     = list#1parsep@cx,
-      list#1~parindent/.store                                  = list#1parindent@cx,
+
+%    \end{macrocode}
+%
+% The \refCom{leftmargini} is defined in the kernel and its initial value set to 0pt.
+% but its value is set in the
+% classes. (See \ref{ss:glistparameters}.) The intitial value is based on
+% the columns of text. For single columns is set at 2.5em and for two column
+% layout at 2.0em.
+%
+% It is also depended on the size of the font other than the default font size and
+% is defined in the |.clo| files. 
+%  Defaults for the list
+% environment are set as follows.  First, |\rightmargin|,
+% |\listparindent| and |\itemindent| are set to 0pt.  Then, for a Kth
+% level list, the command |\@listK| is called, where \enquote{K} denotes \enquote{i},
+% \enquote{i}, ... , \enquote{vi}.  (I.e., |\@listiii| is called for a third-level
+% list.)  By convention, |\@listK| should set |\leftmargin| to
+% |\leftmarginK|.
+%
+% We use l3 commands allowing for input to be of the form of 12pt+12pt etc. 
+%    \begin{macrocode}   
+%      
+    enumerate~leftmargin#1/.code          = { \dim_gset:cn {leftmargin#1}  {##1}},
+    enumerate~rightmargin#1/.code         = { \dim_gset:cn {rightmargin#1} {##1}},
+    list#1~topsep/.code                   = { \skip_gset:cn {topsep#1} {##1}},
+    list#1~partopsep/.code                = { \skip_gset:cn {partopsep#1} {##1}},
+    list#1~itemsep/.code                  = { \skip_gset:cn {itemsep#1}{##1}},
+    list#1~parsep/.code                   = { \skip_gset:cn {parindent#1}{##1}},
+    list#1~parindent/.code                = { \dim_gset:cn {parindent#1}{##1}},
+    enumerate~label#1~punctuation/.code   = \cs_set:cpn {labelpunct#1}{##1},
+    enumerate~label#1~prefix/.code        = \cs_set:cpn{labelprefix#1}{##1},
+    enumerate~label#1~suffix/.code        = \cs_set:cpn{labelsuffix#1}{##1},
   }  
 }
 
@@ -637,22 +924,69 @@ See http://www.latex-project.org/lppl.txt
   {
     \phd_create_enumerate_list_keys {#1} 
   }
-                                            
+  
+\cxset{enumerate~leftmargin/.code= \global\setlength\leftmargin{#1},
+       enumerate~rightmargin/.code= \global\setlength\rightmargin{#1},
+       enumerate~continuous~numbering/.is~choice,
+       enumerate~continuous~numbering/true/.code = \bool_set_true:N \continuouslist,
+       enumerate~continuous~numbering/false/.code = \bool_set_false:N \continuouslist}
+
+\cs_set:Npn \resetlist{\setcounter{enumi}{0}}
+ 
 \ExplSyntaxOff
+%    \end{macrocode}
+%
+%    \begin{macrocode} 
+\cxset{%
+  %enumerate labeli punctuation=$bullet$,
+  enumerate defaults/.style={
+  enumerate continuous numbering=false,
+  enumerate numberingi=arabic,
+  enumerate numberingii=alpha,
+  enumerate numberingiii=Roman,
+  enumerate numberingiv=roman,
+  enumerate labeli punctuation=.,
+  enumerate labeli prefix=,
+  enumerate labeli suffix=,
+  enumerate labelii suffix=),
+% 
+  enumerate leftmargini=2.2em,
+  enumerate rightmargin=1.2em,
+  enumerate leftmarginii=2.1em,
+  enumerate leftmarginiii=1.5em,
+  enumerate leftmarginiv=2em,
+%  
+  listi topsep= 0pt,%\smallskipamount, %10pt plus2pt minus0pt,
+  listi itemsep=0pt plus2pt minus0pt,
+  listi parsep=0pt plus2pt minus0pt,
+  listi partopsep=0pt plus1pt minus0pt,
+%  
+  listii topsep=2pt plus2pt minus0pt,
+  listii itemsep=0pt plus2pt minus0pt,
+  listii parsep=0pt plus2pt minus0pt,
+%  
+  listiii topsep=2pt plus2pt minus0pt,
+  listiii itemsep=0pt plus2pt minus0pt,
+  listiii parsep=0pt plus2pt minus0pt + 0pt,
+%
+  listiv topsep=2pt plus2pt minus0pt,
+  listiv itemsep=0pt plus2pt minus0pt,
+  listiv parsep=0pt plus2pt minus0pt,
+}}
+\cxset{enumerate defaults}
 %    \end{macrocode}
 %
 %  The left and right margin are \docAuxCmd {leftskip} and \docAuxCmd{rightskip} and is 
 %  the distance from the current margin.
+%
+%  We confirm that the lengths are right
+%
+%  \the\leftmarginiii, \the\leftmarginiv, |enumerate listi topsep| \the\topsepi\\
+%  |itemsepi| \the\itemsepi \\
+%  |itemsepii| \the\itemsepii\\
+%  |itemsepiii| \the\itemsepiii\\
+%  |itemsepiv|  \the\itemsepiv\\
 % 
-%
-% \cxset{
-%        enumerate numberingi   = Alpha,
-%        enumerate numberingii  = alpha,
-%        enumerate numberingiii = Roman,
-%        enumerate numberingiv  = roman}
-%
-%   
-% \lorem 
 % \begin{enumerate}
 %  \item This is the first level
 %   \begin{enumerate} 
@@ -667,183 +1001,206 @@ See http://www.latex-project.org/lppl.txt
 %  \end{enumerate}
 % 
 %    \begin{macrocode}
-\cxset{  
-  enumerate labeli punctuation/.store in=\enumeratepunctuationi@cx,
-  enumerate labeli/.is choice,
-  enumerate labeli/brackets/.code={\renewcommand\labelenumi{(\theenumi\enumeratepunctuationi@cx)}},
-  enumerate labeli/square brackets/.code={\renewcommand\labelenumi{[\theenumi\enumeratepunctuationi@cx]}},
-  enumerate labeli/right bracket/.code={\renewcommand\labelenumi{\theenumi\enumeratepunctuationi@cx)}},
-  enumerate label left/.store in=\enumeratelabelleft@cx,
-  enumerate label right/.code=\renewcommand\labelenumi{\enumeratelabelleft@cx\theenumi\enumeratepunctuationi@cx#1},
-%  
-}
 \cxset{compact1/.style={%
   enumerate numberingi=alpha,
   enumerate numberingii=Roman,
   enumerate numberingiii=alpha,
   enumerate numberingiv=roman,
-  enumerate labeli punctuation=.,
-  enumerate label left=,
-  enumerate label right=,
+  enumerate labeli punctuation=!,
+  %enumerate label left=,
+  %enumerate label right=,
   enumerate leftmargini=2.2em,
   enumerate leftmarginii=2.1em,
   enumerate leftmarginiii=1.5em,
   enumerate leftmarginiv=2em,
-  listi topsep=10\p@ \@plus2\p@ \@minus\p@,
-  listi itemsep=0\p@ \@plus2\p@ \@minus\p@,
-  listi parsep=0\p@ \@plus2\p@ \@minus\p@,
+  listi topsep=10pt plus2pt minus0pt,
+  listi itemsep=0pt plus2pt minus0pt,
+  listi parsep=0pt plus2pt minus0pt,
   listi partopsep=0pt plus1pt minus0pt,
 %  
-  listii topsep=0\p@ \@plus2\p@ \@minus\p@,
-  listii itemsep=0\p@ \@plus2\p@ \@minus\p@,
-  listii parsep=0\p@ \@plus2\p@ \@minus\p@,
+  listii topsep=0pt plus2pt minus0pt,
+  listii itemsep=0pt plus2pt minus0pt,
+  listii parsep=0pt plus2pt minus0pt,
 %  
-  listiii topsep=0\p@ \@plus2\p@ \@minus\p@,
-  listiii itemsep=0\p@ \@plus2\p@ \@minus\p@,
-  listiii parsep=0\p@ \@plus2\p@ \@minus\p@,
+  listiii topsep=0pt plus2pt minus0pt,
+  listiii itemsep=0pt plus2pt minus0pt,
+  listiii parsep=0pt plus2pt minus0pt,
 %
-  listiv topsep=0\p@ \@plus2\p@ \@minus\p@,
-  listiv itemsep=0\p@ \@plus2\p@ \@minus\p@,
-  listiv parsep=0\p@ \@plus2\p@ \@minus\p@,
+  listiv topsep=0pt plus2pt minus0pt,
+  listiv itemsep=0pt plus2pt minus0pt,
+  listiv parsep=0pt plus2pt minus0pt,
 }}
 
 \cxset{compact2/.style={%
-  enumerate numberingi=Alpha,
+  enumerate numberingi=arabic,
   enumerate numberingii=roman,
   enumerate numberingiii=alph,
   enumerate numberingiv=roman,
-  enumerate labeli punctuation=,
-  enumerate label left=(,
-  enumerate label right=),
-  enumerate leftmargini=2.2em,
+  enumerate labeli punctuation={!},
+   enumerate leftmargini=2.2em,
   enumerate leftmarginii=2.1em,
   enumerate leftmarginiii=1.5em,
-  enumerate leftmarginiv=0em,
+  enumerate leftmarginiv=1em,
   listi parindent=1em,
   listii parindent=1em,
   listiii parindent=1em,
   listiv parindent=1em,
-  listi topsep   = 8\p@ \@plus2\p@ \@minus\p@,
-  listi itemsep = 0\p@ \@plus2\p@ \@minus\p@,
-  listi parsep   = 0\p@ \@plus2\p@ \@minus\p@,
-  listii topsep  = 0\p@ \@plus2\p@ \@minus\p@,
-  listii itemsep= 0\p@ \@plus2\p@ \@minus\p@,
-  listii parsep  = 0\p@ \@plus2\p@ \@minus\p@,
-  listiii topsep = 0\p@ \@plus2\p@ \@minus\p@,
-  listiii itemsep= 0\p@ \@plus2\p@ \@minus\p@,
-  listiii parsep  = 0\p@ \@plus2\p@ \@minus\p@,
+  listi topsep   = 8pt plus2pt minus0pt,
+  listi itemsep = 0pt plus2pt minus0pt,
+  listi parsep   = 0pt plus2pt minus0pt,
+  listii topsep  = 0pt plus2pt minus0pt,
+  listii itemsep= 0pt plus2pt minus0pt,
+  listii parsep  = 0pt plus2pt minus0pt,
+  listiii topsep = 0pt plus2pt minus0pt,
+  listiii itemsep= 0pt plus2pt minus0pt,
+  listiii parsep  = 0pt plus2pt minus0pt,
 }}
-
-
-\ExplSyntaxOn
-\gdef\setenumerate#1
-  {
-    \cxset{#1}
-      \gdef\@listi{%
-            \listparindent\listiparindent@cx
-            \leftmargin\leftmargini
-            \parsep\listiparsep@cx
-            \topsep\listitopsep@cx\relax
-            \itemsep\listiitemsep@cx}
-            
-      \gdef\@listii{
-           \listparindent\listiiparindent@cx
-            \leftmargin\leftmarginii
-            \parsep\listiiparsep@cx
-            \topsep\listiitopsep@cx\relax
-            \itemsep\listiiitemsep@cx}
-            
-      \gdef\@listiii{
-            \listparindent\listiiiparindent@cx
-            \leftmargin\leftmarginiii
-            \parsep\listiiiparsep@cx
-            \topsep\listiiitopsep@cx\relax
-            \itemsep\listiiiitemsep@cx}
-     \gdef\@listiv{
-            \listparindent\listivparindent@cx
-            \leftmargin\leftmarginiv
-            \parsep\listivparsep@cx
-            \topsep\listivtopsep@cx\relax
-            \itemsep\listivitemsep@cx}       
-}
-
-\ExplSyntaxOff
 %    \end{macrocode}
 %
-% \setenumerate{compact2}
-% 
-% \lorem
-% \begin{enumerate}
-%  \item This is the first level\par
-%         \begin{enumerate}
-%            \item{third list}
-%            \item {fourth list}
-%          \end{enumerate}
-%  \end{enumerate}
-% 
-% \setenumerate{compact1}
+% \section{The Itemize environment}
 %
 % \begin{enumerate}
-%  \item This is the first level\par
-%         \begin{enumerate}
-%            \item{third list}
-%            \item {fourth list}
-%          \end{enumerate}
-%  \end{enumerate}
-
-% \section{The Itemize environment}
+% \item test \theenumi
+% \item test2 \theenumi
+% \end{enumerate}
+%
+% \lorem
+% \begin{enumerate}
+% \item test  \theenumi
+% \item test2 \theenumi
+% \end{enumerate}
 %
 % The standard \latexe defined itemize environment, is much easier to 
 % to parameterize, since there are no counters to worry about. However,
 % we still need to worry about syntactic sugar for a better user interface.
-% 
+% \begin{docEnv}{itemize}{}{}{}\end{docEnv}
+% We will redefine the LaTeX kernel environment to take an extra
+% parameter and a star later on.
+%
+% The user interface is to be kept at a minimum. An author is expected to
+% only have to change the type of decoration to the list. 
+% \begin{verbatim}
+% \cxset{label itemi=arrow}
+% \end{verbatim}
 %    \begin{macrocode}
 \ExplSyntaxOn
+
+\msg_new:nnnn {phd_lists}{too-deep}{List~is~too~deep}
+  { Increase~itemize~depth~limit; use~
+    \string\cxset\{itemize~depth~ limit= depth\}}
+
+\cs_set_eq:NN \phd_item_depth_int \@itemdepth
+
+
+\int_new:N \phd_item_depth_limit_int
+\int_set:Nn \phd_item_depth_limit_int {3}
+
+\newif\if@runin \@runinfalse
+
+\DeclareDocumentCommand\itemize{ o }{
+  \int_compare:nTF { \phd_item_depth_int > \phd_item_depth_limit_int }
+   { \msg_error:nnn { phd_lists } { too-deep } { #1 } } 
+   {
+   
+    \int_incr:N  \phd_item_depth_int  
+    %edef
+    \cs_set:Npx \@itemitem{labelitem\int_to_roman:n \phd_item_depth_int}
+    \exp_after:wN 
+    \list
+    \csname\@itemitem\endcsname
+      {%
+        % 
+        \if@runin 
+          \labelwidth=0pt
+          \itemindent=-0.5em
+          \labelsep=0.2em
+          \listparindent=\dimexpr(1em+0.5em+0.2em)
+          \cs_set:Npn \makelabel ##1{\kern2em##1}%
+        \else
+          \cs_set:Npn \makelabel ##1{\hss\llap{##1}}
+       \fi   
+      }%
+  }
+}
+{\endlist}
+
+
+
+%    \end{macrocode}
+% The |labelitem| are defined in the classes (see \ref{sec:itemize}). One choice is to use our own definitions
+% that is instead of using |\labelitem| rename them to something else. This will minimize depencies on
+% the kernel and the classes to essentially the |\list| environment and associated macros.
+%    \begin{macrocode}
+% 
+
+\newfontfamily\symbola{symbola.ttf}
+\def\makesymbol#1{
+        \tl_set:Nn\l_tmpa_str:N {#1}
+           \str_case_x:nnTF {#1}  
+             {
+               { endash   } { \textendash    }
+               { emdash   } {  \textemdash    }  
+               { asterisk } {  \textasteriskcentered    } 
+               { bullet   } { \textbullet     } 
+               { open~bullet  } { \textopenbullet    } 
+               { florette    } {\symbola \char"273F   } 
+               { white~florette } {\symbola \char"2740  }
+               { arrowhead}{\symbola \char"27A4 }
+               { arrowhead~light }{\symbola \char"27A6} %check
+               { arrowhead~3D}{\symbola \char"27A3}
+               { arrow~curved}{\symbola \char"27A5}
+               { square     }{ \symbola \char"25FE}
+             }
+             {                                                     }
+             % drop anythin else int the false, say just a cut and paste symbol
+             {
+             % Check if it is a number
+                 #1             
+             }
+          }  
+
 \cxset
   {
-     labelitemi/.code     = \cs_set:Npn \labelitemi   { \color{theitemicolor} #1   },
-     labelitemii/.code    = \cs_set:Npn \labelitemii  { \color{theitemiicolor} #1  },
-     labelitemiii/.code   = \cs_set:Npn \labelitemiii { \color{theitemiiicolor} #1 },
-     labelitemiv/.code    = \cs_set:Npn \labelitemiv  { \color{theitemivcolor} #1  },
+     label~itemi/.code    = \cs_set:Npn \labelitemi {\symbola  \makesymbol{#1}   },
+     label~itemii/.code   = \cs_set:Npn \labelitemii {\symbola \makesymbol{#1}   },
+     label~itemiii/.code  = \cs_set:Npn \labelitemiii {\symbola \makesymbol{#1}  },
+     label~itemiv/.code   = \cs_set:Npn  \labelitemiv  {\symbola \makesymbol{#1} },
   }
+ 
+ \cxset{compact2,
+        label~itemi=square,
+        label~itemii=arrowhead~light,
+        label~itemiii=arrowhead~3D,
+        label~itemiv=✻}
+         
 \ExplSyntaxOff
 %    \end{macrocode}
 %    \begin{macrocode}
 \def\imgtest{
-   \tikz[remember picture,overlay]\node[xshift=0cm, yshift=10pt, below left] (0,0) {\includegraphics[width=\labelwidth]{amato}}; 
+   \tikz[remember picture,overlay]\node[xshift=0cm, yshift=0pt, 
+      below left] (0,0) {\includegraphics[width=\labelwidth]{amato}}; 
    }
-\def\dingpoint{\ding{217}}
-\def\dingpointi{\ding{226}}
-\def\dingpointii{\ding{229}}
-\def\dingpointiii{\ding{110}}
-
-
-\cxset
-  {
-    labelitemi    = \dingpointi,%\imgtest,%\dingpointi,
-    labelitemii   = \dingpointii,
-    labelitemiii  = $\iiint$,
-    labelitemiv   = \textbullet,
-  }
 %    \end{macrocode}
-
 % 
-% \listparindent1em
+% 
+%  \cxset{compact2, label itemi=square}
 %  \begin{itemize}
-%   \item \lorem
+%   \item \lorem \the\leftmargin
 %   \item \lorem\par
-%          
-%         This is the second paragraph.
+  
+%         \lorem
           
 %      \begin{itemize}
 %         \item Second level
-%         \item Second level
+%               \lorem
 %           \begin{itemize}
-%              \item Third Level
+%              \item Third Level \lorem
+%              \item Third Level \lorem   
 %              \item Third Level
 %                \begin{itemize}
 %                  \item Fourth Level
 %                    \lorem
+
 %                    \lorem
 %                \end{itemize}    
 %           \end{itemize}
@@ -851,165 +1208,479 @@ See http://www.latex-project.org/lppl.txt
 %  \end{itemize}
 %
 %  \section{The description environment}
+% The package defines a flexible way of setting all the parameters of a description list.
+% We also define or redefine a number of useful ones.
+%
+% I have a preference to store all the dimensions in dimension registers, now that with
+% the new engines we have more registers. This improves the user interface as the user
+% can use simple arithmetic (12pt+3pt). It also enables us to get dimensions values easier
+% for testing.
 %
 %    \begin{macrocode}
 \ExplSyntaxOn
+% These are all local definitions
+\def\makedescriptionkeys#1{
+\dim_zero_new:c {l_phd_description_leftmargin_dim}
+\dim_zero_new:c {l_phd_description_rightmargin_dim}
+\dim_zero_new:c {l_phd_description_labelwidth_dim}
+%
+\dim_zero_new:c {l_phd_description_labelsep_dim}
 \cxset
   {
-    description~label~font-size/.fontsize     = l_phd_description_label_fontsize,
-    description~label~font-weight/.fontweight = l_phd_description_label_fontweight,
-    description~label~font-family/.fontfamily = l_phd_description_label_fontfamily,
-    description~label~font-shape/.fontstyle   = l_phd_description_label_fontshape,
-    description~label~color/.store            = l_phd_description_label_color,
-    description~label~sep/.store              = l_phd_description_label_sep,
-    description~label~width/.store            = l_phd_description_label_width,
-    description~margin~left/.store            = l_phd_description_margin_left,
-    description~margin~right/.store           = l_phd_description_margin_right,
-    description~item~indent/.store            = l_phd_description_item_indent,
-    list~parindent/.store                     = l_phd_description_list_parindent,
+    #1~label~font-size/.fontsize     = l_phd_#1_label_fontsize,
+    #1~label~font-weight/.fontweight = l_phd_#1_label_fontweight,
+    #1~label~font-family/.fontfamily = l_phd_#1_label_fontfamily,
+    #1~label~font-shape/.fontstyle   = l_phd_#1_label_fontshape,
+    #1~label~color/.store            = l_phd_#1_label_color,
+%
+%
+    #1~margin~left/.code          = 
+          { \dim_gset:cn {l_phd_#1_leftmargin_dim}  {##1}},
+    #1~margin~right/.code         = 
+          { \dim_gset:cn {l_phd_#1_rightmargin_dim} {##1}},  
+%    
+    #1~label~sep/.code              = 
+          {\dim_gset:cn {l_phd_#1_labelsep_dim}{##1}},
+%    
+    #1~label~width/.store            = l_phd_#1_label_width,
+    #1~item~indent/.store            = l_phd_#1_item_indent,
+    list~parindent/.store            = l_phd_#1_list_parindent,
+    #1~label~format/.store           = l_phd_#1_labelformat,
   }
+  
+\cxset
+  {
+    #1~label~font-size=normal,
+ 	 #1~label~font-weight=normal,
+    #1~label~font-family=sffamily,
+    #1~label~font-shape=upshape,
+    #1~label~color=bgsexy,
+    #1~label~sep=0em,
+    #1~label~width=3em,
+    #1~margin~left=0pt,    % second line parshape
+    #1~margin~right=0pt,   % second line parshape
+    #1~item~indent = 0em,  % how much it  grows into the label
+    list~parindent=0em,
+    #1~label~format=centered,  
+  }
+}
+
+\makedescriptionkeys{description}  
+
+
 \ExplSyntaxOff  
 %    \end{macrocode}
 %
-% We also define a macro \docAuxCmd {setdescription} as a helper macro to assist in changing 
-% settings at any point in a document.
+% \begin{docCommand}{description_label:n}{\marg{parameters}}
+%    Sets all parameters to typeset the list, as well as it routes
+%    to the appropriate specified format. Unknown formats revert
+%    to simple LaTeX type labels. (but with different dimensioning parameters)
+% \end{docCommand}
 %    \begin{macrocode}
 \ExplSyntaxOn
-\cs_set:Npn \setdescription #1
-  {
-    \cxset{#1}%
-    \renewenvironment{description}
-      {
-        \list{}
-          {
-            \listparindent = \l_phd_description_list_parindent
-            \leftmargin    = \l_phd_description_margin_left
-            \rightmargin   = \l_phd_description_margin_right
-            \itemindent    = \l_phd_description_item_indent
-            \labelwidth    = \l_phd_description_label_width
-            \labelsep      = \l_phd_description_label_sep
-            \cs_set_eq:NN \makelabel \description_label:n
-          }
-      }
-      { \endlist }
-%    \end{macrocode}
+\def\pgfkeysifstyledefined#1#2#3{%
+  \pgfkeys@ifcsname pgfk@#1/.@cmd\endcsname#2\else#3\fi}
+%    \end{macrocode}  
 %
-% \begin{docCmd}{descriptionlabel} { \marg{label text} }
-%   This control sequence is similar to the one defined in the book classes
-%   which we overwrite. It is responsible for typesetting the label contents.
-% \end{docCmd}
+% Each format style has a corresponding key with its name. So that calling
+% \cs{begin}\marg{description}\oarg{parbox} will result in the layout described by the \cmd{\phd\_parbox}
+% macro to be called and the \cs{makelabel} defined accordingly.
+% 
+%
 %    \begin{macrocode}
-    \cs_set:Npn \description_label:n ##1
-    {
-      \hspace\l_phd_description_label_sep
+\cs_set:Npn \description_label:n #1
+  {
+      \hskip\cs:w l_phd_description_labelsep_dim\cs_end:
     {
       \color{\l_phd_description_label_color}%
-      \normalfont\bfseries\raggedleft##1\thickspace%
+      \normalfont
+      \l_phd_description_label_fontsize 
+      \l_phd_description_label_fontweight
+      \l_phd_description_label_fontshape
+        \str_case:onTF {\l_phd_description_labelformat}
+          {
+            { fbox         } { \fbox{#1\hss}          }
+            { inline       } { \hbox{#1\hss}          }
+            { inmargin     } { \inmargin {#1}         }
+            { centered     } { \centered {#1}         }
+            { parbox       } { \phd_parbox {#1}       }
+            { parbox~right } { \phd_parbox_right {#1} }
+            { tikzbox      } { \phd_tikzbox {#1}      }
+            { heading      } { \phd_heading {#1}      }
+            { nextlinelabel} { \nextlinelabel {#1}     }
+          } 
+          {  }
+          { \arial \default {#1}} \ignorespaces%
     }
-   }
-}%
-\ExplSyntaxOff
-%    \end{macrocode}
-%    \begin{macrocode} 
-\setdescription{ 
- description label font-size=normal,
- description label font-weight=bfseries,
- description label font-family=sffamily,
- description label font-shape=upshape,
- description label color=bgsexy,
- description label sep=0sp\relax,
- description label width=100pt,
- description margin left=20pt,
- description margin right=20pt,
- description item indent=90pt,
- list parindent=5em,
-}
-%    \end{macrocode}
-%    \begin{macrocode}
-\ExplSyntaxOn
-\NewDocumentCommand \NewDescriptionEnvironment { o m }
-  {
-    \cxset{#1}
-    \newenvironment{#2}
-     {\list{}{\listparindent\l_phd_description_list_parindent
-                       \leftmargin=\l_phd_description_margin_left
-                       \rightmargin=\l_phd_description_margin_right
-                       \itemindent\l_phd_description_item_indent
-                       \labelwidth\l_phd_description_label_width
-                       \labelsep=\l_phd_description_label_sep
-                       \let\makelabel\description_label:n}}%
-               {\endlist}%
-%
-     \cs_set:Npn \description_label:n ##1
-       {
-
-         \hspace\l_phd_description_label_sep
-         \color{\l_phd_description_label_color}
-         \cs_if_exist_use:cTF {l_phd_description_label_fontfamily}{}{family}
-         \cs_if_exist_use:cTF {l_phd_description_label_fontweight}{}{weight}
-         \cs_if_exist_use:cTF {l_phd_description_label_fontshape}{}{shape}
-         \cs_if_exist_use:cTF {l_phd_description_label_fontsize}{}{size}
-        \hbox_to_wd:nn \l_phd_description_label_width {\hss##1\hskip0.5em}%
-}}%
-
-\ExplSyntaxOff
-%    \end{macrocode}
-
-% \section{In paragraph lists}
-%
-% Next we handle lists that are inline. That is they are placed within paragraph text.
-% This is similar to the \pkgname{paralist} package.
-
-%    \begin{macrocode}
-\def\phd@item[#1]{%
-  \if@noitemarg
-    \@noitemargfalse
-    \if@nmbrlist
-      \refstepcounter{\@listctr}%
-    \fi
-  \fi
-  \settowidth{\@tempdima}{#1}%
-  \ifdim\@tempdima>\z@
-    \makelabel{{#1}}
-    \nobreakspace
-  \fi
-  \ignorespaces
   }
 %    \end{macrocode}
+%
+%  The layout of the label is drawn here, by the various format commands.
+%  I allowed for commonly found formats. For other custom formatters,
+%  can be defined by the documentclasses.
+%
+%    \begin{macrocode}
+\cs_set:cpn   { inmargin } #1 { \llap{#1} }
+
+% We want the default to be indented to parindent if necessesary
+% This put in a variable
+\cs_set:cpn   { default  } #1 { \hskip1em\hbox{#1 \hss} }
+
+\cs_set:cpn   { centered } #1 { \hbox_to_wd:nn \textwidth{\hss#1\hss} }
+
+\cs_set:cpn   { phd_heading } #1 { \hbox_to_wd:nn \textwidth{#1\hss} }
+
+\cs_set_eq:cc { inline   } { default }
+
+% Can't fool TeX's parshape easily, if we are to put the contents in a plain
+% parbox, the height of the first line will appear too height if the text 
+% wraps. We need to put it a box measure it and \textit{then} zero it's
+% height and depth! 
+\cs_set:cpn   { phd_parbox } #1 {
+   \tcbox[size=minimal,
+             on~line,
+             colback=blue!1,
+             coltext=black]%
+  {
+   \sbox{0}{\parbox[t]{2.5cm}{\RaggedLeft #1}}
+    \ht0=0pt\dp0=0pt 
+   \llap{\language-1\RaggedLeft \hbox{\usebox{0}}}
+  } 
+}
+ 
+\cs_set:cpn   { phd_parbox_right } #1 {
+   \sbox{0}{\parbox[t]{2.5cm}{\RaggedRight #1}}
+    \ht0=0pt\dp0=0pt 
+   \llap{\language-1\RaggedLeft \hbox{\usebox{0}}}
+} 
+%    \end{macrocode}
+%
+% \begin{docCommand}{phd_tikzbox}{\marg{contents}}
+% \end{docCommand}
+%   We do the same with a tcbox, which proves to be somehow trickier, as it boxes and unboxes
+% on its own. A tcb box did not work, so we use the full environment! First I had
+% trouble getting it to align vertically. 
+%
+%   Eventually I resorted to \tikzname nodes. Drawback it is slower as well as it may require 
+% two runs or more. 
+%
+%    \begin{macrocode}
+\cs_set:cpn   { phd_tikzbox } #1 {
+
+\tikz[remember~picture,overlay]\node at (-5pt,0pt) [base~left,inner~sep=0pt,outer~sep=0pt,baseline,
+           text~width=2.6cm,align=flush~right,fill=blue!2]{#1};%
+} 
+%    \end{macrocode}
+%
+% \subsection{nextline label}           
+%
+% \begin{docCommand}{nextlinelabel}{\marg{label text}}
+%   The control sequence |\nextlinelabel| measures the width of the label. 
+%   If the width is longer than the label width. It will break it down
+%   and move the material on its own line.
+% \end{docCommand}
+%
+%  The idea with this macro is to make the label text wrap around onto the
+%  nextline if it is too long. This is similar to the |heading| one, but is
+%  only applied on long labels, where the |headings| apply to all. I have seen this
+%  originally using a now not so popular package \pkg{mdwlist} developed by Mark Wooding.
+%  The package it now seems unmaintained and the last documentation date is 2 May 1996.\footcite{mdwlist}
+% 
+%  I have used |\sbox|  that captures color groups properly. I capture the text
+%  and measure it using box 0. This is then compared to the amount of space we have
+%  in the labe width and if it exceeds it we set its width to zero in a series of
+%  vbox/hbox. The |\hbox{}| ensures we have the correct baselineskip. Since we set
+%  the width of the vbox to zero, it will otherwise typeset its contents over the
+%  first line text. 
+%
+%  One limitation with this layout is that the label must never exceed the current line width.
+%  
+%  \begin{description}[nextlinelabel]
+%
+%    \item [My reallly very long line that needs to wrap over.] \lorem
+%    \item[Short] {\bfseries\itshape\color{bgsexy}\lorem}
+%    \item [short] \lorem
+%
+%    \item [a bit longer] \lorem
+%
+%  \end{description}
+%  and back to normal \ldots
+%  \begin{description}
+%  \item [One] \lorem
+%  \item [Two] \lorem
+%  \end{description}
+%
+%    \begin{macrocode} 
+\cs_set:cpn   { nextlinelabel  } #1 { 
+     \sbox\z@{#1}
+     \ifdim\wd\z@>\labelwidth%
+       \setbox\z@\vbox{\box\z@\hbox{}}%
+       \wd\z@\z@%
+       \box\z@%
+     \else
+       \unhbox\z@%  
+     \fi
+     \hfil%
+}
+\ExplSyntaxOff
+%    \end{macrocode}
+%
+
+% \begin{enumerate}[enumerate continuous numbering=false]
+%   \item \docValue{phd defaults} style. This is the default style. it is used
+%     when created new environments to reset all values, before optional values
+%     overwrite these. 
+%    \begin{macrocode} 
+\cxset{phd defaults/.style={% 
+   description label font-size=normal,
+   description label font-weight=bold,
+   description label font-family= calligra,
+   description label font-shape=itshape,
+   description label color=bgsexy,
+   description label sep=0.5em,
+   description label width=0cm,
+   description margin left= 2em,    % second line parshape
+   description margin right=2em,   % second line parshape
+   description item indent = 2em,  % how much it  grows into the label
+   list parindent=1em,
+   description label format=default, %parbox right, 
+ }}
+%    \end{macrocode}
+%
+%   \item The \docValue{nextlinelabel} style.
+%
+%      This only works well with the page left margin aligned
+%      with the list |leftmargin|. Make it too long
+%          and it will disappear at the edges of the page.
 % 
 %    \begin{macrocode}
+ \cxset{nextlinelabel/.style={% 
+   description label font-size=normal,
+   description label font-weight=bold,
+   description label font-family= calligra,
+   description label font-shape=itshape,
+   description label color=bgsexy,
+   description label sep=.25em,
+   description label width=\evensidemargin,
+   description margin left= 0em,   % zero to align with left margin of page
+   description margin right=2em,   % second line parshape
+   description item indent= 5em,  % how much it  grows into the label
+   list parindent=1em,
+   description label format=nextlinelabel, %parbox right, 
+ }}
+%    \end{macrocode}
+%
+%   \item The \docValue{inmargin} style.
+%
+%     This will place the description label in the margin.
+% \end{enumerate}
+%    \begin{macrocode} 
+ \cxset{inmargin/.style={% 
+   description label font-size=normal,
+   description label font-weight=bold,
+   description label font-family= calligra,
+   description label font-shape=itshape,
+   description label color=bgsexy,
+   description label sep=0em,
+   description label width=0cm,
+   description margin left= 0pt,    
+   description margin right=25pt,   
+   description item indent = 0pt,  
+   list parindent=1em,
+   description label format=tikzbox, 
+ }}
+%    \end{macrocode}
+%
+% The description environment is defined in the classes, we redefine it here.
+% We also check for its existence before we redefine it.
+%
+% \begin{docCommand}{NewDescriptionList}{\marg{environment name}\oarg{options}}
+%   will create a new environment that will take three arguments
+%   star, option and mandatory. The DeclareDocumentEnvironment is from 
+%   l3 xparse.
+% 
+% \end{docCommand}
+%    \begin{macrocode}
 \ExplSyntaxOn
-\cs_set:Npn \inparaenum 
+\DeclareDocumentCommand\NewDescriptionList { m o }
+{
+  \DeclareDocumentEnvironment{#1} { o }
+    { 
+      \IfNoValueTF {##1} 
+        { 
+          \cs:w phd_#1_list_do_aux\cs_end: {#2,}
+        } 
+        { 
+          \cs:w phd_description_list_do_aux\cs_end: {#2,##1} 
+        }
+    }
+    {\endlist}
+%    \end{macrocode}
+% The star version of the command reverts back to standard latex list.
+%    \begin{macrocode}
+    \DeclareDocumentEnvironment{#1*} { }
+     { 
+      \cs_if_exist:cTF {}{}{}
+      \latexlist
+     }
+     {\endlist}
+}
+
+
+\NewDescriptionList{testlist}[tikzbox]
+\NewDescriptionList{description}[phd~defaults]
+
+
+\def\latexlist {
+\list{}{
+       \labelwidth\z@ 
+       \itemindent-\leftmargin 
+       \let\makelabel\descriptionlabel 
+       }
+  }
+%    \end{macrocode}
+% \begin{description*}
+%  \item [\bf One] This is a LaTeX list.
+%  \item [\bf One] This is a LaTeX list.
+% \end{description*}
+%  This is the workhorse of the label typsetting. It calls the kernel's list
+%  with the appropriate parameters.
+%    \begin{macrocode}
+\cs_set:cpn {phd_description_list_do_aux} #1 {
+   \list{}
+          { \cxset{#1}%
+            \listparindent = \l_phd_description_list_parindent
+            \leftmargin    = \l_phd_description_leftmargin_dim
+            \rightmargin   = \l_phd_description_rightmargin_dim
+            \itemindent    = \l_phd_description_item_indent
+            \labelwidth    = \l_phd_description_label_width
+            \labelsep      = \l_phd_description_labelsep_dim
+            \parsep        = 3pt\relax
+            \itemsep       = 5pt\relax
+            \itemindent-\leftmargin
+            
+            \cs_set_eq:NN \makelabel \description_label:n
+          }
+}
+
+
+\ExplSyntaxOff
+%    \end{macrocode}
+%
+%
+% \section{In paragraph lists}
+%
+%   Next we handle lists that are inline. That is they are placed within paragraph text.
+% This is similar to the \pkgname{paralist} package.\footcite{paralist} The developer,
+% \citeauthor{paralist} developed numerous environments for enumeration within
+% paragraphs. Another similar package by \citeauthor{shortlst} offers similar facilities
+% as well as comapct lists and a short list environment that looks like a a tabular.\footcite{shortlst}
+%
+% Bezos in \pkgname{enumitem}\footcite{enumitem} uses the star version of the standard list environments.
+% Using |enumitem| with the package option \docValue{inline}, three environments for inline lists are defined:
+% enumerate*, itemize*, and description*. They emulate the behaviour of paralist and
+% shortlst in that labels and settings are shared with the displayed (ie, \enquote{normal}) lists enumerate,
+% itemize and description, respectively (however, remember resuming is based on environment
+% names, not on list types). This applies only to those created with inline – inline lists created
+% with |\newlist| are independent and use their own labels and settings. 
+%
+\endinput
+%    \begin{macrocode}
+\ExplSyntaxOn
+
+ \DeclareDocumentCommand\makeinline{ m } 
+ {
+	\cs_set:cpn {phd_item} [##1] {%
+  		\if@noitemarg
+    		\@noitemargfalse
+    		\if@nmbrlist
+      		\refstepcounter{\@listctr}%
+    		\fi
+  		\fi
+  		\settowidth{\@tempdima}{##1}%
+  		\ifdim\@tempdima>0pt
+    		\makelabel{{##1}}
+   		 1\nobreakspace
+  		\fi
+  		\ignorespaces
+  	}
+ 
+	% makes environment \inpar etc \endpar
+	\cs_new:cpn {#1} 
   {
     \ifnum\@enumdepth>3
       \@toodeep
     \else
       \int_incr:N \@enumdepth
-      \cs_set:Npx \@enumctr 
+      \cs_set:Npn \@enumctr 
          {
-           enum\romannumeral\the\@enumdepth
+           enum\romannumeral\the\@enumdepth\relax
          }
     \fi
-    \@ifnextchar[{\@enumlabel@}{\list_in_paragraph_aux:}
-}
-  
-\cs_set:Npn \list_in_paragraph_aux: 
-  {
+  \@ifnextchar[{\@enumlabel@}{{\list_#1_aux}}
+  } 
+%    \end{macrocode}
+%
+% This is the typesetter for the label.
+% It calls <label>@enumctr and then calls |makelabel|.
+% It also restores the definition of |\@item| back to its
+% original. 
+%
+%    \begin{macrocode}
+	\cs_set:Npn \list_#1_aux 
+ 	 {
     \usecounter{\@enumctr}
+    
     \cs_set:Npn \@itemlabel 
       {
         \cs:w label\@enumctr \cs_end:
       }
-    \cs_set_eq:NN \@item \phd@item
-    \cs_set:Npn \makelabel ##1 {##1}
+    \cs_set_eq:NN \@item \phd_item
+    
+    % set the key properties here
+   
+    \cxset{compact1}
+    \cxset{enumerate~numberingi = alpha }
+    \cs_set_eq:Nc \makelabel {phd_makelabel}
     \ignorespaces
-  }
-  
-\let\endinparaenum\ignorespacesafterend
-\ExplSyntaxOff
+  	}
+ 
+% In the label we can set all the keys as for the enumerate 
+% environment or best to make new ones.   
+	\cs_set:cpn {phd_makelabel} ##1 
+  		{  
+  		  \show #1
+     	  \itshape ##1
+  		}  
 %    \end{macrocode}
+%
+% We finish the environment by ignoring spaces after the end. 
+%
+%    \begin{macrocode}  
+\cs_set_eq:cN {end_#1}\ignorespacesafterend 
+		
+} % end of factory
 
-% This paragraph has an enumerated list \begin{inparaenum} \item[a)] test \item test \item test. \end{inparaenum}
-
+\makeinline{inparaenum}
+\makeinline{inparenum}
+\makeinline{inpar}		
+		\ExplSyntaxOff
+%    \end{macrocode}
+%
+% Testing to remove any left-over issues!
+% \begin{testlist}[inmargin]
+%   \item[First Box that needs to wrap in the margin] testing new environment. \lorem*
+%  
+%  is an in paragraph list.
+% \end{testlist}
+%
+% % \begin{testlist*}
+%   \item[First Box that needs to wrap in the margin] testing new environment. The next line
+%  
+%  is an in paragrap11h list.
+% \end{testlist*}
+% \Finale
+% \PrintIndex 
+% \PrintChanges
 %</LISTS>
 \endinput

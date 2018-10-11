@@ -1,7 +1,7 @@
 \chapter{Unicode}
 
 Unicode is an encoding of \textit{characters}, and it is the first encoding that took the trouble to define what a
-\textit{character} is. The distinction between a character and a \textit{glyph} has come to be of interest een to philosophers with the Japanese philosopher Shigeki Moro to say that Unicode’s approach is Aristotelian essentialist. 
+\textit{character} is. The distinction between a character and a \textit{glyph} has come to be of interest to philosophers with the Japanese philosopher Shigeki Moro to say that Unicode’s approach is Aristotelian essentialist. 
 
 In this book we adopt the practical definition given by Spyropoulos in his book Unicode \& Encodings. 
 
@@ -15,4 +15,124 @@ In this book we adopt the practical definition given by Spyropoulos in his book 
 \section{Unicode's Principles.}
 
 Unicode subscribes to ten principles.
+
+\medskip
+\begin{tabular}{ll}
+Universal repertoire &Logical order\\
+Efficiency &Unification\\
+Characters, not glyphs &Dynamic composition\\
+Semantics &Stability\\
+Plain Text &Convertibility\\
+\end{tabular}
+\medskip
+
+
+The character sets of many existing international, national and corporate standards are incorporated within the Unicode Standard. For example, its first 256 characters are taken from the widely used Latin-1 character set.
+
+Duplicate encoding of characters is avoided by unifying characters within scripts across languages; characters that are equivalent in form are given a single code. Chinese/Japanese/Korean (CJK) consolidation is achieved by assigning a single code for each ideograph that is common to more than one of these languages. This is instead of providing a separate code for the ideograph each time it appears in a different language. (These three languages share many thousands of identical characters because their ideograph sets evolved from the same source.)
+
+The Unicode Standard specifies an algorithm for the presentation of text with bidirectional behavior, for example, Arabic and English. Characters are stored in logical order. The Unicode Standard includes characters to specify changes in direction when scripts of different directionality are mixed. For all scripts Unicode text is in logical order within the memory representation, corresponding to the order in which text is typed on the keyboard.
+
+
+\section{Unicode Character Database}
+
+Unicode provides all the raw data in its database in the form of specially formatted text files.\footnote{\url{http://www.unicode.org/reports/tr44/tr44-20.html\#Unicode_10.0.0}}
+
+\newfontfamily\panuni{aegean}
+
+\section{Character Data}
+
+Each character is defined by a unique codepoint. Unicode does not care about how it looks, but how it is described, so each character is defined by a unique codepoint.  In addition every character has a number of properties associated with it that defines how a character is to be used by various processes. Below we illustrate some of these properties by parsing a single unicode point, using a custom Lua script.
+
+\bgroup
+\parindent=0pt
+\begin{multicols}{2}
+\small
+\panuni
+\luadirect{
+   dofile("./i18n/parseunicode.lua")
+}
+\end{multicols}
+\egroup
+
+
+Among the properties that each character has are:
+
+\begin{enumerate}
+\item The character’s code-point value and name.
+
+\item The character’s general category. All of the characters in Unicode are grouped into 30 categories,
+17 of which are considered normative. The category tells you things like whether the character is
+a letter, numeral, symbol, whitespace character, control code, etc.
+
+\item The character’s decomposition, along with whether it’s a canonical or compatibility
+decomposition, and for compatibility composites, a tag that attempts to indicate what data is lost
+when you convert to the decomposed form.
+
+\item The character’s case mapping. If the character is a cased letter, the database includes the mapping
+from the character to its counterpart in the opposite case.
+
+\item For characters that are considered numerals, the database includes the character’s numeric value.
+(That is, the numeric value the character represents, not the character’s code point value.)
+
+\item The character’s directionality. (e.g., whether it’s left-to-right, right-to-left, or takes on the
+directionality of the surrounding text). The Unicode Bidirectional Layout Algorithm uses this
+property to determine how to arrange characters of different directionalities on a single line of
+text.
+
+\item The character’s mirroring property. This says whether the character take on a mirror-image glyph
+shape when surrounded by right-to-left text.
+
+\item The character’s combining class. This is used to derive the canonical representation of a character
+with more than one combining mark attached to it (it’s used to derive the canonical ordering of
+combining characters that don’t interact with each other).
+
+\item The character’s line-break properties. This is used by text rendering processes to help figure out
+where line divisions should go.
+
+\item  Many more… 
+\end{enumerate}
+
+
+Most of the information for each character is obtained from UnicodeData.txt. This file contains most of the  
+Unicode Character Database. As the database has grown, and as supplementary information has been
+added to the database, various pieces of it have been split out into separate files, but the most
+important parts of the standard are still in UnicodeData.txt. 
+
+\section{Code Point Ranges}
+
+A range of code points is specified by the form |"X..Y"|.
+Each code point in a range has the associated property value specified on a data file. For example (from \docFile{Blocks.txt}),
+
+
+\begin{dispListing}
+0000..007F; Basic Latin
+0080..00FF; Latin-1 Supplement
+\end{dispListing}
+
+Block ranges are different from Scripts which are defined in the \docFile{Scripts.txt} file. A block range is defined by a range of hexadecimal codepoints. 
+
+All block ranges start with a value where |(cp MOD 16) = 0|,
+  and end with a value where |(cp MOD 16) = 15|. In other words,
+  the last hexadecimal digit of the start of range is |...0|
+  and the last hexadecimal digit of the end of range is |...F.|
+  This constraint on block ranges guarantees that allocations
+  are done in terms of whole columns, and that code chart display
+  never involves splitting columns in the charts.
+
+  All code points not explicitly listed for Block
+  have the value |No_Block|.
+
+The advantage for providing the database in specially formatted text files, is that they can be parsed into any computer language easily. In our case I have parsed the files both using Lua, as well as modified variants using \latexe. 
+The only frustration is to make sure the files are somewhere where |texlua| can find them. 
+
+The list of all the blocks can be obtained and typeset using the |phdlua| modules and is shown next.
+
+{\parindent0pt
+\leavevmode\luadirect{dofile("./i18n/parseunicodeblocks.lua")}
+}
+
+We can use the same module to determine the current total unicode points and blocks defined by UNICODE.
+
+
 

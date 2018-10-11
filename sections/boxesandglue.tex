@@ -30,12 +30,13 @@ is flexible space that can stretch and/or shrink by amounts that are under
 user control.
 
 \begin{figure}[h]
-\centering
 \hbox{\drawfontbox{Qwerty}\drawfontbox{fjord}}
 \caption{Everything is boxes.}
 \end{figure}
 
+\begin{center}
 \printfontparams
+\end{center}
 
 \section*{Boxes}
 
@@ -51,10 +52,8 @@ Boxes and glue are the main tools of \tex. The box can hold text and other items
 
 
 
-\begin{minipage}{\linewidth}
 \textbf{One important feature of \tex is that it has no knowledge of the shape of the characters it typesets, just the dimensions of each character box.}
-\end{minipage}
-\medskip
+
 
 When \tex is typesetting, it is normally in horizontal mode, such as while
 it is working on this paragraph. Otherwise, \tex can be in vertical mode, or
@@ -117,7 +116,7 @@ sp &scaled point: &1 pt is exactly $2^{16}$ = 65536 sp.\\
 
 The units can be separated from their numeric value with optional space, so
 \texttt{3pc} and \verb*+3 pc+ are equivalent. The little half box in the latter is a convenient
-way to indicate explicit spaces in typewriter text. It can be printed by typing \cmd{char32}.
+way to indicate explicit spaces in typewriter text. It can be printed by typing \cmd{\char32} and a suitable font or using |\textvisiblespace|.
 
 Internally, \tex\ stores dimensions as integral numbers of scaled points:
 1 sp is tiny ---  smaller than the wavelength of visible light.\footnote{The visible light has wavelengths from 380--450 nm for violet up to 620--750 nm for red (sp = 280 nm} It is sometimes
@@ -131,7 +130,7 @@ and the uppermost bit is needed for a sign (0 for plus, 1 for minus). That
 leaves 15 bits to hold an integral number of points, but TEX only expects 14
 to be used, so that addition of two dimensions does not overflow. Thus, the
 largest dimension in TEX is exactly 214 + (1 26) points, or about 5.758  
-meters or 18.89 feet.
+meters or 18.89 feet. 
 
 \tex has several kinds of special storage locations, called registers, numbered
 from 0 to 255. For example,\cs{dimen0} can hold a fixed dimension,
@@ -141,15 +140,10 @@ recognized by \tex.
 Here is how you can assign a dimension to a register, and then have \tex
 display it back for you:
 
-\begin{teXXX}
-\dimen1 = 25.4mm (*@\protect\footnote{You shouldn't assign dimenensions to primitive registers, but rather use one of the allocation schemes provided by LaTeX to do so.}  @*)
+\begin{dispListing}
+\dimen1 = 25.4mm (*@\protect\footnote{You shouldn't assign dimenensions to primitive registers, but rather use one of the allocation schemes provided by \latex to do so.}  @*)
 \the\dimen1
-\end{teXXX}
-
-This will result in
-\dimen1 = 25.4mm
-
-\the\dimen1
+\end{dispListing}
 
 
 Notice that \tex’s output is always in points, showing that it converts different
@@ -186,14 +180,16 @@ called \cs{skip0} through \cs{skip255}. Here is how you can save glue settings i
  registers, and ask \tex to display the contents of one of them:
 \end{docCommand}
 
-\begin{teX}
+\begin{texexample}{Skip counters}{ex:skipcounters}
+\bgroup
   \skip1 = 10pt
   \skip2 = 10pt plus 3pt
   \skip3 = 10pt minus 2pt
   \skip4 = 10dd plus 3dd minus 2dd
-  \showthe \skip4
-  > 10.70007pt plus 3.21002pt minus 2.14001pt.
-\end{teX}
+  \the\skip4
+  % 10.70007pt plus 3.21002pt minus 2.14001pt.
+\egroup  
+\end{texexample}
 
 
 The four sample glue settings store, respectively, \textit{fixed glue}, \textit{stretchable
@@ -232,13 +228,19 @@ are always converted on input back to the original binary numbers from
 whence they came. For more on the story of \tex’s I/O conversions, see [3].
 
 
-Both \tex and \latex define a number of predefined dimensions and these are discussed in the relevant Chapters discussing the \latex kernel. For example you might have come across the \cs{jot}, which is defined by \latex as:
+Both \tex and \latex define a number of predefined dimensions and these are discussed in the relevant Chapters discussing the \latex kernel. For example you may come across the \docAuxCommand{jot}, which is defined by \latex as:
 
-\begin{teXX}
+\begin{teX}
 \newdimen\jot
-This is some sample text with a one |\jot| left indentation. Which is really too small to see in a paragraph.
 \jot=3pt
-\end{teXX}
+\end{teX}
+
+\begin{texexample}{jot}{ex:jot}
+\bgroup
+\parindent\jot
+This is some sample text with a one |\jot| left indentation. Which is really too small to see in a paragraph.
+\egroup
+\end{texexample}
 
 Defining |\parindent=jot| we can see that the indentation almost disappeared. This is obvious since |\jot| is used normally for maths.
 
@@ -289,10 +291,16 @@ This is a preset |mu| glue. |\medmuskip = 4mu plus 2mu minus 4mu| for use
 with |\mskip|. This is \hbox{\strut\vrule$\mskip\medmuskip$\vrule}.
 \end{texexample}
 
+So far we have been using in our examples the primitive \tex |\skip| to allocate
+skip registers. This is dangerous, as they might have been defined elsewhere and our
+definitions will overwrite them. Plain \tex and \latexe provide an allocation scheme
+where this is done automatically. 
 
 \begin{docCommand}{newskip}{}
 The command \cs{newskip}\meta{skip name} assigns a new skip or glue register to
-the name |\<skip name>|. Glue values may be assigned to it by |\<skip name> [=] <glue>|.
+the name |\<skip name>|. 
+
+Glue values may be assigned to it by |\<skip name> [=] <glue>|.
 This assigns a new muskip or muglue register to the name |\<muskip name>|. Glue
 values may be assigned to it by |\<muskip name> [=] <muglue>|.
 
@@ -360,7 +368,7 @@ given as an explicit dimen, even when it is zero. The ability of \TeX to stretch
 
 
 
-\subsection*{hfil and hfill}
+\subsection{hfil and hfill}
 
 {\obeylines
 {This text will be flush left.\hfil}
@@ -475,7 +483,10 @@ and we use that feature shortly):
 \section{Horizontal and vertical boxes}
 
 
-\noindent \lettrine{L}{ike} their dimensions \TeX's boxes are not what one thinks when thinking of boxes. TeX's boxes come in basically two flavours, horizontal boxes and vertical boxes. An \cs{hbox} is created by the command |\hbox{material}|. It has the following properties:
+\begin{docCommand}{hbox}{\marg{material}}
+\end{docCommand}
+
+Like their dimensions \TeX's boxes are not what one thinks when thinking of boxes. TeX's boxes come in basically two flavours, horizontal boxes and vertical boxes. An \cs{hbox} is created by the command \refCom{hbox}\marg{material}. It has the following properties:
 
 \begin{enumerate}
 \item The material is placed from left to right and it becomes a \textit{horizontal list}.\index{horizontal list}
@@ -483,6 +494,53 @@ and we use that feature shortly):
 \end{enumerate}
 
 An |hbox| can contain, characters, horizontal glue, horizontal leaders or other boxes. While in many cases these other boxes can be other |\hbox|es, |\vbox| can be used.
+
+
+The \refCom{hbox} command has another form |\hbox to <dimen>|\marg{material}. This
+creates a box whose width is the given (dimen). Thus |\hbox to lcm{<material>}|
+will create a 1 inch wide box \hbox to 1cm{text}. However, we have to supply exactly 1 cm worth of
+material to fill up the box; otherwise we end up with an error message. It is best
+to consider this form of the command as a promise; we promise '\tex that we will
+supply just enough material to fill up the box. 
+
+We can place other hboxes in an hbox. By adding glue we can then move them left or right
+
+\begin{texexample}{hbox and glue}{ex:hbox}
+\bgroup
+\Huge
+\hbox to \textwidth{\hfill \hbox{\EOofficerI}\hbox{\EOofficerII}\hbox{\EOofficerIII} \hfill}
+
+\hbox to \textwidth{\hfill \hbox{\EOofficerI}\hbox{\EOofficerII}\hbox{\EOofficerIII} \hfil}
+
+\hbox to \textwidth{\hfill \hbox{\EOofficerI}\hfill \hbox{\EOofficerII}\hfill \hbox{\EOofficerIII} \hfill}
+\egroup
+\end{texexample}
+
+The last command that affects the shape of an |\hbox| is 'spread(dimen)', which
+spreads the box beyond its natural width. An |\hbox spread12pt|{(material)}
+makes the box 12 points wider than its natural size. If the material in the box has
+no flexibility, it cannot spread to fill up the additional space, resulting in an underfull
+box. This is why 'spread' is normally used with flexible glues.
+
+\begin{texexample}{hbox and glue}{ex:hbox}
+\bgroup
+\LARGE
+\hbox to 5cm{\EOofficerI\EOofficerII\hfill\EOofficerIII}
+
+\hbox spread5cm{\hfill\EOofficerI\hfill\EOofficerII\hfil\EOofficerIII}
+
+\hbox spread9cm{\EOofficerI\hfill\EOofficerII\hfil\hfil\EOofficerIII}
+
+\hbox spread7cm{\EOofficerI\hfill\EOofficerII\hfil\hfil\EOofficerIII} 
+
+
+\makeatletter
+\hb@xt@ 5cm {\EOofficerI\EOofficerII\hfill\EOofficerIII}
+\makeatother
+\egroup
+\end{texexample}
+
+
 
 Boxes can be moved up or down using |\raise| or |\lower|. Each of these primitives is followed by a dimension indicating how far the box can be lowered or raised.
 
@@ -544,21 +602,30 @@ using |\unhbox|, which is a horizontal command.
 
 \section{Kerning}
 
-\begin{multicols}{2}
+
 Using the command \cs{kern}, we can move boxes either left or right. Kerning is extensively used to build internal commands and we discuss it in more detail under the chapter for fonts.
 
+\begin{docCommand}{kern}{\meta{dimen}}
+A |\kern| is similar to glue [75], with two differences: (1) |\kern| is rigid; (2)
+|\kern| specifies a point where a line, or a page, should not be broken. Since a box is
+indivisible anyway, |\kern| is used in a box to indicate rigid spacing. It is interesting
+to note that the same command, |\kern|, indicates horizontal spacing when used in
+an |\hbox| and indicates vertical spacing when used in a |\vbox|.
+\end{docCommand}
 Consider two horizontal boxes, holding the letters A and V:
 As you can observe, the letters AB are a bit afar, from what would be a visually pleasant arrangement, we can kern them as follows:
 \medskip
+
 \begin{teXXX}
 \hbox{\Huge AV A\kern-5ptV}
 \end{teXXX}
 \medskip
-Note that hbox, does not produce a frame. I~have used a frame |\fbox|, which will cover a bit later as well as scaled the image by 2, in order to see the effects more clearly.
-\columnbreak
 
-\centerline{\scalebox{2}{\hbox{\hbox{\huge A}\hbox{\huge V}}} \scalebox{2}{\hbox{\hbox{\huge A}\kern-5pt\hbox{\huge V}}}}
-\end{multicols}
+Note that hbox, does not produce a frame. I~have used a frame |\fbox|, which will cover a bit later as well as scaled the image by 2, in order to see the effects more clearly.
+
+
+\drawfontbox{\upshape\Huge FJord F\kern-5pt Jorp}
+
 
 
 
@@ -619,51 +686,50 @@ Notice that an |\hbox| is constructed by setting its components side by side so 
 \noindent\rule{\linewidth}{0.4pt}
 }
 
-\clearpage
 
-\begin{multicols}{2}
+
 \noindent\textbf{Vertical boxes.}\quad A vertical box is build in a similar manner to that of a horizontal list, except it is composed of material in the \textit{vertical list}.
 When horizontal boxes are added in the list, they are stuck on top of each other as shown in the example below. 
 \medskip
-\begin{teXXX}
-\vbox{\hsize=0.8cm\hbox{A} \hbox{AB}} 
-\end{teXXX}
-\columnbreak
+
 \bgroup
 \parindent0pt
 \fbox{\vbox{\hsize=3cm\fbox{\hbox{ABCDEFGH}} \fbox{\hbox{AB}}}}
 \egroup
-\end{multicols}
 
-\begin{multicols}{2}
+
+\begin{docCommand}{vbox}{ to \meta{dimen}\marg{\meta{material}}}
+Typesets a box in vertical mode.
+\end{docCommand}
+
 It is important to remember the two main differences between hboxes and vboxes. An hbox will expand to hold its material. If it need be it will overfill the line and produce an overful warning. A vbox will expand to hold its material. It is perfectly normal for a vbox to hold paragraphs, as shown. This is not possible with an hbox. However, the common pattern is for an |\hbox| to contain a |vbox| .
 
-\columnbreak
-
+\begin{texexample}{hbox/vbox example}{ex:vbox}
 \noindent\fbox{\vbox{\lorem\par\lorem\par}}
-\end{multicols}
+
+\hbox to \linewidth{\vbox{\lorem\par\lorem\par}}
+\end{texexample}
 
 
+\begin{docCommand}{hsize}{\meta{dimen}}
+ Controls the width of text in a |vbox|.
+\end{docCommand}
 
-\topline
-\begin{multicols}{2}
 \noindent\textbf{Controlling the size of a vbox.}\quad What controls the size, is the containing environment. This in TeX, is specified using |\hsize|. In LaTeX this is controlled by an enclosing environment, maybe a minipage (which is build this way) or one of the page width parameters.
-\end{multicols}
-
 
 
 \begingroup
 \parindent0pt
 \fboxsep5pt
-\hsize=3.8cm\footnotesize
-\hfil\fbox{\vbox{\lorem\par}} 
-\hfil\fbox{\vbox{\lorem\par}}
-\hfil\fbox{\vbox{\lorem\par}}\hfill
+\hsize=3.9cm\footnotesize
+\hfil\fbox{\vbox{\RaggedRight\lorem\par}} 
+\hfil\fbox{\vbox{\RaggedRight\lorem\par}}
+\hfil\fbox{\vbox{\RaggedRight\lorem\par}}\hfill
 \endgroup
 \captionof{figure}{Output to demonstrate the use of vboxes.}
 
 
-\begin{multicols}{2}
+
 The code to typest the boxes shown above follows:
 \medskip
 \emphasis{hsize}
@@ -677,10 +743,10 @@ The code to typest the boxes shown above follows:
 \hfill
 \egroup
 \end{teXXX}
-\columnbreak
+
 
 Note, the use of \docAuxCommand{hsize}. We define the font size as |\footnotesize|. We have done this in order not to have overfull boxes--Latin words don't have a full set of hyphenation patterns in \latex. The macro |\lorem|, we have defined internally for this document. We place the code in a group in order not to affect the rest of the document.
-\end{multicols}
+
 
 
 \clearpage
@@ -779,30 +845,68 @@ Study the example a bit more carefully, as we have said earlier on that \cs{hbox
 So if we had only three images in hboxes we will get:
 
 \begin{texexample}{Three Images Lined}{}
-\leavevmode
-\parindent30pt
+%\leavevmode
+%\parindent30pt
 \hbox{\includegraphics[width=1.5cm]{./images/amato.jpg}}%
 \hbox{\includegraphics[width=1.5cm]{./images/amato.jpg}}%
 \hbox{\includegraphics[width=1.5cm]{./images/amato.jpg}}%
 \end{texexample}
+
+An hbox does not start a paragraph. If we started a paragraph the behaviour will be different.
+
+\begin{texexample}{Three Images Lined}{}
+.\hbox{\includegraphics[width=1.5cm]{./images/amato.jpg}}%
+\hbox{\includegraphics[width=1.5cm]{./images/amato.jpg}}%
+\hbox{\includegraphics[width=1.5cm]{./images/amato.jpg}}%
+\end{texexample}
+
+If you notice carefully, we have started the paragraph by inserting a `.' before the first |\hbox|, an alternative way is to 
+use |\leavevmode|. The effect of this command is to leave vertical mode, and to enter horizontal mode. Thus, if the mode is vmode (typically, outside any paragraph), a new paragraph is started. This paragraph may be flushed left, flushed right. 
+
+\begin{texexample}{Three Images Lined}{}
+\leavevmode
+\hbox{\includegraphics[width=1.5cm]{./images/amato.jpg}}%
+\hbox{\includegraphics[width=1.5cm]{./images/amato.jpg}}%
+\hbox{\includegraphics[width=1.5cm]{./images/amato.jpg}}%
+
+\meaning\leavevmode
+\end{texexample}
+
+The macro |\leavevmode| as its name implies forces \tex to leave vertical mode and enter horizontal mode. In this case the photos are just treated by \tex similarly to any character and tehy are typeset next to each other. 
 
 \begin{docCommand}{kern}{}
 If we wanted to add a bit of space between the horizontal images, we could use \cs{kern}
 Kern again. This is from the book TeX for The Impatient page 157. You can use kern in math mode, but you cannot use the \texttt{mu} units. If you want to use \texttt{mu} units use \cs{mkern} instead.
 \end{docCommand}
 
+\emphasize{kern}
 \begin{texexample}{}{}
-   \fboxsep=0pt
-   \fbox{%
-          \vtop{\medskip
-                    \hfill
-                      \hbox{\includegraphics[width=1.5cm]{./images/amato.jpg}}\kern10pt
-                      \hbox{\includegraphics[width=1.5cm]{./images/amato.jpg}}\kern10pt
-                      \hbox{\includegraphics[width=1.5cm]{./images/amato.jpg}}%    
-                    \hfill 
-                   \medskip%
-                }%
-   }%
+\leavevmode
+\hbox{\includegraphics[width=1.5cm]{./images/amato.jpg}}\kern10pt
+\hbox{\includegraphics[width=1.5cm]{./images/amato.jpg}}\kern10pt
+\hbox{\includegraphics[width=1.5cm]{./images/amato.jpg}}%
+\end{texexample}
+
+One needs to be careful as to where you issue |\leavevmode|. If it is in the middle of a paragraph it will have no effect.
+\emphasize{This,is,some,text}
+\begin{texexample}{Example with leavevmode}{}
+This is some text
+\leavevmode
+\hbox{\includegraphics[width=1.5cm]{botticelli-34.jpg}}\kern10pt
+\hbox{\includegraphics[width=1.5cm]{botticelli-34.jpg}}\kern10pt
+\hbox{\includegraphics[width=1.5cm]{images/botticelli-34.jpg}}%
+\end{texexample}
+
+A very common way in \latex2e is to issue a |\par| command before |\leavevmode| to avoid this problem. Another way is to use
+one of the |\ifvmode| or |\ifhmode| and act accordingly. We now fix our example and get what we want. 
+
+\emphasize{par}
+\begin{texexample}{}{}
+This is some text
+\par\leavevmode
+\hbox{\includegraphics[width=1.5cm]{botticelli-34.jpg}}\kern10pt
+\hbox{\includegraphics[width=1.5cm]{botticelli-34.jpg}}\kern10pt
+\hbox{\includegraphics[width=1.5cm]{images/botticelli-34.jpg}}%
 \end{texexample}
 
 \begin{texexample}{}{}
@@ -936,7 +1040,7 @@ The macro puts its argument into an hbox and underlines it.
 
 \smallskip
 
-\hfill\underbar{1,000,788.22}\hfill
+\hfill\[\underbar 1,000,788.22 \]\hfill
 \end{minipage}
 
 \medskip
@@ -1048,10 +1152,6 @@ Here is a short example. We define a `oneLineBox`, which is simply an hbox with 
 
 
 
-
-
-
-
 \parindent1em
 
 
@@ -1091,7 +1191,7 @@ produces a box whose (invisible) outline looks like this:
 
 \hbox to 50pt {\vrule height 20pt depth 10pt width 0pt \it Great}
 
-\drawfontbox{\vrule height20pt depth 10pt width 1pt fjord}
+\drawfontbox{\kern 5pt\vrule height20pt depth 10pt width 1pt fjord}
 
 The
 three extents of the vertical rule can appear in any order, and any convenient
@@ -1105,9 +1205,12 @@ something like it on pp. 223 and 321.
 
 One particular zero-width vertical rule is convenient for ensuring that
 separate boxes all get the same height and depth. It has the height and
-depth of parentheses in the normal prose font, and is given the macro name \docAuxCmd{strut}.
+depth of parentheses in the normal prose font, and is given the macro name \refCom{strut}.
 Its definition in the plain.tex file of macro definitions is roughly
 equivalent to this:
+
+\begin{docCommand}{strut}{}
+\end{docCommand}
 
 \begin{teX}
   \def \strut {\vrule height 8.5pt depth 3.5pt width 0pt}
@@ -1226,16 +1329,18 @@ We can aslo center the text for both lines, by modifying the code slightly.
 
 \chapter{Boxes with \protect\LaTeXe}
 
-The \tex primitive commands have been abstracted by \latexe into more user friendly commands that are easier to use. One other reason for using these \LaTeX\ commands is that they are "color safe". Later on we will see other possibilities given by the \pkgname{color} or \pkgname{xcolor} package for drawing colored boxes, but we want to recall that the code for |\makebox| and the like has already a protection mechanism for colors, which the primitive commands do not have. \latexe also provides boxes that are self-aware of the width of their contents. For example |\fbox| will frame its contents in an |\hbox|. This simple task is very convoluted to achieve using basic \tex commands. 
+The \tex primitive commands have been abstracted by \latexe into more user friendly commands that are easier to use. One other reason for using these \LaTeX\ commands is that they are ``color safe''. Later on we will see other possibilities given by the \pkgname{color} or \pkgname{xcolor} package for drawing colored boxes, but we want to recall that the code for |\makebox| and the like has already a protection mechanism for colors, which the primitive commands do not have. \latexe also provides boxes that are self-aware of the width of their contents. For example |\fbox| will frame its contents in an |\hbox|. This simple task is very convoluted to achieve using basic \tex commands. 
 
-\begin{docCommand}{framebox} {}
+\begin{docCommand}{framebox} {\marg{dim}}
 One useful box command provided by \latex2e is \cmd{\framebox}. This command builds a box with any material you want to provide it with. The contents of this box are unbreakable, and as far as \tex is concerned it is treated the same way as it would treat a letter. 
 \end{docCommand}
-\begin{docCommand}{fboxsep}{}
-\begin{docCommand}{fboxrule}{}
+
+\begin{docCommand}{fboxsep}{\marg{dim}}
+\end{docCommand}
+\begin{docCommand}{fboxrule}{\marg{dim}}
 Two associated lengths control the width of the rule and the space around the contents. We can change their default value by using |\setlength{\fboxsep}{0pt}| or just simply |\fboxsep=0pt| or even |\fboxsep0pt|. 
 \end{docCommand}
-\end{docCommand}
+
 
 Another interesting property is this: \emph{the contents of a box need not lie inside it}. You may have
 noticed that, given the contents as an argument, the
@@ -1244,12 +1349,14 @@ to those of the contents (in reality, to the ``sub-boxes"
 that compose the contents). But you can define the
 dimensions explicitly as well. For example,
 
-\begin{scriptexample}[]{}
+\begin{texexample}{framebox example}{ex:framebox}
 |\framebox[13em]{Some text}|
 
 \framebox[13em]{Some text}
 
-\end{scriptexample}
+\fcolorbox{theblue}{cyan}{Some text}
+
+\end{texexample}
 
 The box as is shown in the example will not break and it occupies more space than its contents. A second optional command allows us to typeset the contents, left, center or right.
 
@@ -1395,31 +1502,32 @@ box to get output like this:
 
 \begin{texexample}{}{}
 
-\parbox[b][120pt][t]{100pt}{\lorem}%
+\parbox[b][120pt][t]{130pt}{\lorem}%
 \hspace{1cm}%
-\parbox[b][120pt][t]{100pt}{Only some short line of text here.}%
+\parbox[b][150pt][t]{130pt}{Only some short line of text here.}%
 
 
 
-\parbox[b][100pt][t]{100pt}{\lorem}\hspace{1cm}\parbox[b][100pt][c]{100pt}{Only some short line of text here.}
+\parbox[b][120pt][t]{130pt}{\lorem}\hspace{1cm}\parbox[b][120pt][c]{130pt}{Only some short line of text here.}
 
 \end{texexample}
 
 
-\section*{The minipage environment}
+\section{The minipage environment}
 
 Another kind of paragraph box can be obtained in a more general, and
-more powerful, way with the minipage environment:
+more powerful, way with the \docAuxEnv{minipage} environment:
 
-\begin{teX}
+\emphasis{minipage}
+\begin{phdverbatim}
 \begin{minipage}[position]{width}
    contents
-\end{minipage}
-\end{teX}
+\end{minipage}   
+\end{phdverbatim}
 
 
-The positioning works just like that for \verb+ \parbox+, with alignment letters b
-and t, and if they are omitted, a default of vertical centering.
+The positioning works just like that for \verb+\parbox+, with alignment letters \textbf{b}
+and \textbf{t}, and if they are omitted, a default of vertical centering.
 In particular, verbatim text produced with the verb command is illegal
 in macro arguments, so it cannot be used with \cs{fbox}, \cs{framebox}, \cs{makebox},
 \cs{mbox}, or\cs{ parbox}, but it can be used inside a minipage. The input
@@ -1447,10 +1555,11 @@ int main(void)
 A minipage can go everywhere and can hold virtually any content.
 
 
-
-
-
 \section{Scaling and resizing boxes}
+
+\begin{docCommand}{resizebox}{\marg{width}}{\marg{general material}}
+Resizes the contents of a box
+\end{docCommand}
 
 The command \cs{resizebox}\marg{width}\marg{height}\marg{object} can be used with tabular to specify the height and width of a table. The following example shows how to resize a table to 8cm width while maintaining the original width/height ratio.
 
@@ -1470,7 +1579,7 @@ Alternatively you can use \cs{scalebox}{ratio}{object} in the same way but with 
 }
 \end{teX}
 
-Both |\resizebox| and |\scalebox| require the \docpkg{graphicx} package.
+Both |\resizebox| and |\scalebox| require the \pkg{graphicx}\footfullcite{graphicx} package.
 To tweak the space between columns (LaTeX will by default chose very tight columns), one can alter the column separation: |\setlength{\tabcolsep}{5pt}|. The default value is |6pt|.
 
 The scalebox is great if you want to magnify a letter so that you can observe the design closer.
@@ -1503,14 +1612,209 @@ Kp-Fonts & Kp-\textit{light} & CM & Palatino & Utopia & Times\\
 
 
 
+\section{Glues with Negative and zero dimensions}
+
+A box with a natural size of zero with the right glue amount can become very useful. For example the glue
+|0pt plus1fil minus1fil| can stretch to infinity and also shring to minus infinity. Of course in the case of
+\tex infinity is \docAuxCommand{maxdimen}. A \tex primitive is defined with this glue \refCom{hss}.
+
+\begin{docCommand}{hss}{}
+\end{docCommand}
+
+There is also a corresponding \refCom{vss}.
+
+\begin{docCommand}{vss}{}
+\end{docCommand}
+
+
+These macros place text on a full line either centred or left or right adjusted.
+
+\begin{texexample}{}{}
+\makeatletter
+368 \def\@@line{\hb@xt@\hsize}
+369 \def\leftline#1{\@@line{#1\hss}}
+370 \def\rightline#1{\@@line{\hss#1}}
+371 \def\centerline#1{\@@line{\hss#1\hss}}
+\rlap
+\llap
+These macros place text to the left or right of the current reference point without
+taking up space.
+372 \def\rlap#1{\hb@xt@\z@{#1\hss}}
+373 \def\llap#1{\hb@xt@\z@{\hss#1}}
+
+$a\mathrel{\rlap{\;/}{=}}b $
+
+{\Huge
+\leavevmode
+\rlap{Y}L
+\rlap{C}\kern2.6pt\lower3.5pt\hbox{,}
+}
+\makeatother
+\end{texexample}
+
+\begin{docCommand}{rlap}{\marg{material}}
+
+\end{docCommand}
+
+Of course neither |llap| or |rlap| start a paragraph, so we need to use a |leavevmode| or one of the other ways to start a paragraph.
+
+\begin{docCommand}{llap}{\marg{material}}
+\end{docCommand}
+
+
+\begin{docCommand}{smash}{\marg{material}}
+The |\smash| command typesets the material with a height and depth of zero.
+\end{docCommand}
+
+\begin{docCommand}{phantom}{\meta{material}}
+\end{docCommand}
+
+\begin{docCommand}{vphantom}{\meta{material}}
+\end{docCommand}
+
+\begin{texexample}{Defining smash}{}
+\bgroup
+\def\smash{%
+   \relax % \relax, in case this comes first in \halign
+   \ifmmode
+   \expandafter\mathpalette\expandafter\mathsm@sh
+   \else
+    \expandafter\makesm@sh
+   \fi}
+   
+\def\makesm@sh#1{%
+   \setbox\z@\hbox{\color@begingroup#1\color@endgroup}\finsm@sh}
+
+\def\mathsm@sh#1#2{%
+   \setbox\z@\hbox{$\m@th#1{#2}$}\finsm@sh}
+
+\def\finsm@sh{\ht\z@\z@ \dp\z@\z@ \box\z@}
+\egroup
+
+\vbox{\smash {\hbox{A} } \hbox{B}} Test
+
+\end{texexample}
+
+\cxset{geometry units = pt,
+       fontbox font=\Huge\upshape}
+
+  
+
+
+Consider the letters `Q' and `P', shown below. The capital letter `Q' has a depth of 1.72mm, we might wish to smash
+it in a two line title block to reduce the line spacing between two consecutive lines. This can be accomplished with the
+\refCom{smash} command.
+
+\centerline{\drawfontbox{Q} \drawfontbox{P}}
+
+Smashing it produces the following results.
+
+\centerline{\drawfontbox{\vbox{\smash {\hbox{Q} } \hbox{P}}}  \drawfontbox{\vbox{\hbox{Q}  \hbox{P}}}}  
+
+The command is more useful in math environments and is used extensively both by authors and package developers.
+
+\begin{teXXX}
+\def\rightarrowfill{$\m@th\smash-\mkern-7mu%
+454 \cleaders\hbox{$\mkern-2mu\smash-\mkern-2mu$}\hfill
+455 \mkern-7mu\mathord\rightarrow$}
+
+456 \def\leftarrowfill{$\m@th\mathord\leftarrow\mkern-7mu%
+457 \cleaders\hbox{$\mkern-2mu\smash-\mkern-2mu$}\hfill
+458 \mkern-7mu\smash-$}
+\end{teXXX}
+
+Two further macros can be useful to authors of mathematical documents, \docAuxCommand*{phantom} and \docAuxCommand*{vphantom}. 
+
+When typesetting roots, sometimes there are issues with heights. The following example
+from \citetitle{mathmode}\footcite{mathmode} illustrates the point.
+
+\begin{equation}
+ \sqrt{a}\,%
+ \sqrt{T}\,%
+ \sqrt{2\alpha k_{B_1}T^i}\label{eq:root1}
+\end{equation}
+
+This can be corrected using \refCom{vphantom}. 
+
+\begin{texexample}{Correcting height issues}{ex:sqrtheights}
+\begin{equation}\label{eq:root2}
+ \sqrt{a\vphantom{k_{B_1}T^i}}\,%
+ \sqrt{T\vphantom{k_{B_1}T^i}}\,%
+ \sqrt{2\alpha k_{B_1}T^i}
+\end{equation}
+
+\begin{equation}
+x = \sqrt[3]{6+\sqrt[3]{6+\sqrt[3]{6+\sqrt[3]{6+\cdots}}}}
+\end{equation}
+\end{texexample}
+
+Using \pkgname{amsmath} \docAuxCommand{smash} can be used for even better results when
+using inline or displayed roots. It must be noted that \cs{smash} in \latexe is defined
+without such an optional argument.
 
 
 
+\makeatletter
+\renewcommand{\smash}[1][tb]{%
+\def\mb@t{\ht}\def\mb@b{\dp}\def\mb@tb{\ht\z@\z@\dp}%
+\edef\finsm@sh{\csname mb@#1\endcsname\z@\z@ \box\z@}%
+\ifmmode \@xp\mathpalette\@xp\mathsm@sh
+\else \@xp\makesm@sh
+\fi
+}
+\makeatother
+This is a test $\sqrt{\lambda_{ki}}$ and $\smash[tb]{\sqrt{\lambda_{ki}}} $ 
+\meaning\smash
+
+\begin{docCommand}{smash}{ \oarg{position}\marg{argument} }
+The optional argument for the position can take three values: \textbf{t} keeps the bottom and annihilates the top, \textbf{b} keeps the top and annihilates the bottom and \textbf{tb} which annihilates top and bottom. The latter is the default.
+\end{docCommand}
+
+\begin{texexample}{Use of Amsmath smash}{ex:amssmash}
+xxx
+\fbox{\rule{0.5cm}{2cm}}
+\fbox{\rule[-1cm]{0.5cm}{2cm}}
+\fbox{\smash{\rule{0.5cm}{2cm}}}
+\fbox{\smash{\rule[-1cm]{0.5cm}{2cm}}}
+\fbox{\raisebox{0pt}[0pt][0pt]{\rule[-1cm]{0.5cm}{2cm}}}
+\fbox{\raisebox{-1cm}[0pt][0pt]{\rule{0.5cm}{2cm}}}
+\end{texexample}
 
 
+\begin{texexample}{The array environment}{ex:array2}
+Thus to change $\frac34$ to a decimal divide $4$ into $3$
+and we get $.75$ as a result, thus:
+\[
+\begin{array}{r@{}r@{}}
+4 \; & \vline \; 3.00 \\\cline{2-2}
+     &            .75
+\end{array}
+\]
+To find the square root of a four-figure number
+such as our example calls for, work it out in the
+following manner:
 
 
+\[
+\arraycolsep=0em
+\begin{array}{cccccccccccc}
+\multicolumn{3}{c}{\text{2d pair}} &\qquad&\qquad&
+\multicolumn{3}{c}{\text{1st pair}}&\qquad&\qquad&
+\multicolumn{2}{c}{\text{square root}}\\
+ & \overbrace{\quad}&\ZZZ&&&\ZZZ&\overbrace{\quad}&\ZZZ\\
+ & 42 &&&&& 25 &&&&\vline\;65&(answer)\\\cline{11-11}
+ & 36 &&&&& \\\cline{2-2}
+\multirow{2}{*}{125\:} & \vline\hfill \phantom{Z}6 \hfill&&&&& 25\\
+ & \vline\hfill \Zi6 \hfill&&&&& 25\\\cline{2-7}
+\end{array}
+\]
+\end{texexample}
 
+What I provided as an easy mnemonic for the \pkg{phd} I provided macros |\Zi, \ZZ, \ZZZ| as convenience aliases for
+|\phantom{Z}| etc.
+
+With graphic programs becoming available, most of the drawing of small complicated boxes, has been overtaken by using
+\tikzname and especially its option to overlay a node at a particular point of the page without any impact on the spacing.
 
 
 

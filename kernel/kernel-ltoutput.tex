@@ -1,4 +1,5 @@
 \chapter{ltoutput.dtx}
+\label{kernel:ltoutput}
 
 \section{Introduction}
 
@@ -28,7 +29,7 @@ The interesting and complicated part of the OR is its algorithm for handling flo
 the figure as well as the table environments. It is instructive to start the discussion of the algorithm from this point. 
 
 The class defines the default float placement specifier using 
-|\fps@figure| and then goes on to define the figure environment with the help of \refCom{@float} and \refCom{@endfloat}, which are defined in the generic float.dtx in the kernel.
+|\fps@figure| and then goes on to define the figure environment with the help of \refCom{@float} and \refCom{end@float}, which are defined in the generic float.dtx in the kernel.
 
 
 \begin{teX}
@@ -46,7 +47,7 @@ The class defines the default float placement specifier using
 
 A float specifier is made of two parts the float type, which is a power of two--e.g., figures in the case of the book class are type 1 and tables type 2 and the \textit{placement specification} describing where the float can be placed.  The type is defined in powers of two due to the way the specifiers are represented using a binary representation internally.
 
-\begin{figure}[h]erase 
+\begin{figure}[h]
 \centering
 \begin{tabular}{rl}
 {\fboxsep2pt   \fbox{1} \fbox{1} \fbox{0} \fbox{0} \fbox{1} \fbox{0}} &= 50\\
@@ -90,7 +91,7 @@ One needs to remember that the floats are placed based on constraints and page s
 
 \section{Page Layout Parameters}
 
-\begin{tabular}{lp{6cm}}
+\begin{longtable}[l]{p{4.5cm}p{8.5cm}}
    |\topmargin|      & Extra space added to top of page.\\
    |\@twoside|       & boolean.  T if two-sided printing\\
    |\oddsidemargin|  & IF @twoside = T
@@ -131,14 +132,14 @@ One needs to remember that the floats are placed based on constraints and page s
                      page (including figures).  Used by letter style;
                      can also be used to produce centered pages.
                      Let to |\relax| by |\raggedbottom| and |\flushbottom|.\\
-\end{tabular}
+\end{longtable}
 
 
 Page layout must initialize |\@colht| and |\@colroom| to |\textheight|.
 
 \section{Page Style Parameters}
 
-\begin{tabular}{p{3.5cm}p{7.5cm}}
+\begin{longtable}{p{3.5cm}p{7.5cm}}
    |\floatsep|       & Space left between floats.\\
    |\textfloatsep|   & Space between last top float or first bottom float
                      and the text.\\
@@ -192,7 +193,7 @@ Page layout must initialize |\@colht| and |\@colroom| to |\textheight|.
                             before composing the current page.
                             This command should execute only |\def|'s and
                             |\edef|'s, making only local definitions.\\
-\end{tabular}
+\end{longtable}
 
 
 
@@ -220,7 +221,7 @@ Page layout must initialize |\@colht| and |\@colroom| to |\textheight|.
 \end{description}
 
 
-\begin{tabular}{p{3.5cm}p{6cm}}
+\begin{longtable}{p{4.5cm}p{5.5cm}}
     |\@botnum|, |\@botroom|
                 & Analogous to above.\\
     |\@colnum|  & G Maximum number of floats allowed in a column,
@@ -230,7 +231,7 @@ Page layout must initialize |\@colht| and |\@colroom| to |\textheight|.
                   It is used locally in processing double
                   floats.\\
     |\@fpmin|   & L Minimum height of floats in a float column.\\
-\end{tabular}
+\end{longtable}
 
 
  The macro \cs{@dblfloatplacement} sets the following parameters.
@@ -460,7 +461,9 @@ This solves two special problems:
 \section{User commands  that call  affect the output routine}
 
 \begin{docCommand}{newpage}{}
+ \begin{teX}
  \newpage == BEGIN \par\vfil\penalty -10000 END
+ \end{teX}
 \end{docCommand}
 
 \begin{docCommand}{clearpage}{}
@@ -627,7 +630,11 @@ Additional commentary on the changes is discussed later on.
                      pages.\\
 \end{tabular}
 
-
+\begin{texexample}{Meaning toplist}{ex:toplist}
+\makeatletter
+\meaning\@freelist
+\makeatother
+\end{texexample}
 
 \section{Float-Placement algorithms}
 
@@ -763,10 +770,12 @@ Additional commentary on the changes is discussed later on.
 \let\@elt\relax
     \end{teX}
 
+\begin{docCommand}{@next}{}{}{}{}
     \begin{teX}
 \def\@next#1#2#3#4{\ifx#2\@empty #4\else (*@\label{next}@*)
    \expandafter\@xnext #2\@@#1#2#3\fi}
     \end{teX}
+\end{docCommand}
 
     \begin{teX}
 \def\@xnext \@elt #1#2\@@#3#4{\def#3{#1}\gdef#4{#2}}
@@ -846,6 +855,12 @@ The rest of the lists are defined below and they are initialized as empty lists.
 \gdef\@dbldeferlist{}
     \end{teX}
 
+\begin{texexample}{Current list}{ex:currentlist}
+\makeatletter
+\meaning\@currlist
+\makeatother
+\end{texexample}
+
 \section{Page layout parameters}
 
 The page layout parameters (all taking values by the standard classes later on
@@ -872,14 +887,16 @@ are defined here. They are important in building up the page calculations.
 
 
 
- \begin{docCommand}{AtBeginDvi}{}
+\begin{docCommand}{AtBeginDvi}{\marg{contents}}{}
 
-    We use a box register in which to put
-    stuff that must appear before anything else in the
-    |.dvi| file.
+Uses a box register in which to put
+stuff that must appear before anything else in the
+|.dvi| file.
 
-    The stuff in the box should not add any typeset material to the
-    page when it is unboxed.
+The stuff in the box should not add any typeset material to the
+page when it is unboxed.
+\end{docCommand}
+    
     \begin{teX}
 \newbox\@begindvibox
 \def \AtBeginDvi #1{%
@@ -887,7 +904,6 @@ are defined here. They are important in building up the page calculations.
     \vbox{\unvbox \@begindvibox #1}%
 }                             
     \end{teX}
- \end{docCommand}
 
   
   \begin{docCommand}{@maxdepth}{}
@@ -904,8 +920,8 @@ are defined here. They are important in building up the page calculations.
   \end{docCommand}
 
 
- \begin{docCommand}{paperheight}{}
- \begin{docCommand}{paperwidth}{}
+ \begin{docCommand}{paperheight}{}{}
+ \begin{docCommand}{paperwidth}{}{}
  Although earlier on, page parameters have been defined, we also need to define the paper height
 and width.
     \begin{teX}
@@ -1430,7 +1446,8 @@ as a document always starts at an odd number.
     \end{teX}
   \end{docCommand}
 %
-%
+% The next two functions determine what to put in box255 and which output function to be called. 
+
   \begin{docCommand}{@makecol}
 
     We must rewrite this macro to alllow for variations in page-makeup
@@ -1439,6 +1456,7 @@ as a document always starts at an odd number.
     This uses a different macro if a special-length column is being
     produced.
 
+
     \begin{teX}
 \gdef \@makecol {%
    \ifvoid\footins
@@ -1446,21 +1464,47 @@ as a document always starts at an odd number.
    \else
      \setbox\@outputbox \vbox {%
     \end{teX}
-%    This |\boxmaxdepth| setting is to ensure that  deep footnotes
-%    do not overwrite the footer (on account of the negative skip
-%    added later): it should use |\@maxdepth| otherwise the change is
-%    pointless when there are footnotes.
-% \task{CAR}{Investigate providing an option to put the footnotes
-%    below the bottom floats.}
-%
-%    But see also its use when combining floats.
+    This |\boxmaxdepth| setting is to ensure that  deep footnotes
+    do not overwrite the footer (on account of the negative skip
+    added later): it should use |\@maxdepth| otherwise the change is
+    pointless when there are footnotes.
+   % \task{CAR}{Investigate providing an option to put the footnotes
+   % below the bottom floats.}
+
+    But see also its use when combining floats.
+    
+    Macro |\newinsert| computes a number (counting down from 254) and
+allocates a box, a count, a dimen, and a skip register with that number. The reason
+for allocating from 254 instead of 255 is that |\box255| is reserved for special OTR
+use. The reason for allocating downwards is that registers |\countO, \count1|. .. are
+used for the page number, and many people tend to use registers |\boxO, \box1|. .. for
+temporary storage.
+\begin{texexample}{footins}{ex:footins}
+
+\the\footins
+
+\the\skip\footins
+
+\the\dimen\footins
+
+\the\count\footins
+
+\end{texexample}
+
+
     \begin{teX}
-       \boxmaxdepth \@maxdepth                   
+       \boxmaxdepth \@maxdepth 
+       % unbox                  
        \unvbox \@cclv
+       % skip 
        \vskip \skip\footins
+       
        \color@begingroup
          \normalcolor
+         % draw rule
          \footnoterule
+         
+         % unbox footins
          \unvbox \footins
        \color@endgroup
        }%
@@ -1674,7 +1718,7 @@ bottom glue on all pages. They are hardly used by anyone.\footnote{http://tex.st
 
 
   \begin{docCommand}{@outputpage}{}
-         
+  \end{docCommand}      
     The |\color@hbox| hooks here are used to avoid putting just a
     colour special into an otherwise empty box (in a header or
     footer).  These boxes are often set to be completely empty and so
@@ -1708,8 +1752,9 @@ bottom glue on all pages. They are hardly used by anyone.\footnote{http://tex.st
 
     A lot of this code has been in-lined tp prevent mis-use of
     internal commands as hooks.
-\end{docCommand}
-        
+\begin{docCommand}{@outputpage}{\marg{void}}
+This essentially calls |\shipout|
+\end{docCommand}        
     \startlineat{472}
     \begin{teX}
 \def\@outputpage{%
@@ -1836,7 +1881,7 @@ Finally we are ready to \docAuxCommand{shipout} the box.
     \end{teX}
     \ldots\ to here was in the command |\@shipoutsetup|. 
     \begin{teX}
-    \@begindvi
+    \@begindvi (*@\dcircle{1}@*)
     \vskip \topmargin
     \moveright\@themargin \vbox {%
       \setbox\@tempboxa \vbox to\headheight{%
@@ -1879,7 +1924,17 @@ Finally we are ready to \docAuxCommand{shipout} the box.
     \end{teX}
 %  \end{docCommand}
 
-%
+At \dcircle{1} the |@begindvi| was inserted for the material taht it holds. This in reality
+is a hook, used to place anything we want at the page, provided it holds material that do not take
+any space. \makeatletter
+
+\the\@themargin
+
+\vbox{\scalebox{0.3}{\@thehead}
+\vskip30pt
+\scalebox{0.3}{\@thefoot}}
+\makeatother
+
  \begin{docCommand}{@begindvi}{}
  
     This unboxes stuff that must appear before anything else in the
@@ -1899,6 +1954,7 @@ Finally we are ready to \docAuxCommand{shipout} the box.
     \end{teX}
  \end{docCommand}
 
+The combining of the floats happens here.
 
  \begin{docCommand}{@combinefloats}{}
  \begin{docCommand}{@cflb}{}
@@ -2513,7 +2569,8 @@ Finally we are ready to \docAuxCommand{shipout} the box.
        \end{teX}
 %  \end{docCommand}
 %
-%  \begin{docCommand}{@addtonextcol}
+\begin{docCommand}{@addtonextcol}{}
+\end{docCommand}
 % \changes{v1.0f}{1993/12/05}{Command changed}
 %    Lots of changes.
 %
@@ -3028,6 +3085,7 @@ Finally we are ready to \docAuxCommand{shipout} the box.
 % corresponding count registers.
 %
 %  \begin{docCommand}{@fpstype}
+%  \end{docCommand}
 %  \begin{docCommand}{@reqcolroom}
 %  \begin{docCommand}{@textfloatsheight}
 % First a new count register to go with |\@currtype|.
@@ -3047,7 +3105,6 @@ Finally we are ready to \docAuxCommand{shipout} the box.
 \newdimen \@reqcolroom
 \newdimen \@textfloatsheight
        \end{teX}
-%  \end{docCommand}
 %  \end{docCommand}
 %  \end{docCommand}
 %

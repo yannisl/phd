@@ -1,8 +1,11 @@
 \chapter{The LateX Kernel}
 
+\epigraph{He who would eat the kernel, must crack the shell.
+[Lat., \textit{Qui e nuce nucleum esse vult, frangat nucem.}]}{Plautus}
 
 \latex is the batteries of \tex. It has given authors the ability to write documents easily and in a consistent way. It has also provided pacakage writers with endless nights of work trying to figure out how things work. In this chapter we will describe briefly the workings of \latex and the areas where one could use it for improvements. The best source for how the \latex kernel works is \latex itself and the publication that comes with it \docFile{sourc2e.pdf}.
-The original developer of \latex was Leslie Lamport. Lamport who is now a recipient of the Turing award, described his philosophy for document production in a paper \textit{Document Production: Visual or Logical?}, presented before the ACM in 1987.\footcite{lamport1987}
+
+The original developer of \latex was Leslie Lamport. Lamport who is now a recipient of the Turing award, described his philosophy for document production in a paper \textit{Document Production: Visual or Logical?}, presented before the ACM in 1987. \parencite{lamport1987}
 
 Although many developers have criticized the original code it is an amazing fact that it has endured. Although in today’s terms the system cannot be considered pluggable, it was
 certainly extensible and the fact that \tex provides the means to write macros on the fly, the main effort
@@ -14,55 +17,56 @@ good discipline in being economical with code and for discovering the right amou
 
 \section{Code Organization.} 
 
-The \latex source code is distributed in a number of |.dtx| files. These are saved in files |a|..|z| and files |A-O| The source files are documented in |source2e|, just |texdoc source2e| to read it. What I am describing here, is a step by step analysis of the classes, supplemented by additional materials, in order to understand the inner workings. 
+The \latex source code is distributed in a number of |.dtx| files. These are saved in files |a|..|z| and files |A-O| The source files are documented in \docFile{source2e}, just |texdoc source2e| to read it. 
+
+What I am describing here, is a step by step analysis of the kernel code, supplemented by additional materials, in order to provide an understanding of  the inner workings. 
 
 
-\begin{longtable}{lp{5cm}}
+\begin{longtable}{llp{5cm}}
 \toprule
-Filename  				    & Description \\
+Filename  			 & Description & Reference\\
 \midrule
-a ltxdirchk.dtx 	&        \\
-b ltplain.dtx    	&        \\
-c ltvers.dtx     	& Version information       \\
-d ltdefns.dtx     & See Chapter~\ref{ch:ltxdefns},pg~\pageref{ch:ltxdefns}\\
-e ltalloc.dtx     & Allocations \\
-f ltcntrl.dtx     & Control structures See Chapter~\ref{ch:ltcntrl}~\pageref{ch:ltcntrl}\\
-g lterror.dtx     & Error handling\\ 
-h ltpar.dtx      	& Paragraphs See (\pageref{pars})\\
-i ltspace.dtx			& Spacing commands. See~pg~[\pageref{spc}]\\
-j ltlogos.dtx     & \\
-k files.dtx				& File handling, listing of files\\
-l ltoutenc.dtx    & Stadard encoding and commands See Chapter~\ref{ltoutenc}\\
-m ltcounts.dtx    &\\
-n ltlengths				& Length setting commands. See~pg~[\pageref{kernel:lengths}]\\
-o ltfssbas.dtx    &\\
-p ltfsstrc.dtx    & Tracing fonts See Chapter~\ref{ltfsstrc}\\
-q ltfsscmp.dtx    &\\
-s ltfssini.dtx    &\\
-t fontdef.dtx     &\\ 
-u preload.dtx     &\\
-v ltfntcmd.dtx    &\\
-w ltpageno.dtx    &\\
-x ltref.dtx       &\\
-y ltmiscen.dtx    &\\
-z ltmath.dtx      &\\
-A ltlists.dtx     &\\
-B ltboxes.dtx     &\\
-C lttab.dtx       &\\
-D ltpictur.dtx    &\\
-E ltthm.dtx       &\\
-F ltsect.dtx      &\\
-G ltfloat.dtx     &\\
-H ltidxglo.dtx    &\\
-I ltbibl.dtx      &\\
-J ltpage.dtx      &\\
-K ltoutput.dtx    &\\
-L ltclass.dtx     &\\
-M lthyphen.dtx    &\\
-N ltfinal.dtx     &\\
+\inc a ltxdirchk.dtx 	 & &      \\
+\inc b ltplain.dtx    	 & & See Chapter \ref{kernel:ltplain}, page [\pageref{kernel:ltplain}]  \\
+c ltvers.dtx     	 && Version information \ref{kernel:ltvers}      \\
+d ltdefns.dtx     && See Chapter~\ref{ch:ltxdefns},pg~\pageref{ch:ltxdefns}\\
+e ltalloc.dtx     && Allocations, Chapter \ref{kernel:ltalloc}, page [\pageref{kernel:ltalloc}] \\
+f ltcntrl.dtx     && Control structures See Chapter~\ref{ch:ltcntrl}~\pageref{ch:ltcntrl}\\
+g lterror.dtx     && Error handling  \pageref{kernel:lterror}\\ 
+h ltpar.dtx      	 && Paragraphs See (\pageref{kernel:ltpar})\\
+i ltspace.dtx		 && Spacing commands. See~Chapter \ref{kernel:ltspace}, page~[\pageref{kernel:ltspace}]\\
+j ltlogos.dtx     && See \pageref{kernel:ltlogos}\\
+k files.dtx			 && File handling, listing of files. See \pageref{kernel:ltfiles}\\
+l ltoutenc.dtx    && Stadard encoding and commands See Chapter~\pageref{ltoutenc}\\
+m ltcounts.dtx    && Chapter \ref{kernel:ltcounts}, page [\pageref{kernel:ltcounts}]\\
+n ltlengths			 && Length setting commands. See~pg~[\pageref{kernel:lengths}]\\
+o ltfssbas.dtx    && \pageref{kernel:ltfssbas}\\
+p ltfsstrc.dtx    && Tracing fonts See Chapter~\pageref{kernel:ltfsstrc}\\
+q ltfsscmp.dtx    && See Chapter \ref{kernel:ltfntcmd}, page [\pageref{kernel:ltfntcmd}] \\
+s ltfssini.dtx    && NFSS Font initializaton, see Chapter~\ref{kernel:ltfssini}, page~\pageref{kernel:ltfssini}\\
+t fontdef.dtx     && Chapter \ref{kernel:fontdef}, page [\pageref{kernel:fontdef}]\\ 
+u preload.dtx     && Chapter \ref{kernel:preload} page [\pageref{kernel:preload}]\\
+v ltfntcmd.dtx    && \pageref{kernel:ltfntcmd}\\
+w ltpageno.dtx    && See Chapter \ref{kernel:ltpageno}, page [\pageref{kernel:ltpageno}]\\
+x ltref.dtx       && See Chapter \ref{kernel:ltxref}, page [\pageref{kernel:ltxref}] \\
+y ltmiscen.dtx    && See Chapter \ref{kernel:ltmiscen}, page [\pageref{kernel:ltmiscen}]\\
+z ltmath.dtx      && See chapter \ref{kernel:ltmath}, page [\pageref{kernel:ltmath}]\\
+A ltlists.dtx     && See \ref{kernel:ltlists}\\
+B ltboxes.dtx     && See \pageref{kernel:ltboxes}\\
+C lttab.dtx       && See \pageref{kernel:lttab}\\
+D ltpictur.dtx    && See Chapter \ref{kernel:ltpictur}, page [\pageref{kernel:ltpictur}]\\
+E ltthm.dtx       &Theorems& See Chapter \ref{kernel:ltthm}, page [\pageref{kernel:ltthm}]\\
+F ltsect.dtx      &Sectioning& See \ref{kernel:ltsect} \\
+G ltfloat.dtx     &Floats& See \ref{kernel:ltfloat}\\
+H ltidxglo.dtx    &Indices \& Glossaries& See \pageref{kernel:ltidxglo}\\
+I ltbibl.dtx      &Bibliography & See Chapter~\ref{kernel:biblio}, page [\pageref{kernel:biblio}]\\
+J ltpage.dtx      && See Chapter\ref{kernel:ltpage}, page [\pageref{kernel:ltpage}]\\
+K ltoutput.dtx    && \ref{kernel:ltoutput}\\
+L ltclass.dtx     && See Chapter \ref{kernel:ltclass}, page [\pageref{kernel:ltclass}]\\
+M lthyphen.dtx    && See Chapter \ref{kernel:lthyphen}, page [\pageref{kernel:lthyphen}]\\
+N ltfinal.dtx     && See Chapter \ref{kernel:ltfinal}, page [\pageref{kernel:ltfinal}]\\
 \bottomrule
 \end{longtable}
-
 
 
 \section{Autoloading}
@@ -164,10 +168,9 @@ contains code equivalent to:
   \let\@filelist\relax
   \let\@addtofilelist\@gobble
 \fi}
-229 \@onlypreamble\listfiles
-230 \let\@dofilelist\relax
+\@onlypreamble\listfiles
+\let\@dofilelist\relax
 \end{teXXX} 
-
 \index{onlypreamble}
 
 
@@ -176,13 +179,14 @@ contains code equivalent to:
 
 \begin{docCommand}{fmtname}{}
 LaTeXe's name is stored here as LaTeX2e
-\begin{docCommand}{fmtversion}{}
 \end{docCommand}
+
+\begin{docCommand}{fmtversion}{}
+prints the format version
+\end{docCommand}
+
 This is a small class,  that its sole purpose is to provide version information. It checks
 if the format is too old. If it is older than 65 months it emits an error. 
-\end{docCommand}
-
-
 
 \begin{teXXX}
 2 \def\fmtname{LaTeX2e}
@@ -229,8 +233,6 @@ It does not appear that this macro is currently activated, but I can be wrong. O
 \section{File d ltplain.dtx}
 
 The routines covered by this file go deep into the heart of the kernel. Besides storing some of the plain commands in new macros, this section of the kernel defines its own defining commands like |\newcommand|, |\newenvironment| and similar other macros. We start by summarizing the author and internal commands available in this section.
-
-
 
 
 \section{File  Bibliographies ltbibl.dtx} 
@@ -430,6 +432,7 @@ The internal version of \texttt{\textbackslash parbox}. The parameter text is as
 
 \noindent If you are wondering what |\@pboxswfalse| and |\@pboxswtrue| you can checkit out by using \cmd{meaning}. There is also the package \docpkg{reflex} which you can use.
 
+\endinput
 
 \makeatletter
 
@@ -542,26 +545,11 @@ This was a long write and possibly a long read. As \latex was written a long tim
 defining the |\parbox| with the |keyval| package. Will it be more intuitive to describe
 
 \begin{teXX}
-
 \parboX[width=7cm, 
-             height=8cm,
-             textposition=t, 
-             outerposition=b]{teX}
+        height=8cm,
+        textposition=t, 
+        outerposition=b]{teX}
 \end{teXX}
-
-\begin{comment}
-%\makeatletter
-%\def\ac{test}
-%\def\Source{this,is, a, short, \string\ac }
-% The string \emph{\Source} contains the following tokens:\\
-% \whiledo{\not\equal{\Source}{}}
-% {
-%     \GetTokens{TokenOne}{TokenTwo}{\Source}
-%     \def\tempa{\TokenOne}
-%     \texttt{\meaning\ac}\\
-%     \let\Source\TokenTwo
-% }
-\end{comment}
 
 \section*{Strip the backslash}
 
@@ -690,8 +678,7 @@ The command does a lot of work. Firstly, it defines a new counter using the \tex
 16   \@ifundefined{c@#2}{\@nocounterr{#2}}{\@addtoreset{#1}{#2}}}
 \end{teXXX}
 
-
-
+\endinput
 
 \begin{docCommand}{arabic} {}
 Next follow a number of commands, for representing the values of counters in different forms, such

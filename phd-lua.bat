@@ -7,7 +7,7 @@ rem in order to use minted
 @echo off
 CLS
 lualatex -shell-escape %~n1%~x1
-bibtex %1
+biber %1
 makeindex -s phd.ist %~n1.idx 
 lualatex -shell-escape %~n1%~x1
 makeindex -s phd.ist %~n1.idx

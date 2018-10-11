@@ -1,3 +1,7 @@
+\cxset{subsubsection title color=black}
+\colorlet{thesubsubsectioncolor}{black}
+
+\let\sidenote\footnote
 \chapter{PROGRAMMING MACROS}
 
 \addtocimage{-10pt}{-40pt}{../graphics/harnett.jpg}
@@ -40,7 +44,7 @@ There are other macro defining primitives available, but we will first focus on 
  
 \subsection{Simple substitution macros}
 
-\begin{docCommand*}{def} { \meta{macro name}\meta{parameter text}} {\marg{replacement text}}
+\begin{docCommand*}{def} { \meta{macro name}\meta{parameter text} \marg{replacement text}}{}
 Simple substitution macros, during expansion replace their name with the contents enclosed between the braces. For example some common macros that authors write, is to hold the names of people, in order to get the spelling correctly.
 \end{docCommand*}
 
@@ -67,6 +71,7 @@ If we were writing the macro and compiling it using \tex only, the example can b
 
 Macros can use other macro commands. For example if we wanted to store the name of the author of |pdfTeX| we could write,
 
+\emphasize{def	}
 \begin{texexample}{example substitution macro}{}
 \def\Thanh{%
       H\`an~%
@@ -116,7 +121,7 @@ As a simple example consider the following:\index{macros>delimited}
 Example~\ref{ex:delimited} defines a macro with an undelimited first parameter, and a second parameter delimited by a semicolon. The replacement text consists only of |#1| and hence the rest are discarded.
 
 \begin{texexample}{delimited examples}{ex:delimited}
-\def\asentence#1#2;{{\bfseries #1}#2}
+\def\asentence#1 #2;{{\bfseries #1 }#2}
 \asentence The whole sentence is printed;
 \end{texexample}
 
@@ -185,13 +190,13 @@ As you can see from the output, any definitions of macros within other macros ar
 \cmd{\long}\cmd{\def}\marg{command}\{\ldots\}
 
 \index{macro definitions>long}
-Knuth designed \tex in such a way that the normal |\def| will not work with arguments that include paragraphs. This was so that if you forget to add a brace '\}' \tex will not continue absorbing tokens until the end of the file or completely full \tex's memory. Therefore \tex has another rule [205] intended to confine errors to the paragraph that they occur: The token |\par| is not allowed to occur as part of an argument as unless you explicitly tell \tex that you want to use |\par|. Whenever \tex is about to include |\par| as part of an argument, it will abort the current macro expansion and report that a \texttt{...runaway argument} has been found.
+Knuth designed \tex in such a way that the normal |\def| will not work with arguments that include paragraphs. This was so that if you forget to add a brace \enquote{\}} \tex will not continue absorbing tokens until the end of the file or completely full \tex's memory. Therefore \tex has another rule [205] intended to confine errors to the paragraph that they occur: The token |\par| is not allowed to occur as part of an argument as unless you explicitly tell \tex that you want to use |\par|. Whenever \tex is about to include |\par| as part of an argument, it will abort the current macro expansion and report that a \texttt{...runaway argument} has been found.
 
 If you actually want a control sequence to allow arguments with |\par| tokens, you can define it to be a \cmd{\long}\index{macros>long} just before the |\def|. For example the |\bold| macro defined by:
 
 
 \begin{teX}
-\long\def\bold#1{{\bf#1}}
+\long\def\mybold#1{{\bf#1}} 
 \end{teX}
 
 \noindent is capable of setting several paragraphs in boldface type. However, such a macro is not a especially good way to typeset bold text. It would be better to say, e.g.,
@@ -203,8 +208,9 @@ If you actually want a control sequence to allow arguments with |\par| tokens, y
 because this doesn't fill \tex's memory with a long argument.
 
 
-\cmd{\edef}
-\index{macro definitions>\string\edef=\texttt{\string\edef}}
+\begin{docCommand}{edef}{\marg{macro name}\meta{arguments}\marg{replacement text}}
+Defines a fully expandable macro.
+\end{docCommand}
 
 Another command that can be used to define macros is \cmd{\edef}. You can say |\edef\foo{bar}|. The syntax is the same as |\def|, but the token list in the body is fully expanded (tokens that come from |\the| are not expanded).
 
@@ -215,9 +221,14 @@ You can say |\xdef\foo{bar}|. The syntax is the same as \cmd{\def}, but the toke
 You can put the prefix \cmd{\global} before \cmd{\xdef}, this is however useless, since |\xdef| is the same as |\global\edef|. The following example puts a brace in |\foo|. The |\string| command can be expanded, the value is the name of the command (preceded by a backslash, or whatever the value of the escape character is). Here the assignment to the escape character is local, the assignment to |\foo| is global.
 
 
-\begin{teX}
-{\escapechar=-1 \xdef\foo{\string\}}}
-\end{teX}
+\begin{texexample}{Putting a brace}{ex:put a brace}
+{\escapechar=-1 
+\xdef\fooleft{\string\{}
+\xdef\fooright{\string\}}}
+\fooleft A\fooright 
+
+\textbraceright A\textbraceleft
+\end{texexample}
 
 
 \begin{docCmd}{relax}{} 
@@ -315,8 +326,7 @@ Note that \cmd{\ignorespaces} does \emph{not} cause \tex to gobble up empty line
 \section{Creating macros on the fly}
 
 
-One of the more useful ability of \tex is that macros can be created programmatically. This is achieved using \cmd{\string} and \cmd{\csname}
-
+One of the more useful ability of \tex is that macros can be created programmatically. This is achieved using \refCom{string} and \refCom{csname}.
 \footnote{Most of this discussion is based on an article by Stephan v. Bechtolsheim see \url{http://www.tug.org/TUGboat/Articles/tb10-2/tb24bechtolsheim.pdf}}
 
 This article discusses \cmd{\string} and \cmd{\csname} to
@@ -333,15 +343,44 @@ Any control sequence which should be written
 to a file (instead of being expanded) must be
 prefixed by \cmd{\string}. The command \cmd{\noexpand} can also be used.
 
-\cmd{\csname}
+\begin{docCommand}{csname}{}{}
+\end{docCommand}
+
+\emphasize{csname,endcsname,}
+\begin{texexample}{Example of using \textbackslash csname.}{ex:csname}
+\expandafter\def\csname john\endcsname{My name is John.} %(*@\dcircle{2}@*)
+\john
+
+\expandafter\def\csname john\endcsname{My name is Johnny.} %(*@\dcircle{2}@*)
+\john
+\end{texexample}
+
+If we did not use the \docAuxCommand{expandafter}, we would have redefined \docAuxCommand{csname} with disastrous effects. The example defines the macro |john| twice, at \dcircle{1} and \dcircle{2} and acts normally as if we have defined the macros using |\def|. 
 
 The \cmd{\csname} command
 is, in a certain sense, the inverse operation of
-\cmd{\string}. It converts a sequence of characters into
-one token. Observe that I said "characters" and
-not "letters." Using \texttt{\string\csname} allows you to build
+\docAuxCommand{string}. It converts a sequence of characters into
+one token. Observe that I said \enquote{characters} and
+not \enquote{letters.} Using \texttt{\string\csname} allows you to build
 names for tokens that contain { non-letter characters}
-such as digits. \footnote{Normal macro definitions cannot contain any digits, but just alphanumeric characters}
+such as digits.\footnote{Normal macro definitions cannot contain any digits, but just alphanumeric characters}
+
+\begin{texexample}{Example of using \textbackslash csname with non-letter arguments}{ex:csname2}
+\makeatletter
+\expandafter\def\csname john1\endcsname{John Lovelace }
+\expandafter\def\csname john2\endcsname{John Smith }
+
+John1 is \csname john1\endcsname
+but
+John2 is \@nameuse{john2}
+\makeatother
+\end{texexample}
+
+
+\begin{docCommand}{string}{}{}
+\end{docCommand}
+
+
 
 The ordinary way to write control
 sequences restricts the user to control words (the
@@ -373,7 +412,8 @@ Here is an example. To name the token
    \csname ?-a*l7. g\endcsname
 \end{teX}
 
-\cmd{\expandafter}
+\begin{docCommand}{expandafter}{}
+\end{docCommand}
 It is important to stress that|\csname| does not define anything: you need to use the TeX primitive \cmd{\def} to create a definition. This also requires the \cmd{\expandafter} primitive.
 
 \begin{teX}
@@ -390,7 +430,6 @@ will produce:
 \MyMacro{John}
 
 
-\endinput
 As mentioned before it is legal to call a macro
 inside a |\def\csname| . . .|\def\endcsname| sequence as long
 as the macro expands to characters only. Counter registers
@@ -398,13 +437,15 @@ can also be used:
 
 
 \begin{texexample}{count example}{}
+\makeatletter
 \bgroup
 \count0=5 %
 \expandafter\def\csname ZZ-\the\count0\endcsname{outputs: 
 ZZ-\the\count0 }
 
-\csname ZZ-5\endcsname
+\@nameuse{ZZ-5}
 \egroup
+\makeatother
 \end{texexample}
 
 
@@ -414,16 +455,16 @@ ZZ-\the\count0 }
   \csname ZZ1=\the\count0-\xx\endcsname
 \end{comment}
 
-\begin{multicols}{2}
+
 This will print |\ZZ1-137-ABC|. This example is equivalent to forming the same
-token using. |\csname ZZ-4-ABC\endcsname|. Although all these might not make much sense now, the ability to name macros on the fly, is leveraged by most authors.
+token using. |\csname ZZ-4-ABC\endcsname|. Although all these might not make much sense now, the ability to name macros on the fly, is leveraged by most package authors.
 
-\end{multicols}
-
+So far we have been using \tex core counters only and now and then we have seen a \latexe command such as |\@nameuse|. In the case study that follows, we will use mostly \latexe definitions. 
 
 
 \chapter*{CASE STUDY 13}
-We want to define a command that can hold text. The command must have the form |\lorem@i|, we want to automate the production of such commands, so that we can produce them automatically using |csname|.
+
+\noindent We want to define a command that can hold text. The command must have the form |\lorem@i|, we want to automate the production of such commands, so that we can produce them automatically using |csname|.
 
 \topline
 \begin{teXXX}
@@ -441,69 +482,112 @@ An example worth studying can be found in Patrick Happel's package \pkg{lipsum}.
 We first define a counter and set it to zero
 
 
-\begin{teX}
-\newcounter{lips@count}
-\setcounter{lips@count}{0}
+\begin{texexample}{Setting the counters}{ex:counters}
+\makeatletter 
+\newcounter{lorem@count}
+\setcounter{lorem@count}{0}
 
-var lips@count;
-      lips@count=0;
-\end{teX}
-
-
-
-\begin{teXXX}
 % define a new command for default values
-\newcommand\lips@default{1-7}
+\newcommand\lorem@default{1-7}
 
 % allow user to change this default value
 % using setlipsumdefault 
-\newcommand\setlipsumdefault[1]{%
-  \renewcommand{\lips@default}{#1}}
+\newcommand\setloremdefault[1]{%
+  \renewcommand{\lorem@default}{#1}}
+
+% change the defaults example to only two lines
+\setloremdefault{1-2}  
+\makeatother  
+\end{texexample}
+
+
+
+\begin{texexample}{Rest of code}{ex:rest}
+\makeatletter
+
+% define a new command for default values
+\newcommand\lorem@default{1-7}
+
+% allow user to change this default value
+% using setlipsumdefault 
+\newcommand\setloremdefault[1]{%
+  \renewcommand{\lorem@default}{#1}}
+
+% change the defaults example to only two lines
+\setloremdefault{1-5}
 
 % This is a bit difficult to grasp
 % try it on your own a few times
-\newcommand\lips@dolipsum{%
-  \ifnum\value{lips@count}<\lips@max\relax%
-    \addtocounter{lips@count}{1}%
+\newcommand\lorem@dolipsum{%
+  \ifnum\value{lorem@count}<\lorem@max\relax%
+    \addtocounter{lorem@count}{1}%
 %\roman would convert numerals
 % to roman numerals all the lipsum paragraphs
 % are referenced in roman  
-    \csname lipsum@\roman{lips@count}\endcsname%
-    \lips@dolipsum%
+    \csname lorem@\roman{lorem@count}\endcsname%
+    \lorem@dolipsum%
   \fi  
 }
 
 % lipsum[1-8] would print para 1-8 etc
 % this routine defines the command
-\newcommand\lipsum[1][\lips@default]{%
-  \expandafter\lips@minmax\expandafter{#1}%
-  \setcounter{lips@count}{\lips@min}%
-  \addtocounter{lips@count}{-1}%
-  \lips@dolipsum%
+\newcommand\lorems[1][\lorem@default]{%
+  \expandafter\lorem@minmax\expandafter{#1}%
+  \setcounter{lorem@count}{\lorem@min}%
+  \addtocounter{lorem@count}{-1}%
+  \lorem@dolipsum%
 }
 
 % define min and max
 %this is quite involved
-\def\lips@get#1-#2;{\def\lips@min{#1}\def\lips@max{#2}}
-\def\lips@stripmax#1-{\edef\lips@max{#1}}
-\def\lips@minmax#1{%
-  \lips@get#1-\relax;%
-  \edef\lips@tmpa{\lips@max}%
-  \edef\lips@relax{\relax}%
-  \ifx\lips@tmpa\lips@relax\edef\lips@max{\lips@min}%
-  \else\expandafter\lips@stripmax\lips@max\fi%
+\def\lorem@get#1-#2;{\def\lorem@min{#1}\def\lorem@max{#2}}
+\def\lorem@stripmax#1-{\edef\lorem@max{#1}}
+
+\def\lorem@minmax#1{%
+  \lorem@get#1-\relax;%
+  \edef\lorem@tmpa{\lorem@max}%
+  \edef\lorem@relax{\relax}%
+  \ifx\lorem@tmpa\lorem@relax\edef\lorem@max{\lorem@min}%
+  \else\expandafter\lorem@stripmax\lorem@max\fi%
 }
 
 % All the paragraphs are set as commands
 % for example
-\newcommand\lipsum@i{Lorem ipsum dolor sit amet, consectetuer
+\newcommand\lorem@i{1 Lorem ipsum dolor sit amet, consectetuer
   adipiscing elit. Ut purus elit, vestibulum ut, placerat ac,
   adipiscing vitae, felis.. \par}
 
-These are called by:
- \csname lipsum@\roman{lips@count}\endcsname%
+\newcommand\lorem@ii{\[ a+ b +c = \frac{a+b}{a+b+c}\]}
 
-\end{teXXX}
+\newcommand\lorem@iii{3 Lorem ipsum dolor sit amet, consectetuer
+  adipiscing elit. Ut purus elit, vestibulum ut, placerat ac,
+  adipiscing vitae, felis.. \par}
+  
+\newcommand\lorem@iv{4 Lorem ipsum dolor sit amet, consectetuer
+  adipiscing elit. Ut purus elit, vestibulum ut, placerat ac,
+  adipiscing vitae, felis.. \par}  
+  
+\newcommand\lorem@v{5 \selectlanguage{ngerman}
+This are German quotes \enquote{quoted text}. 
+\par}  
+  
+\newcommand\lorem@vi{
+\cxset{paragraph format=hang, paragraph color=yellow,}
+\paragraph* {Septic Equation} 
+   \begin{gather}ax^7+bx^6+cx^5+dx^4+ex^3+fx^2+gx+h=0\end{gather}%
+   }
+  
+These are called by:
+\setcounter{lorem@count}{2}
+\csname lorem@\roman{lorem@count}\endcsname%
+
+\makeatother
+
+% author commands
+\lorems[1-2]
+\lorems[5]
+\lorems[6]
+\end{texexample}
 
 
 
@@ -517,20 +601,16 @@ All  control sequences for conditionals begin with \doccmd{if}...,
 and they all have a matching \doccmd{fi}. This convention that\doccmd{if}... pairs up
 with |fi| makes it easier to see the nesting of conditionals within your program. 
 
-The nesting of \doccmd{if}$\ldots$\doccmd{fi}  is independent of the nesting of \{...\}; thus, you can begin or end
+The nesting of \docAuxCommand*{if}$\ldots$\docAuxCommand*{fi}  is independent of the nesting of \{...\}; thus, you can begin or end
 a group in the middle of a conditional, and you can begin or end a conditional in the
 middle of a group. Knuth notes that
 
 \begin{quotation}
 Extensive experience with macros has shown that such independence
 is important in applications; but it can also lead to confusion if you aren't careful.
-\end{quotation}\sidenote{\TODO}
+\end{quotation}
 
-Simply, don't use it! It just looks ugly.
-
-
-
-\textbf{\textbackslash if constructions.} \quad The first conditional we will review, is |\if| \ldots |\fi|. This is used to compare two unexpandable tokens. \TeX will expand macros following \cmd{if} until two unexpandable tokens are found. If
+\textbf{\textbackslash if constructions.} \quad The first conditional we will review, is |\if| \ldots |\fi|. This is used to compare two unexpandable tokens. \TeX will expand macros following |\if| until two unexpandable tokens are found. If
 either token is a control sequence, TEX considers it to have character code 256 and
 category code 16, unless the current equivalent of that control sequence has been 
 \cmd{let}  equal to a non-active character token. In this way, each token specifes a (character
@@ -540,55 +620,82 @@ independent of the category codes.
  For example, after 
 \end{multicols}
 
-\begin{teXXX}
-\def\a{*} and \let\b=* and \def\c{/}, 
-the tests `\if*\a \fi' and `\if\a\b \fi' will be true, 
-but `\if\a\c \fi' will be false.
 
-Also \if\a\par\fi' will be false, 
-but `\if\par\let \fi' will be true.
+\section{Characters and control sequences}
 
-\end{teXXX}
+\begin{docCommand}{if}{\meta{$token_1$}\meta{$token_2$}}{}
+Tests for equality of character codes.
+\end{docCommand}
 
-produces,
-
-
-
-\def\a{} 
-\def\b{**} 
-\def\c{True}
-
-\if\a\b \relax True \fi
- 
-
-\def\z1{3}
-\ifnum \z1=3  \string\z1=3  is True \fi
-
- this is |\ifhmode| I am in horizontal mode |\fi|
+\emphasize{if,fi}
+\begin{texexample}{Check for Equality of Characters}{ex:if}
+\def\a{a}\def\b{a}
+\def\TRUE{TRUE} 
+\def\FALSE{FALSE}
+\if\a\b\TRUE\fi
+\end{texexample}
 
 
+\begin{docCommand}{ifx}{\meta{$token_1$}\meta{$token_2$}}{}
+Test equality of macro expansion, or equality of character code and category code
+\end{docCommand}
 
-\section*{ifodd}
+\begin{texexample}{Check for Equality of Characters}{}
+\def\a{a}\def\b{a}\def\c{other}
+\def\TRUE{TRUE}
+\def\FALSE{FALSE}
+
+\ifx\a\b\TRUE\fi
+
+\ifx\a\c\TRUE\else\FALSE\fi
+
+\meaning\a
+
+\meaning\b
+\end{texexample}
 
 
-The \cmd{ifodd} construction, checks if a number is odd and you can use it to for example to color 
-all the odd rows of a table. \sidenote{We will use this once we learn a bit more about counters.}
+\section{Numerical Testing}
 
-\begin{teX}
-   \ifodd  \z1  print ok \fi
-\end{teX}
+\begin{docCommand}{ifnum}{\meta{$number_1$}\meta{relation}\meta{$number_2$}}
+Testing of a numerical relation, where the relation is a character <, =, or >, of category 12.
+\end{docCommand}
 
-\section*{CASE STATEMENTS}
+\emphasize{ifnum,else,fi}
+\begin{texexample}{Testing a relation}{ex:numericaltests}
+\edef\a{12}\edef\b{13}
+\ifnum\a<\b\TRUE\else\FALSE\fi
 
-\begin{multicols}{2}
+\ifnum\a>\b\TRUE\else\FALSE\fi
+
+\ifnum\a=\b\TRUE\else\FALSE\fi
+\end{texexample}
+
+
+\section{\textbackslash ifodd}
+
+
+The \docAuxCommand{ifodd} construction, checks if a number is odd and you can use it to for example to color 
+all the odd rows of a table. 
+
+\begin{texexample}{\textbackslash ifodd construction.}{ex:ifodd}
+   \ifodd\thepage  
+      this page is odd
+   \else
+      this page is even   
+   \fi
+\end{texexample}
+
+\section{Case Statements}
+
+
 {\textbackslash ifcase.} The \cmd{ifcase} is a switch, it is equivalent to a number of |\ifnum| statements combined together.
 Remember for most of \TeX\  constructs you do not use parentheses, just write freely. Like a Turing machine,
 just read from the tape and give your result to the next token and so on.
 
 Here is a trivial example:
-\end{multicols}
 
-\TODO{Good question}
+
 \begin{teX}
 \ifcase 12% 
     I am zero      %   0
@@ -606,72 +713,256 @@ This will output  \ldots \texttt{I am different}
 Just to become more familiar with the syntax let us see another example. This time we will define
 a new command \cmd{weekday}, which will give us the name of the date of the week, given a numer, really simple stuff,
 
-\begin{comment}
-\begin{texexample}{ifcase}{ifcase}
-\def\weekday#1{
+
+\begin{texexample}{ifcase}{ex:ifcase}
+\gdef\weekday#1{
  \ifcase#1
-   Sunday          		%   0
-   \or Monday    		%   1
-   \or Tuesday    	%   2
-   \or Wednesday  	%   3
-   \or Thursday     	%   4
-   \or Friday  		%   5
-   \or Saturday 		%   6 
+   Sunday          	
+   \or Monday    		
+   \or Tuesday    	
+   \or Wednesday  	
+   \or Thursday     
+   \or Friday  		
+   \or Saturday 		
    \else 
-      Error No: 212345, this is not a  weekday!}
- \fi\relax 
-}
+      Error No: 212345, this is not a  weekday!
+ \fi\relax} 
+\weekday{2}
 \end{texexample}
-\end{comment}
 
 
-\begin{comment}
-Typing \texttt{\string\weekday\{12\}} will give you an error: 
 
- \weekday{12} \sidenote{Not a real error, but we need to start thinking as to how to catch errors!}\sidenote{\jobname, ~ \today }
-\end{comment}
-
-\begin{teX}
+\begin{texexample}{Month and time stamp}{}
+\bgroup
 \def\monthname{%
-\ifcase\month
-\or Jan\or Feb\or Mar\or Apr\or May\or Jun%
-\or Jul\or Aug\or Sep\or Oct\or Nov\or Dec%
+  \ifcase\month
+    \or Jan\or Feb\or Mar\or Apr\or May\or Jun%
+    \or Jul\or Aug\or Sep\or Oct\or Nov\or Dec%
 \fi}%
-\def\timestring{\begingroup
-\count0 = \time \divide\count0 by 60
-\count2 = \count0 % The hour.
-\count4 = \time \multiply\count0 by 60
-\advance\count4 by -\count0 % The minute.
-\ifnum\count4<10 \toks1 = {0}% Get a leading zero.
-\else \toks1 = {}%
+
+%\def\timestring{\begingroup
+%  \count0 = \time \divide\count0 by 60
+%  \count2 = \count0 % The hour.
+%  \count4 = \time \multiply\count0 by 60
+%  \advance\count4 by -\count0 % The minute.
+%  \ifnum\count4<10 \toks1 = {0}% Get a leading zero.
+%  \else \toks1 = {}%
+%  \fi
+%
+%\ifnum\count2<12 \toks0 = {a.m.}%
+%\else \toks0 = {p.m.}%
+%\advance\count2 by -12
+%\fi
+%
+%\ifnum\count2=0 \count2 = 12 \fi 
+%\number\count2:\the\toks1 \number\count4
+%\thinspace \the\toks0
+% \endgroup}%
+%
+%\def\timestamp{\number\day\space\monthname\space
+%\number\year\quad\timestring}%
+%
+%number = \number
+%
+%day = \day 
+%
+%year =\year
+%
+%month = \month
+%
+%month-name  = \monthname 8
+%
+%time = \timestring
+\monthname{5} \weekday{\day} 
+\egroup
+\end{texexample}
+
+\section{Box Testing}
+
+\begin{docCommand}{ifvoid}{\marg{8-bit number}}{}
+
+Test a box register if is void
+\end{docCommand}
+
+\begin{texexample}{Box registers}{}
+% create a new box
+\newbox\mybox
+
+% check if it is void
+\ifvoid\mybox\TRUE\else\FALSE\fi
+
+% put some material in the box
+\setbox\mybox=\hbox{This is some test}
+
+% check if void, returns false
+\ifvoid\mybox\TRUE\else\FALSE\fi
+
+% unbox the \mybox, this will empty the box
+\box\mybox
+
+% check if void, returns true as using a \box will
+% empty it
+\ifvoid\mybox\TRUE\else\FALSE\fi
+
+% put some new material in the box
+\setbox\mybox=\hbox{new material in the box}
+
+% unbox
+\copy\mybox
+
+% check if void, returns false
+\ifvoid\mybox\TRUE\else\FALSE\fi
+
+\end{texexample}
+
+\begin{docCommand}{ifhbox}{\meta{8-bit number}}
+Returns true if the box register contains a horizontal box.
+\end{docCommand}
+
+\begin{docCommand}{ifvbox}{\meta{8-bit number}}
+Returns true if the box register contains a vertical box.
+\end{docCommand}
+
+\emphasize{ifhbox,ifvbox,else,fi}
+\begin{texexample}{ifhbox}{}
+% create a new box
+\newbox\hororvertbox
+
+% insert some material in the box 
+\setbox\hororvertbox=\hbox{This is some test.}
+
+% check if is a horizontal box, returns true
+\ifhbox\hororvertbox\TRUE\else\FALSE\fi
+
+% insert some vertical material
+\setbox\hororvertbox=\vbox{This is a vertical box}
+
+% check if it is a horizontal box, returns false
+\ifhbox\hororvertbox\TRUE\else\FALSE\fi
+
+% check if it is a vertical box, returns true
+\ifvbox\hororvertbox\TRUE\else\FALSE\fi
+\end{texexample}
+
+
+
+\section{Special tests}
+
+The tests \docAuxCommand{iftrue} and \docAuxCommand{iffalse} are always true and false respectively. They are mainly
+useful as tools in macros.
+For instance, the sequences
+
+|\iftrue{\else}\fi|
+
+and
+
+|\iffalse{\else}\fi|
+
+yield a left and right brace respectively, but they have balanced braces, so they can be used
+inside a macro replacement text.
+The \docAuxCommand{newif macro}, treated below, provides another use of |\iftrue| and |\iffalse|. On
+page 260 of the TEX book these control sequences are also used in an interesting manner.
+
+
+\begin{texexample}{latex newif}{ex:ltxnewif}
+\makeatletter
+\newif\if@mytest
+\@mytesttrue
+\if@mytest\TRUE\else\FALSE\fi
+\makeatother 
+\end{texexample}
+
+The \docAuxCommand{newif} is not a \tex primitive command, as one would at first expect, but is defined later
+in the format.
+
+The definition is:
+
+\begin{teXXX}
+%\newif And here's a different sort of allocation: For example, \newif\iffoo creates
+%\footrue, \foofalse to go with \iffoo.
+\def\newif#1{%
+ \count@\escapechar \escapechar\m@ne
+ \let#1\iffalse
+ \@if#1\iftrue
+ \@if#1\iffalse
+ \escapechar\count@}
+%\@if
+\def\@if#1#2{%
+ \expandafter\def\csname\expandafter\@gobbletwo\string#1%
+ \expandafter\@gobbletwo\string#2\endcsname
+ {\let#1#2}}
+\end{teXXX}
+
+If the value of \docAuxCommand{escapechar} is negative or larger than 255, then no escape-character will be printed, when using string or writing to a file and in the text printed using |\meaning|. Simplistically \tex uses this to remove the if from the characters and define the two macros. In example \ref{es:escapechar}, we will set the |\escapechar| to -1 and see its effects on |\meaning| and |\string| more clearly. 
+
+The |\newif| does not do any checking for duplicate names. It will simply overwrite the definition? 
+
+\begin{texexample}{Effects of \textbackslash @escapechar}{ex:escapechar}
+\makeatletter
+\bgroup
+\count@\escapechar 
+
+% define \test to hold \string\test
+\def\test{\escapechar\m@ne \string\test}
+
+% prints just test
+\test
+
+% prints macro:->escapechar m@ne string test 
+\meaning\test 
+
+% reset escapechar
+\escapechar=`\\
+
+% prints ]test
+\string\test
+
+% prints macro:->\escapechar \m@one \string \test
+\meaning\test
+
+\egroup
+\makeatother
+\end{texexample}
+
+Lamport in \latex used these constructs extensively to define switch-on and switch-off macros. For example\\
+|\def\@nobreaktrue {\global\let\if@nobreak\iftrue}|\\
+is used to used to avoid page breaks caused by |\label| after a section heading, etc.
+It should be globally set true after the |\nobreak| and globally set false by
+the next invocation of |\everypar|. Commands that reset |\everypar| should globally set it false if appropriate
+
+
+\begin{texexample}{latex newif}{ex:ltxnewif}
+\makeatletter
+\if@nobreak\TRUE\else\FALSE\fi
+
+\begin{minipage}{\linewidth}
+\if@minipage
+  \lorem
 \fi
 
-\ifnum\count2<12 \toks0 = {a.m.}%
-\else \toks0 = {p.m.}%
-\advance\count2 by -12
-\fi
+\if@nobreak\TRUE\else\FALSE\fi  
+\end{minipage}
+\if@minipage
+  \lorem
+\fi  
+\makeatother
+\end{texexample}
 
-\ifnum\count2=0 \count2 = 12 \fi 
-\number\count2:\the\toks1 \number\count4
-\thinspace \the\toks0
-\endgroup}%
+This brings us to the end of the discussion of \tex's and \latexe's conditionals. They are somewhat different from other
+programming languages and it takes sometime to get used to them. If you can store variables, have recursion, you have a complete Turing engine. You can actually program anything---although this can take a bit longer than usual programming using \tex. 
 
-\def\timestamp{\number\day\space\monthname\space
-\number\year\quad\timestring}%
+Turing-completeness basically requires three properties:\footnote{For a longer discussion see \url{https://tex.stackexchange.com/questions/58042/are-there-any-disadvantages-of-tex-being-turing-complete}}
 
-number = \number
+\begin{enumerate}
+\item Variables (registers) that can be modified by primitive arithmetic: An inc operation (+1) is enough.
+\item A test operation (if)
+\item An endless loop construct, such as goto or while or recursion. \tex does not have a |goto| but has recursion.
+\end{enumerate}
 
-day = \day 
 
-year =\year
 
-month = \month
 
-month-name  = \monthname 8
-
-time = \timestring
-\end{teX}
-
+\endinput
 \section{Find the lenth of an argument}
 % This can be useful standard library routine
 % Find the length of a string - but not spaces

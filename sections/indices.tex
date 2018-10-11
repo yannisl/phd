@@ -1,4 +1,5 @@
-\parskip1ex 
+\let\bs\textbackslash
+\parskip1.5pt 
 \newfontfamily\tibetan{TibMachUni.ttf}
 \def\deva{{\protect\tibetan\symbol{"0F7C} xx ༃}}
 
@@ -48,6 +49,7 @@ A section entitled ``An Alphabetical Table of the most material contents of the 
 
 \section{Preparing an index}
 
+\index[latex]{latex>test}
 In order to produce an index, we need to load the
 package \pkg{makeidx}  and immediately issue the command \cmd{\makeindex}.\footnote{You will also need to at least run the file once using |MakeIndex| on |MikTex|. Check your distribution if you getting problems.}
 At the place where
@@ -67,12 +69,10 @@ If the word is to be printed in bold, we use
  \catcode`|=11
 \gdef\idxmain#1{%
    \def\idxmainentryi##1##2##3;{%
-      \index{Kr0=\textbf{#1}|textbf}
+      \index{Kroll=\textbf{#1}|textbf}
     }
    \idxmainentryi#1;    
 }  
-
-
 \egroup
 
 \idxmain{Kroll}
@@ -80,8 +80,8 @@ If the word is to be printed in bold, we use
 \index{Kroll=\textbf{Kroll}>Leon Kroll}
 
 
-
-\begin{minted}[fontsize=\footnotesize]{TeX}
+\emphasis{makeidx,makeindex,printindex}
+\begin{teX}
 \documentclass{article}
 \usepackage{makeidx}
 \makeindex
@@ -92,12 +92,12 @@ If the word is to be printed in bold, we use
 
 \printindex
 \end{document}
-\end{minted}
+\end{teX}
 
 
 
-There is a  special character |@| is used to denote that what appears on its left side must be
-typeset as it appears on its right side.  the first occurrence of perl will also be used
+There is a  special character |@| which is used to denote that what appears on its left side must be
+typeset as it appears on its right side.  The first occurrence of perl will also be used
 by the sorting algorithm. is is very useful since what is used for sorting and what
 will be printed may be different! For example,we may want to have the name 
 \texttt{Donald Knuth}  under the letter K., we should write
@@ -193,7 +193,7 @@ Example	&Index Entry	&Comment\\
 \index{Indexing>general}
 \index{Indexing>doc}
 
-Indexing \latex2e classes is normally achieved using the |doc| and |docstrip| program, which they are not so clear with examples, if you need to deviate from the standard methods. The important thing here to remember is that you need to use different characters |=| |>| |*|.
+Indexing \latex2e classes or package documentation produced with the \docClass{ltxdoc} is normally achieved using the \pkg{doc} and \pkg{docstrip} program, which are sometime difficult to use, if you need to deviate from their standard methods. The important thing here to remember is that you need to use different characters |=| |>| |*|.
 
 \begin{tabular}{ll}
 \toprule
@@ -212,6 +212,72 @@ normal    & doc \\
 
 This manual, was build using a large |ltxdoc| class and these problems appeared while I was developing it. As normal with such problems, they were very time consuming to debug. There are still issues in some parts and one day, I am hoping to come back and correct them. One needs at this point to query the need to use the |doc| and |docstrip| method of documenting macros and if it shouldn't have a pre-processor written in a higher language to ease development. 
 
+\chapter{The makeindex program}
+
+The makeindex program was developed by Pehong Chen and Michael Harrison \fullcite{chen01} in the eighties and is still used by \latexe. It is a remarkable, flexible program, found on most distributions. It is also used in GNU EMACS. 
+
+The input format consists of a list of \meta{specifier, attribute} tuples. These are the essential tokens and delimiters needed in scanning the input index file. There are ten such specifiers (you can think of them as the names of functions or variables) and the attributes as their value. 
+
+\captionof{table}{Index input style parameters}
+\begin{longtable}{l l l l}
+\toprule
+specifier &attribute &default &meaning\\
+\midrule
+|keyword|     & string &|"\\indexentry"| & index command\\
+|arg_open|    & char   &|'{'|            & argument opening delimiter\\
+|arg_close|   & char   &|'}'|            & argument closing delimiter\\
+|range_open|  & char   &|'('|            & page range opening delimiter\\
+|range_close| & char   &|')'|           & page range closing delimiter\\
+|level|       & char   &|'!'|             & index level delimiter\\     
+|actual|      & char   &|'@'|             & actual key designator\\
+|encap|       & char   &  $\|$            & page number encapsulator\\
+|quote|       & char & |'"'|            & quote symbol\\
+|escape|      & char & |'\\'|           & symbol which escapes quote\\
+|page_compositor| & string & ''-''       & composite page delimiter\\
+\bottomrule
+\end{longtable}
+
+
+\begin{description}
+
+\item[composite page delimiter] A page number can be a composite of one or more fields separated by a certain delimiter bound to a \textit{page\_compositor}  e.g. II-13 for page 13 of Chapter II. This attribute allows the lexical analyzer of the makeindex program to seprate these fields, making the sorting of page numbers easier.
+\end{description}
+
+
+\section{Output format}
+
+
+
+The file \docFile{gind.ist} is shown below
+\begin{teXXX}
+actual '='
+encap '|'
+level '>'
+quote '!'
+preamble
+"\n \\begin{theindex} \n \\makeatletter\\scan@allowedfalse\n"
+postamble
+"\n\n \\end{theindex}\n"
+item_x1   "\\efill \n \\subitem "
+item_x2   "\\efill \n \\subsubitem "
+delim_0   "\\pfill "
+delim_1   "\\pfill "
+delim_2   "\\pfill "
+% The next lines will produce some warnings when
+% running Makeindex as they try to cover two different
+% versions of the program:
+%lethead_prefix   "{\\bfseries\\hfil "
+%lethead_suffix   "\\hfil}\\nopagebreak\n"
+%lethead_flag       1
+heading_prefix   "{\\bfseries\\hfil "
+heading_suffix   "\\hfil}\\nopagebreak\n"
+headings_flag       1
+%%
+%%
+%% End of file `gind.ist'.
+\end{teXXX}
+
+
 \section{Customization}\index{Indexing>customizing}
 
 When creating an index with \pkgname{makeindex} one can create a \docFile{sample.ist} file that can be used together with the |makeidx| program to customize the way the index will look.
@@ -227,20 +293,20 @@ delim_2 "\\dotfill"
 
 This will write the first alphabet symbol in bold font, and uses dots as delimiters. This file is generally  used jointly with \texttt{makeindex} using
 
-\begin{minted}{bash}
+\begin{teX}
 makeindex -s sample.ist filename.idx
-\end{minted}
+\end{teX}
 
 where |filename.idx| has been craeted by executing |latex| or one of the other engine commands such as |pdflatex| on |filename.tex|.
 
 
 According to \citep{gabora}, you may use
 
-\begin{minted}{bash}
+\begin{teX}
 sort_rule "\." "\b\."
 sort_rule "\:" "\b\:"
 sort_rule "\," "\b\,"
-\end{minted}
+\end{teX}
 
 
 \section{Writing custom indexing commands}
@@ -264,6 +330,7 @@ For complex documents it is easier to write a number of macros to assist with in
 %   \indexcommand[\string#1]{#1}
 %   \string#1}
 %\end{phdverbatim}
+\endinput
 
 
 

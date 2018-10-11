@@ -1,8 +1,6 @@
-
-
-
+\chapter{Managing Keys with PGF}
 \section{PGF keys}
-\label{pgfkeys}
+\label{ch:pgfkeys}
 
 This chapter describes the package |pgfkeys|. It is loaded
 automatically by both \pgfname\ and \tikzname.
@@ -12,6 +10,85 @@ automatically by both \pgfname\ and \tikzname.
   other package of \pgfname\ needs to be loaded (so neither the
   emulation layer nor the system layer is needed). The Con\TeX t
   abbreviation is |pgfkey| if |pgfmod| is not loaded.
+  
+\long\def\uwavestory{A Dialogue between the Landlady, and Susan the Chambermaid, proper to be read by all Innkeepers, and their Servants; with the Arrival, and affable Behaviour of a beautiful young Lady; which may teach Persons of Condition how they may acquire the Love of the whole World.}
+         
+\def\fontstore{}
+\def\fractionlinewidth{\linewidth}
+
+\cxset{paragraph style/uwave/.code=\wavelast{#1},
+       paragraph style/uwave/font-weight/.store in=\fontstore{#1}, 
+       paragraph style/uwave/linewidth/.code=\fractionlinewidth{#1},
+       }
+       
+ \cxset{paragraph style/uwave/font-weight=\itshape,
+      % paragraph style/uwave/linewidth={15cm},
+       }      
+       
+\def\wavelast#1{%
+       \bgroup
+       \hbox to \linewidth{\hfill\vbox{%
+       \fontstore
+       \hsize=0.8\linewidth
+       \hyphenpenalty=100
+       \setbox0=\vbox{\noindent\centering #1}%
+       \setbox1=\vbox{%
+            \unvbox0
+            \setbox2=\lastbox
+            \centerline{\uwave{\unhbox2}}%
+       }%
+       \unvbox1
+       }\hfill}%
+       \bigskip
+      \egroup
+  }
+
+\begin{texexample}{wavelast}{}
+\bgroup
+\cxset{paragraph style/uwave/font-weight=\itshape,
+      % paragraph style/uwave/linewidth={15cm},
+       }
+\begin{center}       
+
+ \wavelast{
+A Dialogue between the Landlady, and Susan the Chambermaid, proper to be read by all Innkeepers, and their Servants; with the Arrival, and affable Behaviour of a beautiful young Lady; which may teach Persons of Condition how they may acquire the Love of the whole World.}
+
+\end{center}
+\egroup
+\end{texexample}
+
+\emphasis{uwave}
+\begin{teXXX}
+\def\wavelast#1{%
+       \bgroup
+       
+       \setbox0=\vbox{\fontstore\noindent #1}%
+       \setbox1=\vbox{%
+            \unvbox0
+            \setbox2=\lastbox
+            \hbox to 10cm{\hfill\uwave{\unhbox2}\hfill}(*@\label{lin:uwave}@*)%
+       }%
+       \unvbox1
+      \egroup
+  }%
+\end{teXXX}
+
+
+
+Consider the number of variables involved in such a paragraph. How can we abstract the code to make it more general? We can have settings for colors, width, hyphenation, font related commands etc. \pgfname\ keys can be used to provide a dictionary.
+
+
+
+ \cxset{paragraph style/uwave/font-weight=\bfseries,
+        paragraph style/uwave=\uwavestory}
+
+\medskip
+
+ \cxset{paragraph style/uwave/font-weight=\itshape\bfseries,
+        paragraph style/uwave=\aliceii}       
+
+
+
 
 \section{Introduction}
 
@@ -48,6 +125,69 @@ following:
   defining keys in different ways is handled by, well, handlers.
 \end{itemize}
 
+The \pgfname can be used for complicated and multi-value cases. The fact that it is
+more capable than the rest does not in itself make it slower. 
+
+\section{Technical}
+
+The package uses \cs{csname} to craete the names of macros and token registers to store the values. For example to
+store a length in a key |/test/length| it does the following:
+
+\begin{texexample}{pgfkeyssetvalue}{ex:setexpl}
+\pgfkeyssetvalue{/test/length}{2cm-3cm}
+\makeatletter
+\the\pgfkeys@temptoks
+
+\csname pgfk@/test/length\endcsname
+\makeatother
+\end{texexample}
+
+Essentially we defined a macro |pgfk@/test/length| with its replacement text being |2cm-3cm|. The definition
+of \docAuxCommand{pgfkeyssetvalue} given by:
+
+\begin{teXXX}
+\long\def\pgfkeyssetvalue#1#2{%
+  \pgfkeys@temptoks{#2}
+  \expandafter
+    \edef\csname pgfk@#1\endcsname{\the\pgfkeys@temptoks}%
+}
+\end{teXXX}
+
+The code above just stored a value. If the path ends in |.@cmd| it will set up things so the |key/.@cmd| contains a 
+a macro that takes one parameter and has |#2| as its code.
+
+\begin{teXXX}
+\long\def\pgfkeysdef#1#2{%
+  \long\def\pgfkeys@temp##1\pgfeov{#2}%
+  \pgfkeyslet{#1/.@cmd}{\pgfkeys@temp}%
+  \pgfkeyssetvalue{#1/.@body}{#2}%
+}
+
+\long\def\pgfkeysedef#1#2{%
+  \long\edef\pgfkeys@temp##1\pgfeov{#2}%
+  \pgfkeyslet{#1/.@cmd}{\pgfkeys@temp}%
+  \pgfkeyssetvalue{#1/.@body}{#2}%
+}
+\end{teXXX}
+
+
+\begin{texexample}{Defining keys for code}{ex:keycode}
+
+\def\city#1{\expandafter\def\csname#1\endcsname{#1}}
+
+\pgfkeysdef{/test/cities}{\city{#1}}
+
+\pgfkeys{/test/cities=Rome}
+\pgfkeys{/test/cities=Paris}
+
+\Rome, \Paris
+
+
+
+\end{texexample}
+
+
+
 
 \subsection{Getting started}
 
@@ -55,8 +195,8 @@ The following quick guide to \pgfname's key mechanism only treats the
 most commonly used features. For an in-depth discussion of what is
 going on, please consult the \pgfname\ manual.
 
-Keys are organized in a large tree that is reminiscent of the Unix
-file tree. A typical key might be, say, |/tikz/coordinate system/x|
+Keys are organized in a large tree that is similar to the Unix
+file tree. A typical key might be, say, \lstinline{/tikz/coordinate system/x}
 or just |/x|. Again as in Unix, when you specify keys you can provide
 the complete path of the key, but you usually just provide the name of
 the key (corresponding to the file name without any path) and the path
@@ -145,6 +285,19 @@ executed whenever the style is executed. Here is an example:
 As the above example shows, style can also be parametrized, just like
 the normal code keys.
 
+Printing a phd key 
+\begin{texexample}{Printing a Key}{ex:key}
+\pgfkeys{/phd/test/.code=(Test),}
+\pgfkeys{/phd/.style =/phd/.cd,
+         phd, chapter name,
+         }
+\expandafter\meaning\expandafter\pgfkeysvalueof{/phd/chapter font-family}   
+\makeatletter
+\csname pgfkey@store\endcsname {test}
+\makeatother      
+\end{texexample}
+
+
 As a typical use of styles, suppose we wish to setup the key |/tikz|
 so that it will change the default path to |/tikz|. This can be
 achieved as follows:
@@ -203,7 +356,7 @@ command or some command that uses it internally like, say,
 |\tikzset|. So, you may wish to skip the following commands and
 continue with the next subsection.
 
-\begin{command}{\pgfkeyssetvalue\marg{full key}\marg{token text}}
+\begin{docCommand}{pgfkeyssetvalue}{\marg{full key}\marg{token text}}{}
   Stores the \meta{token text} in the \meta{full key}. The \meta{full key}
   may not be a partial key, so no default-path-adding is done. The
   \meta{token text} can be arbitrary tokens and may even contain things
@@ -214,9 +367,17 @@ continue with the next subsection.
 \end{codeexample}
 
   The setting of a key is always local to the current \TeX\ group.
-\end{command}
+  
+\begin{codeexample}[]
+\pgfkeyssetvalue{/phd/chapteris font}{\arial}
+{\pgfkeysvalueof{/phd/chapteris font}  Lorem ipsum ...}
+\end{codeexample}  
+\end{docCommand}
 
-\begin{command}{\pgfkeyslet\marg{full key}\marg{macro}}
+
+
+
+\begin{docCommand}{pgfkeyslet}{\marg{full key}\marg{macro}}
   Performs a |\let| statement so the the \meta{full key} pionts to the
   contents of \meta{macro}.
 \begin{codeexample}[]
@@ -226,9 +387,9 @@ continue with the next subsection.
 \end{codeexample}
   You should never let a key be equal to |\relax|. Such a key may or
   may not be indistinguishable from an undefined key.
-\end{command}
+\end{docCommand}
 
-\begin{command}{\pgfkeysgetvalue\marg{full key}\marg{macro}}
+\begin{docCommand}{pgfkeysgetvalue}{\marg{full key}\marg{macro}}{}
   Retrieves the tokens stored in the \meta{full key} and lets
   \meta{macro} be equal to these tokens. If the key has
   not been set, the \meta{macro} will be equal to |\relax|. 
@@ -237,9 +398,11 @@ continue with the next subsection.
 \pgfkeysgetvalue{/my family/my key}{\helloworld}
 \helloworld
 \end{codeexample}
-\end{command}
+\end{docCommand}
 
-\begin{command}{\pgfkeysvalueof\marg{full key}}
+
+
+\begin{docCommand}{pgfkeysvalueof}{\marg{full key}}
   Inserts the value stored in \meta{full key} at the current position
   into the text.
 
@@ -247,10 +410,11 @@ continue with the next subsection.
 \pgfkeyssetvalue{/my family/my key}{Hello, world!}
 \pgfkeysvalueof{/my family/my key}
 \end{codeexample}
-\end{command}
+\end{docCommand}
 
+%
 
-\begin{command}{\pgfkeysifdefined\marg{full key}\marg{if}\marg{else}}
+\begin{docCommand}{pgfkeysifdefined}{\marg{full key}\marg{if}\marg{else}}{}
   Checks whether this key was previously set using either
   |\pgfkeyssetvalue| or |\pgfkeyslet|. If so, the code in \meta{if} is
   executed, otherwise the code in \meta{else}.
@@ -259,14 +423,16 @@ continue with the next subsection.
   efficiency. This means, however, that it may behave differently for
   \TeX\ and for e\TeX\ when you set keys to |\relax|. For this reason
   you should not do so. 
+
 \begin{codeexample}[]
 \pgfkeyssetvalue{/my family/my key}{Hello, world!}
 \pgfkeysifdefined{/my family/my key}{yes}{no}
 \end{codeexample}
-\end{command}
+\end{docCommand}
 
 
-\subsection{Setting Keys}
+
+\subsection{Setting Keys}{ }
 
 Settings keys is done using a powerful command called |\pgfkeys|. This
 command takes a list of so-called \emph{key--value pairs}. These are
@@ -288,7 +454,7 @@ Addtionally, if the \meta{value} is missing, a default value may or
 may not be substituted. Before we plunge into all the details,
 let us have a quick look at the command itself.
 
-\begin{command}{\pgfkeys\marg{key list}}
+\begin{docCommand}{pgfkeys}{\marg{key list}}{}
   The \meta{key list} should be a list of key--value pairs, separated
   by commas. A key--value pair can have the following two forms:
   \meta{key}|=|\meta{value} or just \meta{key}. Any spaces around the
@@ -314,32 +480,33 @@ let us have a quick look at the command itself.
   default path is restored after a call of |\pgfkeys|, the default
   path will not change when you call |\pgfkeys| while executing code
   for a key (which is exactly what you want).
-\end{command}
+\end{docCommand}
 
-\begin{command}{\pgfqkeys\marg{default path}\marg{key list}}
+\begin{docCommand}{pgfqkeys}{\marg{default path}\marg{key list}}{}
   This command has the same effect as |\pgfkeys{|\meta{default
       path}|/.cd,|\meta{key list}|}|, it is only marginally
   quicker. This command should not be used in user code, but rather in
   commands like |\tikzset| or |\pgfset| that get called very often.   
-\end{command}
+\end{docCommand}
 
-\begin{command}{\pgfkeysalso\marg{key list}}
+\begin{docCommand}{pgfkeysalso}{\marg{key list}}{}
   This command has execatly the same effect as |\pgfkeys|, only the
   default path is not modified before or after the keys are being
   set. This command is mainly intended to be called by the code that
   is being processed for a key.
-\end{command}
+\end{docCommand}
 
-\begin{command}{\pgfqkeysalso\marg{default path}\marg{key list}}
+\begin{docCommand}{pgfqkeysalso}{\marg{default path}\marg{key list}}{}{}
   This command has the same effect as |\pgfkeysalso{|\meta{default
       path}|/.cd,|\meta{key list}|}|, it is only quicker. Changing the
   default path inside a |\pgfkeyalso| is dangerous, so use with
   care. A rather safe place to call this command is at the beginning
   of a \TeX\ group.
-\end{command}
+\end{docCommand}
 
 
-\subsubsection{Default Arguments}
+
+\subsubsection{Default Arguments} 
 
 The arguments of the |\pgfkeys| command can either be of the form
 \meta{key}|=|\meta{value} or of the form \meta{key} with the
@@ -381,6 +548,7 @@ following happens:
 
 
 \subsection{Keys That Execute Commands}
+
 \label{section-key-code}
 
 After the transformation process described in the previous subsection,
@@ -405,7 +573,9 @@ have a key that expects a \meta{value} of the form
 ``\meta{text}|+|\meta{more text}'' and wishes to store \meta{text} and
 \meta{more text} in two different macros. This can be achieved as
 follows:
-\begin{texexample}{Storing values in macros}{}
+
+\begin{texexample}{Storing values in macros}{ex:storemacro}{ }
+
 \def\mystore#1+#2\pgfeov{\def\a{#1}\def\b{#2}}
 \pgfkeyslet{/my key/.@cmd}{\mystore}
 \pgfkeys{/my key=hello+world}
@@ -418,7 +588,7 @@ is too awkward. A simpler approach is shown in Example~\ref{delineated}. The fol
 usual manner of setting up code for a key is to use one of the
 handlers described in Section~\ref{section-code-handlers}.
 
-\begin{command}{\pgfkeysdef\marg{key}\marg{code}}
+\begin{docCommand}{pgfkeysdef}{\marg{key} \marg{code}}
   This command temporarily defines a \TeX-macro with the argument list
   |#1\pgfeov| and then lets \meta{key}|/.@cmd| be equal to this
   macro. The net effect of all this is that you have then setup code
@@ -428,36 +598,36 @@ handlers described in Section~\ref{section-code-handlers}.
   by \meta{value}. (This behaviour is quite similar to the
   |\define@key| command of |keyval| and |xkeyval|).
 
-\begin{codeexample}[]
-\pgfkeysdef{/my key}{#1, #1.}
-\pgfkeys{/my key=hello}
-\end{codeexample}
-\end{command}
+%\begin{codeexample}[]
+%\pgfkeysdef{/my key}{#1, #1.}
+%\pgfkeys{/my key=hello}
+%\end{codeexample}
+\end{docCommand}
 
-\begin{command}{\pgfkeysedef\marg{key}\marg{code}}
+\begin{docCommand}{pgfkeysedef}{\marg{key} \marg{code}}
   This command works like |\pgfkeysdef|, but it uses |\edef| rather
   than |\def| when defining the key macro. If you do not know the
   difference between the two, then you will not need this command;
   and if you know the difference, then you will know when you need this
   command.
-\end{command}
+\end{docCommand}
 
-\begin{command}{\pgfkeysdeargs\marg{key}\marg{argument pattern}\marg{code}}
+\begin{docCommand}{pgfkeysdeargs}{\marg{key}\marg{argument pattern}\marg{code}}{}
   This command works like |\pgfkeysdef|, but it allows you to provide
   an arbitrary \meta{argument pattern} rather than just the simple
   single argument of |\pgfkeysdef|. 
-
-\begin{texexample}{Delineated arguments}{delineated}
+\end{docCommand}
+\begin{texexample}{Delineated arguments}{delineated}{}
 \pgfkeysdefargs{/my key}{#1+#2}{\def\a{#1}\def\b{#2}}
 \pgfkeys{/my key=hello+world}
 
 |\a| is \a, |\b| is \b.
 \end{texexample}
-\end{command}
 
-\begin{command}{\pgfkeysedefargs\marg{key}\marg{argument pattern}\marg{code}}
+
+\begin{docCommand}{pgfkeysedefargs}{\marg{key}\marg{argument pattern}\marg{code}}{}
   The |\edef| version of |\pgfkeysdefargs|.
-\end{command}
+\end{docCommand}
 
 
 \subsection{Keys That Store Values}
@@ -525,6 +695,10 @@ this key and print it.
 \pgfkeyssetvalue{/my key}{Hi!}
 ...
 \pgfkeys{/my key/.print to log}
+
+\pgfkeys{/phd/chapter label/.font-size}
+
+font sise
 \end{codeexample}
 The above code will print |Hi!| in the log, provided the macro
 |\writetolog| is setup appropriately.
@@ -536,7 +710,7 @@ code is given as \meta{value}. All the handler must do is to call
 name) and assign the parameter value to it.
 
 \begin{texexample}{Defining Handlers}{ex:handlers}
-\pgfkeysdef{/handlers/.my code}{\pgfkeysdef{\pgfkeyscurrentpath}{#1}}
+\pgfkeysdef{/handlers/.my code} {\pgfkeysdef{\pgfkeyscurrentpath}{#1}}
 \pgfkeys{/my key/.my code=(#1)}
 \pgfkeys{/my key=hallo}
 \end{texexample}
@@ -577,6 +751,8 @@ this:
 \pgfkeys{/my search path/.cd,foo,bar}
 \end{teXXX}
 
+
+
 In the above code, |foo| and |bar| will be searched for in the three
 directories  |/a|, |/b|, and |/b/c|. 
 
@@ -590,17 +766,21 @@ We now describe which key handlers are defined by default. You can
 also define new ones as described in Section~\ref{section-key-handlers}.
 
 
+
+
 \subsection{Handlers for Path Management}
 
-\begin{handler}{{.cd}}
+\begin{handler}{{.cd}}{}
   This handler causes the default path to be set to \meta{key}. Note that
   the default path is reset at the beginning of each call to
   |\pgfkeys| to be equal to~|/|.
 
-  \example |\pgfkeys{/tikz/.cd,...}|
+%  \example |\pgfkeys{/tikz/.cd,...}|{ }
 \end{handler}
 
-\begin{handler}{{.is family}}
+
+
+\begin{handler}{{.is family}}{}
   This handler sets up things such that when \meta{key} is executed, then
   the current path is set to \meta{key}. A typical use is the following:
 \begin{codeexample}[code only]
@@ -612,49 +792,93 @@ also define new ones as described in Section~\ref{section-key-handlers}.
   |.is family| handler is quicker.
 \end{handler}
 
+This is an importnat handler if you are going to write your own library or package. It will enable you to write code
+of the form |\mypackageset{}| allowing your users not to have to type every time the full path.
 
-\subsubsection{Setting Defaults}
+\begin{texexample}{The .is family handler}{ex:isfamily}
+\def\pkgfamilyname{phd}
+\pgfkeys{/\pkgfamilyname/.is family} 
+% 
+%\newcommand\cxset{\pgfqkeys{/\pkgfamilyname}} 
+
+\def\cxkeydef#1#2{%
+ \pgfkeyssetvalue{/\pkgfamilyname/#1}{#2}%
+}
+\def\cxvalueof#1{%
+ \pgfkeysvalueof{/\pkgfamilyname/#1}%
+}
+
+\pgfkeyssetvalue{/phd/test}{Hello World.}
+\pgfkeysvalueof{/phd/test}\\
+
+\cxset{/phd/test=Hello Another world.}
+\pgfkeysvalueof{/phd/test}
+
+\cxvalueof{test}
+
+\let\phdvalueof\cxvalueof
+\let\phdset\cxset
+
+\phdset{test=Hello PHD Worlds}
+\phdvalueof{test}
+\end{texexample}
+
+
+
+\subsection{Setting Defaults}
+
 \label{section-default-handlers}
 
-\begin{handler}{{.default}|=|\meta{value}}
+\begin{handler}{.default}{|=|\meta{value}}
   Sets the default value of \meta{key} to \meta{value}. This means
   that whenever no value is provided in a call to |\pgfkeys|, then
-  this \meta{value} will be used instead.
-
-  \example |\pgfkeys{/width/.default=1cm}|
+  this \meta{value} will be used instead. This still means taht we need to have the key defined earlier
 \end{handler}
+The key needs to be initialized first. 
 
-\begin{handler}{{.value required}}
-  This handler causes the error message key |/erros/value required| to
+\begin{texexample}{Using default}{}
+\pgfkeys{myfamily/color/.initial =red, }
+\pgfkeys{myfamily/color}
+\end{texexample}
+
+
+\begin{handler}{{.value required}}{}
+  This handler causes the error message key |/errors/value required| to
   be issued whenever the \meta{key} is used without a value.
 
   \example |\pgfkeys{/width/.value required}|
 \end{handler}
 
-\begin{handler}{{.value forbidden}}
+\begin{handler}{{.value forbidden}}{}
   This handler causes the error message key |/erros/value forbidden|
   to be issued whenever the \meta{key} is used with a value.
 
   This handler works be adding code to the code of the key. This means
   that you have to define the key first before you can use this
   handler. 
+
+
+\end{handler}
 \begin{codeexample}[code only]
+
 \pgfkeys{/my key/.code=I do not want an argument!}
 \pgfkeys{/my key/.value forbidden}
 
 \pgfkeys{/my key}     % Ok
 \pgfkeys{/my key=foo} % Error
 \end{codeexample}
-\end{handler}
 
 
-\subsubsection{Defining Key Codes}
+
+\subsection{Defining Key Codes}
+
 \label{section-code-handlers}
 
 A number of handlers exist for defining the code of keys.
 
-\begin{handler}{{.code}|=|\meta{code}}
-  This handler executes |\pgfkeysdef| with the parameters \meta{key}
+\begin{handler}{.code}{|=|\meta{code}}
+
+This handler executes |\pgfkeysdef| with the parameters \meta{key}
   and \meta{code}. This means that, afterwards, whenever the
   \meta{key} is used, the \meta{code} gets executed. More precisely,
   when \meta{key}|=|\meta{value} is encountered in a key list,
@@ -665,22 +889,23 @@ A number of handlers exist for defining the code of keys.
   It is permissible that \meta{code} calls the command |\pgfkeys|. It
   is also permissible the \meta{code} calls the command
   |\pgfkeysalso|, which is useful for styles, see below.
+\end{handler}
 
-\begin{codeexample}[code only]
+\begin{texexample}{Some test}{}
 \pgfkeys{/par indent/.code={\parindent=#1},/par indent/.default=2em}
 \pgfkeys{/par indent=1cm}
 ...
 \pgfkeys{/par indent}
-\end{codeexample}
-\end{handler}
+\end{texexample}
 
-\begin{handler}{{.ecode}|=|\meta{code}}
-  This handler works like |.code|, only the command |\pgfkeysedef| is
+
+\begin{handler}{.ecode}{|=|\meta{code}}
+This handler works like |.code|, only the command |\pgfkeysedef| is
   used. 
 \end{handler}
 
 
-\begin{handler}{{.code 2 args}|=|\meta{code}}
+\begin{handler}{.code 2 args}{|=|\meta{code}}
   This handler works like |.code|, only two arguments rather than one
   are expected when the \meta{code} is executed. This means that when
   \meta{key}|=|\meta{value} is encountered in a key list, the
@@ -692,21 +917,27 @@ A number of handlers exist for defining the code of keys.
   Because of the special way the \meta{value} is parsed, if you set
   \meta{value} to, for instance, |first| (without any braces), then
   |#1| will be set to |f| and |#2| will be set to |irst|. 
-
-\begin{codeexample}[code only]
-\pgfkeys{/page size/.code 2 args={\paperheight=#2\paperwidth=#1}}
-\pgfkeys{/page size={30cm}{20cm}}
-\end{codeexample}
 \end{handler}
 
-\begin{handler}{{.ecode 2 args}|=|\meta{code}}
+%\begin{texexample}{paper height}{ex:paperheight}
+%
+%\pgfkeys{/page size/.code 2 args={\pheight=#2\pwidth=#1}}
+%\pgfkeys{/page size={30cm}{20cm}}
+%%\pheight  
+%
+%%\pwidth
+%\end{texexample}
+
+
+\begin{handler}{.ecode 2 args}{|=|\meta{code}}
+
   This handler works like |.code 2 args|, only an |\edef| is used
   rather than a |\def| to define the macro.
 \end{handler}
 
 
 
-\begin{handler}{{.code args}|=|\marg{argument pattern}\marg{code}}
+\begin{handler}{.code args}{|=|\marg{argument pattern}\marg{code}}
   This handler also works like |.code|, but you can now specify an
   arbitrary \meta{argument pattern}. Such a pattern is a usual \TeX\
   macro pattern. For instance, suppose \meta{argument pattern} is
@@ -717,13 +948,13 @@ A number of handlers exist for defining the code of keys.
   is matched against the \meta{argument pattern} in the standard \TeX\
   way. 
 
-\begin{codeexample}[code only]
-\pgfkeys{/page size/.code args={#1 and #2}{\paperheight=#2\paperwidth=#1}}
-\pgfkeys{/page size=30cm and 20cm}
-\end{codeexample}
+%\begin{codeexample}[code only]
+%\pgfkeys{/page size/.code args={#1 and #2}{\paperheight=#2\paperwidth=#1}}
+%\pgfkeys{/page size=30cm and 20cm}
+%\end{codeexample}
 \end{handler}
 
-\begin{handler}{{.ecode args}|=|\marg{argument pattern}\marg{code}}
+\begin{handler}{{.ecode args}|=|\marg{argument pattern}\marg{code}}{}
   This handler works like |.code args|, only an |\edef| is used
   rather than a |\def| to define the macro.
 \end{handler}
@@ -749,7 +980,7 @@ There are also handlers for modifying existing keys.
 \end{codeexample}
 \end{handler}
 
-\begin{handler}{{.prefix code}|=|\meta{prefix code}}
+\begin{handler}{{.prefix code}|=|\meta{prefix code}}{ }
   This handler is a shortcut for \meta{key}|/.add code={|\meta{prefix
       code}|}{}|. That is, this handler adds the \meta{prefix code} at
   the beginning of the code stored in \meta{key}|/.@cmd|.
@@ -761,14 +992,14 @@ There are also handlers for modifying existing keys.
 \end{handler}
 
 
-\subsubsection{Defining Styles}
+\subsection{Defining Styles}
 
 The following handlers allow you to define \emph{styles}. A style is a
 key list that is processed whenever the style is given as a key in a
 key list. Thus, a style ``stands for'' a certain key value
-list. Styles can be parametrized just like normal code.
+list. Styles can be parameterized just like normal code.
 
-\begin{handler}{{.style}|=|\meta{key list}}
+\begin{handler}{{.style}|=|\meta{key list}}{ }
   This handler set things up so that whenever \meta{key}|=|\meta{value} is
   encountered in a key list, then the \meta{key list}, with every
   occurrence of |#1| replaced by \meta{value}, is processed
@@ -779,27 +1010,32 @@ list. Styles can be parametrized just like normal code.
   \meta{key}|/.code=\pgfkeysalso{|\meta{key list}|}|. This means, in
   particular, that the code of a key could also first execute some
   normal code and only then process some further keys. 
-
-\begin{texexample}{Styles}{styles}
-\pgfkeys{/par indent/.code={\parindent=#1}}
-\pgfkeys{/no indent/.style={/par indent=0pt}}
-\pgfkeys{/normal indent/.style={/par indent=2em}}
-\pgfkeys{/no indent}
-\lorem
-\pgfkeys{/normal indent}
-\lorem
-\end{texexample}
-
-  The following example shows a parametrized style ``in action''.
-\begin{texexample}{Styles}{}
-\begin{tikzpicture}[outline/.style={draw=#1,fill=#1!20}]
-  \node [outline=red]            {red box};
-  \node [outline=blue] at (3,-0) {blue box};
-\end{tikzpicture}
-\end{texexample}
+%
+%\begin{texexample}{Styles}{ex:styles}
+%\pgfkeys{/par indent/.code={\parindent=#1}}
+%\pgfkeys{/no indent/.style={/par indent=0pt}}
+%\pgfkeys{/normal indent/.style={/par indent=2em}}
+%\pgfkeys{/no indent}
+%\lorem
+%\pgfkeys{/normal indent}
+%\lorem
+%\end{texexample}
+%
+%  The following example shows a parametrized style ``in action''.
+%\begin{texexample}{Styles}{}
+%\begin{tikzpicture}[outline/.style={draw=#1,fill=#1!20}]
+%  \node [outline=red]            {red box};
+%  \node [outline=blue] at (3,-0) {blue box};
+%\end{tikzpicture}
+%\end{texexample}
 \end{handler}
 
-\begin{handler}{{.estyle}|=|\meta{key list}}
+
+
+
+
+\begin{handler}{.estyle}{|=|\meta{key list}}
+
   This handler works like |.style|, only the \meta{code} is set using
   |\edef| rather than |\def|. Thus, all macros in the \meta{code} are
   expanded prior to saving the style.
@@ -807,32 +1043,34 @@ list. Styles can be parametrized just like normal code.
 
 For styles the corresponding handlers as for normal code exist:
 
-\begin{handler}{{.style 2 args}|=|\meta{key list}}
+\begin{handler}{.style 2 args|=|}{\meta{key list}}
   This handler works like |.code 2 args|, only for styles. Thus, the
   \meta{key list} may contain occurrences of both |#1| and |#2| and
   when the style is used, two parameters must be given as
   \meta{value}. 
-\begin{codeexample}[code only]
+\end{handler}
+
+\begin{texexample}{example}{}
 \pgfkeys{/paper height/.code={\paperheight=#1},/paper width/.code={\paperwidth=#1}}
 \pgfkeys{/page size/.style 2 args={/paper height=#1,/paper width=#2}}
 \pgfkeys{/page size={30cm}{20cm}}
-\end{codeexample}
-\end{handler}
+\end{texexample}
 
-\begin{handler}{{.estyle 2 args}|=|\meta{key list}}
+\begin{handler}{.estyle 2 args}{|=|\meta{key list}}
   This handler works like |.style 2 args|, only an |\edef| is used
   rather than a |\def| to define the macro.
 \end{handler}
 
-\begin{handler}{{.style args}|=|\marg{argument pattern}\marg{key list}}
+\begin{handler}{.style args}{|=|\marg{argument pattern}\marg{key list}}
   This handler works like |.code args|, only for styles.
 \end{handler}
 
-\begin{handler}{{.estyle args}|=|\marg{argument pattern}\marg{code}}
+\begin{handler}{.estyle args}{|=|\marg{argument pattern}\marg{code}}
   This handler works like |.ecode args|, only for styles.
 \end{handler}
 
-\begin{handler}{{.add style}|=|\marg{prefix key list}\marg{append key list}}
+\begin{handler}{.add style}{|=|\marg{prefix key list}\marg{append key list}}
+
   This handler works like |.add code|, only for styles. However, it is
   permissible to add styles to keys that have previously been set
   using  |.code|. (It is also permissible to add normal \meta{code} to
@@ -851,13 +1089,18 @@ For styles the corresponding handlers as for normal code exist:
 \end{codeexample}
 \end{handler}
 
-\begin{handler}{{.prefix style}|=|\meta{prefix key list}}
+
+
+
+\begin{handler}{.prefix style}{|=|\meta{prefix key list}}
   Works like |.add style|, but only for the prefix key list.
 \end{handler}
 
-\begin{handler}{{.append style}|=|\meta{append key list}}
+\begin{handler}{.append style}{|=|\meta{append key list}}
   Works like |.add style|, but only for the append key list.
 \end{handler}
+
+
 
 
 \subsubsection{Defining Value-, Macro-, If- and Choice-Keys}
@@ -870,20 +1113,13 @@ predefine handlers make it easier to install the necessary code.
 However, we start with some handlers that are used to manage the value
 that is directly stored in a key.
 
-\begin{handler}{{.initial}|=|\meta{value}}
+\begin{handler}{.initial}{|=|\meta{value}}
   This handler sets the value of \meta{key} to \meta{value}. Note that
   no subkeys are involved. After this handler has been used, by the
   rules governing keys, you can subsequently change the value of the
   \meta{key} by just writing \meta{key}|=|\meta{value}. Thus, this
   handler is used to set the initial value of key.
 
-\begin{texexample}{The .initial handler}{initial}
-\pgfkeys{/my key/.initial=red}
-% "/my key" now stores the value "red"
-\pgfkeys{/my key=blue}
-% "/my key" now stores the value "blue"
-\pgfkeys{/my key}
-\end{texexample}
 
   Note that in the after the example, writing |\pgfkeys{/my key}| will not
   have the effect you might expect (namely that |blue| is inserted
@@ -894,7 +1130,16 @@ that is directly stored in a key.
   To retrieve the value stored in a key, the handler |.get| is used.
 \end{handler}
 
-\begin{handler}{{.get}|=|\meta{macro}}
+\begin{texexample}{The .initial handler}{ex:initial}
+\pgfkeys{/my key/.initial=red}
+% "/my key" now stores the value "red"
+\pgfkeys{/my key=blue}
+% "/my key" now stores the value "blue"
+\pgfkeys{/my key}
+\end{texexample}
+
+
+\begin{handler}{.get}{|=|\meta{macro}}
   Executes a |\let| command so that \meta{macro} contains the contents
   stored in \meta{key}.  
 
@@ -906,7 +1151,9 @@ that is directly stored in a key.
 \end{texexample}
 \end{handler}
 
-\begin{handler}{{.add}|=|\marg{prefix value}\marg{append value}}
+
+
+\begin{handler}{.add}{|=|\marg{prefix value}\marg{append value}}
   Adds the \meta{prefix value} and the beginning and the \meta{append
     value} at the end of the value stored in \meta{key}.
 \end{handler}
@@ -916,7 +1163,7 @@ The next handler is useful for the common situation where
 in some macro. Note that, typically, you could just as well store the
 value in the key itself.
 
-\begin{handler}{{.store in}|=|\meta{macro}}
+\begin{handler}{.store in}{|=|\meta{macro}}
   This handler has the following effect: When you write
   \meta{key}|=|\meta{value}, the code
   |\def|\meta{macro}|{|\meta{value}|}| is executed. Thus, the given
@@ -930,11 +1177,16 @@ value in the key itself.
 \end{codeexample}
 \end{handler}
 
-\begin{handler}{{.estore in}|=|\meta{macro}}
+
+
+
+\begin{handler}{.estore in}{|=|\meta{macro}}
   This handler is similar to |.store in|, only the code 
   |\edef|\meta{macro}|{|\meta{value}|}| is used. Thus, the
   macro-expanded version of \meta{value} is stored in the
   \meta{macro}. 
+\end{handler} 
+
 \begin{codeexample}[]
 \pgfkeys{/text/.estore in=\mytext}
 \def\a{world} 
@@ -942,12 +1194,92 @@ value in the key itself.
 \def\a{Gruffalo}
 \mytext
 \end{codeexample}
-\end{handler}
+
+The definition of this handler is trivial:
+
+\begin{teXXX}
+\pgfkeys{/handlers/.store in/.code=
+  \pgfkeysalso{\pgfkeyscurrentpath/.code=\def#1{##1}}}
+\end{teXXX}
+
+How about a csname one? 
+
+
+\begin{texexample}{Defining a new handler}{ex:csnamehandler}
+\pgfkeys{/handlers/.csname in/.code=%
+   \pgfkeysalso{\pgfkeyscurrentpath/.code=
+     \expandafter\def\csname#1\endcsname{##1}}}
+\pgfkeys{/my test/fonts/.csname in=font-store}
+\pgfkeys{/my test/fonts=\bfseries}   
+\bgroup
+\csuse{font-store} This is bold text.
+\egroup
+\end{texexample}
+
+If we wanted the user never to have to type a command, but only strings we could do something like this:
+
+\begin{texexample}{Defining a new handler}{ex:csnamehandler}
+\pgfkeys{/handlers/.csstore in/.code=%
+   \pgfkeysalso{\pgfkeyscurrentpath/.code=
+     \expandafter\def\csname#1\endcsname{\csname##1\endcsname}}}
+\pgfkeys{/my test/fonts/.csstore in=font-store}
+\pgfkeys{/my test/fonts=bfseries}   
+\bgroup
+\csuse{font-store} This is bold text.
+\egroup
+\end{texexample}
+
+We can take an idea from another great library \pkg{expl3} this time from the \latex3 Team. We will modify the above code and create a 
+handler to choose a font-weight from a list of predefined keywords. For example we may want to use css-like font-weights.
+
+\begin{texexample}{using Expl3 to Define handlers}{ex:l3handlers}
+\ExplSyntaxOn
+\pgfkeys{/handlers/.fontweights/.code = 
+  \pgfkeysalso
+    {\pgfkeyscurrentpath/.code=
+      \tl_set:Nn\l_tmpa_str:N {##1}
+         \str_case_x:nnTF {##1}  
+           {
+             { none     } { \cs_gset:cpn {#1} { \mdseries } } 
+             { bold     } { \cs_gset:cpn {#1} { \bfseries } } 
+             { normal   } { \cs_gset:cpn {#1} { \mdseries } } 
+             { bfseries } { \cs_gset:cpn {#1} { \bfseries } } 
+             { mdseries } { \cs_gset:cpn {#1} { \mdseries } } 
+           }
+           {                               }
+           { \cs_gset:cpn {#1} {\mdseries} }
+    }
+ }   
+\ExplSyntaxOff 
+% 1  define where the values will be stored
+\pgfkeys{/my test/font weight/.fontweights = font-weight-store}
+
+% 2 store a value
+\pgfkeys{/my test/font weight = bold} 
+
+% 3 use the store to set the weight
+\csuse{font-weight-store} This is bold weight text.
+
+% type an unknown value
+\pgfkeys{/my test/font weight=very strong}
+
+% this will just give medium series
+
+\csuse{font-weight-store} This is medium weight text.
+\end{texexample}
+We can extend the code to give us an error message, if we use a value that is not acceptable. We could also have written the code
+using the |.choice| handler. I personally think that using custom defined handlers is a much better option as it can make
+part of our code portable to other packages (rather than cut-and-paste).
+
+Of course \latexe comes with its own set of key generation macros. Personally I made the choice to go this route, for most of the
+|PHD| package. I made the choice in order to offer a consistent user interface that consists only of one command to set the keys,
+that does not require any knowlwdge of \latexe commands to set document parameters.
+
 
 In another common situation a key is used to set a \TeX-if to true or
 false. 
 
-\begin{handler}{{.is if}|=|\meta{\TeX-if name}}
+\begin{handler}{.is if}{|=|\meta{\TeX-if name}}
   This handler has the following effect: When you write
   \meta{key}|=|\meta{value}, it is first checked that \meta{value} is
   |true| or |false| (the default is |true| if no \meta{value} is
@@ -955,6 +1287,7 @@ false.
   |/errors/boolean expected| is executed. Otherwise, 
   the code |\|\meta{\TeX-if name}\meta{value} is executed, which sets
   the \TeX-if accordingly.
+\end{handler}  
 \begin{codeexample}[]
 \newif\iftheworldisflat    
 \pgfkeys{/flat world/.is if=theworldisflat}
@@ -965,7 +1298,7 @@ false.
   Round?
 \fi
 \end{codeexample}
-\end{handler}
+
 
 The next handler deals with the problem when a
 \meta{key}|=|\meta{value} makes sense only for a small set of possible
@@ -973,11 +1306,12 @@ The next handler deals with the problem when a
 |rect| or |butt|, but nothing else. For this situation the following
 handler is useful.
 
-\begin{handler}{{.is choice}}
+\begin{handler}{.is choice}{}
   This handler set things up so that writing \meta{key}|=|\meta{value}
   will cause the subkey \meta{key}|/|\meta{value} to be executed. So,
   each of the different possible choices should be given by a subkey
   of \meta{key}.
+\end{handler}  
 \begin{codeexample}[code only]
 \pgfkeys{/line cap/.is choice}
 \pgfkeys{/line cap/round/.style={\pgfsetbuttcap}}
@@ -989,11 +1323,26 @@ handler is useful.
 \end{codeexample}
   If the subkey \meta{key}|/|\meta{value} does not exist, the error
   key |/errors/unknown choice value| is executed.
-\end{handler}
 
+Behind the scenes \pgfname uses some mind-boggling code:
 
-The definition of an appropriate handler, can improve the user interface and also the programmer can benefit
-by re-using code.
+\begin{codeexample}[code only]
+\pgfkeys{/handlers/.is choice/.code=%
+  \pgfkeys{%
+    \pgfkeyscurrentpath/.cd,%
+    .code=\def\pgfkeys@was@choice{##1}%
+       \expandafter\pgfkeysalso\expandafter{\pgfkeyscurrentkey/##1},
+    .unknown/.code={%
+      \def\pgf@marshal{\pgfkeysvalueof{/errors/unknown choice value/.@cmd}}%
+      {\expandafter\expandafter\expandafter\pgf@marshal
+          \expandafter\expandafter\expandafter{\expandafter
+             \the\expandafter\pgfkeys@pathtoks\expandafter}
+               \expandafter{\pgfkeys@was@choice}\pgfeov}%
+    }%
+  }%
+}
+\end{codeexample}
+
 
 \subsubsection{Expanding Values}
 
@@ -1008,13 +1357,15 @@ instead of using \meta{value} you wish to use whatever \meta{value}
 expands to. Instead of using some fancy |\expandafter| hackery, you
 can use the following handlers:
 
-\begin{handler}{{.expand once}|=|\meta{value}}
+\begin{handler}{.expand once}{|=|\meta{value}}
   This handler expands \meta{value} once (more precisely, it executes
   an |\expandafter| command on the first token of \meta{value}) and
   then process the resulting \meta{result} as if you had written
   \meta{key}|=|\meta{result}. Note that if \meta{key} contains a
   handler itself, this handler will be called normally.
-\begin{texexample}{Handling expansion}{pgfexpand}
+\end{handler}
+
+\begin{texexample}{Handling expansion}{ex:pgfexpand}
 \def\a{bottom}
 \def\b{\a}
 \def\c{\b}
@@ -1035,25 +1386,27 @@ Key 3:& \pgfkeys{/phd/key3} \\
 Key 4:& \pgfkeys{/phd/key4}
 \end{tabular}
 \end{texexample}
-\end{handler}
+
 
 In the example above, you can observe how the key macro definitions can be expanded. When |.expanded| is used
 the macro is fully expanded (see key4), whereas in the other two expansion is controlled. These are mind-boggling and some patience and skill is required to use them effectively.
 
 
-\begin{handler}{{.expand twice}|=|\meta{value}}
+\begin{handler}{.expand twice}{|=|\meta{value}}
   This handler works like saying \meta{key}|/.expand once/.expand once=|\meta{value}.
 \end{handler}
 
-\begin{handler}{{.expanded}|=|\meta{value}}
+\begin{handler}{.expanded}{|=|\meta{value}}
   This handler will completely expand \meta{value} (using |\edef|)
   before processing \meta{key}|=|\meta{result}.
 \end{handler}
 
 
+
+
 \subsubsection{Handlers for Testing Keys}
 
-\begin{handler}{{.try}|=|\meta{value}}
+\begin{handler}{.try}{|=|\meta{value}}
   This handler causes the same things to be done as if
   \meta{key}|=|\meta{value} had been written instead. However, if
   neither \meta{key}|/.@cmd| nor the key itself is defined, no
@@ -1064,35 +1417,38 @@ the macro is fully expanded (see key4), whereas in the other two expansion is co
 
   The \TeX-if |\||ifpgfkeyssuccess| will be set according to whether
   the \meta{key} was successfully executed or not. 
+\end{handler}  
 \begin{codeexample}[]
 \pgfkeys{/a/.code=(a:#1)}
 \pgfkeys{/b/.code=(b:#1)}
-\pgfkeys{/x/.try=hmm,/a/.try=hallo,/b/.try=welt}
+\pgfkeys{/x/.try=blue,/a/.try=hallo,/b/.try=welt,/tikz/.try=blue} text
 \end{codeexample}
-\end{handler}
 
-\begin{handler}{{.retry}|=|\meta{value}}
+
+\begin{handler}{.retry}{|=|\meta{value}}
   This handler works just like |.try|, only it will not do anything if
   |\||ifpgfkeyssuccess| is false. Thus, this handler will only retry
   to set a key if ``the last attempt failed''. 
+\end{handler}  
 \begin{codeexample}[]
 \pgfkeys{/a/.code=(a:#1)}
 \pgfkeys{/b/.code=(b:#1)}
 \pgfkeys{/x/.try=hmm,/a/.retry=hallo,/b/.retry=welt}
 \end{codeexample}
-\end{handler}
+
 
 
 \subsubsection{Handlers for Key Inspection}
 
-\begin{handler}{{.show value}}
+\begin{handler}{.show value}{}
+
   This handler executes a |\show| command on the value stored in
   \meta{key}. This is useful mostly for debugging.
 
   \example |\pgfkeys{/my/obscure key/.show value}|
 \end{handler}
 
-\begin{handler}{{.show code}}
+\begin{handler}{.show code}{}
   This handler executes a |\show| command on the code stored in
   \meta{key}|/.@cmd|. This is useful mostly for debugging.
 
@@ -1101,11 +1457,11 @@ the macro is fully expanded (see key4), whereas in the other two expansion is co
 
 The following key is not a handler, but it also commonly used for
 inspecting things:
-\begin{key}{/utils/exec=\meta{code}}
+\begin{docKey}{/utils/exec}{|=|\meta{code}}{}
   This key will simply execute the given \meta{code}. 
 
   \example |\pgfkeys{some key=some value,/utils/exec=\show\hallo,obscure key=obscure}|
-\end{key}
+\end{docKey}
 
 
 \subsection{Error Keys}
@@ -1120,27 +1476,29 @@ Currently, error keys are simply executed. In the future it might be a
 good idea to have different subkeys that are executed depending on the
 language currently set so that users get a localized error message.
 
-\begin{key}{/errors/value required=\marg{offending key}\marg{value}}
+\begin{docKey}{/errors/value required}{|=|\marg{offending key}\marg{value}}{}
   This key is executed whenever an \meta{offending key} is used
   without a value when a value is actually required. 
-\end{key}
+\end{docKey}
 
-\begin{key}{/errors/value forbidden=\marg{offending key}\marg{value}}
+
+
+\begin{docKey}{/errors/value forbidden}{|=|\marg{offending key}\marg{value}}{}
   This key is executed whenever a key is used with a value when a
   value is actually forbidden.
-\end{key}
+\end{docKey}
 
-\begin{key}{/errors/boolean expected=\marg{offending key}\marg{value}}
+\begin{docKey}{/errors/boolean expected}{=\marg{offending key}\marg{value}}{}
   This key is executed whenever a key setup using |.is if| gets called
   with a \meta{value} other than |true| or |false|.
-\end{key}
+\end{docKey}
 
-\begin{key}{/errors/unknown choice value=\marg{offending key}\marg{value}}
+\begin{docKey}{/errors/unknown choice value}{=\marg{offending key}\marg{value}}{}
   This key is executed whenever a choice is used as a \meta{value} for
   a key setup using the |.is choice| handler that is not defined.
-\end{key}
+\end{docKey}
 
-\begin{docKey}{/errors/unknown key}{=\marg{offending key}\marg{value}}{no default}
+\begin{docKey}{/errors/unknown key}{=\marg{offending key}\marg{value}{no default}}{}
   This key is executed whenever a key is unknown and no specific
   |.unknown| handler is found.
 \end{docKey}

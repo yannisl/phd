@@ -143,7 +143,10 @@ See http://www.latex-project.org/lppl.txt
 
 %\listfiles
 %gdef\@onlypreamble{} % TO BE REMOVED NEEDED FOR TUTS
+\NeedsTeXFormat{LaTeX2e}[2017/04/15]%
+\RequirePackage[2017/04/15]{latexrelease}
 \documentclass[twoside,11pt,a4paper]{ltxdoc}
+\usepackage{microtype}
 \usepackage[bottom=2cm]{geometry}
 \savegeometry{std}
 % \usepackage[style=mla]{biblatex}
@@ -153,6 +156,8 @@ See http://www.latex-project.org/lppl.txt
 \usepackage{phd-runningheads}
 \usepackage{phd-lowersections}
 \usepackage{makeidx}
+%
+
 \usepackage{phd-lists}
 \pagestyle{headings}
 \sethyperref
@@ -173,7 +178,7 @@ See http://www.latex-project.org/lppl.txt
     chapter font-weight               = bold,
     chapter font-family               = sffamily,
     chapter font-shape                = upshape,
-    chapter color                     = black,
+    chapter color                     = auto,
     chapter number prefix             = ,
     chapter number suffix             = ,
     chapter numbering                 = arabic,
@@ -184,7 +189,6 @@ See http://www.latex-project.org/lppl.txt
     chapter number after              = ,
     chapter arc                       = 0mm,
     chapter background-color          = bgsexy,
-    chapter afterindent               = off,
     chapter grow left                 = 0mm,
     chapter grow right                = 0mm, 
     chapter rounded corners           = northeast,
@@ -201,7 +205,7 @@ See http://www.latex-project.org/lppl.txt
     chapter label color               = white,    
     }
  \cxset{    
-    chapter number font-size        = huge,
+    chapter number font-size        = Huge,
     chapter number font-weight      = bfseries,
     chapter number font-family      = sffamily,
     chapter number font-shape       = upshape,
@@ -215,15 +219,16 @@ See http://www.latex-project.org/lppl.txt
      chapter title color            = black,
      }    
 \end{filecontents}
+
+% input the defaults
 \input{defaults-chapters}  
-%\definecolor{bgsexy}{HTML}{FF6927}
-%
-%\definecolor{creamy}{HTML}{FDEBD7}
+
 \cxset{chapter title color= creamy,
        chapter label color = creamy,
        chapter number color = creamy,
+       chapter number color = white,
        chapter number font-size = Huge,
-       subsection title color = creamy,
+       subsection afterindent = false,
        chapter name = CHAPTER,
        chapter label case = upper,
        chapter number align=left,
@@ -231,12 +236,13 @@ See http://www.latex-project.org/lppl.txt
        part background-color=spot,
        part beforeskip                = -3cm,
        part afterskip                 = 30pt,
+       section color = auto,
        }
 \begin{document}
+\DEBUGOFF
 \parindent1em
 \coverpage{asia}{Book Design Monographs}{Camel Press}{HANDLER}{DESIGN} 
 \pagestyle{empty}
-%\coverpage{habtoor-city}{Delay Claim}{HLS-DSE/JV}{HABTOOR CITY}{MEP CLAIM} 
 \secondpage
 \pagestyle{empty}
 \clearpage
@@ -431,8 +437,8 @@ See http://www.latex-project.org/lppl.txt
 %  
 %
 %    \begin{macrocode}
-\NeedsTeXFormat{LaTeX2e}[1994/12/01]%
-\RequirePackage[2014/05/01]{latexrelease}
+\NeedsTeXFormat{LaTeX2e}[2017/04/15]%
+\RequirePackage[2017/04/15]{latexrelease}
 \ProvidesFile{phd-handlers}[2015/1/13 v1.0 less preamble (YL)]%
 %    \end{macrocode}
 %
@@ -463,6 +469,14 @@ See http://www.latex-project.org/lppl.txt
 % font.
 %    \begin{macrocode}
 \ExplSyntaxOn
+\pgfkeys{%
+   /handlers/.alias/.code=
+      \pgfkeysedef\pgfkeyscurrentpath{%
+                  \noexpand\pgfkeysalso{\pgfkeysdefaultpath#1={##1}}},%
+     % /handlers/.alias/.value required,%
+     % /handlers/.blank/.code=\pgfkeyssetvalue{\pgfkeyscurrentpath/.@blank}{#1},%
+     % /handlers/.blank/.default=\pgfkeysnovalue,%
+}
 
 \clist_new:N \allowed_font_family_options
 \clist_gset:Nn \allowed_font_family_options 
@@ -501,7 +515,7 @@ See http://www.latex-project.org/lppl.txt
                { ttfamily   } { \cs_gset:cpn {#1} { \ttfamily   } } 
               }
              {                                   }
-             { \cs_gset:cpn {#1} { \normalfont } }
+             { \cs_gset:cpn {#1} {\cs:w ##1 \cs_end:} }
      }   
    }    
    
@@ -546,14 +560,16 @@ See http://www.latex-project.org/lppl.txt
 % \subsection{Font face handler}
 %    \begin{macrocode}
 \ExplSyntaxOn
- \pgfkeys{/handlers/.set~font-face/.code=\pgfkeysalso{\pgfkeyscurrentpath/.code=
-           \def\tempa{##1}%
-           \def\tempb{normal}%
-           \def#1{##1}%
-           \ifx\tempa\tempb%
-              \def#1{\normalfont}%
-           \fi%
-   }}%   
+ \pgfkeys{/handlers/.set~font-face/.code=\pgfkeysalso {
+     \pgfkeyscurrentpath/.code=
+           \def\tempa{##1}
+           \def\tempb{normal}
+           \def#1{##1}
+           \ifx\tempa\tempb
+              \def#1{\normalfont}
+           \fi
+   }
+ }   
 \ExplSyntaxOff
 %    \end{macrocode}
 %
@@ -569,7 +585,7 @@ See http://www.latex-project.org/lppl.txt
 \cs_gset_eq:cc {oblique}{slshape}
 
 \pgfkeys{/handlers/.font-style~in/.code =
-    \global\let\bold\bfseries 
+     
     \pgfkeysalso
       {\pgfkeyscurrentpath/.code=
         \clist_if_in:NnTF \allowed_font_style_options {##1 } 
@@ -587,18 +603,37 @@ See http://www.latex-project.org/lppl.txt
         \tl_set:Nn\l_tmpa_str:N {##1}
            \str_case_x:nnTF {##1}  
              {
-               {normal        } { \cs_gset:cpn {#1} { \upshape   } }
+               { normal       } { \cs_gset:cpn {#1} { \upshape   } }
                { upshape      } { \cs_gset:cpn {#1} { \upshape   } }  
                { itshape      } { \cs_gset:cpn {#1} { \itshape   } } 
                { italic       } { \cs_gset:cpn {#1} { \itshape   } } 
                { oblique      } { \cs_gset:cpn {#1} { \slshape   } } 
                { slshape      } { \cs_gset:cpn {#1} { \slshape   } } 
+               { scshape      } { \cs_gset:cpn (#1) { \scshape   } }
              }
              {                                                     }
              { \cs_gset:cpn {#1} {##1}                          }
       }
    }    
   
+\pgfkeys{/handlers/.listformat/.code = 
+    \pgfkeysalso
+      {\pgfkeyscurrentpath/.code=
+        \tl_set:Nn\l_tmpa_str:N {##1}
+           \str_case_x:nnTF {##1}  
+             {
+               { normal       } { \cs_gset:cpn {#1} { \upshape   } }
+               { upshape      } { \cs_gset:cpn {#1} { \upshape   } }  
+               { itshape      } { \cs_gset:cpn {#1} { \itshape   } } 
+               { italic       } { \cs_gset:cpn {#1} { \itshape   } } 
+               { oblique      } { \cs_gset:cpn {#1} { \slshape   } } 
+               { slshape      } { \cs_gset:cpn {#1} { \slshape   } } 
+               { scshape      } { \cs_gset:cpn (#1) { \scshape   } }
+             }
+             {                                                     }
+             { \cs_gset:cpn {#1} {##1}                          }
+      }
+   }   
 \ExplSyntaxOff  
 %    \end{macrocode}
 %  
@@ -622,7 +657,7 @@ See http://www.latex-project.org/lppl.txt
              {
                { none        } { \cs_gset:Npn #1 { empty    } } 
                { bold        } { \cs_gset:Npn #1 { bfseries } } 
-               { normal      } { \cs_gset:Npn #1 { mdseries } } 
+               { normal      } { \cs_gset:Npn #1 { normalfont } } 
                { bfseries    } { \cs_gset:Npn #1 { bfseries } } 
                { mdseries    } { \cs_gset:Npn #1 { mdseries } } 
               }
@@ -632,7 +667,7 @@ See http://www.latex-project.org/lppl.txt
 }   
 %    \end{macrocode}
 %
-% The |.fontweight| handler is used to define keys for \docAuxKey{font-weight}.
+% The |.fontweight| handler is used to define keys for \docValue{font-weight}.
 %    \begin{macrocode}   
     \pgfkeys{/handlers/.fontweight/.code = 
     \pgfkeysalso
@@ -640,14 +675,14 @@ See http://www.latex-project.org/lppl.txt
         \tl_set:Nn\l_tmpa_str:N {##1}
            \str_case_x:nnTF {##1}  
              {
-               { none       } { \cs_gset:cpn {#1} { \mdseries } } 
+               { none       } { \cs_gset:cpn {#1} { } } 
                { bold       } { \cs_gset:cpn {#1} { \bfseries } } 
-               { normal     } { \cs_gset:cpn {#1} { \mdseries } } 
+               { normal     } { \cs_gset:cpn {#1} { } } 
                { bfseries   } { \cs_gset:cpn {#1} { \bfseries } } 
                { mdseries   } { \cs_gset:cpn {#1} { \mdseries } } 
               }
              {                               }
-             { \cs_gset:cpn {#1} {\mdseries} }
+             { \cs_gset:cpn {#1} { } }
       }
    }   
 \ExplSyntaxOff   
@@ -677,7 +712,8 @@ See http://www.latex-project.org/lppl.txt
   \clist_new:N   \allowed_keys_font_size
   \clist_gset:Nn \allowed_keys_font_size 
     { 
-      normal,tiny,footnotesize,small,scriptsize,
+      normal,tiny,footnotesize,small,
+      scriptsize,
       large,Large,LARGE,
       huge,Huge,HUGE,HHUGE,
       HHHUGE,auto,inherit,
@@ -695,7 +731,7 @@ See http://www.latex-project.org/lppl.txt
    }
 %    \end{macrocode}  
 %
-% When the storing key is provided as a name we use the |.fontsize| handler.
+% When the storing key is provided as a name we use the \docValue{.fontsize} handler.
 %
 %    \begin{macrocode}  
     \pgfkeys{/handlers/.fontsize/.code = 
@@ -704,7 +740,8 @@ See http://www.latex-project.org/lppl.txt
         \tl_set:Nn\l_tmpa_str:N {##1}
            \str_case_x:nnTF {##1}  
              {
-               { normal     } { \cs_gset:cpn {#1} { \normalfont } }
+               { normal     } { \cs_gset:cpn {#1} { \normalsize } }
+               { tiny      } { \cs_gset:cpn {#1} { \tiny      } } 
                { small      } { \cs_gset:cpn {#1} { \small      } }  
                { scriptsize } { \cs_gset:cpn {#1} { \scriptsize } }  
                { large      } { \cs_gset:cpn {#1} { \large      } } 
@@ -789,10 +826,10 @@ See http://www.latex-project.org/lppl.txt
         \tl_set:Nn\l_tmpa_str:N {##1}
            \str_case_x:nnTF {##1}  
              {
-               { none        } { \cs_gset:cpn {#1} {}                } 
+               { none        } {  \cs_gset:cpn {#1} {}               } 
                { left        } {  \cs_gset:cpn {#1} { \RaggedRight } } 
                { RaggedLeft  } {  \cs_gset:cpn {#1} { \RaggedLeft  } } 
-               { raggedleft  } { \cs_gset:cpn {#1}  { \raggedleft  } }
+               { raggedleft  } {  \cs_gset:cpn {#1}  { \raggedleft } }
                { right       } {  \cs_gset:cpn {#1} { \RaggedLeft  } } 
                { RaggedRight } {  \cs_gset:cpn {#1} { \RaggedRight } } 
                { raggedright } {  \cs_gset:cpn {#1} { \raggedright } } 
@@ -811,7 +848,8 @@ See http://www.latex-project.org/lppl.txt
 %    \end{macrocode}
 % 
 % \subsection{On off general handlers}
-%  This handler is for aligning text. We cater for all variations.
+%  This handler is for programmatically setting on off variables.
+% 
 %    \begin{macrocode}
 \ExplSyntaxOn  
   \pgfkeys{/handlers/.onoff/.code = 
@@ -820,13 +858,38 @@ See http://www.latex-project.org/lppl.txt
         \tl_set:Nn\l_tmpa_str:N {##1}
            \str_case_x:nnTF {##1}  
              {
-               { on    }  { \cs_gset:cpn {#1} {##1} } 
-               { off   }  { \cs_gset:cpn {#1} {##1} } 
-               { true  }  { \cs_gset:cpn {#1} {##1} } 
-               { false }  { \cs_gset:cpn {#1} {##1} } 
+               { on    }  { %\cs_gset:cpn {#1} {##1}  
+                            \bool_if_exist:cTF {#1} { \bool_gset_true:c {#1} }
+                                                 { \bool_new:c {#1}
+                                                   \bool_gset_true:c {#1} 
+                                                 } 
+                          } 
+               
+               { off    }  { 
+                            \bool_if_exist:cTF {#1} { \bool_gset_false:c {#1} }
+                                                 { \bool_new:c {#1}
+                                                   \bool_gset_false:c {#1} 
+                                                 } 
+                          } 
+              
+              { true    }  { %\cs_gset:cpn {#1} {##1}  
+                            \bool_if_exist:cTF {#1} { \bool_gset_true:c {#1} }
+                                                 { \bool_new:c {#1}
+                                                   \bool_gset_true:c {#1} 
+                                                 } 
+                          } 
+               
+              { false    }  { 
+                            \bool_if_exist:cTF {#1} { \bool_gset_false:c {#1} }
+                                                 { \bool_new:c {#1}
+                                                   \bool_gset_false:c {#1} 
+                                                 } 
+                          }             
+             
+             
              }
              {                           }
-             { \cs_gset:cpn {#1} {empty} }
+             { }%\cs_gset:cpn {#1} {empty} }
       }
   }
 \ExplSyntaxOff  
@@ -858,59 +921,88 @@ See http://www.latex-project.org/lppl.txt
          \str_case_x:nnTF {##1}  
              {
                { none               } { \cs_gset:cpn {#1} { {no~shadow} } } 
+               { off               } { \cs_gset:cpn {#1} { {no~shadow} } } 
+               { on               } { \cs_gset:cpn {#1} { {drop~shadow} } } 
                { drop~shadow        } { \cs_gset:cpn {#1} { drop~shadow } }
                { drop~lifted~shadow } { \cs_gset:cpn {#1} { {##1}       } } 
                { fuzzy~halo         } { \cs_gset:cpn {#1} { halostyle   } }
              }
              {                       }
-             { \cs_gset:cpn #1 {##1} }
+             { \cs_gset:cpn {#1} {##1} }
       }
   } 
 \ExplSyntaxOff  
-%    \end{macrocode}  
+%    \end{macrocode} 
+% \tcbdocmarginnote{31/07/2017 Nasty bug fix, did not brace one argument of cpn, resulted redefining the |l|} 
 % \subsection{Sectioning format handler}
 %  This handler manages sectioning type formats. Not all of them are currently
 %  defined.
 %    \begin{macrocode}  
 \ExplSyntaxOn
+  \msg_new:nnnn {phd-handlers} {undefined-format}
+    {`#1'~is~not~a~defined~format}
+    {You~have~to~define~and~register~the~format~`#1'~before~you~can~use~it.}
+    
   \clist_new:N   \allowed_options_format
   \clist_gset:Nn \allowed_options_format 
     { 
       plain, block, display, runin, leftmargin,
       rightmargin, drop, wrap, frame, custom, inline, inmargin,
-      hanginmargin
+      hanginmargin, paperback,fashion,traditional,hang,
     } 
   \pgfkeys{/handlers/.format~in/.code = 
     \pgfkeysalso
       {\pgfkeyscurrentpath/.code=
         \clist_if_in:NnTF \allowed_options_format {##1 } 
           {
-           \cs_gset:cpn {#1} {##1}
+           \cs_gset:cpn {#1} {##1} %true code
           } 
           {
-             \cs_gset:cpn {#1}  {##1} %FIRE MUST CATER FOR SPECIALS
+             \cs_if_exist:cTF{##1}{ \cs_gset:cpn {#1}  {##1}}
+             {
+               \msg_error:nnx { phd-handlers } { undefined-format } {##1}
+               % define it in any case until we have a stable API
+               \cs_gset:cpn {#1}  {##1}
+             } %false code
           } % to add that this is custom message and check if defined
       }
   }
 \ExplSyntaxOff  
 %    \end{macrocode}
 %
-%    \begin{macrocode}  
+%    \begin{macrocode} 
+
 \ExplSyntaxOn
+   \msg_new:nnnn {phd-handlers} {undefined-color}
+    {`#1'~is~not~a~defined~color}
+    {You~have~to~define~the~color~`#1'~before~you~can~use~it.~I~am~using~the~`current~default~color. Press~any~key~to~ continue.}
   \clist_new:N   \allowed_color_options
   \clist_gset:Nn \allowed_color_options 
     { 
-      auto,palette,
+      auto, palette,
     } 
   \pgfkeys{/handlers/.colorin/.code = 
     \pgfkeysalso
       {\pgfkeyscurrentpath/.code=
         \clist_if_in:NnTF \allowed_color_options  {##1 } 
           {
-           \cs_gset:cpn {#1} {\color{##1}}
+           %check to see if palette is defined
+           \cs_if_exist:cTF{palettename}{\cs_gset:cpn{#1} {\color{the#1color}} }{
+          % \cs_gset:cpn {#1} {\color{##1}}
+           }
+           
           } 
           {
-           { \cs_gset:cpn {#1} {\color{##1}} } %FIRE MUST CATER FOR SPECIALS
+           { 
+           % We check that the color is defined
+              \@ifundefined{\string\color@##1}{
+                 \msg_error:nnx { phd-handlers } { undefined-color } {##1}
+                 \colorlet{##1}{black}
+               }
+               { 
+                 \cs_gset:cpn {#1} {\color{##1}} 
+               }
+           } %FIRE MUST CATER FOR SPECIALS
           } % to add that this is custom message and check if defined
       }
   }
@@ -926,8 +1018,8 @@ See http://www.latex-project.org/lppl.txt
 %   as we need to gobble four tokens we need to define a |\use_v:nnnnn|, as
 %   \pkgname{expl3} does not have one.
 %   
-% \begin{docCommand} {use_v:nnnnn} { \marg{arg1} \marg{arg2} \marg{arg3} \marg{arg4} \marg{arg4} }
-%    Gobbles four arguments.
+% \begin{docCommand} {use_v:nnnnn} { \marg{arg1} \marg{arg2} \marg{arg3} \marg{arg4} \marg{arg5} }
+%    Gobbles five arguments.
 %  \end{docCommand}
 %
 %    \begin{macrocode}

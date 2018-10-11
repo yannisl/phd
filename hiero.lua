@@ -75,7 +75,6 @@ We define a local table to hold data for glyphs
 --- returns a number of transformations and data
 -- to the table holding codepoints for Gardiner lists
 ---
-
 local function f(codepoint, gardiner, mnemonic,
                  description, determinant)
 
@@ -420,8 +419,8 @@ t = {
 	["F29" ]       = f("1311D","F29","sti"),
 	["F30" ]       = f("1311E","F30","Sd"),
 	["F31" ]       = f("1311F","F31","ms"),
-    ["F31a"]       = f("13120","F31a",""),
-    ["F32" ]       = f(13121,"F32","X"),
+   ["F31a"]       = f("13120","F31a",""),
+   ["F32" ]       = f(13121,"F32","X"),
 	["F33" ]       = f(13122,"F33","sd"),
 	["F34" ]       = f(13123,"F34","ib"),
 	["F35" ]       =  f(13124,"F35","nfr"),
@@ -1225,6 +1224,7 @@ t = {
  	["Z15f"]    = f("13400","Z15f",""),
  	["Z15g"]    = f("13401","Z15g",""),
  	["Z15h"]    = f("13402","Z15h",""),
+	
 	["Z15i"]    = f("13403","Z15i",""),
  	["Z16" ]    = f("13404","Z16",""),
  	["Z16a"]    = f("13405","Z16a",""),
@@ -1235,6 +1235,7 @@ t = {
  	["Z16f"]    = f("1340A","Z16f",""),
  	["Z16g"] 	= f("1340B","Z16g",""),
  	["Z16h"] 	= f("1340C","Z16h",""),
+
 	["Aa1" ] 	= f("1340D","Aa1","x"),
    	["Aa2" ]    = f("1340E","Aa2","x"),
 	["Aa3" ]    = f("1340F","Aa3","x"),
@@ -1559,7 +1560,7 @@ end
 
 
 
-
+-- Prints a Gardiner sign, given a set of options and a code
 local printgardiner = function (t,options) 
    local ts = {} -- table to hold the cat keys
    local tmp = {}
@@ -1573,7 +1574,7 @@ local printgardiner = function (t,options)
    for k,v in pairs (ts) do
       tmp = cat[ts[k]]
       if (options.headings and tmp.heading) then
-          hcmd = "\\"..options.headings --TODO improve on interface 
+          hcmd = "\\"..options.headings --TODO improve the interface 
           tex.print(hcmd.." {"..tmp.heading.."}")
       end 
       if tmp.label then tex.print("\\label{"..tmp.label.."}") end

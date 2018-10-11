@@ -36,15 +36,15 @@ Captions are very visual and both the text as well as its typography need carefu
 
 
 To set the caption options we can use the \cmd{\captionsetup} with a set of options.
+\begin{dispListing}
+\captionsetup{name=Fig, labelsep=space}
+\end{dispListing}
 
-\begin{commands}[]{}
-\cmd{\captionsetup}\marg{name=Fig, labelsep=space}
-\end{commands}
+
+
 
 It is highly recommended to use the \texttt{caption} package to setup the captions of figures. This package developed by Axel Sommerfeldt offers customization of captions in floating environments such
-figure and table and cooperates with many other packages.
-Please note: Many document classes already have build-in options and commands
-for customizing captions.
+figure and table and cooperates with many other packages. Most classes provide build-in options and commands for customizing captions. 
 
 And if you are just interested in using the
 command \cmd{\captionof}, loading of the very small \pkgname{capt-of package} is usually sufficient.
@@ -53,7 +53,7 @@ For wrapped figures the label name is preferable to be shorter, otherwise it lea
 
 Figure~\ref{fig:shortlabel}, has its label shortened by using ``Fig'' rather than "Figure". I have done this as the space available is narrow. The setup is achieved using the \texttt{caption} package's \verb+\captiosetup+ command. We will use this command to specify, the fonts, numbering, labels, separators and other parameters of the captions.
 
-\subsection{Adjusting the label\hfill\hfill}%%
+\subsection{Adjusting the label}%%
 
 The \emph{label} is the name of the figure. Sometimes it is abbreviated, sometimes it is not. Adjusting the label, is achieved by setting the key parameter |name| in \cmd{\captionsetup}. 
 
@@ -139,12 +139,12 @@ Skips are the amount of vertical space between the caption and the figure. The c
 \medskip
 
 \begin{figure}[htp]
-\centering
+\everypar{}
+\captionsetup{name=Photo,parindent=0pt,minmargin=0pt,width=3sp,labelsep=period,skip=5pt,margin={0pt,0pt},position=bottom}
 
-\captionsetup{name=Photo, labelsep=period, skip=5pt, position=bottom}
-\includegraphics[width=\textwidth]{./graphics/damageinspection.jpg}
-\caption{Damage Inspection.
-A squadron operations officer of the 332d Fighter Group points out a cannon hole to ground crew, Italy, 1945.}
+\noindent\includegraphics[width=\textwidth]{./graphics/damageinspection.jpg}
+
+\noindent\caption{Damage Inspection.A squadron operations officer of the 332d Fighter Group points out a cannon hole to ground crew, Italy, 1945.}\par
 \end{figure}
 
 \medskip
@@ -152,13 +152,14 @@ A squadron operations officer of the 332d Fighter Group points out a cannon hole
 The space between the image and the caption should be approximately half the point size of the text. The photo above had the following settings:
 
 
-\begin{verbatim}
+\begin{teX}
+
 \captionsetup{name=Photo, labelsep=period,
                     skip=5pt, font=scriptsize,
-                    position=bottom}
-\end{verbatim}
+                    position=bottom, margin{0pt,0pt}}
+\end{teX}
 
-The \verb+\caption+ command offered by LATEX has a design flaw\footnote{According to Axel Sommerfeldt, \textit{see} the \textit{Caption} documentation.}: The command does not
+The \docAuxCommand{caption} command offered by \latexe has a design flaw\footnote{According to Axel Sommerfeldt, \textit{see} the \textit{Caption} documentation.}: The command does not
 know if it stands on the beginning of the figure or table, or at the end. Therefore it does
 not know where to put the space separating the caption from the content of the figure
 or table. While the standard implementation always puts the space above the caption
@@ -171,7 +172,7 @@ The caption of the next photograph follows a more traditional approach found in
 \begin{figure}[htp]
 \vskip10pt
 \centering
-\captionsetup{name=Photo, labelsep=period, skip=5pt, position=bottom, textfont=scriptsize, justification=centering}
+\captionsetup{name=Photo, labelsep=period, position=bottom, textfont=scriptsize, justification=centering}
 \includegraphics[width=\textwidth]{./graphics/korea.jpg}
 
 \caption*{\textsc{25th Division Troops Unload Trucks and Equipment}\par
@@ -181,7 +182,8 @@ The caption of the next photograph follows a more traditional approach found in
 many books where, there is no label or number and the text is split into two lines. The first line is a photograph heading and the second line is printed in italics with some explanatory stuff about the photo.
 
 To achieve this result we need to firstly use the \emph{starred} form of the caption command and override the formatting commands of the caption.
-\begin{verbatim}
+
+\begin{teX}
 \begin{figure}[htp]
 \vskip10pt
 \centering
@@ -191,33 +193,38 @@ To achieve this result we need to firstly use the \emph{starred} form of the cap
 \textit{at Sasebo Railway Station, Japan, for transport to Korea, 1950.}}
 \vskip10pt
 \end{figure}
-\end{verbatim}
+\end{teX}
+
 You will notice that the photograph is between the lines of the paragraph, so I have added some small skips to arrange proper spacing around it.
 
 
 To my knowledge, you cannot customize the caption package to get the heading for the caption text. You can define your own command to do so:
-\begin{verbatim}
+\begin{phdverbatim}
 \newcommand\captionx[2]{\par%
-     \caption*{\textsc{#1}\newline%
+     \leavevmode 
+     \caption*{\textsc{#1}\par%
      \textit{#1}}%
 }
-\end{verbatim}
-\newcommand\captionx[2]{\par%
-     \caption*{\textsc{#1}\par%
+\end{phdverbatim}
+
+\DeclareDocumentCommand\captionx{m m}{%
+     \leavevmode
+     \caption{\textsc{#1} %
      \textit{#2}}%
 }
 
 With photographs you need sometimes to add a "credit" to credit the photographer or even a copyright notice. This is necessary, especially if you have licensed images from an agency. For this I would prefer a simple solution where we
 just define an \verb+addcredit+ macro. More customization might be possible, as well as a few setup macros. As an exercise have a look at some publications and see how they handle this type of photographs.
 
-\begin{verbatim}
+\begin{teX}
 \newcommand\addcredit[1]{%
    \vspace*{-10.5pt}%
    \scriptsize
    \hfill\hfill
    \textit{Credit: #1}%
 }
-\end{verbatim}
+\end{teX}
+
 \providecommand\addcredit[1]{%
  \scriptsize%
  \vspace*{-10.5pt}%
@@ -230,7 +237,7 @@ the text has been centered and styled as required.
 
 The full code is now shown below:
 
-\begin{verbatim}
+\begin{teX}
 \begin{figure}[htp]
   \centering
   \captionsetup{skip=0pt,  justification=centering}%
@@ -238,7 +245,7 @@ The full code is now shown below:
   \addcredit{U.S. DoD.}%
   \captionx{Assistant Secretary Rosenberg}{talks ...}
 \end{figure}
-\end{verbatim}
+\end{teX}
 
 \begin{figure}[htp]
   \centering
@@ -254,17 +261,17 @@ It all looks perfect, but there is a snag. If the photo is narrower, there will 
 
 \begin{figure}[htp]
 \begin{commands}[]{}
-\captionsetup{name=Fig., labelsep=period, format=plain}%
+\captionsetup{name=Fig., labelsep=period, format=plain, margin{30pt,30pt}}%
 \includegraphics[width=0.97\textwidth]{./graphics/movingup.jpg}%
 \addcredit{U.S. DoD.}%
 \caption{The effects of the credit going past the edge of the figure. This can be corrected by adding a minipage to hold both the include graaphics, as well as the addcredit command. }
 
 \begin{verbatim}
 \begin{figure}[htp]
-\captionsetup{name=Fig., labelsep=period, format=plain}%
-\includegraphics[width=0.97\textwidth]{./graphics/movingup.jpg}%
-\addcredit{U.S. DoD.}%
-\caption{The effects of the credit going past the edge of the figure. This can be corrected by adding a minipage to hold both the include graaphics, as well as the addcredit command. }
+  \captionsetup{name=Fig., labelsep=period, format=plain}%
+  \includegraphics[width=0.97\textwidth]{./graphics/movingup.jpg}%
+  \addcredit{U.S. DoD.}%
+  \caption{The effects of the credit going past the edge of the figure. This can be corrected by adding a minipage to hold both the include graaphics, as well as the addcredit command. }
 \end{figure}
 \end{verbatim}
 \end{commands}
@@ -275,22 +282,25 @@ It all looks perfect, but there is a snag. If the photo is narrower, there will 
 Presentation of a lot of figures can influence the appearance of a book tremendously. Like sectioning commands and text styling, magazines and books can be recognized from the styling of their pictures. In figures we imitated the appearance of photographs in Life Magazine. Life in the forties was in the front with the troops and had some great photographers.  It had a style still very hard to improve on.
 
 \begin{figure}[htp]
-\centering
-
-\captionsetup{name=Photo., labelsep=period, format=plain}%
-   \begin{minipage}[t]{0.48\textwidth}%
+\bgroup
+\parindent=0pt
+\null
+\clearcaptionsetup{figure}
+\captionsetup{style=default,name=Photo.,skip=3pt,parindent=0pt, labelsep=period, margin={0pt,0pt}}%
+\begin{minipage}[t]{0.48\textwidth}%
       \includegraphics[width=\textwidth]{./graphics/movingup.jpg}%
       \addcredit{U.S. DoD.}\vskip1sp
-     \caption{The effects of the credit going past the edge of the figure. This can be corrected by adding a minipage to hold both commands. }
+     \caption{The effects of the credit going past the edge of the figure. This can be corrected by adding a minipage to hold both commands.}%
 \end{minipage}\hfill\hfill
 \begin{minipage}[t]{0.48\textwidth}
-      \includegraphics[width=\textwidth]{./graphics/survivors.jpg}%
-      \addcredit{U.S. DoD.}%
-     \caption{The effects of the credit going past the edge of the figure. This can be corrected by adding a minipage to hold both commands. }
+\includegraphics[width=\linewidth]{./graphics/survivors.jpg}%
+%      \addcredit{U.S. DoD.}%
+\caption{The effects of the credit going past the edge of the figure. This can be corrected by adding a minipage to hold both commands. }
+    
 \end{minipage}
 
- \begin{minipage}[t]{0.48\textwidth}
-      \includegraphics[width=\textwidth]{./graphics/img009.jpg}%
+ \begin{minipage}[t]{0.48\linewidth}
+      \includegraphics[width=\linewidth]{./graphics/img009.jpg}%
       \addcredit{U.S. DoD.}%
      \caption{Engineer Construction Troops in Liberia, July 1942.}
 \end{minipage}\hfill\hfill
@@ -299,7 +309,7 @@ Presentation of a lot of figures can influence the appearance of a book tremendo
       \addcredit{U.S. DoD.}%
      \caption{The effects of the credit going past the edge of the figure. This can be corrected by adding a minipage to hold both commands. }
 \end{minipage}
- \begin{minipage}[t]{0.48\textwidth}
+\begin{minipage}[t]{0.48\textwidth}
       \includegraphics[width=\textwidth]{./graphics/img126.jpg}%
       \addcredit{U.S. DoD.}%
      \caption{Marine Reinforcements.
@@ -310,6 +320,7 @@ A light machine gun squad of 3d Battalion, 1st Marines, arrives during the battl
       \addcredit{U.S. DoD.}%
      \caption{Brothers Under the Skin, inductees at Fort Sam Houston, Texas, 1953. }
 \end{minipage}
+\egroup
 \end{figure}
 \newpage
 

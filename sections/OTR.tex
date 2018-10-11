@@ -1,6 +1,3 @@
-\cxset{section color=spot!50,
-          section afterindent=false}
-
 \chapter{Page Breaking and The Output Routine (OTR)}
 \precis{In this chapter we discuss one of the most mysterious aspects of \TeX\ the output routine.}
 \addtocimage{-12pt}{-20pt}{../images/tocblock-flower.jpg}
@@ -17,13 +14,13 @@ and as  David Salomon noted\footnote{TUGboat/tb-11-1/tb27salomon.pdf}, advanced 
  The chapter of the \texbook discussing output
 routines claims that designing output routines makes one:
 
-\begin{quotation}
-`achieve the level of a `\tex Grandmaster'.
+\begin{quote}
+achieve the level of a `\tex Grandmaster'.
 As is so often the case, mastery of the concept of an
 output routine in plain \tex will only barely prepare you
 for the complexities awaiting you with \latexe's variant of
 an output routine.
-\end{quotation}
+\end{quote}
 
 
 The subject is considered complex for the following reasons:
@@ -194,7 +191,7 @@ where $n$ is the number of text lines. Remember that the first line is a special
 
 \section{The height of \texttt{\textbackslash box255}}
 
-In the case of |\box255|,
+In the case of \docAuxCommand{box}255,
 enough glue is placed above the first line of text
 to reach to |\topskip| from the first baseline. We
 denote the value of |\topskip| by $h$ (10pt in plain).
@@ -212,28 +209,41 @@ the most common of which is |\parskip|
 \end{figure}
 \end{comment}
 
-\subsection{Dead cycles.} An execution of the OTR without shipping any material is called a \texttt{dead cycle}. Dead cycles, have their uses and we will explain this a bit later on. However, long iterations that just return \textit{dead cycles} is an indication of an error somewhere. \tex counts the number of dead cycles in a counter named |\deadcycles| and stops the run if |\deadcycles >= \maxdeadcycles|.  In the \textit{plain} format |\maxdeadcycles| is set as 25 and in \latex as \the\deadcycles. |\maxdeadcycles = 100| is \the\maxdeadcycles. Each time |\shipout| is invoked, it resets |\deadcycles| to zero.
+\subsection{Dead cycles.} An execution of the OTR without shipping any material is called a \emph{dead cycle}. Dead cycles, have their uses and we will explain this a bit later on. However, long iterations that just return \textit{dead cycles} is an indication of an error somewhere. \tex counts the number of dead cycles in a counter named |\deadcycles| and stops the run if |\deadcycles >= \maxdeadcycles|.  In the \textit{plain} format |\maxdeadcycles| is set as 25 and in \latex as \the\deadcycles. |\maxdeadcycles = 100| is \the\maxdeadcycles. Each time |\shipout| is invoked, it resets |\deadcycles| to zero.
 
-\begin{teXXX}
+\begin{dispListing}
 If the file is not included, reset \deadcycles, so that a long list of non-included
 files does not generate an `Output loop' error.
 115 \deadcycles\z@
 116 \@nameuse{cp@#1}%
 117 \fi
 118 \let\@auxout\@mainaux}
-\end{teXXX}
+\end{dispListing}
 
 
 \subsection{\tex's Page Number.} The page number can come from any source. Salomon provides an example where the \textsc{OTR} typesets a page number from a |\count| variable. This is typeset centered below the printed area.
 
-\begin{teXXX}
-\newcount\pageNum
-\output={
-\shipout\vbox{
-\box255\smallskip
-\centerline{\tenrm\the\pageNum}}
-\global\advance\pageNum by1}
-\end{teXXX}
+%\newpage
+%
+%Test
+%\makeatletter
+%
+%\let\ltxxoutput\output
+%\let\ltxlabel\label@name
+%\output={{\let\label@name\@gobble
+%  \shipout\vbox{
+%  \box255\smallskip
+%  \centerline{\thepage}}}
+%}
+%
+%\vfill \penalty-10000
+%
+%\global\let\output\ltxxoutput
+%\let\label@name\ltxlabel
+%
+%
+%\makeatother
+
 
 Notice that the output macro, just passes the contents of the box to |\shipout|. This is not actually a very good method, but is shown here to illustrate a point.
 
@@ -255,9 +265,17 @@ macros are especially useful.
 
 Supposed you have inserted the material required to go on a page on a big |\vbox|, but the material is a bit extra that what is required to fill a page exactly. You would need an operation to split the box in two. The |vsplit| operation does that. It is important to the understanding of OTR operations to have an intimate knowledge of |\vsplit|. Its syntax is: 
 
+\begin{quote}
 |\vsplit|\meta{box number} to \meta{dim}
+\end{quote}
 
-The result of the operation is a box. Most often it appears in an assignment such as: |\setbox1=\vsplit0 to2.6in|. This sets |\box1| to a
+The result of the operation is a box. Most often it appears in an assignment such as: 
+
+\begin{quote}
+|\setbox1=\vsplit0 to2.6in| 
+\end{quote}
+
+This sets |\box1| to a
 height of 2.6in, moves material from the top of
 |\box0| to |\box1|, and keeps the remainder in |\box0|.
 
@@ -276,16 +294,22 @@ It is important to remember that most of \tex's commands work with \latex as wel
 }
 \begin{multicols}{2}
 \small
-\loremlines{16}{\lipsum[1-2]}
+\loremlines{16}{\onepar}
 \end{multicols}
 \boxone
+
+\setbox\one=\vbox{100}
+\the\ht\one \\
+\the\baselineskip
+\the\splittopskip
+
 \end{texexample}
 
 
 \tex assumes that the new |\box1| may have to
 be shipped out as part of the page. It therefore
 places a glue similar to $h$ at the top of |\box1|.
-This glue is called |\splittopskip| and has a plain
+This glue is called \docAuxCommand{splittopskip} and has a plain
 format value of 10pt [348].
 
 One important thing to note is that a box can only be split \textit{between} lines of text. 
@@ -337,6 +361,7 @@ If no marks have occurred yet, all three are empty; if no marks occured on the c
 
 Marks can be used to get a section heading into the headline or footline of the page.
 
+\begin{quote}
 \begin{verbatim}
 \def\section#1{ ... \mark{#1} ... }
 \def\rightheadline{\hbox to \hsize
@@ -344,6 +369,7 @@ Marks can be used to get a section heading into the headline or footline of the 
 \def\leftheadline{\hbox to \hsize
    {\headlinefont \pagenumber\hfil\firstmark}}
 \end{verbatim}
+\end{quote}
 
 This places the title of the first section that starts on a left page in the left
 headline, and the title of the last section that starts on the right page in
@@ -393,18 +419,14 @@ Knuth also suggested another method that he called the \emph{dirtiest trick of a
 of |\box255|. 
 
 \section{Insertions}
-Insertions are considered one of  the most  com- 
-plex  topics in \tex. Many users master  topics  such 
-as tokens,  file  I/O, macros,  and  even  OTRS  before 
-they dare  tackle  insertions.  The  reason  is  that 
+Insertions are considered one of  the most  complex  topics in \tex. Many users master  topics  such 
+as tokens,  file  I/O, macros,  and  even  OTRS  before they dare  tackle  insertions.  The  reason  is  that 
 insertions  are  complex,  and  The \texbook, while 
-covering all the relevant material, is somewhat cryp- 
-tic regarding  insertions, and  lacks  simple examples. 
+covering all the relevant material, is somewhat cryptic regarding  insertions, and  lacks  simple examples. 
 The  main  discussion  of  insertions takes  place  on 
 [115-1251.  where \tex' s  registers  are also discussed. 
 Examples  of  insertions are  shown, mostly  without 
-explanations,  on  [363-364,  423-424].  A lot of what is described here is based on an article in TUGboat by David Salomon\footnote{ 
-http://www.tug.org/TUGboat/Articles/tb11-4/tb30salomon.pdf}
+explanations,  on  [363-364,  423-424].  A lot of what is described here is based on an article in TUGboat by David Salomon\footnote{\protect\url{http://www.tug.org/TUGboat/Articles/tb11-4/tb30salomon.pdf}}
 
 Many users understand the idea of floats. Certain material to be typeset needs to be held in a buffer and inserted at different points on a page, for example a a figure that does not fit on a page it has to be inserted at the top of the next page. An \textit{insertion} is just a piece of a document that is generated at a certain point but appears at another point. Common examples are figures, footnotes and endnotes. Quoting Knuth:
 
@@ -414,16 +436,93 @@ but  no  simpler  mechanism  seems  to  do  nearly
 as  much.
 \end{quote}
 
-\section{OTR Example}
+\section{\protect\textbackslash shipout}
 
-\begin{comment}
-\begin{figure}%
- \centering
-  \includegraphics[width=0.37\linewidth]{./graphics/framedpage.jpg}
-  \caption{A boxed page}
-  \label{fig:framedpage}
-\end{figure}
-\end{comment}
+The primitive control sequence \docAuxCommand{shipout} is \tex's end game. It's syntax is quite simple:
+
+\begin{quote}
+|\shipout<box>|
+\end{quote}
+
+From TeXbook, Chapter 23: Output Routines, page 254:
+
+\begin{quotation}
+TeX’s primitive command |\shipout<box>| is what actually causes output. It sends the contents of the box to the dvi file, which is TeX’s main output file; after TeX has finished, the dvi file will contain a compact device-independent encoding of instructions that specify exactly what should be printed. When a box is shipped out, TeX displays the values of |\count0| through |\count9| on your terminal, as explained in Chapter 15; these ten counters are also recorded in the dvi file, where they can be used to identify the page. All of the |\openout, \closeout|, and |\write| commands that appear inside of the box are performed in their natural order as that box is being shipped out. Since a |\write| command expands macros, as explained in Chapter 21, TeX’s scanning mechanism might detect syntax errors while a |\shipout| is in progress. If  |\tracingoutput| is nonzero at the time of a \cs{shipout}, the contents of the box being shipped are written into your log file in symbolic form. You can say \cs{shipout} anywhere, not only in an output routine.
+\end{quotation}
+
+
+We can say:
+
+\emphasize{shipout,vbox}
+\begin{teXXX}
+\shipout\vbox{%
+  \hrule
+  \medskip
+  \lipsum[1-5]
+  \medskip
+  
+  This is a Test for shipout
+  
+  \hrule
+}
+\end{teXXX}
+
+\shipout\vbox{%
+  \hrule
+  \medskip
+  \lipsum[1-5]
+  \medskip
+  \centering
+  \textbf{Sample: }{This is a Test for shipout}
+  \hrule
+}
+
+Since the output box handled by \tex still holds material the page is shown in the previous page. There is no page numbers or headers and it just shows he lorem-ipsum text and a primitive caption at the bottom. I have written the example to show the difference between the logical and actual pages. TeX does not care how the page will look, it will assemble it put headers, page numbers and pass it on to shipout. Shipout will then insert it to the dvi file, which will hold all teh instructions to print a real page.
+
+We can modify the example to add our head and foot. 
+
+\begin{texcode}{Shipout}{ex:ship2}
+This will print by the normal routine
+
+\long\gdef\boxit#1#2{\hbox{\vrule \vbox{\hrule\kern#2pt\hbox{%
+\kern#2pt\vbox{#1}\kern#2pt}\kern#2pt\hrule}\vrule}}
+
+\makeatletter
+\shipout\vbox {%
+  \vskip\topsep\relax
+  \vskip\headsep
+   \@thehead
+   \vskip30pt
+    \boxit{
+      \lipsum[1-5]
+      }{2}
+   \vskip30pt
+   \@thefoot   
+}
+\makeatother 
+\end{texcode}
+
+\latexe's output routine takes care of all the page geometry, the details to set up the headers and footers, but most importantly intercepts teh contents of the output box measure it, cuts it inserts the inserts such as footnotes and figures, margin notes, separates the text in two columns if necessary and so on. 
+
+\long\gdef\boxit#1#2{\hbox{\vrule \vbox{\hrule\kern#2pt\hbox{%
+\kern#2pt\vbox{#1}\kern#2pt}\kern#2pt\hrule}\vrule}}
+\makeatletter
+\shipout\vbox {%
+  \vskip\topsep\relax
+  \vskip\headsep
+   \@thehead
+   \vskip30pt
+    \boxit{
+      \lipsum[1-5]
+      }{2}
+   \vskip30pt
+   \@thefoot   
+}
+\makeatother 
+
+
+
+An output routine will prepare the virtual page and pass it onto a 
 
 Here is an OTR for a \textit{framed} page. It surrounds the
 page with double rules on all sides, and centers the
@@ -439,7 +538,7 @@ space between the rules and the text. \#1 is a box
 containing the text.
 
 \emphasis{output,shipout}
-\begin{teXXX}
+\begin{texcode}{Example of simple output routine}{ex:output1}
 \def\frameit#1#2{%
  \vbox{\hrule
   \hbox{%
@@ -455,17 +554,22 @@ containing the text.
       \medskip
       \centerline{Test Framed Page}}
   \advancepageno}
-\end{teXXX}
+\end{texcode}
+
+ 
+
+So far we did not care if the height of the page is right or not. In production code the shipout holds
+a box, which has been produced by \tex. Any material we add to it, must not affect the dimensions of the box.
+If we do and is too big the drivers will probably clip it.
 
 
 Plain TeX has an output routine that takes care of  simple things like page numbering and insertions
 using \cs{footnote} and \cs{topinsert}. 
 
-\section{\LaTeX\  output routines}
 
 So far we have examined the \tex OTR in detail. I hope it has given you enough understanding, not only to write your own output routine, but also to now be ready to study the \latex output routine, which is much more complicated. We have so far seen that  when \tex 
 is typesetting pages of continuous text, it will gather material until it can find a least-cost page break intended to
-make the gathered material fit the \cs{pagegoal size}. The
+make the gathered material fit the \cs{pagegoal} size. The
 gathered material will then be placed into |\box255| and
 the output routine stored in the token register \cs{output}
 will be processed in a group of its own. 
@@ -478,7 +582,10 @@ At the time of the \cs{shipout} command all \cs{open} and
 numbers at the time of shipout: the corresponding info
 is written to the |.aux| file at that time.
 The output routine may decide to place material
-back on the main vertical list instead of shipping it out.
+back on the main vertical list instead of shipping it out. Its ob is to check if it can have a break, if it can it will ship the page out. If it cannot it will palce the material back on the main vertical list. 
+
+\section{\LaTeX\  output routines}
+
 
 \LaTeX\ output routine is described in \texttt{ltoutput.dtx}. You should also have a look at \texttt{ltfloat.dtx}. The algorithm is revisited i \latex3 and Frank Mittelbach, published a paper
 \footnote{\protect\url{http://www.latex-project.org/papers/xo-pfloat.pdf}} in which he explains some of the problems facing the team, when dealing with the output routine.
@@ -504,535 +611,534 @@ standard building blocks like \textit{insertion lists}, \textit{here points},
 default mechanisms for \textit{margin notes} and so on.
 
 
-\section{Calling the output routine}
-
-The output routine is called either by TeX's normal page-breaking
-mechanism, or by a macro putting a penalty < or = -10000 in the output
-list. In the latter case, the penalty indicates why the output
-routine was called, using the following code.
-penalty reason
-
-\begin{longtable}{ll}
-\toprule
-penalty &reason\\
-\midrule
--10000  &\ pagebreak\\
-~       &\ newpage\\
--10001  &clearpage (\ penalty -10000 \ vbox{}| \ penalty -10001)|\\
--10002  &float insertion, called from horizontal mode\\
--10003 &float insertion, called from vertical mode.\\
--10004 &float insertion.\\
-\bottomrule
-\end{longtable}
-\medskip
-
-Note: A |float| or |marginpar| puts the following sequence in the output
-list: 
-
-\begin{enumerate}
-\item a penalty of -10004,
-
-\item a null |\vbox|
-
-\item a penalty of -10002 or -10003.
-\end{enumerate}
-
-This solves two special problems:
-
-\begin{enumerate}
-\item If the float comes right after a |\newpage| or |\clearpage|,
-then the first penalty is ignored, but the second one
-invokes the output routine.
-
-\item If there is a split footnote on the page, the second 'page'
-puts out the rest of the footnote
-\end{enumerate}
-
-\latex first defines some helper routines and increase the \cs{maxdeadcycles}. The helper macros are for
-manipulating lisst.
-
-\begin{teX}
- \maxdeadcycles = 100
- \let\@elt\relax
- \def\@next#1#2#3#4{\ifx#2\@empty #4\else
-   \expandafter\@xnext #2\@@#1#2#3\fi}
-   \@next \CS \LIST {NONEMPTY}{EMPTY} == %% NOTE: ASSUME
-\@elt = \relax
- BEGIN assume that \LIST == \@elt \B1 ... \@elt \Bn
- if n = 0
- then EMPTY
- else 
-   \CS :=L \B1
-   \LIST :=G \@elt \B2 ... \@elt \Bn
-   NONEMPTY
- fi
-END
-\end{teX}
-
-
-\begin{teX}
-11 \def\@xnext \@elt #1#2\@@#3#4{\def#3{#1}\gdef#4{#2}}
-
-12 \def\@testfalse{\global\let\if@test\iffalse}
-13 \def\@testtrue {\global\let\if@test\iftrue}
-14 \@testfalse}
-   }
-
-15 \def\@bitor#1#2{\@testfalse {\let\@elt\@xbitor
-16   \@tempcnta #1\relax #2}}
-
-17 \def\@xbitor #1{\@tempcntb \count#1
-18    \ifnum \@tempcnta =\z@
-19    \else
-20      \divide\@tempcntb\@tempcnta
-21    \ifodd\@tempcntb \@testtrue\fi
-22   \fi}
-\end{teX}
-
-
-\subsection{Float boxes and lists.} 
-A \textit{float list} consisting of the 
-floats in boxes |\boxa ... \boxN| has
-the form:
-
-|\@elt \boxa ... \@elt \boxN|
-where |\boxI| is defined by
-
-|\newinsert\boxI|
-
-Normally, |\@elt| is |\let| to |\relax|. A test can be performed on the
-entire 
-oat list by locally |\def|'ing |\@elt| appropriately and
-executing the list.
-This is a lot more efficient than looping through the list.
-\LaTeX\ defines float boxes as |bx@A| to |bx@R| to make them available for 
-inserts. These will be used later to define the lists that hold these boxes. 
-
-\latex now defines the float boxes. Each one is defined as an \cmd{\newinsert.}
-
-\begin{teXXX}
-\newinsert\bx@A
-...
-\newinsert\bx@I
-\newinsert\bx@J
-\newinsert\bx@K
-\newinsert\bx@L
-\newinsert\bx@M
-\newinsert\bx@N
-\newinsert\bx@O
-\newinsert\bx@P
-\newinsert\bx@Q
-\newinsert\bx@R
-\end{teXXX}
-
-
-
-Once these boxes are defined they are inserted in the |@freelist|. At this point all the other lists are defined.
-
-\emphasis{@freelist,@toplist,@botlist,@midlist,@currlist}
-\begin{teXXX}
-41 \gdef\@freelist{\@elt\bx@A\@elt\bx@B\@elt\bx@C\@elt\bx@D
-         \@elt\bx@E
-42                 \@elt\bx@F\@elt\bx@G\@elt\bx@H\@elt\bx@I\@elt\bx@J
-43                 \@elt\bx@K\@elt\bx@L\@elt\bx@M\@elt\bx@N
-44                 \@elt\bx@O\@elt\bx@P\@elt\bx@Q\@elt\bx@R}
-\end{teXXX}
-
-\startlineat{45}
-All the lists are defined initially to be empty.
-\begin{teXXX}
-45 \gdef\@toplist{}
-46 \gdef\@botlist{}
-47 \gdef\@midlist{}
-48 \gdef\@currlist{}
-49 \gdef\@deferlist{}
-50 \gdef\@dbltoplist{}
-51 \gdef\@dbldeferlist{}
-\end{teXXX}
-
-
-The lists are similar to those defined in \texttt{plain}.
-
-\begin{description}
-\item[\cs{@freelist}] : List of empty boxes for placing new 
-floats.
-\item[\string\@toplist] : List of 
-floats to go at top of current column.
-\item[\string\@midlist] : List of 
-floats in middle of current column.
-\item[\string\@botlist] : List of 
-floats to go at bottom of current column.
-\item[\string\@deferlist] : List of 
-floats to go after current column.
-\item[\string\@dbltoplist] : List of double-col. 
-floats to go at top of current
-page.
-\item[\string\@dbldeferlist] : List of double-column 
-floats to go on subsequent
-pages.
-
-\end{description}
-
-\begin{multicols}{2}
-Check was prudent when defining the newinsert boxes in order to reserve space and memory. The package \docpkg{morefloats} can be used to add more floats to this list. This should have definitely been included here in a revision.
-
-\subsection{Defining Layout parameters} All the page layout parameters are defined next. 
-
-\begin{teXXX}
-52 \newdimen\topmargin
-53 \newdimen\oddsidemargin
-54 \newdimen\evensidemargin
-55 \let\@themargin=\oddsidemargin
-56 \newdimen\headheight
-57 \newdimen\headsep
-58 \newdimen\footskip
-59 \newdimen\textheight
-60 \newdimen\textwidth
-61 \newdimen\columnwidth
-62 \newdimen\columnsep
-63 \newdimen\columnseprule
-64 \newdimen\marginparwidth
-65 \newdimen\marginparsep
-66 \newdimen\marginparpush
-\end{teXXX}
-
-Remember  that TeX knows little about a page. The problem is that TEX has no idea how
-wide and tall the paper is. All it knows is the
-left and top offsets, and the dimensions of the
-printed area (|\hsize| and |\vsize|). All these dimensions need to be calculated and adjustments made within the \otr.
-
-A document normally  starts by specifying:
-
-\begin{teXXX}
-\newdimen\paperheight
-\newdimen\paperwidth
-\paperheight=..in \paperwidth=..in
-\end{teXXX}
-
-
-\end{multicols}
-
-
-\subsection*{The AtBeginDvi}
-A box register is used  to put stuff that must appear before anything else
-in the |.dvi| file.
-
-The stuff in the box should not add any typeset material to the page when it
-is unboxed.
-
-\emphasis{AtBeginDvi,@begindvibox}
-
-\begin{teXXX}
-67 \newbox\@begindvibox
-68 \def \AtBeginDvi #1{%
-69 \global \setbox \@begindvibox
-70 \vbox{\unvbox \@begindvibox #1}%
-71 }
-\end{teXXX}
-
-\begin{teXXX}
-72 \newdimen\@maxdepth
-73 \@maxdepth = \maxdepth
-\end{teXXX}
-
-
-Some new registers for paperheight and paperwidth are defined:
-
-\begin{teXXX}
-74 \newdimen\paperheight
-75 \newdimen\paperwidth
-76 \newif \if@insert
-These should definitely be global:
-77 \newif \if@fcolmade
-78 \newif \if@specialpage \@specialpagefalse
-These should be global but are not always set globally in other les.
-79 \newif \if@firstcolumn \@firstcolumntrue
-80 \newif \if@twocolumn \@twocolumnfalse
-Not sure about these: two questions. Should things which must apply to a whole
-doument be local or global (they probably should be `preamble only' commands)?
-Are these three such things?
-81 \newif \if@twoside \@twosidefalse
-82 \newif \if@reversemargin \@reversemarginfalse
-83 \newif \if@mparswitch \@mparswitchfalse
-This counter has been imported from `multicol'.
-84 \newcount \col@number
-85 \col@number \@ne
-\end{teXXX}
-
-and a lot of other internal registers
-
-\begin{teX}
-86 \newcount\@topnum
-87 \newdimen\@toproom
-88 \newcount\@dbltopnum
-89 \newdimen\@dbltoproom
-90 \newcount\@botnum
-91 \newdimen\@botroom
-92 \newcount\@colnum
-93 \newdimen\@textmin
-94 \newdimen\@fpmin
-95 \newdimen\@colht
-96 \newdimen\@colroom
-97 \newdimen\@pageht
-98 \newdimen\@pagedp
-99 \newdimen\@mparbottom \@mparbottom\z@
-100 \newcount\@currtype
-101 \newbox\@outputbox
-102 \newbox\@leftcolumn
-103 \newbox\@holdpg
-104 \def\@thehead{\@oddhead} % initialization
-105 \def\@thefoot{\@oddfoot}
-\end{teX}
-
-
-\subsection{\texttt{\textbackslash clearpage}}
-
-\begin{macro}{\clearpage}
-The clearpage macro is a bit complicated, as it needs to avoid a complete empty page after a |\twocolumn[..]|. This prevents the text from the argument
-vanishing into a  float box, never to be seen again. We hope that it does not
-produce wrong formatting in other cases.
-\end{macro}
-
-\begin{teXXX}
-106 \def\clearpage{%
-107   \ifvmode
-108   \ifnum \@dbltopnum =\m@ne
-109     \ifdim \pagetotal <\topskip
-110       \hbox{}%
-111     \fi
-112   \fi
-113  \fi
-114 \newpage
-115 \write\m@ne{}%
-116 \vbox{}%
-117 \penalty -\@Mi
-118 }
-\end{teXXX}
-
-\subsection{The \texttt{\textbackslash clearpagedoublepage} macro} 
-
-\begin{macro}{cleardoublepage}
-This checks for odd and even pages by using the
-page counter |c@page|.  It also provides switches of twoside printing. 
-
-\numberlineat{119}
-\begin{teXXX}
-\def\cleardoublepage{%
-   \clearpage
-   \if@twoside 
-     \ifodd\c@page
-     \else
-       \hbox{}
-       \newpage
-       \if@twocolumn\hbox{}\newpage
-       \fi
-     \fi
-  \fi}
-\end{teXXX}
-\end{macro}
-
-Note the |\newpage| is defined a bit further on. This is a fairly simple definition, since most of the code that follows only gets a bit complicated with the twocolumn option. It sets the dimensions and the booleans to those appropriate for the |onecolumn| option. An important note we back to \tex's |\hsize|. Both the linewidth as well as the columnwidth are set to this.
-
-\begin{teXXX}
-123 \def\onecolumn{%
-124   \clearpage
-125   \global\columnwidth\textwidth
-126   \global\hsize\columnwidth
-127   \global\linewidth\columnwidth
-128   \global\@twocolumnfalse
-129   \col@number \@ne
-130   \@floatplacement
-     }
-\end{teXXX}
-
-\subsection{\string newpage.} 
-
-The |\newpage| macro is programmed defensively. The two checks at the beginning ensure that an item label or run-in section title
-immediately before a |\newpage| get printed on the correct page, the one before
-the page break.
-All three tests are largely to make error processing more robust; that is why
-they all reset the 
-flags explicitly, even when it would appear that this would be
-done by a |\leavevmode|.
-
-\begin{teXXX}
-131 \def \newpage {%
-132  \if@noskipsec
-133    \ifx \@nodocument\relax
-134      \leavevmode
-135      \global \@noskipsecfalse
-136    \fi
-137 \fi
-138 \if@inlabel
-139   \leavevmode
-140   \global \@inlabelfalse
-141 \fi
-142 \if@nobreak \@nobreakfalse \everypar{}\fi
-143 \par
-144 \vfil
-145 \penalty -\@M}
-\end{teXXX}
-
-An empty cols is defined. There is a note here, that an invisible rule might have been a better idea.
-
-\begin{teXXX}
-146 \def \@emptycol {\vbox{}\penalty -\@M}
-\end{teXXX}
-
-\subsection{The \string twocolumn macro.} This is the longest definition so far. We will leave it for a while and then come back. There are several bug fixes to the two-column stuff here. Firstly, like the onecolumn the page parameters are set to the correct parameters.
-
-
-\begin{teXXX}
-147 \def \twocolumn {%
-148 \clearpage
-149 \global\columnwidth\textwidth
-150 \global\advance\columnwidth-\columnsep
-151 \global\divide\columnwidth\tw@
-152 \global\hsize\columnwidth
-153 \global\linewidth\columnwidth
-154 \global\@twocolumntrue
-155 \global\@firstcolumntrue
-156 \col@number \tw@
-\end{teXXX}
-
-
-
-\section{The output macro}
-
-The setting of the \cs{output} is quite short but it belies its complexity.
-After having checked verious parameters it redirects to |@specialoutput|. This is the heart of the routines. Notice that \latex just fills in the token list of \tex's |output| routine, it does not attempt to redefine it or save it. 
-Should some hooks be defined here, life might have been made easier, however, what one can do is to first save the \latex output routine and then redefine the output as one may wish. Return to it can happen after it. If you take this approach, you should be careful of packages that redefine output, such as |multicol| and |longtable|. An approach such as this is taken by \citeauthor{revtex} in the \pkgname{revtex} class.\footcite[][This is a document class of the American Physical Society. It enables submission to any of the APS journals. Its distribution point is \protect\url{http://publish.aps.org/revtex4/}]{revtex}
-
-\emphasis{ifnum,fi,else,ifdimen,@specialoutput}
-\begin{teX}
-204 \output {%
-205 \let \par \@@par
-206 \ifnum \outputpenalty<-\@M
-207    \@specialoutput
-208 \else
-209    \@makecol
-210    \@opcol
-211    \@startcolumn
-212    \@whilesw \if@fcolmade \fi
-213      {%
-218      \@opcol\@startcolumn}%
-219 \fi
-220 \ifnum \outputpenalty>-\@Miv
-221 \ifdim \@colroom<1.5\baselineskip
-222 \ifdim \@colroom<\textheight
-223 \@latex@warning@no@line {Text page \thepage\space
-224 contains only floats}%
-225 \@emptycol
-226 % \if@twocolumn
-227 % \if@firstcolumn
-228 % \else
-229 % \@emptycol
-230 % \fi
-231 % \fi
-232 \else
-  233 \global \vsize \@colroom
-234 \fi
-235 \else
-236   \global \vsize \@colroom
-237 \fi
-238 \else
-239   \global \vsize \maxdimen
-240 \fi
-241 }
-\end{teX}
-
-
-
-\begin{teXXX}
-244 \gdef\@specialoutput{%
-245   \ifnum \outputpenalty>-\@Mii
-246     \@doclearpage
-247   \else
-248     \ifnum \outputpenalty<-\@Miii
-249         \ifnum \outputpenalty<-\@MM \deadcycles \z@ \fi
-250                 \global \setbox\@holdpg \vbox {\unvbox\@cclv}%
-251         \else
-252         \global \setbox\@holdpg \vbox{%
-253                 \unvbox\@holdpg
-254                 \unvbox\@cclv
-We must now remove the box added by the 
-oat mechanism and the \topskip
-glue therefore added above it by TEX.
-255                \setbox\@tempboxa \lastbox
-256                \unskip
-257 }%
-These two are needed as separate dimensions only by \@addmarginpar; for other
-purposes we put the whole size into \@pageht (see below).
-258                \@pagedp \dp\@holdpg
-259                \@pageht \ht\@holdpg
-260                \unvbox \@holdpg
-
-261                \@next\@currbox\@currlist{%
-262                \ifnum \count\@currbox>\z@
-Putting the whole size into \@pageht (see above).
-263                  \advance \@pageht \@pagedp
-264                  \ifvoid\footins \else
-265                    \advance \@pageht \ht\footins
-266                    \advance \@pageht \skip\footins
-267                    \advance \@pageht \dp\footins
-268                \fi
-\end{teXXX}
-
-
-
-\subsection{The \string @doclearpage macro.} This is an emergency action. It dumps everything: footnotes first and then floats. 
-
-
-\section*{The Kludgeins}
-
-The kludgeins are simply inserts that fool \tex in enlarging a page by a small amount, normally used to allow one or two lines of text to go in the same page.
-
-The two kludgeins mentioned in the kernel are are \cs{enlargethisspace} and its star version.\footnote{The Oxford English Dictionary (2nd ed., 1989) kludge entry cites one source for this word's earliest recorded usage, definition, and etymology: Jackson W. Granholm's 1962 "How to Design a Kludge" article, which appeared in the American computer magazine Datamation
-kludge  Also kluge. [J. W. Granholm's jocular invention: see first quot.; cf. also bodge v., fudge v.]
-
-'An ill-assorted collection of poorly-matching parts, forming a distressing whole' (Granholm); esp. in Computing, a machine, system, or program that has been improvised or 'bodged' together; a hastily improvised and poorly thought-out solution to a fault or 'bug'.
-
-The word 'kludge' is...derived from the same root as the German Kluge..., originally meaning 'smart' or 'witty'.... 'Kludge' eventually came to mean 'not so smart' or 'pretty ridiculous'.}
-
-
-
-\begin{teXX}
-\gdef \enlargethispage{%
-1198 \@ifstar
-1199 {%
-1203   \@enlargepage{\hbox{\kern\p@}}}%
-1204 {%
-1208   \@enlargepage\@empty}%
-1209 }
-\end{teXX}
-
-Adds |<dim>| to the height of the current column only. On the printed page the
-bottom of this column is extended downwards by exactly |<dim>| without having
-any effect on the placement of the footer; this may result in an overprinting.
-\cs{enlargethispage}.
-
-Similar to |\enlargethispage| but it tries to squeeze the column to be printed
-in as small a space as possible, ie it uses any shrinkability in the column. If the
-column was not explicitly broken (e.g. with |\pagebreak|) this may result in an
-overfull box message but except for this it will come out as expected (if you know
-what to expect).
-The star form of this command is dedicated to Leslie Lamport, the other we
-need for ourselves (FMi, CAR).
-These commands may well have unwanted if used soon before a\ldots
-
- 
-
-
-
-
-\section{Using packages to ease the pain}
+%\section{Calling the output routine}
+%
+%The output routine is called either by TeX's normal page-breaking
+%mechanism, or by a macro putting a penalty < or = -10000 in the output
+%list. In the latter case, the penalty indicates why the output
+%routine was called, using the following code.
+%penalty reason
+%
+%\begin{longtable}{ll}
+%\toprule
+%penalty &reason\\
+%\midrule
+%-10000  &\ pagebreak\\
+%~       &\ newpage\\
+%-10001  &clearpage (\ penalty -10000 \ vbox{}| \ penalty -10001)|\\
+%-10002  &float insertion, called from horizontal mode\\
+%-10003 &float insertion, called from vertical mode.\\
+%-10004 &float insertion.\\
+%\bottomrule
+%\end{longtable}
+%\medskip
+%
+%Note: A |float| or |marginpar| puts the following sequence in the output
+%list: 
+%
+%\begin{enumerate}
+%\item a penalty of -10004,
+%
+%\item a null |\vbox|
+%
+%\item a penalty of -10002 or -10003.
+%\end{enumerate}
+%
+%This solves two special problems:
+%
+%\begin{enumerate}
+%\item If the float comes right after a |\newpage| or |\clearpage|,
+%then the first penalty is ignored, but the second one
+%invokes the output routine.
+%
+%\item If there is a split footnote on the page, the second 'page'
+%puts out the rest of the footnote
+%\end{enumerate}
+%
+%\latex first defines some helper routines and increase the \cs{maxdeadcycles}. The helper macros are for
+%manipulating lisst.
+%
+%\begin{teX}
+% \maxdeadcycles = 100
+% \let\@elt\relax
+% \def\@next#1#2#3#4{\ifx#2\@empty #4\else
+%   \expandafter\@xnext #2\@@#1#2#3\fi}
+%   \@next \CS \LIST {NONEMPTY}{EMPTY} == %% NOTE: ASSUME
+%\@elt = \relax
+% BEGIN assume that \LIST == \@elt \B1 ... \@elt \Bn
+% if n = 0
+% then EMPTY
+% else 
+%   \CS :=L \B1
+%   \LIST :=G \@elt \B2 ... \@elt \Bn
+%   NONEMPTY
+% fi
+%END
+%\end{teX}
+%
+%
+%\begin{teX}
+%11 \def\@xnext \@elt #1#2\@@#3#4{\def#3{#1}\gdef#4{#2}}
+%
+%12 \def\@testfalse{\global\let\if@test\iffalse}
+%13 \def\@testtrue {\global\let\if@test\iftrue}
+%14 \@testfalse}
+%   }
+%
+%15 \def\@bitor#1#2{\@testfalse {\let\@elt\@xbitor
+%16   \@tempcnta #1\relax #2}}
+%
+%17 \def\@xbitor #1{\@tempcntb \count#1
+%18    \ifnum \@tempcnta =\z@
+%19    \else
+%20      \divide\@tempcntb\@tempcnta
+%21    \ifodd\@tempcntb \@testtrue\fi
+%22   \fi}
+%\end{teX}
+%
+%
+%\subsection{Float boxes and lists.} 
+%A \textit{float list} consisting of the 
+%floats in boxes |\boxa ... \boxN| has
+%the form:
+%
+%|\@elt \boxa ... \@elt \boxN|
+%where |\boxI| is defined by
+%
+%|\newinsert\boxI|
+%
+%Normally, |\@elt| is |\let| to |\relax|. A test can be performed on the
+%entire 
+%oat list by locally |\def|'ing |\@elt| appropriately and
+%executing the list.
+%This is a lot more efficient than looping through the list.
+%\LaTeX\ defines float boxes as |bx@A| to |bx@R| to make them available for 
+%inserts. These will be used later to define the lists that hold these boxes. 
+%
+%\latex now defines the float boxes. Each one is defined as an \cmd{\newinsert.}
+%
+%\begin{teXXX}
+%\newinsert\bx@A
+%...
+%\newinsert\bx@I
+%\newinsert\bx@J
+%\newinsert\bx@K
+%\newinsert\bx@L
+%\newinsert\bx@M
+%\newinsert\bx@N
+%\newinsert\bx@O
+%\newinsert\bx@P
+%\newinsert\bx@Q
+%\newinsert\bx@R
+%\end{teXXX}
+%
+%
+%
+%Once these boxes are defined they are inserted in the |@freelist|. At this point all the other lists are defined.
+%
+%\emphasis{@freelist,@toplist,@botlist,@midlist,@currlist}
+%\begin{teXXX}
+%41 \gdef\@freelist{\@elt\bx@A\@elt\bx@B\@elt\bx@C\@elt\bx@D
+%         \@elt\bx@E
+%42                 \@elt\bx@F\@elt\bx@G\@elt\bx@H\@elt\bx@I\@elt\bx@J
+%43                 \@elt\bx@K\@elt\bx@L\@elt\bx@M\@elt\bx@N
+%44                 \@elt\bx@O\@elt\bx@P\@elt\bx@Q\@elt\bx@R}
+%\end{teXXX}
+%
+%\startlineat{45}
+%All the lists are defined initially to be empty.
+%\begin{teXXX}
+%45 \gdef\@toplist{}
+%46 \gdef\@botlist{}
+%47 \gdef\@midlist{}
+%48 \gdef\@currlist{}
+%49 \gdef\@deferlist{}
+%50 \gdef\@dbltoplist{}
+%51 \gdef\@dbldeferlist{}
+%\end{teXXX}
+%
+%
+%The lists are similar to those defined in \texttt{plain}.
+%
+%\begin{description}
+%\item[\cs{@freelist}] : List of empty boxes for placing new 
+%floats.
+%\item[\string\@toplist] : List of 
+%floats to go at top of current column.
+%\item[\string\@midlist] : List of 
+%floats in middle of current column.
+%\item[\string\@botlist] : List of 
+%floats to go at bottom of current column.
+%\item[\string\@deferlist] : List of 
+%floats to go after current column.
+%\item[\string\@dbltoplist] : List of double-col. 
+%floats to go at top of current
+%page.
+%\item[\string\@dbldeferlist] : List of double-column 
+%floats to go on subsequent
+%pages.
+%
+%\end{description}
+%
+%\begin{multicols}{2}
+%Check was prudent when defining the newinsert boxes in order to reserve space and memory. The package \docpkg{morefloats} can be used to add more floats to this list. This should have definitely been included here in a revision.
+%
+%\subsection{Defining Layout parameters} All the page layout parameters are defined next. 
+%
+%\begin{teXXX}
+%52 \newdimen\topmargin
+%53 \newdimen\oddsidemargin
+%54 \newdimen\evensidemargin
+%55 \let\@themargin=\oddsidemargin
+%56 \newdimen\headheight
+%57 \newdimen\headsep
+%58 \newdimen\footskip
+%59 \newdimen\textheight
+%60 \newdimen\textwidth
+%61 \newdimen\columnwidth
+%62 \newdimen\columnsep
+%63 \newdimen\columnseprule
+%64 \newdimen\marginparwidth
+%65 \newdimen\marginparsep
+%66 \newdimen\marginparpush
+%\end{teXXX}
+%
+%Remember  that TeX knows little about a page. The problem is that TEX has no idea how
+%wide and tall the paper is. All it knows is the
+%left and top offsets, and the dimensions of the
+%printed area (|\hsize| and |\vsize|). All these dimensions need to be calculated and adjustments made within the \otr.
+%
+%A document normally  starts by specifying:
+%
+%\begin{teXXX}
+%\newdimen\paperheight
+%\newdimen\paperwidth
+%\paperheight=..in \paperwidth=..in
+%\end{teXXX}
+%
+%
+%\end{multicols}
+%
+%
+%\subsection*{The AtBeginDvi}
+%A box register is used  to put stuff that must appear before anything else
+%in the |.dvi| file.
+%
+%The stuff in the box should not add any typeset material to the page when it
+%is unboxed.
+%
+%\emphasis{AtBeginDvi,@begindvibox}
+%
+%\begin{teXXX}
+%67 \newbox\@begindvibox
+%68 \def \AtBeginDvi #1{%
+%69 \global \setbox \@begindvibox
+%70 \vbox{\unvbox \@begindvibox #1}%
+%71 }
+%\end{teXXX}
+%
+%\begin{teXXX}
+%72 \newdimen\@maxdepth
+%73 \@maxdepth = \maxdepth
+%\end{teXXX}
+%
+%
+%Some new registers for paperheight and paperwidth are defined:
+%
+%\begin{teXXX}
+%74 \newdimen\paperheight
+%75 \newdimen\paperwidth
+%76 \newif \if@insert
+%These should definitely be global:
+%77 \newif \if@fcolmade
+%78 \newif \if@specialpage \@specialpagefalse
+%These should be global but are not always set globally in other les.
+%79 \newif \if@firstcolumn \@firstcolumntrue
+%80 \newif \if@twocolumn \@twocolumnfalse
+%Not sure about these: two questions. Should things which must apply to a whole
+%doument be local or global (they probably should be `preamble only' commands)?
+%Are these three such things?
+%81 \newif \if@twoside \@twosidefalse
+%82 \newif \if@reversemargin \@reversemarginfalse
+%83 \newif \if@mparswitch \@mparswitchfalse
+%This counter has been imported from `multicol'.
+%84 \newcount \col@number
+%85 \col@number \@ne
+%\end{teXXX}
+%
+%and a lot of other internal registers
+%
+%\begin{teX}
+%86 \newcount\@topnum
+%87 \newdimen\@toproom
+%88 \newcount\@dbltopnum
+%89 \newdimen\@dbltoproom
+%90 \newcount\@botnum
+%91 \newdimen\@botroom
+%92 \newcount\@colnum
+%93 \newdimen\@textmin
+%94 \newdimen\@fpmin
+%95 \newdimen\@colht
+%96 \newdimen\@colroom
+%97 \newdimen\@pageht
+%98 \newdimen\@pagedp
+%99 \newdimen\@mparbottom \@mparbottom\z@
+%100 \newcount\@currtype
+%101 \newbox\@outputbox
+%102 \newbox\@leftcolumn
+%103 \newbox\@holdpg
+%104 \def\@thehead{\@oddhead} % initialization
+%105 \def\@thefoot{\@oddfoot}
+%\end{teX}
+%
+%
+%\subsection{\texttt{\textbackslash clearpage}}
+%
+%\begin{macro}{\clearpage}
+%The clearpage macro is a bit complicated, as it needs to avoid a complete empty page after a |\twocolumn[..]|. This prevents the text from the argument
+%vanishing into a  float box, never to be seen again. We hope that it does not
+%produce wrong formatting in other cases.
+%\end{macro}
+%
+%\begin{teXXX}
+%106 \def\clearpage{%
+%107   \ifvmode
+%108   \ifnum \@dbltopnum =\m@ne
+%109     \ifdim \pagetotal <\topskip
+%110       \hbox{}%
+%111     \fi
+%112   \fi
+%113  \fi
+%114 \newpage
+%115 \write\m@ne{}%
+%116 \vbox{}%
+%117 \penalty -\@Mi
+%118 }
+%\end{teXXX}
+%
+%\subsection{The \texttt{\textbackslash clearpagedoublepage} macro} 
+%
+%\begin{macro}{cleardoublepage}
+%This checks for odd and even pages by using the
+%page counter |c@page|.  It also provides switches of twoside printing. 
+%
+%\numberlineat{119}
+%\begin{teXXX}
+%\def\cleardoublepage{%
+%   \clearpage
+%   \if@twoside 
+%     \ifodd\c@page
+%     \else
+%       \hbox{}
+%       \newpage
+%       \if@twocolumn\hbox{}\newpage
+%       \fi
+%     \fi
+%  \fi}
+%\end{teXXX}
+%\end{macro}
+%
+%Note the |\newpage| is defined a bit further on. This is a fairly simple definition, since most of the code that follows only gets a bit complicated with the twocolumn option. It sets the dimensions and the booleans to those appropriate for the |onecolumn| option. An important note we back to \tex's |\hsize|. Both the linewidth as well as the columnwidth are set to this.
+%
+%\begin{teXXX}
+%123 \def\onecolumn{%
+%124   \clearpage
+%125   \global\columnwidth\textwidth
+%126   \global\hsize\columnwidth
+%127   \global\linewidth\columnwidth
+%128   \global\@twocolumnfalse
+%129   \col@number \@ne
+%130   \@floatplacement
+%     }
+%\end{teXXX}
+%
+%\subsection{\string newpage.} 
+%
+%The |\newpage| macro is programmed defensively. The two checks at the beginning ensure that an item label or run-in section title
+%immediately before a |\newpage| get printed on the correct page, the one before
+%the page break.
+%All three tests are largely to make error processing more robust; that is why
+%they all reset the 
+%flags explicitly, even when it would appear that this would be
+%done by a |\leavevmode|.
+%
+%\begin{teXXX}
+%131 \def \newpage {%
+%132  \if@noskipsec
+%133    \ifx \@nodocument\relax
+%134      \leavevmode
+%135      \global \@noskipsecfalse
+%136    \fi
+%137 \fi
+%138 \if@inlabel
+%139   \leavevmode
+%140   \global \@inlabelfalse
+%141 \fi
+%142 \if@nobreak \@nobreakfalse \everypar{}\fi
+%143 \par
+%144 \vfil
+%145 \penalty -\@M}
+%\end{teXXX}
+%
+%An empty cols is defined. There is a note here, that an invisible rule might have been a better idea.
+%
+%\begin{teXXX}
+%146 \def \@emptycol {\vbox{}\penalty -\@M}
+%\end{teXXX}
+%
+%\subsection{The \string twocolumn macro.} This is the longest definition so far. We will leave it for a while and then come back. There are several bug fixes to the two-column stuff here. Firstly, like the onecolumn the page parameters are set to the correct parameters.
+%
+%
+%\begin{teXXX}
+%147 \def \twocolumn {%
+%148 \clearpage
+%149 \global\columnwidth\textwidth
+%150 \global\advance\columnwidth-\columnsep
+%151 \global\divide\columnwidth\tw@
+%152 \global\hsize\columnwidth
+%153 \global\linewidth\columnwidth
+%154 \global\@twocolumntrue
+%155 \global\@firstcolumntrue
+%156 \col@number \tw@
+%\end{teXXX}
+%
+%
+%
+%\section{The output macro}
+%
+%The setting of the \cs{output} is quite short but it belies its complexity.
+%After having checked verious parameters it redirects to |@specialoutput|. This is the heart of the routines. Notice that \latex just fills in the token list of \tex's |output| routine, it does not attempt to redefine it or save it. 
+%Should some hooks be defined here, life might have been made easier, however, what one can do is to first save the \latex output routine and then redefine the output as one may wish. Return to it can happen after it. If you take this approach, you should be careful of packages that redefine output, such as |multicol| and |longtable|. An approach such as this is taken by \citeauthor{revtex} in the \pkgname{revtex} class.\footcite[][This is a document class of the American Physical Society. It enables submission to any of the APS journals. Its distribution point is \protect\url{http://publish.aps.org/revtex4/}]{revtex}
+%
+%\emphasis{ifnum,fi,else,ifdimen,@specialoutput}
+%\begin{teX}
+%204 \output {%
+%205 \let \par \@@par
+%206 \ifnum \outputpenalty<-\@M
+%207    \@specialoutput
+%208 \else
+%209    \@makecol
+%210    \@opcol
+%211    \@startcolumn
+%212    \@whilesw \if@fcolmade \fi
+%213      {%
+%218      \@opcol\@startcolumn}%
+%219 \fi
+%220 \ifnum \outputpenalty>-\@Miv
+%221 \ifdim \@colroom<1.5\baselineskip
+%222 \ifdim \@colroom<\textheight
+%223 \@latex@warning@no@line {Text page \thepage\space
+%224 contains only floats}%
+%225 \@emptycol
+%226 % \if@twocolumn
+%227 % \if@firstcolumn
+%228 % \else
+%229 % \@emptycol
+%230 % \fi
+%231 % \fi
+%232 \else
+%  233 \global \vsize \@colroom
+%234 \fi
+%235 \else
+%236   \global \vsize \@colroom
+%237 \fi
+%238 \else
+%239   \global \vsize \maxdimen
+%240 \fi
+%241 }
+%\end{teX}
+%
+%
+%
+%\begin{teXXX}
+%244 \gdef\@specialoutput{%
+%245   \ifnum \outputpenalty>-\@Mii
+%246     \@doclearpage
+%247   \else
+%248     \ifnum \outputpenalty<-\@Miii
+%249         \ifnum \outputpenalty<-\@MM \deadcycles \z@ \fi
+%250                 \global \setbox\@holdpg \vbox {\unvbox\@cclv}%
+%251         \else
+%252         \global \setbox\@holdpg \vbox{%
+%253                 \unvbox\@holdpg
+%254                 \unvbox\@cclv
+%We must now remove the box added by the 
+%oat mechanism and the \topskip
+%glue therefore added above it by TEX.
+%255                \setbox\@tempboxa \lastbox
+%256                \unskip
+%257 }%
+%These two are needed as separate dimensions only by \@addmarginpar; for other
+%purposes we put the whole size into \@pageht (see below).
+%258                \@pagedp \dp\@holdpg
+%259                \@pageht \ht\@holdpg
+%260                \unvbox \@holdpg
+%
+%261                \@next\@currbox\@currlist{%
+%262                \ifnum \count\@currbox>\z@
+%Putting the whole size into \@pageht (see above).
+%263                  \advance \@pageht \@pagedp
+%264                  \ifvoid\footins \else
+%265                    \advance \@pageht \ht\footins
+%266                    \advance \@pageht \skip\footins
+%267                    \advance \@pageht \dp\footins
+%268                \fi
+%\end{teXXX}
+%
+%
+%
+%\subsection{The \string @doclearpage macro.} This is an emergency action. It dumps everything: footnotes first and then floats. 
+%
+%
+%\section*{The Kludgeins}
+%
+%The kludgeins are simply inserts that fool \tex in enlarging a page by a small amount, normally used to allow one or two lines of text to go in the same page.
+%
+%The two kludgeins mentioned in the kernel are are \cs{enlargethisspace} and its star version.\footnote{The Oxford English Dictionary (2nd ed., 1989) kludge entry cites one source for this word's earliest recorded usage, definition, and etymology: Jackson W. Granholm's 1962 "How to Design a Kludge" article, which appeared in the American computer magazine Datamation
+%kludge  Also kluge. [J. W. Granholm's jocular invention: see first quot.; cf. also bodge v., fudge v.]
+%
+%'An ill-assorted collection of poorly-matching parts, forming a distressing whole' (Granholm); esp. in Computing, a machine, system, or program that has been improvised or 'bodged' together; a hastily improvised and poorly thought-out solution to a fault or 'bug'.
+%
+%The word 'kludge' is...derived from the same root as the German Kluge..., originally meaning 'smart' or 'witty'.... 'Kludge' eventually came to mean 'not so smart' or 'pretty ridiculous'.}
+%
+%
+%
+%\begin{teXX}
+%\gdef \enlargethispage{%
+%1198 \@ifstar
+%1199 {%
+%1203   \@enlargepage{\hbox{\kern\p@}}}%
+%1204 {%
+%1208   \@enlargepage\@empty}%
+%1209 }
+%\end{teXX}
+%
+%Adds |<dim>| to the height of the current column only. On the printed page the
+%bottom of this column is extended downwards by exactly |<dim>| without having
+%any effect on the placement of the footer; this may result in an overprinting.
+%\cs{enlargethispage}.
+%
+%Similar to |\enlargethispage| but it tries to squeeze the column to be printed
+%in as small a space as possible, ie it uses any shrinkability in the column. If the
+%column was not explicitly broken (e.g. with |\pagebreak|) this may result in an
+%overfull box message but except for this it will come out as expected (if you know
+%what to expect).
+%The star form of this command is dedicated to Leslie Lamport, the other we
+%need for ourselves (FMi, CAR).
+%These commands may well have unwanted if used soon before a\ldots
+%
+% 
+
+
+
+
+\section{Packages}
 
 OTR routines are notoriously difficult to debug and define. Some of the available packages at CTAN
 can make the programming job easier.
 
-The |everypage| package by Sergio Callegari provides hooks into the \latex\ internal commands to
-to do actions on every page or on the current page. Specifically, actions  are performed \emph{before} the page is shipped, so they can be
-used to put watermarks \emph{in the background} of a page, or to
+The \pkg{everypage} package by Sergio Callegari provides hooks into the \latex\ internal commands to
+to do actions on every page or on the current page. Specifically, actions  are performed \emph{before} the page is shipped, so they can be used to put watermarks \emph{in the background} of a page, or to
 set the page layout. 
 
 The package provides two hooks:
@@ -1060,7 +1166,7 @@ The package reminds in some sense
  \emph{behind} the page contents (e.g., watermarks such as an image,
  framing, the ``DRAFT'' word, and the like).
  
- The package reminds in some sense \Lpack{bobhook} by Karsten
+ The package reminds in some sense \pkg{bobhook} by Karsten
  Tinnefeld, but it differs in the way in which the hooks are
  implemented:
  
@@ -1143,17 +1249,17 @@ To this we append the text produced by |\PrelimText|. It is put in a |\vbox to 0
 in which a |\hbox| to the width of |\box255| is included, in which |\PrelimText| is set.
 We have to reset |\protect| because it is set to |\noexpand| by the output routine.
 
-\begin{teX}
+\begin{teXXX}
 56 \vbox to \z@{%
-57 \hb@xt@\dimen\z@{%
-58 \let\protect\relax
-59 \hfill\PrelimText\hfill
-60 }%
-61 \vss
+57   \hb@xt@\dimen\z@{%
+58     \let\protect\relax
+59     \hfill\PrelimText\hfill
+60   }%
+61   \vss
 62 }%
-63 \vss
+63   \vss
 64 }%
-\end{teX}
+\end{teXXX}
 
 Finally we set the dimensions of |\box255| to the values they had before |\@Prelim@EveryShipout|.
 
@@ -1175,7 +1281,7 @@ Once the command is defined, it is hooked into the system via |\EveryShipout| wh
 
 \section{How to place a background image}
 
-One can use \tikzname to place a background image on a page
+One can use \tikzname to place a background image or some text on a page
 
 First we define some utility macros:
 
@@ -1194,14 +1300,14 @@ First we define some utility macros:
 
 A new command is then developed to describe the background material
 
-\begin{teX}
+\begin{teXXX}
 \newcommand\bg@material{%
    \begin{tikzpicture}[remember picture,overlay]
    \node [rotate=\bg@angle,scale=\bg@scale,opacity=\bg@opacity,%
    xshift=\bg@hshift,yshift=\bg@vshift,color=\bg@color]
    at (\bg@position) [\bg@anchor] {\bg@contents};
   \end{tikzpicture}}%
-\end{teX}
+\end{teXXX}
 
 
 Once the background material has been defined we can place it on the page by simply calling:
@@ -1211,13 +1317,18 @@ Once the background material has been defined we can place it on the page by sim
 \end{teX}
 
 
-The \pkgname{background}\footcite{background} package has capitalized on two good packages the \tikzname and the \pkgname{everypage}.
+The \pkgname{background}\footcite{background} package by \citeauthor has capitalized on two good packages the \tikzname and the \pkgname{everypage}.
 \footcite{everypage} As most of modern
 \tex programming works with |pdf| files, package developers prefer to use \tikzname methods for hooking directly into the pdf and thus avoid a trip into the output routine. If it is required then it hooks via the dvi or shipout commands.\footnote{These packages are loaded automatically by the \pkgname{phd-pkgmanager}.}
 
 
 
+\vfill
 
+\message{(total: \the\pagetotal
+depth: \the\pagedepth
+shrink: \the\pageshrink
+stretch: \the\pagestretch}
 
 
 

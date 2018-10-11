@@ -40,4 +40,6 @@
   }
   
 return strings  
+
+--print(strings.vietnamese.datevietnamese)
   

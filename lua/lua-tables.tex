@@ -92,22 +92,59 @@ end
 
 \section{The Table Library}
 The Lua |table| library comprises auxiliary functions to manipulate tables as arrays.
-It provides functions to insert and remove elements from lists, to sort the elements
+It provides functions to insert and remove elements from lists, to sort the elements of an array, and to concatenate all strings in an array.
 
-of an array, and to concatenate all strings in an array.
+\subsection{table.insert(aTable,[pos],value)}
+This function is used to insert a value into an array table, as indicated by a Table. The value
+is inserted at the position indicated by pos; if not value is indicated for pos, then it is assigned
+the default value of the length of the table plus 1. (i.e., it is inserted at the end of the table).
+
+\emphasis{insert}
+\begin{texexample}{Insert}{ex:luainsert}
+\begin{luacode}
+   local someTable = {5,10,22,23,26}
+   table.insert(someTable,2,13)
+   tex.print(someTable)
+\end{luacode}  
+
+\end{texexample}
+
+
+
 \subsection{Sorting}
+
+Sorting is one issue, which cannot be handled easily with \latexe or \latex3. So far I have been using
+a buble sort for lstdoc where I had to to sort through a list.
+
+Here is one area, where Lua can shine. Consider a list of paper sizes.
 
 \emphasis{table, sort}
 \begin{texexample}{Sorting tables}{}
-\begin{luacode}
-if type(tex) == 'table' then print = tex.print end
-local paper = {'a4', 'a3', 'a2', 'a1', 'a5', 'a0' }
-table.sort(paper)
-for k,v in pairs(paper) do
-   print(v)
-end
-\end{luacode}
+\long\def\clisttest#1{
+  \directlua{
+    if type(tex) == 'table' then print = tex.print end 
+      local paper = {#1}
+      table.sort(paper)
+      for k,v in pairs(paper) do
+      print(v.."paper, ")
+    end
+}}
+
+\ExplSyntaxOn
+\clist_new:N \clist_values
+
+\DeclareDocumentCommand\ClistTest { m } {%
+  \clist_set:Nn \clist_values {#1}
+  \clisttest{\clist_values}
+}
+\ExplSyntaxOff
+
+\ClistTest{'a1','a3', 'a2', 'a4','a5'}
 \end{texexample}
+
+One word of explanation regarding line \ref{totable}. We test if |type(tex)| is a table and then we set print to be equal to |tex.print|
+This convention, is useful, if you want to run longer code in an IDE rather than through LuaTeX. It is easier and faster
+for debugging.
 
 One caveat, is that tables that contain |nil| values cannot be sorted reliably. The table library provides a function |table.sort|, which receives a table and sort its elements. Such functions normally provide an optional parameter that provides variations in the sorting order, such as \emph{ascending} or \emph{descending}, numeric or alphabetical. Instead of trying to provide all kinds of options |sort| provides a single optional parameter, which is the \emph{order function}: a function that receives two elements and returns whether the first must come before the second in the 
 sorted list. Suppose we have a table of records such as this:

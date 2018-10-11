@@ -227,8 +227,10 @@ See http://www.latex-project.org/lppl.txt
 
 %\listfiles
 %gdef\@onlypreamble{} % TO BE REMOVED NEEDED FOR TUTS
+\NeedsTeXFormat{LaTeX2e}[2017/04/15]%
+\RequirePackage[2017/04/15]{latexrelease}
 \documentclass[twoside,11pt,a4paper]{ltxdoc}
-
+\let\HUGE\Huge
 \makeatletter
 %\usepackage{pkgindoc}
 %\usepackage{phdfilecontents}
@@ -239,46 +241,55 @@ See http://www.latex-project.org/lppl.txt
 \def\partname{Part}
 \makeatother
 %
+%\RequirePackage{etex}
 \usepackage[bottom=2cm]{geometry}
 \savegeometry{std}
 
 % \usepackage[style=mla]{biblatex}
-\usepackage[unicodemath=on]{phd}
+\usepackage[microtype=on]{phd}
 \usepackage{fontspec}
+\usepackage{phd-fontmanager}
 \usepackage{phd-runningheads}
 \usepackage{phd-lowersections}
-
+\usepackage{phd-documentation}
 %\usepackage{phd-toc}
 
 %\usepackage{pkgindoc}             %%% danger
 \sethyperref
 \usepackage{makeidx}
 \makeindex
-\cxset{part format=stewart}
+\cxset{part format=stewart,
+       chapter afterindent=on,
+       part afterindent=on,
+       section format=hang,
+       chapter format=block,
+       chapter opening=left}
+\newfontfamily\symbola{Symbola.ttf}       
 \begin{document}
-%\let\bold\bfseries MUST CHECK THIS
-
+\DEBUGOFF
+\let\luacmd\docAuxCommand
 \frontmatter
 \tableofcontents
-\listoffigures
-\listoftables
+%\listoffigures
+%\listoftables
 \mainmatter
+\pagestyle{headings-sugar-hearts}
 \parindent1em
 %\input{./sections/lowerlevelheadings}
-\input{defaults-chapters}
-\input{./sections/symbols}
-\input{./sections/unicodemath}
-%  \input{./sections/i18n}
-%    \part{LuaTeX}
-%%   \input{./sections/luatex}
-%     \input{./lua/variadic}
+%\input{defaults-chapters}
+%\input{./sections/symbols}
+%\input{./sections/unicodemath}
+ % \input{./sections/i18n}
+  %  \part{LuaTeX}
+ %  \input{./sections/luatex}
+ %  \input{./lua/variadic}
 %     \input{./lua/strings}    
 %     \input{./lua/pattern-matching} 
 %     \input{./lua/modules}
 %     \input{lua/lua-objects}
-%     \input{./lua/lpeg} 
-%
-%     \input{./lua/nodes} 
+%%     \input{./lua/lpeg} 
+
+ %%    \input{./lua/nodes} 
 % %     \input{./lua/luaio}
 %  \input{./sections/chemistry} 
 %   \input{./lua/metatables} 
@@ -291,8 +302,8 @@ See http://www.latex-project.org/lppl.txt
 %\DocInput{phd-docmacros.tex}
 %%\DocInput{phd-sections.dtx}
 %\DocInput{phd-pkgmanager.dtx}
-\bibliography{phd} 
-\printindex
+%\bibliography{phd} worked
+%\printindex worked
  \end{document}
  %
 % \input{./sections/OTR}
@@ -387,6 +398,10 @@ See http://www.latex-project.org/lppl.txt
 %  \item [The header and footer Manager] Manages the typesetting of 
 %        headers and footers.
 %
+%  \item [lists] Formats lists.
+%
+%  \item [quote] Provides environments and keys for quotes and quotations.
+%
 %  \item [Indexing and Documentation] This is managed through the
 %        package \pkgname{phd-documentation}.
 %
@@ -397,13 +412,26 @@ See http://www.latex-project.org/lppl.txt
 %  \item[Common Utilities] We provide a number of predefined commands
 %		for macros that us and other people found useful.
 %
+%  \item [Handlers] The phd-handlers package provides handlers for managing
+%    key definitions, in a consistent way.
+%
 %  \item[Scripts Manager] Manages the loading of scripts for the worlds 
 %  laguages and scripts.
+%
+%  \item[Keys] Key values are managed through \pgfname. The package
+%       \pkg{phd-handlers} provides some useful handlers, mostly used by
+%       internally.
+%
+%  \item[Epigraphs] A small supplementary package for epigraphs.
 %
 %  \item[MWE] The package generates a large number
 %		of Minimum Working Examples that we use for testing. 
 %		Most of them can also used as examples for training 
 %		or self-study.
+%
+%  \item[Counters] The package counters, is an extension to the current
+%    \latexe package offering more functionality and close integration
+%    with the rest of the |phd| packages.
 %
 % \end{description}
 %
@@ -421,13 +449,17 @@ See http://www.latex-project.org/lppl.txt
 % \subsection{Preliminaries}
 %
 %    Standard file identification. We first announce the package 
-%	 and require that it be used with \LaTeX2e. \FIRE
+%	 and require that it be used with \LaTeX2e. RE
 %
 %    \begin{macrocode}
-\NeedsTeXFormat{LaTeX2e}[1994/12/01]%
-\RequirePackage[2014/05/01]{latexrelease}
+\NeedsTeXFormat{LaTeX2e}[2017/04/15]%
 \ProvidesPackage{phd}[2015/1/13 v1.0 less preamble (YL)]%
 \let\ltxtoday\today
+\newcommand\U[1]{{\texttt{U+#1}}(\char"#1)\xspace}
+\let\latexitemize\itemize
+\let\latexenditemize\enditemize
+\let\latexenumerate\enumerate
+\let\latexendenumerate\endenumerate
 %    \end{macrocode}
 
 % Load the package \pkgname{fixltx2e} to update \LaTeX2e for various fixes. The package fixes a number things in the LaTeX2e kernel. Due to LaTeX's stability policy, these corrections have not been incorporated into the LaTeX2e kernel, but this package does things most people would agree are bugfixes. So to load this package is always recommended for newly created documents. The corrections have no commonalities, but the package's description has a nice summary:
@@ -463,9 +495,9 @@ See http://www.latex-project.org/lppl.txt
 %    \begin{macrocode}
 \RequirePackage{expl3}
 \RequirePackage{l3keys2e}
-\RequirePackage{xcoffins}
+%\RequirePackage{xcoffins}
 \RequirePackage{xtemplate}
-\RequirePackage{l3sort}
+%\RequirePackage{l3sort}
 \RequirePackage{phd-logos}
 %    \end{macrocode}
 %
@@ -482,12 +514,14 @@ See http://www.latex-project.org/lppl.txt
 %    \begin{macrocode}      
 \def\pkgfamilyname{phd}
 \pgfkeys{/\pkgfamilyname/.is family} 
+% 
 \newcommand\cxset{\pgfqkeys{/\pkgfamilyname}} 
+
 \def\cxkeydef#1#2{%
  \pgfkeyssetvalue{/\pkgfamilyname/#1}{#2}%
 }
 \def\cxvalueof#1{%
- \expandafter\pgfkeysvalueof{#1}%
+  \pgfkeysvalueof{/\pkgfamilyname/#1}%
 }
 %    \end{macrocode}
 %
@@ -663,7 +697,8 @@ See http://www.latex-project.org/lppl.txt
 %    \end{macrocode}
 %
 % We use \pkgname{luacode} and luatextra only if we are using LuaTeX. Many of the
-% packages we load ourselves later in any case. We need to check this.
+% packages we load ourselves later in any case. We need to check this. This loads 
+% \pkg{luatexbase}.
 %    \begin{macrocode}
 \ifluatex
   \RequirePackage{luacode}
@@ -703,7 +738,7 @@ See http://www.latex-project.org/lppl.txt
 % We use the package \pkgname{polyglossia} for language management for the
 % newer engines and \pkgname{babel} for pdfLaTeX.
 % This is full of holes which need to be closed for cases where the
-% bidi package is loaded.\FIRE be careful of babel shorthands! They corrupt
+% bidi package is loaded. Be careful of babel shorthands! They corrupt
 % the table
 %
 
@@ -755,44 +790,10 @@ See http://www.latex-project.org/lppl.txt
 %\usepackage{dateiliste}
 %    \end{macrocode}
 %
-
-
-
-
-% and spacing commands 
-% which can be handy,
-%
-% \section{spacing}
-% {hspace} This is a \textit{hairspace}, here defined 
-% as 1pt.
-% {hquad} This is a half squad space
-%    \begin{macrocode}
-\newcommand{\hairsp}{\hspace{1pt}}% hair space
-\newcommand{\hquad}{\hskip0.5em\relax}% half quad space
-% Sometimes, we need a little more horizontal spacing, too (used for symbols).
-\newcommand{\qqquad}{\qquad\quad}
-\newcommand{\ie}{\textit{i.\hairsp{}e}\xspace} %removed\@
-\newcommand{\eg}{\textit{e.\hairsp{}g.}\xspace}
-\newcommand{\BC}[1]{\textsc{#1 BC}} %European Union Style Guide FIX
-\newcommand{\AD}[1]{\textsc{AD #1}} %European Union Style Guide FIX
-%    \end{macrocode}
+%  
 % 
 %
-% \subsection{Standard phantom widths}
-%
-%    \begin{macrocode}
-\newcommand\Zi{\phantom{0}} %Z conflicts with symbols 
-\newcommand\ZZ{\phantom{00}}
-\newcommand\ZZZ{\phantom{000}}
-\newcommand\ZZZZ{\phantom{0000}}
-\providecommand\newthought[1]{%
-   \addvspace{1.0\baselineskip plus 0.5ex minus 0.2ex}%
-   \noindent\textsc{#1}%
-}
-  \let\equation\gather             %% See tabu and hyperref docs
-  \let\endequation\endgather
-%    \end{macrocode}
-%
+
 
 %
 %
@@ -811,9 +812,9 @@ See http://www.latex-project.org/lppl.txt
 \ifengine{}{}{\RequirePackage{scalefnt}	}
 %    \end{macrocode}
 %
-%
-
-
+%    \begin{macrocode}
+ \RequirePackage{phd-utils}
+%    \end{macrocode}
 %
 % \section{Quotations}
 % 
@@ -950,9 +951,14 @@ See http://www.latex-project.org/lppl.txt
 %
 %    \begin{macrocode}
 \newenvironment{absolutequote}
-               {\list{}{\leftmargin2cm\rightmargin\leftmargin}%
+               {\list{}{\listparindent 1.5em%
+                \itemindent \listparindent
+                \leftmargin2cm\rightmargin\leftmargin
+                \parsep \z@ \@plus \p@%
+                }%
                 \item\relax\footnotesize}
                {\endlist}
+               
 
 \newenvironment{summary}
                {\list{}{\listparindent0pt %

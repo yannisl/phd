@@ -152,19 +152,27 @@ See http://www.latex-project.org/lppl.txt
 
 %\listfiles
 %gdef\@onlypreamble{} % TO BE REMOVED NEEDED FOR TUTS
+\NeedsTeXFormat{LaTeX2e}[2017/04/15]%
+\RequirePackage[2017/04/15]{latexrelease}
 \documentclass[twoside,11pt,a4paper]{ltxdoc}
 \usepackage[bottom=2cm]{geometry}
 \savegeometry{std}
 % \usepackage[style=mla]{biblatex}
 \usepackage{phd}
+
+\usepackage{phd-handlers}
 \usepackage{phd-documentation}
+
 \usepackage{phd-toc}
 \usepackage{phd-runningheads}
 \usepackage{phd-lowersections}
 \usepackage{makeidx}
-\usepackage{phd-lists}
+%
+
 \pagestyle{headings}
 \sethyperref
+\usepackage{phd-quote}
+\usepackage{phd-lists}
 \cxset{palette bbc}
 \makeindex
 \begin{filecontents}{defaults-chapters}
@@ -222,6 +230,8 @@ See http://www.latex-project.org/lppl.txt
      chapter title font-family      = calligra,
      chapter title font-shape       = upshape,
      chapter title color            = black,
+      subsection afterindent=off,
+       section afterindent=off,
      }    
 \end{filecontents}
 \input{defaults-chapters}  
@@ -240,10 +250,14 @@ See http://www.latex-project.org/lppl.txt
        part background-color=spot,
        part beforeskip                = -3cm,
        part afterskip                 = 30pt,
-       }
+       section format=hang,
+             }
+\usepackage{microtype}  
+
 \begin{document}
+\DEBUGOFF
 \parindent1em
-\coverpage{asia}{Book Design Monographs}{Camel Press}{QUOTE}{DESIGN} 
+\coverpage{korea-01}{Book Design Monographs}{Camel Press}{QUOTE}{DESIGN} 
 \pagestyle{empty}
 %\coverpage{habtoor-city}{Delay Claim}{HLS-DSE/JV}{HABTOOR CITY}{MEP CLAIM} 
 \secondpage
@@ -258,10 +272,10 @@ See http://www.latex-project.org/lppl.txt
 \mainmatter
 \pagenumbering{arabic}
 \pagestyle{headings}        
-\makeatletter
-%\@debugtrue
 
-\makeatother
+%\input{./sections/lists}
+ 
+
 \DocInput{\jobname.dtx}
 \printindex
  %
@@ -290,6 +304,7 @@ See http://www.latex-project.org/lppl.txt
 %
 %
 % \changes{1.0}{2013/01/26}{Converted to DTX file}
+% \changes{1.0}{2017/08/08}{Update to latest LaTeX distribution}
 %
 % \DoNotIndex{\newcommand,\newenvironment}
 % \GetFileInfo{phd.dtx}
@@ -338,7 +353,8 @@ See http://www.latex-project.org/lppl.txt
 %}{\href{http://blog.zmxv.com/2015/07/code-golf-at-google.html}{Zhen Wang}}
 %
 % We start by outlining what we are trying to achieve with this package:
-%
+% \cxset{enumerate numberingi =arabic,
+%        enumerate labeli punctuation=,}
 % \begin{enumerate}
 % \item To provide a declarative interface to enable users to modify headings by
 %       setting keys, rather than writing macros.  
@@ -440,9 +456,8 @@ See http://www.latex-project.org/lppl.txt
 %  
 %
 %    \begin{macrocode}
-\NeedsTeXFormat{LaTeX2e}[1994/12/01]%
-\RequirePackage[2014/05/01]{latexrelease}
-\ProvidesFile{phd-quote}[2015/7/13 v1.0 quotation management (YL)]%
+\NeedsTeXFormat{LaTeX2e}[2017/04/15]%
+\ProvidesFile{phd-quote}[2017/04/15 v1.0 quotation management (YL)]%
 %    \end{macrocode}
 %
 % 
@@ -453,64 +468,151 @@ See http://www.latex-project.org/lppl.txt
 % This section can be revisited once expl3 code becomes available.
 %
 %    \begin{macrocode}
-\ExplSyntaxOn
 \let\ltxtoday\today
-\let\phd_hang_from:nn \@hangfrom
 \newif\if@ltxcompat \@ltxcompatfalse
-\ExplSyntaxOff
-%    \end{macrocode}
-%    \begin{macrocode}
-\cxset{
-  quotation above/.store in=\quotationabove@cx,
-  quotation left margin/.store in=\quotationleftmargin@cx,
-  quotation right margin/.store in=\quotationrightmargin@cx,
-  quotation parsep/.store in=\quotationparsep@cx,
-  quotation font-size/.store in=\quotationfontsize@cx,
-  quotation parindent/.store in=\quotationparindent@cx,
-  quotation font-name/.store in=\quotationfontname@cx,
- }
+\renewenvironment{quotation}
+               {\par\addvspace{6pt}
+                \list{}{\listparindent12pt %
+                        \leftmargin=\quotationleftmargin@cx %
+                        \itemindent    \quotationparindent@cx
+                        \rightmargin   \quotationrightmargin@cx
+                        \parsep \quotationparsep@cx 
+                        \expandafter\csname thequotationfontsize\endcsname   %
+                        \quotationfontname@cx\relax } 
+                \item\relax\hspace{0pt}\relax }
+               {\endlist}
+ \let\latexquotation\quotation
+\let\endlatexquotation\endquotation
+\let\latexquote\quote
+\let\endlatexquote\endquote
 %    \end{macrocode}
 %
-% \begin{docCommand}{setquotation} { \meta{keys} } Macro to create the quotation
-%	environment. We need to think of a better way here. Saved
-%   old environment.
-% \end{docCommand}  
+% \section{Key Management}
+%
+% For all keys we use the \pgfname package.
+%
 %    \begin{macrocode}
-\let\latexquotation\quotation
-\let\endlatexquotation\endquotation
-\def\setquotation#1{%
-\cxset{#1}
-\renewenvironment{quotation}
-               {\par\addvspace{\quotationabove@cx}
-                \list{}{\listparindent\quotationparindent@cx%
-                        \leftmargin=\quotationleftmargin@cx%
-                        \itemindent    \listparindent
-                        \rightmargin \quotationrightmargin@cx
-                        \parsep=\quotationparsep@cx%
-                        \quotationfontname@cx\quotationfontsize@cx}%
-                \item\relax\hskip-\listparindent}
-               {\endlist}
-}
+\ExplSyntaxOn
+\cxset{
+  quotation~above/.store~in=\quotationabove@cx,
+  quotation~left~margin/.store~in=\quotationleftmargin@cx,
+  quotation~right~margin/.store~in=\quotationrightmargin@cx,
+  quotation~parsep/.store~in=\quotationparsep@cx,
+  quotation~font-size/.fontsize= thequotationfontsize,
+  quotation~parindent/.store~in=\quotationparindent@cx,
+  quotation~font-name/.store~in=\quotationfontname@cx,
+ }
+\ExplSyntaxOff 
+ \cxset{quotation default/.style={%
+  quotation above=0pt, 
+  quotation left margin=25pt,
+  quotation right margin=25pt,
+  quotation parsep=2pt,
+  quotation font-size=normal,
+  quotation parindent=4em,
+  quotation font-name=\arial,}} 
+ \cxset{quotation default}
 %    \end{macrocode}
 % 
-%CHANGE FOR SETFONT
+%
 %    \begin{macrocode}
-\setquotation{%
-  quotation above=20pt, 
-  quotation left margin=50pt,
-  quotation right margin=0pt,
-  quotation parsep=0pt,
-  quotation font-size=\normalsize,
-  quotation parindent=12pt,
-  quotation font-name=, 
-}
+
+\cxset{quotation acmtrans2e/.style={
+  quotation above = 5pt plus 2pt minus 1pt,
+  quotation left margin=2pc,
+  quotation right margin=2pc,
+  quotation parindent=10pt,
+}}
+
+\cxset{quotation ametsoc/.style={
+  quotation above = 5pt plus 2pt minus 1pt,
+  quotation left margin=2pc,
+  quotation right margin=2pc,
+  quotation parindent=1.5em,
+  %quotation item indent = 1.5em, % 
+}}
+
+
+\cxset{quotation phil/.style={
+  quotation above = 5pt plus 2pt minus 1pt,
+  quotation left margin=13.5pt,
+  %quotation right margin=13.5pt,
+  quotation right margin=13.5pt,
+  quotation parindent=1.5em,
+  %quotation item indent = 1.5em, % 
+}}
+
+\cxset{quotation tugboat/.style={
+  quotation above = 5pt plus 2pt minus 1pt,
+  quotation left margin=4em,
+  quotation right margin=1em,
+  quotation parindent=1.5em,
+  %quotation item indent = 1.5em, % 
+}}
+
+\cxset{quotation wide/.style={
+  quotation above = 5pt plus 2pt minus 1pt,
+  quotation left margin=3em,
+  quotation right margin=3em,
+  quotation parindent=1.5em,
+  %quotation item indent = 1.5em, % 
+}}
+\def\longitem{\list{---}{\labelwidth\z@
+ \leftmargin\z@ \itemindent\parindent \advance\itemindent\labelsep}}
+\let\endlongitem\endlist
 %    \end{macrocode}
+% \hrule
+% \lorem 
+% \hrule
+% \cxset{quotation acmtrans2e}
+% 
+% \begin{quotation}
+% 
+% \lorem 
+% \lipsum[1]
+% \lorem
+% \hrule
+% \end{quotation}
+% \hrule
+%
+% \begin{longitem}
+% \item \lorem
+% \item \lorem
+% \end{longitem}
+%
+% \section{Philosophers Imprint Style}
+% \lorem
+% \cxset{quotation phil}
 %
 % \begin{quotation}
-% \lipsum[1]
+% \lorem
+%
+% \lorem
 % \end{quotation}
 %
+% \subsection{TUGboat}
+%
+% This style is interesting as it has uneven left and right margins.
+%
+% \lorem
+% 
+% \cxset{quotation tugboat}
+% \begin{quotation}
+% \lorem
+%
+% \lorem
+% \end{quotation}
+% 
+% 
+% \subsection{International Journal of Digital Curation (dcpaper)}
+%\cxset{quotation wide}
+%\begin{quotation}
+%‘Cras porttitor dictum lacus. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos hymenaeos. In consectetuer, diam at volutpat elementum, libero lectus pulvinar sem.’ (Borgman, 2007)
+%\end{quotation}
+%
+% 
 % \begin{docCommand} {setquote} { \meta{keys} }
+
 % \end{docCommand}
 %    \begin{macrocode}
 \cxset{
@@ -522,8 +624,7 @@ See http://www.latex-project.org/lppl.txt
   quote parindent/.store in=\quoteparindent@cx,
   quote font-name/.store in=\quotefontname@cx,
  }
-\let\latexquote\quote
-\let\endlatexquote\endquote
+
 \def\setquote#1{%
   \cxset{#1}
   \renewenvironment{quote}
@@ -538,23 +639,20 @@ See http://www.latex-project.org/lppl.txt
                {\endlist}
   }
 
-% Some default values
-\setquotation{%
-  quotation above=36pt,
-  quotation left margin=50pt,
-  quotation parsep=0pt,
-  quotation font-size=\small,
-  quotation parindent=12pt,
-}
-\setquote{%
-  quote above=0pt,
-  quote left margin=20pt,
-  quote parsep=0pt,
-  quote font-size=\small,
-  quote parindent=12pt,
-  quote font-name=,
-}
+%\setquote{%
+%  quote above=0pt,
+%  quote left margin=50pt,
+%  quote parsep=0pt,
+%  quote font-size=\small,
+%  quote parindent=12pt,
+%  quote font-name=,
+% }
 %    \end{macrocode}
+% \begin{quote}
+%   \lorem
+%
+%   \lorem
+% \end{quote}
 %</QUOTE>
 \endinput
 

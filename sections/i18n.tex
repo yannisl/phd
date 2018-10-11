@@ -1,18 +1,43 @@
-
- 
 \parindent1em
 \cxset{section font-family=tiresias,
-          section font-family=sffamily}
+      section font-family=sffamily,
+      chapter format=block}
 
 \chapter{Internationalization and Globalization}
+
 
 \section{Introduction}
 
 In this Chapter we discuss the requirements for localization of software and how this can be applied to \latex. In a way this chapter overlaps the one on languages. However, here we focus mostly on LuaTeX solutions. We also extend the discussion to calendric and solar calculations.
 
+Internationalization is the process of designing a software application so that it can potentially be adapted to various languages and regions without engineering changes. Localization is the process of adapting internationalized software for a specific region or language by adding locale-specific components and translating text. Localization (which is potentially performed multiple times, for different locales) uses the infrastructure or flexibility provided by internationalization (which is ideally performed only once, or as an integral part of ongoing development).\index{internationalization}\index{globalization}
+
 The development of routines for software internationalization and globalization has been an ongoing effort for many years. Currently the accepted method for building such software is the use of i18n. This is an abbreviation of the first letter and last letter of the word internationalization and the 18 is the number of characters in the word.
 
-Internationalization based on i18n is not an easy task for \LaTeX. To an extend some of the issues have been removed with the use of Babel and Polyglossia that provide translation strings for many of the worlds scripts. The de facto standard for internationalization is the Unicode Consortium’s \href{http://cldr.unicode.org/}{CLDR} project.
+Internationalization based on i18n is not an easy task for \LaTeX. To an extend some of the issues have been removed with the use of Babel and Polyglossia that provide translation strings for many of the worlds scripts. The de facto resource for internationalization is the Unicode Consortium’s \href{http://cldr.unicode.org/}{CLDR} project.\index{i18n}
+
+\section{Enforcing local styles}
+
+To understand the magnitude of the problem let us look at some of the easier parts of localizing. Consider the Greek days of the week.
+\medskip
+\begin{trivlist}\item[]\panunicode
+\begin{tabular}{llll}
+\toprule
+Day &Normal Form &Abbreviation &Narrow\\
+Monday &Δευτέρα &Δευ. &Δ. \\
+\midrule
+\end{tabular}
+\end{trivlist}
+
+In Greek the abbreviated form, is always capitalized and a stop is provided. The same is true for the month. The narrow form can give problems, unless it is for calendars, where the content is clear. This is because "{\panunicode Π}" are the initials for both ``{\panunicode Πέμπτη}" (Thursday), and ``{\panunicode Παρασκευή}" (Friday). 
+
+In date formats with long month format, that do not include the day, the full month form should be used.
+In date formats with long month format, that also include the day, the long date format should be used.
+
+If limited space is available, it is possible to omit the period in the abbreviated form of months, but this should be used only when there is a serious technical restriction
+
+Ultimately, we are aiming at providing the necessary rules to build an automated style that can be used by the system.
+                
 
 \section{Locales}
 \index{locale}
@@ -49,7 +74,9 @@ Currently the consortium’s distribution make the data available in both json a
 
 We do not need many of the files provided by the CLDR unicode consortium and others we are missing. Take for example the |delimiters| file. 
 
-\begin{verbatim}
+\bgroup
+\scriptsize
+\begin{phdverbatim}
   "main" = {
     "ff": {
       "identity": {
@@ -71,7 +98,8 @@ We do not need many of the files provided by the CLDR unicode consortium and oth
     }
   }
 }
-\end{verbatim}
+\end{phdverbatim}
+\egroup
 
 Of course the |Json| format as it is, is not readable by Lua a format such as:
 
@@ -85,24 +113,28 @@ delimiters = {
 \end{verbatim}
 
 \begin{texexample}{i18n}{i18-1}
+
+\panunicode
 \begin{luacode*}
 -- mock the delimiters from the json
 -- file
 greekname = 'el'
 delimiters = {
-        quotationStart = "«", 
+        quotationStart = "«",
         quotationEnd = "»",
-        alternateQuotationStart = "\"",
-        alternateQuotationEnd = "\""
+        alternateQuotationStart = [["]],
+        alternateQuotationEnd = [["]]
       }
-tex.sprint(delimiters.quotationStart .. 'test' .. delimiters.quotationEnd)
+tex.print(delimiters.quotationStart .. 'test' .. delimiters.quotationEnd)
 tex.print ([[\gdef\]] .. greekname .. [[quote#1{\directlua{tex.sprint(delimiters.quotationStart .. '#1' .. delimiters.quotationEnd)}}]])
 \end{luacode*}
 
-%\def\elquote#1{%
-%  \directlua {tex.sprint(delimiters.quotationStart .. '#1' .. delimiters.quotationEnd)}
-%}
+\def\elquote#1{%
+  \directlua {tex.sprint(delimiters.quotationStart .. '#1' .. delimiters.quotationEnd)}
+}
 \end{texexample}
+
+
 
 This is of course a much more simplified way of what one needs to program for a full system. The advantage
 of producing the \tex definition also through LuaTeX is that we can keep all the code in one place and econd, we can avoid |\csname| costructs.
@@ -119,12 +151,13 @@ The package |phd| packge takes an approach to use only json resource files for t
 \section{Language and Region Tags}
 \index{tags>regions}\index{tags>language}
 
-Languages are represented by tags such as "en"  for English or "el" for Greek. Other languages have no significant variation and are represented by a language subtag such as "en-US".  The names are mostly intuitive, but in many case bear no relationship to their English names, for example Armenian is coded as \textbf{hy}. There is a useful utility at the SIL website for viewing these codes.\footnote{\protect\url{http://www-01.sil.org/iso639-3/codes.asp?order=reference_name&letter=\%25}.} Note that the CLDR database does not cover all the languages listed in the ISO-639.\index{ISO-639}
+Languages are represented by tags such as "en"  for English or "el" for Greek. Other languages have no significant variation and are represented by a language subtag such as "en-US".  The names are mostly intuitive, but in many case bear no relationship to their English names, for example Armenian is coded as \textbf{hy}. There is a useful utility at the SIL website for viewing these codes.\footnote{\protect\url{http://www-01.sil.org/iso639-3/codes.asp?order=reference_name&letter=\%25}.} Note that the CLDR database does not cover all the languages listed in the ISO-639.\footcite{iso639} \index{ISO-639}
 
-The language tags are based on the BGN which is mapped to languages based on ISO-639-1. 
+The language tags are based on the BGN which is mapped to languages based on ISO-639-1.
+
+ISO 639-2 is the alpha-3 code in Codes for the representation of names of languages-- Part 2. There are 21 languages that have alternative codes for bibliographic or terminology purposes. In those cases, each is listed separately and they are designated as "B" (bibliographic) or "T" (terminology). In all other cases there is only one ISO 639-2 code. Multiple codes assigned to the same language are to be considered synonyms. ISO 639-1 is the alpha-2 code.
 
 We will describe the tables using the English language, which is normally the default and Greek as a second language, as the script is distinctive enough to demonstrate their use. We will also explain Lua routines available via the \pkgname{phd} that are provided as alternatives to Babel and Polyglossia.
-
 
 {layout.lua}
 
@@ -157,357 +190,116 @@ tex.print(s1, '\\par', s2)
 \end{luacode}
 \end{texexample}
 
-Based on the direction of the language we may then develop code to set the arabic text. This is discussed further
-in the section for languages using the Arabic script.\footnote{The bidi package is useful for texts that are predominantly RTL.}
+In the next example we get the string for the first month of the year in the ``abbreviated'' style. I have changed the json
+strings directly to Lua for this file to speed up processing.
 
-\section{Calendars and Dates}
-
-\subsection{The year}
-\indexmany[year]{solar,tropical}
-
-The tropical or solar year, properly, and by way of eminence so-called, is the space of time in which the sun moves 
-through the twelve signs of the zodiac. This, by observations of the best modern astronomers, contains \printtime[5]{365}{5}{48}{46.14912}. The quantity assumed by the authors of the Gregorian calendar was \printtime[0]{365}{ 5}{49}{0} which  corresponds exactly with the observations of Bianchini, and  de La Hire, in the next century. In the civil, or popular account, the year. 
-
-The excess of the solar year over 365 days has been given by different astronomers as follows:---
- 
- \def\daytime#1#2#3#4{%
- #1\textsuperscript{d}%
- #2\textsuperscript{h}%
- #3\textsuperscript{m}%
- #4\textsuperscript{s}%
-  }
- 
- \indexmany[calendric calculations]{Meton,Euctemon,%
-   Hipparchos,Sosigenes,Albategnius,Copernicus,Tycho %  
-   Brahe,Kepler,Halley,Lalande,Delambre,Laplace,Hind}
-
- 
- \begin{longtable}{l r l}
-Meton and Euctemon  &5th Century BC  &\printtimeinterval{6}{18}{57}{0}\\
-Hipparchos          &2 Century BC        &\printtimeinterval{5}{55}{12}{0}\\
-Sosigenes           &1 Century BC        &\printtimeinterval{6}{0}{0}{0}\\
-Albategnius         &9th Century AD    &\printtimeinterval{5}{46}{24}{0}\\ 
-Alphonsine Tables   &13th Century AD  &\printtimeinterval{5}{49}{16}{0}\\
-Copernicus          &16th Century AD  &\printtimeinterval{5}{46}{6}{0}\\
-Tycho Brahe     	  &16th Century AD  &\printtimeinterval{5}{48}{45.5}{0}\\
-Kepler 				    &17th Century AD  &\printtimeinterval{5}{48}{57.65}{0}\\
-Halley 				    &17th Century AD  &\printtimeinterval{5}{48}{54.691}\\
-Lalande 			      &18th Century AD  &\PrintTimeInterval{5}{48}{35.5}\\
-Delambre			      &18th Century AD  &\printtimeinterval {5}{48}{51.6}{0}\\ 
-Laplace				    &18th Century AD  &\printtimeinterval {5}{48}{49.7}{0} \\
-Hind, 1850			    &19th Century AD  &\printtimeinterval {5}{41}{46.2}{0} \\
-\end{longtable} 
-
-
-The oldest references to the Greek word τροπή [turn, soltice] are from Hesiod and Homer. Evidence
-exists that from the earliest times the Chinese, the Hindus and the Greeks, and others did measure the
-length of the tropical year, also called the seasonal year. According to Delabre this year is so called
-`because the first astronomers did deduce it from the return of the Sun to the same tropic’.\footnote{Delabre, J., \textit{Histoire de l’Astronomie}, Paris, 1817.}
-
-According to Ptolemy, Hipparchus wrote: `I composed a book about the length of the year, in which
-I show that this is the time required for the Sun to travel from a tropic to the same tropic again, or from
-an equinox to that same equinox, and that it is equal to 365.25 days minus 1/300 of a day-and-night, and not to a fourth of a day as the mathematicians believed’.\footnote{\textit{Almagest}, Book III. The citation has been reported by Ptolemy.}
-
-
-The accepted current tropical year value on January 1, 2000 was 365.2421897 or \PrintTimeInterval{365}{5}{48}{45.19} . This changes slowly; an expression suitable for calculating the length in days for the distant past is
-
-\begin{equation}
-365.2421896698 - 6.15359×10-6T- 7.29\times10T2 + 2.64 \times10 -10 T3
-\end{equation}
-
-
-where $T$ is in Julian centuries of 36,525 days measured from noon January 1, 2000 TT (in negative numbers for dates in the past). (McCarthy \& Seidelmann, 2009, p. 18.; Laskar, 1986)
-
-Modern astronomers define the tropical year as time for the Sun's mean longitude to increase by 360°. The process for finding an expression for the length of the tropical year is to first find an expression for the Sun's mean longitude (with respect to ♈), such as Newcomb's expression given above, or Laskar's expression (1986, p. 64). When viewed over a 1 year period, the mean longitude is very nearly a linear function of Terrestrial Time. To find the length of the tropical year, the mean longitude is differentiated, to give the angular speed of the Sun as a function of Terrestrial Time, and this angular speed is used to compute how long it would take for the Sun to move 360°. (Meeus \& Savoie, 1992, p. 42).
-
-The length of the tropical year accordinng to Leverrier
-
-\begin{equation}
-365.24219647 - 0.00000624 T \text{days}
-\end{equation}
-while Newcomb's well known expression, derived from his solar theory, is
-
-\begin{equation}
-\PrintTimeInterval {365}{5}{46}{0} - \PrintTimeInterval {0}{0}{0}{.530}T
-\end{equation}
-
-In these two expressions, $T$ is the time in Julian centuries of 36525 days measured from 1900 January 0.5 Ephemeris time. 
-
-\subsection{Month}
-\index{month}\index{month, astronomical}
-
-The next convenient measure for the division of time, which is marked by the revolution of the
-celestial objects is the month. The astronomical month is the period of time in which the moon 
-performs a complete revolution round the heavens, and is either \textit{periodical} or \textit{synodical}. The periodical
-month is the time in which the moon moves from one point the same point again, and is equal to \printtime{27}{7}{ 43}{47}; and the synodical month, or lunation, as it is sometimes called, is that portion of time which
-elapses between two successive new moons, or between two succesive conjuctions of the moon with the sun, and is equal to \printtime{29}{12}{44}{3.19}.  The solar month is that portion of time in which the sun moves through an
-entire sign of the zodiac, the mean quantity of which is \printtime{30}{10}{29}{3.84576}, being the twelfth of the
-solar year.
-
-
-\subsection{Week}
-
-The origins of the seven day week is thought to have originated with Sumeria, who gave the name
-of one of the seven planets to each hour of the day, and deisgnated each day by the name of that planet, which corresponded with the first hour of the day. 
-
-The Latins adopted these designations in their names of 
-the days of the week. They are to be found in old law books 
-and MSS. For a very interesting discussions as to how the seven
-day week, survived and passed to us see The Economist.\footnote{\protect\url{http://www.economist.com/node/895542?fsrc=scn/fb/wl/ar/thepowerofseven}}
-
-Occasionally, the signs only of the planets were used, for 
-the sake of brevity, particularly in diaries and journals. This 
-is notably the case in the original MS. field-book of Mason 
-and Dixon's survey of the boundary line between Pennsylvania and Maryland, 1763 to 1768, 
-in possession of the Historical 
-Society of Pennsylvania. In this book the name of 
-each day of the week is represented by the sign, in addition 
-to the usual dates, for a period of over four years. See, also, 
-" Minutes of the Provincial Council of Pennsylvania" (Colonial Records), vol. ii. pages 90 to 96, etc. etc. In the latter 
-part of vol i. (same Records) the Latin names of the days 
-were used. 
-
-\begin{center}
-\begin{tabular}{l c l l}
-\toprule
-Latin              &Signs                   &English      &Anglo-Saxon\\
-\midrule
-Dies Saturni   &{\pan\char"2644}  &Saturday     &Saetern-daeg\\
-Dies Solis       &{\pan\char"2609}  &Sunday       &Sunnan-daeg\\
-Dies Lunae     &{\pan\char"263D} &Monday      &Monan-daeg\\
-Dies Martis     &{\pan\char"2642} &Tuesday       &Tiwes-daeg\\
-Dies Mercurii  &{\pan\char"263F}  &Wednesday &Wodnes-daeg\\
-Dies Jovis       &{\pan\char"2643}  &Thursday     &Thors-daeg\\
-Dies Veneris   &{\pan\char"2640}  &Fiday           &Frigas-daeg\\
-\bottomrule
-\end{tabular}
-\end{center}
-
-The |IAU| discourages the use of the planetary symbols in articles and we only show them in the above table for historical reasons.  
-
-The Aztecs had a ritual cycle of 260 days, known as Tonalpohuali, which was divided
-into 20 weeks of 13 days known as Trecena. They also divided the solar year of 365 days, into 18
-periods of 20 days and five nameless days known as Nemontemi. Although some consider this 20-day
-grouping a month, it has no relation to lunation. It was divided into four ``weeks'' of five days.
-
-The Soviet Union between 1929 and 1931 changed from the seven-day week to a five-day week. There
-were 72 weeks and an additional five national holidays inserted within three of them totaling a year of
-365 days.
-
-\begin{figure}[ht]
-\includegraphics[width=\textwidth]{./images/soviet-calendar.jpg}
-\caption{The Soviet Calendar for 1930}
-\end{figure}
-
-The five day week was a social disaster and this was then changed to a six day week, which later was
-abandoned by a decree issued on 27 June 1940.
-
-\begin{figure}[ht]
-\centering
-\includegraphics[width=0.5\textwidth]{./images/soviet-calendar-1939.jpg}
-\caption{The six day Soviet Calendar for 1939}
-\end{figure}
-
-From the summer of 1931 until 26 June 1940, each Gregorian month was usually divided into five six-day weeks, more and less (as shown by the 1933 and 1939 calendars displayed here).[2] The sixth day of each week was a uniform day off for all workers, that is days 6, 12, 18, 24 and 30 of each month. 
-
-The last day of 31-day months was always an extra work day in factories, which, when combined with the first five days of the following month, made six successive work days. But some commercial and government offices treated the 31st day as an extra day off. To make up for the short fifth week of February, 1 March was a uniform day off followed by four successive work days in the first week of March (2–5). The partial last week of February had four work days in common years (25–28) and five work days in leap years (25–29). But some enterprises treated 1 March as a regular work day, producing nine or ten successive work days between 25 February and 5 March, inclusive. The dates of the five national holidays did not change, but they now converted five regular work days into holidays within three six-day weeks rather than splitting those weeks into two parts (none of these holidays was on a ``sixth day")
-
-
-The Unicode |CLDR| specification dictates that for each language a set of files are provided for calendar related information. This for example enables the printing of calendars in a specific language such as Greek, but using an islamic calendar.  The internationalization tables do not provide any conversion or calculation routines. They just represent how the traslated string would look. 
-
-\begin{texexample}{i18n}{i18-3}
+\begin{texexample}{i18n}{i18-2}
 \begin{luacode}
-local c = require("i18n.el.caislamic")
-local s1 = c.el.dates.calendars.islamic.months.format.abbreviated["1"]
-local s2 = c.el.dates.calendars.islamic.months.format.abbreviated["2"]
-tex.print('typeof :', type(c), '\\par')
-tex.print(s1, '\\par', s2)
-\end{luacode}
-\end{texexample}
+local c = require("i18n.el.cagregorian")
+local months = c.el.dates.calendars.gregorian.months.formats
+local days = c.el.dates.calendars.gregorian.days.formats
 
-\subsection{Available calendar translations}
-
-The available calendar translations for each language, they are provided as submodules to the |i18n| module. They are listed in Table    . The prefix is the 2-letter name of the language so for English it will be ca-buddhist.
-
-\begin{table}[ht]
-
-\begin{multicols}{2}
-ca-buddhist\\
-ca-chinese\\
-ca-coptic\\
-ca-dangi\\
-ca-ethiopic\\
-ca-ethiopic-amete-alem\\
-ca-generic\\
-ca-gregorian\\
-ca-hebrew\\
-ca-indian\\
-ca-islamic\\
-ca-islamic-civil\\
-ca-islamic-rgsa\\
-ca-islamic-tba\\
-ca-islamic-umalqura\\
-ca-japanese\\
-ca-persian\\
-ca-roc\\
-\end{multicols}
-\caption{Available calendars for each language.}
-\end{table}
-
-\subsection{Historical Roman Calendars}
-
-
-\subsection{Julian Calendar}
-
-Julius Caesar in 46 BC (708 AUC\footnote{A.U.C. is from the Latin ab urbe condita, which translates from the founding of the City (Rome).}) reformed the then current calendar.   It was the predominant calendar in the Roman world, most of Europe, and in European settlements in the Americas and elsewhere, until it was refined and superseded by the Gregorian calendar. The difference in the average length of the year between Julian (365.25 days) and Gregorian (365.2425 days) is 0.002%.
-
-The Julian calendar has a regular year of 365 days divided into 12 months, as listed in Table of months. A leap day is added to February every four years. The Julian year is, therefore, on average 365.25 days long. It was intended to approximate the tropical (solar) year. Although Greek astronomers had known, at least since Hipparchus, a century before the Julian reform, that the tropical year was a few minutes shorter than 365.25 days, the calendar did not compensate for this difference. As a result, the calendar year gained about three days every four centuries compared to observed equinox times and the seasons. This discrepancy was corrected by the Gregorian reform of 1582. The Gregorian calendar has the same months and month lengths as the Julian calendar, but inserts leap days according to a different rule. Consequently, the Julian calendar is currently 13 days behind the Gregorian calendar; for instance, 1 January in the Julian calendar is 14 January in the Gregorian. Old Style (O.S.) and New Style (N.S.) are sometimes used with dates to indicate either whether the start of the Julian year has been adjusted to start on 1 January (N.S.) even though documents written at the time use a different start of year (O.S.), or whether a date conforms to the Julian calendar (O.S.) rather than the Gregorian (N.S.). Dual dating uses two consecutive years because of differences in the starting date of the year, or includes both the Julian and Gregorian dates.
-
-The Julian calendar has been replaced as the civil calendar by the Gregorian calendar in all countries which formerly used it, although it continued to be the civil calendar of some countries into the 20th century. Among the last countries to convert to the Gregorian Calendar were Greece (in 1924), Turkey (in 1926) and Egypt (in 1928).[2] As of 1930, all countries that were using the Julian calendar had discontinued it. Most Christian denominations in the West and areas evangelized by Western churches have also replaced the Julian calendar with the Gregorian as the basis for their liturgical calendars. However, most branches of the Eastern Orthodox Church still use the Julian calendar for calculating the dates of moveable feasts, including Easter (Pascha). Some Orthodox churches have adopted the Revised Julian calendar for the observance of fixed feasts, while other Orthodox churches retain the Julian calendar for all purposes.[3] The Julian calendar is still used by the Berber people of North Africa, and on Mount Athos. In the form of the Alexandrian calendar, it is the basis for the Ethiopian calendar, which is the civil calendar of Ethiopia.
-
-The ordinary years in the previous Roman calendar consisted of 12 months, for a total of 355 days. In addition a 27-day intercalary month, the \textit{Mensis Intercalaris}, was sometimes inserted between February and March. This extra month was formed by inserting 22 days after the first 23 or 24 days of February, which counted down toward the start of March, 
-became the last five days of Intercalaris. The result was to add2 or 23 days to the year forming an intercalary year of 377 or 
-378 days.
-
-Caesar returned to Rome in 46 BC and, according to Plutarch, called in the best philosophers and mathematicians of his time to solve the problem of the calendar.[16] Pliny says that Caesar was aided in his reform by the astronomer Sosigenes of Alexandria[17] who is generally considered the principal designer of the reform. Sosigenes may also have been the author of the astronomical almanac published by Caesar to facilitate the reform.[18] Eventually, it was decided to establish a calendar that would be a combination between the old Roman months, the fixed length of the Egyptian calendar, and the 365¼ days of the Greek astronomy. According to Macrobius, Caesar was assisted in this by a certain Marcus Flavius.[19]
-
-Since the Julian and Gregorian calendars were long used simultaneously, although in different places, calendar dates in the transition period are often ambiguous, unless it is specified which calendar was being used. In some circumstances, double dates might be used, one in each calendar. The notation ``Old Style" (O.S.) is sometimes used to indicate a date in the Julian calendar, as opposed to ``New Style" (N.S.), which either represents the Julian date with the start of the year as 1 January or a full mapping onto the Gregorian calendar. This notation is used to clarify dates from countries which continued to use the Julian calendar after the Gregorian reform, such as Great Britain, which did not switch to the reformed calendar until 1752, or Russia, which did not switch until 1918.
-
-Throughout the long transition period, the Julian calendar has continued to diverge from the Gregorian. This has happened in whole-day steps, as leap days which were dropped in certain centennial years in the Gregorian calendar continued to be present in the Julian calendar. Thus, in the year 1700 the difference increased to 11 days after February 28 (Gregorian); in 1800, 12; and in 1900, 13. Since 2000 was a leap year according to both the Julian and Gregorian calendars, the difference of 13 days did not change in that year: 29 February 2000 (Gregorian) fell on 16 February 2000 (Julian). This difference will persist through the last day of February, 2100 (Gregorian), since 2100 is not a Gregorian leap year, but is a Julian leap year. Monday 1 March 2100 (Gregorian) falls on Monday 16 February 2100 (Julian).[81]
-
-
-\subsection{Gregorian calendar}
-
-The routines for calculating and displaying Gregorian Calendar dates are provided by 
-the \pkgname{phd} as lua interfaced code. They are also provided (with limited functionality) for the other TeX engines.
-
-The Gregorian calendar is the most widely calendar use today. The calendar was designed by a commission instructed by Pope~Gregory~XIII in the sixteenth century. This is strictly a solar calendar based on a 365-day common year divided into twelve months. On leap years of 366 days, one extra day is added to February.
-
-For a computer implementation, the easiest way to reckon time is simply to count
-days: Establish an arbitrary starting point as day 1 and specify a date by giving
-a day number relative to that starting point;\footnote{See Leslie Lamport's \textit{On the Proof of Correctness of a Calendar Program}, Communications of ACM, Vol 22, Number 10, October 1979.} a single thirty-two bit integer allows
-the representation of more than 11.7 million years. Such a reckoning of time is,
-evidently, extremely awkward for human beings and is not in common use, except
-among astronomers who use Julian day numbers to specify dates.
-
-Thus a date is normally a triplet of three integers starting from an era. We specify a date such as (13, December, 2014) where we let "January", \ldots, "December" be the names for the integers $1,\ldots,12$. A calendar is the assignment of dates to days.  More precisely, let us define an era to be an infinite sequence of days. A calendar for that era is an assignment of a date to each day in the era. 
-
-\[gregorian[n] = (day[n], month[n], year[n])\]
-where the integer-valued functions $day, month$ and $year$ are defined inductively.
-
-We will also need to define the range that we need to print calendar, as calendars are printed normally over a 42 day interval.
-
-\begin{figure}[h]
-\centering
-\includegraphics[width=0.7\textwidth]{./images/calendar-01.jpg}
-\end{figure}
-
-The full page calendar is illustrated in Figure~\ref{girlcalendar}.
-\begin{figure}[htb]
-\centering
-\includegraphics[width=0.4\textwidth]{./images/calendar-02.jpg}
-\caption{The full page rendering of the makeCalendar command}
-\label{girlcalendar}
-\end{figure}
-
-The calendar holds the images and styles in  a Lua table, which is easily configurable to use it, you need to
-use the \cmd{\makeCalendar}\meta{year}, which creates a pdf. care must be used in selecting the right size images and with an aspect ratio that suits the paper dimensions. 
-
-\clearpage
-
-\input{./sections/coptic-calendar}
-
-\subsection{Ethiopic calendar}
-
-The Ethiopic calendar, is very similar to the Coptic. “The day starts with sunrise” is the conceptual basis for the clock in Ethiopia and many of its neighbors. Being near the equator this translates to roughly 6 AM each day with an even 12 hours of light and darkness with only a little seasonal drifting. A twelve hour clock is used that begins at “12 AM” with sunrise (aka 6 AM in the West), reaches “noon” at “6 AM”, followed by “12 PM” 6 hours later and “6 PM” at “midnight”. Think of it as a clock or watch with the “6” at the top and the “12” at the bottom.
-
-The calendar in Ethiopia has 13 months and the year is 7 years 8 months and 11 days behind the Gregorian calendar (12 days when a leap year occurs). Which means that the year 2000 has only just occurred on September 12th of this year! But why? Many references will state that the Ethiopic calendar is based on the Julian, but this is only partly true. The Ethiopic calendar descends more directly from the Coptic which in turn is a reformation of the ancient Egyptian solar calendar with respect to the Julian scheme also known as the “Alexandrian Calendar”.
-
-The ancient Egyptian solar calendar used a 365 day year with the year divided into 3 seasons of 120 days and each season into 4 months of 30 days. Five corrective, or epagomenal, days were added at the end of the year. The months were only numbered initially but later took on the corresponding month names from a second, lunar based calendar of Egypt. The month names under the lunar calendar derived their names from the major feast that would occur during the respective month. The problem with “calendar creep” was not addressed until the arrival of the Julian calendar in 46 BC with the introduction of an extra day for a “leap year”. The Coptic calendar applied the Julian leap year in 25 BC thus forever fixing the date synchronization between the two calendar systems.
-
-However, the Coptic and Ethiopic calendars do not apply the leap year correction rule where leap year is skipped every 100 years, except every 400 years, except (maybe) every 16,000 years. So “calendar creep” will continue between the Coptic, Ethiopic and Gregorian calendars. Leap years however do not occur when the year is a multiple of 4, as with the Gregorian system, but will occur on the year prior. Thus 1999 was a leap year as will be 2003 and so on. The four year cycle is also enumerated with the names of the four Evangelists: Mateos, Markos, Luqas and Yohannes as they are known in Ethiopian Orthodox Church. Yohannes is the leap year and is considered the end of a four year cycle.
-
-Where the Coptic and Ethiopic calendars differ will be in the month names, which are language specific even within Ethiopia, as are the days of the week and day divisions. The other major difference is that the year in the Coptic calendar is presently 1724 some 276 years behind the Ethiopic. The modern Coptic calendar’s origin, or epoch, is counted from the year 284 AD when many Coptic Christians were martyr under the rein of Roman Emperor Diocletian. So what accounts for the difference in the Ethiopic calendar versus the Gregorian? Popular legend has it that the 7 year, 8 month and 11 day difference is the time it took for the news of the Birth of Christ to reach Ethiopia. More likely the answer is that the Ethiopic calendar went through fewer reformations than did other calendar systems (notably skipping the reformation by Dionysius Exiguus in AD 525) which potentially makes it more in keeping with “actual time” since the birth of Christ. The truth is, we may never know.
-
-\begin{luacode}
-ethiopicMonths = {
-"Meskerem",
-"Tekemt",
-"Hedar",
-"Tahsas",
-"Ter",
-"Yekatit",
-"Megabit",
-"Miazia",
-"Genbot",
-"Sene",
-"Hamle",
-"Nehasse",
-"Pagumen"
-}
-
-for i=1,13 do 
-   tex.print(ethiopicMonths[i]..', ')
+tex.print("\\begin{tabular}{ll} ")
+for i=1,12 do
+  tex.sprint(i.." &"..months.wide[i].."\\\\ ")
 end
-\end{luacode}
-
-
-\section{The French Revolutionary Calendar}
-
-The French Revolution, accompanied by a zeal to change all traditional things in France, induced the rulers to change their calendar along with their government.  It was decreed by the National Convention, in the autumn of 1793, that the old calendar was to be abolished and that the new French era should be reckoned from the foundation of the republic, September 22, 1792, of the Common Era, on the day of the true autumnal equinox; that each year should begin on the midnight of the day on which the autumnal equinox falls; and that the first year of the French Republic had begun immediately after 12 o’clock P.M. of the 21st of September, 1792, and had terminated on the midnight between the 21st and 22nd of September, 1793.
-
-As the French months consisted of 30 days each, making in all 360 days, the remaining five days required to complete the year were called \textit{complementary days} and \textit{sans-culottides}. They were named as follows:
-
-\begin{tabular}{llll}
-1. Primedi  & Fe\^ete de la Vertu  & The Virtues & Sept. 17th \\
-\end{tabular}
-
-The intercalary day of every fourth year was called La  sans-culottide, and was to be the Festival of 
-the Revolution,  to be dedicated to a grand solemnity, in which the French should celebrate the period of their enfranchisement, and the  institution of the Republic. The National oath, "To live  free or die," was to be renewed. 
-
-Each day was divided according to the decimal system, 
-into ten parts or hours, and these into ten others, and so on. 
-Each month was divided into three decades, each consisting of ten days ; 
-the names of which were taken from the 
-Latin numerals. The first was called Primedi, 2nd Duodi, 3rd 
-Iridi, 4th Quartidi, 5th Quintidi, 6th Sextidi, 7th Septidi, 8th 
-Octidi, 9th Nonidi, and 10th Decadi. The last was the day 
-of rest, and superseded the former Sunday. \index{Calendars>French Revolutionary}
-
-\begin{figure}[htp]
-\centering
-\includegraphics[width=\textwidth]{./images/republican-calendar.jpg}
-\caption{The months illustrated the Republican Calendar  
-Author: Salvatore Tresca in 1794. 
-Paris, Musée Carnavalet. }
-\end{figure}
-
-\subsection{Revolutionary Calendar to Gregorian Calendar}
-
-The year can easily be reckoned by taking the Gregorian year and adding 1. 
-
-\begin{texexample}{Revolutionary year example}{}
-\begin{luacode}
-  local year, revyear
-  year = 1792
-  revyear = 1
-  tex.print((year-revyear)+1)
+tex.print("\\end{tabular}")
 \end{luacode}
 \end{texexample}
 
+Printing directly to the document has many benefits but does slow developemnt, both of the code as well as the document. Another distraction is transferring arguments from \tex to Lua and vice versa.
 
-\section{Julian Day}
-
-
-
+Similarly we can print the months in the Italian language by loading the \textbf{i18n.italian} module and iterating through the month strings. I am still thinking about the interface and the best way forward to provide an easy to use and remember interface. 
 
 
+Let us now develop a longer example. We will load a number of languages and typeset a table for the different months.
+Since we are running the example directly in the document, some patience is required. 
+
+\bigskip 
+
+\begin{texexample}{Month string in various languages}{ex:transl}
+\bgroup
+\parindent0pt
+\newfontfamily\langtable{code2000}
+\langtable
+\scriptsize
+\begin{luacode} 
+
+c = require("i18n.irish")
+d = require("i18n.russian")
+e = require("i18n.latin")
+f = require("i18n.german")
+g = require("i18n.kannada")
+h = require("i18n.lao")
+j = require("i18n.turkish")
+k = require("i18n.albanian")
+
+local count=0
+
+local months_irish = c.irish.months
+local months_russian = d.russian.months
+local months_latin = e.latin.months 
+local months_german = f.german.months
+local months_kannada = g.kannada.months
+local months_lao    = h.lao.months
+local months_turkish = j.turkish.months
+local months_albanian = k.albanian.months
+local centering = function()
+                     tex.print("\\centering")
+end
+
+local par = function()
+               tex.print("\\par")   
+end
+
+local tabular = function() 
+	tex.print("\\begin{tabular}{clllllll}")
+	tex.sprint("\\toprule")
+end	
 
 
+local endtabular = function()
+	tex.print("\\bottomrule")
+	tex.print("\\end{tabular}")
+	tex.print("\\medskip")
+end
 
+local eol = function()
+  return("\\\\")
+end
+
+
+-- center the table
+centering()
+tabular()
+tex.sprint("Month","&Irish", "&Russian", "&Latin", "&Kannada", "&Lao","&Turkish","&Albanian", eol())
+tex.sprint("\\midrule")
+for i = 1,12 do
+   count = i
+   tex.sprint(i.."&", months_irish[i],
+                 "&",months_russian[i], 
+                 "&",months_latin[i], 
+                 "&", months_kannada[i], 
+                 "&"..months_lao[i], 
+                 "&"..months_turkish[i],
+                 "&"..months_albanian[i],
+                 eol() )
+end  
+endtabular()
+par()
+
+\end{luacode} 
  
-  
-    
+\egroup
+\end{texexample}
+
+Now some explanation for the code. We started by loading the necessary libraries for the languages that we wanted to print the month strings and allocated them to local variables.
+
+We then iterated through the twelve months of the gregorian table and typeset them. We could have put the languages in a Lua table and iterated over them. I haven't done it so that the code is clearer. I tried to keep the API functions separate as much as possible. We also defined a font using \docAuxCommand{newfontfamily} of the \pkg{fontspec} package to ensure that we can print the Asian and Cyrillic scripts.
+
+The long javanesque object notations make it difficult to work, but once they are set in functions and locals, development is fast. After the detour to explore the i18n tables and available information, we are now ready to tackle the production of multi-lingual calendars and to complete are library on internationalization. Before we do that a detour to understand
+the complexity of calendrical calculations and some historical information is required.
+\vfill
 
 
 

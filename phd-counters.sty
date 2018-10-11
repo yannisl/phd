@@ -16,10 +16,12 @@
 
 
 
-\NeedsTeXFormat{LaTeX2e}[1994/12/01]%
-\RequirePackage[2014/05/01]{latexrelease}
-\ProvidesFile{phd-lists}[2015/1/13 v1.0 less preamble (YL)]%
-\RequirePackage[thepage,abspage,lastpage,totpages, user,savepos,xr,pagelayout]{zref}
+
+\NeedsTeXFormat{LaTeX2e}[2017/04/15]%
+\RequirePackage[2017/04/15]{latexrelease}
+\ProvidesFile{phd-counters}[2017/04/15 v1.0 less preamble (YL)]%
+\RequirePackage[thepage,abspage,%
+                lastpage,totpages, user,savepos,xr,pagelayout]{zref}
 \newcounter{foo}
 \renewcommand*{\thefoo}{\Alph{foo}}
 \zref@newprop{thefoo}{\thefoo}
@@ -50,7 +52,11 @@
 \cs_new:Npx  \counter_resets_prefix: { __counter_resets_prefix_ }
 \cs_gset:Nn  \phd_create_new_counter:n
   {
-    \int_if_exist:cTF {\phd_counter_prefix_tl#1}{ERROR~counter~exists}
+    \int_if_exist:cTF
+      {\phd_counter_prefix_tl#1}
+            {
+            \msg_error:nnn { phd-counters } { counter-exists }{#1}
+            }
       {
         \int_gzero_new:c {\phd_counter_prefix_tl#1}
         \seq_new:c {\counter_resets_prefix:#1}
@@ -89,7 +95,7 @@
   {
     \int_gset:cn {\phd_counter_prefix_tl #1} { #2 }
   }
-\DeclareDocumentCommand\newCounter { o m }
+\DeclareDocumentCommand\NewCounter { o m }
   {
     \phd_create_new_counter:n {#2}
       \IfNoValueF {#1}
@@ -188,8 +194,7 @@
  \int_gzero_new:N \int_tens
  \int_gzero_new:N \int_units
  \int_gzero_new:N \int_to_be_converted
-
-\cs_new:Npn \int_to_cardinal_aux_en:n #1
+\cs_gset:Npn \int_to_cardinal_aux_en:n #1
   {
    \int_gset:Nn \int_to_be_converted {#1}
    \int_gset:Nn \int_thousands {\int_div_truncate:nn {#1}{1000}}

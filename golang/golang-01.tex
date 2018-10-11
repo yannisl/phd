@@ -1,4 +1,5 @@
 \def\Go{\texttt{go}\xspace}
+
 \lstdefinelanguage{Golang}%
   {morekeywords=[1]{package,import,func,type,struct,return,defer,panic,%
      recover,select,var,const,iota,},%
@@ -94,7 +95,7 @@ For convenience, add the workspace's bin subdirectory to your PATH:
 $ export PATH=$PATH:$GOPATH/bin
 \end{teX}
 
-\begin{lstlisting}
+\begin{minted}{batch}
 REM modified version of brainman's batch file at https://groups.google.com/forum/#!topic/golang-nuts/QVPKm7pbhds
  
 REM setting goroot to my go installation folder.
@@ -108,7 +109,7 @@ set PATH=%PATH%;c:\go\bin;%GOBIN%
 REM finally make my playground source folder as my PWD, write your hello.go here and execute "go install" and check GOBIN folder for exe.
 cd %GOPATH%\src
 CMD
-\end{lstlisting}
+\end{minted}
 
 
 
@@ -208,8 +209,6 @@ and the |testing| package.
 Yo can write a test by creating a file with a name ending in |_test.go|
 that contains functions named |TestXXX| with a signature |(t *testing.T)|. The test framework runs each such function; if the function calls a failure function such as |t.Error| or |t.Fail|, the test is considered to have failed.
 
-\setminted[go]{fontsize=\footnotesize,linenos,firstnumber=last,style=friendly,escapeinside=VV}
-\setminted[bash]{fontsize=\footnotesize,linenos,firstnumber=last,style=friendly,escapeinside=VV}
 
 
 \begin{minted}{go}
@@ -259,7 +258,7 @@ $ $GOPATH/bin/hello
 Hello, Go examples!
 \end{minted}
 
-If the specified package is not present in a workspace, go get will place it inside the first workspace specified by GOPATH. (If the package does already exist, go get skips the remote fetch and behaves the same as go install.)
+If the specified package is not present in a workspace, go get will place it inside the first workspace specified by |GOPATH|. (If the package does already exist, go get skips the remote fetch and behaves the same as |go install|.)
 
 After issuing the above go get command, the workspace directory tree should now look like this:
 
@@ -291,6 +290,77 @@ src/
 This convention is the easiest way to make your Go packages available for others to use. The Go Wiki and godoc.org provide lists of external Go projects.
 
 For more information on using remote repositories with the go tool, see go help \href{https://golang.org/cmd/go/\#hdr-Remote_import_paths}{importpath}.
+
+
+\section{Installation on Windows WSL}
+
+
+%https://golang.org/doc/install?download=go1.10.linux-amd64.tar.gz
+
+%https://gist.github.com/nikhita/432436d570b89cab172dcf2894465753
+
+%https://gist.github.com/stefanprodan/29d738c3049a8714297a9bdd8353f31c
+
+
+
+This bash script installs Go lang tools in |/usr/local/go|, creates |$HOME/go| directory and sets |GOPATH| environment variable to |$HOME/go/bin|. It is an adapation from a gist by \href{https://gist.github.com/nikhita/432436d570b89cab172dcf2894465753}{nikhita}.
+
+\begin{minted}{bash}
+#!/bin/bash
+set -e
+
+GVERSION="1.7"
+GFILE="go$GVERSION.linux-amd64.tar.gz"
+
+GOPATH="$HOME/go"
+GOROOT="/usr/local/go"
+if [ -d $GOROOT ]; then
+    echo "Installation directory already exists $GOROOT"
+    exit 1
+fi
+
+mkdir -p "$GOROOT"
+chmod 777 "$GOROOT"
+
+wget --no-verbose https://storage.googleapis.com/golang/$GFILE -O $TMPDIR/$GFILE
+if [ $? -ne 0 ]; then
+    echo "Go download failed! Exiting."
+    exit 1
+fi
+
+tar -C "/usr/local" -xzf $TMPDIR/$GFILE
+
+touch "$HOME/.bashrc"
+{
+    echo '# GoLang'
+    echo 'export PATH=$PATH:/usr/local/go/bin'
+    echo 'export GOPATH=$HOME/go'
+    echo 'export PATH=$PATH:$GOPATH/bin'
+} >> "$HOME/.bashrc"
+source "$HOME/.bashrc"
+echo "GOROOT set to $GOROOT"
+
+mkdir -p "$GOPATH" "$GOPATH/src" "$GOPATH/pkg" "$GOPATH/bin" "$GOPATH/out"
+chmod 777 "$GOPATH" "$GOPATH/src" "$GOPATH/pkg" "$GOPATH/bin" "$GOPATH/out"
+echo "GOPATH set to $GOPATH"
+
+rm -f $TMPDIR/$GFIL
+\end{minted}
+
+
+You can run the one-line installer using this 
+
+\href{https://github.com/udhos/update-golang/blob/master/update-golang.sh}{gist} as source:
+
+\begin{minted}{bash}
+cd $HOME
+curl -s -L <GIST_RAW_URL> | sudo bash
+\end{minted}
+
+The |gist| raw |URL| can be found here.
+
+After running the script, type exit to close the current session. Open a new bash session and run |go env| to verify the installation.
+
 
 
 

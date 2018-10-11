@@ -1,21 +1,18 @@
-\cxset{chapter opening=any,
-          chapter color=thelightgray,
-          chapter font-family=sffamily,
-          chapter font-size=LARGE,
-          number font-size=LARGE,
-          number display=inline,
-          chapter display=block,
-          chapter float=right,
-          chapter title align=right,
-          chapter title text-align=right}
-          
-\chapter[Data Structures]{Data Structures $a^2$}
+\chapter[Data Structures]{Data Structures}
 
-\newthought{In computer science, a data structure} is a particular way of organizing data in a computer so that it can be
+\parindent1em 
+In computer science, a data structure is a particular way of organizing data in a computer so that it can be
 used efficiently. \tex has only one type of data structure: the \emph{token list}, although one can consider a macro storing only contents as another primitive data structure. The original \tex had only 256 token list\footnote{See also etex for a more modern version.} registers that are
 available to the user.\tex also offers some special token lists: the |\every|... variables, |\errhelp|,
 and |\output|. Lamport in \latex developed additional data structures, using \tex’s primitive commands and  these are discussed in the chapters discussing the \latex kernel. In addition the \latex3 team is busy developing more familiar data structures and associated manipulation routines that one can truly say that the \tex programmer has now a full kit to program any complicated piece of code.
 
+
+A token register stores a token list. A macro also stores a token list in its \meta{replacement text}, so you can perfectly get away without using token registers in most of your \tex programming. So where is the difference?
+
+\begin{enumerate}
+\item Token registers are faster.
+\item Token registers will \emph{never} be expanded.
+\end{enumerate} 
 
 
 \begin{description}
@@ -34,15 +31,83 @@ unpacking\index{token lists>unpacking}. However, these are sufficient to impleme
 
 \section{How to allocate to a token register}
 
-\begin{macro}{\newtoks}
-Let us say we have allocated a token register, which we can define with the \cmd{\newtoks} command.
-\end{macro}
+\begin{docCommand}{toks}{\marg{number}}
+Allocates a \tex primitive token register.
+\end{docCommand}
+
+\begin{texexample}{Basic usage}{ex:toksusage}
+\bgroup
+\def\a{a test.}
+\toks0={\a}
+\edef\b{\the\toks0 }
+\def\c{\a}
+\edef\e{\c}
+\def\f{\the\toks0 }
+\meaning\b
+
+\meaning\e
+
+\meaning\f
+\egroup
+\end{texexample}
+
+In this simple test in example~\ref{ex:toksusage} we can see the major differences of using token registers or macros to hold values. An |\edef| holding the |\the\toks0 |, did not expand the values, where |\c| expanded the macro. This is an important difference and can enable one to build lists. Once you have lists, you have a full Turing complete language.
+
+\begin{texexample}{Usage}{ex:toksadd}
+\makeatletter
+\bgroup
+\long\def\g@addto@macro#1#2{%
+  \begingroup
+  \toks@\expandafter{#1#2}%
+  \xdef#1{\the\toks@}%
+  \endgroup
+}
+
+\def\a{My macro.\kern5pt}
+
+\g@addto@macro\a{My other text }
+
+\meaning\a
+
+\a
+\egroup
+\makeatother
+\end{texexample}
+
+As lightly different macro can do a similar job:
+
+\begin{texexample}{Example with edefappend}{ex:toks3}
+% Add #2 (which is expanded in an \edef) to the end of the definition of
+% #1 (which must be a previously-defined control sequence).  This is a
+% way to construct simple lists. (xeplain)
+% 
+\makeatletter
+\bgroup
+\def\edefappend#1#2{%
+  \toks@ = \expandafter{#1}%
+  \edef#1{\the\toks@ #2}%
+}%
+%
+\def\a{My macro.\kern5pt}
+\edefappend\a{My other text. }
+
+\meaning\a
+\egroup
+\makeatother
+\end{texexample}
+
+So far we have used the register |toks0| and |toks@| which are the same register. This is bad practice, as it may already
+be in use. We can use \docAuxCommand{newtoks} to define a new register using a name.
+
+\begin{docCommand}{newtoks}{\marg{name}}
+Allocates a new token register.
+\end{docCommand}
 
 
-\begin{texexample}{Token List Allocation}{}
+\begin{texexample}{Token List Allocation}{ex:toks}
 \newtoks\alist 
-\alist={token1 token2 token3}
-\the\alist
+\alist={token1,token2,token3}
+\meaning\alist
 \end{texexample}
 
 As you can see from the example we can typeset the contents of the token register with the \cs{the} command,
@@ -70,9 +135,10 @@ As you can see from the example we can typeset the contents of the token registe
 
 New token lists can be created, by either using the \cmd{\newtoks} or the \cmd{\toks}\meta{number}. Where |\toks0| defines the zero register etc. It is always better to use \cmd{\newtoks} in order not to affect existing token registers used by the system or other packages.
 
-Token register can store anything for example they can store \cmd{\vfil} or \cmd{\hfill}. \latexe uses them for example to store flush glue \cmd{\@temptoken}.
+Token register can store anything for example they can store \cmd{\vfil} or \cmd{\hfill}. \latexe uses them extensively, using one or two registers but mostly using |\@temptoken|. Do not be tempted to use this variable as it can affect the marks in your document. Good practice in your package is to define a scratch register |\mypackagetemptokena| etc.
 
 \section{Operations}
+
 \subsection{copying}
 
 You can copy the contents of one token register to another by assignment. The copying is carried out \emph{without expansion}.
@@ -83,9 +149,14 @@ You can copy the contents of one token register to another by assignment. The co
 \newtoks\@exampletoksb
 \@exampletoksa = {first token list}
 \@exampletoksb=\@exampletoksa
+
+% the @exampletoksb now holds the contents of @exampletoksa
 \the\@exampletoksb
 \makeatother
 \end{texexample}
+
+
+
 
 \section{Collecting Information with Token Registers}
 
@@ -99,31 +170,32 @@ One important use of token registers is to store information. Normally the packa
 \end{teXXX}
 
 
-\begin{texexample}{Adding to a token list}{}
+\begin{texexample}{Adding to a token list}{ex:adding}
+
 \bgroup
 \makeatletter
-\def\addinfo #1{
-    \expandafter\expandafter\expandafter\@temptokena\expandafter{%
-          \the\@temptokena #1}
+\def\addinfo#1{
+  \expandafter\expandafter\expandafter
+    \@exampletoksa\expandafter{%
+     \the\@exampletoksa #1 }%
 }
-
 \addinfo{\hfill}
 \addinfo{CHAPTER}
 \addinfo{\kern0.5em}
-\addinfo{\thechapter}
-\the\@temptokena
+\addinfo{50}
+\the\@exampletoksa
+
 \makeatother
 \egroup
+
 \end{texexample}
 
 
-As you can observe from the example we can also add glue, which it gets preserved until the contents are typeset. This is an importance difference between storing in a token and storing using \cmd{\edef} or a macro, although there are ways and means to by-pass this limitation.
-
 \section{Joining two token registers}
 
-We can join two token registers by expanding both in a macro or a token register:
+We have see so far how to allocate a token register to another, we can also join two token registers by expanding both in a macro or a token register:
 
-\begin{texexample}{Join two token registers}{}
+\begin{texexample}{Join two token registers}{ex:joining}
 \makeatletter
 \bgroup
 \toks0={}
@@ -132,8 +204,8 @@ We can join two token registers by expanding both in a macro or a token register
 \@temptokenb={tokenb}
 
 \def\jointoks#1#2#3{%
-#1=\expandafter\expandafter\expandafter
-{\expandafter\the\expandafter#2\the#3}}
+  #1=\expandafter\expandafter\expandafter
+    {\expandafter\the\expandafter#2\the#3}}
 
 \jointoks{\toks0}{\@temptokena}{\@temptokenb}
 
@@ -163,6 +235,8 @@ We can join two token registers by expanding both in a macro or a token register
 \def\UpToHere{\relax}%
 \def\IgnoreRest#1#2\UpToHere{#1} % helper macro
 \def\IgnoreFirst#1#2\relax\UpToHere{#2} % helper macro
+
+
 %===============================================================
 % 3. liefert das erste Element eines token register #1
 %
@@ -237,14 +311,14 @@ The result is
 \end{tabular}
 }
 
-\section{Joining two registers}e
+\section{Joining two registers}
 
 Now, that we have described the basic commands of creating a token register (assignment) and unpacking it with the \cmd{the}, we can develop some macros to manipulate such lists. The first macro we will develop is a macro to \textit{join}
 two lists and store the result in a third token list \cmd{\result}.
 
 \begin{texexample}{Joining two registers}{}
 \def\JoinToks#1#2+#3;{#1=\expandafter\expandafter\expandafter
-{\expandafter\the\expandafter#2\the#3}}
+    {\expandafter\the\expandafter#2\the#3}}
 
 \toks1={{Alice }{John }{Mary }}
 \toks2={{Marilou }{Maria }{Marianne }}
@@ -278,7 +352,7 @@ Similarly we can define a command \cmd{\Union} which is very similar to \cmd{\Jo
 
 
 
-\begin{comment}
+
 
 \subsection{Helper Macros}
 The next macros are helper macros to assist in the rest of the definitions. The \cmd{\UpToHere} macro is a simple \cmd{\relax}, where the \cmd{\IgnoreRest} and \cmd{\IgnoreFirst} are defined as per their names.
@@ -324,15 +398,14 @@ The next macros are helper macros to assist in the rest of the definitions. The 
 
 \end{teX}
 
-If you have read up to here, you would be wondering as to how to access the \textit{length} of the token register, pop and push, slice etc. Common terminologies of lists and arrays\sidenote{Remember that a list is a one dimensional array. It is quite possible to build all these commands using \TeX\ and as a matter of fact \LaTeX has all these constructs built-in.} We would demonstrate this by example.
-
+If you have read up to here, you would be wondering as to how to access the \textit{length} of the token register, pop and push, slice etc. Common terminologies of lists and arrays\footnote{Remember that a list is a one dimensional array. It is quite possible to build all these commands using \TeX\ and as a matter of fact \LaTeX has all these constructs built-in.} We would demonstrate this by example.
 
 
 \subsection{How to find the length of a token list}
 \index{token lists!length}
 
 These examples are from \TeX by Topic. They have been modified to print their
-output, rather than message{}, in order to print the result here.
+output, rather than |\message{}|, in order to print the result here.
 
 
 We first define a toks register and a count register, named \cmd{auxlist} and \cmd{auxcount}.
@@ -342,8 +415,7 @@ We first define a toks register and a count register, named \cmd{auxlist} and \c
 \newcount\auxcount
 \end{teX}
 
-\newtoks\auxlist 
-\newcount\auxcount
+
 
 First of all there must be an operation to add auxiliary files:
 
@@ -357,306 +429,295 @@ First of all there must be an operation to add auxiliary files:
 % plus other actions
 }
 
-\noindent Next we define a macro that adds a token to the token list, but also delimits it using \indexat{elt}. The token |\@elt| is commonly used by \latex in list constructions. It has been borrowed from Lisp which and is a short for element. Knuth used throughout |plain| two backslashes (\textbackslash\textbackslash). As a matter of fact you can use any marker you want. It is preferable though to adhere to these two conventions as they are commonly used throughout packages and in the literature.
+\noindent Next we define a macro that adds a token to the token list, but also delimits it using \docAuxCommand{elt}. The token |\@elt| is commonly used by \latex in list constructions. It has been borrowed from Lisp which and is a short for element. Knuth used throughout |plain| two backslashes (\textbackslash\textbackslash). As a matter of fact you can use any marker you want. It is preferable though to adhere to these two conventions as they are commonly used throughout packages and in the literature.
 
 Map takes a function \textbf{f} and a list $xs$ and applies f
 to every element of xs. For example,
 
 $$
-Map~~f[1,2,3] = [fl,f2,f3]
+\mbox{Map}\,[1,2,3] = [f1,f2,f3]
 $$
 
-\begin{teX}
-\def\AddToAuxList#1{\let\@elt=\relax
-  \edef\act{\noexpand\auxlist={\the\auxlist \@elt{#1}}}%
-\act}
-\end{teX}
 
+
+\begin{texexample}{Elt lists}{ex:eltlist}
 \makeatletter
-\def\AddToAuxList#1{\let\@elt=\relax
-  \edef\act{\noexpand\auxlist={\the\auxlist \@elt {#1}}}%
-\act}
+% allocations
+\global\newtoks\auxlist 
+\newcount\auxcount
 
+% Define a macro to add to the list
+\protect\gdef\addtoauxlist#1{\let\@elt=\relax
+  \xdef\act{\noexpand\auxlist={\the\auxlist \@elt{#1}}}%
+  \act}
 
-This adds the name to the list in a uniform format, by adding \textbackslash @elt as a marker. This marker is let to \cmd{relax}.
+% Add some elements to the list
+\addtoauxlist{one}  
+\addtoauxlist{two}
+\addtoauxlist{three}
 
-We can add files to the token register by using:
+\the\auxlist
 
-\begin{teX}
-\NewAuxFile{toc} \NewAuxFile{lof} \NewAuxFile{lot}
-\end{teX}
-\NewAuxFile{toc} \NewAuxFile{lof} \NewAuxFile{lot}
-
-
-We will also need a command to print such a list. We define \indexat{elt} as an empty space, in order to typeset the list properly (you can make it into a comma if you wish).
-
-
-
-
-\begin{teX}
-\def\PrintAuxList{%
-  \def\@elt{ }
-  \the\auxlist}
-\end{teX}
-
-\def\PrintAuxList{%
-  \def\@elt{ }
-   \the\auxlist }
-
-\noindent Finally we can print the list:
-\begin{teX}
-\PrintAuxList 
-\end{teX}
-\texttt{> \PrintAuxList}
-
-\noindent And now we are ready to find the length of the token list\index{tokens list!find length}
-
-\begin{teX}
-\def\ComputeLengthOfAuxList{\auxcount=0
-\def\@elt##1{\advance\auxcount1\relax}%
-  \the\auxlist}
-\end{teX}
-
-\def\ComputeLengthOfAuxList{\auxcount=0
-\def\@elt##1{\advance\auxcount1\relax}%
-\the\auxlist \the\auxcount}
-
-\noindent The length is calculated by using |\ComputeLengthOfAuxList| which gives us a result of \texttt{\ComputeLengthOfAuxList}.
-
-Another use of this structure is the following: at the end of the job we can now close all auxiliary files at once, by defining,
-
-\begin{teX}
-\def\CloseAuxFiles{
-  \def\@elt##1{\CloseAuxFile{##1}}%
-  \the\auxlist}
-
-\def\CloseAuxFile#1{closing file: #1. %
-% plus other actions
-}
-\end{teX}
-\def\CloseAuxFiles{
-  \def\@elt##1{\CloseAuxFile{##1}}%
-  \the\auxlist}
-
-\def\CloseAuxFile#1{closing file: #1. %
-% plus other actions
-}
-
-
-\noindent which gives the output
-
-\texttt{> \CloseAuxFiles}
-
-\def\alist{}
-\listadd{\alist}{Yiannis~}
-\listadd{\alist}{Yianis~}
-\listadd{\alist}{Ioannis~}
-\listadd{\alist}{Giannis~}
-\alist
-
+\the\auxlist
 \makeatother
-
-\def\tempa{}
-\numdef{\tempa}{(22+35)*45}
-
-\tempa
+\end{texexample}
 
 
 
-\section{String comparisons}
-
-A more general problem along the same lines is to
-check if two words, or strings are the same. We can
-use |\ifx| for this as well. When |\ifx| compares two
-tokens that are macro names, the result is true if
-the macros have been defined in the same way, and
-if their first level replacement texts are the same.
-So, we define two macros whose replacement texts
-are the strings, and compare these.
-
-\numberLineAt{50}
-\begin{teX}
-\newif\ifsame
-\newcommand{\strcomp}[2]{%
- \samefalse
- \begingroup
-   \def\1{#1}\def\2{#2}%
-   \ifx\1\2\endgroup True \sametrue
-   \else False 
- \endgroup
-\fi}
-\strcomp{Yiannis}{Yiannis}\\
-\strcomp{Yiannis}{YIANNIS}\\
-\end{teX}
-
-\newif\ifsame
-\newcommand{\strcomp}[2]{%
-\samefalse
-\begingroup
-\def\1{#1}\def\2{#2}%
-\ifx\1\2\endgroup True \sametrue
-\else False \endgroup
-\fi}
+By redefining \docAuxCommand*{@elt} we can capture each element during expansion and map to the elements other functions. Consider that we just want to print the elements.
 
 
-\printf{\strcomp{Yiannis}{Yiannis}}
-\printf{\strcomp{Yiannis}{YIANNIS}}
+\begin{texexample}{printing the list}{ex:printlist}
+\makeatletter
+% define a macro to print the list
+\the\auxcount
+\def\printauxlist{%
+  \def\@elt##1{\advance\auxcount1\relax\the\auxcount. \itshape ##1\par }
+  \the\auxlist }
+  
+% add some values
+\addtoauxlist{one}  
+\addtoauxlist{two}
+\addtoauxlist{three}  
+\addtoauxlist{four}  
+\addtoauxlist{five}
+
+% print the results
+\printauxlist
+\makeatother  
+\end{texexample}
+
+The space after |\auxcount1| is important to signal to \tex the end of the number 1. It is better to actually write |\relax|. Try it without and it will just keep on printing only the dot only.
 
 
 
-\section{Lists}
-
-A list is simply a one dimensional array, normally delimited by commas:
-
-\begin{teX}
-  \def\somelist(1,2,3,4,5,6,7,8)
-\end{teX}
-
-In TeX you will probably better off defining it as:
-
-\begin{teX}
-  \def\somelist{1,2,3,4,5,6,7,8}
-\end{teX}
-
-The package \cmd{coolist} provides basic control sequences for manipulating such lists
-
- Lists are defined as a sequence of tokens separated by a comma.  The \texttt{coollist} package allows the user
- to access certain elements of the list while neglecting others---essentially turning lists into a sort of
- array. 
-
- List elements are accessed by specifying the position of the object within the list (the index of the item) and
- all lists start indexing at |1|.
-
- 
- \begin{tabular}{ll}
- |\listval{1,2,3,4}{2}|                & \listval{1,2,3,4}{2} (the null string)        \\
- |$\listval{\alpha,\beta,\gamma}{2}$|  & $\listval{\alpha,\beta,\gamma}{2}$            \\
- |\listval{a,b,c}{4}|                  & \listval{a,b,c}{4} (the null string)
- \end{tabular}
-
-The \pmac{coolist}{liststore} stores the length of the comma delimited list into the counter. It does so by creating variables with the same name as the argument.
-
-\begin{teX}
-\liststore{1,2,3,4}{temp}
-\tempi;\tempii;\tempiii;\tempiv 
-\end{teX}
-
-produces 
-
-\liststore{1,2,3,4}{temp}
-\tempi;\tempii;\tempiii;\tempiv 
-
-This can be used quite effectively to create a number of on the fly variables.
-
-The list can be numerical or alpha
-
-\begin{teX}
-\liststore{alpha,beta}{temp}
-\end{teX}
-
-
-will produce
-
-\liststore{alpha,beta}{temp}
-
-\texttt{\medskip\tempi; \tempii \medskip }
-
-\section*{length of list}
-
-The length of the list can be obtained by using the \pmac{listcool}{listlen} or \pmac{listcool}{listlenstore}
-
-\begin{teX}
-\listlen{1,2,3,4,5} 
-\listlen{} 
-\listlen{1,2} 
-\listlen{1} 
-\end{teX}
-
-\medskip
-
-|\listlen{1,2,3,4,5}| \texttt{\listlen{1,2,3,4,5}}\\
-
-
-\listlen{} 
-\listlen{1,2} 
-\listlen{1} 
-\medskip
-
-You can copy one list into another using \cmd{listcopy}
-
-\begin{teX}
-\liststore{1,2,3}{temp}
-\listcopy{temp}{copiedlist}
-\copiedlisti;\copiedlistii;\copiedlistiii 
-\end{teX}
-
-{\obeylines\tt
-\liststore{1,2,3}{temp}
-\listcopy{temp}{copiedlist}
-\copiedlisti;\copiedlistii;\copiedlistiii 
-}
-
-
-You can get the sum of a list by using \cmd{listsum}
-
-
-\listsum{1,2,3,4,5}{\thelistsum}
-\thelistsum 
-\listsum{1,2,3,a,b,a,a}{\thelistsum}
-\thelistsum 
-\liststore{1,2,3,5,j,k,j}{temp}
-
-
-\listsum[liststored=true]{temp}{\thelistsum}
-\thelistsum 11+2j+k
-\listsum{a,b,c,d}{\thelistsum}
-\thelistsum
-
-
-An ingenious way of providing a consistent user interface with the |coolllist| commands is in the package \docpkg{cool}, by the same author. The code below is from the package and is used to define the display of a Fibonacci number:
-
-\begin{teX}
-$$\Fibonacci{n,x}  or~ \Fibonacci{n}$$
-$$\Fibonacci{n,x+1}  or~ \Fibonacci{n}$$
-$$\Multinomial{n_1, n_2, \ldots, n_m}$$
-\end{teX}
-
-$$\Fibonacci{n,x}  or~ \Fibonacci{n}$$
-$$\Fibonacci{n,x+1}  or~ \Fibonacci{n}$$
-$$\Multinomial{n_1, n_2, \ldots, n_m}$$
-
-
-
-Note the $\ldots$ are not lost!
-
-\begin{teX}
-% \begin{macro}{\Fibonacci}
-% Fibonacci number, |\Fibonacci{n}|, $\Fibonacci{n}$, and 
+\endinput
+Another use of this structure is the following: at the end of the job we can now close all auxiliary files at once, by defining,
 %
-% Fibonacci Polynomial, |\Fibonacci{n,x}|, $\Fibonacci{n,x}$
+%\begin{teX}
+%\def\CloseAuxFiles{
+%  \def\@elt##1{\CloseAuxFile{##1}}%
+%  \the\auxlist}
+%
+%\def\CloseAuxFile#1{closing file: #1. %
+%% plus other actions
+%}
+%\end{teX}
+%\def\CloseAuxFiles{
+%  \def\@elt##1{\CloseAuxFile{##1}}%
+%  \the\auxlist}
+%
+%\def\CloseAuxFile#1{closing file: #1. %
+%% plus other actions
+%}
+%
+%
+%\noindent which gives the output
+%
+%\texttt{> \CloseAuxFiles}
+%
+%\def\alist{}
+%\listadd{\alist}{Yiannis~}
+%\listadd{\alist}{Yianis~}
+%\listadd{\alist}{Ioannis~}
+%\listadd{\alist}{Giannis~}
+%\alist
+%
+%\makeatother
+%
+%\def\tempa{}
+%\numdef{\tempa}{(22+35)*45}
+%
+%\tempa
 
-\newcommand{\COOL@notation@FibonacciParen}{p}
-\newcommand{\Fibonacci}[1]{%
-\liststore{#1}{COOL@Fibonacci@arg@}%
-\listval{#1}{0}%
-\ifthenelse{\value{COOL@listpointer} = 1}%
-   {F_{#1}}
-   % ElseIf
-  {\ifthenelse{\value{COOL@listpointer} = 2}%
-      {F_{\COOL@Fibonacci@arg@i}%
-	\COOL@decide@paren{Fibonacci}{\COOL@Fibonacci@arg@ii}}%
-% Else
-   {\PackageError{cool}{Invalid Argument}%
-    {`Fibonacci' can only accept a 
-    comma separate list of length 1 or 2}}}%
-}
-\end{teX}
 
-\section*{Insertion and deletion}
+%
+%\section{String comparisons}
+%
+%A more general problem along the same lines is to
+%check if two words, or strings are the same. We can
+%use |\ifx| for this as well. When |\ifx| compares two
+%tokens that are macro names, the result is true if
+%the macros have been defined in the same way, and
+%if their first level replacement texts are the same.
+%So, we define two macros whose replacement texts
+%are the strings, and compare these.
+%
+%\numberLineAt{50}
+%\begin{teX}
+%\newif\ifsame
+%\newcommand{\strcomp}[2]{%
+% \samefalse
+% \begingroup
+%   \def\1{#1}\def\2{#2}%
+%   \ifx\1\2\endgroup True \sametrue
+%   \else False 
+% \endgroup
+%\fi}
+%\strcomp{Yiannis}{Yiannis}\\
+%\strcomp{Yiannis}{YIANNIS}\\
+%\end{teX}
+%
+%\newif\ifsame
+%\newcommand{\strcomp}[2]{%
+%\samefalse
+%\begingroup
+%\def\1{#1}\def\2{#2}%
+%\ifx\1\2\endgroup True \sametrue
+%\else False \endgroup
+%\fi}
+%
+%
+%\printf{\strcomp{Yiannis}{Yiannis}}
+%\printf{\strcomp{Yiannis}{YIANNIS}}
+%
+%
+%
+%\section{Lists}
+%
+%A list is simply a one dimensional array, normally delimited by commas:
+%
+%\begin{teX}
+%  \def\somelist(1,2,3,4,5,6,7,8)
+%\end{teX}
+%
+%In TeX you will probably better off defining it as:
+%
+%\begin{teX}
+%  \def\somelist{1,2,3,4,5,6,7,8}
+%\end{teX}
+%
+%The package \cmd{coolist} provides basic control sequences for manipulating such lists
+%
+% Lists are defined as a sequence of tokens separated by a comma.  The \texttt{coollist} package allows the user
+% to access certain elements of the list while neglecting others---essentially turning lists into a sort of
+% array. 
+%
+% List elements are accessed by specifying the position of the object within the list (the index of the item) and
+% all lists start indexing at |1|.
+%
+% 
+% \begin{tabular}{ll}
+% |\listval{1,2,3,4}{2}|                & \listval{1,2,3,4}{2} (the null string)        \\
+% |$\listval{\alpha,\beta,\gamma}{2}$|  & $\listval{\alpha,\beta,\gamma}{2}$            \\
+% |\listval{a,b,c}{4}|                  & \listval{a,b,c}{4} (the null string)
+% \end{tabular}
+%
+%The \pmac{coolist}{liststore} stores the length of the comma delimited list into the counter. It does so by creating variables with the same name as the argument.
+%
+%\begin{teX}
+%\liststore{1,2,3,4}{temp}
+%\tempi;\tempii;\tempiii;\tempiv 
+%\end{teX}
+%
+%produces 
+%
+%\liststore{1,2,3,4}{temp}
+%\tempi;\tempii;\tempiii;\tempiv 
+%
+%This can be used quite effectively to create a number of on the fly variables.
+%
+%The list can be numerical or alpha
+%
+%\begin{teX}
+%\liststore{alpha,beta}{temp}
+%\end{teX}
+%
+%
+%will produce
+%
+%\liststore{alpha,beta}{temp}
+%
+%\texttt{\medskip\tempi; \tempii \medskip }
+%
+%\section*{length of list}
+%
+%The length of the list can be obtained by using the \pmac{listcool}{listlen} or \pmac{listcool}{listlenstore}
+%
+%\begin{teX}
+%\listlen{1,2,3,4,5} 
+%\listlen{} 
+%\listlen{1,2} 
+%\listlen{1} 
+%\end{teX}
+%
+%\medskip
+%
+%|\listlen{1,2,3,4,5}| \texttt{\listlen{1,2,3,4,5}}\\
+%
+%
+%\listlen{} 
+%\listlen{1,2} 
+%\listlen{1} 
+%\medskip
+%
+%You can copy one list into another using \cmd{listcopy}
+%
+%\begin{teX}
+%\liststore{1,2,3}{temp}
+%\listcopy{temp}{copiedlist}
+%\copiedlisti;\copiedlistii;\copiedlistiii 
+%\end{teX}
+%
+%{\obeylines\tt
+%\liststore{1,2,3}{temp}
+%\listcopy{temp}{copiedlist}
+%\copiedlisti;\copiedlistii;\copiedlistiii 
+%}
+%
+%
+%You can get the sum of a list by using \cmd{listsum}
+%
+%
+%\listsum{1,2,3,4,5}{\thelistsum}
+%\thelistsum 
+%\listsum{1,2,3,a,b,a,a}{\thelistsum}
+%\thelistsum 
+%\liststore{1,2,3,5,j,k,j}{temp}
+%
+%
+%\listsum[liststored=true]{temp}{\thelistsum}
+%\thelistsum 11+2j+k
+%\listsum{a,b,c,d}{\thelistsum}
+%\thelistsum
+%
+%
+%An ingenious way of providing a consistent user interface with the |coolllist| commands is in the package \docpkg{cool}, by the same author. The code below is from the package and is used to define the display of a Fibonacci number:
+%
+%\begin{teX}
+%$$\Fibonacci{n,x}  or~ \Fibonacci{n}$$
+%$$\Fibonacci{n,x+1}  or~ \Fibonacci{n}$$
+%$$\Multinomial{n_1, n_2, \ldots, n_m}$$
+%\end{teX}
+%
+%$$\Fibonacci{n,x}  or~ \Fibonacci{n}$$
+%$$\Fibonacci{n,x+1}  or~ \Fibonacci{n}$$
+%$$\Multinomial{n_1, n_2, \ldots, n_m}$$
+%
+%
+%
+%Note the $\ldots$ are not lost!
+%
+%\begin{teX}
+%% \begin{macro}{\Fibonacci}
+%% Fibonacci number, |\Fibonacci{n}|, $\Fibonacci{n}$, and 
+%%
+%% Fibonacci Polynomial, |\Fibonacci{n,x}|, $\Fibonacci{n,x}$
+%
+%\newcommand{\COOL@notation@FibonacciParen}{p}
+%\newcommand{\Fibonacci}[1]{%
+%\liststore{#1}{COOL@Fibonacci@arg@}%
+%\listval{#1}{0}%
+%\ifthenelse{\value{COOL@listpointer} = 1}%
+%   {F_{#1}}
+%   % ElseIf
+%  {\ifthenelse{\value{COOL@listpointer} = 2}%
+%      {F_{\COOL@Fibonacci@arg@i}%
+%	\COOL@decide@paren{Fibonacci}{\COOL@Fibonacci@arg@ii}}%
+%% Else
+%   {\PackageError{cool}{Invalid Argument}%
+%    {`Fibonacci' can only accept a 
+%    comma separate list of length 1 or 2}}}%
+%}
+%\end{teX}
 
-The \texttt{coollist} package does not provide user commands for iterating through a list
-however, it is possible to do so using the |xfor| package and building a few extra commands. The first command is
-an \cmd{insertinto}.
-
-In the example below we show the usage of the command:
-\end{comment}

@@ -15,34 +15,59 @@
 
 
 
-\NeedsTeXFormat{LaTeX2e}[1994/12/01]%
-\RequirePackage[2014/05/01]{latexrelease}
-\ProvidesFile{phd-lowersections}[2015/1/13 v1.0 less preamble (YL)]%
+\NeedsTeXFormat{LaTeX2e}[2017/04/15]%
+\ProvidesFile{phd-lowersections}[2017/04/15 v1.0 less preamble (YL)]%
 \ExplSyntaxOn
 \let\ltxtoday\today
 \let\phd_hang_from:nn \@hangfrom
 \newif\if@ltxcompat \@ltxcompatfalse
 \ExplSyntaxOff
-\ExplSyntaxOn
-\cs_if_exist:cTF {tikzi}
-  {}
-  {
-    \newcommand\tikzi[1][after heading]
-    {
-   %\if@debug
-    \tikz[remember~picture,overlay]
-    \draw[<->] (0,0)--(0,.2)--++(-.5,0) node[left,fill=blue!15,text=black]%
-       {
-         \parbox{2cm}
-         {
-           {\sffamily
-            \footnotesize #1}
-         }
-       };%\space%
-   %\fi
-    }
-  }
-\ExplSyntaxOff
+
+
+\newif\if@DEBUG
+\@DEBUGfalse
+
+\def\DEBUGON{
+\@DEBUGtrue
+\if@DEBUG
+\def\tikzi[##1]{%
+    \begin{tikzpicture}[remember picture,overlay]
+                \draw[<->] (0,0)--(0,.2)--++(-.5,0) node[left,fill=blue!15,text=black]%
+                {
+                   \parbox{2cm}
+                    {
+                       {\sffamily
+                        \footnotesize ##1 }
+                    }
+                };
+   \end{tikzpicture}%
+}
+\else
+\def\tikzi[##1]{}
+\fi}
+
+\def\DEBUGOFF{
+\@DEBUGfalse
+\if@DEBUG
+\def\tikzi[##1]{%
+    \begin{tikzpicture}[remember picture,overlay]
+                \draw[<->] (0,0)--(0,.2)--++(-.5,0) node[left,fill=blue!5,text=black]%
+                {
+                   \parbox{2cm}
+                    {
+                       {\sffamily
+                        \footnotesize ##1 }
+                    }
+                };
+   \end{tikzpicture}%
+}
+\else
+\def\tikzi[##1]{}
+\fi
+}
+
+\DEBUGON
+
 \ExplSyntaxOn
 \def\lphdsubsectionnumberprefixtl {}
 \def\lphdsubsectionnumbersuffixtl {}
@@ -52,11 +77,64 @@
 \def\lphdparagraphnumbersuffixtl{}
 \def\lphdsubparagraphnumberprefixtl{}
 \def\lphdsubparagraphnumbersuffixtl{}
-\clist_new:N   \phd_book_divisions_clist
-\clist_gset:Nn \phd_book_divisions_clist
+\clist_new:N \phd_document_types_clist {}
+\tl_new:N \phd_document_type_tl {}
+\cs_new_nopar:Npn \phd_set_document_type:n #1
+  {
+    \tl_gset:Nn \phd_document_type_tl {#1}
+    %create secondary list as well here
+    \clist_gput_right:Nn \phd_document_types_clist {#1}
+    \clist_new:c {phd_#1_divisions_clist}
+  }
+\phd_set_document_type:n {book}
+\cs_new:Npn \phd_set_document_divisions #1 #2 {
+  \clist_gset:cn {phd_#1_divisions_clist} {#2}
+}
+
+\phd_set_document_divisions {book}
   {
     part,chapter,section,subsection,subsubsection,
     paragraph,subparagraph
+  }
+
+\phd_set_document_divisions {article}
+  {
+    section,subsection,subsubsection,
+    paragraph,subparagraph
+  }
+
+\phd_set_document_divisions {proc}
+  {
+    section,subsection,subsubsection,
+    paragraph,subparagraph
+  }
+
+\phd_set_document_divisions {journal}
+  {
+    volume,article,section,subsection,subsubsection,
+    paragraph,subparagraph
+  }
+\phd_set_document_divisions {bible}
+  {
+    testament,book,chapter,verse
+  }
+\cs_new:Npn \element_delimiter{.}
+\clist_new:N \thirdlist
+\cs_new:Npn \z_make_names #1 {
+   % append to third list
+   \clist_map_inline:Nn \phd_book_divisions_clist {
+     \clist_put_right:Nn \thirdlist{##1\element_delimiter#1}
+   }
+ }
+
+\clist_new:N   \phd_secondary_clist_names_clist
+\clist_gset:Nn \phd_secondary_clist_names_clist
+ {
+   label,label_before,number,title, title_before,number_before
+ }
+\clist_map_inline:Nn \phd_secondary_clist_names_clist
+  {
+     \z_make_names {#1}
   }
  \clist_new:N \phd_secondary_clist
  \clist_gset:Nn \phd_secondary_clist
@@ -127,7 +205,8 @@
   \cxset
     {
      #1~name/.store                = #1name,
-     #1~afterindent/.onoff         = afterindent@cx,
+     locale/en/#1~name/.store      = #1name,
+     #1~afterindent/.onoff         = #1_afterindent,
      #1~align/.textalign           = l_phd_#2_align_tl,
      #1~beforeskip/.store          = l_phd_#2_before_skip_tl,
      #1~afterskip/.store           = l_phd_#2_afterskip_tl,
@@ -135,14 +214,15 @@
      #1~font-size/.fontsize        = l_phd_#2_fontsize_tl,
      #1~font-weight/.fontweight    = l_phd_#2_fontweight_tl,
      #1~font-shape/.fontstyle      = l_phd_#2_fontshape_tl,
+     #1~font-style/.fontstyle      = l_phd_#2_fontshape_tl,
      #1~font-family/.fontfamily    = l_phd_#2_fontfamily_tl,
+     #1~font-face/.fontface        = l_phd_#2_fontface_tl,
      #1~case/.case                 = l_phd_#2_case_tl,
      #1~format/.format~in          = l_phd_#2_format_tl,
      #1~background-color/.store        = l_phd_#2_background_color_tl,
      #1~frame-color/.store             = l_phd_#2_frame_color_tl,
      #1~color/.colorin                 = l_phd_#2_color_tl,
      #1~shadow/.shadow                 = l_phd_#2_shadow_tl,
-
      #1~width/.store                   = l_phd_#2_width,
      #1~arc/.store                     = l_phd_#2_arc_tl,
      #1~grow~left/.store               = l_phd_#2_grow_left_dim,
@@ -170,7 +250,46 @@
      #1~margin-left-width/.store       = l_phd_#2_margin_left_width_dim,
    }
  }
+
 \ExplSyntaxOff
+
+\ExplSyntaxOn
+\cs_gset:Npn \make_new_bool:n #1
+  {
+    \bool_new:c {#1_open_left_bool}
+    \bool_gset_false:c {#1_open_left_bool}
+    \bool_new:c {#1_open_any_bool}
+    \bool_gset_false:c {#1_open_any_bool}
+    \bool_new:c {#1part_open_anywhere_bool}
+    \bool_gset_false:c {#1_open_anywhere_bool}
+    \bool_new:c {#1_open_right_bool}
+    \bool_gset_false:c {#1_open_right_bool}
+  }
+
+\make_new_bool:n {part}
+\make_new_bool:n {chapter}
+\make_new_bool:n {section}
+\ExplSyntaxOff
+\ExplSyntaxOn
+\cs_gset:Npn \make_new_opening_keys:n #1
+{
+ \cxset{
+    #1~opening/.is~choice,
+    #1~opening/right/.code      = \bool_gset_true:c {#1_open_right_bool},
+    #1~opening/left/.code       = \bool_gset_true:c {#1_open_left_bool},
+    #1~opening/any/.code        = \bool_gset_true:c {#1_open_any_bool},
+    #1~opening/none/.code       = \bool_gset_true:c {#1_open_anywhere_bool},
+    #1~opening/anywhere/.code   = \bool_gset_true:c {#1_open_anywhere_bool},
+    #1~opening/ifafter/.code={},
+ }
+}
+\make_new_opening_keys:n {part}
+\make_new_opening_keys:n {chapter}
+\make_new_opening_keys:n {section}
+\ExplSyntaxOff
+\cxset{part opening = anywhere,
+       chapter opening = anywhere,
+       section opening = none}
 \ExplSyntaxOn
 \cs_new:Npn \l_phd_make_new_numbering_keys:n #1
   {
@@ -260,19 +379,41 @@
        \WORDS@cx{\@arabic\cs:w c@#1\cs_end:\relax}
        \cs:w lphd#1numbersuffixtl \cs_end:
       },
+    #1~numbering/ordinals/.code            =
+    \cs_gset:cpn {the#1}
+      {
+       \cs:w lphd#1numberprefixtl \cs_end:
+       \ordinals@cx{\@arabic\cs:w c@#1\cs_end:\relax}
+       \cs:w lphd#1numbersuffixtl \cs_end:
+      },
+    #1~numbering/ORDINALS/.code            =
+    \cs_gset:cpn {the#1}
+      {
+       \cs:w lphd#1numberprefixtl \cs_end:
+       \ORDINALS@cx{\@arabic\cs:w c@#1\cs_end:\relax}
+       \cs:w lphd#1numbersuffixtl \cs_end:
+      },
    #1~numbering~custom/.code           =
     \cs_gset:cpn {the#1} {##1},
   }
  }
 \ExplSyntaxOff
 \ExplSyntaxOn
-
+\cs_gset:Npn\phd_setparent:nn #1#2 {%
+   \cs_gset:cpn {#1parent} {#2}
+}
+\phd_setparent:nn {document}{root}
+\phd_setparent:nn {part}{document}
+\phd_setparent:nn {chapter}{document}
+\phd_setparent:nn {section}{chapter}
+\phd_setparent:nn {subsection}{section}
+\phd_setparent:nn {subsubsection}{subsection}
+\phd_setparent:nn {paragraph}{subsubsection}
 \clist_map_inline:Nn \phd_book_divisions_clist
   {
     \l_phd_make_new_heading_keys:n{#1}{#1}
     \l_phd_make_new_numbering_keys:n{#1}
   }
-
 \clist_map_inline:Nn \phd_book_divisions_clist
   {  \wlog{#1, }
     \l_phd_make_new_heading_keys:n {#1~title}{#1_title}
@@ -286,7 +427,6 @@
   }
 
 \ExplSyntaxOff
-
 \ExplSyntaxOn
 \cs_new:Npn \l_phd_set_headings_key_defaults:n #1
   {
@@ -300,6 +440,7 @@
         #1~font-weight            = bold,
         #1~font-family            = sffamily,
         #1~font-shape             = upshape,
+        #1~font-style             = upshape,
         #1~case                   = upper,
         #1~color                  = black,
         #1~background-color       = bgsexy,
@@ -307,9 +448,9 @@
         #1~indent                 = 0pt,
         #1~beforeskip             = 10pt,
         #1~afterskip              = -3ex,
-        #1~afterindent            = off,
+        #1~afterindent/.onoff     = #1_afterindent,
         #1~arc                    = 0pt,
-        #1~afterindent            = off,
+
         #1~grow~left              = 0mm,
         #1~grow~right             = 0mm,
         #1~rounded~corners        = northeast,
@@ -345,6 +486,7 @@
     \l_phd_set_headings_key_defaults:n {#1~before}
     \l_phd_set_headings_key_defaults:n {#1~after}
   }
+
 \ExplSyntaxOff
 \ExplSyntaxOn
 \cxset
@@ -358,7 +500,7 @@
 \ExplSyntaxOn
 \cs_gset:Npn \set_font_aux:n #1
  {
-   \cs_if_exist_use:c { the_#1_fontface_tl}
+   %\cs_if_exist_use:c { #1_fontface_tl}
    \cs_if_exist_use:c { #1_fontfamily_tl }
    \cs_if_exist_use:c { #1_fontweight_tl }
    \cs_if_exist_use:c { #1_fontshape_tl  }
@@ -417,14 +559,13 @@
      }
   }
 \ExplSyntaxOff
-
 \ExplSyntaxOn
 \cs_set:Npn \format_hang:nn #1#2#3
-  {
+  {\par\leavevmode
     \phd_hang_from:nn
         {
          \set_font_aux:n {l_phd_#1}
-         \cs_if_exist_use:c {the_section_title_fontface_tl}
+         \cs_if_exist_use:c {the_#1_title_fontface_tl}
          \cs:w
           l_phd_#1_number_color_tl
           \cs_end:
@@ -440,11 +581,13 @@
           l_phd_#1_color_tl
           \cs_end:
           #3
+
         }
    { \interlinepenalty\@M
     \@@par }
     \par \nobreak
-    \skip_vertical:c {l_phd_#1_afterskip_tl}
+    %\skip_vertical:c {l_phd_#1_afterskip_tl}
+    \vskip10pt
     \phd_after_heading:
     \tex_ignorespaces:D
   }
@@ -471,7 +614,15 @@
          }
         }
         }
-     \begin{tcolorbox}[size=minimal,nobeforeafter,box~align=center]
+     \begin{tcolorbox}[enhanced,
+                      %title empty,
+                       size=minimal,
+                       nobeforeafter,box~align=center,
+                       title,title code={
+\path[draw=yellow,solid,decorate,line width=2mm,
+decoration={coil,aspect=0,segment length=10.1mm}]
+([xshift=1mm]title.west) -- ([xshift=-1mm]title.east);}
+                       ]
           \set_font_aux:n {l_phd_#1}
           \cs:w
           l_phd_#1_color_tl
@@ -488,32 +639,58 @@
 \ExplSyntaxOff
 \ExplSyntaxOn
 \bool_new:N \combo_if_bool \bool_gset_true:N \combo_if_bool
-\cs_set:Npn \format_block:nnnn #1#2#3#4
-  {
-    \bgroup
-    %\leftskip-1.25in
-    \set_borderline_aux:nn {#1}{}
-    \begin{tcolorbox}[enhanced,
-      width       = \textwidth-4pt, %\pdfpagewidth-4cm,
-      arc         = 10mm,
-      auto~outer~arc,
-      \cs_if_exist_use:cTF {l_phd_#1_shadow_tl}{}{},
-        colback           = \set_color_aux:nn {#1}{background},
-        colframe          = \set_color_aux:nn {#1}{frame},
-        toprule           = \set_borders_aux:nn {#1} {top},
-        rightrule         = \set_borders_aux:nn {#1} {right},
-        bottomrule        = \set_borders_aux:nn {#1} {bottom},
-        leftrule          = \set_borders_aux:nn {#1} {left},
-        %borderline~style,
-        rounded~corners=all,
-        drop~lifted~shadow=black,
-     ]
-     \bool_if:NTF \combo_if_bool
+\cs_set:Npn \label_number_box #1 {
+ \bool_if:NTF \combo_if_bool
      {
-       \phd_float_box:nnn {chapter_number} {}{
-         \tcbox{\cs:w #1name\cs_end:\space
-                \cs:w the#1\cs_end:}
-           }
+         \fboxsep=2pt
+         \fboxrule=1pt
+         %\phd_float_box:nnn {chapter_number} {}{
+                \tcbox[size=minimal,
+                nobeforeafter,
+                before = \vskip1sp,
+                colback=white]
+                {
+                   %\cs:w l_phd_#1_fontsize_tl\cs_end:
+                   \tcbox[size=minimal,
+                          nobeforeafter,
+                          colback= \cs:w l_phd_chapter_label_background_color_tl \cs_end:,
+                          valign=top,
+                          ]{
+                     \bgroup
+                     \cs_if_exist_use:c { the_#1_fontface_tl}
+                     \cs_if_exist_use:c {l_phd_#1_label_fontfamily_tl}
+                     \cs_if_exist_use:c {l_phd_ #1_label_fontweight_tl}
+                     \cs_if_exist_use:c {l_phd_#1_label_fontshape_tl}
+                     \cs_if_exist_use:c {l_phd_#1_label_fontsize_tl}
+
+                     %\l_phd_chapter_label_fontfamily_tl
+                     %\l_phd_chapter_label_fontshape_tl\space
+                     \cs:w l_phd_#1_label_color_tl\cs_end:
+
+                     \cs:w #1name\cs_end:\space
+
+                   \egroup}
+
+                   \tcbox[size=minimal,
+                          nobeforeafter, top=0pt,valign=top,
+                          colback=\cs:w
+                               l_phd_chapter_number_background_color_tl
+                          \cs_end:,
+                          ]{
+                     \bgroup
+
+                     \cs_if_exist_use:c { the_#1_number_fontface_tl    }
+                     \cs_if_exist_use:c {l_phd_#1_number_fontfamily_tl }
+                     \cs_if_exist_use:c {l_phd_#1_number_fontweight_tl }
+                     \cs_if_exist_use:c {l_phd_#1_number_fontshape_tl  }
+                     \cs_if_exist_use:c {l_phd_#1_number_fontsize_tl   }
+                     \cs:w l_phd_#1_number_color_tl\cs_end:
+                     \vphantom{\chaptername}
+                     \cs:w the#1\cs_end:\scan_stop:
+                     \egroup
+                    }
+              }
+           %}
     }
     {
      \phd_float_box:nnn {#1}{}
@@ -522,47 +699,101 @@
 
        }
     }
+}
+
+\cs_set:Npn \format_block:nnnn #1#2#3#4
+  {
+    \bgroup
+    %\leftskip-1.25in
+    \set_borderline_aux:nn {#1}{}
+    \noindent\begin{tcolorbox}[size=minimal,
+      width       = \textwidth-4pt, %\pdfpagewidth-4cm,
+      %arc         = 10mm,
+      %auto~outer~arc,
+      \cs_if_exist_use:cTF {l_phd_#1_shadow_tl}{}{},
+        colback           = white,  %bgsexy!5,%\set_color_aux:nn {#1}{background},FIXME THIS IS WROBG
+        colframe          = white, %\set_color_aux:nn {#1}{frame},
+        toprule           = \set_borders_aux:nn {#1} {top},
+        rightrule         = \set_borders_aux:nn {#1} {right},
+        bottomrule        = \set_borders_aux:nn {#1} {bottom},
+        leftrule          = 0pt,%\set_borders_aux:nn {#1} {left},
+        left~skip =0pt,
+        left=0pt,
+        boxsep=0pt,
+      %  borderline        = {5pt}{5pt}{blue,double,dashed,line~join=bevel},
+     %  borderline~north = {2pt}{-3pt}{dotted},
+     %  borderline~south = {2pt}{-3pt}{dotted},
+     %  borderline~east  = {2pt}{-3pt}{dotted},
+     %  borderline~west  = {2pt}{-3pt}{dotted},
+      % borderline~style,
+       % no~borderline,
+       % show~bounding~box,
+        halign = left,
+        valign = top,
+        %rounded~corners=all,
+        %drop~lifted~shadow=black,
+     ]
+
+    \label_number_box {#1}
    \phd_float_box:nnn {#1_title_before}{}{}
-   \phd_float_box:nnn {#1_title}{}{#4}
+
+  \phd_float_box:nnn {#1_title}{}{#4}
    \par
+   \vskip10pt %TODO
    \end{tcolorbox}
+   \vskip10pt
  \egroup
  \par\nobreak\nointerlineskip
 }
 \cs_set:Npn \phd_float_box:nnn #1 #2 #3
 {\set_borderline_aux:nn {#1}{}
+
   \begin{tcolorbox}
     [
-      size=minimal,no~shadow,
+      size=minimal,
+      width = \linewidth,
+      no~shadow,
       colback  = \cs:w l_phd_#1_background_color_tl \cs_end:,
       colframe = \cs:w l_phd_#1_frame_color_tl \cs_end:,
-      toprule  = .1pt,
+      toprule  = 0pt,
       borderline~style,
+      boxsep=0pt,
+      left~skip=0pt,
+      left=0pt,
+      right=0pt,
+      right~skip=0pt,
      ]
+
+    \set_font_aux:n {l_phd_#1}
     \cs:w l_phd_#1_align_tl \cs_end:
+    %in between box or title or author block
     \begin{tcolorbox}
       [
         %#1~outer,
         size=minimal,
         no~shadow,
-        colback = \cs:w l_phd_#1_background_color_tl \cs_end:,
-        colframe= \cs:w l_phd_#1_frame_color_tl \cs_end:,,
-        boxsep=10pt,
+        colback = white,%\cs:w l_phd_#1_background_color_tl \cs_end:,
+        colframe= white,%\cs:w l_phd_#1_frame_color_tl \cs_end:,,
+        boxsep=0pt,
+        top=0pt,
+        bottom=0pt,
+        left=0pt,
+        right=2pt,
         %drop~shadow,
-        width=0.7\textwidth,
+        %width=\linewidth,
         borderline~style,
        % halign = ,
        ]
        {   \language-1\relax
-
-      \set_font_aux:n {l_phd_#1}
-      \cs:w  l_phd_#1_color_tl       \cs_end:
+       %\RaggedRight
+      \set_font_aux:n {l_phd_#1_tl}
+      \cs:w  l_phd_#1_color_tl  \cs_end:
       \cs:w  l_phd_#1_align_tl  \cs_end:
-       {#3}\relax %
-
-      }
+       {\textsl{\textls{#3}}}\relax %
+       \vskip10pt
+       }
   \end{tcolorbox}
-   \par
+    \par
   \end{tcolorbox}
 }
 
@@ -570,7 +801,7 @@
 \ExplSyntaxOn
 \cs_set:Npn \format_display:nnnn #1 #2 #3 #4
 {
-  \cxset{#1~title~margin-top-width=30pt}
+  %\cxset{#1~title~margin-top-width=30pt}
   \format_block:nnnn {#1}{#2}{#3}{#4}
 }
  \ExplSyntaxOff
@@ -581,17 +812,18 @@
     \theparagraph #3}
    }
 \ExplSyntaxOff
+
 \ExplSyntaxOn
 \cs_new:Npn \format_part_traditional:nn #1 #2 #3
   {\par\leavevmode
    \group_begin:
     \centering
      \interlinepenalty \@M
-     \normalfont
+     \set_font_aux:n {l_phd_#1}
      \cs:w l_phd_#1_number_tl\cs_end:
      \set_font_aux:n {l_phd_#1_number}
      \ifnum \c@secnumdepth >-2\relax
-       \partname\nobreakspace\thepart
+       \csname #1name\endcsname\nobreakspace\csname the#1\endcsname
        \par
        \vskip 20\p@
      \fi
@@ -601,10 +833,45 @@
           #3
      \group_end:
      \par
+     \vskip20pt
    \group_end:
+
   }
 \ExplSyntaxOff
+\ExplSyntaxOn
+\cs_new:Npn \format_traditional:nn #1 #2 #3
+  {\par\leavevmode
+   \group_begin:
+    \centering
+     \interlinepenalty \@M
+     \set_font_aux:n {l_phd_#1}
+     \cs:w l_phd_#1_number_tl\cs_end:
 
+     \ifnum \c@secnumdepth >-2\relax
+       \set_font_aux:n {l_phd_#1_number}
+
+       \csname #1name\endcsname\nobreakspace\csname the#1\endcsname
+       {
+         \cxset{chapter~label~font-family=\ovidius}
+         \begin{tikzpicture}
+         \node (a) at (0,0) {\expandafter\csname#1name\endcsname};
+         \node (b) at (0,15pt) {\tiny \set_font_aux:n{l_phd_chapter_label} test};
+        \end{tikzpicture}
+       }
+       \par
+       \vskip 20\p@
+     \fi
+     \group_begin:
+       %\set_color:nn {#1}{color}
+       \set_font_aux:n {l_phd_#1 }
+          #3
+     \group_end:
+     \par
+     \vskip20pt
+   \group_end:
+
+  }
+\ExplSyntaxOff
 \ExplSyntaxOn
 \DeclareDocumentCommand \start_section:nnnnnnnnn {m m m m m m s o m}
   {
@@ -615,15 +882,29 @@
     \if_dim:w \l_tmpa_skip <\z@
       \skip_gset:Nn\l_tmpa_skip {-\l_tmpa_skip}
       \@afterindentfalse
+
     \fi:
+
+    \bool_if:cTF {#1_afterindent}{
+       \@afterindentfalse
+    }{\@afterindenttrue}
     \if@nobreak
-      \everypar{\tikzi[start\\sect]}
+      \everypar{\tikzi[start\\sect] \bool_if:cTF {#1_afterindent}{\tikzi[TRUE]}{\tikzi[falsy]}  }
     \else
       \addpenalty \@secpenalty
       \addvspace\l_tmpa_skip
     \fi
     \IfBooleanTF {#7}
-      {\@ssect {#3} {#4} {#5} {#6} {#9} }
+    % send to star section
+      {
+      % This is only for LaTeX Compatibility
+      % name is not send which is problematic as we cannot
+      % pick-up the properties
+      %
+         \gdef\currentsectionname{#1}
+         \@ssect {#3} {#4} {#5} {#6} {#9}
+
+      }
       {
         \IfValueTF {#8} {\@sect:  {#1} {#2} {#3} {#4} {#5} {#6} [{#8}] {#9} }
                         {\@sect:  {#1} {#2} {#3} {#4} {#5} {#6} [{#8}] {#9} }
@@ -675,17 +956,21 @@
     \str_case_x:nnTF {\cs:w l_phd_#1_format_tl \cs_end:}
       {
           { display      } {\format_display:nnnn { #1 } {  } {} { #2       }
-                             \xsect:n {3.5ex}   }
+                             \xsect:n {3.5ex}{}   }
           { block        } { \format_block:nnnn  {#1 } {  } {} { {#2}      }
-                             \xsect:n {3.5ex}
+                             \xsect:n {3.5ex}{#2}
                            }
-          { plain        } { \format_hang:nn    {#1} {  }   {#2}           }
+          { plain        } {
+                             \format_hang:nn    {#1} {  }   {#2}
+                             \xsect:n {3.5ex}{#2}
+                           }
           { hang         } { \format_hang:nn    { #1 } {  } {#2}           }
           { hanginmargin } {\format_hang_inmargin:nn {#1} {#2}             }
           { leftmargin   } {\format_hang_inmargin:nn {#1} {#2}             }
-          { inline       } {  \xsect:n {-3.5ex}                            }
+          { inline       } {  \xsect:n {-1ex}{#2}                        }
           { inmargin     } {\format_inmargin:nnn {#1} {} {#2}              }
-          { traditional  } {\format_part_traditional:nn {#1}{}{#2}         }
+          { traditional  } {\format_part_traditional:nn {#1}{}{#2} \xsect:n {5pt}{section} }
+          { paperback } {\format_traditional:nn {#1}{}{#2} \xsect:n {5pt}{section} }
       }
       {       }
 
@@ -705,29 +990,47 @@
 
 \ExplSyntaxOff
 \ExplSyntaxOn
-\cs_set:Npn \@ssect #1 #2 #3 #4 #5 {%
+\cs_set:Npn \@ssect #1 #2 #3 #4 #5 {
   \@tempskipa #3\relax
   \ifdim \@tempskipa>\z@
   \begingroup
-    #4{
-    \phd_hang_from:nn{\hskip #1}%
-    \interlinepenalty \@M (#5)\@@par}%
-    \endgroup
+    #4
+    {
+      \phd_hang_from:nn{\hskip #1}%
+      \interlinepenalty \@M
+
+      % do color
+
+      \cs:w l_phd_\currentsectionname _title_color_tl\cs_end:
+      %\pgfkeysvalueof{/phd/section~title~color}
+      \set_font_aux:n{l_phd_\currentsectionname _title}
+     % \pgfkeysvalueof{/phd/section~title~font-family}
+      %\MakeUppercase{#5}
+      #5
+      \@@par
+   }%
+  \endgroup
   \else
   \def\@svsechd{#4{\hskip #1\relax #5}}%
   \fi
-  \xsect:n{#3} %ONLY NEEDED FOR HANG PARA
+  \cxset{section~afterindent = true,
+         subsection~afterindent = true,
+         subsubsection~afterindent = true}
+  \xsect:n{#3}{#1} %ONLY NEEDED FOR HANG PARA
 }
+
 \ExplSyntaxOff
 
 \ExplSyntaxOn
-\cs_set:Npn \xsect:n #1
+\cs_set:Npn \xsect:n #1 #2
   {
   \l_tmpa_skip #1\relax
-  \if_dim:w \l_tmpa_skip>0pt %WATCH better boolean
+  \if_dim:w \l_tmpa_skip>-1pt %WATCH better boolean
     \par \nobreak
     \vskip\l_tmpa_skip
     \phd_after_heading:
+
+   % negative dimension
    \else:
     \@nobreakfalse
     \global\@noskipsectrue
@@ -737,8 +1040,10 @@
           {\setbox\z@\lastbox}
           \tex_clubpenalty:D\@M
           \group_begin:
-            \parindent0pt\tcbox[size=minimal,
+            \parindent0pt
+                   \tcbox[size=minimal,
                     nobeforeafter,
+                    colback=white,
                     box~align=base]{\bfseries \@svsechd }%}
           \group_end:
           \tex_unskip:D
@@ -746,7 +1051,7 @@
           \hskip -\l_tmpa_skip
         \else
           \tex_clubpenalty:D \@clubpenalty
-          \tex_everypar:D {\tikzi[every]}
+          \tex_everypar:D {\tikzi[every\bool_if:cTF {#2_afterindent}{#2~TRUE}{#2~FALSE//}]}
         \fi
       }
   \fi:
@@ -772,11 +1077,17 @@
           \if@afterindent
           \else
             {\setbox\z@\lastbox}%
-          \fi
+            \tikzi[afterheading\\
+                   clubpenalty\\
+                 = \the\clubpenalty]
+         \fi
        \else
        \clubpenalty \@clubpenalty %150
        \tex_everypar:D
          {
+           \tikzi[everypar in after heading cleared\\
+                  clubpenalty\\ \the\clubpenalty
+                 ]
          }
        \fi
     }
@@ -801,6 +1112,29 @@
 \cs_set:Npn \subparagraph_cntformat {\thesubparagraph\subparagraph_number_after_tl }
 \ExplSyntaxOff
 \ExplSyntaxOn
+\cs_gset:Npn \emptypagecontents{This~is~an~empty~page.}
+\ExplSyntaxOff
+
+\NewDocumentCommand\EmptyPageContents{ m }{
+\global\long\def\emptypagecontents {#1}
+}
+
+\EmptyPageContents{%
+  \vspace*{\fill}%
+  \begin{center}
+  \LARGE \lorem
+  \end{center}
+  \vspace{\fill}%
+  \thispagestyle{empty}
+}
+
+\long\def\cleardoublepage{\clearpage\if@twoside\ifodd\c@page\else
+  \hbox{}
+    \emptypagecontents\tikzi[In Clear Double Page, empty page]
+  \newpage
+  \if@twocolumn\hbox{}\newpage\fi\fi\fi}
+
+\ExplSyntaxOn
  \renewcommand\part {%
    \newpage\null
    \thispagestyle{empty}
@@ -819,9 +1153,49 @@
  }
 \ExplSyntaxOff
 \ExplSyntaxOn
+\cs_gset:Npn \phd_set_opening #1 {
+    \bool_if:cT {chapter_open_left_bool}  {
+       \cleartoevenpage\null
+       \global\@topnum\z@~
+       \tikzi[open~left]
+       \bool_gset_false:c {#1_open_right_bool}
+       \bool_gset_false:c {#1_open_any_bool}
+       \bool_gset_false:c {#1_open_anywhere_bool}
+       }
+    \bool_if:cT {#1_open_right_bool}
+      {
+        \cleardoublepage\null
+        \global\@topnum\z@~
+        \tikzi[open~right]
+        \bool_gset_false:c {#1_open_left_bool}
+        \bool_gset_false:c {#1_open_any_bool}
+        \bool_gset_false:c {#1_open_anywhere_bool}
+      }
+    \bool_if:cT {#1_open_any_bool}
+      {
+        \clearpage\null
+        \global\@topnum\z@~
+        \tikzi[open~any]
+        \bool_gset_false:c {#1_open_left_bool}
+        \bool_gset_false:c {#1_open_right_bool}
+        \bool_gset_false:c {#1_open_anywhere_bool}
+      }
+    \bool_if:cT {#1_open_anywhere_bool}
+      {
+        \global\@topnum\z@~
+        \tikzi[open~anywhere ]
+        \bool_gset_false:c {#1_open_left_bool}
+        \bool_gset_false:c {#1_open_right_bool}
+        \bool_gset_false:c {#1_open_any_bool}
+      }
+}
+\ExplSyntaxOff
+\ExplSyntaxOn
  \renewcommand\chapter {%
-   \newpage\null
-   \thispagestyle{empty}
+    \phd_set_opening{chapter}
+    \thispagestyle{empty}
+   %\newpage
+    %\bool_show:c {chapter_open_right_bool}
     \start_section:nnnnnnnnn{chapter}%
       {0}  %level check this conflicts with source2e
 
@@ -831,10 +1205,10 @@
 
       {\l_phd_chapter_afterskip_tl}% after skip#4
 
-      {
           %\expandafter\setfontparam@cx\l_phd_chapter_align_tl;%
           %\color{\l_phd_chapter_color_tl}%5
-      }
+{}
+
  }%
 
 
@@ -914,7 +1288,7 @@
 \ExplSyntaxOff
 \ExplSyntaxOn
 \if@ltxcompat
-\renewcommand\subparagraph{\@startsection{subparagraph}{5}{0pt}%
+   \renewcommand\subparagraph{\@startsection{subparagraph}{5}{0pt}%
                                        {2ex}%
                                        {-1em}%
                                       {\normalfont\normalsize\bfseries}}
@@ -938,7 +1312,7 @@
 \ExplSyntaxOff
 
 \cxset { section name              = Section,
-    section format                 = hang,
+    section format                 = traditional,
     section align                  = Centering,
     section title align            = Centering, %checked
     section font-size              = Large,
@@ -958,13 +1332,13 @@
     section number suffix          =,
     section numbering              = arabic,
     section indent                 = 0pt,
-    section beforeskip             = -3ex,
+    section beforeskip             = 3ex,
     section afterskip              = 1.5ex \@plus .1ex,
-    section afterindent            = off,
+    section afterindent            = on,
     section number after           = \quad,
     section arc                    = 3pt,
     section background-color       = white,
-    section afterindent            = off,
+    %section afterindent            = off,
     section grow left              = 0mm,
     section grow right             = 0mm,
     section rounded corners        = northeast,
@@ -976,8 +1350,8 @@
     section padding-right-width    = 10pt,
     section padding-top-width      = 2pt,
     section padding-bottom-width   = 2pt,
-    section title margin-top-width       = 2pt,
-    section title color            = spot,
+    section title margin-top-width = 2pt,
+    section title color            = thesectiontitlecolor,
     section shadow                 = no shadow,
   }
 \cxset
@@ -996,7 +1370,7 @@
     subsection title font-weight      = bfseries,
     subsection title font-family      = sffamily,
     subsection title font-shape       = upshape,
-    subsection title color            = spot,
+    subsection title color            = bgsexy,
     subsection color                  = bgsexy,
     subsection numbering              = arabic,
     subsection align                  = Centering, %checked
@@ -1021,7 +1395,8 @@
   {
     subsubsection name                    = Subsubsection,
     subsubsection format                  = hang,
-    subsubsection background-color        = white!30, %checked
+    subsubsection background-color        = white, %checked
+    subsubsection afterindent             = off,
     subsubsection font-family             = rmfamily,
     subsubsection font-size               = large,
     subsubsection font-weight             = bfseries,
@@ -1032,7 +1407,7 @@
     subsubsection font-weight             = bfseries,
     subsubsection font-family             = tiresias,
     subsubsection font-shape              = upshape,
-    subsubsection color                   = bgsexy,
+    subsubsection color                   = black,
     subsubsection number prefix           = \thesubsection,
     subsubsection number suffix           = ,
     subsubsection numbering               = arabic,
@@ -1054,8 +1429,8 @@
     subsubsection title font-size         = large,
     subsubsection title font-weight       = bfseries,
     subsubsection title font-family       = serif,
-    subsubsection title font-shape        = upshape,
-    subsubsection title color             = spot,
+    subsubsection title font-shape        = itshape,
+    subsubsection title color             = thesubsectiontitlecolor,
   }
 \cxset
   {
@@ -1076,6 +1451,7 @@
     paragraph color               = bgsexy,
     paragraph background-color    = white,
     paragraph shadow              = no shadow,
+    paragraph afterindent         = off
   }
 \cxset
   {
@@ -1094,7 +1470,7 @@
     subparagraph afterskip        = -1em,
     subparagraph indent           = 0pt,
     subparagraph number after     = ,
-    subparagraph shadow           = off,
+    %subparagraph shadow           = off,
   }
 \cxset{chapter title style/.style= {
        chapter title align = left,}
@@ -1115,6 +1491,9 @@
    }
  }
  \cxset{subsubsection title style= raggedright}
+\newcommand{\preface}[1][\prefacename]{\chapter*{#1}\markboth{#1}{#1}}
+\newcommand{\foreword}[1][\forewordname]{\chapter*{#1}\markboth{#1}{#1}}
+\newcommand{\extrachap}[1]{\chapter*{#1}\markboth{#1}{#1}}
 \ExplSyntaxOn
 \cs_set:Npn \testsections
   {
@@ -1147,7 +1526,7 @@
     image/.store~in          = \image@cx,
     texti/.store~in          = \texti@cx,
     textii/.store~in         = \textii@cx,
-    chapter~beforeskip       = -1sp,
+    chapter~beforeskip       = 1sp,
     chapter~afterskip        = 1sp,
   }
 }
@@ -1365,7 +1744,6 @@
 \cxset{image         = ./chapters/genetics-dogs,
        image caption = Genetics,
        textiii       = \lorem}
-
 \ExplSyntaxOn
 \newcommand\genetics[1]{%
   %    \end{macrocode}
@@ -1417,7 +1795,7 @@
 \cxset{fashion image/.code           = \gdef\fashionimage@cx{#1}}
 \cxset{fashion image                 = shock.jpg}
 \cxset{subtitle font-color/.store in = \subtitlefontcolor@cx}
-\cxset{subtitle font-color           = black!45}
+\cxset{subtitle font-color           = black!95}
 
 \def\imagewidth@cx{5cm}
 \def\fashionnumberbg@cx{gray!30}
@@ -1444,55 +1822,53 @@
 \ExplSyntaxOn
 \DeclareDocumentCommand \fashion {m m} {%
 \begin{tikzpicture}
-
 \if@debug
-  \draw [help~lines,color=thelightgray] (0,-1) grid (16,-13);
-  \draw[fill=red]  (0,0) circle (1.5pt) ;
-  \draw[fill=red]  (0,-3) circle (1.5pt) ;
+  \draw [help~lines,color=black!10] (0,-1) grid (16,-18);
+  %\draw[fill=red]  (0,0) circle (1.5pt) ;
+  %\draw[fill=red]  (0,-3) circle (1.5pt) ;
 \else
 \fi
-\node[fashion, right, baseline] (x) at (0,1) {\LARGE\color{black!30}{before}\relax};
-\draw[fill=red]  (0,1) circle (1.5pt) ;
+\node[fashion, right, baseline] (x) at (0,1) {\LARGE\color{black!30}{}\relax};
 \node[fashion, right=1sp] at (0,0)
   {
-    \LARGE\color{black!20} \so\chaptername\relax
+    %\LARGE\color{black!20} \so\chaptername\relax
   };
 
 \node[rectangle,draw,
-      color=black!35,
+      color=thechaptercolor,
       below~left, drop~shadow,
-      fill=\fashionnumberbg@cx,
+      fill= thechaptercolor, %\fashionnumberbg@cx,
       text=white,
-      rounded~corners] at +(15,-0.5) {\HHUGE\sffamily\bfseries \thechapter};
+      %rounded~corners
+      ] at +(15,-0.5) {\HHUGE\sffamily\bfseries \color{white}\thechapter};
 
 \node[fashion, text~width=9cm,below~right, yshift=-1pt] at (0,-3) {%
         {\sffamily\RaggedRight\language-1
-        \Huge\bfseries\color{black}#2\par}
+        \Huge\bfseries\color{thechaptercolor}#2\par}
          \bigskip
          \Large%
          \centering
          \color{\subtitlefontcolor@cx}%
-         \RaggedRight
+         %\RaggedRight
         \storyi\par};
-        \IfFileExists{\fashionimage@cx}%
+        \IfFileExists{./images/\fashionimage@cx}%
            {\node[below~left,
                   outer~sep=0pt,
                   inner~sep=0pt,
                   drop~shadow = {
                   shadow~scale=1.0,
-                  shadow~xshift=10pt,
+                  shadow~xshift=50pt,
                   shadow~yshift=-10pt,
-                  fill=thelightgray!50,
+                  fill=white,%thelightgray!50,
                   opacity=0.2},
-                  rounded~corners
-                  ] at (12.5,-9) {\includegraphics[width=\imagewidth@cx]{\fashionimage@cx}};}%
-           {\node at (12.5,-9) {\includegraphics[width=5cm]{hypatia}};}%
+                  rounded~corners,yshift=2cm,
+                  ] at (14.5,-9) {\includegraphics[width=\imagewidth@cx]{\fashionimage@cx}};}%
+           {\node at (12.5,-10.5) {\includegraphics[width=5cm]{./images/venus}};}%
 \end{tikzpicture}
 \expandafter\vskip\cs:w l_phd_chapter_afterskip_tl \cs_end:
 \par\phd_after_heading:
 }
 \ExplSyntaxOff
-
 \endinput
 %%
 %% End of file `phd-lowersections.sty'.

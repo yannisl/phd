@@ -145,21 +145,25 @@ See http://www.latex-project.org/lppl.txt
 
 %\listfiles
 %gdef\@onlypreamble{} % TO BE REMOVED NEEDED FOR TUTS
+\NeedsTeXFormat{LaTeX2e}[2017/04/15]%
+\RequirePackage[2017/04/15]{latexrelease}
 \documentclass[oneside,11pt,a4paper]{ltxdoc}
 \usepackage[bottom=2cm]{geometry}
 \savegeometry{std}
 % \usepackage[style=mla]{biblatex}
-\usepackage[unicodemath=on]{phd}
+\usepackage{microtype}
+\usepackage{phd}
 \usepackage{phd-lowersections}
 \usepackage{phd-runningheads}
 \usepackage{phd-documentation}
+\usepackage{phd-toc}
 \pagestyle{headings}
 
 
 \sethyperref
 
 \addbibresource{phd.bib}% Syntax f
-\cxset{palette bbc}
+\cxset{palette unorange}
 \begin{filecontents}{defaults-chapters}
 %%    General Defaults for Chapters
 \cxset{%    
@@ -233,11 +237,16 @@ See http://www.latex-project.org/lppl.txt
        part background-color=spot,
        part beforeskip                = -3cm,
        part afterskip                 = 30pt,
+       subsection afterindent=off,
+       section format=hang,
        }
-\usepackage{makeidx}       
+       
 \makeindex
-\usepackage{minted}
+\usepackage[cache=false]{minted} 
+\usemintedstyle[latex]{borland}  
 \begin{document}
+\DEBUGOFF
+\overfullrule0pt
 \parindent1em
 \coverpage{monkey}{Book Design Monographs}{Camel Press}{INDEXING}{AND DOCUMENTATION} 
 \pagestyle{empty}
@@ -253,7 +262,8 @@ See http://www.latex-project.org/lppl.txt
 \parskip0pt plus.1ex minus.1ex
 \mainmatter
 \pagenumbering{arabic}
-\pagestyle{headings}        
+\pagestyle{headings} 
+\input{./sections/docmacros}       
 %       
 %\input{./sections/tikz}
 %\input{./mep/claim}  
@@ -278,8 +288,8 @@ See http://www.latex-project.org/lppl.txt
 %\@debugtrue
 
 \makeatother
-\input{./sections/indices}
-\input{./sections/unicodemath}
+%\input{./sections/indices}
+%\input{./sections/unicodemath}
 \DocInput{\jobname.dtx}
 \nocite{*}
 \printbibliography
@@ -287,6 +297,7 @@ See http://www.latex-project.org/lppl.txt
 \printindex 
  %
 % 
+\def\contentsname{Contents}
 \end{document}
 %</driver>
 % \fi
@@ -364,7 +375,7 @@ See http://www.latex-project.org/lppl.txt
 % 
 % For the normal author there are both mark-up related macros, as well as a set
 % of settings for indices.
-% 
+
 % My main motivation for developing this package was to group all the special
 % documentation macros that I have used in developing the phd package. I also saw
 % the need to hook up these settings with the concept of color palettes as 
@@ -416,14 +427,6 @@ See http://www.latex-project.org/lppl.txt
 %  some minor modifications, for example use an italic shape for the font of the mark, but an 
 %  upright font for the page numbers. 
 %
-%\begin{minted}[gobble=1,fontsize=\footnotesize]{TeX}
-%\cxset
-%   {
-%     chapter number color          = thechapternumbercolor,
-%     section title font-size       = Large,
-%   }
-%}  
-% \end{minted}
 %
 % We follow the idea of representing the basic elements of documents
 % as elements, each one having a parent in order to specify
@@ -477,23 +480,23 @@ See http://www.latex-project.org/lppl.txt
 %  
 % \section{Preliminaries}
 %
-% We declare that we use \latexe and name the package. Note we are overriding some
-% of the latest \latexe releases, as they conflict with the \pkgname{morewrites},
-% which we need in order to by-pass some of the restrictions on number of files.
+% We declare that we use \latexe and name the package. The code has been
+% moved to the latest version of \latexe to take advantage of more allocations.
+% Package works well with LuaLaTeX.\tcbdocmarginnote{7/8/2017}
 %
 %    \begin{macrocode}
-\NeedsTeXFormat{LaTeX2e}[1994/12/01]%
-\RequirePackage[2014/05/01]{latexrelease}
-\ProvidesFile{phd-documentation}[2015/1/13 v1.0 less preamble (YL)]%
+\NeedsTeXFormat{LaTeX2e}[2017/04/15]%
+\RequirePackage[2017/04/15]{latexrelease}
+\ProvidesFile{phd-documentation}[2017/04/15 v1.0 less preamble (YL)]%
 %    \end{macrocode}
 %
-% We also need the \pkgname{refcount}. 
+% We also need the \pkg{refcount}. 
 %
 % \section{tcolorbox}
-% We load \pkgname{tcolorbox} with options theorems, skins, documentation etc
+% We load \pkgname{tcolorbox} (\footfullcite(tcolorbox)) with options theorems, skins, documentation etc
 % for internal and external use.
 %
-% We also provide an interface, between the \pkgname{tcolorbox} documentation
+% We also provide an interface, between the \pkg{tcolorbox} documentation
 % keys and our own.
 % 
 % The indexing keys are still to be sorted out with other sections of the
@@ -550,9 +553,10 @@ boxrule=0pt,toprule=0pt,colframe=white}
        escapeinside={{(*@}{@*)}}, 
        numbers=left, 
        gobble=0,
-       stepnumber=1,numbersep=5pt, 
+       stepnumber=1,
+       numbersep=5pt, 
        numberstyle={\footnotesize\color{gray}},
-       firstnumber=last,
+      % firstnumber=last,
        breaklines=false,
        framesep=5pt,
        basicstyle=\small\ttfamily,
@@ -582,14 +586,14 @@ boxrule=0pt,toprule=0pt,colframe=white}
       basicstyle=\verbatimfamily,
       showstringspaces=false,
       keywordstyle=\verbatimfamily,
-      stringstyle={\color{gray!90}\footnotesize},
-	    commentstyle={\color{gray!90}\footnotesize},
-	    rulecolor=\color{theshade},
+      stringstyle={\color{gray!90}},
+	   commentstyle={\color{gray!90}},
+	   rulecolor=\color{theshade},
       breakatwhitespace=true,
-	    xleftmargin=15pt,
-	    xrightmargin=5pt,
-	    aboveskip=\medskipamount,
-	    belowskip=\medskipamount,
+	   xleftmargin=15pt,
+	   xrightmargin=5pt,
+	   aboveskip=\medskipamount,
+	   belowskip=\medskipamount,
       backgroundcolor=\color{white}, #1
 }}
 {}
@@ -599,9 +603,9 @@ boxrule=0pt,toprule=0pt,colframe=white}
   {\lstset{language=[LaTeX]TeX}\lstset{%
       breaklines=true,
       framesep=5pt,
-      basicstyle=\small\ttfamily,
+      basicstyle=\verbatimfamily,
       showstringspaces=false,
-      keywordstyle=\ttfamily\color{blue},
+      keywordstyle=\verbatimfamily,
       stringstyle=\color{maroon},
 	  commentstyle=\color{black},
 	  rulecolor=\color{gray!10},
@@ -610,12 +614,17 @@ boxrule=0pt,toprule=0pt,colframe=white}
 	  xrightmargin=5pt,
 	  aboveskip=\medskipamount,
 	  belowskip=\medskipamount,
-      backgroundcolor=\color{gray!10}, #1
+      backgroundcolor=\color{white}, #1
 }}
 {}
 %    \end{macrocode}
 
-% {continuelinenumber} 
+% \begin{docCommand}{continuelinenumber}{}
+%   Continues code numbers from previous block
+% \end{docCommand} 
+%    \begin{macrocode}
+\newcommand\continuelinenumber{\lstset{firstnumber=last}}
+%    \end{macrocode}
 % {startnumberat} 
 %  The macro \cs{continueLineNumber}, provides a command
 %  to start the next block of code with the code numbers continuing.
@@ -623,7 +632,6 @@ boxrule=0pt,toprule=0pt,colframe=white}
 %  
 %    \begin{macrocode}
 % Always I forget this so I created some aliases
-\newcommand\continuelinenumber{\lstset{firstnumber=last}}
 \newcommand\startlineat[1]{\lstset{firstnumber=#1}}
 \let\numberlineat\startlineat
 \let\startnumberat\numberlineat
@@ -632,40 +640,51 @@ boxrule=0pt,toprule=0pt,colframe=white}
 % 
 %
 %    \begin{macrocode}
-\newcommand\emphasis[2][black!80]{\lstset{emph={write, writeln,#2},escapeinside={(*@}{@*)},
-   emphstyle={\verbatimfont\bfseries\textcolor{#1}}}}%changed to textbf
+\newcommand\emphasis[2][black!80]{%
+   \lstset{%
+     emph={write, writeln,#2},
+     escapeinside={(*@}{@*)},
+     emphstyle={\verbatimfont%
+                \bfseries%
+                \textcolor{#1}%
+                },
+   }%
+}%changed to textbf
       
    
 \lstnewenvironment{teXXX}[1][]
   {\lstset{language=[LaTeX]TeX}%
     \lstset{%
       emph={cs, use,new,seq,map,inline,eq,gincr,incr,IfNoValueF,if,If,exist,protect,nopar,gset,%
-      set,undefine,define,add,gadd,remove,div,%
+      set,undefine,define,add,gadd,remove,div,newcounter%
       round,truncate,max,min,mod,gzero,int,%
       zero,newcount,protected,msg,error,DeclareDocumentCommand},
-      emphstyle=\verbatimfont\bfseries\color{black!80},
+      emphstyle=\ttfamily\color{theemphasiscolor},
       firstnumber=last,
       stepnumber=1,
       escapeinside={{(*@}{@*)}},
-      breaklines=false,
+      breaklines=true,
       framesep=5pt,
-      basicstyle= \verbatimfont,
+      basicstyle= \ttfamily,
       showstringspaces=false,
-      keywordstyle=\color{thegreen},
+      keywordstyle=\ttfamily\color{blue},%\color{primary},
       stringstyle=\color{black!50},
-      commentstyle=\color{black!50},
-	    rulecolor=\color{gray!10},
+      commentstyle=\color{black!70},
+	   rulecolor=\color{gray!10},
       breakatwhitespace=true,
+      prebreak={\Righttorque},
+      postbreak={\space\Lefttorque},
       showspaces=false,  % shows spacing symbol
+      upquote=true,
 	   %xleftmargin=0pt,
 	   %xrightmargin=5pt,
-	xleftmargin=15pt,
-	xrightmargin=5pt,
+	   xleftmargin=15pt,
+	   xrightmargin=5pt,
 	 %  aboveskip=0pt, % compact the code looks ugly in type
 	  % belowskip=0pt,  % user responsible to insert any skips
-	 aboveskip=\medskipamount,
-	 belowskip=\medskipamount,
-       backgroundcolor=,
+	   aboveskip=\medskipamount,
+	   belowskip=\medskipamount,
+      backgroundcolor=,
        #1
 }}
 {}
@@ -683,16 +702,16 @@ boxrule=0pt,toprule=0pt,colframe=white}
       escapeinside={{(*@}{@*)}},
       breaklines=false,
       framesep=5pt,
-      basicstyle= \verbatimfont,
+      basicstyle= {\small\ttfamily},
       showstringspaces=false,
-      keywordstyle=\color{thegreen},
+      keywordstyle=\ttfamily\color{thekeywordstyle},
       stringstyle=\color{black!50},
       commentstyle=\color{black!50},
-	  rulecolor=\color{gray!10},
+	   rulecolor=\color{gray!10},
       breakatwhitespace=true,
       showspaces=false,  % shows spacing symbol
-	  xleftmargin=15pt,
-	  xrightmargin=5pt,
+	   xleftmargin=15pt,
+	   xrightmargin=5pt,
 	 %  aboveskip=0pt, % compact the code looks ugly in type
 	  % belowskip=0pt,  % user responsible to insert any skips
 	  aboveskip=\medskipamount,
@@ -725,7 +744,7 @@ boxrule=0pt,toprule=0pt,colframe=white}
 %    \end{macrocode}
 % \section{LaTeX code demo environments}
 %
-%	To demonstrate LaTeX code it is sometimes desirable to have the code
+%	To demonstrate \latex code it is sometimes desirable to have the code
 %	be executed. This was pioneered in a number of packages. One of
 %	the better packages to do so is \pkg{tcolorbox}. We use it to define
 %	a special environment.
@@ -758,6 +777,7 @@ boxrule=0pt,toprule=0pt,colframe=white}
 %	
 %    \begin{macrocode}
 %\tcbset{listing utf8=latin1}% optional; ’latin1’ is the default.
+\def\dcircle#1{\ding{\numexpr181 + #1\relax}}
 \def\thetexexp{\@arabic\c@section.\arabic{texexp}}
 %    \end{macrocode}
 %    \begin{macrocode}    
@@ -768,6 +788,7 @@ boxrule=0pt,toprule=0pt,colframe=white}
     coltitle=black,
     colback = thecodebackground,% background
     colframe=thecodebackground, 
+   % process code={\def\dcircle##1{\ding{\numexpr181 + ##1}}},
       %colupper=spot!,
    },
    listing options = {%
@@ -776,7 +797,7 @@ boxrule=0pt,toprule=0pt,colframe=white}
      escapeinside={(*@}{@*)},%
      breaklines=true,%
      backgroundcolor=\color{thecodebackground},%
-     firstnumber=last,%
+     %firstnumber=last,%
      stepnumber=1,%
      upquote=true,%
      alsoletter={_,:},%
@@ -790,7 +811,7 @@ boxrule=0pt,toprule=0pt,colframe=white}
             DeclareDocumentCommand,%
             NewDocumentCommand,%
             RenewDocumentCommand,includegraphics,
-            function,local,return
+            function,local,return,break,
          },%
            %
           % For LaTeX3 we need to add these, note % is important
@@ -827,7 +848,7 @@ boxrule=0pt,toprule=0pt,colframe=white}
           DeclareInstance,UseInstance,AssignTemplateKeys%
           keys_set,keys_define,%      
           },%
-     emphstyle=\verbatimfont\bfseries\color{black!80},%
+     emphstyle=\verbatimfont\bfseries\color{theemphasiscolor},%
           %
    },%close listings options
       % added for better control
@@ -837,6 +858,83 @@ boxrule=0pt,toprule=0pt,colframe=white}
      \pgfkeysalso{texexp, enhanced, breakable, title={Example \thetexexp\ #1}%
  },
 }
+
+\def\emphasize#1{%
+\tcbset{texexp/.style={% 
+    fonttitle=\small\ttfamily, 
+    fontupper=\small, 
+    fontlower=\small,
+    coltitle=black,
+    colback = thecodebackground,% background
+    colframe=thecodebackground, 
+    %process code={\def\dcircle##1{\ding{\numexpr181 + ##1}}},
+      %colupper=spot!,
+   },
+   listing options = {%
+     keywordstyle=\color{thekeywordstyle},
+     belowskip=0pt, 
+     escapeinside={(*@}{@*)},%
+     breaklines=true,%
+     backgroundcolor=\color{thecodebackground},%
+     %firstnumber=last,%
+     stepnumber=1,%
+     upquote=true,%
+     alsoletter={_,:},%
+     commentstyle=\color{thecommentstyle},%
+     emph={cs,new,seq,map,inline,eq,gincr,incr,IfNoValueF,if,%
+            If,exist,protect,nopar,gset,%
+            set,undefine,define,add,gadd,remove,div,%
+            round,truncate,max,min,mod,gzero,int,exp,put,left,args,%
+            zero,newcount,protected,msg,error,%
+            eval,to,arabic,alph,Alph,roman,Roman,dim%
+            DeclareDocumentCommand,%
+            NewDocumentCommand,%
+            RenewDocumentCommand,includegraphics,
+            function,local,return,#1,
+         },%
+           %
+          % For LaTeX3 we need to add these, note % is important
+          % dn’t miss, at the end...
+     moretexcs    = {DeclareDocumentCommand,IfBooleanTF,tex_def:D,%
+          cs_new:Nn,cs_new:Npn,cs_new:cn,cs_set_nopar:Npn,token_to_meaning:N,%
+          %primitives
+          cs:w,cs_end:,tex_underline,group_begin:, group_end:,%
+          %coffins
+          NewCoffin,JoinCoffins,SetHorizontalCoffin,TypesetCoffin,%
+          %properties
+          prop_new:N,prop_new:c,prop_put:Nnn,%
+          %boolean
+          bool_new:N,bool_set_true:N,bool_set_false:N,%
+          bool_if:NTF,%
+          hbox_to_wd:nn,%
+          IfNoValueTF,%
+          %token lists
+          tl_new:N,tl_set:Nn,tl_concat:NNN,%
+          token_to_meaning:N,%
+          seq_pop_left:NN,%
+          %
+          %int
+          int_if_exist:cT,int_use:c,int_new:c,int_new:N,int_eval:n,%
+          int_add,int_use,int_to_roman,%
+          %boxes
+          box_new:c,hbox_set:cn,box_use:c,vbox_set:cn,box_move_down:nn,%
+          %string
+          str_if_eq_x:nnTF,%
+          tl_tail:n,%
+          DeclareObjectType,%
+          DeclareTemplateInterface,%
+          DeclareTemplateCode,%
+          DeclareInstance,UseInstance,AssignTemplateKeys%
+          keys_set,keys_define,%      
+          },%
+     emphstyle=\verbatimfont\bfseries\color{theemphasiscolor},%
+          %
+   },%close listings options
+      % added for better control
+      arc=0pt,  
+      outer arc=0pt,
+  }%close style
+}%close command
 %
 \newenvironment{texexp}[1]{\tcblisting{texexp,#1}}{\endtcblisting}
 
@@ -850,7 +948,9 @@ boxrule=0pt,toprule=0pt,colframe=white}
 %    \end{docEnvironment}
 %    \begin{macrocode}
 \newenvironment{texexample}[3][]{\noindent\tcblisting{example1={#2}{#3},#1}}%
-    {\endtcblisting}
+    {\endtcblisting }
+\newenvironment{texcode}[3][listing only]{\noindent\tcblisting{example1={#2}{#3},#1}}%
+    {\endtcblisting }    
 %    
 % Need to fix
 \let\luaexample\texexample        
@@ -898,7 +998,7 @@ boxrule=0pt,toprule=0pt,colframe=white}
 % The following demonstrates the usage.
 %
 % 	\begin{texexample}[]{atest}{This is a comment?}
-%	  \def\demomacro{Hello World!}
+	  \def\demomacro{Hello World!}
 %	\end{texexample}
 %
 % 	\begin{example}{A Test}{test}{This is a comment?}
@@ -917,13 +1017,15 @@ boxrule=0pt,toprule=0pt,colframe=white}
   }
 \ExplSyntaxOff  
 %    \end{macrocode}
+%
 % \section{Refcount}
+%
 %References are not numbers, however they often store numerical data
 %such as section or page numbers. \cs{ref} or \cs{pageref} cannot be used for
 %counter assignments or calculations because they are not expandable, generate
 %warnings, or can even be links. The package provides expandable macros
-%to extract the data from references. Packages \pkgname{hyperref}, \pkgname{nameref}\footcite{nameref}, 
-% \pkgname{titleref}, and
+%to extract the data from references. Packages \pkgname{hyperref}, \pkgname{nameref}\footfullcite{nameref}, 
+% \pkgname{titleref}\footfullcite{}, and
 % \pkgname{babel} are supported.
 %    \begin{macrocode}  
 \RequirePackage{refcount}[2011/10/16]
@@ -956,9 +1058,8 @@ boxrule=0pt,toprule=0pt,colframe=white}
 % \end{docCmd}
 %
 %    \begin{macrocode}
-\ExplSyntaxOn
 \DeclareRobustCommand\phdcs[1]{\texttt{\char`\\\detokenize{#1}}}
-
+\ExplSyntaxOn
 \let\phd@doc@org@meta\meta%
 
 \cs_set:Npn \meta#1{{\rmfamily\phd@doc@org@meta{#1}}}
@@ -1031,11 +1132,14 @@ boxrule=0pt,toprule=0pt,colframe=white}
 }
 %    \end{macrocode}
 %
+% \section{Index settings}
+%
 %  We consider indices to be composed of three elements, the index heading 
 %  i.e., the word Index typeset in a specific language, the entries and the
 %  page numbers. The following keys relate to settings that must have a 
 %  one to one relationship with the settings of the |.ist| file. Unfortunately
-%  there is no easy way to achieve this.
+%  there is no easy way to achieve this. A better strategy is togenerate the \docextension{.ist} file 
+%  automatically by writing the parameters to a file.\tcbdocmarginnote{16/08/2017}
 %
 %    \begin{macrocode}
 \cxset{    
@@ -1112,15 +1216,20 @@ boxrule=0pt,toprule=0pt,colframe=white}
 %  \cxset{docexample,#1}\phdwritetemp%
 %  }{\enddispExample}
 %
-%\cs_set:Npn \dispListing{\phd@layer@pushup\cxset{docexample}\phdwritetemp}
+%    \end{macrocode}
 %
-%\cs_set:Npn \enddispListing{%
-%  \endtcbwritetemp%
-%  \phdkv@beforeexample\begin{tcolorbox}%
-%  \phd@doc@usetemplisting%
-%  \end{tcolorbox}\phdkv@afterexample%
-%}
-%
+% Set a basic style for dispListing
+%    \begin{macrocode}
+\lstdefinestyle{smalldisplay}{numbers=none, backgroundcolor=\color{thecodebackground}, xleftmargin=0pt}
+
+\tcbset{documentation listing style=smalldisplay}
+\tcbset{
+docexample/.style={colframe=thecodeframe, colback=thecodebackground,
+before skip=\medskipamount,after skip=\medskipamount,
+fontlower=\footnotesize}
+}
+%    \end{macrocode}
+%    \begin{macrocode}
 %\newenvironment{dispListing*}[1]{%
 %  \phd@layer@pushup\cxset{docexample,#1}\phdwritetemp%
 %  }{\enddispListing}
@@ -1151,7 +1260,7 @@ boxrule=0pt,toprule=0pt,colframe=white}
 }
 
 
-\newrobustcmd{\phdindexprintcomc}[1]
+\NewDocumentCommand{\phdindexprintcomc}{ m }
   {
     \phd_index_print_c {\phdcs{#1}}{\phdkv@col@command}
   }
@@ -1166,7 +1275,7 @@ boxrule=0pt,toprule=0pt,colframe=white}
 \ExplSyntaxOn
 \cs_new:Npn \phd_print_com #1
   {
-    \textcolor{\phdkv@col@command}{\ttfamily\bfseries\phdcs{#1}}
+    \textcolor{black}{\ttfamily\bfseries\phdcs{#1}}%\phdkv@col@command
   }
 \ExplSyntaxOff  
 %    \end{macrocode}
@@ -1286,12 +1395,13 @@ boxrule=0pt,toprule=0pt,colframe=white}
   {
     \ifphd@doc@toindex\index{#2\idx@actual  
       \phdindexprintkeyca{#2}}
-      \index{\phdkv@text@keys\idx@level#1
-      \idx@actual
-      \phdindexprintkeyc{/#1/}
-      \idx@level#2
-      \idx@actual
-      \phdindexprintkeyc{#2}
+      \index{\phdkv@text@keys
+         \idx@level#1
+        \idx@actual
+        \phdindexprintkeyc{/#1/}
+        \idx@level#2
+        \idx@actual
+        \phdindexprintkeyc{#2}
       }
     \fi
   }
@@ -1351,6 +1461,9 @@ boxrule=0pt,toprule=0pt,colframe=white}
 \ExplSyntaxOff
 %    \end{macrocode}
 %
+% \begin{docEnv}{phd@manual@entry}{}
+% Internal command for setting an index entry
+% \end{docEnv}
 %    \begin{macrocode}
 \ExplSyntaxOn
 \newenvironment{phd@manual@entry}
@@ -1445,8 +1558,8 @@ boxrule=0pt,toprule=0pt,colframe=white}
   \phdcs{begin}
   \phd_brackets{\phd_print_env{#2}}
   \phd_index_env{#2}
-  \protected@edef\@currentlabel{#2}\label{env:#2}{\ttfamily #3}\par%
-  \strut~~\meta{\phdkv@text@envcontent}\par%
+  \protected@edef\@currentlabel{#2}\label{env:#2}{\ttfamily #3}%\par%
+  \strut~~\meta{\phdkv@text@envcontent}%\par%
   \strut\phdcs{end}
   \phd_brackets{\phd_print_env{#2}}%
   \phd_doc_do_description:%
@@ -1652,14 +1765,15 @@ boxrule=0pt,toprule=0pt,colframe=white}
   \hyperref[#1]
   {\texttt{\ref*{#1}}%
     \ifnum\getpagerefnumber{#1}=\thepage
-  \else%
-    \textsuperscript
-    {
-      \ding{213}\,
-      \phdkv@text@pageshort\,
-     \pageref*{#1}}
-  \fi
-  }
+    \else%
+      \textsuperscript
+      {
+        \ding{213}\,
+        \phdkv@text@pageshort\,
+        \pageref*{#1}
+      }
+   \fi
+   }
  }
 
 \cs_set:Npn \phd_ref_doc_star#1
@@ -1816,7 +1930,7 @@ boxrule=0pt,toprule=0pt,colframe=white}
     color hyperlink=Hyperlink,
     before example=\par\smallskip,
     after example=,
-    doc left=2em,
+    doc left=0em,
     doc right=0pt,
     doc left indent=-2em,
     doc right indent=0pt,
@@ -1978,6 +2092,9 @@ boxrule=0pt,toprule=0pt,colframe=white}
 %    \end{macrocode}  
 % 
 % \section{Miscellaneous doc commands}
+% For consistency all commands that typeset their content, as well as index it and perhaps, also reference
+% it have the prefix |doc|.
+%
 % \begin{docCommand} {docFile} { \marg{file name} }
 %   Typesets and index a file. 
 % \end{docCommand}
@@ -1988,6 +2105,12 @@ boxrule=0pt,toprule=0pt,colframe=white}
     \texttt {#1}
     \index{files>#1}
   }
+\cs_set:Npn \docExtension #1
+  {
+    \texttt {#1}
+    \index{file extensions\idx@level#1}
+  }  
+\let\docextension\docExtension  
 \ExplSyntaxOff  
 %    \end{macrocode}
 % 
@@ -2007,7 +2130,7 @@ boxrule=0pt,toprule=0pt,colframe=white}
     { 
       \clist_map_inline:Nn\indexmany: 
         {
-          \index{#1>##1}\index{##1}
+          \index{#1\idx@level##1}\index{##1}
         }
     }
     { 
@@ -2049,6 +2172,9 @@ boxrule=0pt,toprule=0pt,colframe=white}
 % be problematic for makeindex, we define an \indexpunct macro that
 % sorts its argument under the comparatively innocuous "\_".
 %
+% \begin{docCommand}{sanitize}{}
+%  Delimited macro (!!!) that sanitizes macros. Classic TeXBook style.
+% \end{docCommand}
 %    \begin{macrocode}
 \begingroup
  \catcode`\|=0
@@ -2084,6 +2210,8 @@ boxrule=0pt,toprule=0pt,colframe=white}
     }
   }
 %    \end{macrocode}
+%
+% \indexcommand{\test}
 %  
 % \begin{docCommand} {indexcypriot} { \oarg{arg1} \marg{arg2} }
 %    Index helper function for indexing Cypriot script. Only used
@@ -2728,9 +2856,15 @@ boxrule=0pt,toprule=0pt,colframe=white}
 \newcommand{\pkgname}[1]{%
   \href{http://ctan.org/pkg/#1}{\bfseries{#1}}%
   \index{#1=\texttt{#1} (package)}%
-  \index{packages>#1=\texttt{#1}}}
+  \index{packages>#1=\texttt{#1}}
+ }
+ 
 \let\pkg\pkgname
 \let\Lpack\pkgname
+
+\newcommand*\opt[1]{\texttt{#1}}
+
+\newcommand*\feat[1]{\texttt{#1}}
 
 
 \newcommand{\optname}[2]{%
@@ -2739,6 +2873,14 @@ boxrule=0pt,toprule=0pt,colframe=white}
   \index{package options>#2=\textsf{#2} (\textsf{#1})}}
 %    \end{macrocode}
 %
+%    \begin{macrocode}
+\newcommand{\docClass}[1]{%
+  \href{http://ctan.org/pkg/#1}{\bfseries{#1}}%
+  \index{#1=\texttt{#1} (class)}%
+  \index{classes>#1=\texttt{#1}}}
+\let\pkg\pkgname
+\let\Lpack\pkgname
+%    \end{macrocode}
 % 
 % This macro and all similar macros starting from doc
 % typeset their argument and also add the argument to the 
@@ -2750,9 +2892,9 @@ boxrule=0pt,toprule=0pt,colframe=white}
 %    \begin{macrocode}
 \newcommand{\docfilename}[1]{%
   \texttt{#1}
-  \index{#1=\texttt{#1} (file)}}
+  \index{#1=\phdindexprintcomc{#1}(file)}}
   
-\let\docFile\docfilename
+
 \let\docFilename\docfilename  
 %    \end{macrocode}
 % 
@@ -2770,13 +2912,17 @@ boxrule=0pt,toprule=0pt,colframe=white}
 \newcommand{\PSfont}[1]{%
   #1%
   \index{#1 (font)}%
-  \index{fonts>#1}%
+  \index{fonts\index@level#1}%
 }
 %    \end{macrocode}
 % 
 %    \begin{macrocode}
 \NewDocumentCommand{\person} { m m } {#1\index{#2, #1} #2}
 %    \end{macrocode}
+%
+% \begin{docCommand}{ctan}{\marg{package name}}
+% Provides a link to the ctan package repository
+% \end{docCommand}
 %    \begin{macrocode}
 \DeclareRobustCommand\ctan[1]{%
   \textcolor{green}{%
@@ -2959,10 +3105,18 @@ boxrule=0pt,toprule=0pt,colframe=white}
   \index{#1@\protect\texttt{#1} date test}%
   \index{Date tests!#1@\protect\texttt{#1}}%
 }
-
-\def\class#1{\list{}{\leftmargin=2em\itemindent-\leftmargin\def\makelabel##1{\hss##1}}%
-\extractclass#1@\par\topsep=0pt}
-
+%    \end{macrocode}
+% \begin{docEnvironment}{class}{\marg{class}}
+% \end{docEnvironment}
+%
+% \begin{class}{{article}{[10pt,oneside]}}
+% \end{class}
+%    \begin{macrocode}
+\def\class#1{%
+  \list{}% 
+    {\leftmargin=2em\itemindent-\leftmargin\def\makelabel##1{\hss##1}}%
+   \extractclass#1@\par\topsep=0pt
+}
 \def\endclass{\endlist}
 
 \def\extractclass#1#2@{%
@@ -2972,7 +3126,7 @@ boxrule=0pt,toprule=0pt,colframe=white}
 
 
 
-\def\index@prologue{\section*{Index}\addcontentsline{toc}{section}{Index}
+\def\index@prologue{\section*{Index}\addcontentsline{toc}{section}{My Index}
   This index only contains automatically generated entries. A good
   index should also contain carefully selected keywords. This index is
   not a good index.
@@ -3154,7 +3308,7 @@ boxrule=0pt,toprule=0pt,colframe=white}
     \noindent%
     \begin{minipage}[t]{\codeexamplewidth}\raggedright
       \hrule width0pt%
-      \footnotesize\vskip-1em%
+      \small%\vskip-1em%
       \code@flushstart\box\codeexamplebox\code@flushend%
       \vskip-1ex
       \leavevmode%
@@ -3171,7 +3325,7 @@ boxrule=0pt,toprule=0pt,colframe=white}
         \let\do\@makeother
         \dospecials
         \frenchspacing\@vobeyspaces
-        \normalfont\ttfamily\footnotesize
+        \normalfont\ttfamily%\footnotesize
         \typesetcomment%
         \@tempswafalse
         \def\par{%
@@ -3211,10 +3365,6 @@ boxrule=0pt,toprule=0pt,colframe=white}
 	%vbox,
 	%newline=\codeexamplenl,
 }
-%%% Local Variables: 
-%%% mode: latex
-%%% TeX-master: "beameruserguide"
-%%% End: 
 %    \end{macrocode}
 %
 %
@@ -3333,7 +3483,7 @@ boxrule=0pt,toprule=0pt,colframe=white}
 % color definitions
 \def\colDef#1{\textcolor{themacro}{#1}}
 % color for options
-\def\colOpt#1{\textcolor{theoption}{#1}}
+\def\colOpt#1{\textcolor{theoption}{\texttt{#1}}}
 
 \newcommand{\option}[1]{\colOpt{#1}}
 %    \end{macrocode}
@@ -3341,9 +3491,13 @@ boxrule=0pt,toprule=0pt,colframe=white}
 %  \subsection{Creating a Small Verbatim Environment}
 %  This is a modified version from Cambridge classes
 %    \begin{macrocode}
-\begingroup \catcode `|=0 \catcode `[= 1
-\catcode`]=2 \catcode `\{=12 \catcode `\}=12
-\catcode`\\=12 |gdef|@xsmallverbatim#1\end{smallverbatim}[#1|end[smallverbatim]]
+\begingroup \catcode `|=0 
+\catcode `[= 1
+\catcode`]=2 
+\catcode `\{=12 
+\catcode `\}=12
+\catcode`\\=12 
+|gdef|@xsmallverbatim#1\end{smallverbatim}[#1|end[smallverbatim]]
 |gdef|@sxsmallverbatim#1\end{smallverbatim*}[#1|end[smallverbatim*]]
 |endgroup
 \def\@smallverbatim{\trivlist \item\relax
@@ -3368,12 +3522,60 @@ boxrule=0pt,toprule=0pt,colframe=white}
 \def\endsmallverbatim{\if@newlist \leavevmode\fi\endtrivlist}
 \def\smallverbatim@font{\normalfont\smallverbatimsize\ttfamily}
 %    \end{macrocode}
-%
-% \begin{smallverbatim}
-% \def\smallverbatim{\@smallverbatim \frenchspacing\@vobeyspaces \@xsmallverbatim}
-% \def\endsmallverbatim{\if@newlist \leavevmode\fi\endtrivlist}
-% \def\smallverbatim@font{\normalfont\smallverbatimsize\ttfamily}
-% \end{smallverbatim}
+% 
+% This is a short test. \lorem
+%  \begin{smallverbatim}
+%  \ifx\bhj
+%  \else
+%  \fi
+%  \end{smallverbatim}
+% \lorem
+% \begin{docEnv}{docCommands}{}
+% \end{docEnv}
+%    \begin{macrocode}
+\newenvironment{docCommands}{%
+\bgroup
+\par
+\parindent=0pt
+\parskip=3.5pt plus0.5pt
+\everypar{\hangindent2em}%
+\addvspace\belowdisplayskip\relax}%
+{\everypar{}%
+ \par
+ \vskip\belowdisplayskip\egroup\par}
+\long\def\auxm#1(#2);{%
+  \def\Xtemp{#1}%
+  \def\Ytemp{#2}%
+  \parindent=0pt
+  \addvspace{1.5pt}%
+  \par\leavevmode
+  \hangafter=1\relax   \hangindent=1em\relax
+  \bgroup  
+   \bfseries\sffamily\color{red}\Xtemp\,\color{black}(\textit{\Ytemp})\hskip0.1em
+  \egroup
+}
+
+   
+\newenvironment{docLua}[1]{%
+  \auxm#1;
+ }{%
+\@@par
+\smallskip\parindent=1em } 
+
+\def\docFont#1{
+\index{fonts!#1}%
+#1%
+} 
+
+\newenvironment{handler}[2]{%
+ \begin{phd@manual@entry}
+  {\ttfamily{\color{thered}#1}\color{black}#2}
+ \end{phd@manual@entry}
+ }
+{}
+
+%    \end{macrocode}
+
 %</DOCUM>
 \endinput
 

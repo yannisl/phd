@@ -1,22 +1,38 @@
+\cxset{palette budapest}
+
 \chapter{ltlists.dtx}
-         
+\label{kernel:ltlists}
  \section{List, and related environments}
+
+This section of the kernel is interesting in order to understand the underlying general design
+decisions of the \latexe Team.
+
+The kernel source can be considered as a framework, upon which classes build. All \latex lists are aware
+of their environment and can be included in other lists. You can also even if you want include sections within
+enumerated or itemized lists and they will not break. You can include boxes or minipages. 
 
 This section of the kernel creates generic factory commands for the creation of list environments. 
 These list environments \refEnv{enumerate}, \refEnv{itemize} are defined in the kernel, whereas others are normally
 defined in the class files (see \vref{ch:bookclass}, \vref{sec:clo} and \vref{sec:booklists}).
-To understand the properly we need to note that lists are shaped paragraphs, which Lamport
-decided to shape with \cs{parshape}. By shaping the paragraph the geometry of the
-paragraphs can be achieved. The complexity of the code is necessary to make sure
+
+To understand how lists are created we need to understand that they are shaped paragraphs. Lamport's 
+decision to shape them with \cs{parshape}, has produced a flexible system, used later on by standard classes to create numerous environments. The complexity of the code is necessary to make sure
 that at every item the |\parshape| is used and also in any following paragraphs. Remember
 that |\parshape| will only act on one paragraph. As Knuth said the \latexe Team did some
 nifty tricks with |\parshape|.
 
- The generic commands for creating an indented environment --
- |enumerate|, |itemize|, |quote|, etc -- are:
- \begin{quote}
+A sideline is that the code can be used to add vertical and bottom space to content as well as adjust the left and right margins of text blocks. In the \latexe classes they are used to define the environments for quotations, quotes \vref{sec:quotationenvironment}, verse \autoref{sec:verseenvironment}  and verbatim environments.
+
+
+\section{Generic Command}
+
+The |\list| is the generic command that is used to create other lists.  Think of it as the |\newcommand|
+for new list environments. The command takes two arguments.
+
+
+\begin{quote}
         |\list|\marg{label}\marg{commands} ... |\endlist|
- \end{quote}
+\end{quote}
 
  which can be invoked by the user as the |list| environment.  The \meta{label}
  argument specifies item labeling.  \meta{commands} contains commands for
@@ -68,7 +84,7 @@ nifty tricks with |\parshape|.
  The trivlist environment is equivalent to a list environment
  whose second argument sets the following parameter values:
  \begin{description}
- \item[\refCom{leftmargin} = 0:] causes no indentation of left margin
+ \item[{\refCom{leftmargin}} = 0:] causes no indentation of left margin
  \item[\refCom{labelwidth} = 0:] see below for precise effect this has.
  \item[\refCom{itemindent} = 0:] with a null label, makes first paragraph
         have no indentation.  Succeeding paragraphs have |\parindent|
@@ -84,6 +100,70 @@ nifty tricks with |\parshape|.
  when it occurs immediately after an |\item| command in an enclosing
  list.
 
+\begin{texexample}{understanding how lists are being build}{ex:parshape1}
+
+\makeatletter
+\def\mybullet{$\bullet$}
+\leftskip0pt \rightskip0pt
+
+\newlength\lmargin
+\newlength\rmargin
+\newlength\lnwidth
+\setlength\lnwidth{\linewidth}
+
+\setlength\lmargin{30pt}
+\setlength\rmargin{30pt}
+\setlength\lnwidth{\textwidth}
+\advance\lnwidth-2\rmargin\relax %
+
+\hskip-\lmargin\hbox to \lmargin{\hfill\mybullet}%
+\parshape 1 \dimexpr\lmargin\relax \lnwidth\relax
+\lorem
+
+% Second list level
+\addtolength\lmargin{30pt}\relax
+\hskip-\lmargin\hbox to \lmargin{\hfill\mybullet}%
+\parshape 1 \dimexpr\lmargin\relax \dimexpr\linewidth-3\rmargin\relax
+\lorem
+
+% Third list level
+\addtolength\lmargin{30pt}\relax
+\hskip-\lmargin\hbox to \lmargin{\hfill\mybullet}%
+\parshape 1 \dimexpr\lmargin\relax \dimexpr\linewidth-5\rmargin\relax
+\lorem
+
+\makeatother
+\end{texexample}
+
+The above were manually defined so that you can understand how the code builds the list. These can be abstracted into a macro similar to |item| to typeset the text. The label can be typeset with a new macro |mklabel|. We will do this first and change it to an enumerated list. I will use a counter that is already defined for this book and use a macro |\inc| to step it up.
+
+\emphasize{mybullet,itm}
+\begin{texexample}{understanding how lists are being build}{ex:parshape2}
+\makeatletter
+\def\mybullet{{\itshape\large\inc. }}
+\leftskip0pt \rightskip0pt
+\setlength\lmargin{0pt}
+\setlength\rmargin{0pt}
+
+\def\itm{%
+  \setlength\lmargin{0pt}
+  \setlength\rmargin{0pt}
+  \hskip-\lmargin\hbox to \lmargin{\hfill\mybullet}%
+  \parshape 1 \dimexpr\lmargin\relax \dimexpr\linewidth-\rmargin\relax}
+
+% First level
+\itm \lorem
+
+% Second list level
+\itm \lorem
+
+% Third list level
+\itm \lorem
+
+\makeatother
+\end{texexample}
+
+Remember that \latexe defines all lengths to be global lengths, so we didn't have to redeclare them above, just reset them to the values we needed them.
 
 
  \subsection{List and Trivlist}
@@ -148,17 +228,19 @@ nifty tricks with |\parshape|.
  inside a paragraph or is its own paragraph.
 
 
- \subsection{Vertical Spacing (skips)}
+ \paragraph{Vertical Spacing (skips)}
+ 
  \begin{description}
- \item[]  \refCom{topsep} Space between first item and preceding paragraph.
- \item[] \refCom{partopsep} Extra space added to \refCom{topsep} when
+ \item[\refCom{topsep}] Space between first item and preceding paragraph.
+ \item[\refCom{partopsep}] Extra space added to \refCom{topsep} when
         environment starts a new paragraph (is called in vmode).
- \item[] \refCom{itemsep} Space between successive items.
- \item[] \refCom{parsep} Space between paragraphs within an item -- the
-                 \refCom{parskip} for this environment.
+ \item[\refCom{itemsep}] Space between successive items.
+ \item[\refCom{parsep}] Space between paragraphs within an item -- the
+                 |parskip| for this environment.
  \end{description}
 
- \subsection{Penalties}
+ \paragraph{Penalties}
+ 
  \begin{description}
 
  \item[] \refCom{@beginparpenalty} put at the beginning of a list
@@ -197,12 +279,12 @@ nifty tricks with |\parshape|.
  First, \refCom{rightmargin}, \refCom{listparindent} and \refCom{itemindent}
  are set
       to 0pt.  Then, one of the commands
-      \refCom{@listi}, \refCom{@listii}, ... , \refCom{@listvi}
+      \refCom{@listi}, |@listii|,\ldots,|@listvi|
       is called, depending upon the current level of the list.
-      The \refCom{@list} \ldots commands should be defined by the document
+      The |@list|\ldots commands should be defined by the document
       style.  A convention that the document style should follow is
       to set \refCom{leftmargin} to
-      \refCom{leftmargini},\ldots, \refCom{leftmarginiv} for
+      |leftmargini|,\ldots, |leftmarginiv| for
       the appropriate level.  Items that aren't changed may be left
       alone, but everything that could possibly be changed must be
       reset.
@@ -214,7 +296,7 @@ nifty tricks with |\parshape|.
   \refCom{list}\marg{LABEL}\marg{COMMANDS} ==\\
    \Begin{
      \eIf{\refCom{@listdepth} > 5}{
-        LaTeX error: 'Too deeply nested'}{
+        LaTeX error: `Too deeply nested'}{
         \refCom{@listdepth} :=G \refCom{@listdepth} + 1\\
      }
      \refCom{rightmargin}     := 0pt\\
@@ -223,8 +305,8 @@ nifty tricks with |\parshape|.
      eval(@list \refCom{romannumeral}\refCom{the}\refCom{@listdepth})\\  
      \refCom{@itemlabel}      :=L LABEL\\
      \refCom{makelabel}       == \refCom{@mklab}\\
-     @nmbrlist        :=L false\\
-     COMMANDS\\
+     @nmbrlist :=L false\\
+     SETTING COMMANDS\\
      \refCom{@trivlist}\\  
      parskip          :=L \refCom{parsep}\\
      parindent        :=L \refCom{listparindent}\\
@@ -278,8 +360,8 @@ The \refCom{@trivlist} is define as,
 \begin{algorithm}
  \refCom{trivlist}  ==\\
  \Begin{
-  \refCom{parsep} := \refCom{parskip}\\
-   @nmbrlist := F\\
+  \refCom{parsep} := \cs{parskip}\\
+  \cs{@nmbrlist} := false\\
   \refCom{@trivlist}\\
   \refCom{labelwidth} := 0\\
   \refCom{leftmargin} := 0\\
@@ -335,7 +417,7 @@ to \refCom{@item} which follows.
     \If{math mode}{issue warning}
     \eIf{ next char = {\tt [}}{
              \refCom{@item}}{
-              \refCom{@noitemarg} := true\\
+              @noitemarg := true\\
              \refCom{@item}[\refCom{@itemlabel}]}
   }
 \caption{The algorithm for \textbackslash item}
@@ -350,9 +432,9 @@ to \refCom{@item} which follows.
              % NOTE: then clause  hardly every taken,\\
              %  so made a macro \refCom{@donoparitem}\\
             \refCom{box}\refCom{@labels} :=G\\
-             \refCom{hbox} \Begin{\refCom{hskip} -\refCom{leftmargin}\\
-                                   \refCom{box}\\refCom{@labels}\\
-                                   \refCom{hskip} \refCom{leftmargin}}
+             \refCom{hbox} \Begin{hskip -\refCom{leftmargin}\\
+                                   {box}   \\refCom{@labels}\\
+                                   {hskip} \refCom{leftmargin}}
             \If{@minipage = false}{
                \refCom{@tempskipa} := \refCom{lastskip}\\
                \refCom{vskip} -\refCom{lastskip}\\
@@ -418,9 +500,9 @@ to \refCom{@item} which follows.
     default to catch lonely \refCom{item}
 
  \refCom{usecounter}\marg{CTR} == \Begin{
-                              \refCom{@nmbrlist} :=L true\\
-                              \refCom{@listctr} == CTR\\
-                              \refCom{setcounter}\marg{CTR}\marg{0}
+                              @nmbrlist :=L true\\
+                              @listctr == CTR\\
+                              setcounter\marg{CTR}\marg{0}
                              }
 \end{algorithm}
 
@@ -470,37 +552,41 @@ The skip registers \docAuxCommand{topskip}, \docAuxCommand*{partopsep},
     \end{teX}
  
  
- \begin{docCommand}{leftmargin} {\meta{dim}}
+\begin{docCommand}{leftmargin} {\meta{dim}}
+|\newdimen\leftmargin|
 \end{docCommand}
+
 \begin{docCommand}{rightmargin} {\meta{dim}}
+|\newdimen\rightmargin|
+
 \end{docCommand}
+
 \begin{docCommand}{listparindent} {\meta{dim}}
+|\newdimen\listparindent|
 \end{docCommand}
+
 \begin{docCommand}{labelwidth} {\meta{dim}}
+|\newdimen\labelwidth|
 \end{docCommand}
-\begin{docCommand}{@totlaleftmargin} {\meta{dim}}
-\end{docCommand}
+
+
 \begin{docCommand}{labelsep} {\meta{dim}}
+ |\newdimen\labelsep|
 \end{docCommand}
+
 \begin{docCommand}{linewidth} {\meta{dim}}
+|\newdimen\linewidth|
 \end{docCommand}
+
 \begin{docCommand}{itemindent} {\meta{dim}}
+|\newdimen\itemindent|
 \end{docCommand}
- \begin{docCommand}{@totalleftmargin} {}
- \end{docCommand}
+
+\begin{docCommand}{@totalleftmargin} {\meta{dim}}
+|\newdimen\@totalleftmargin|  |\@totalleftmargin=\z@|
+\end{docCommand}
 
 
- 
-    \begin{teX}
-\newdimen\leftmargin
-\newdimen\rightmargin
-\newdimen\listparindent
-\newdimen\itemindent
-\newdimen\labelwidth
-\newdimen\labelsep
-\newdimen\linewidth
-\newdimen\@totalleftmargin \@totalleftmargin=\z@
-    \end{teX}
  
 \begin{docCommand} {leftmargini} { \meta{dim}}
 \end{docCommand}
@@ -535,13 +621,14 @@ The skip registers \docAuxCommand{topskip}, \docAuxCommand*{partopsep},
 \end{docCommand}
 \begin{docCommand}{@beginparpenalty}{}
 \end{docCommand}
-\begin{docCommand}{@endparpenalty}{}
+\begin{docCommand}{@endparpenalty}{\meta{penalty}}
+|\newcount\@endparpenalty|
 \end{docCommand}
     \begin{teX}
 \newcount\@listdepth \@listdepth=0
 \newcount\@itempenalty
 \newcount\@beginparpenalty
-\newcount\@endparpenalty
+
     \end{teX}
 
 
@@ -554,6 +641,7 @@ The skip registers \docAuxCommand{topskip}, \docAuxCommand*{partopsep},
 
 
  \begin{docCommand}{if@inlabel}{}
+   \docAuxCommand{@inlabel}true and false 
   \end{docCommand}
     \begin{teX}
 \newif\if@inlabel \@inlabelfalse
@@ -619,9 +707,13 @@ The skip registers \docAuxCommand{topskip}, \docAuxCommand*{partopsep},
 
 \begin{docCommand}{if@newlisttrue}{}
 \end{docCommand}  
+
 \begin{docCommand}{if@newlistfalse}{}
+   \docAuxCommand{@newlist}
 \end{docCommand}  
+
 \begin{docCommand}{if@nmbrlist}{}
+Checks if the list is to be numbered or not
 \end{docCommand}
   
 \begin{teX}
@@ -635,12 +727,56 @@ The skip registers \docAuxCommand{topskip}, \docAuxCommand*{partopsep},
   Temporary definition to store the label.
 \end{docCommand}
 
+\section{The \textbackslash list environment}
+
+Notice that the list takes two arguments the first parameter contains instructions as to how
+to typeset items, that do not have an |\item[]|. If we need to step a counter we tell it here
+
+
+\begin{texexample}{The list}{k:list}
+\begin{list}{\bfseries\upshape Step \arabic{steps}:}
+{%
+\usecounter{steps}
+\setlength{\labelwidth}{2cm}\setlength{\leftmargin}{2.6cm}
+\setlength{\labelsep}{0.5cm}\setlength{\rightmargin}{1cm}
+\setlength{\parsep}{0.5ex plus0.2ex minus0.1ex}
+\setlength{\itemsep}{0ex plus0.2ex minus0pt}\relax \slshape %
+}
+\item Understand how they are being build
+\item Define your own environment
+\item[Has Own] test
+\end{list}
+
+
+\newenvironment{myplain}
+{ 
+  \list{\bfseries\arabic{steps} }{\usecounter{steps}\bfseries } }
+ {\endlist}
+
+
+\begin{myplain}
+\item \lorem
+
+\item[Something]  \lorem
+\end{myplain}
+\end{texexample}
+
+Looking at the |list| environement differntly it is actually a settings environment, it sets what to do if the item has nor argument and also sets the counter to be used the current levels. It end issuing a parshape command that is going to
+shape the paragraph that follows. Next we need to see how item works in more detail. The calculations and some of the work is
+delegated to trivlist.
+
+The code follows:
+
+
 \index{kernel>lists>\textbackslash list}
 \begin{docCommand} {list} {\marg{item label } \marg {commands} }
- List takes two arguments and is an author command for building
+ List takes two arguments and is factory command for building
 other lists.
 \end{docCommand}
 
+
+Check that the list is not nested too far.
+ 
     \begin{teX}
 \def\list#1#2{%
   \ifnum \@listdepth >5\relax
@@ -650,27 +786,43 @@ other lists.
   \fi
    \end{teX}
 Initialize all margins to 0pt in case the user did not specify anything.   
-   \begin{teX}  
+   \begin{texcode}{}{}  
   \rightmargin\z@
   \listparindent\z@
   \itemindent\z@
   \csname @list\romannumeral\the\@listdepth\endcsname
+   \end{teXXX}
+
+Define the item label here, if it is empty it will be defined to empty   
+   \begin{texcode}  
+   % store the itemlabel 
   \def\@itemlabel{#1}%
   \let\makelabel\@mklab
   \@nmbrlistfalse
-  #2\relax
+  % insert other parameters, spaces, fonts etc
+   #2\relax
+  % call trivlist to do some calculations
+  % and set conditionals 
   \@trivlist
+  
+  % redefine parskip and parindent
   \parskip\parsep
   \parindent\listparindent
+  
+  % set the linewidth
   \advance\linewidth -\rightmargin
   \advance\linewidth -\leftmargin
   \advance\@totalleftmargin \leftmargin
-  \end{teX}
-Now set parshape for the rest of the paragraphs.   
-  \begin{teX}  
+  \end{texcode}
+  
+  Finally set the parshape commands. Thsi is perhaps the most misunderstood line in the whole
+  routine. As you see we cannot do any typsetting as yet. Both parameters are just commands to be
+  entered before the text, is typeset. Probably you guessed, but what follows is |\item|. At this
+  point it will just activate an error if it is missing.  
+  \begin{teXXX}  
   \parshape \@ne \@totalleftmargin \linewidth
   \ignorespaces}
-    \end{teX}
+    \end{teXXX}
 
 
 \begin{docCommand}{par@deathcycles}{}
@@ -681,13 +833,14 @@ Now set parshape for the rest of the paragraphs.
  
 
  \begin{docCommand}{@trivlist}{}
+   Auxiliary macro call by trivlist.
  \end{docCommand}
   Because |\par| is sometimes made a no-op it is possible for a missing
  |\item| to produce a loop that does not fill memory and so never gets
  trapped by \TeX.  We thus need to trap this here by seting |\par| to
  count the number of times a paragraph ii is called with no progress
  being made started.
-    \begin{teX}
+    \begin{teXXX}
 \def\@trivlist{%
   \if@noskipsec \leavevmode \fi
   \@topsepadd \topsep
@@ -720,10 +873,20 @@ Now set parshape for the rest of the paragraphs.
            \fi}%
   \global \@newlisttrue
   \@outerparskip \parskip}
-    \end{teX}
+    \end{teXXX}
 
 The function of a |trivlist| is very simple, it sets numbering to false and initializes all  widths to zero, thus at this stage it will default to a normal paragraph then it calls the auxiliary function \refCom{@trivlist}, which will set
-the top and bottom skips and other paragraphing parameters, if set..
+the top and bottom skips and other paragraphing parameters, if set.
+
+\begin{texexample}{Trivlist}{ex:trivlist}
+\lorem
+\begin{trivlist}
+\item[] \lorem
+
+\end{trivlist}
+\lorem
+
+\end{texexample}
 
  \begin{docCommand}{trivlist} { \meta{void} }
  \end{docCommand} 
@@ -807,28 +970,29 @@ the top and bottom skips and other paragraphing parameters, if set..
   \begin{docCommand}{@endparenv}{}
  \end{docCommand}
  
- 
+     \begin{teX}
+\def\@endparenv{%
+  \addpenalty\@endparpenalty\addvspace\@topsepadd\@endpetrue}
+    \end{teX}
+
 
  
 \begin{docCommand}{@doendpe}{}
    To suppress the paragraph indentation in text immediately following
-   a paragraph-making environment, \refCom{everypar} is changed to remove the
-   space, and \refCom{par} is redefined to restore \refCom{everypar}.  Instead of
-   redefining \refCom{par} and \refCom{everypar}, \refCom{@endparenv} was changed to 
-   set the \refCom{@endpe switch}, letting |end| redefine |par| and 
+   a paragraph-making environment, \cs{everypar} is changed to remove the
+   space, and \cs{par} is redefined to restore \cs{everypar}.  Instead of
+   redefining \refCom{par} and \cs{everypar}, \refCom{@endparenv} was changed to 
+   set the \refCom{@endpe} switch, letting |end| redefine |par| and 
    |everypar|.   This allows paragraph-making environments to work right when called 
  by other environments. )
 \end{docCommand}
  
-    \begin{teX}
-\def\@endparenv{%
-  \addpenalty\@endparpenalty\addvspace\@topsepadd\@endpetrue}
-    \end{teX}
 
     \begin{teX}
 \def\@doendpe{\@endpetrue
      \def\par{\@restorepar\everypar{}
           \par\@endpefalse}\everypar
+          {{\setbox\z@\lastbox}\everypar{}\@endpefalse}}
     \end{teX}
     
     Use |\setbox0=\lastbox| instead of   |\hskip -\parindent|   
@@ -836,11 +1000,7 @@ the top and bottom skips and other paragraphing parameters, if set..
     a line immediately following a list environment(23 Oct 86).
  \changes{v1.0k}{1995/11/07}{Enclosed \refCom{setbox0} assignment by a
  group so that it leaves the contents of box $0$ intact.
-    } 
-    \begin{teX}
-               {{\setbox\z@\lastbox}\everypar{}\@endpefalse}}
-    \end{teX}
- 
+    }
 
   \begin{docCommand}{if@endpe}{}
  \end{docCommand}
@@ -868,8 +1028,13 @@ the top and bottom skips and other paragraphing parameters, if set..
  \changes{v1.0d}{1994/05/03}
      {Removed superfluous braces}
      
- \begin{docCommand}{item}{}
+\section{Typesetting the label}     
+ 
+ \begin{docCommand}{item}{\oarg{label}}
+ 
  \end{docCommand}     
+ 
+ 
      \begin{teX}
 \def\item{%
   \@inmatherr\item
@@ -895,8 +1060,9 @@ the top and bottom skips and other paragraphing parameters, if set..
     \end{teX}
 
  
- \begin{docCommand}{@item}{}
+ \begin{docCommand}{@item}{\marg{label} }
  \end{docCommand}
+ 
      \begin{teX}
 \def\@item[#1]{%
   \if@noparitem
@@ -994,8 +1160,10 @@ the top and bottom skips and other paragraphing parameters, if set..
   \fi
     \end{teX}
     
-We use |\sbox| to support colour commands.
-\begin{teX}
+Before the label is typeset it is placed in a bo. The latex Team used an |\sbox| so that colour commands can be supported.
+It call |\makelabel| with the item parameters.
+
+    \begin{teXXX}
   \sbox\@tempboxa{\makelabel{#1}}%
   \global\setbox\@labels\hbox{%
     \unhbox\@labels
@@ -1003,20 +1171,26 @@ We use |\sbox| to support colour commands.
     \hskip -\labelwidth 
     \hskip -\labelsep
     \ifdim \wd\@tempboxa >\labelwidth
-      \box\@tempboxa
-\end{teX}
- \changes{LaTeX2.09}{1991/11/22}
-         {(RmS) Changed second call to \refCom{makelabel} to
-           \refCom{unhbox}\refCom{@tempboxa}.
-          Avoids problems with side effects in \refCom{makelabel} and is
-               more efficient.}
-    \begin{teX}
+       \box\@tempboxa
+\end{teXXX}
+
+\begin{teXXX}
+%
+% \changes{LaTeX2.09}{1991/11/22}
+%         {(RmS) Changed second call to \refCom{makelabel} to
+%           \refCom{unhbox}\refCom{@tempboxa}.
+%          Avoids problems with side effects in \refCom{makelabel} and is
+%               more efficient.}
+%    \begin{teX}
     \else
       \hbox to\labelwidth {\unhbox\@tempboxa}%
-    \fi
+    \fix
     \hskip \labelsep}%
   \ignorespaces}
-    \end{teX}
+    \end{teXXX}
+ 
+ 
+ 
  
  \begin{docCommand}{makelabel}{}
  Initial definition of \cs{makelabel} set to produce the infamous and often encountered error, if it
@@ -1048,7 +1222,7 @@ We use |\sbox| to support colour commands.
     \end{teX}
 
 
- \subsection{Itemize and Enumerate}
+ \section{Enumerate}
 
   Enumeration is done with four counters: |enumi|, |enumii|, |enumiii|
   and |enumiv|, where |enum|N controls the numbering of the Nth level
@@ -1079,10 +1253,11 @@ We use |\sbox| to support colour commands.
  bulleted, you just define \docAuxCommand{labelitemii}
  to be |$\bullet$|.  |@itemspacing|
  and \refCom{@itemdepth} are the analogs of |@enumspacing| and
- \refCom{@enumdepth}.
+ \refCom{@enumdepth}. These are not defined in the kernel, their definition is delegated to the classes and to another extend to the users.
 
 
  \begin{docCommand}{@enumdepth}{}
+  The enumeration depth. 
  \end{docCommand}
      \begin{teX}
 \newcount\@enumdepth \@enumdepth = 0
@@ -1092,10 +1267,7 @@ We use |\sbox| to support colour commands.
 Next the counters for the \refEnv{enumerate} environment, \docCounter{c@enumi}, \docCounter{c@enumii}, \docCounter{c@enumiii} and \docCounter{c@enumiv} are created.
 
     \begin{teX}
-\@definecounter{enumi}
-\@definecounter{enumii}
-\@definecounter{enumiii}
-\@definecounter{enumiv}
+\@definecounter{enumi} \@definecounter{enumii} \@definecounter{enumiii} \@definecounter{enumiv}
     \end{teX}
 
 
@@ -1113,7 +1285,7 @@ Next the counters for the \refEnv{enumerate} environment, \docCounter{c@enumi}, 
     \edef\@enumctr{enum\romannumeral\the\@enumdepth}%
       \expandafter
       \list
-        \refComname label\@enumctr\endcsname
+         \csname label\@enumctr\endcsname
         {\usecounter\@enumctr\def\makelabel##1{\hss\llap{##1}}}%
   \fi}
     \end{teX}
@@ -1128,36 +1300,84 @@ Next the counters for the \refEnv{enumerate} environment, \docCounter{c@enumi}, 
 \newcount\@itemdepth \@itemdepth = 0
     \end{teX}
 
-Finally the \refEnv{itemize} environment is defined. This is defined in the kernel to have a limit of 4 levels only (which as a matter
-of fact is more than adequate. \footnote{changes v1.0j 1995/07/09 Use \textbackslash expandafter. 
-Hard to believe the team missed it!}
+\section{The itemize environment}
 
- \begin{docEnvironment}{itemize}{}
- \end{docEnvironment}
+Finally the \docValue{itemize} environment is defined. This is defined in the kernel to have a limit of 4 levels only.
+
+Itemization is controlled by four commands, which are defined in the standard classes: |\labelitemi|,
+   |\labelitemii|, |\labelitemiii|, and |\labelitemiv|, which define
+    the labels of the various itemization levels: the symbols used in the standard classes are
+    bullet, bold en-dash, centered asterisk and centred dot.
+
+
+
+\begin{docEnvironment}{itemize}{}
+\end{docEnvironment}
+
+
      \begin{teX}
 \def\itemize{%
   \ifnum \@itemdepth >\thr@@\@toodeep\else
     \advance\@itemdepth\@ne
-    \edef\@itemitem{labelitem\romannumeral\the\@itemdepth}%
+    \edef\@itemitem{labelitem\romannumeral\the\@itemdepth}% (*@\dcircle{1}@*)
     \end{teX}
+
+The \dcircle{1} is a hack to create the |\@itemi|\ldots|\@itemv| names. How it works is that the
+|\romannumeral| will expand until it finds a number and leave the letter |i| etc. in the stream.
+
+\begin{texexample}{Creating a suffix with Roman Numerals}{ex:rmnumeral}
+\newcounter{tempcounter}
+\setcounter{tempcounter}{5}
+\edef\itemtest{labelitem\romannumeral\thetempcounter}
+%  the replacement
+\meaning\itemtest
+
+\itemtest
+\end{texexample}
+    
+    
+A romannumeral just returns nothing if it encounters the number \texttt{0} or a negative number. 
+
+\begin{texexample}{Creating a suffix with Roman Numerals}{ex:rmnumeral1}
+% counter has been created globally
+% commented out.
+%\newcounter{tempcounter}
+\setcounter{tempcounter}{0}
+\edef\itemtest{labelitem\romannumeral\thetempcounter}
+%  the replacement
+\meaning\itemtest\par
+\itemtest
+\end{texexample}
+    
     
 Call the \refCom{list} sets all parameters and defines a  \refCom{makelabel} for this particular
 environment. This is a good place to also hook other items to decorate the label, if necessary.
 Remember also that the \docAuxCommand{@itemitem}, defined above is just there to facilitate  
 calling |labelitemi| \ldots |labelitemn| depending on the level.
 
-    \begin{teX}
+    \begin{teXXX}
     \expandafter
     \list
+      
       \csname\@itemitem\endcsname
       {\def\makelabel##1{\hss\llap{##1}}}%
   \fi}
-    \end{teX}
+    \end{teXXX}
+
+The astude reader will notice at this point that although we defined the name of labeli etc, they still have no meaning. As mentioned earlier there is still some work to be done before we have full lists. These are defined in the standatrd classes and the definitions are shown below.\tcbdocmarginnote{revised\\13-06-2018}
+
+\begin{teXXX}
+\newcommand\labelitemi{\textbullet}
+\newcommand\labelitemii{\normalfont\bfseries \textendash}
+\newcommand\labelitemiii{\textasteriskcentered}
+\newcommand\labelitemiv{\textperiodcentered}
+\end{teXXX}
+
+Finally the end of the environment is defined.
 
     \begin{teX}
 \let\enditemize =\endlist
     \end{teX}
-
 
 
 

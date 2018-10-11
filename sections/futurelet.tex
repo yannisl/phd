@@ -7,7 +7,7 @@
 \epigraph{Life can only be understood backwards; but it must be lived forwards.}{
 ---S Kierkegaard}
 
-The \docAuxCmd{futurelet} primitive deserves its own chapter, as most people have difficulty in understanding the command. The instruction allows the user to \textit{look ahead}. By look ahead we mean that \tex will look at a future token\footnote{remember that a token is either a single character or a macro command} without absorbing it, i.e, without removing that token from the token list. This operation allows the programmer to perform a test to check what token follows. There are a couple of articles about \cs{futurelet} in TUGBoat; for example \citetitle{Eijkhout2001} by \citeauthor{Eijkhout2001}\footcite{Eijkhout2001} and \citetitle{bechto88} by \citeauthor{bechto88}\footcite{bechto88}. Both articles are generally difficult to follow. 
+The \docAuxCmd{futurelet} primitive deserves its own chapter, as most people have difficulty in understanding the command. The instruction allows the user to \textit{look ahead}. By look ahead we mean that \tex will look at a future token\footnote{remember that a token is either a single character or a macro command} without absorbing it, i.e, without removing that token from the token list. This operation allows the programmer to perform a test to check what token follows. There are a couple of articles about \cs{futurelet} in TUGBoat; for example \citetitle{Eijkhout2001} by \citeauthor{Eijkhout2001}\footcite{Eijkhout2001} and \citetitle{bechto88} by \citeauthor{bechto88}\footfullcite{bechto88}. Both articles are good but difficult to follow. 
 
 There are many applications of |\futurelet| but the most common one is that of scanning forward
 to find if a `[' is found to build \latexe macros with optional arguments. Here we will  present three examples in detail, including one from the |PGF| module |parser| that can be used to build Deterministic Finite Automata.
@@ -15,8 +15,7 @@ to find if a `[' is found to build \latexe macros with optional arguments. Here 
 
 \section{The mechanics of futurelet}
 
-The |\futurelet|
-instruction has the following format:
+The |\futurelet| instruction has the following format:
 
 
 \begin{commands}[]{}
@@ -51,8 +50,8 @@ what $<token_l>$ is.
 The description above, is a bit of a mouthful and it is better to describe it with an example. In Example~\ref{futurelet} we will try and find if the next token is the opening square bracket `['. We then according to the definition in \ref{lettoken} this should be stored in \cs{tokenone}. We verify this by peeking at its meaning.
 
 \begin{texexample}{futurelet}{futurelet}
-\def\tokentwo#1{}
-\futurelet\tokenone\tokentwo[
+\def\tokentwo[#1]{}
+\futurelet\tokenone\tokentwo[1]
 \meaning\tokenone
 \end{texexample}
 
@@ -87,7 +86,7 @@ We try again with spaces,
 \emphasis{tokentwo,[}
 \begin{texexample}{futurelet}{futurelet}
 \def\tokentwo#1{%
-   \ifx\tokenone[ true [\else false\fi
+   \ifx\tokenone[ \TRUE [\else |FALSE\fi
 }
 \futurelet\tokenone\tokentwo     [
 \meaning\tokenone
@@ -273,7 +272,7 @@ resulting in a,b,c
 
 To define the |()| as an optional parameter, we effectively need to define the macro as a conditional a sort of a "yes-no" switch. If \tex finds the "(" bracket the "yes-code" will be called and if it finds only the normal arguments the "no-code" will be executed.
 
-For this we can use the |\@ifnextchar| macro from the LaTeX kernel.
+For this we can use the \refCom{@ifnextchar} macro from the LaTeX kernel.
 You can say |@ifnextchar{char}{yes-code}{no-code}| to test for |(|. The result then will depend on the token that follows. If this token is the same as the first argument, then the "yes-code" is executed, otherwise the "no-code" is executed. The first argument should be a single token (for instance a character). Spaces are ignored. 
 
 As for example we can redefine the LaTeX code for `rule` to accept an optional parameter in round brackets, rather than the traditional square brackets.
@@ -396,10 +395,16 @@ final state has been reached.
 \pgfparserdef{myparser}{initial}{the letter b}
 {} % do nothing
 \pgfparserdef{myparser}{initial}{the letter c}
+{}
+\pgfparserdef{myparser}{initial}{the character ;}
 {\pgfparserswitch{final}}% done!
 
-\pgfparserparse{myparser}aabaabababbbbbabaabcccc
+\pgfparserparse{myparser}aabaabababbbbbabaabcccc;
 There are \the\mycount\ a's.
+
+\meaning a
+
+\meaning ;
 \end{texexample}
 \end{docCmd}
 
@@ -629,7 +634,7 @@ Lastly the parser is called again by the command |\pgf@parser@ridded| or termina
 }
 \end{teXXX}
 
-
+The \pgfname package, has in my opinion a very good style of coding. Firstly it uses only lower case letters and separates them with the |@| for internal code. For author commands, all commands are in lowercase. I have adopted this style for all \latex2e code. For \latex3 it is a different story, as one needs to follow the idiomatic way of the \latex3 authors. Also \pgfname defines its own \latex2e common macros, so as to be able to be used in Plain TeX and ConTeXt. 
 
 
 

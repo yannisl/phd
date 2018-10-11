@@ -63,7 +63,7 @@ interface in future releases. There is a large amount of
 work still to be carried out to improve the template styles
 provided, to test it more thoroughly and to add a number of
 improvements in the special designs. At present I estimate
-that I have completed about 70% of the work that needs
+that I have completed about 80% of the work that needs
 to be done.
 
 __The package as it stands is not production stable.__ 
@@ -129,7 +129,8 @@ See http://www.latex-project.org/lppl.txt
 \fi
 %</internal>
 %<*driver>
-\NeedsTeXFormat{LaTeX2e}
+\NeedsTeXFormat{LaTeX2e}[2017/04/15]%
+\RequirePackage[2017/04/15]{latexrelease}
 \ProvidesFile{phd-toc.drv}%
   [2013/01/13 v1.0 ]%
 \documentclass[oneside,11pt,a4paper]{ltxdoc}
@@ -139,10 +140,17 @@ See http://www.latex-project.org/lppl.txt
 
 \usepackage{phd}
 \cxset{geometry units=mm}
+\usepackage{phd-documentation}
+\usepackage{phd-colorpalette}
 \usepackage{phd-toc}
 \usepackage{phd-lowersections}
 \usepackage{phd-runningheads}
+%\usepackage{verse}
+\usepackage{threeparttablex}
+\let\HUGE\Huge
 \input{defaults-chapters}
+\cxset{palette orange sakura,
+       fashion image=hypatia}    
 \sethyperref
 \EnableCrossrefs
 \CodelineIndex
@@ -150,36 +158,65 @@ See http://www.latex-project.org/lppl.txt
 %\def\toctitle#1{\protect\color{red}#1}
 %\def\addcontentsline#1#2#3{%
 % \addtocontents{#1}{\protect\contentsline{#2}{\protect\toctitle{#3}}{\thepage}}} 
-\definecolor{bgsexy}{HTML}{F09078}
-\definecolor{creamy}{HTML}{D83078}
-\cxset{chapter title color= creamy,
-       chapter label color = creamy,
-       chapter number color = creamy,
-       chapter number font-size = Huge,
-       subsection title color = creamy,
-       chapter name = CHAPTER,
-       chapter label case = upper,
-       chapter align=left,
-       chapter title align=left}
+%\definecolor{bgsexy}{HTML}{F09078}
+%\definecolor{creamy}{HTML}{D83078}
+%\cxset{chapter title color= creamy,
+%       chapter label color = creamy,
+%       chapter number color = creamy,
+%       chapter number font-size = Huge,
+%       subsection title color = creamy,
+%       chapter name = CHAPTER,
+%       chapter label case = upper,
+%       chapter align=left,
+%       chapter title align=left}
+\input{defaults-chapters}  
+\cxset{headings odd header background color = white,
+         headings even header background color = white,
+         section title font-shape = itshape,
+  }  
+   
+\setmonofont[Scale=1.0]{Inconsolata} 
+\newfontfamily\mono{Inconsolata}
+\usepackage{trajan}
 \begin{document}
-  \coverpage{desert}{Book Design Monographs}{Camel Press}{ON CONTENTS PAGES}{AND THEIR DESIGN} 
+  \pagestyle{empty}
+  \coverpage{primitives}{Book Design Monographs}{Camel Press}{ON CONTENTS PAGES}{AND THEIR DESIGN} 
  \secondpage
  \newpage
+ \pagestyle{headings}
  \tableofcontents
+ \listoffigures
+ \listoftables
 % \listoffigures
 % \listoftables
  \mainmatter
  \thispagestyle{plain}
- \input{./sections/tableofcontents}
+ 
+ %\input{./sections/paragraphs}
+% \input{./sections/geometry-chapter}
+ %\input{./sections/floats}
+% \input{./sections/macros}
+% \input{./sections/luatex-fonts.tex}
+% \input{./sections/verse}
+% \input{./sections/pagenotes}
+% 
+% \input{./sections/elgreco}
+% 
+% \input{./sections/book.cls.tex}
+% %\input{./sections/graphics} 
+% %\input{./sections/charting01}
+% %\input{south-asian-scripts}
+% %\input{./sections/captions}
+% %\input{./sections/docmacros}
+%\input{./sections/tableofcontents}
   % \catcode `\| =12
 %  \DeleteShortVerb
   \makeatletter
-  \@debugtrue
+  \@debugfalse
+  \DEBUGOFF
   \makeatother
-  \cxset{headings odd header background color = white,
-         headings even header background color = white,
-  }
-  \pagestyle{headings}
+  \input{./sections/tableofcontents}
+  \pagestyle{fancy}
   \DocInput{phd-toc.dtx}%
 \end{document}
 %</driver>
@@ -221,7 +258,7 @@ See http://www.latex-project.org/lppl.txt
 % \date{\filedate}
 %
 % \newpage
-% \maketitle
+% ^^A\maketitle
 % 
 % \begin{summary}
 %   This package forms part of the \pkgname{phd} bundle and can be used to manage running heads
@@ -234,7 +271,7 @@ See http://www.latex-project.org/lppl.txt
 %
 % ^^A\StopEventually{}
 %<*TOC> 
-% \part{Package Implementation}
+% ^^A \part{Package Implementation}
 % 
 % \chapter{Objectives and Design Philosophy}
 % ^^A\def\headhookleft{\agrid}
@@ -293,7 +330,9 @@ See http://www.latex-project.org/lppl.txt
 %       control sequences. Keys stored in control sequences follow strictly
 %       the naming convention of the key, but omitting any hyphens and replacing spaces with underscores. For example:
 % 
+% \begin{quote}
 % |toc chapter page font-size = \phd_toc_chapter_page_fontsize|
+% \end{quote}
 % 
 %      I have only used the |_tl| su suffix only where the cs is manipulated. For the rest
 % I have followed expl3 conventions regarding suffixes.
@@ -306,81 +345,12 @@ See http://www.latex-project.org/lppl.txt
 %	we had inspiration and used liberally code from Peter Wilson's 
 %	\pkg{tocloft}., including the code for the image.
 %
-% \newcommand{\maxx}{120}       ^^A picture width
-% \newcommand{\maxxm}{118}      ^^A \maxx - 2\
-% \newcommand{\maxy}{55}        ^^A picture height
-% \newcommand{\maxym}{53}       ^^A \maxy - 2
-% \newcommand{\findent}{20}     ^^A indent
-% \newcommand{\findentp}{22}    ^^A \findent + 2
-% \newcommand{\fnumwidth}{10}   ^^A numwidth
-% \newcommand{\ftocrmarg}{30}   ^^A \@tocrmarg
-% \newcommand{\fpnumwidth}{20}  ^^A \@pnumwidth
-% \newcommand{\fipn}{30}        ^^A \findent + \fnumwidth
-% \newcommand{\frmarg}{90}      ^^A \maxx - \ftocrmarg
-% \newcommand{\frnum}{100}      ^^A \maxx - \fpnumwidth
-% \newcommand{\fyi}{10}         ^^A 1st y height
-% \newcommand{\fyim}{8}         ^^A \fyi - 2
-% \newcommand{\fyii}{20}        ^^A 2nd y height
-% \newcommand{\fyiii}{25}       ^^A 3rd y height
-% \newcommand{\fyiv}{30}        ^^A 4th y height
-% \newcommand{\fyv}{40}         ^^A 5th y height
-% \newcommand{\fyvp}{42}        ^^A \fyv + 2
-% \newcommand{\flin}{4}         ^^A length of leader lines
-% \newcommand{\frmargm}{89}     ^^A \frmarg (90) - a little bit
-% 
-% \providecommand{\bs}{\textbackslash}
-% \begin{figure}[bp]
-% \centering
-% \setlength{\unitlength}{1mm}
-% \begin{picture}(\maxx,\maxy)
-%     ^^A side lines and linewidth
-%   \put(0,0){\line(0,1){\maxy}}
-%   \put(\maxx,0){\line(0,1){\maxy}}
-%   \put(0,\maxy){\vector(1,0){\maxx}}
-%   \put(2,\maxym){\makebox(0,0)[tl]{\texttt{\bs linewidth}}}
-%     ^^A \@pnumwidth
-%   \put(\maxx,\fyi){\vector(-1,0){\fpnumwidth}}
-%   \put(\maxxm,\fyim){\makebox(0,0)[tr]{\texttt{\bs @pnumwidth}}}
-%   \put(\frnum,\fyi){\line(0,1){\flin}}
-%     ^^A \@tocrmarg
-%   \put(\maxx,\fyv){\vector(-1,0){\ftocrmarg}}
-%   \put(\maxxm,\fyvp){\makebox(0,0)[br]{\texttt{\bs @tocrmarg}}}
-%   \put(\frmarg,\fyv){\line(0,-1){\flin}}
-%     ^^A indent
-%   \put(0,\fyv){\vector(1,0){\findent}}
-%   \put(2,\fyvp){\makebox(0,0)[bl]{\textit{toc margin-left}}}
-%   \put(\findent,\fyv){\line(0,-1){\flin}}
-%     ^^A numwidth
-%   \put(\findent,\fyv){\vector(1,0){\fnumwidth}}
-%   \put(\findentp,\fyvp){\makebox(0,0)[bl]{\textit{numwidth}}}
-%   \put(\fipn,\fyv){\line(0,-1){\flin}}
-%     ^^A last title line
-%   \put(\maxx,\fyii){\makebox(0,0)[br]{487}}
-%   \put(\fipn,\fyii){title end}
-%     ^^A second title line
-%   \put(\fipn,\fyiii){continue\ldots}
-%   \put(\frmarg,\fyiii){\makebox(0,0)[br]{\ldots title}}
-%     ^^A first title line
-%   \put(\findent,\fyiv){\textbf{3.5}}
-%   \put(\fipn,\fyiv){Heading\ldots}
-%   \put(\frmarg,\fyiv){\makebox(0,0)[br]{\ldots title}}
-%     ^^A dotted leader
-%   \multiput(\frmargm,\fyii)(-\flin,0){12}{.}
-%   \multiput(\frmarg,\fyi)(-\flin,0){2}{\line(0,1){\flin}}
-%   \put(\frmarg,\fyi){\vector(-1,0){\flin}}
-%   \put(\frmarg,\fyi){\vector(1,0){0}}
-%   \put(\frmarg,\fyim){\makebox(0,0)[tr]{\texttt{\bs @dotsep}}}
-% 
-% \end{picture}
-% \setlength{\unitlength}{1pt}
-% \caption{Standard Layout of a ToC (LoF, LoT) entry} \label{fig:ltoc}
-% \end{figure}
-%
 %    \begin{macrocode}
 %
-\NeedsTeXFormat{LaTeX2e}
+\NeedsTeXFormat{LaTeX2e}[2017/04/15]%
+\RequirePackage[2017/04/15]{latexrelease}
 \ProvidesPackage{phd-toc}%
-  [2015/13/06 v1.0 ToC styling]%
+  [2017/04/15 v1.0 ToC styling]%
 %    \end{macrocode}
 
 % 
@@ -452,11 +422,14 @@ See http://www.latex-project.org/lppl.txt
 % 
 %
 % {tocparskip@cx}
-% The |\parskip| local to the ToC, etc., is set to the length |\tocparskip@cx|.
+% The |\parskip| local to the ToC, etc., is set to the length |\phd_toc_parskip|.
 %
 %    \begin{macrocode}
-\newlength{\tocparskip@cx}
-\setlength{\tocparskip@cx}{1pt}
+\ExplSyntaxOn
+%\newlength{\phd_toc_parskip}
+\dim_new:N \phd_toc_parskip
+\dim_set:Nn \phd_toc_parskip {1pt}
+\ExplSyntaxOff
 %    \end{macrocode}
 % 
 %
@@ -478,15 +451,26 @@ See http://www.latex-project.org/lppl.txt
   { 
     %size            = minimal,  
     enhanced,
-    colback         = \cs_if_exist_use:cTF {#1_background_color}{}{blue},
-    colframe        = \cs_if_exist_use:cTF {#1_frame_color}{}{blue},
+    colback         = \cs_if_exist_use:cTF {#1_background_color}{}{white},
+    colframe        = \cs_if_exist_use:cTF {#1_frame_color}{}{white},
     rounded~corners = all,
     arc=3mm,
     auto~outer~arc,
     boxsep          = 3pt,
     \cs_if_exist_use:cTF {#1_shadow}{}{no~shadow},
   } 
-  
+%    \end{macrocode}  
+%
+% \begin{docCommand}{phd_font_aux_toc:n}{ \meta{toc, lof, lot}}{ } 
+%   This is an auxiliary command useful for setting the font properties. It is used in conjuction with a 
+%   pgf key handler to set the properties.
+%   TODO PROPER ERROR HANDLING!
+% \end{docCommand}
+%
+%
+% The definition follows:
+%
+%    \begin{macrocode}
 \cs_new:Npn \phd_font_aux_toc:n #1
  {
    \cs_if_exist_use:cTF { #1_fontfamily }{}{#1~Family}
@@ -494,7 +478,14 @@ See http://www.latex-project.org/lppl.txt
    \cs_if_exist_use:cTF { #1_fontshape  }{}{#1~Sh}
    \cs_if_exist_use:cTF { #1_fontsize   }{}{#1~Siz}
  }  
-  
+%
+%    \end{macrocode}
+%  
+%  \begin{docCommand}{format_toc_name} { \meta{toc name}}{}
+%  \end{docCommand}
+%
+%  The formatter places the contents heading in a box, that we call a float box. 
+%    \begin{macrocode}
 \cs_gset:Npn \format_toc_name:n #1 
   {
  \begin{float_box}{toc_name}
@@ -502,33 +493,39 @@ See http://www.latex-project.org/lppl.txt
       \cs_if_exist_use:cTF {#1_align}{}{F~#1}
       
       %\toc_name_indent 
-      \tcbox[size            = minimal,
+      \tcbox[size = minimal,
+             boxsep=0pt,
+             top=0pt,
+             bottom=0pt,
+             left=0pt,
+             right=0pt,
              nobeforeafter,
-             colback         = \cs_if_exist_use:cTF {#1_background_color}{}{blue},
-             colframe        = \cs_if_exist_use:cTF {#1_frame_color}{}{blue},
+             colback         = white,  %\cs_if_exist_use:cTF {#1_background_color}{}{white},
+             colframe        = white,  %\cs_if_exist_use:cTF {#1_frame_color}{}{white},
              ]
         {
-               \toc_name_before
-               \phd_font_aux_toc:n {toc_name}
-               %\color{\toc_name_color}
-               \cs_if_exist_use:cTF {#1_case}{}{F #1}
+            
+            \toc_name_before
+            \phd_font_aux_toc:n {toc_name}
+             %\color{\toc_name_color}
+            \hskip-\dimexpr(\@tocrmarg/2)
+            \cs_if_exist_use:cTF {#1_case}{}{#1}
                {
-                 \cs_if_exist_use:cTF {#1_contentsname}{}{F~#1}
-                }
+                \cs_if_exist_use:cTF {contentsname}{}{F~#1}
+               }
         }
-       
-      
-     \end{float_box} 
-    \toc_name_after%
+   \end{float_box} 
+   %\tikzrule
+   \toc_name_after%
  }
 \ExplSyntaxOff
 %    \end{macrocode}
-%  \begin{docCommand} {phd_toc_start} { \meta{void}}
+%  \begin{docCommand} {phd_toc_start:} { \meta{void}}
 %    Typesets any material before the toc, for example a rule or image. This
 %    can also be used to typeset a two column or three column toc.
 %  \end{docCommand}
 %
-%  \begin{docCommand}{phd_toc_finish} { \meta{void}}
+%  \begin{docCommand}{phd_toc_finish:} { \meta{void}}
 %    Typesets any material after the toc, for example a rule or image. This
 %    can also be used to typeset end a two column or three column layout.
 %  \end{docCommand} 
@@ -556,31 +553,31 @@ See http://www.latex-project.org/lppl.txt
 \ExplSyntaxOn
  \renewcommand{\tableofcontents}{%
     \phd_toc_start:
-    \bgroup
+    \group_begin:
    % \hypersetup{linkcolor=spot}
 %    \end{macrocode}
 % Ensure that any previous paratgraph has been finished. 
 %	within a group set
 % the local paragraphing style and typeset the title. \label{code:tableofcontents}
 %    \begin{macrocode}
-    \par
-    \begingroup
-      \parindent\z@ 
-      \parskip\tocparskip@cx
-      \phd_make_toc_title:n {toc_name}
+    	\par
+    	\group_begin:
+      	\parindent\z@ 
+      	\dim_set_eq:NN \parskip \phd_toc_parskip
+      	\phd_make_toc_title:n {toc_name}
 %    \end{macrocode}
 %
 % Finally, start reading the \docFile{.toc} file and finish up.
 %    \begin{macrocode}
-    \start_toc:n {toc}%
-    \endgroup
-    \egroup
+    		\start_toc:n {toc}%
+    		\group_end:
+    \group_end:
     \phd_toc_finish:
 }%
 \ExplSyntaxOff
 %    \end{macrocode}
 %
-%  \begin{docCommand} {start_toc} { \meta {void}}
+%  \begin{docCommand} {start_toc:n} { \meta {void}}
 %    Reads the file |.toc|. Write to the file conditionally. This was
 %    originally provided in the source2e class |lsect|, which we redefine.\FIRE
 %  \end{docCommand}
@@ -603,7 +600,7 @@ See http://www.latex-project.org/lppl.txt
 %    \end{macrocode}
 % 
 % \begin{docCommand} {numberline} { \meta {the number} }
-%  The purpose of the |\numberline{|\meta{secnum}|}| command is to typeset
+%  The purpose of the \docAuxCommand{numberline}{\meta{secnum}}  command is to typeset
 %  \meta{secnum} left justified in a box of width |\@tempdima|. I redefine
 %  it to add three additional parameters, namely |\toc_number_before|, 
 %  |\toc_number_after| and |\toc_number_after_box| 
@@ -622,20 +619,30 @@ See http://www.latex-project.org/lppl.txt
 \cs_set:Npn \toc_number_before {}
 \cs_set:Npn \toc_number_after {}
 \cs_set:Npn \toc_number_after_box {}
+\ExplSyntaxOff
 %    \end{macrocode}
 %
-% This is the most important part of all. It is saved in the .toc
-% and when we use l@\meta{chapter} etc it is used for formatting. No
-% separation of concerns here.
 %
+% 
 %    \begin{macrocode}  
-\dim_new:N \numberlineboxwidth  
+\ExplSyntaxOn
+\dim_new:N \numberlineboxwidth 
+
 \cs_gset:Npn \numberline #1
   {
    \toc_number_before_box
-   \hbox_to_wd:nn \numberlineboxwidth                   %\numberlineboxwidth  
+   
+%   \tcbox[
+%          size=minimal,
+%          colback=red,
+%          width=5em,
+%           ]             %\numberlineboxwidth  
      { 
-       \toc_number_before\relax #1 \toc_number_after \hfil 
+      \toc_number_before
+      \tcbox[size=minimal,
+             nobeforeafter,
+             colback=white,
+             width=\numberlineboxwidth + 1.5em]{#1}\hskip5pt\toc_number_after 
      }
    \toc_number_after_box
   }
@@ -644,7 +651,9 @@ See http://www.latex-project.org/lppl.txt
 % 
 % \section{ToC Name Parameters}
 %
-%  The ToC name keys are intended for styling the top part of the ToC.
+%  The ToC name keys are intended for styling the top part of the ToC. This is typeset
+%  in a tcolorbox as the example below, so we can have full control of the
+%  keys of tcolorbox.
 %
 %  \begin{tcolorbox}[colframe=black,colback=white]
 %  \hfill \tcbox[size=minimal,colback=white,
@@ -659,6 +668,7 @@ See http://www.latex-project.org/lppl.txt
          \str_case_x:nnTF {##1}  
              {
                { none       } { \cs_gset:cpn {#1} { \empty             } } 
+               { normal     } { \cs_gset:cpn {#1} { \empty             } } 
                { lower      } { \cs_gset:cpn {#1} { \MakeTextLowercase } } 
                { lowercase  } { \cs_gset:cpn {#1} { \MakeTextLowercase } } 
                { upper      } { \cs_gset:cpn {#1} { \MakeTextUppercase } } 
@@ -713,22 +723,34 @@ See http://www.latex-project.org/lppl.txt
          \cs_gset:cpn {#1} {##1}
       }
   }   
+\ExplSyntaxOff  
 %    \end{macrocode}
-%  \begin{docCommand}{ new_toc_keys:nn } {}
+%
+% Since most of the keys are similar for all the lists I tried to automate the key generation and
+% the setting of defaults.
+%
+% A diiferent aim of the \pkg{phd} is to provide if possible only keys that are accept textual parameters,
+% i.e., the user types bfseries rather than |bfseries|. 
+%
+%  \begin{docCommand}{cs_new_toc_keys:nn } {}
 %    ToC, LoF, ToF etc, follow the conventions of the |phd| package in declaring
 %    basic elements using prefixes, normally with two names, for example
 %    |toc name|\meta{field} defines properties for the name used on top of
 %    contents pages.
 %  \end{docCommand}
+%
+%
 %    \begin{macrocode}
+\ExplSyntaxOn
 \cs_new:Npn \new_toc_keys #1 #2
 {           
 \cxset 
   {
-    #1/.store                                   = #2_contentsname,
+    #1/.store                                   = contentsname,
     #1~before/.store                            = #2_before,
     #1~after/.store                             = #2_after,
-%    
+    #1~numwidth/.store                          = #1_numwidth, 
+   %    
     #1~font-size/.fontsize                      = #2_fontsize,
     #1~font-weight/.fontweight                  = #2_fontweight,
     #1~font-family/.fontfamily                  = #2_fontfamily,
@@ -744,15 +766,15 @@ See http://www.latex-project.org/lppl.txt
 %    
     #1~afterskip/.store                         = #2_after_skip,
     #1~align/.textalign                         = #2_align,
-    
+        
     #1~indent/.store                            = #2_indent,
-%    
+
+    #1~page~after/.store                        = #2_page_after,    
     toc~pagestyle/.code                               =
       \gdef\contentspagestyle@cx{\thispagestyle{empty}},%
+  }
 }
- 
-}
-
+%
 \ExplSyntaxOff     
 %    \end{macrocode}      
 %
@@ -768,25 +790,33 @@ See http://www.latex-project.org/lppl.txt
        #1                   = #2,
        #1~before            =,
        #1~after             =, 
+       #1~numwidth          = 0pt,
        #1~color             = black,
-       #1~background-color  = magenta!15,
+       #1~background-color  = white,
        #1~frame-color       = white,
-       #1~shadow            = drop shadow,       
+       #1~shadow            = none,       
        #1~font-weight       = normal,
-       #1~font-family       = sffamily,
+       #1~font-family       = rmfamily,
        #1~font-shape        = upshape,
-       #1~font-size         = LARGE,
-       #1~afterskip         = 10pt, %set as 40pt in LaTeX
-       #1~after        = ,
-       #1~align        = left,
-       #1~indent       = ,
-       #1~case         = none,
-       toc~pagestyle         = empty,
+       #1~font-size         = Huge,
+       #1~afterskip         = 40pt, %set as 40pt in LaTeX
+       #1~after             = ,
+       #1~align             = center,
+       #1~indent            = 0pt,
+       #1~case              = none,
+       #1~page~after        = A,
+       toc~pagestyle        = fancy,
   }%
 }  
+\cxset{toc~rmarg/.code = \cs_new:Npn\tocrmarg: {#1}\global\let\@tocrmarg\tocrmarg:, }
+\cxset{toc~rmarg = 4em,}
 \ExplSyntaxOff
 %    \end{macrocode}
+%
 %  Next we create key sets for all three default lists, ToC, LoF and LoT.
+%  More can also be created, say for Plates or Illustrations
+%
+%  Note the second parameter is a csname hence the underscore, we use it to pick up the value from a macro
 %  
 %    \begin{macrocode}
 \ExplSyntaxOn
@@ -803,6 +833,12 @@ See http://www.latex-project.org/lppl.txt
 \ExplSyntaxOff
 %    \end{macrocode}
 %
+% TESTING
+% ARE THINGS BROKEN WITH THE KEYS??? 
+% 
+% \pgfkeyssetvalue{/phd/my key}{Hello, world!}
+% \pgfkeysifdefined{/phd/my key}{yes}{no}
+
 % \begin{docCommand}{phd_make_toc_title:n } { \meta{prefix} }
 %	Typesets the heading that goes on top of the Contents page.
 %	The prefix is the code prefix i.e, |toc_name| or |lof_name| etc. 
@@ -810,7 +846,6 @@ See http://www.latex-project.org/lppl.txt
 %
 %    \begin{macrocode}
 \ExplSyntaxOn
-
 \cs_new:Npn \phd_make_toc_title:n #1 
 {
   \addpenalty\@secpenalty
@@ -850,21 +885,23 @@ See http://www.latex-project.org/lppl.txt
 %
 % \ExplSyntaxOff 
 %
-% {setpnumwidth@cx}
-% {setocmarg@cx}
+% \docAuxCommand{setpnumwidth@cx}
+%
+% \docAuxCommand{setocmarg@cx}
+%
 %  Users commands for setting |\@pnumwidth| and |\@tocrmarg|.
 %    \begin{macrocode}
-\newcommand{\setpnumwidth@cx}[1]{\renewcommand{\@pnumwidth}{#1}}
-\newcommand{\settocmarg@cx}[1]{\renewcommand{\@tocrmarg}{#1}}
-\setpnumwidth@cx{25pt}
-\settocmarg@cx{20pt}
+%\newcommand{\setpnumwidth@cx}[1]{\renewcommand{\@pnumwidth}{#1}}
+%\newcommand{\settocmarg@cx}[1]{\renewcommand{\@tocrmarg}{#1}}
+% \setpnumwidth@cx{25pt}
+%\ settocmarg@cx{20pt}
 %    \end{macrocode}
 % 
 % 
 %
 % \section{Styling the dot leaders}
-%  	Here we will allow the user to either have dotfills and
-%    be	able to specify the type and spacing of the dots.
+%  Here we will allow the user to either have dotfills and
+%  be	able to specify the type and spacing of the dots.
 %	We also provide a key to disable dotfills.
 %
 % \begin{docCommand} {dot@cx} { \meta{void}}
@@ -889,7 +926,7 @@ See http://www.latex-project.org/lppl.txt
 %    \begin{macrocode}
 \ExplSyntaxOn
 \cs_gset:Npn \dot@cx { - }
-\cs_gset:Npn \dot_fill #1 
+\cs_gset:Npn \dot_fill  #1 
   {
     \leaders\hbox{$\m@th\mkern #1 mu\hbox{\dot@cx}\mkern #1 mu$}\hfill
   }
@@ -919,82 +956,164 @@ See http://www.latex-project.org/lppl.txt
   {
   \parfillskip=0pt plus1fil
   }
-\ExplSyntaxOff  
+\ExplSyntaxOff 
+\ExplSyntaxOn
+\cs_if_exist:cTF {showvalue}
+  { }
+  {
+    \newcommand\showvalue[2][value] 
+    {
+   %\if@debug
+    \cs_if_exist:cTF {once}{}{
+    \tikz[remember~picture,overlay] 
+    \draw[<->] (0,0)--(0,.1)--++(-.25,0) node[left,fill=blue!5,text=black]%
+       {
+         \parbox{2.3cm} 
+         {
+           {\sffamily
+            \tiny #1 #2}
+         }
+       };%\space%
+     }  
+   %\fi    
+    }
+  }
+\ExplSyntaxOff   
 %    \end{macrocode}
 %
+% \begin{docCommand}{format_toc_entry:nn} { \meta{number} \meta{label} \meta{page number} }{}{}
+%  This is the workhorse command that typesets every entry in a colorbox.
+% \end{docCommand}
 % 
 %    \begin{macrocode}
 \ExplSyntaxOn
 \cs_set:Npn \format_toc_entry:nn #1 #2 #3
   {
-  
-  %     \cs_set:Npn \tocindent 
-%     {
-         %\cs_if_exist_use:cTF {#1_indent}{TI}{0pt} 
-         
-%     }
- \begingroup  
- \hypersetup{linkcolor=magenta,
-             }
- \begin{tcolorbox}[size=minimal,
-                   colback=white!10,
-                   width=\linewidth-1em]   
+ \str_if_eq:nnTF{A}{A}{\def\temp{red}}{\def\temp{green}}
+ \group_begin:  
+   \hypersetup{linkcolor=thelinkcolor,}         %thelinkcolor
+   \parindent0pt
+%    \end{macrocode}
+%
+% The standard ToC entry is typeset in |tcolorboxes|. We first set all the parameters to the tightest fit possible.
+% 
+%    \begin{macrocode}   
+\showvalue[]{@tocrmarg = \@tocrmarg\\
+             @pnumwidth = \csname #1_numwidth\endcsname \relax \\
+             section\\
+             indent=\csname toc_section_indent\endcsname\relax\\
+             subsection\\
+             indent=\csname toc_subsection_indent\endcsname\relax\\
+             subsubsection\\
+             indent =\csname toc_subsubsection_indent\endcsname\relax\\  
+\gdef\once{}}  
+   \begin{tcolorbox}[
+                     colback=white,
+                     width=\linewidth,
+                     nobeforeafter,
+                     boxsep=5pt,
+                     bottom=0pt,
+                     top=0pt,
+                     toprule=0pt,
+                     bottomrule=0pt,
+                     leftrule=0pt,
+                     rightrule=0pt,
+                     colframe= black,
+                     ignore~nobreak=true,
+                     shrink~tight,
+                     hbox,
+                     ]  
+                     \null 
      \expandafter\leftskip \cs:w #1_indent\cs_end:
-     \renewcommand\@tocrmarg{3em}
+    
      \dim_set_eq:NN \tex_rightskip:D \@tocrmarg
      \parfillskip -\rightskip
-     \dim_set_eq:NN \parindent {1em} %\tocindent
-%    
-     \interlinepenalty\@M
-     \leavevmode
-     \numberlineboxwidth 4.2em %\cs:w #1_number_width \cs_end:\relax
-     \let\toc_number_before \cftsecpresnum
-     \advance\leftskip \numberlineboxwidth
-     \null\nobreak\hskip -\leftskip
-    
-%       \tcbox[size=minimal,
-%         nobeforeafter,
-%         before=\hspace{0em},
-%         colback=white,
-%         box~align=base,
-%        ]
-         {
-            \phd_font_aux_toc:n  {#1}
-           % \cs_if_exist_use:cTF {#1_color}{T #1}{F #1}
-            \expandafter\color{\cs:w #1_color\cs_end:}
-            \cs_if_exist_use:cTF {#1_case}  {#2}{#2}
-         }
-       \cs_if_exist_use:cTF {toc_section_leader}{} {}
+     %\dim_set_eq:NN \parindent {1em} \tocindent
+     %\interlinepenalty\@M
+    % \leavevmode
+    \global\expandafter
+       \let\expandafter
+         \numberlineboxwidth\csname #1_numwidth\endcsname\relax
+    % \let\toc_number_before \cftsecpresnum
+    % \advance\leftskip \numberlineboxwidth
+     %\null\nobreak
+    % \hskip -\leftskip
+%    \end{macrocode}
+%
+% The second tcolorbox will typeset the number and the title. Again we ensure we pass it all the keys for a tight
+% fit to avoid spurious spaces. 
+%
+%    \begin{macrocode}    
+     \hskip\csname#1_indent\endcsname\relax
+        \begin{tcolorbox}[
+         nobeforeafter,
+         before=,
+         after=,
+         shrink~tight,
+         width=\linewidth-\expandafter
+                  \csname#1_indent\endcsname - \@tocrmarg,
+         %before=\hspace{\csname#1_indent\endcsname},
+         colback=white,
+         colframe=white,
+         box~align=base,
+         boxsep    = 3pt, 
+         top=0pt,
+         left~skip=0pt,
+         right~skip=0pt,
+         %noparskip,
+         parbox=true,
+         hyphenationfix=true,
+         minipage,
+         %forces~nobeforeafter,
+        ]
+        
+        \phd_font_aux_toc:n  {#1}
+        \expandafter\color{\cs:w #1_color\cs_end:}
+        \expandafter\csname #1_number_box_before\endcsname
+            %\cs_if_exist_use:cTF {#1_case}{#2}{#2 \relax}
+          
+        #2
+        \expandafter\csname #1_number_box_after\endcsname
+        \hfill\hfill\hfill
+        %\cs_if_exist_use:cTF {toc_section_leader}{} {}
+        
 %    \end{macrocode}
 % Next we take care of the page box. This is again a box within a 
 % box arrangement as in most case we need to float the page numbers to the right.
 % Think page 1 and page 999.  
-%    \begin{macrocode}       
+%    \begin{macrocode}   
+           
        \begin{tcolorbox}
        [
           size=minimal,
           nobeforeafter,
           colback=\toc_section_page_background_color,
-          width=\toc_section_number_width-0.5em,
+          width=\@tocrmarg, %\expandafter\csname #1_numwidth\endcsname + 10pt,
           halign=center,
           box~align = base,
-          boxsep    = 3pt, 
+          boxsep    = 1pt, 
+          colframe = red,
        ]
-       \tcbox
-        [
+       \hfill\hfill
+       \tcbox[
           size=minimal,
           nobeforeafter,
-          width=\toc_section_number_width-0.5em,
-          colback=\toc_section_page_background_color,
+          width=\toc_section_number_width,
+          colback= white, %\toc_section_page_background_color,
           box~align = base,
         ]
          {
-         %\mbox{
          \phd_font_aux_toc:n  {#1_page}
-         \toc_section_page_before #3 \toc_section_page_after
+         
+         \expandafter\csname #1_page_before\endcsname
+             {#3}
+         \expandafter\csname #1_page_after\endcsname 
+             
          }
-       \end{tcolorbox}  
-     \par
+       \end{tcolorbox} 
+       \par 
+     \end{tcolorbox}   
+     \par \parskip1pt
     \end{tcolorbox} 
     \par  
     \group_end:
@@ -1015,13 +1134,17 @@ See http://www.latex-project.org/lppl.txt
     #1~beforeskip/.store            = #2_beforeskip,
     #1~afterskip/.store             = #2_afterskip,    
     #1~indent/.store                = #2_indent,
+    #1~numwidth/.store              = #2_numwidth,
+% number box related 
+    #1~number~box~before/.store      = #2_number_box_before, 
+    #1~number~box~after/.store       = #2_number_box_after,   
 % fonts 
     #1~font-size/.fontsize          = #2_fontsize, 
     #1~font-family/.fontfamily      = #2_fontfamily, 
     #1~font-shape/.fontstyle        = #2_fontshape, 
     #1~font-weight/.fontweight      = #2_fontweight, 
     #1~color/.store                 = #2_color,
-    #1~numwidth/.store              = #2_number_width,
+    #1~number width/.store          = #2_number_width,
     #1~case/.case                   = #2_case,
     #1~page~font-size/.fontsize     = #2_page_fontsize,
     #1~page~font-family/.fontfamily = #2_page_fontfamily,
@@ -1030,7 +1153,7 @@ See http://www.latex-project.org/lppl.txt
     #1~page~color/.store            = #2_page_color,
     #1~page~background-color/.store = #2_page_background_color,    
 %   leaders template only
-	  #1~dotsep/.store                = #2_dotsep,
+	 #1~dotsep/.store                = #2_dotsep,
 %   before and after page number
     #1~page~before/.store           = #2_page_before,
     #1~page~after/.store            = #2_page_after,
@@ -1047,15 +1170,18 @@ See http://www.latex-project.org/lppl.txt
     \cxset
     {%
       #1~beforeskip  =\z@ \@plus.2\p@,
-      #1~afterskip   =0pt,      
+      #1~afterskip   =1pt,      
       #1~indent=0em,
+      #1~numwidth=0em,
+      #1~number~box~before =,
+      #1~number~box~after =,
       #1~font-family= sffamily,
       #1~font-weight = bfseries,
-      #1~font-shape = upshape,
-      #1~color= spot,
+      #1~font-shape = itshape,
+      #1~color= black,
       #1~case = none,
       #1~font-size= normal,
-      #1~numwidth = 3em,
+      #1~numwidth = 3em,    %this has to be handled auto
       #1~dotsep = 2.7,
 %    \end{macrocode}
 %
@@ -1070,7 +1196,7 @@ See http://www.latex-project.org/lppl.txt
       #1~page~font-weight        =,  
       #1~page~font-family        = sffamily,
       #1~page~color              = black, 
-      #1~page~background-color   = spot!15,       
+      #1~page~background-color   = white,       
       #1~page~before             =,
       #1~page~after              =,
     }
@@ -1102,8 +1228,12 @@ See http://www.latex-project.org/lppl.txt
 \make_new_toc_entry_key_defaults {toc~part}
 \ExplSyntaxOff
 \cxset{toc part font-size=LARGE,
-       toc part color=spot,
-       toc part beforeskip=1em}
+       toc part color=black,
+       toc part beforeskip=1em,
+       toc part page before=, 
+       toc part indent = 0pt,
+       toc part numwidth=1.5em,
+       }
 %    \end{macrocode}
 %
 %
@@ -1136,18 +1266,18 @@ See http://www.latex-project.org/lppl.txt
       {
         \bool_if:NTF \has_chapter_bool 
           {
-            \addpenalty{-\@highpenalty}
+            %\addpenalty{-\@highpenalty}
           }
           { 
-            \addpenalty\@secpenalty 
+            %\addpenalty\@secpenalty 
           }
           \addvspace{\toc_part_beforeskip}%
           \format_toc_entry:nn {toc_part} {#1} {#2}
            \nobreak
            \bool_if:NT \has_chapter_bool
              {
-               \global\@nobreaktrue
-               \tex_everypar:D { \global\@nobreakfalse\tex_everypar:D {} }%
+               %\global\@nobreaktrue
+               %\tex_everypar:D { \global\@nobreakfalse\tex_everypar:D {} }%
  	           }
            %\group_end:
     }
@@ -1167,6 +1297,7 @@ See http://www.latex-project.org/lppl.txt
   \newcommand{\toc_part_leader}{\large\bfseries\dot_fill{\partdotsep@cx}}
 \ExplSyntaxOff       
 %    \end{macrocode}
+%
 % \section{Handling of chapters in ToC.}
 %
 %  These are the user commands to control the typesetting of Chapter entries.
@@ -1197,7 +1328,7 @@ See http://www.latex-project.org/lppl.txt
 %
 % \begin{docCommand} {l@chapter} { }
 %  \cs{l@chapter}\marg{title}\marg{page} typesets the ToC entry for
-% a |chapter| heading. It is a parameterised copy of the default |\l@chapter|
+% a |chapter| heading. It is a parameterised copy of the default \docAuxCommand{l@chapter}
 %  (see \docFile{classes.dtx} for the original definition). This only applies
 %  to chaptered documents.
 % \end{docCommand}
@@ -1207,10 +1338,20 @@ See http://www.latex-project.org/lppl.txt
   \make_new_toc_entry_keys {toc~chapter}{toc_chapter}  
   \make_new_toc_entry_key_defaults {toc~chapter}
 \ExplSyntaxOff
+%    \end{macrocode}
+% \subsection{Set toc chapter label defaults}
+%  We next set some reasonable chapter formatting key defaults.
+%    \begin{macrocode}
 \cxset{toc chapter font-size=LARGE,
-       toc chapter color=spot,
+       toc chapter color=black,
        toc chapter beforeskip=1em,
-       toc chapter afterskip = 1em plus0.2pt minus .2pt}
+       toc chapter afterskip = 1em plus0.2pt minus .2pt,
+       toc chapter case=upper,
+       toc chapter font-family = sffamily,
+       toc chapter page before = ,
+       toc chapter page after =,
+       toc chapter numwidth = 1.5em,
+       }
 %    \end{macrocode}
 %
 %    \begin{macrocode}
@@ -1220,14 +1361,14 @@ See http://www.latex-project.org/lppl.txt
 %    \end{macrocode}  
 %    \begin{macrocode}  
 \ExplSyntaxOn
-  \renewcommand*{\l@chapter}[2]{%
+  \renewcommand*{\l@chapter}[2]{
      \ifnum \c@tocdepth >\m@ne
-       \addpenalty{-\@highpenalty}%
-       \vskip \toc_chapter_beforeskip\relax 
+       \addpenalty{-\@highpenalty}
+       \skip_vertical:N \toc_chapter_beforeskip
         {
          \format_toc_entry:nn {toc_chapter}{#1}{#2}
-        }%
-       \vskip \toc_chapter_afterskip 
+        }
+       \skip_vertical:N \toc_chapter_afterskip 
     \fi
  }%
 \ExplSyntaxOff 
@@ -1236,7 +1377,7 @@ See http://www.latex-project.org/lppl.txt
 % We define a macro for mocking sample toc chapters for the documentation
 % 
 % \begin{docCommand} {sampletocchapter} {\meta{void}}
-%   Typesets  a sample based on l@chapter
+%   Typesets  a sample based on \docAuxCommand{l@chapter}{}{}
 % \end{docCommand}
 %    \begin{macrocode}
 \let\sampletocchapter\l@chapter
@@ -1250,9 +1391,14 @@ See http://www.latex-project.org/lppl.txt
   \make_new_toc_entry_keys {toc~section}{toc_section}  
   \make_new_toc_entry_key_defaults {toc~section}
 \ExplSyntaxOff
+\cxset{toc section page after = ,
+       toc section page before =,
+       toc section indent=1.5em,
+       toc section numwidth= 2.3em,
+}
 %    \end{macrocode}
 %
-% \begin{docCommand} { l@section } { \meta{title} } { page number }
+% \begin{docCommand} {l@section} { \meta{title} } { page number }
 % 	 This macro is called when the \cs{tableofcontents}
 %	 is read from the |.toc| file and it typesets
 %	 the title and the page number. It is called in a |csname| by |\contentsline|
@@ -1262,6 +1408,7 @@ See http://www.latex-project.org/lppl.txt
 %    \#3 added by Hyperref
 %      
 % \end{docCommand}
+%
 %    \begin{macrocode}
 \ExplSyntaxOn
 \cs_gset:Npn \l@section #1 #2
@@ -1292,17 +1439,6 @@ See http://www.latex-project.org/lppl.txt
 %
 %
 \newcommand{\toc_section_leader}  {\normalfont\dot_fill{\toc_section_dotsep}}
-%^^A\newcommand{\cftsecdotsep}{\cftdotsep}
-%    \end{macrocode}
-%    We can now define the command \cmd{\tocsectionfillnum@cx}. 
-%    will print the 
-%	leaders if any and the page number \#1. 
-%    \begin{macrocode}
-%\newcommand{\tocsectionfillnum@cx}[1]{%
-%  {\tocsectionleader@cx}\nobreak
-%  \hb@xt@\@pnumwidth{\hfil\tocsectionpagefont@cx
-%   \toc_section_page_before #1}%
-%   \tocsectionpageafter@cx\par}%
 \ExplSyntaxOff
 %    \end{macrocode}
 %
@@ -1311,7 +1447,7 @@ See http://www.latex-project.org/lppl.txt
 %
 % 
 %  \refCom{l@subsection} typesets the ToC entry for
-% a |section| heading. It is similar to   \refCom{l@section}
+% a |subsection| heading. It is similar to  \refCom{l@section}
 % (see \docFile{classes.dtx} for the original definition). 
 % 	We start by defining all our parameters and variables.
 %
@@ -1320,6 +1456,12 @@ See http://www.latex-project.org/lppl.txt
 \make_new_toc_entry_keys {toc~subsection}{toc_subsection}  
 \make_new_toc_entry_key_defaults {toc~subsection}
 \ExplSyntaxOff 
+\cxset{%
+  toc subsection indent = 3.8em,
+  toc subsection numwidth = 3.2em,
+  toc subsection page before =[,
+  toc subsection page after =],
+}
 %    \end{macrocode}
 % Settings
 %
@@ -1362,6 +1504,9 @@ See http://www.latex-project.org/lppl.txt
 \make_new_toc_entry_keys {toc~subsubsection}{toc_subsubsection}  
 \make_new_toc_entry_key_defaults {toc~subsubsection}
 \ExplSyntaxOff
+\cxset{toc subsubsection indent = 7.0em,
+       toc subsubsection numwidth= 4.1em,
+}
 %
 %    \end{macrocode}
 %
@@ -1380,7 +1525,7 @@ See http://www.latex-project.org/lppl.txt
 %
 % \begin{docCommand} {l@subsubsection} { \meta{title} \meta{page number}} 
 %  typesets the ToC entry for
-% a |subsubsection| heading. It is a parameterised copy of the default |\l@subsubsection|
+% a |subsubsection| heading. It is a parameterised copy of the default \mono{ @subsubsection}
 %	We start by defining all our parameters and variables.
 % \end{docCommand} 
 %       
@@ -1407,7 +1552,7 @@ See http://www.latex-project.org/lppl.txt
 %     \let\toc_number_after_box \cftsecaftersnumb
 %     \advance\leftskip \@tempdima \null\nobreak\hskip -\leftskip
 
-  \format_toc_entry:nn {toc_subsubsection} {#1} {#2}
+    \format_toc_entry:nn {toc_subsubsection} {#1} {#2}
   \fi
 }
 \ExplSyntaxOff
@@ -1422,15 +1567,6 @@ See http://www.latex-project.org/lppl.txt
    }
 \ExplSyntaxOff
 %\newcommand{\cftsecdotsep}{\cftdotsep}
-%    \end{macrocode}
-%    We can now define the command \cmd{\tocsectionfillnum}. It will print the 
-%	leaders if any and the page number \#1. TODO IS par necessary??
-%    \begin{macrocode}
-\newcommand{\tocsubsubsectionfillnum}[1]{%
-  {\tocsubsubsectionleader}\nobreak
-  \hb@xt@\@pnumwidth{\hfil\toc_subsubsection_page_font
-   \toc_subsubsection_page_before #1}%
-   \toc_subsubsection_page_after\par}%
 %    \end{macrocode}
 %
 % \section{Toc paragraph styling}
@@ -1472,6 +1608,7 @@ See http://www.latex-project.org/lppl.txt
 \ExplSyntaxOff  
 %    \end{macrocode}
 %
+% \paragraph{A Test Paragraph} Just to show a test paragraph. \lorem
 %
 %    \begin{macrocode}
 \ExplSyntaxOn
@@ -1535,7 +1672,7 @@ See http://www.latex-project.org/lppl.txt
 % we also need to do the other lists, list of figure
 % and list of tables and maybe others.
 %
-% \section{List of Figures}
+% \chapter{List of Figures}
 % 
 
 % The standard list of figures follows the same patterns
@@ -1580,21 +1717,26 @@ See http://www.latex-project.org/lppl.txt
 % different style for this.
 % 
 %    \begin{macrocode}
-\cxset{lof name= Illustrations,}%
+\cxset{lof name = Illustrations,
+		 lof name font-shape = itshape,
+		 lof name font-weight = bfseries,
+       lof name case = lower,
+       }
 %    \end{macrocode}    
 %
 %    \begin{macrocode}    
 \ExplSyntaxOn
-\def\phd_lof_start{}
-\def\phd_lof_end {}
+\cs_new:Npn \phd_lof_start: {}
+\cs_new:Npn \phd_lof_end: {}
 \cs_new:Npn \make_lof_title
   {
     \newpage
-    \phd_lof_start
+    \phd_lof_start:
     \format_toc_name:n {lof_name}%
+    \gdef\listfigurename{Illustrations}
     \@mkboth{\MakeUppercase\listfigurename}%
             {\MakeUppercase\listfigurename}%
-    \phd_lof_end         
+    \phd_lof_end:         
   }        
 \ExplSyntaxOff    
 %    \end{macrocode}    
@@ -1629,7 +1771,7 @@ See http://www.latex-project.org/lppl.txt
 \ExplSyntaxOff  
 %    \end{macrocode}
 %
-% \section{List of Tables}
+% \chapter{List of Tables}
 %
 % The standard list of tables is similar to that of the
 % for the LoF. As a matter of fact in the book class they are
@@ -1646,6 +1788,8 @@ See http://www.latex-project.org/lppl.txt
 \ExplSyntaxOn
 \make_new_toc_entry_keys {lot~entry}{lot_entry}  
 \make_new_toc_entry_key_defaults {lot~entry}
+%
+%
 \renewcommand\listoftables 
   {
     \if@twocolumn
@@ -1653,6 +1797,7 @@ See http://www.latex-project.org/lppl.txt
     \else
       \@restonecolfalse
     \fi
+    
     \phd_make_toc_title:n {lot_name}
     \start_toc:n {lot}%
     \if@restonecol
@@ -1660,11 +1805,10 @@ See http://www.latex-project.org/lppl.txt
     \fi
    }
 \ExplSyntaxOff
-\endinput    
+    
 %    \end{macrocode}
-% \drawlistdiagram
 % 
-% \subsection{Keys for Lists of Tables}
+% \section{Keys for Lists of Tables}
 
 % Next we define all the properties we need to add for the LoF heading. In
 % the standard classes it just uses |\chapter*|, but many books have a totally
@@ -1684,7 +1828,7 @@ See http://www.latex-project.org/lppl.txt
 % at the page number of the entry. 
 % 
 % 
-% \begin{docCommand} {l@figure} { \marg{number and title}  \marg {page number} }
+% \begin{docCommand} {l@table} { \marg{number} \marg{title}  \marg {page number} }
 %  As for the other lists the |l@figure| has been defined in one of the classes.
 %  We re-write it to add parameters. As the style can vary considerably from book
 %  to book we also introduce special formatters.
@@ -1694,7 +1838,9 @@ See http://www.latex-project.org/lppl.txt
 \renewcommand*{\l@table}[2]
  {
    \vskip \lot_entry_beforeskip
+   {
    \format_toc_entry:nn {lot_entry} {#1} {#2}
+   }
   }
 
 \ExplSyntaxOff  
@@ -1702,15 +1848,17 @@ See http://www.latex-project.org/lppl.txt
 % \begin{table}
 % \caption{This is the first table}
 % \end{table}
+%
 % \begin{table}
 % \caption{This is the second table}
 % \end{table}
-% \captionof{table}{This is with captionof}
-% \captionof{figure}{This is figure with caption of}
 %
-% \section{This is a very long heading to see.This is a very long heading to see.This is a very long heading to see.This is a very long heading to see.This is a very long heading to see.This is a very long heading to see.This is a very long heading to see. }
+% 
+% 
+%
+% \section[Very long]{This is a very long heading to see.This is a very long heading to see.This is a very long heading to see.This is a very long heading to see.This is a very long heading to see.This is a very long heading to see.This is a very long heading to see. }
 
-% \meaning\contentsline
+% ^^A \meaning\contentsline
 %
 %
 % \meaning\numberline
@@ -1722,7 +1870,16 @@ See http://www.latex-project.org/lppl.txt
 %\makeatletter
 %\hyper@linkstart{link}{section.1.2}{12}\hyper@linkend
 %\makeatother
-
+  
+% \section{Issues and Road Map}  
+%
+% \begin{enumerate}
+% \item Provide custom styles, in the same fashion like the rest of the \pkg{phd}. Custom will just load a custom formatter.
+% \item Provide a better section on usage with some better examples.
+% \item Provide better error messages.
+% \item Check integration with phd-colormanager.
+% \item Automate the number and pagewidth dimensions for more flexibility
+% \end{enumerate}
 
 %</TOC>      
 \endinput       
@@ -1790,8 +1947,7 @@ See http://www.latex-project.org/lppl.txt
 %    \par
 %  }            
 %
-\
-
+% TODO EVERYTHING WITH TCOLORBOX 
 \cs_new:Npn \format_lot_entry_leaders_type #1 #2 
   {
    \leftskip \lot_indent\relax

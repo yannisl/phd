@@ -159,43 +159,4 @@ end
 
 
 
---[[
-\hbox to \textwidth{\hfill
-\begin{minipage}{.8\textwidth}
-\columnseprule2pt
-\def\columnseprulecolor{\color{thegray}}
-\columnsep22pt
-\begin{multicols}{2}
-\arial
-\color{theblue}
-\flushright
-\Large
-Over the last year we\\
-have continued to\\
-...
-...
-career researchers.\\
-\columnbreak
-\color{thegray}
-
-\small
-\flushleft
-\setlength{\baselineskip}{12pt plus 2pt minus 1pt}
-
-We have engaged both\\
-individuals and groups to\\
-build a vision for our strategic\\
-initiatives and our museums\\
-...
-...
-project on the Efficiency and\\
-Effectiveness of Peer Review\ \
-Journals\\
-\end{multicols}
-\end{minipage}
-}
-\bigskip
-\bgroup
-
-]]
 

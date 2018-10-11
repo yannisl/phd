@@ -3,36 +3,53 @@
 \index{Grouping}
 \label{ch:grouping}
 
-Like most computer languages \tex\ has a grouping mechanism that is able to confine most changes to a particular locality. This chapter explains what sort of actions can be local, and how groups are formed.
+Like most computer languages \tex\ has a scoping mechanism that is able to confine most changes to a particular locality. This chapter explains what sort of actions can be local, and how groups are formed.
 \medskip
 
-\DescribeMacro{\bgroup}
+\begin{docCommand}{bgroup}{}
 Implicit beginning of group character.
+\end{docCommand}
 
-\DescribeMacro{\egroup} Implicit end of group character.
+\begin{docCommand}{egroup}{}
+ Implicit end of group character.
+ \end{docCommand}
 
-\DescribeMacro{\begingroup} Open a group that must be closed with |\endgroup|.
+\begin{docCommand}{begingroup}{}
+ Open a group that must be closed with |\endgroup|.
+\end{docCommand}
 
-\DescribeMacro{\endgroup} Close a group that was opened with |\begingroup|.
+\begin{docCommand}{endgroup}{} 
+Close a group that was opened with |\begingroup|.
+\end{docCommand}
 
-\DescribeMacro{\aftergroup} Save the next token for insertion after the current group ends.
+\begin{docCommand}{aftergroup}{} 
+Save the next token for insertion after the current group ends.
+\end{docCommand}
 
-\DescribeMacro{\global} Make assignments, macro definitions, and arithmetic global.
+\begin{docCommand}{global}{}
+ Make assignments, macro definitions, and arithmetic global.
+\end{docCommand} 
 
-\DescribeMacro{\globaldefs} Parameter for overriding |\global| prefixes. IniTEX default: 0.
+\begin{docCommand}{globaldefs}{}
+ Parameter for overriding |\global| prefixes. IniTEX default: 0.
+\end{docCommand}
 
 
 
 The grouping mechanism can be thought of a bit like scope in other programming languages, with the
 exception that in \tex the mechanism is much more Pascal-like. Most assignments made inside a group are local to that group
-unless explicitly indicated otherwise, and outside the group old values are restored (pretty much like in Pascal). If we type the following  example:
+unless explicitly indicated otherwise, and outside the group old values are restored (pretty much like in Pascal). 
+
+The most common way to group a portion of your program is to use braces. If we type the following  example:
 
 \begin{texexample}{}{}
-\def\i{42}
+\def\i{42} 
+
 {
-   \def\i{43}
-   \def\b{2}
+  \def\i{43}
+  \def\b{2}
 }
+
 The value of the \textbackslash i is now \i
 
 \def\x{a}
@@ -43,59 +60,8 @@ The value of the \textbackslash i is now \i
 \egroup
   Outside group \x
 \end{texexample}
-
-we get   \texttt{The value of the \textbackslash i is now 42}. Due to the way \tex scoping rules work, the old program state
+We get   \texttt{The value of the \textbackslash i is now 42}. Due to the way \tex scoping rules work, the old program state
 will be restored \textit{completely} after returning from the local group. Neither the change to |\i| nor the definition of |\b| will survive. This is also true for register changes or other assignments.
-
-The listing above defines |\i| enters a local scope (a \tex group) and changes |\i|
-
-The |\end| command is allowed to occur inside a group, but TEX will give a diagnostic
-message about this.
-
-The \cs{aftergroup} control sequence saves a token for insertion after the current group. Several
-tokens can be set aside by this command, and they are inserted in the left-to-right order in which
-they were stated.
-
-\begin{texexample}{}{}
-\def\x#1;{#1}
-\def\y{15}
-{\globaldefs1
-\bgroup
-   \def\y{0}
-   \aftergroup\x\aftergroup\y\aftergroup;
-   \aftergroup}
-\egroup
-\y
-
-
-\globaldefs0
-
-\def\z{1}
-{\def\z{0}
-\z
-}
-
-\z
-
-\end{texexample}
-
-\begin{texexample}{}{}
-{ \def\z{1}
-  {\def\z{0}\globaldefs1
-     \z
-    {
-	\z
-    }
-   \z
-  }
- \z
-}
-
-
-
-
-
-\end{texexample}
 
 
 
@@ -105,21 +71,22 @@ An assignment or macro definition is usually made global by prefixing it with \c
 values of the integer parameter |globaldefs| override |doccmd{global}|
 is positive every assignment is implicitly prefixed with \doccmd{global}, and if |\globaldefs| is negative,
 |\global| is ignored. Ordinarily this parameter is zero. It has very
-limited use and even in the \latex\ kernel we can only find 3-4 uses when defining math fonts.
+limited use and even in the \latex\ kernel we can only find 3-4 uses when defining math fonts.\footnote{In file \texttt{ltfssbas.dtx}.}
 
 
 Some assignment are always global: the \marg{global} assignments are:
 
-font assignment assignments involving \cs{fontdimen}, \cs{hyphenchar}, and \cs{skewchar}.
+\begin{description}
+\item[font assignment] assignments involving \cs{fontdimen}, \cs{hyphenchar}, and \cs{skewchar}.
 
-hyphenation assignmenti \cs{hyphenation} and \cs{patterns} commands.
+\item[hyphenation] assignment \cs{hyphenation} and \cs{patterns} commands.
 
-hbox size assignmenti altering box dimensions with \cs{ht}, \cs{dp}, and \cs{wd} 
+\item[hbox size assignment] altering box dimensions with \cs{ht}, \cs{dp}, and \cs{wd} 
 
-hinteraction mode assignmenti run modes for a \tex job (see Chapter 32).
+\item[interaction mode assignment] run modes for a \tex job.
 
-hintimate assignmenti assignments to a hspecial integeri or hspecial dimeni;
-
+\item[intimate assignment] assignments to a special integer or special dimen
+\end{description}
 
 \section{Braces}
 
@@ -132,17 +99,16 @@ The most common way to group is to use braces. They are used for two purposes:
 to delimit the argument.
 \end{enumerate}
 
-It is important to note that the characters \{, \} are not hardwired in \tex. Any tokens with catcodes 1 and 2 can be used.
-The plain format starts [343] by saying:
+It is important to note that the characters `\{', `\}' are not hardwired in \tex. Any tokens with catcodes 1 and 2 can be used.
+The plain format starts [343] by defining:
 
 \begin{teX}
-
 \catcode`\{ =1
 \catcode `} = 2
 \end{teX}
 
 Tokens with catcodes 1 and 2 are called \emph{explicit braces}. An \emph{implicit} brace is a control sequence whose replacement text is an explicit brace. Thus the two |plain| control sequences 
-|\bgroup| and |\egroup| are implicit braces. They are defined in [353] by:
+|\bgroup| and |\egroup| are implicit braces. 
 
 There is also a low-level \tex operator pair for creating groups. It works
 just as the braces. A group is started with \cs{begingroup} and ended with
@@ -177,6 +143,7 @@ This will typeset:
   \small\lipsum[1-3]
 \endindent
 
+\section{Forming Groups Using \textbackslash begingroup and \textbackslash endgroup} 
 
 The other two primitives \docAuxCommand{begingroup} and \docAuxCommand{endgroup} can also be used to define a group. However a group that starts with a |\begingroup| must end with an |\endgroup|. This provides a mechanism for error checking, which \tex's parsing routines can easily catch.
 
@@ -194,7 +161,18 @@ but the following will get \tex to complain about missing braces
 \hbox\begingroup\it abc\endgroup
 \end{teX}
 
+It should be pointed out that |\begingroup| and |\endgroup| do not really
+add any new grouping functionality that could not be provided by curly braces
+or |\bgroup| and |\egroup|. On the other hand, these two instructions are very
+useful in nested groups of complicated structures, where one wants to make sure
+that a certain "begin group instruction" is matched by a certain "end group
+instruction." For this pair of grouping instructions, and this pair only, use |\begingroup|
+and |\endgroup|. In case a |\begingroup| is not matched by a |\endgroup|,
+an error is generated by \tex.\footcite{bechto1993} 
 
+The case when not to use |begingroup| is clear. However, if one should use it for cases where
+|\bgroup| is possible, is a subject with different opinions.\footnote{See \url{https://tex.stackexchange.com/questions/1930/when-should-one-use-begingroup-instead-of-bgroup/1932\#1932}.} Unless you are using |mathmode| or have deeply nested structures, |bgroup| is fine to use. In all
+other cases it is preferable to use |\begingroup|.
 
 \section*{Examples}
 From the TexBook Exercise 7.4
@@ -282,6 +260,94 @@ we want to change the spacing, but since the font changes are global, we want to
 \lorem
 
 }
+
+\section{\textbackslash aftergroup}
+
+The \cs{aftergroup} control sequence saves a token for insertion after the current group. Several
+tokens can be set aside by this command, and they are inserted in the left-to-right order in which
+they were stated.
+
+\begin{texexample}{}{}
+\def\x#1;{#1}
+\def\y{15}
+{\globaldefs1
+\bgroup
+   \def\y{0}
+   \aftergroup\x\aftergroup\y\aftergroup;
+   \aftergroup}
+\egroup
+\y
+
+
+\globaldefs0
+
+\def\z{1}
+{\def\z{0}
+\z
+}
+
+\z
+
+\end{texexample}
+
+\begin{texexample}{}{}
+{ \def\z{1}
+  {\def\z{0}\globaldefs1
+     \z
+    {
+	\z
+    }
+   \z
+  }
+ \z
+}
+\end{texexample}
+\section{afterassignment}
+
+An interesting primitive is \docAuxCommand{afterassignment}. The primitive saves the token immediately following it without
+expansion. Nothing happens until after the next assignment; immediately after the next assignment the saved token is expanded.
+
+\begin{texexample}{Aftergroup}{ex:aftergroup}
+\def\yy{%
+  \afterassignment\yyb
+  \let\yyDiscard = 
+}
+
+\def\yyb{%
+ ``%
+ \bgroup
+ \itshape
+ \aftergroup\yyc
+}
+\def\yyc{%
+  ''%
+}
+
+\yy{This is a test}  
+\end{texexample}
+
+The above example is not a very common or idiomatic way of writing macros. So what is |\afterassignment| good for? Its main use is to write macros with \enquote{arguments} similar to the way \tex assigns registers. Afterassignment allow you to define macros which avoid curly braces to enclose arguments.
+
+The most common use of |\afterassignment| is in a macro whose parameter is glue or dimen. Consider the definition of a macro such as:
+\begin{quote}
+ |\def\myglue#1{\leftskip=#1 \rightskip=#1}|
+\end{quote}
+
+Such a macro can be called as |\myglue{3pt plus5pt minus3pt}|, but if we want to keep the same conventions as \tex we might prefer to have the ability to call it as |\myglue 3pt plus5pt minus3pt|. To achieve this we can do:
+
+\begin{texexample}{Afterassignment}{ex:afterassignment}
+\bgroup
+\font\larger=cmr10 scaled\magstep1
+\larger
+\newskip\tempskip
+\def\myglue{\afterassignment\myglueaux \tempskip}
+\def\myglueaux{\leftskip=\tempskip \rightskip=\tempskip}
+\myglue=30pt plus1pt minus1pt
+\lorem\par
+\egroup
+\lorem
+\end{texexample}
+
 
 
 \section{Scoping Rules for boxes}
@@ -416,9 +482,24 @@ Note \cs{afterassignment} saves the token following \cs{afterassignment} without
 \footnote{\url{http://tex.stackexchange.com/questions/65462/plain-tex-theory-afterassignment}}
 
 
+\begin{texexample}{Combining bgroup and begingroup}{}
+\begingroup
+\newbox\savedparbox
 
+\def\saveparbox{\par\begingroup
+  \def\par{\egroup\endgroup}
+  \global\setbox\savedparbox\vbox\bgroup}
 
+Ordinary paragraph.
+\saveparbox
+This paragraph will be saved in \string\box\string\savedparbox.
+If you wish, you can unpack the box and do all kinds of processing on it.
+In this demo, I won't do any processing.
+Look in the log file to examine the box contents.
 
+Another ordinary paragraph.
+\endgroup
+\end{texexample}
 
 
 

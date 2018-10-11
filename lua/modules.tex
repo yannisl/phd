@@ -1,7 +1,8 @@
 
-\directlua{Start = 0}
+\newfontfamily\hiero{AegyptusR.ttf}
+\def\texthiero#1{{\color{black!95}\hiero #1}}
+\parindent=1em   
 
-           
 \chapter{Lua Modules}
 
 \epigraph{People think that computer science is the art of geniuses but the actual reality is the opposite, just many people doing things that build on each other, like a wall of mini stones.}{---Donald Knuth}
@@ -31,6 +32,7 @@ tex.print(s)
 \end{luacode*}
 \end{texexample}
 
+
 In the example we use the \luacmd{string.gsub} to replace windows( \textbackslash) to a harmless version, so we do not need to worry about catcodes, a quick and dirty solution.  Of course we could have used a catcode table as well.
 
 \section{The Basic Approach for Writing Modules in Lua}
@@ -51,7 +53,7 @@ function M.chickens ()
 end
 -- and another
 function M.ancient_chickens ()
-  return "\\bgroup\\hiero\\char\"13171 \\egroup"
+  return "\\bgroup\\panunicode\\char\"13171 \\egroup"
 end
 return M
 \end{lualisting}
@@ -69,39 +71,47 @@ require "foo"  --> loading foo
 \end{luaexample}
 
 
+\begin{lstlisting}
+package main
+
+import (
+	"fmt"
+	"time"
+)
+
+func main() {
+	fmt.Println("In main()")
+	go longWait()
+	go shortWait()
+	fmt.Println("About to sleep in main()")
+	// sleep works with a Duration in nanoseconds (ns) !
+	time.Sleep(6 * 1e9)
+	fmt.Println("At the end of main()")
+}
+func longWait() {
+	fmt.Println("Beginning longWait()")
+	time.Sleep(5 * 1e9) // sleep for 5 seconds
+	fmt.Println("End of longWait()")
+}
+func shortWait() {
+	fmt.Println("Beginning shortWait()")
+	time.Sleep(2 * 1e9) // sleep for 2 seconds
+	fmt.Println("End of shortWait()")
+}
+
+\end{lstlisting}
+
+
 
 A second and in my opinion much better way is to return the list of functions you want to export. This way\footnote{This is very similar to Javascript modules.} your code will be much more cleaner and easier to maintain. We rewrite our module |chicken|  to |chickens|. Again the module is saved in a file with the module name and saved in a place where the module loader can find it. 
 
-\begin{lualisting}[keywordstyle=\underbar,emph={local},emphstyle=\underbar,]
--- create module
-local M = {}
-
--- add a function
-local chicken = function ()
-  return "chicken"
-end
-
--- returns just a string
-local chickens = function ()
-  return "many chickens" 
-end
-
--- our ancient chickens from hiero
-local ancient_chickens = function ()
-  return "\\bgroup\\hiero\\HUGE\\char\"13171 \\char\"13173\\egroup"
-end
-
-return {chicken                = chicken,
-        chickens               = chickens,
-        ancient_chickens       = ancient_chickens}
-\end{lualisting}
-
+Once we save the file |chickens.lua|
 
 \begin{texexample}{Writing a Module}{ex:wmodule}
-\begin{luacode*}
-   local c = require "manychickens"
-   tex.print(c.chicken(), c.chickens(),"\\par","ancient chickens", "{\\Huge" .. c.ancient_chickens() .. "}")
-\end{luacode*}
+\begin{luacode}
+   local c = require"chickens"
+   tex.print(c.chicken(), c.chickens(),"\\par","ancient chickens", "{\\Huge" .. c.ancientchickens() .. "}")
+\end{luacode}
 \end{texexample}
 
 
@@ -127,15 +137,15 @@ From the point of view of Lua, submodules in the same package have no explicit r
 
 In LuaTeX things are much simpler if everything falls into place and the LuaTeX searchers find the modules. I experimented a bit, before getting the paths right on a MikTeX installation. Normal modules need to be located in a place where \tex can find them.
 
-%\begin{filecontents*}{test.config}
-%    # test.config
-%    # Read timeout in seconds
-%    read.timeout=10
-%    # Write timeout in seconds
-%    write.timeout=5
-%   #acceptable ports
-%   ports = 1002, 1003, 1004
-%\end{filecontents*}
+\begin{filecontents*}{test.config}
+    # test.config
+    # Read timeout in seconds
+    read.timeout=10
+    # Write timeout in seconds
+    write.timeout=5
+   #acceptable ports
+   ports = 1002, 1003, 1004
+\end{filecontents*}
 
 \begin{texexample}{Lua Modules and Paths}{}
 
@@ -148,7 +158,7 @@ local t               = config.read 'test.config'
 tex.print("read time out = " .. t.write_timeout, "\\par",
             "ports = " .. "ports" .. "\\par")
 
- local Map = luatexbase.require_module("pl.Map")   
+ local Map = require"pl.Map"
  Map = require("pl.Map")
    m = Map{one=1, two=2}
    m:update{three=3, four=4,two=20}
@@ -171,11 +181,10 @@ end
 local z = search ("Map")
 
 tex.print(z)
-local r = kpse.show_path("lua")
-tex.print(r)
+-- local r = kpse.show_path("lua")
+-- tex.print(r)
 \end{luacode}
 \end{texexample}
-
 
 
 LuaTeX uses the |kpse| library to search for files and naturally it is at home, when the files are located somewhere wher kpse can find them. In the example below, I have downloaded the penlight library into the scripts folder. The Map file can be found in:
@@ -192,40 +201,42 @@ tex.print("\\par",f1)
 
 However, most Lua libraries use the dot notation as described above.
 
-\endinput
+
 
 \section{The luatexbase package}
 
-Lua's standard function require() is similar to TEX’s \cmd{\input} primitive but is somehow more
-evolved in that it makes a few checks to avoid loading the same module twice. In the TEX
-world, this needs to be taken care of by macro packages; in the LATEX world this is done by
-\cmd{\usepackage.}
+Lua's standard function \luacmd{require()} is similar to TEX’s \docAuxCommand{input} primitive but is somehow more
+evolved in that it makes a few checks to avoid loading the same module twice. In the \tex
+world, this needs to be taken care of by macro packages; in the \latexe world this is done by
+\docAuxCommand{usepackage}
 
-But \usepackage also takes care of many other things. Most notably, it implements a
+But |\usepackage| also takes care of many other things. Most notably, it implements a
 complex option system, and does some identification and version checking. The present package
 doesn’t try to provide anything for options, but implements a system for identification and
 version checking similar to LATEX’s system.
 
 It is important to note that Lua’s function \luacmd{module()} is deprecated in Lua 5.2 and should be
 avoided. For examples of good practices for creating modules, see section 1.4. Chapter 15 of
-Programming in Lua, 3rd ed. discusses various methods for managing package
+\textit{Programming in Lua}, 3rd ed. discusses various methods for managing package
 
-The package which was developed by Heiko Oberdiek Élie Roux, Manuel Pégourié-Gonnard, Philipp Gesang∗
+The package \pkg{luatexbase} which was developed by Heiko Oberdiek Élie Roux, Manuel Pégourié-Gonnard, Philipp Gesang∗
 provides the function 
 
-|luatexbase.require_module(name [, required date])|
+\begin{docLua}{luatexbase.require\_module(name [, required date])}
 
-which can be used as a replacement to \luacmd{require()}. The only difference between them being that the luatexbase.require()  will check that the module properly identifies itself.
+\end{docLua}
+
+The package function which can be used as a replacement to \luacmd{require()}. The only difference between them being that the |luatexbase.require()|  will check that the module properly identifies itself.
 
 
 \begin{teXXX}
 local err, warn, info, log = luatexbase.provides_module({
-     _name      = 'dice',
+     _name       = 'dice',
      _date       = '2014/11/01',
-     _version   = '0.0',
+     _version    = '0.0',
      _description = 'simulating a die',
      _author      = 'Y Lazarides',
-     _license      =  'LPPL v1.3+' ,
+     _license     =  'LPPL v1.3+' ,
 })
 
 local dice =  {}    -- is this better to be local?
@@ -237,26 +248,36 @@ end
 return dice         -- return the table returns {} 
 \end{teXXX} 
 
-\begin{texexample}{luatexbase module}{}
-
-\begin{luacode}   
-local  f = require("dice")           
-        tex.print('return from dice module = ', f.txprint())
-\end{luacode}
-
-\end{texexample}
+%\begin{texexample}{luatexbase module}{}
+%
+%\begin{luacode}   
+%local  f = require("dice")           
+%       tex.print('return from dice module = ', f.txprint())
+%\end{luacode}
+%
+%\end{texexample}
 
 Working through a document is a hostile environment, and please do not follow my example. It is best to
-load the files and develop them individually. However, it is prone with errors either way and one can easily get confused with local and global variables. Perseverance and patience are required, and the frustrations of TeX will diminish.
+load the files and develop them individually. However, it is prone with errors either way and one can easily get confused with local and global variables. Perseverance and patience are required, and the frustrations of \tex will diminish.
+
+
+
+
 
 \section{Installing the penlight package}
 
-The penlight package can provides some very useful routines and we will use it as an example
+The |penlight| package can provides some very useful routines and we will use it as an example
 to understand the module system.
 
-The easiest way to get the package is to use git, as the package can be found at Github. Use |git clone https|  to clone the directory into |C:/Program Files/MikTeX 2.9/scripts/|. The |scripts| folder is used for normal packages, whereas a similar path exists for |.dlls|, which are placed in a |bin| directory. The path system is a bit of a mess and it requires a few attempts before everything falls into place. 
+The easiest way to get the package is to use git, as the package can be found at Github. Use |git clone https|  to clone the directory into: 
 
-\begin{texexample}{Using the penlight library}{}
+\begin{quote}
+|C:/Program Files/MikTeX 2.9/scripts/| 
+\end{quote}
+
+The |scripts| folder is used for normal packages, whereas a similar path exists for |.dlls|, which are placed in a |bin| directory. The path system is a bit of a mess and it requires a few attempts before everything falls into place. 
+
+\begin{texexample}{Using the penlight library}{ex:penlight}
 \begin{luacode}
 local Map = require("pl.Map")
        m = Map{document="article", 
@@ -269,7 +290,6 @@ local Map = require("pl.Map")
        tex.print("\\par\\}\\par") 
 \end{luacode}
 \end{texexample}
-
 
 
 \section{Setting up a Database}
@@ -319,8 +339,8 @@ logger:debug(log_callback, "string value", 1234)
 
 x = os.getenv('PATH')
 s = string.gsub(x,"\\", "\\textbackslash ")
-
-tex.print(s)
+s = string.gsub(x,"_", "\\textunderscore ")
+-- tex.print(s)
 
 require("lualibs.lua")
 
@@ -387,34 +407,57 @@ txprint(str)
 
 \end{texexample}
 
+
 \section{Libraries from ConTeXt}
 
 
 \subsection*{Dir}
 
 The dir library uses functions of the lfs library that is linked into LuaTEX.
-current
+current.
 
 This returns the current directory:
 
-\subsection*{dir.current()}
+\begin{texexample}{lfs}{}
+\begin{luacode}
+local write = tex.sprint
 
-\directlua{Stop = os.runtime()
-             diff = Start - Stop 
-             tex.print(Stop, os.clock())
+write(2, dir.current())
 
-tex.print(os.which("ps2pdf"))}
+\end{luacode}
+\end{texexample}
+
+
+\begin{docLua}{dir.current()}
+Returns the current directory.
+\end{docLua}
+
+%\directlua{Stop = os.runtime()
+%           diff = Start - Stop 
+%           tex.print(Stop, os.clock())
+%tex.print(os.which("ps2pdf"))}
+
+
 
 
 \def\function#1{\leavevmode\noindent{\color{teal}
 \parindent0pt\leavevmode\par \bfseries #1 }}
  
  
-\function{os.which(\meta{filename})}  This function returns the path of a file and emulates the kpse library function, with similar results. However, the function looks up the local environment path, so if a file is on the path in can find it.
+\begin{docLua}{os.which(\meta{filename})}  
+This function returns the path of a file and emulates the kpse library function, with similar results. However, the function looks up the local environment path, so if a file is on the path in can find it.
+\end{docLua}
 
-\function{os.where()} This is an alias for \textbf{os.which()}
 
-\begin{teXXX}{phd-utils.lua}
+
+\begin{docLua}{os.where()} 
+This is an alias for \textbf{os.which()}
+\end{docLua}
+
+
+
+\begin{teXXX}
+
 -- presents nicely a table 
 
 local M = M or {}
@@ -443,23 +486,36 @@ end
 return M
 \end{teXXX}
 
-\section{phd package utilities}
+\begin{docLua}{os.which(file)}
+Locates a file.
+\end{docLua}
 
-\function{inspect()} Typesets a Lua table. 
-
-\begin{texexample}{inspecting tables}{}
+\begin{texexample}{Test}{ex:which}
 \begin{luacode}
-local utils = require("phd-utils")
-local inspect = utils.inspect
-
-inspect({a="b", c={d="man", e ="woman"}})
-
-local cmd = require("cmd")
-
-
+local sprint=tex.sprint
+sprint(-2,os.which("tex.exe"))
+tex.print("\\par")
+sprint(-2,os.where("texlua.exe"))
 \end{luacode}
-
-\test
 \end{texexample}
+
+As file names can cause problems, the |tex.print| statement is loaded with the catcode table -2. 
+%\section{phd package utilities}
+%
+%\function{inspect()} Typesets a Lua table. 
+%
+%\begin{texexample}{inspecting tables}{}
+%\begin{luacode}
+%local utils = require"phd-utils"
+%local inspect = utils.inspect
+%
+%inspect(\{a="b", c=\{d="man", e ="woman"\}\})
+%
+%local cmd = require("cmd")
+%
+%\end{luacode}
+%
+%
+%\end{texexample}
 
 

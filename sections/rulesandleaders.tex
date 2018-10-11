@@ -4,6 +4,143 @@
 \chapter{Rules and Leaders}
 \pagestyle{headings}
 
+\epigraph{He had forty-two boxes, all carefully packed,
+With his name painted clearly on each:
+But, since he omitted to mention the fact,
+They were all left behind on the beach.}{---Lewis Carroll, The Hunting of the Snark}
+
+\section{Rules}
+
+Rules, both horizontal and vertical, are traditionally used in typesetting. In
+\tex, a rule does not necessarily have to be long and thin; it has three dimensions,
+like a box, and can have any rectangular shape. There are two types of rules, |\hrule| and |\vrule|.
+
+\begin{docCommand}{hrule}{ height\meta{dimen} width \meta{dimen} depth\meta{dimen} }
+Draws a rule in vertical mode.
+\end{docCommand}
+
+\begin{docCommand}{vrule}{ height\meta{dimen} width \meta{dimen} depth\meta{dimen} }
+Draws a rule in horizontal mode.
+\end{docCommand}
+
+The shape of the rule does not depend on whether it is \textsc{h} or \textsc{v}, and the difference
+between the two types is in the context in which they can be used, not in their
+shapes. An |\hrule| is considered vertical material and can be part of a vertical list.
+
+A |\vrule| is the opposite and can only appear in horizontal lists. The reason for
+this convention is that a horizontal rule is a good separator between items stacked
+vertically, whereas a vertical rule is a natural separator for items laid horizontally,
+from left to right.
+
+As a result, a |\vrule| should be used inside a paragraph, such as this \vrule, or in
+an |\hbox|. An |\hrule| should be used between paragraphs or in a |\vbox|.
+
+Any unspecified dimensions of a rule are determined [221] by these defaults:
+
+\begin{enumerate}
+\item The height of an |\hrule| is 0.4pt, and the depth is 0pt.
+\item The width of a |\vrule| is 0.4pt.
+\item Other dimensions are determined by extending the rule to the size of the smallest
+box containing it. An example of this rule is the |\vrule| above. Its depth is set
+equal to the depth of the line it happens to be on.
+\end{enumerate}
+
+
+
+The rule is extended to the width {\Huge \drawfontframe{\vbox{\hsize=24pt\parindent0pt p\hrule*}}}
+
+\paragraph{Struts} The word \emph{strut} has already been mentioned. It refers to a \refCom{vrule} with width zero. It refers to a |\vrule| with
+width zero. A standard strut is part of the plain format and is defined, on [353], as
+|\vrule height8.5pt depth3. 5pt width0pt| (the actual definition is slightly more
+complicated and takes into account the current mode). Such a rule does not show
+up in print and is used to open up boxes. Inexperienced users find it hard to believe
+that such a rule can be useful, but a glance at [478] shows that it is one of the most
+frequently mentioned terms in the \texbook.
+
+A horizontal strut can also be defined. It is an |\hrule| with height and depth
+of zero. Surprisingly, such a thing is rarely used (but see discussion of |\hphantom|
+in section 3.24)
+
+\begin{texexample}{Drawing a Ruler}{ex:ruler}
+\bgroup
+
+\def\1{\vrule height 0pt depth 2pt}
+
+\def\2{\vrule height 0pt depth 4pt}
+
+\def\3{\vrule height 0pt depth 6pt}
+
+\def\4{\vrule height 0pt depth 8pt}
+
+\def\ruler#1#2#3{%
+    \leftline{$\vcenter{%
+    \hrule\hbox{\4#1}}\,\,\rm#2\,{#3}$}}%
+  
+\def\\#1{\hbox to .125in{\hfil#1}}
+  
+\def\8{\\\1\\\2\\\1\\\3\\\1\\\2\\\1\\\4}%
+  
+\ruler{\8\8\8\8}4{in}
+\egroup
+\end{texexample}
+
+Lamport in \latex developed a macro |\rule| to enable users to draw lines without remembering all the rules for horizontal or vertical modes and the like.\footnote{In the latest releases this has been changed to a robust macro, using \textbackslash DeclareRobustCommand.}
+
+\begin{docCommand}{rule}{\oarg{raised}\marg{width}\marg{height} }
+Typesets a rule with a  \meta{width} and\meta{height}, raised by \meta{raised}.
+\end{docCommand}
+
+\begin{teX}
+\def\rule{\@ifnextchar[\@rule{\@rule[\z@]}}%
+\def\@rule[#1]#2#3{%
+\leavevmode
+\hbox{%
+  \setlength\@tempdima{#1}%
+  \setlength\@tempdimb{#2}%
+  \setlength\@tempdimc{#3}%
+  \advance\@tempdimc\@tempdima
+  \vrule\@width\@tempdimb\@height\@tempdimc\@depth-\@tempdima}
+}
+\end{teX}
+
+The important macro is |@rule| which sets the lengths and widths to the parameters required by the user. The raising of the rule is achieved by adjusting the depth to the given amount of length to raise the rule.
+
+This is a Lamport rule |\rule[6.5pt]{4pt}{7pt}| typeset as:\rule[6.5pt]{4pt}{7pt} Many \latexe packages 
+provide rules for common cases, such as \pkg{booktabs} providing rules that can be used in tables. 
+
+Another useful \latexe macro is |\underline| that can be used to underline text. The \latex version is a modification of the \textsc{plain} version to enable it to be used in math mode. The \textsc{plain} version can still be used in \latexe by using |\@@underline|. 
+
+\section{Applications}
+
+One example of \refCom{vrule} is to provide the color background of a box. This method is used for
+example by the \pkg{xcolor} to provide generic drivers. First a |vrule| with the require box dimensions
+is typeset in a zero width box using \refCom{rlap} and then the text is overwritten to provide the typeset box, with a background color. One can extend such macros to draw numerous lines at different colors to also 
+achieve  a gradient effect.
+
+
+\begin{texexample}{}{}
+\makeatletter
+\bgroup
+\renewcommand*\color@block[3]%
+{{%
+\color{blue}%
+    \rlap{%
+      \ifcolors@
+        \vrule\@width#1\@height#2\@depth#3
+      \fi
+    }%
+}} 
+\hbox{\color@block{80pt}{30pt}{3.5pt}%
+      \sffamily\bfseries\Huge\color{white}FFji}
+\egroup 
+\makeatother 
+\end{texexample}
+
+Of course the example is trivial. In a more detailed macro, it would be preferable to measure the dimensions
+of the text and size the background accordingly. 
+
+\section{Leaders}
+
 A leader is a single copy of a pattern, for example in a dashed line a dash is a leader.
 Dot leaders are a row of dots that visually connect the chapter titles and section headings to their corresponding page numbers. 
 
@@ -53,7 +190,7 @@ In \tex leaders are actually \emph{visual glue}. Wherever glue can go a row of l
 
 \begin{docCommand}{xleaders}{}
 \tex  provides three commands for specifying leaders:\cs{leaders},\cs{cleaders},
-and\cs{xleaders} (p. 174). The argument of each command specifies the
+and\cs{xleaders} (p.~174). The argument of each command specifies the
 leader. The command must be followed by glue; the size of the glue specifies
 how much space is to be filled. The choice of command determines how
 the leaders are arranged within the space.
@@ -103,14 +240,30 @@ instead of leaders.
 
 \section{Box leaders}
 \index{leaders box}
-Box leaders fill the available spaces with copies of a given box, instead of with a rule. For all of the following examples, assume that a box register has been allocated:
+Box leaders fill the available spaces with copies of a given box, instead of with a rule. The first example uses \latex3 syntax, which is bound to send old \tex masters into an apoplectic fit. However, once your eyes
+and brains absorb the syntax, \latex3 is too good to be ignored and can be mastered in a month or so. The
+underscores still bother me, as well as the Hungarian notation, but I have mellowed as I grew older and
+have now accepted it as an essential toolbox for latexing.
+
+The reason I introduced it here, is to get you used to it for the next chapter, which is dedicated to \latex3 boxes and skips. This will bring us to a full round. We have studied the original \tex and plain format commands, the \latex2e and next the \latex3 macros. 
 
 \begin{texexample}{Box leaders}{}
 \ExplSyntaxOn  
-  \newbox\starbox
-  \setbox\starbox=\hbox{\hskip.7em*\hskip.7em}
+  \box_new:N \starbox
+  %\setbox\starbox=\hbox:n{
+  \hbox_set:Nn \starbox 
+    {
+      \skip_horizontal:n { .2em  }
+      \box_move_down:nn { 2.5pt }
+                        {\hbox:n{*}}
+      \skip_horizontal:n {.2em}
+    }
 
-  \hbox_to_wd:nn { 5cm} {lorem \tex_leaders:D\copy\starbox\hfill lorem}.
+  
+  \hbox_to_wd:nn {\textwidth} 
+    {
+       \null \tex_leaders:D\box_use:N \starbox \hfill \null
+    }.
 \ExplSyntaxOff
 \end{texexample}
 
@@ -167,6 +320,8 @@ The differences are best explained with an example.
 Lorem \leaders\leaderpattern\hfill 13\par
 Lorem \cleaders\leaderpattern\hfill 13\par
 Lorem \xleaders\leaderpattern\hfill 13\par
+
+\meaning\xleaders
 \end{texexample}
 
 
@@ -181,7 +336,7 @@ vertical leaders. In Example~\ref{vleaders} we use a centered dot \cs{cdot} to f
 \begin{texexample}{Vertical leaders}{vleaders}
 \newcommand{\vdotfill}{%
   \par\leaders\hbox{$\cdot$}\vfill}
-  \vbox to 3cm{
+  \vbox to 5cm {%
   \lorem
   \vdotfill
   \lorem
@@ -231,7 +386,7 @@ Leaders are a powerful tool, they take a little bit of time to understand, but o
 
 Most of the useage of leaders is in table of contents and old tables fashioned the old way. The package \pkg{arydshln} by Hiroshi Nakashima uses \cs{xleaders} to give \latex’s \pkg{array} and \pkg{tabular} environments the capability to draw horizontal/vertical dash-lines. You can refer to it for more examples.
 
-In the LateX kernel they are mostly found them in the definition of mathematical symbols and from where we derived Example~\ref{cleaders}.
+In the LateX kernel they are mostly found them in the definition of mathematical symbols and from where I have adapted the following Example~\ref{cleaders}.
 
 \begin{texexample}{cleaders example}{cleaders}
  \makeatletter
@@ -247,9 +402,22 @@ Note in the example the use of mathematical kerns (|\mkern|) and the use of
 picture environment using solely leaders.
 
 
+Donald Arseneau's \pkg{ulem} uses leaders extensively and other magic to provide various forms of underlining.
 
+\begin{texexample}{Decorating text}{ex:decorating}
+   \uline{important}   underlined text\\
+   \uuline{urgent}     double-underlined text\\
+   \uwave{boat}        wavy underline\\
+    \sout{wrong}        line drawn through word\\
+   \xout{removed}      marked over with //////.\\
+   \dashuline{dashing} dash underline\\
+   \dotuline{dotty}    dotted underline\\
+\end{texexample}   
 
+The package has another useful feature. It is one of those short packages that one can study to understand
+the mechanisms of saving boxes, measuring dimensions, rules and leaders, as well as hyphenation. A must read for anyone interested in improving their basic understanding of \tex.
 
+\vfill
 
 
 
