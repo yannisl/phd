@@ -1,4 +1,4 @@
-# The `phd` LaTeX2e package
+###The `phd` LaTeX2e package
 
 The `phd` latex package and the class with the same name provide
 convenient methods to create new styles for books, reports
