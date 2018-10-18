@@ -19,7 +19,7 @@ and the derived files
 
      `phd-scriptsmanager.sty`.
 
-###Installation
+## Installation
 
 The documentation of this package uses numerous fonts not available in a
 normal `TeX` distribution. Before you regenerate it, make sure you install these
@@ -64,7 +64,7 @@ http://tex.stackexchange.com and post a new question or
 add a comment at http://tex.stackexchange.com/a/45023/963.
 or send me a message at  yannislaz at gmail.com
 
-### Documentation
+## Documentation
 
 The package was written using the `doc` and `docscript` packages,
 so that it is self documented in a literary programming style.
