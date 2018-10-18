@@ -47,6 +47,8 @@ the following:
 
 - Vrinda
 
+- RibenUni.ttf from [hilledu.com]{http://uni.hilledu.com/} for Chakma script fonts.
+
 If you have Windows
 
 - Microsoft JhengHei and SimSun
@@ -85,14 +87,14 @@ To set or add a key we only use the command `\cxset`:
       \cxset{chapter name font-size = Huge,
              chapter number font-size = HUGE}
 
-### Future Development
+##  Future Development
 
 This is still an experimental version, but I will retain the
 interface in future releases. There is a large amount of
 work still to be carried out to improve the template styles
 provided, to test it more thoroughly and to add a number of
 improvements in the special designs. At present I estimate
-that I have completed about 70% of the work that needs
+that I have completed about 80% of the work that needs
 to be done.
 
 __The package as it stands is not production stable.__
