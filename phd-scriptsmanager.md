@@ -1,4 +1,4 @@
-###The `phd-scriptsmanager` LaTeX2e package version 0.08.0
+# The `phd-scriptsmanager` LaTeX2e package version 0.08.0
 
 The `phd-scriptsmanager` latex package and the class
 with the same name provide
