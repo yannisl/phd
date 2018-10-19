@@ -51,7 +51,7 @@ improvements in the special designs. At present I estimate
 that I have completed about 70% of the work that needs
 to be done.
 
-__The package as it stands is not production stable.__
+The package as it stands is production stable.
 
 
 

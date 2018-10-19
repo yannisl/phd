@@ -1,4 +1,4 @@
-###The `phd-lists` LaTeX2e package (version 0.08.0)
+###The `phd-lists` LaTeX2e package (version 1.0.0)
 
 The `phd-lists` latex package forms part of a suite of packages
 that are bundled with the `phd` package and the class with the
@@ -19,7 +19,7 @@ and the derived files
 
 run
 
-    `phd-lua  phd-lists.dtx`   on windows
+    `phd-lua  phd-lists.dtx`  on windows
 
 If you have any difficulties with the package come and join us at
 http://tex.stackexchange.com and post a new question or
