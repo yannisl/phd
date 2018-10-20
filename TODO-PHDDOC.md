@@ -1,14 +1,10 @@
-1. On final round add pkg options. This was left as last in order not to solve problems by adding
-    options. Too many options are not a good User Interface.
-2.  Finish symbol management, both text and math. Math already 60% incorporated.
-3.  Better integration of indexing commands.
-4.  Revisit layout manager for Chapters. Broke again in tests.
-5.  Docs. Add all references.
-6.  Incorporate phd class for more flexibility.
-7. Improve package manager.
-8. Group script loading for better font management.
-9. General font management to relook it again.
-10. Add all style sections (about 100 already prepared). Once they
-     are all working issue beta version.
+# Outstanding Issues
+1.  Add all references and final edit of documentation.
+2. Improve on installation notes.
+3. Add package examples and class examples in an examples directory.
+4. Expand on TDS trees write-up.
+5. Add acknowledgements.
+6. Add summary.
+7. Add a nice coverpage.
 
 
