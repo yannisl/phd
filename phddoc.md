@@ -26,7 +26,7 @@ If you have any difficulties with the package come and join us at
 http://tex.stackexchange.com and post a new question or
 add a comment at http://tex.stackexchange.com/a/45023/963.
 or send me a message at  yannislaz at gmail.com. Alternatively you can raise
-an issue here on gitgub.
+an issue here on [gitgub](https://github.com/yannisl/phd/issues/new).
 
 ## Documentation
 
