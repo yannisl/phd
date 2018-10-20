@@ -6,7 +6,7 @@
 %%
 %% phddoc.dtx  (with options: `class')
 %% ----------------------------------------------------------------
-%% phd --- A package to beautify documents.
+%% phddoc --- A class to typeset LaTeX code.
 %% E-mail: yannislaz@gmail.com
 %% Released under the LaTeX Project Public License v1.3c or later
 %% See http://www.latex-project.org/lppl.txt

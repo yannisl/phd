@@ -16,7 +16,7 @@ and `phddoc.cls`.
 
 On windows run
           phd-lua.bat phddoc.dtx
-and on UNIX systems run
+and on NIX systems run
           lualatex phddoc.dtx
           biber
           lualatex phddoc.dtx
