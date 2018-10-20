@@ -146,7 +146,7 @@ See http://www.latex-project.org/lppl.txt
 %gdef\@onlypreamble{} % TO BE REMOVED NEEDED FOR TUTS
 \NeedsTeXFormat{LaTeX2e}[2017/04/15]%
 \RequirePackage[2017/04/15]{latexrelease}
-\documentclass[oneside,11pt,a4paper]{phddoc}
+\documentclass[book,oneside,11pt,a4paper]{phddoc}
 \usepackage[bottom=2cm]{geometry}
 \savegeometry{std}
 % \usepackage[style=mla]{biblatex}
@@ -1052,26 +1052,50 @@ boxrule=0pt,toprule=0pt,colframe=white}
 %    \end{macrocode}
 % The following macros are taken from ltxdoc and modified accordingly.
 %
-% \begin{docCmd} {phdcs} { \marg{macro name}}
+% \begin{docCommand} {phdcs} { \marg{macro name}}
 %   We modify the standard |\cs| and save to a new name to be able to use
 %   underscores. Maybe there are better ways of doing it as well.
-% \end{docCmd}
+% \end{docCommand}
 %
 %    \begin{macrocode}
-\DeclareRobustCommand\phdcs[1]{\texttt{\char`\\\detokenize{#1}}}
+\DeclareRobustCommand\phdcs[1]{{\color{thecs}{\texttt{\char`\\\detokenize{#1}}}}}
 \ExplSyntaxOn
 \let\phd@doc@org@meta\meta%
-
-\cs_set:Npn \meta#1{{\rmfamily\phd@doc@org@meta{#1}}}
-
+%    \end{macrocode}
+%
+% \begin{docCommand}{meta}{\marg{argument}}
+% We modify the standard \meta{arguments} to allow for colour settings.  The \docColor{themeta} is defined in the \pkg{phd-colorpalette} package. The braces are not colored
+% as they do not look very good if they are. 
+% \end{docCommand}
+%    \begin{macrocode}
+\cs_set:Npn \meta#1{
+   \group_begin:
+   \rmfamily\phd@doc@org@meta{{\color{themeta}#1}}
+   \group_end:
+}
+%    \end{macrocode}
+%
+%    \begin{macrocode}
 \cs_set:Npn \marg #1
   {
-    {\ttfamily\char`\{}\meta{#1}{\ttfamily\char`\}}
+    {\ttfamily\char`\{}\rmfamily\phd@doc@org@meta{\color{theoarg}#1}{\ttfamily\char`\}}
   }
-  
+%    \end{macrocode}
+% 
+% \begin{docCommand}{oarg}{\marg{argument}}
+% Typesets an optional argument, as found in \latexe commands. The command:
+% \begin{quote}
+%  |\test\oarg{style=two}\marg{mandatory arguments}| 
+% \end{quote}
+% will typeset:
+%  \begin{quote}
+%   |\test|\oarg{style=two}\marg{mandatory arguments}
+%  \end{quote}
+% \end{docCommand} 
+%    \begin{macrocode}
 \cs_set:Npn \oarg #1
   {
-    \colOpt{{\ttfamily[}\meta{#1}{\ttfamily]}}
+    {\ttfamily[}\meta{#1}{\ttfamily]}
   }
 \ExplSyntaxOff
 %    \end{macrocode}
@@ -3428,9 +3452,9 @@ fontlower=\footnotesize}
 
 \renewcommand*{\verbatim@font}{\verbatimfamily}
 
-\def\cmd#1{\cs{\expandafter\cmd@to@cs\string#1}}%
+%\def\cmd#1{\cs{\expandafter\cmd@to@cs\string#1}}%
 
-\def\cmd@to@cs#1#2{\char\number`#2\relax}
+%\def\cmd@to@cs#1#2{\char\number`#2\relax}
 
 \newrobustcmd*{\env}[1]{\mbox{\verbatimfont\bfseries\textcolor{thegreen}{#1}}}
 

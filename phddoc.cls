@@ -21,9 +21,17 @@
 \newif\if@book
 \newif\if@article
 \newif\if@report
+\newif\if@scrbook
+\newif\if@scrartcl
+\newif\if@scrreprt
+
 \DeclareOption{article}{\@articletrue}
 \DeclareOption{book}{\@booktrue}
 \DeclareOption{report}{\@reporttrue}
+\DeclareOption{scrbook}{\@scrbooktrue}
+\DeclareOption{scrartcl}{\@scrartcltrue}
+\DeclareOption{scrreprt}{\@scrreprttrue}
+
 \DeclareOption*{%
     \PassOptionsToClass  {\CurrentOption}{book}}
 \InputIfFileExists{phddoc.cfg}
@@ -33,15 +41,32 @@
            {}
 \ProcessOptions
 \if@book
- \LoadClass{book}
-\else
-  \if@article
-    \LoadClass{article}
-  \else
-    \LoadClass{report}
+  \LoadClass{book}
+    \else
+      \if@article
+        \LoadClass{article}
+        \cxset{section number prefix=,}
+        \else
+          \if@report
+            \LoadClass{report}
+          \else
+             \if@scrbook
+             \LoadClass{scrbook}
+             \else
+             \if@scrartcl
+                 %\cxset{section number prefix=,}
+                 \LoadClass{scrartcl}
+                 \else
+                 \if@scrreprt
+                 \LoadClass{scrreprt}
+              \fi
+           \fi
+      \fi
+    \fi
   \fi
 \fi
 \RequirePackage{doc}
+\RequirePackage{expl3}
 \AtBeginDocument{\MakeShortVerb{\|}}
 \DeclareFontShape{OT1}{cmtt}{bx}{n}{<-> ssub * cmtt/m/n}{}
 \DeclareFontFamily{OMS}{cmtt}{\skewchar\font 48}  % '60
@@ -57,11 +82,6 @@
 \setcounter{StandardModuleDepth}{1}
 \def\cmd#1{\cs{\expandafter\cmd@to@cs\string#1}}
 \def\cmd@to@cs#1#2{\char\number`#2\relax}
-\DeclareRobustCommand\cs[1]{\texttt{\char`\\#1}}
-\providecommand\marg[1]{%
-  {\ttfamily\char`\{}\meta{#1}{\ttfamily\char`\}}}
-\providecommand\oarg[1]{%
-  {\ttfamily[}\meta{#1}{\ttfamily]}}
 \providecommand\parg[1]{%
   {\ttfamily(}\meta{#1}{\ttfamily)}}
 
@@ -131,6 +151,17 @@
     \fi
     \hfill\thepage}%
  \let\@evenfoot\@oddfoot}%
+\ExplSyntaxOn
+\newenvironment {ddangernote}
+  {
+    \begin{trivlist}\item[]\noindent
+    \begingroup\hangindent=3.5pc\hangafter=-2
+    \cs_set:Npn \par{\endgraf\endgroup}
+    \hbox to0pt{\hskip-\hangindent\dbend\kern2pt\dbend\hfill}\ignorespaces
+  }{
+      \par\end{trivlist}
+  }
+\ExplSyntaxOff
 \def\task#1#2{}
 \endinput
 %%

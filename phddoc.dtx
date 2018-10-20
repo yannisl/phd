@@ -148,7 +148,7 @@ See http://www.latex-project.org/lppl.txt
 %<class>         [2007/11/11 v2.0u Standard LaTeX documentation class]
 %
 %<*driver>
-\documentclass[report]{phddoc}
+\documentclass[book]{phddoc}
 \GetFileInfo{phddoc.cls}
 \providecommand\dst{\expandafter{\normalfont\scshape docstrip}}
 
@@ -170,10 +170,11 @@ See http://www.latex-project.org/lppl.txt
 
 
 \sethyperref
+\addbibresource{phd1.bib}
 \input{defaults-chapters}
 \cxset{palette spring onion}
 % removes the prefix \thechapter when numbering.
-\cxset{section number prefix=,}
+
 \begin{document}
 \DEBUGOFF
 \frontmatter
@@ -187,11 +188,11 @@ See http://www.latex-project.org/lppl.txt
 %
 % \fi
 %
-% \CheckSum{340}
+% \CheckSum{392}
 %
 %  \pagestyle{headings}
 % \cxset{chapter format=stewart}
-% \section{The phddoc Class}
+% \chapter{User Manual}
 %
 % \section{Documentation of the \LaTeX\ sources}
 %
@@ -236,10 +237,10 @@ See http://www.latex-project.org/lppl.txt
 % The second option is usually more convenient. Various possibilities
 % are discussed in the next section.
 %
-% \section{Specifiction}
+% \section{Specification}
 %
 % The class builds on the \pkg{ltxdoc}\footcite{ltxdoc}  class and the 
-% \pkg{doc} package, but since they were written many authors have
+% \pkg{doc}\footcite{doc} package, but since they were written many authors have
 % come up with different ideas, as to how these documents should be
 % produced.
 %
@@ -257,12 +258,24 @@ See http://www.latex-project.org/lppl.txt
 % The objectives are as follows:
 %
 % \begin{description}
-% \item [Flexibilty]  Provide flexibility to use |article|, |book| or |report| classes
+% \item [Flexibilty]  Provide flexibility to use one of the standard \latex2e classes |article|, |book|  |report| or the |KOMA| classes |scrartcl|, |scrbook|, |scrreprt|
 % as the main class. 
 % \item [Style] Enable the use of a fully featured key value interface for documenting
 %   the code.
 % \item [Tools] Provide a series of tools to create new documents, formatting
-%  and scaffolding.
+%  and scaffolding. Currently LaTeX distributions have a plethora of tools, mostly
+%  using perl and lately l3build using Lua. Perl tools have served the community well
+% for many years. One such tool |ctanify| does not work using normal dstributions
+% as the Perl bundled in the distributions has some missiong modules. Go is 
+% a cross-compliation systems language enabling scripts to be bundled for different
+% operating systems easily, hence the choice here.\footnote{See for example \protect\url{https://tex.stackexchange.com/questions/256096/which-perl-to-install-for-xindy-with-miktex-on-windows}}
+% Some of these problems with Perl on Windows can be overcome using |Strawberry Perl|\footnote{Donload at \url{http://strawberryperl.com/}. This will also enable xindy to work on a MikTeX distribution.} For any conflicts follow the guidelines in penwatch.\footnote{\protect\url{https://www.penwatch.net/cms/pip_conflict/}}
+%
+% \begin{quote}
+%    |phd ctanify  myclass.dtx  myclass.ins  README|
+% \end{quote}
+%
+%
 % \end{description} 
 %
 % \section{Customisation}
@@ -331,7 +344,7 @@ See http://www.latex-project.org/lppl.txt
 %
 % \StopEventually{}
 %
-%
+% \chapter{Implementation Code}
 % \section{Options}                       
 %
 %    \begin{macrocode}
@@ -341,9 +354,17 @@ See http://www.latex-project.org/lppl.txt
 \newif\if@book
 \newif\if@article
 \newif\if@report
+\newif\if@scrbook
+\newif\if@scrartcl
+\newif\if@scrreprt
+
 \DeclareOption{article}{\@articletrue} 
-\DeclareOption{book}{\@booktrue}  
+\DeclareOption{book}{\@booktrue} 
 \DeclareOption{report}{\@reporttrue}
+\DeclareOption{scrbook}{\@scrbooktrue}
+\DeclareOption{scrartcl}{\@scrartcltrue}
+\DeclareOption{scrreprt}{\@scrreprttrue}
+
 %    \end{macrocode}
 %
 %    \begin{macrocode}
@@ -374,18 +395,35 @@ See http://www.latex-project.org/lppl.txt
 % the book. This means we might get an error on the production of a title, which we will fix very soon.
 %    \begin{macrocode}
 \if@book
- \LoadClass{book}
-\else
-  \if@article
-    \LoadClass{article}
-  \else
-    \LoadClass{report}   
+  \LoadClass{book}
+    \else
+      \if@article
+        \LoadClass{article}
+        \cxset{section number prefix=,}
+        \else  
+          \if@report
+            \LoadClass{report}   
+          \else
+             \if@scrbook
+             \LoadClass{scrbook}
+             \else
+             \if@scrartcl
+                 %\cxset{section number prefix=,}
+                 \LoadClass{scrartcl}   
+                 \else
+                 \if@scrreprt
+                 \LoadClass{scrreprt}
+              \fi   
+           \fi  
+      \fi
+    \fi  
   \fi
 \fi  
 %    \end{macrocode}
 %
 %    \begin{macrocode}
 \RequirePackage{doc}
+\RequirePackage{expl3}
 %    \end{macrocode}
 %
 % Make \verb+|+ be a `short verb' character, but not in the document
@@ -440,49 +478,49 @@ See http://www.latex-project.org/lppl.txt
 %    \end{macrocode}
 %
 % \section{Useful abbreviations}
-%
+% The \pkg{phd-documentation} provides numerous commands for typesetting \latexe code.
+% It is imported automatically by the |phddoc| class and hence the following 
+% macros are described here for convenience.
+% 
 % |\cmd{\foo}| Prints |\foo| verbatim. It may be used inside moving
 % arguments. It can \emph{not} be use to record commands that are defined as
 %    ``|\outer|'' nor is it possible to use it on conditionals such as
 %    |\iftrue| or  defined by |\newif|.
-% |\cs{foo}| also prints |\foo|, for those who prefer that
+% |\cs{foo}| also prints \phdcs{foo}, for those who prefer that
 % syntax. (This second form can be used to record all type of commends so the
 %    above restrictions do not apply.
+%
 % \begin{macro}{\cmd}
-% \changes{v2.0k}{1994/05/21}{New definition, so \cmd\{ works.}
 % \begin{macro}{\cs}
 % \changes{v2.0d}{1994/03/17}{Add \cs{cs}}
 %    \begin{macrocode}
 \def\cmd#1{\cs{\expandafter\cmd@to@cs\string#1}}
 \def\cmd@to@cs#1#2{\char\number`#2\relax}
-\DeclareRobustCommand\cs[1]{\texttt{\char`\\#1}}
+%\newcommand\cs[1]{\color{blue}{\texttt{\char`\ #1}}}
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
 %
-% \changes{v2.0r}{1996/01/11}{Removed \cs{star} since useless pr/2039}
-%
 % \begin{macro}{\marg}
-% \changes{v2.0d}{1994/03/17}{Add \cs{marg}}
+%
 %    |\marg{text}| prints \marg{text}, `mandatory argument'.
 %    \begin{macrocode}
-\providecommand\marg[1]{%
-  {\ttfamily\char`\{}\meta{#1}{\ttfamily\char`\}}}
+%\providecommand\marg[1]{%
+%  {\ttfamily\char`\{}\meta{#1}{\ttfamily\char`\}}}
 %    \end{macrocode}
 % \end{macro}
 % 
 % \begin{macro}{\oarg}
 %    |\oarg{text}| prints \oarg{text}, `optional argument'.
 %    \begin{macrocode}
-\providecommand\oarg[1]{%
-  {\ttfamily[}\meta{#1}{\ttfamily]}}
+%\providecommand\oarg[1]{%
+%  {\ttfamily[}\meta{#1}{\ttfamily]}}
 %    \end{macrocode}
 % \end{macro}
 %
 % \begin{macro}{\parg}
 %    |\parg{te,xt}| prints \parg{te,xt}, `picture mode argument'.
-% \changes{v2.0h}{1994/04/28}{Add \cs{parg}}
-% \changes{v2.0o}{1995/08/09}{Use \cs{meta} when showing arguments}
+%
 %    \begin{macrocode}
 \providecommand\parg[1]{%
   {\ttfamily(}\meta{#1}{\ttfamily)}}
@@ -601,6 +639,29 @@ See http://www.latex-project.org/lppl.txt
  \let\@evenfoot\@oddfoot}%
 %    \end{macrocode}
 % \end{macro}
+% \begin{environment}{ddangernote}\end{environment}
+% \begin{ddanger}
+%   Use the double danger bend if there is something which could cause
+%   serious problems when used in a wrong way. Better the normal user
+%   does not know about such things.
+% \end{ddanger}
+%    \begin{macrocode}
+\ExplSyntaxOn
+\newenvironment {ddangernote}
+  {
+    \begin{trivlist}\item[]\noindent
+    \begingroup\hangindent=3.5pc\hangafter=-2
+    \cs_set:Npn \par{\endgraf\endgroup}
+    \hbox to0pt{\hskip-\hangindent\dbend\kern2pt\dbend\hfill}\ignorespaces
+  }{
+      \par\end{trivlist}
+  }
+\ExplSyntaxOff  
+%    \end{macrocode}
+% 
+% \begin{ddangernote}
+% This is a double bend danger sign from \pkg{manfnt}\footcite{manfnt}
+% \end{ddangernote}
 %
 %
 %    \begin{macrocode}
