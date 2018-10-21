@@ -1,4 +1,4 @@
-###The `phd` LaTeX2e package
+##The `phd-handlers` LaTeX2e package
 
 The `phd` latex package and the class with the same name provide
 convenient methods to create new styles for books, reports
@@ -8,7 +8,7 @@ and resolves conflicts.
 This work consists of the file  `phd.dtx`,
 and the derived files   `phd.ins`,  `phd.pdf`, and `phd.sty`.
 
-###Installation
+## Installation
 
 run
           phd-lua.bat on windows
@@ -20,7 +20,7 @@ http://tex.stackexchange.com and post a new question or
 add a comment at http://tex.stackexchange.com/a/45023/963.
 or send me a message at  yannislaz at gmail.com
 
-### Documentation
+## Documentation
 
 The package was written using the `doc` and `docscript` packages,
 so that it is self documented in a literary programming style.
@@ -41,14 +41,14 @@ To set or add a key we only use one command:
       \cxset{chapter name font-size = Huge,
              chapter number font-size = HUGE}
 
-### Future Development
+## Future Development
 
 This is still an experimental version, but I will retain the
 interface in future releases. There is a large amount of
 work still to be carried out to improve the template styles
 provided, to test it more thoroughly and to add a number of
 improvements in the special designs. At present I estimate
-that I have completed about 70% of the work that needs
+that I have completed about 80% of the work that needs
 to be done.
 
 __The package as it stands is not production stable.__

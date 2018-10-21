@@ -8,6 +8,7 @@ erase *.out
 erase *.glo
 erase *.ind
 erase *.synctex.gz
+erase *.synctex(busy).gz
 erase *.mw
 erase *.ilg
 erase *.blg

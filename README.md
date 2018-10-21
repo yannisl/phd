@@ -1,4 +1,4 @@
-## The `phd` LaTeX2e package
+###The `phd` LaTeX2e package
 
 The `phd` latex package and the class with the same name provide
 convenient methods to create new styles for books, reports
@@ -63,7 +63,7 @@ They consist of:
 15.0 The [phd-logos](https://github.com/yannisl/phd/blob/master/docs/phd-logos.md)
      package. Supplementary commands for logos.
 
-## Installation
+###Installation
 
 run
         `phd-lua phd.dtx` on windows
@@ -105,5 +105,4 @@ that I have completed about 70% of the work that needs
 to be done.
 
 __The package as it stands is not production stable.__
-
 
