@@ -1,4 +1,4 @@
-###The `phd-quote` LaTeX2e package version 0.08.0
+# The `phd-quote` LaTeX2e package version 0.08.0
 
 The `phd` latex package and the class with the same name provide
 convenient methods to create new styles for books, reports
@@ -15,7 +15,7 @@ and the derived files
    `phd.pdf`,
    `phd.sty`.
 
-###Installation
+## Installation
 
 run the provide script
 
@@ -28,7 +28,7 @@ http://tex.stackexchange.com and post a new question or
 add a comment at http://tex.stackexchange.com/a/45023/963.
 or send me a message at  yannislaz at gmail.com
 
-### Documentation
+## Documentation
 
 The package was written using the `doc` and `docscript` packages,
 so that it is self documented in a literary programming style.
@@ -49,7 +49,7 @@ To set or add a key we only use one command:
       \cxset{chapter name font-size = Huge,
              chapter number font-size = HUGE}
 
-### Future Development
+## Future Development
 
 This is still an experimental version, but I will retain the
 interface in future releases. There is a large amount of
