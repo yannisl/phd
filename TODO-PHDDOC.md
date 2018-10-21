@@ -6,5 +6,7 @@
 5. Add acknowledgements.
 6. Add summary.
 7. Add a nice coverpage.
+8. Explain guard and generate with working examples.
+9. Add explanation as to how to generate an .ins from a .dtx
 
 
