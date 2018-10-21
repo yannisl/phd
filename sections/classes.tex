@@ -187,7 +187,7 @@ following  definitions and are used throughout. These are:
 
 
 
-\begin{teXXX}
+\begin{minted}{latex}
 \renewcommand\small{%
    \@setfontsize\small\@ixpt{12}%
    \abovedisplayskip 8.5\p@ \@plus3\p@ \@minus4\p@
@@ -220,7 +220,7 @@ following  definitions and are used throughout. These are:
 
 %% Define a HUGE for fun
 \newcommand\HUGE{\@setfontsize\Huge{38}{47}}  
-\end{teXXX}
+\end{minted}
 
 
 \section{Adjusting paragraph parameters}
@@ -584,16 +584,101 @@ and occasionally leads to some awkward constructions. Fortunately, once
 the basic structure of a |dtx|  file is in place, filling in the code is fairly
 straightforward.
 
-\begin{teXXX}
-\CharacterTable {<text>}
-\end{teXXX}
+\paragraph{Guards} If you open any .dtx file you will notice that the lines either start with a \%
+sign or sometimes with a percentage sign and |<guard>|. The latter is called a guard and they are in a way
+like html tags. They have a starting and an ending tag. In the example below there are two different guards
+|<*10pt>...</10pt>| and |<*11pt></11pt>|. Unlike html tags guards are boolean expressions! You can use:
+\begin{quote}
+\textbar  ! \&  
+\end{quote}
 
-The second mechanism that Doc uses to ensure that a |dtx|  file is uncorrupted
+The \textbar stands for disjunction (OR), the \& stands for conjunction (AND) and the ! (NOT) stands for
+negation. The terminal is any sequence of letters and evaluates to true iff it
+occurs in the list of options that have to be included.
+
+\begin{minted}{latex}
+%<*10pt|11pt|12pt>
+... code
+%</10pt|11pt|12pt>
+\end{minted}
+
+A longer example from KOMA shows the concept better.
+
+\begin{minted}{latex}
+%    \begin{macrocode}
+\def\normalsize{%
+%<*10pt>
+  \@setfontsize\normalsize\@xpt\@xiipt
+  \abovedisplayskip 10\p@ \@plus2\p@ \@minus5\p@
+  \abovedisplayshortskip \z@ \@plus3\p@
+  \belowdisplayshortskip 6\p@ \@plus3\p@ \@minus3\p@
+%</10pt>
+%<*11pt>
+  \@setfontsize\normalsize\@xipt{13.6}%
+  \abovedisplayskip 11\p@ \@plus3\p@ \@minus6\p@
+  \abovedisplayshortskip \z@ \@plus3\p@
+  \belowdisplayshortskip 6.5\p@ \@plus3.5\p@ \@minus3\p@
+%</11pt>
+... 
+%    end{macrocode}
+\end{minted}
+
+If the guards only contain a one line of text, then a short form is provided as |<10pt>|. It is unecessary to provide a closing tag and the `*' is omitted. The example below from the KOMA classes shows a quite ingenious way of writing the |\ProvidesFile| macro in
+the different files; one for each tag. 
+Two kinds of optional code are supported: one can either have optional code
+that `ts' on one line of text, like the example above, or one can have blocks of
+optional code.
+To distinguish both kinds of optional code the `guard modier' has been in-
+troduced. The `guard modier' is one character that immediately follows the < of
+the guard. It can be either * for the beginning of a block of code, or / for the end
+of a block of code4. The beginning and ending guards for a block of code have to
+be on a line by themselves.
+When a block of code is not included, any guards that occur within that block
+are not evaluated.
+
+
+\begin{minted}{latex}
+%    \begin{macrocode}
+\ProvidesFile{%
+%<10pt>  scrsize10pt.clo%
+%<11pt>  scrsize11pt.clo%
+%<12pt>  scrsize12pt.clo%
+}[\KOMAScriptVersion\space font size class option %
+%<10pt>  (10pt)%
+%<11pt>  (11pt)%
+%<12pt>  (12pt)%
+]
+%    \end{macrocode}
+\end{minted}
+
+In the |.ins| file one could write to generate the various |.clo| files.:
+
+\begin{minted}{latex}
+\generate{\usepreamble\defaultpreamble
+  \file{scrsize10pt.clo}{%
+    \from{scrkernel-version.dtx}{clo,10pt}%
+    \from{scrkernel-fonts.dtx}{clo,10pt}%
+    \from{scrkernel-paragraphs.dtx}{clo,10pt}%
+  }%
+  \file{scrsize11pt.clo}{%
+    \from{scrkernel-version.dtx}{clo,11pt}%
+    \from{scrkernel-fonts.dtx}{clo,11pt}%
+    \from{scrkernel-paragraphs.dtx}{clo,11pt}%
+  }%
+  \file{scrsize12pt.clo}{%
+    \from{scrkernel-version.dtx}{clo,12pt}%
+    \from{scrkernel-fonts.dtx}{clo,12pt}%
+    \from{scrkernel-paragraphs.dtx}{clo,12pt}%
+  }%
+}%
+\end{minted}
+
+\paragraph{The character table check } The second mechanism that Doc uses to ensure that a |dtx|  file is uncorrupted
 is a character table. If you put the following command verbatim into
-your |dtx|  file, then Doc will ensure that no unexpected character translation
+your |dtx|  file, then \pkg{Doc} will ensure that no unexpected character translation
 took place in transport:
 
-\begin{teXXX}
+\begin{minted}{latex}
 % \CharacterTable
 % {Upper-case \A\B\C\D\E\F\G\H\I\J\K\L\M\N\O\P\Q\R\S\T\U\V\W\X\Y\Z
 % Lower-case \a\b\c\d\e\f\g\h\i\j\k\l\m\n\o\p\q\r\s\t\u\v\w\x\y\z
@@ -616,7 +701,7 @@ A success message looks like this:
 
 and an error message looks like this:
 ! Package doc Error: Character table corrupted.
-\end{teXXX}
+\end{minted}
 
 \paragraph{DoNotIndex} When producing an index, \pkg{doc} normally indexes every control sequence
 (i.e., backslashed word or symbol) in the code. The problem with this level
