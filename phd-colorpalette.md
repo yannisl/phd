@@ -1,4 +1,4 @@
-###The `phd-colorpalette` LaTeX2e package
+## The `phd-colorpalette` LaTeX2e package
 
 The `phd-colorpalette` latex package is part of the `phd` bundle
 which provides convenient methods to create new styles for books, reports
@@ -9,7 +9,7 @@ This work consists of the file  `phd-colorpalette.dtx`,
 and the derived files   `phd-colorpalette.ins`,  `phd-colorpalette.pdf`,
 and `phd-colorpalette.sty`.
 
-###Installation
+## Installation
 
 run
           phd-lua.bat on windows
@@ -42,14 +42,14 @@ To set or add a key we only use one command:
       \cxset{chapter name font-size = Huge,
              chapter number font-size = HUGE}
 
-### Future Development
+## Future Development
 
 This is still an experimental version, but I will retain the
 interface in future releases. There is a large amount of
 work still to be carried out to improve the template styles
 provided, to test it more thoroughly and to add a number of
 improvements in the special designs. At present I estimate
-that I have completed about 70% of the work that needs
+that I have completed about 90% of the work that needs
 to be done.
 
 __The package as it stands is not production stable.__
