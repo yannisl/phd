@@ -1,4 +1,4 @@
-# The `phd-quote` LaTeX2e package version 0.08.0
+# The `phd-quote` LaTeX2e package version 1.0.0
 
 The `phd` latex package and the class with the same name provide
 convenient methods to create new styles for books, reports
