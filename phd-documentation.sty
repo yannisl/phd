@@ -18,6 +18,13 @@
 \NeedsTeXFormat{LaTeX2e}[2017/04/15]%
 \RequirePackage[2017/04/15]{latexrelease}
 \ProvidesFile{phd-documentation}[2017/04/15 v1.0 less preamble (YL)]%
+\newcommand*{\verbatimfont}{\ttfamily}%
+
+\let\displayverbfont\ttfamily
+
+\renewcommand*{\verbatim@font}{\verbatimfamily}
+
+
 \RequirePackage[theorems, skins, documentation,
                 breakable,listings]{tcolorbox}
                 \tcbset{index format=pgfchapter,
@@ -163,7 +170,8 @@ boxrule=0pt,toprule=0pt,colframe=white}
 \lstnewenvironment{phdverbatim}[1][]
   {\lstset{language=[LaTeX]TeX}%
     \lstset{%
-      emph={cs, use,new,seq,map,inline,eq,gincr,incr,IfNoValueF,if,If,exist,protect,nopar,gset,%
+      emph={cs, use,new,seq,map,inline,eq,gincr,incr,IfNoValueF,%
+      if,If,exist,protect,nopar,gset,%
       set,undefine,define,add,gadd,remove,div,%
       round,truncate,max,min,mod,gzero,int,%
       zero,newcount,protected,msg,error,DeclareDocumentCommand},
@@ -178,16 +186,14 @@ boxrule=0pt,toprule=0pt,colframe=white}
       keywordstyle=\ttfamily\color{thekeywordstyle},
       stringstyle=\color{black!50},
       commentstyle=\color{black!50},
-   rulecolor=\color{gray!10},
+rulecolor=\color{gray!10},
       breakatwhitespace=true,
       showspaces=false,  % shows spacing symbol
-   xleftmargin=15pt,
-   xrightmargin=5pt,
- %  aboveskip=0pt, % compact the code looks ugly in type
-  % belowskip=0pt,  % user responsible to insert any skips
-  aboveskip=\medskipamount,
-  belowskip=\medskipamount,
-      backgroundcolor=,
+xleftmargin=15pt,
+xrightmargin=5pt,
+aboveskip=\medskipamount,
+belowskip=\medskipamount,
+       backgroundcolor=,
        #1
 }}
 {}
@@ -284,7 +290,7 @@ boxrule=0pt,toprule=0pt,colframe=white}
           DeclareInstance,UseInstance,AssignTemplateKeys%
           keys_set,keys_define,%
           },%
-     emphstyle=\verbatimfont\bfseries\color{theemphasiscolor},%
+         emphstyle=\verbatimfont\bfseries\color{theemphasiscolor},%
           %
    },%close listings options
       % added for better control
@@ -382,7 +388,6 @@ boxrule=0pt,toprule=0pt,colframe=white}
 \let\luaexample\texexample
 \let\endluaexample\endtexexample
 %%
-  \def\demomacro{Hello World!}
 \ExplSyntaxOn
 \cs_if_exist:cTF {printindex}
   { }
@@ -626,7 +631,6 @@ fontlower=\footnotesize}
        }
     \fi
   }
-
 \cs_set:Npn \phd_index_env #1
   {
     \ifphd@doc@toindex
@@ -1149,7 +1153,6 @@ fontlower=\footnotesize}
 \cs_gset_eq:NN \indexbothbegin \idxbothbegin
 \cs_gset_eq:NN \indexbothend\idxbothend
 \ExplSyntaxOff
-\DeclareRobustCommand{\idxfont}[1]{\index{#1 (font)}\texttt{#1}\xspace}%
 \DeclareRobustCommand{\idxlanguage}[1]{\index{#1 (script)}\index{scripts>#1}\texttt{#1}\xspace}%
 \begingroup
  \catcode`\|=0
@@ -1577,7 +1580,7 @@ fontlower=\footnotesize}
   \href{http://ctan.org/pkg/#1}{\bfseries{#1}}%
   \index{#1=\texttt{#1} (class)}%
   \index{classes>#1=\texttt{#1}}}
-\let\pkg\pkgname
+
 \let\Lpack\pkgname
 \newcommand{\docfilename}[1]{%
   \texttt{#1}
@@ -1825,7 +1828,7 @@ fontlower=\footnotesize}
     \draw (0pt,.5ex) -- (1.5cm,.5ex);
   \end{tikzpicture}
 }
-\def\myvbar{\char`\|}
+
 \newcommand\plotmarkentry[1]{%
   \index{#1@\protect\texttt{#1} plot mark}%
   \index{Plot marks!#1@\protect\texttt{#1}}
@@ -2024,13 +2027,6 @@ narrow/.style={width=6.9cm},
 
 \newcommand*{\changeloglabelfont}{\bfseries}
 
-%% needed for listings????
-\newcommand*{\verbatimfont}{\ttfamily}%
-
-\let\displayverbfont\ttfamily
-
-\renewcommand*{\verbatim@font}{\verbatimfamily}
-
 
 
 \newrobustcmd*{\env}[1]{\mbox{\verbatimfont\bfseries\textcolor{thegreen}{#1}}}
@@ -2134,18 +2130,27 @@ narrow/.style={width=6.9cm},
 \@@par
 \smallskip\parindent=1em }
 
+\DeclareRobustCommand{\idxfont}[1]{\index{#1 (font)}\texttt{#1}\xspace}%
 \def\docFont#1{
-\index{fonts!#1}%
+ \index{fonts>#1}%
 #1%
 }
-
-\newenvironment{handler}[2]{%
- \begin{phd@manual@entry}
-  {\ttfamily{\color{thered}#1}\color{black}#2}
+\newenvironment{handler}[2][]{%
+  \begin{phd@manual@entry}%
+   \begingroup
+   \sffamily\textbf{Key handler} \meta{key}/\bfseries\ttfamily{\color{thered}#2}\color{black}#1
+   \endgroup
  \end{phd@manual@entry}
  }
 {}
 
+\newcommand\stok[2][]{%
+  \texttt{#2}\ensuremath{_{%
+  \if!#1!
+    \the\catcode`#2
+  \else
+    #1
+  \fi}}}
 
 \endinput
 %%
