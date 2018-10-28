@@ -44,13 +44,14 @@ A section entitled ``An Alphabetical Table of the most material contents of the 
 
 \index{Quantum Mechanics>History|(}
 \setlength{\columnsep}{2em}
+
 \begin{multicols}{2}
 
 \section{Preparing an index}
 
 
 In order to produce an index, we need to load the
-package \pkg{makeidx}, mark the indices we need using \docAuxCommand{index}  and compile the doument using  \cmd{\makeindex}.\footnote{You will also need to at least run the file once using |MakeIndex| on |MikTex|. Check your distribution if you getting problems.}
+package \pkg{makeidx}, mark the indices we need using \docAuxCommand{index}  and compile the doument using  \docAuxCommand{makeindex}.\footnote{You will also need to at least run the file once using |MakeIndex| on |MikTex|. Check your distribution if you getting problems.}
 At the place where we want the index to be printed,we use \docAuxCommand{printindex}.
 \parindent1em
 
@@ -111,17 +112,18 @@ by the sorting algorithm. is is very useful since what is used for sorting and w
 will be printed may be different! For example,we may want to have the name 
 \texttt{Donald Knuth}  under the letter K., we should write
 
-
-\verb+\index{Knuth@{Donald Knuth}}+
+\begin{sverbatim}
+\index{Knuth@{Donald Knuth}}
+\end{sverbatim}
 
 Another thing we may want to change is the way that the page number is typeset.
 If we want, for example, to have the page number in bold, we would write
 \verb+\index{perl|textbf}+.  Notice that we wrote "textbf"  without the backslash. Of course,
 the above can be combined with the  command:
 
-
-\verb+\index{perl@\textbf{perl}|textit}+
-
+\begin{sverbatim}
+\index{perl@\textbf{perl}|textit}
+\end{sverbatim}
 
 will print the word perl in the index (the entry will be typeset in boldface type) sorted
 as "perl",’ and its page number will be italic. A common application of this is through
@@ -148,20 +150,19 @@ page range in the index for the word "convex".
 Subindices can be produced using an exclamation mark. If we want the word `Zeus'
 to appear in the category of Greek which is in the category of Gods, we will write:
 
-\verb+\index{Gods!Greek!Zeus}+
+\begin{sverbatim}
+\index{Gods!Greek!Zeus}
+\end{sverbatim}
 
-The actual symbol used will depend on the |.ist| file used when the file is compiled. For example in the |ltxdoc| class this is redefined as |>| and the above should be written as:
+The actual symbol used will depend on the |.ist| file used when the file is compiled. For example in the |ltxdoc| and \docClass{phddoc} classes this is redefined as |>| and the above should be written as:
 
-\verb+\index{Gods>Greek>Zeus}+
+\begin{sverbatim}
+\index{Gods>Greek>Zeus}
+\end{sverbatim}
 
+The sympbol to be used is called |index level| and is defined in the |.ist| file that is used in conjuction with the |MakeIndex| program to produce the index.
 
-%
-%\DeclareRobustCommand\textat{%
-%  \bgroup\makeatother \egroup
-%}
-
-
-\section{Multiple Pages}
+\section{Multi-page Indexing}
 
 To perform multi-page indexing, add a |( and |) to the end of the \cmd{\index} command, as in 
 \index{Indexing>multi-page}.
@@ -231,7 +232,7 @@ This manual, was build using a large |ltxdoc| class and these problems appeared 
 
 The makeindex program was developed by Pehong Chen and Michael Harrison \fullcite{chen01} in the eighties and is still used by \latexe. It is a remarkable, flexible program, found on most distributions. It is also used in GNU EMACS. 
 
-The input format consists of a list of \meta{specifier, attribute} tuples. These are the essential tokens and delimiters needed in scanning the input index file. There are ten such specifiers (you can think of them as the names of functions or variables) and the attributes as their value. 
+The input format consists of a list of \meta{specifier, attribute} tuples. These are the essential tokens and delimiters needed in scanning the input index file. There are numerous such specifiers (you can think of them as the names of functions or variables) and the attributes as their value. 
 
 \captionof{table}{Index input style parameters}
 \begin{longtable}{l l l l r}
@@ -245,7 +246,7 @@ S/No & Specifier &Attribute &Default & Meaning\\
 \inc & |range_close| & char   &|')'|           & page range closing delimiter\\
 \inc & |level|       & char   &|'!'|             & index level delimiter\\     
 \inc & |actual|      & char   &|'@'|             & actual key designator\\
-\inc & |encap|       & char   &  $\|$            & page number encapsulator\\
+\inc & |encap|       & char   & \textbar             & page number encapsulator\\
 \inc & |quote|       & char & |'"'|            & quote symbol\\
 \inc & |escape|      & char & |'\\'|           & symbol which escapes quote\\
 \inc & |page_compositor| & string & ''-''       & composite page delimiter\\
@@ -368,17 +369,47 @@ This package has multiple issues. It is not found in normal TeX distributions an
 The package \pkg{imakeidx}\footcite{imakeidx} by Enrico Gregorio 
 
 \section{How to I add index to the table of contents?}
-By default \latexe will not show in Table of Contents. It can be added manually. To add index as a chapter, use these commands:
+By default \latexe will not show in Table of Contents. It can be added manually. To add index as a chapter, use the control sequence \docAuxCommand{addcontentsline}, as shown below:
 
-\begin{teXXX}
+\emphasis[thered]{addcontentsline}
+\begin{teX}
 \clearpage
 \addcontentsline{toc}{chapter}{Index}
 \printindex
-\end{teXXX}
+\end{teX}
+
+\emphasis[thered]{printindex}
+\begin{teX}
+\clearpage
+\addcontentsline{toc}{chapter}{Index}
+\printindex
+\end{teX}
+
+\parindent=1em
+\section{Limitations of the MakeIndex index processor}
+
+The |MakeIndex| program has served the \latex community well for many years. With the newer engines it struggles
+with indexing |utf| documents and this is its major limitation. Its limitations with multiple indexing can be by-passed
+using the \pkg{imakeidx} package.
+
+\section{The xindy index processor}
+
+A more recent index processor is \href{http://www.xindy.org}{xindy}\index{xindy}. 
+
+xindy means fle\textbf{x}ible \textbf{ind}exing s\textbf{y}stem. It is an indexing system that can be used to generate book-like indexes for arbitrary document preparation systems. This term includes systems such as TeX and LaTeX , the Nroff-family or SGML-based systems (e.g. HTML) that process some kind of text and generate indexing information. It is not fixed to any specific system, but can be configured for a wide variety of purposes.
+
+Authors sometimes wish to include an index into their document, but very often their document preparation systems aren't able to produce indexes on their own, or the capabilities of the built-in indexers are insufficient and produce ugly looking results. More often they use separate specialized tools for this purpose, sometimes called index processors.
+
+In comparison to other index processors xindy has several powerful features that make it an ideal framework for describing and generating complex indexes. Its most interesting features are
+
+\subsection{Internationalization}
+
+xindy can be configured to process indexes for many languages with different letter sets and different sorting rules. For example, many roman languages such as Italian, French, Portuguese or Spanish contain accentuated letters such as À, Á, ñ. Other languages from northern Europe have letters like Ä, Ø, æ or ß which often can't even be processed by many index processors let alone sorting them correctly into an index. The xindy system can be configured to process these alphabets by defining sort and merge rules that allow expressing language specific rules. One example of such a rule would be
+
+(sort-rule "ä" "ae")
+
+defining that a word containing the umlaut-a will be sorted as if it contained the letters ae instead. This is one form of how the umlaut-a ("ä") is sorted into german indexes. With an appropriate set of rules on can express the complete rules of a specific language.
 \endinput
-
-
-
 
 
 
