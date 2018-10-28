@@ -1,0 +1,95 @@
+\documentclass{article}
+\usepackage{graphicx,caption,keyval,ragged2e,lipsum}
+\begin{document}
+\makeatletter
+\fboxsep0pt
+\fboxsep0pt
+%% The graphic command simply sets up the correct paths and includes the
+%% image, this might need to be left in a box for later usage
+%% I will come back and change it later.
+%% We definekeys to enable manipulation of various parameters
+%% which we pass to image macros
+%% KEY DEFINITIONS
+\define@key{img}{width}[1cm]{\def\img@width{#1}}
+\define@key{img}{height}{\def\img@height{#1}}
+\define@key{img}{scale}{\def\img@scale{#1}}
+\define@key{img}{offsetx}{\def\img@offsetx{#1}}
+\define@key{img}{offsety}{\def\img@offsety{#1}}
+\define@key{img}{border}{\def\img@border{#1}}
+\define@key{img}{padding}{\def\img@padding{#1}}
+\define@key{img}{style}{\def\img@style{#1}}
+\define@key{img}{bottommargin}{\def\img@bottommargin{#1}}
+\define@key{img}{keepaspectratio}{\def\img@keepaspectratio{keepaspectratio}}
+\define@key{imgpg}{pagestyle}{\def\imgpg@pagestyle{#1}}
+%% Set defaults for all keys
+\setkeys{img}{offsetx=1sp, offsety=0pt,width=0cm,height=0cm, 
+                      border=0pt, padding=0pt,bottommargin=0pt,scale=1}
+%% Create the command graphic
+\newlength\tempa
+
+%% We create a new command to place images 
+%% #1 default holds all the keys
+%% #2 filename
+%% #3 holds caption
+
+\newcommand\putimage[3][]{%
+%% Set the keys
+\setkeys{img}{#1}%
+\setlength\fboxrule\img@border%
+\setlength\fboxsep\img@padding%
+\ifdim\img@offsety=0pt% 
+   \else%
+     \vspace*{\img@offsety}%
+\fi%
+\hskip\img@offsetx%
+\setlength{\tempa}{\img@width}%
+\def\setcaption{\captionof{figure}{#3}}%
+\fbox{%
+%% need to do calculations
+%% First we calclulate the width and size of the 
+%% image in order to arrange the enclosing box checks and dimensions
+\let\outerbox\minipage%
+\let\endouterbox\endminipage%
+\parindent0pt%
+\noindent\begin{outerbox}[t]{\textwidth}%
+     \fbox{%
+        \noindent\begin{minipage}[t]{\textwidth}%
+          \centering
+          \def\test{}%
+          \ifdim\img@height>0pt%
+              \g@addto@macro{\test}{height=\img@height,}% 
+           \fi%
+           \ifdim\img@width>0pt
+                \g@addto@macro{\test}{width=\img@width,}% 
+                \ifdim\img@height>0pt
+                   \g@addto@macro{\test}{width=\img@width, keepaspectratio}% 
+                \fi%
+           \fi %
+\noindent\fbox{\expandafter\includegraphics\expandafter[\test ]{#2}}%
+ %% reset some of the values
+ %% reset all keys
+ \setkeys{img}{offsetx=0sp, offsety=0pt,width=0cm,height=0cm,%  
+                      border=0pt, padding=0pt,bottommargin=0pt,scale=0}%
+ \end{minipage}%%
+}
+\captionof{figure}{#3}%
+\end{outerbox}}%
+}
+\makeatother
+\let\thepageheight\textheight
+\lipsum[1]
+\noindent\putimage[width=0.5\textwidth,border=0pt]{./graphics/amato}{This is a short caption test and this one is a long caption test.}
+\lipsum[1-2]
+\noindent\putimage[width=0.5\textwidth,border=0pt]{./graphics/pierced}{This is a short caption test and this one is a long caption test.}
+\pagebreak
+\lipsum[1]
+\putimage[height=0.8\textheight, width=\textwidth, offsetx=0cm,offsety=0cm,border=0pt]{./graphics/christina}{This is a short caption test and this one is a long caption test.}
+
+\putimage[width=\textheight, width=\textwidth, offsetx=0cm,offsety=0cm,border=0pt]{./graphics/kathleen/woman}{Donna Velata.}
+
+
+
+\end{document}
+http://www.artesmagazine.com/2010/07/new-york-artist-kathleen-gilje-revisits-john-singer-sargent%E2%80%99s-portraits-2/
+http://kathleengilje.com/artwork/321569_Portrait_of_a_Lady_Restored_Pierced.html
+
