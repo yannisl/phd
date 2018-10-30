@@ -55,6 +55,3 @@ to be done.
 
 __The package as it stands is not production stable.__
 
-
-
-

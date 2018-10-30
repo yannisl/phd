@@ -5,6 +5,3 @@
 4. Add a regiter function for new special templates.
 5. Add style defaults to enable switching back to defaults easier.
 6. Add new special using l3 coffins. This is probably an ideal use.
-
-
-

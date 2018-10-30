@@ -13,10 +13,7 @@
 %% See http://www.latex-project.org/lppl.txt
 %% ----------------------------------------------------------------
 
-
-
 \NeedsTeXFormat{LaTeX2e}[2017/04/15]%
-\RequirePackage[2017/04/15]{latexrelease}
 \ProvidesPackage{phd-toc}%
   [2017/04/15 v1.0 ToC styling]%
 
@@ -74,37 +71,47 @@
    \cs_if_exist_use:cTF { #1_fontshape  }{}{#1~Sh}
    \cs_if_exist_use:cTF { #1_fontsize   }{}{#1~Siz}
  }
+
 \cs_gset:Npn \format_toc_name:n #1
   {
  \begin{float_box}{toc_name}
+     % gives duplicate errors
+     % \msg_new:nnnn {phd_toc}{missing-key}{Missing~or~unset~key~for~hh#1 frame color}
+      %{Set~the~key~}
+      %\cs_if_exist:cTF{#1_frame_color}{}{\msg_error:nnn { phd_toc } { missing-key } { #1 }}
       \leavevmode
       \cs_if_exist_use:cTF {#1_align}{}{F~#1}
 
       %\toc_name_indent
-      \tcbox[size = minimal,
+      \tcbox[
+             size = minimal,
              boxsep=0pt,
              top=0pt,
              bottom=0pt,
              left=0pt,
              right=0pt,
              nobeforeafter,
-             colback         = white,  %\cs_if_exist_use:cTF {#1_background_color}{}{white},
-             colframe        = white,  %\cs_if_exist_use:cTF {#1_frame_color}{}{white},
+             colback         = \cs_if_exist_use:cTF {#1_background_color}{}{thecodebackground},
+             colframe        = \cs_if_exist_use:cTF {#1_frame_color}{}
+                                         {white},
              ]
         {
 
-            \toc_name_before
-            \phd_font_aux_toc:n {toc_name}
-             %\color{\toc_name_color}
+            \toc_before
+            % parameter is either toc, lof, lot
+            \phd_font_aux_toc:n {#1}
+            % sets the color
+            % this originates from color palette
+            \color{\cs:w #1_color\cs_end:}
             \hskip-\dimexpr(\@tocrmarg/2)
-            \cs_if_exist_use:cTF {#1_case}{}{#1}
+            \cs_if_exist_use:cTF {#1_case}{}{Case Error}
                {
-                \cs_if_exist_use:cTF {contentsname}{}{F~#1}
+                \cs_if_exist_use:cTF {#1_name}{}{F~#1}
                }
         }
    \end{float_box}
    %\tikzrule
-   \toc_name_after%
+   \toc_after%
  }
 \ExplSyntaxOff
 \let\ltxtableofcontents\tableofcontents
@@ -114,6 +121,8 @@
 \ExplSyntaxOff
 \ExplSyntaxOn
  \renewcommand{\tableofcontents}{%
+   \phantomsection
+   \addcontentsline{toc}{chapter}{Contents}
     \phd_toc_start:
     \group_begin:
    % \hypersetup{linkcolor=spot}
@@ -121,7 +130,7 @@
      \group_begin:
        \parindent\z@
        \dim_set_eq:NN \parskip \phd_toc_parskip
-       \phd_make_toc_title:n {toc_name}
+       \phd_make_toc_title:n {toc}
      \start_toc:n {toc}%
      \group_end:
     \group_end:
@@ -144,8 +153,8 @@
 \ExplSyntaxOff
 \ExplSyntaxOn
 \cs_set:Npn \toc_number_before_box {}
-\cs_set:Npn \toc_number_before {}
-\cs_set:Npn \toc_number_after {}
+\cs_set:Npn \toc_number_before {\{}
+\cs_set:Npn \toc_number_after {\}}
 \cs_set:Npn \toc_number_after_box {}
 \ExplSyntaxOff
 \ExplSyntaxOn
@@ -154,13 +163,23 @@
 \cs_gset:Npn \numberline #1
   {
    \toc_number_before_box
-
-     {
+      {
       \toc_number_before
       \tcbox[size=minimal,
              nobeforeafter,
-             colback=white,
-             width=\numberlineboxwidth + 1.5em]{#1}\hskip5pt\toc_number_after
+             colback=yellow!60,
+             colupper = thered,
+             colframe=red!75!black,
+             left=1pt,right=1pt,
+             top=2pt,
+             bottom=2pt,
+             boxrule=0pt,
+             bottomrule=1pt,
+             toprule=1pt,
+             box~align=base,
+             width=\numberlineboxwidth + 1.5em]
+             {#1}
+             \space\toc_number_after
      }
    \toc_number_after_box
   }
@@ -216,8 +235,8 @@
 {
 \cxset
   {
-    #1/.store                                   = contentsname,
-    #1~before/.store                            = #2_before,
+    #1~name/.store                                   = #2_name,
+    #1~before/.store                                 = #2_before,
     #1~after/.store                             = #2_after,
     #1~numwidth/.store                          = #1_numwidth,
    %
@@ -244,8 +263,8 @@
 \ExplSyntaxOn
 \cs_set:Npn \toc_set_key_defaults #1 #2
   {
-    \cxset{
-       #1                   = #2,
+\cxset{
+       #1~name              = #2,
        #1~before            =,
        #1~after             =,
        #1~numwidth          = 0pt,
@@ -266,27 +285,49 @@
        toc~pagestyle        = fancy,
   }%
 }
-\cxset{toc~rmarg/.code = \cs_new:Npn\tocrmarg: {#1}\global\let\@tocrmarg\tocrmarg:, }
-\cxset{toc~rmarg = 4em,}
+
+\new_toc_keys {toc}{toc}
+\toc_set_key_defaults {toc}{Table~of~Contents}
+\new_toc_keys {lof}{lof}
+\toc_set_key_defaults {lof}{List~of~Figures}
+
+\new_toc_keys {lot}{lot}
+\toc_set_key_defaults {lot}{List~of~Tables}
+\cxset{toc~rmarg/.code = \cs_new:Npn\tocrmarg: {#1}
+                                        \global\let\@tocrmarg\tocrmarg:, }
+
 \ExplSyntaxOff
-\ExplSyntaxOn
-\new_toc_keys {toc~name}{toc_name}
-\toc_set_key_defaults {toc~name}{Table~of~Contents}
-
-\new_toc_keys {lof~name}{lof_name}
-\toc_set_key_defaults {lof~name}{List~of~Figures}
-
-\new_toc_keys {lot~name}{lot_name}
-\toc_set_key_defaults {lot~name}{List~of~Tables}
-\ExplSyntaxOff
-
+\cxset{
+%%
+%% toc contents element settings
+    toc name               = Table of Contents,
+    toc  before            =,
+    toc  after             =,
+    toc  numwidth          = 0pt,
+    toc  color             = thetocname,
+    toc  background-color  = white,
+    toc  frame-color       = red,
+    toc  shadow            = none,
+    toc  font-weight       = normal,
+    toc  font-family       = rmfamily,
+    toc  font-shape        = upshape,
+    toc  font-size         = Huge,
+    toc  afterskip         = 40pt,
+    toc  after             = ,
+    toc  align             = left,
+    toc  indent            = 0pt,
+    toc case               = none,
+    toc  page after        = A,
+    toc  pagestyle         = headings,
+    toc  rmarg             = 4em,
+}
 \ExplSyntaxOn
 \cs_new:Npn \phd_make_toc_title:n #1
 {
   \addpenalty\@secpenalty
   \if@haschapter@cx
     \vspace*{10pt}
-    \pdfbookmark[0]{\contentsname}{toc}
+    \pdfbookmark[0]{\toc_name}{toc}
   \else
     \vspace{10pt}
   \fi
@@ -295,7 +336,7 @@
   \interlinepenalty\@M
   \format_toc_name:n {#1}
     \par\nobreak
-    \vskip\toc_name_after_skip\relax
+    \vskip\toc_after_skip\relax
     \@afterheading
  }
 \ExplSyntaxOff
@@ -360,7 +401,8 @@
              indent=\csname toc_subsection_indent\endcsname\relax\\
              subsubsection\\
              indent =\csname toc_subsubsection_indent\endcsname\relax\\
-\gdef\once{}}
+            \gdef\once{}}
+
    \begin{tcolorbox}[
                      colback=white,
                      width=\linewidth,
@@ -428,21 +470,29 @@
 
        \begin{tcolorbox}
        [
-          size=minimal,
+          %size=minimal,
           nobeforeafter,
-          colback=\toc_section_page_background_color,
-          width=\@tocrmarg, %\expandafter\csname #1_numwidth\endcsname + 10pt,
-          halign=center,
+          colback=\cs:w #1_page_background_color\cs_end:,
+          width=\expandafter\csname #1_numwidth\endcsname + 10pt\relax, %\@tocrmarg
+          halign~lower=right, % hs no impact
           box~align = base,
-          boxsep    = 1pt,
+          boxsep    = 0pt,
           colframe = red,
+          bottom = 0pt,
+          middle = 0pt,
+          arc = 0pt,
+          boxrule = 0pt,
+          top = 0pt,
+          toptitle = 0pt,
+          bottomtitle = 0pt,
+          outer~arc = 0pt,
        ]
        \hfill\hfill
        \tcbox[
           size=minimal,
           nobeforeafter,
-          width=\toc_section_number_width,
-          colback= white, %\toc_section_page_background_color,
+          width=\toc_chapter_number_width,
+          colback= \cs:w #1_page_background_color\cs_end:,  %\toc_section_page_background_color,
           box~align = base,
         ]
          {
@@ -488,7 +538,7 @@
     #1~page~font-weight/.fontweight = #2_page_fontweight,
     #1~page~color/.store            = #2_page_color,
     #1~page~background-color/.store = #2_page_background_color,
- #1~dotsep/.store                = #2_dotsep,
+    #1~dotsep/.store                = #2_dotsep,
     #1~page~before/.store           = #2_page_before,
     #1~page~after/.store            = #2_page_after,
   }
@@ -497,20 +547,20 @@
   {
     \cxset
     {%
-      #1~beforeskip  =\z@ \@plus.2\p@,
-      #1~afterskip   =1pt,
-      #1~indent=0em,
-      #1~numwidth=0em,
+      #1~beforeskip         =\z@ \@plus.2\p@,
+      #1~afterskip         = 1pt,
+      #1~indent            = 0em,
+      #1~numwidth          = 0em,
       #1~number~box~before =,
-      #1~number~box~after =,
-      #1~font-family= sffamily,
-      #1~font-weight = bfseries,
-      #1~font-shape = itshape,
-      #1~color= black,
-      #1~case = none,
-      #1~font-size= normal,
-      #1~numwidth = 3em,    %this has to be handled auto
-      #1~dotsep = 2.7,
+      #1~number~box~after  =,
+      #1~font-family       = sffamily,
+      #1~font-weight       = normal,
+      #1~font-shape        = upshape,
+      #1~color             = black,
+      #1~case              = none,
+      #1~font-size         = normal,
+      #1~numwidth          = 3em,    %this has to be handled auto
+      #1~dotsep            = 2.7,
       #1~page~font-size          = normal,
       #1~page~font-shape         = upshape,
       #1~page~font-weight        =,
@@ -526,12 +576,14 @@
 \make_new_toc_entry_keys {toc~part}{toc_part}
 \make_new_toc_entry_key_defaults {toc~part}
 \ExplSyntaxOff
-\cxset{toc part font-size=LARGE,
-       toc part color=black,
-       toc part beforeskip=1em,
-       toc part page before=,
-       toc part indent = 0pt,
-       toc part numwidth=1.5em,
+\cxset{%
+%% TOC part keys
+    toc part font-size       = LARGE,
+    toc part color            =  black,
+    toc part beforeskip    =  1em,
+    toc part page before  =,
+    toc part indent          =  0pt,
+    toc part numwidth    = 1.5em,
        }
 \ExplSyntaxOn
 \newif\if@dopart@cx
@@ -587,21 +639,42 @@
   \make_new_toc_entry_keys {toc~chapter}{toc_chapter}
   \make_new_toc_entry_key_defaults {toc~chapter}
 \ExplSyntaxOff
-\cxset{toc chapter font-size=LARGE,
-       toc chapter color=black,
-       toc chapter beforeskip=1em,
-       toc chapter afterskip = 1em plus0.2pt minus .2pt,
-       toc chapter case=upper,
-       toc chapter font-family = sffamily,
-       toc chapter page before = ,
-       toc chapter page after =,
-       toc chapter numwidth = 1.5em,
-       }
+\cxset {%
+    % table of contents defaults
+    % toc chapter keys
+    toc chapter font-size   = LARGE,
+    toc chapter font-family = rmfamily,
+    toc chapter font-weight = normal,
+    % the toc chapter color thetocchapter
+    % is fetched from the palette define
+    % your own color in the palette rather than
+    % change this here
+    toc chapter color       = thetocchapter,
+    toc chapter beforeskip  =1em,
+    toc chapter afterskip   = 1em plus0.2pt minus .2pt,
+    toc chapter case        = upper,
+    toc chapter numwidth    = 1.5em,
+    %  TOC chapter page formatting
+    toc chapter page font-size        = LARGE,
+    toc chapter page font-shape       = upshape,
+    toc chapter page font-weight      = normal,
+    toc chapter page font-family      = rmfamily,
+    toc chapter page color            = black,
+    toc chapter page background-color = yellow!10,
+    toc chapter page before           =,
+    toc chapter page after            =,
+}
 \ExplSyntaxOn
-  \newcommand{\toc_chapter_leader}{\normalfont\dot_fill{\toc_section_dotsep}}
+  \cs_new:Npn \toc_chapter_leader
+    {
+       \normalfont
+       \dot_fill{\toc_section_dotsep}
+    }
 \ExplSyntaxOff
 \ExplSyntaxOn
   \renewcommand*{\l@chapter}[2]{
+     \cs_set:Npn \toc_number_before {[}
+    \cs_set:Npn \toc_number_after {]}
      \ifnum \c@tocdepth >\m@ne
        \addpenalty{-\@highpenalty}
        \skip_vertical:N \toc_chapter_beforeskip
@@ -610,6 +683,7 @@
         }
        \skip_vertical:N \toc_chapter_afterskip
     \fi
+
  }%
 \ExplSyntaxOff
 \let\sampletocchapter\l@chapter
@@ -617,14 +691,30 @@
   \make_new_toc_entry_keys {toc~section}{toc_section}
   \make_new_toc_entry_key_defaults {toc~section}
 \ExplSyntaxOff
-\cxset{toc section page after = ,
-       toc section page before =,
+\cxset{
+      %TOC section
+      % indentation
        toc section indent=1.5em,
        toc section numwidth= 2.3em,
+      % page number fonts
+       toc  section page font-size          = Large,
+       toc  section page font-shape         = itshape,
+       toc  section page font-weight        = normal,
+       toc  section page font-family        = rmfamily,
+       % page number colors
+       toc  section page color                 = bgsexy,
+       toc  section page background-color   = theblue!10,
+       % page number before after elements
+       toc  section page before             =,
+       toc  section page after              =,
+       toc section page after = ,
+       toc section page before =,
 }
 \ExplSyntaxOn
 \cs_gset:Npn \l@section #1 #2
   {
+   \cs_set:Npn \toc_number_before {\{}
+   \cs_set:Npn \toc_number_after {\}}
   \ifnum \c@tocdepth >\z@
     \if@haschapter@cx
       \skip_vertical:n \toc_section_beforeskip
@@ -634,6 +724,7 @@
     \fi
     \format_toc_entry:nn {toc_section} {#1} {#2}
   \fi
+
   }
 \ExplSyntaxOff
 \ExplSyntaxOn
@@ -647,14 +738,19 @@
 \make_new_toc_entry_key_defaults {toc~subsection}
 \ExplSyntaxOff
 \cxset{%
-  toc subsection indent = 3.8em,
-  toc subsection numwidth = 3.2em,
-  toc subsection page before =[,
-  toc subsection page after =],
+%%
+%% subsection defaults
+    toc subsection indent           = 3.8em,
+    toc subsection numwidth      = 3.2em,
+    toc subsection page before   = ,
+    toc subsection page after     = ,
+%%
 }
 \ExplSyntaxOn
 \cs_gset:Npn \l@subsection #1 #2
   {%
+   \cs_set:Npn \toc_number_before {}
+   \cs_set:Npn \toc_number_after {}
     \ifnum \c@tocdepth >\z@
       \if@haschapter@cx
         \skip_vertical:N \toc_subsection_beforeskip
@@ -664,6 +760,7 @@
     \fi
       \format_toc_entry:nn {toc_subsection} {#1} {#2}
   \fi
+
 }
  \ExplSyntaxOff
 
@@ -761,31 +858,53 @@
     \else
       \@restonecolfalse
     \fi
-    \phd_make_toc_title:n {lof_name}
+    \newpage
+    \phd_make_toc_title:n {lof}
+    %\begin{multicols*}{2}
+
+     \@mkboth{\MakeUppercase\listfigurename}%
+              {\MakeUppercase\listfigurename}%
     \start_toc:n {lof}%
     \if@restonecol
       \twocolumn
     \fi
+    %\end{multicols*}
     }
 \ExplSyntaxOff
 
-\cxset{lof name = Illustrations,
- lof name font-shape = itshape,
- lof name font-weight = bfseries,
-       lof name case = lower,
-       }
+\cxset{
+    % List of Figures
+    lof name              = List of Figures,
+    lof before            =,
+    lof after             =,
+    lof numwidth          = 0pt,
+    lof color             = thelofname,
+    lof background-color  = white,
+    lof frame-color       = white,
+    lof shadow            = none,
+    lof font-weight       = normal,
+    lof font-family       = rmfamily,
+    lof font-shape        = upshape,
+    lof font-size         = Huge,
+    lof afterskip         = 40pt,
+    lof after             = ,
+    lof align             = left,
+    lof indent            = 0pt,
+    lof case              = none,
+    lof page after        = ,
+}
 \ExplSyntaxOn
 \cs_new:Npn \phd_lof_start: {}
 \cs_new:Npn \phd_lof_end: {}
 \cs_new:Npn \make_lof_title
   {
-    \newpage
-    \phd_lof_start:
-    \format_toc_name:n {lof_name}%
+    %\clearpage moved to listoffigure
+    %\phd_lof_start:
+    \format_toc_name:n {lof}%
     \gdef\listfigurename{Illustrations}
     \@mkboth{\MakeUppercase\listfigurename}%
             {\MakeUppercase\listfigurename}%
-    \phd_lof_end:
+    %\phd_lof_end:
   }
 \ExplSyntaxOff
 
@@ -795,9 +914,11 @@
 \ExplSyntaxOff
 \ExplSyntaxOn
 \renewcommand*{\l@figure}[2]
-  {
+  {\cs_set:Npn \toc_number_before {}
+   \cs_set:Npn \toc_number_after {}
     \vskip \lof_entry_beforeskip
     {
+      %\@dottedtocline{1}{1.5em}{2.3em}
       \format_toc_entry:nn {lof_entry} {#1} {#2}
     }
  }
@@ -812,8 +933,8 @@
     \else
       \@restonecolfalse
     \fi
-
-    \phd_make_toc_title:n {lot_name}
+    \newpage
+    \phd_make_toc_title:n {lot}
     \start_toc:n {lot}%
     \if@restonecol
       \twocolumn
@@ -837,7 +958,6 @@
   }
 
 \ExplSyntaxOff
-
 
 
 %%  Copyright (C) 2015 by Dr. Yiannis Lazarides <yannislaz@gmail.com>
