@@ -2,9 +2,9 @@
 
 
 \NeedsTeXFormat{LaTeX2e}[2017/04/15]%%
-\ProvidesFile{phd-packagemanager}[2015/1/13 v1.0 less preamble (YL)]%
+\ProvidesPackage{phd-pkgmanager}[2015/1/13 v1.0 less preamble (YL)]%
 \let\ltxtoday\today
-
+\let\oldcontentsline\contentsline
 \RequirePackage{expl3}
 
 \RequirePackage{phd-colorpalette}
@@ -12,15 +12,7 @@
       \newcounter{chapter}
       \def\thechapter{\@arabic\c@chapter}
 }{}
-\ExplSyntaxOn
-\clist_new:N \g_phd_packages_loaded_clist
-\ExplSyntaxOff
-\ExplSyntaxOn
-\clist_new:N \g_phd_packages_not_found
-\ExplSyntaxOff
-\ExplSyntaxOn
-\clist_new:N \g_phd_packages_loaded_by_others
-\ExplSyntaxOff
+
 \ExplSyntaxOn
 \cs_new:Npn \save_symbol: #1
   {
@@ -46,52 +38,55 @@
 \newcommand*{\ifnotsavedsym}[1]{%
   \expandafter\ifnotsavedsym@helper\string#1!%
 }
-\let\oldcontentsline\contentsline
+
 \newif\ifcomplete
 \ExplSyntaxOn
-\global\let\origRequirePackage\RequirePackage
-\DeclareDocumentCommand\RequirePackage {o m o}
-  {
-     \IfValueTF{#3}
-       {\IfValueTF {#1}
-           { \origRequirePackage [{#1}] {#2} [{#3}] }
-           { \origRequirePackage {#2} [{#3}]      }
-       }
-       {
-        \IfValueTF{#1}
-           {
-             \origRequirePackage  [{#1}] {#2}
-           }
-           {
-             \origRequirePackage {#2}
-           }
-      }
-  }
-
-\ExplSyntaxOff
+\clist_new:N \g_phd_packages_loaded_clist:n
+\clist_new:N \g_phd_packages_not_found:n
 \newif\ifloadpackages
 \loadpackagestrue
+
 \newcommand{\missingpkgs}{}
 \newcommand{\foundpkgs}{}
-\newcommand{\if@sty@file@exists@star}[3]{%
-  \ifloadpackages
-    \IfFileExists{#1.sty}{#2}{#3}%
-  \else
-    #3%
-  \fi
+
+\cs_new:Npn \ifstylefileexists_star #1 #2 #3 {
+\ifloadpackages
+\file_if_exist:nTF {#1}
+  {
+    #2
+    \clist_gput_right:Nn \g_phd_packages_loaded_clist:n {#1}
+  }
+
+  {
+   #3
+    \clist_gput_right:Nn \g_phd_packages_not_found:n {#1}
+
+  }
+\fi
 }
-\newcommand{\if@sty@file@exists}[3]{%
-  \ifloadpackages
-    \IfFileExists{#1.sty}%
-                 {#2\@cons\foundpkgs{{#1}}}%
-                 {#3\completefalse\@cons\missingpkgs{{#1}}}%
-  \else
-    #3\completefalse\@cons\missingpkgs{{#1}}%
-  \fi
+
+\cs_new:Npn \ifstylefileexists_aux #1 #2 #3 {
+\ifloadpackages
+\file_if_exist:nTF {#1.sty}
+  {
+    #2
+    \clist_gput_right:Nn \g_phd_packages_loaded_clist:n {#1}
+  }
+
+  {
+   #3
+    \clist_gput_right:Nn \g_phd_packages_not_found:n {#1}
+
+  }
+\fi
 }
-\newcommand{\IfStyFileExists}{%
-  \@ifstar{\if@sty@file@exists@star}{\if@sty@file@exists}%
+
+\NewDocumentCommand\ifstylefileexists {s m m m } {
+ \IfBooleanTF #1
+ {\ifstylefileexists_star {#2}{#3}{#4} }
+ {\ifstylefileexists_aux {#2}{#3}{#4}}
 }
+\ExplSyntaxOff
 \newcommand\symbols{\flushleft}
 \def\endsymbols{\endflushleft}
 
@@ -102,7 +97,7 @@
    \footnotesize\texttt{\string#1}\hss}%
    \penalty10}
 \ExplSyntaxOn
-\IfStyFileExists{calligra}
+\ifstylefileexists{calligra}
   {\save_symbol:{filename}
    \RequirePackage{calligra}
    \restore_symbol:{CAL}{filename}
@@ -112,213 +107,109 @@
   {}
 \ExplSyntaxOff
 
-\IfStyFileExists{chancery}
-  {\newcommand{\mathpzc}[1]{\mbox{\usefont{OT1}{pzc}{m}{it}##1}}}
-  {}
-\ifxetex
-   \else
-     \ifluatex
-        \RequirePackage{etex}
-     \else
-        \RequirePackage{etex}
-  \fi
-\fi
 
-\cxset{nag keys/.store in =\nagkeys@cx,
-       onlyamsmath keys/.store in=\onlyamsmathkeys@cx,
-       xcolor keys/.store in=\xcolorkeys@cx}
-\cxset{xcolor keys={fixpdftex,usenames,dvipsnames,
-                  svgnames,x11names,table}}
 %% |\PassOptionsToPackage{\onlyamsmathkeys@cx}{onlyamsmath}|
+\ifMICROTYPE
+\ifengine%
+  {\RequirePackage[tracking=true]{microtype}}%
+  {\RequirePackage[tracking=true]{microtype}}%
+  {\RequirePackage[tracking=true]{microtype}}%
+\fi
+\ExplSyntaxOn
 \newif\ifRAGGEDTWOE
 \newif\ifEVERYSEL
 \newif\ifFOOTMISC
-\IfStyFileExists{ragged2e}
-{\RAGGEDTWOEtrue
- \EVERYSELtrue
- \FOOTMISCtrue
-  \PassOptionsToPackage{footnotes,raggedrightboxes}{ragged2e}
-  \RequirePackage{ragged2e}}
-{}
-\newif\ifSOUL
-\IfStyFileExists{soul}
-{\SOULtrue\RequirePackage{soul}
-    \sethlcolor{thehighlight}}
-{}
+\ifstylefileexists{ragged2e}{
+  \RAGGEDTWOEtrue
+  \EVERYSELtrue
+  \FOOTMISCtrue
+  \PassOptionsToPackage{footnotes,raggedrightboxes}{ragged2e}%
+  \RequirePackage{ragged2e}}{}
+\ExplSyntaxOff
 
+\ifstylefileexists{soul}%
+{\RequirePackage{soul}%
+ \sethlcolor{thehighlight}}{}
+
+\newif\ifLETTRINE
+\ifstylefileexists{lettrine}{%
+\LETTRINEtrue
 \RequirePackage{lettrine}
-\ifx\dropcap\undefined
-  \def\dropcap#1#2{%
-    \lettrine[lines=3, lraise=0.1, nindent=0em, slope=.1em]{#1}{#2}
-  }%
-\fi
-\IfStyFileExists{siunitx}{
-   \RequirePackage{siunitx}
-   \sisetup{fixed-exponent =0,
-            scientific-notation = false}}
-{}
-\cxset{acronym keys/.store in = \acronymkeys@cx}
-\cxset{acronym keys={smaller,printonlyused,withpage}}
-\PassOptionsToPackage{smaller,printonlyused,withpage}{acronym}
-\RequirePackage{acronym}[2015/03/21]
-\RequirePackage{mdframed}
-
-\RequirePackage{adjustbox}
-\RequirePackage{fancybox}
-\RequirePackage{graphicx}[1999/02/16]
-\DeclareGraphicsExtensions{.jpg, .JPG, .jpeg, .png, .eps}
-\graphicspath{{graphics/}{graphics//}{../images/}{images//}{./images/}{./graphics/}%
-   {../graphics/}{./pic/}{../pic}}
-
-\RequirePackage{wrapfig}
-\PassOptionsToPackage{quiet}{rotating}
-\RequirePackage{rotating}
-\DeclareRobustCommand\thickrule{%
-    \leavevmode \leaders \hrule height 2pt \hfill \kern \z@}
-\DeclareRobustCommand\thinrule{\vrule width\textwidth height0.4pt depth0pt\relax}%
-\DeclareRobustCommand\mediumrule{\rule{\textwidth}{0.8pt}}
-\DeclareRobustCommand\Rule{{\color{\tocchapternumberfill@cx}\rule[-4.1pt]{13cm}{0.4pt}}}
-\DeclareRobustCommand\bottomline{\medskip
-   \noindent\rule{\linewidth}{0.4pt}\medskip}
-\DeclareRobustCommand\topline{\par\medskip
-   \noindent\rule{\linewidth}{0.4pt}\medskip}
-\cxset{chapter rule color/.store in={\chapter@rule@color}}%
-\cxset{chapter rule color=spot!30}
-\DeclareRobustCommand\tikzrule{%
-  \tikz [color=\chapter@rule@color, very thick, inner sep=0pt, outer sep=0pt]%
-        \draw(0,0)--(\the\linewidth,0);
+\def\dropcap#1#2{
+\lettrine[lines=3, lraise=0.1, nindent=0em, slope=.1em]{#1}{#2}}
+}{}
+\ifstylefileexists{acronym}%
+{%
+    \PassOptionsToPackage{smaller,printonlyused,withpage}{acronym}
+    \RequirePackage{acronym}[2015/03/21]
 }%
-\newcommand\drawrule[3][]{%
-    \offinterlineskip
-          \tikz [ name=s,trim left,
-                   anchor=base,
-                   draw=black,
-                 % double distance=.2pt,
-                  line width=#3,
-                  %very thick,
-                  inner sep=0pt,
-                  outer sep=0pt,#1]   \draw(0,0)--(#2,0);
-}
- \def\drawdoublerule#1#2{%
-    \drawrule{#1}{#2}%
-    \vskip2.5pt
-    \drawrule{#1}{#2}%
- }
+{}
+\newif\ifSIUNITX
+\ifstylefileexists{siunitx}{\SIUNITXtrue
+   \RequirePackage{siunitx}}{}
+\ifSIUNITX
+  \sisetup{fixed-exponent =0,
+          scientific-notation = false}
+\fi
+
+
+\ifstylefileexists{fancybox}
+  {\RequirePackage{fancybox}}
+  {}
+\ifstylefileexists{graphicx}{
+\RequirePackage{graphicx}
+\DeclareGraphicsExtensions{.jpg, .JPG, .jpeg, .png, .eps}
+  \graphicspath{{graphics/}{graphics//}{../images/}{images//}{./images/}{./graphics/}%
+    {../graphics/}{./pic/}{../pic}}}{}
+
+\newif\ifWRAPFIG
+\ifstylefileexists{wrapfig}{\WRAPFIGtrue\RequirePackage{wrapfig}}{}
+\ifstylefileexists{rotating}
+{\PassOptionsToPackage{quiet}{rotating}
+\RequirePackage{rotating}}
+{}
+
 \newif\ifLIPSUM
-\RequirePackage{lipsum}
+\ifstylefileexists{lipsum}{\LIPSUMtrue
+\RequirePackage{lipsum}}{}
 
-\RequirePackage[par]{kantlipsum}
-\RequirePackage{blindtext}
-\DeclareDocumentCommand\lorem{ s }{Fusce adipiscing justo nec ante. Nullam in enim.
- Pellentesque felis orci, sagittis ac, malesuada et, facilisis in,
- ligula. Nunc non magna sit amet mi aliquam dictum. In mi. Curabitur
- sollicitudin justo sed quam et quadd.
- \IfBooleanTF{#1}%
- {}%
- {\par}}
-\newcommand{\fox}{``The quick brown fox jumps over the lazy dog''}
-\newcommand\frogking{%
-\leavevmode
-\hskip1em In olden times when wishing
-still helped one, there lived a
-king whose daughters were all
-beautiful, but the youngest was so
-beautiful that the sun itself,
-which has seen so much, was
-astonished whenever it shone in
-her face. Close by the king's
-castle lay a great dark forest,
-and under an old lime-tree in the
-forest was a well, and when
-the day was very warm, the
-king's child went out into the
-forest and sat down by the side
-of the cool fountain, and when she was bored she
-took a golden ball, and threw it up on a high and caught it, and this
-ball was her favorite plaything. \par}%
-\newcommand\onepar{In olden times when wishing
-still helped one, there lived a
-king whose daughters were all
-beautiful, but the youngest was so
-beautiful that the sun itself,
-which has seen so much, was
-astonished whenever it shone in
-her face. Close by the king's
-castle lay a great dark forest,
-and under an old lime-tree in the
-forest was a well, and when
-the day was very warm, the
-king's child went out into the
-forest and sat down by the side
-of the cool fountain, and when she was bored she
-took a golden ball, and threw it up on a high and caught it, and this
-ball was her favorite plaything.}%
-
-\newcommand\alicei{% 
-  The King and Queen of Hearts were seated on their throne
-  when they arrived, with a great crowd assembled about them
-  ---all sorts of little birds and beasts, as well as the
-  whole pack of cards: the Knave was standing before them,
-  in chains, with a soldier on each side to guard him; and
-  near the King was the White Rabbit, with a trumpet in one
-  hand, and a scroll of parchment in the other.  In the very
-  middle of the court was a table, with a large dish of
-  tarts upon it: they looked so good, that it made Alice
-  quite hungry to look at them---``I wish they'd get the
-  trial done,'' she thought, ``and hand round the
-  refreshments!''.  But there seemed to be no chance of this,
-  so she began looking at everything about her to pass away
-  the time.}%
-
-\newcommand\aliceii{%
-  Alice had never been in a court of justice before, but she
-  had read about them in books, and she was quite pleased to
-  find that she knew the name of nearly everything there.
-  ``That's the judge,'' she said to herself, ``because of his
-  great wig.''.
-
-  The judge, by the way, was the King, and as he wore his
-  crown over the wig, (look at the frontispiece if you want
-  to see how he did it,) he did not look at all comfortable,
-  and it was certainly not becoming.
-}
-
- \newcommand\aliceiii{``And that's the jury-box,'' thought Alice, ``and those
-  twelve creatures,'' (she was obliged to say ``creatures,''
-  you see, because some of them were animals, and some were
-  birds) ``I suppose they are the jurors.''.  She said this
-  last word two or three times over to herself being rather
-  proud of it: for she thought, and rightly too, that very
-  few little girls of her age knew the meaning of it at all.
-  However, ``jurymen'' would have done just as well.}
-
- \newcommand\aliceiv{The twelve jurors were all writing very busily on slates.
-  ``What are they doing?'' Alice whispered to the Gryphon.
-  ``They can't have anything to put down yet, before the
-  trial's begun.''.}
-
-\newcommand\alicev{``They're putting down their names,'' the Gryphon
-  whispered in reply, ``for fear they should forget them
-  before the end of the trial.''.}
-
-\newcommand\alicevi{``Stupid things!'' Alice began in a loud indignant voice,
-  but she stopped herself hastily, for the White Rabbit
-  cried out, ``Silence in the court!''; and the King put on
-  his spectacles and looked anxiously round, to make out who
-  was talking.\par}
-\def\ALPHABET {A B C D E F G H I J K L M N O P Q R S T U V W X Y Z}
-\def\alphabet {a b c d e f g h i j k l m n o p q r s t u v w x y z}
-\newcommand{\punctuation}{! ? . / , : }
-\RequirePackage{fonttable} 
+ \RequirePackage[par]{kantlipsum}
+\ifstylefileexists{blindtext}{
+\RequirePackage{blindtext}}{}
+\newif\ifPHDLOREMS
+\ifstylefileexists{phd-lorems}{\PHDLOREMStrue
+  \RequirePackage{phd-lorems}}{}
+%%    \end{macrocode}
+%%
+%%
+%% \begin{docCommand}{fox} {\meta{void}}
+%%  A classic one liner containing all the letters
+%%  of the alphabet, used as a testing code.
+%% \end{docCommand}
+%%    \begin{macrocode}
+%%    \end{macrocode}
+%%
+%%
+%% \begin{docCommand} {frogking} { \meta {void}}
+%% \end{docCommand}
+%%    \begin{macrocode}
+%%    \end{macrocode}
+%%
+%%
+%%    \begin{macrocode}
+\RequirePackage{fonttable}
 
 \RequirePackage{booktabs}
 \newcounter{step}
 \newcommand\resetinc{\setcounter{step}{0}}
 \newcommand\inc{\stepcounter{step}\thestep}
 \RequirePackage{tabularx}
-\RequirePackage{array}
-\RequirePackage{dcolumn}
-\RequirePackage{rccol}
+\ifstylefileexists{array}{
+\RequirePackage{array}}{}
+\ifstylefileexists{dcolumn}{
+\RequirePackage{dcolumn}}{}
+\ifstylefileexists{rccol}{
+\RequirePackage{rccol}}{}
 \RequirePackage{longtable}
 \let\origLT@array=\LT@array
 \let\origLT@start=\LT@start
@@ -369,25 +260,22 @@ ball was her favorite plaything.}%
 
 \let\LT@array=\origLT@array
 \let\LT@start=\origLT@start
-\IfStyFileExists*{type1cm}
-  {\usepackage{type1cm}}
-  {}
 \newif\ifhavemultirow
-\IfStyFileExists{multirow}
+\ifstylefileexists{multirow}
   {\havemultirowtrue
   \RequirePackage{multirow}
   }
   {}
 \newif\ifhavecolortbl
-\IfStyFileExists{colortbl}
+\ifstylefileexists{colortbl}
   {\havecolortbltrue\RequirePackage{colortbl}}
   {}
 \RequirePackage{threeparttable}
 
-\IfStyFileExists {pdflscape}
+\ifstylefileexists {pdflscape}
   {\RequirePackage{pdflscape}}
   {}
-\IfStyFileExists {diagbox}
+\ifstylefileexists {diagbox}
   {\RequirePackage{diagbox} }
   {}
 \ifUNICODE
@@ -406,117 +294,7 @@ ball was her favorite plaything.}%
 \newif\ifAMS
 \newcommand\AMS{\AmS\index{AMS=\AmS}}
 
-\ExplSyntaxOn
-\newif\ifMTOOLS
-\newcommand\MTOOLS{\pkgname{mathtools}}
- \RequirePackage{mathtools}
- \RequirePackage{suffix}
-\IfStyFileExists{mathtools}
-  {\MTOOLStrue
-   \save_symbol:{xleftrightarrow} \save_symbol:{xLeftarrow}
-   \save_symbol:{xRightarrow} \save_symbol:{xLeftrightarrow}
-   \save_symbol:{xrightharpoondown} \save_symbol:{xrightharpoonup}
-   \save_symbol:{xleftharpoondown} \save_symbol:{xleftharpoonup}
-   \save_symbol:{xleftrightharpoons} \save_symbol:{xrightleftharpoons}
-   \save_symbol:{xhookleftarrow} \save_symbol:{xhookrightarrow}
-   \save_symbol:{xmapsto} \save_symbol:{underbracket}
-   \save_symbol:{overbracket} \save_symbol:{lparen} \save_symbol:{rparen}
-   \save_symbol:{dblcolon} \save_symbol:{coloneqq} \save_symbol:{Coloneqq}
-   \save_symbol:{coloneq} \save_symbol:{Coloneq} \save_symbol:{eqqcolon}
-   \save_symbol:{Eqqcolon} \save_symbol:{eqcolon} \save_symbol:{Eqcolon}
-   \save_symbol:{colonapprox} \save_symbol:{Colonapprox}
-   \save_symbol:{colonsim} \save_symbol:{Colonsim} \save_symbol:{overbrace}
-   \save_symbol:{underbrace}%NEW
-   \save_symbol:{underbrace}
-   \save_symbol:{overleftrightarrow}%NEW
-   \save_symbol:{mathscr}
-   \save_symbol:{ulcorner}
-   \save_symbol:{urcorner}
-   \save_symbol:{llcorner}
-   \save_symbol:{lrcorner}
-   \save_symbol:{backepsilon}
-   \save_symbol:{digamma}
-   \save_symbol:{underrightarrow}
-   \save_symbol:{underleftarrow}
-   \save_symbol:{underleftrightarrow}
-   \save_symbol:{eth}
-   \save_symbol:{underbracket}
-   \save_symbol:{smash}
-   % The mathtools package delays the definitions of some of its symbols
-   % to the \begin{document}.  We redefine \AtBeginDocument to force
-   % mathtools to define everything immediately.
-   \let\origAtBeginDocument=\AtBeginDocument
-   \def\AtBeginDocument##1{##1}
-  % \let\RequirePackage\origRequirePackage
-  \PassOptionsToPackage{donotfixmathbugs}{mathtools}
-   \RequirePackage{mathtools}
-
-   \let\AtBeginDocument=\origAtBeginDocument
-
-   \restore_symbol:{MTOOLS}{xleftrightarrow}
-   \restore_symbol:{MTOOLS}{xLeftarrow}
-   \restore_symbol:{MTOOLS}{xRightarrow}
-   \restore_symbol:{MTOOLS}{xLeftrightarrow}
-   \restore_symbol:{MTOOLS}{xrightharpoondown}
-   \restore_symbol:{MTOOLS}{xrightharpoonup}
-   \restore_symbol:{MTOOLS}{xleftharpoondown}
-   \restore_symbol:{MTOOLS}{xleftharpoonup}
-   \restore_symbol:{MTOOLS}{xleftrightharpoons}
-   \restore_symbol:{MTOOLS}{xrightleftharpoons}
-   \restore_symbol:{MTOOLS}{xhookleftarrow}
-   \restore_symbol:{MTOOLS}{xhookrightarrow}
-   \restore_symbol:{MTOOLS}{xmapsto}
-   \restore_symbol:{MTOOLS}{underbracket}
-   \restore_symbol:{MTOOLS}{overbracket} \restore_symbol:{MTOOLS}{lparen}
-   \restore_symbol:{MTOOLS}{rparen} \restore_symbol:{MTOOLS}{dblcolon}
-   \restore_symbol:{MTOOLS}{coloneqq} \restore_symbol:{MTOOLS}{Coloneqq}
-   \restore_symbol:{MTOOLS}{coloneq} \restore_symbol:{MTOOLS}{Coloneq}
-   \restore_symbol:{MTOOLS}{eqqcolon} \restore_symbol:{MTOOLS}{Eqqcolon}
-   \restore_symbol:{MTOOLS}{eqcolon} \restore_symbol:{MTOOLS}{Eqcolon}
-   \restore_symbol:{MTOOLS}{colonapprox}
-   \restore_symbol:{MTOOLS}{Colonapprox}
-   \restore_symbol:{MTOOLS}{colonsim} \restore_symbol:{MTOOLS}{Colonsim}
-   \restore_symbol:{MTOOLS}{overbrace} \restore_symbol:{MTOOLS}{underbrace}
-   \restore_symbol:{MTOOLS}{underbracket}
-   \restore_symbol:{MTOOLS}{smash}
-
-   % Some of the above are defined in terms of \dblcolon.  At the time
-   % of this writing it doesn't seem like any other package uses the
-   % name \dblcolon so it should be safe to retain its mathtools
-   % definition.
-   \let\dblcolon=\MTOOLSdblcolon
-  }
-  {}
-\ExplSyntaxOff
 %%
-\newif\ifFontIsAvailable
-\def\testFontAvailability#1{%
-  \count255=\interactionmode
-  \batchmode
-  \let\preload=\nullfont
-  \font\preload="#1" at 10pt
-  \ifx\preload\nullfont \FontIsAvailablefalse
-  \else \FontIsAvailabletrue \fi
-  \interactionmode=\count255
-}
-
-\def\FindAnInstalledFont#1#2{
-  \expandafter\getFirstFontName#1/\end
-  \let\next\gobbleTwo
-  \ifx\trialFontName\empty
-    \def#2{<No suitable font found>}%
-  \else
-    \testFontAvailability{\trialFontName}
-    \ifFontIsAvailable
-      \edef#2{\trialFontName}%
-    \else
-      \let\next\FindAnInstalledFont
-    \fi
-  \fi
-  \expandafter\next\expandafter{\remainingNames}{#2}
-}
-\def\getFirstFontName#1/#2\end{\def\trialFontName{#1}\def\remainingNames{#2}}
-\def\gobbleTwo#1#2{}
 \newcommand\ligatures[2][Old Standard-Regular]{%
   \bgroup
   \fontspec[Ligatures = Common]{#1}%
@@ -527,16 +305,17 @@ ball was her favorite plaything.}%
 \ifUNICODE
 \else
 \newcommand\YH{yhmaths}
-\IfStyFileExists{yhmath}
+\ifstylefileexists{yhmath}
   {\YHtrue
     \RequirePackage{yhmath}
   }
   {}
 \fi
-\RequirePackage{multienum}
+\ifstylefileexists{multienum}{
+\RequirePackage{multienum}}{}
 \ExplSyntaxOn
 \newif\ifACCENTS
-\IfStyFileExists{accents}
+\ifstylefileexists{accents}
   {\ACCENTStrue
    \save_symbol:{undertilde}
    \save_symbol:{dddot}
@@ -548,24 +327,23 @@ ball was her favorite plaything.}%
   }
   {}
 \ExplSyntaxOff
-\IfStyFileExists{mathrsfs}
-  {\newcommand{\mathscr}[1]{\mbox{\usefont{U}{rsfs}{m}{n}##1}}}
-  {}
 \def\TX{txfonts}
 
   % Redefine \DeclareMathSymbol to stick "ABX" in front of each symbol name.
   % Do the same for \DeclareMathDelimiter.
   % Define only those accents that are not defined elsewhere.
 %%
-\RequirePackage{nicefrac}
-\RequirePackage{xfrac}
+\ifstylefileexists{nicefrac}{
+\RequirePackage{nicefrac}}{}
+\ifstylefileexists{xfrac}{
+\RequirePackage{xfrac}}{}
 \RequirePackage{amssymb}[2002/01/22]
 \RequirePackage{amsthm}[2002/01/22]
 \RequirePackage{amsopn}
 \RequirePackage{amscd}
 \setcounter{MaxMatrixCols}{20}
 \ifengine{}{}{%
-  \IfStyFileExists{dsfont}%
+  \ifstylefileexists{dsfont}%
     { \newcommand{\mathds}[1]{\mbox{\usefont{U}{dsrom}{m}{n}##1}}
       \newcommand{\mathdsss}[1]{\mbox{\usefont{U}{dsss}{m}{n}##1}}}
     {}
@@ -573,13 +351,11 @@ ball was her favorite plaything.}%
 
 \newif\ifFEYN
 \newcommand\FEYN{\pkgname{feyn}}
-\IfStyFileExists{feyn}
+\ifstylefileexists{feyn}
   {\FEYNtrue
       %\RequirePackage{feyn}
-  }
-
-  {}
- \DeclareRobustCommand\FIRE{{\large\color{red}Fire}}
+  }{}
+\DeclareRobustCommand\FIRE{{\large\color{red}Fire}}
 \ExplSyntaxOff
 %%
 %%   \save_symbol:{white}
@@ -603,13 +379,13 @@ ball was her favorite plaything.}%
 %%   \restore_symbol:{IGO}{Huge}
 \newif\ifULSY
 \newcommand\ULSY{\pkgname{ulsy}}
-\IfStyFileExists{ulsy}
+\ifstylefileexists{ulsy}
   {\ULSYtrue\usepackage{ulsy}}
   {}
 \ExplSyntaxOn
 \newif\ifCEQ
 \newcommand\CEQ{\pkgname{colonequals}}
-\IfStyFileExists{colonequals}
+\ifstylefileexists{colonequals}
   {\save_symbol:{colonapprox}
    \save_symbol:{colonsim}
    \CEQtrue
@@ -619,27 +395,10 @@ ball was her favorite plaything.}%
   }
   {}
 \ExplSyntaxOff
-\newif\ifCMLL
-\newcommand\CMLL{\pkgname{cmll}}
-\IfStyFileExists{cmll}
-  {\CMLLtrue
-   \newcommand*{\textCMLL}[1]{{\usefont{U}{cmllr}{m}{n}##1}}
-   \DeclareRobustCommand{\CMLLparr}{\textCMLL{\char0}}
-   \DeclareRobustCommand{\CMLLshpos}{\textCMLL{\char1}}
-   \DeclareRobustCommand{\CMLLshneg}{\textCMLL{\char2}}
-   \DeclareRobustCommand{\CMLLshift}{\textCMLL{\char3}}
-   \DeclareRobustCommand{\CMLLcoh}{\textCMLL{\char4}}
-   \DeclareRobustCommand{\CMLLscoh}{\textCMLL{\char5}}
-   \DeclareRobustCommand{\CMLLincoh}{\textCMLL{\char6}}
-   \DeclareRobustCommand{\CMLLsincoh}{\textCMLL{\char7}}
-   \DeclareRobustCommand{\CMLLbigwith}{\raisebox{2ex}{\textCMLL{\char8}}}
-   \DeclareRobustCommand{\CMLLbigparr}{\raisebox{2ex}{\textCMLL{\char10}}}
-  }
-  {}
 \ExplSyntaxOn
  \newif\ifST
  \newcommand\ST{\pkgname{stmaryrd}}
- \IfStyFileExists{stmaryrd}
+ \ifstylefileexists{stmaryrd}
   {\STtrue
    \save_symbol:{lightning}
    \save_symbol:{bigtriangleup} \save_symbol:{bigtriangledown}
@@ -652,7 +411,7 @@ ball was her favorite plaything.}%
 \ExplSyntaxOn
 \newif\ifXPFEIL
 \newcommand\XPFEIL{\pkgname{extpfeil}}
-\IfStyFileExists{extpfeils}
+\ifstylefileexists{extpfeils}
   {\XPFEILtrue
    % extpfeil tries to do a \RequirePackage of stmaryrd with
    % conflicting options from what we used to load stmaryd.  We
@@ -672,7 +431,7 @@ ball was her favorite plaything.}%
 \newif\ifEU \EUfalse
 
 \iffalse
-\IfStyFileExists{euscript}
+\ifstylefileexists{euscript}
   {\EUtrue\RequirePackage[mathcal]{euscript}
    \renewcommand{\mathcal}[1]{\mbox{\usefont{U}{eus}{m}{n}##1}}
   }
@@ -681,7 +440,7 @@ ball was her favorite plaything.}%
 \ifUNICODE
 \else
   \newif\ifBM
-  \IfStyFileExists{bm}
+  \ifstylefileexists{bm}
     {\BMtrue
       \RequirePackage{bm}
     }
@@ -689,7 +448,7 @@ ball was her favorite plaything.}%
 \fi
 \ifUNICODE
  \else
-\IfStyFileExists{bbm}
+\ifstylefileexists{bbm}
   {\newcommand{\mathbbm}[1]{\mbox{\usefont{U}{bbm}{m}{n}##1}}
    \newcommand{\mathbbmss}[1]{\mbox{\usefont{U}{bbmss}{m}{n}##1}}
    \newcommand{\mathbbmtt}[1]{\mbox{\usefont{U}{bbmtt}{m}{n}##1}}}
@@ -697,7 +456,7 @@ ball was her favorite plaything.}%
 \fi
 \ifUNICODE
 \else
-\IfStyFileExists{bbold}
+\ifstylefileexists{bbold}
   {
   %</fontdef
   \newcommand{\BBmathbb}[1]{\mbox{\usefont{U}{bbold}{m}{n}##1}}
@@ -715,7 +474,7 @@ ball was her favorite plaything.}%
   }
   {}
 \fi
-\IfStyFileExists{mbboard}
+\ifstylefileexists{mbboard}
   {\newcommand{\MBBmathbb}[1]{\mbox{\usefont{OT1}{mbb}{m}{n}##1}}}
   {}
 \ifx\MBBmathbb\undefined
@@ -749,7 +508,7 @@ ball was her favorite plaything.}%
 \newcommand\MDOTS{\pkgname{mathdots}}
 \ifUNICODE
 \else
-\IfStyFileExists{mathdots}
+\ifstylefileexists{mathdots}
   {\MDOTStrue
    \save_symbol:{ddots}
    \save_symbol:{vdots}
@@ -772,7 +531,7 @@ ball was her favorite plaything.}%
   \Chinasym
   \index{china2e=\textsf{china2e} (package)}%
   \index{packages>china2e=\textsf{china2e}}}
-\IfStyFileExists{china2e}
+\ifstylefileexists{china2e}
   {\CHINAtrue
    \save_symbol:{Info}
    \save_symbol:{Earth}
@@ -797,7 +556,7 @@ ball was her favorite plaything.}%
 \ExplSyntaxOff
 \newif\ifHARP
 \newcommand\HARP{\pkgname{harpoon}}
-\IfStyFileExists{harpoon}
+\ifstylefileexists{harpoon}
   {\HARPtrue\usepackage{harpoon}}
   {}
 
@@ -835,7 +594,7 @@ ball was her favorite plaything.}%
 \ExplSyntaxOn
 \newif\ifWASY
 \newcommand\WASY{\pkgname{wasysym}}
-\IfStyFileExists{wasysym}
+\ifstylefileexists{wasysym}
   {\WASYtrue
    \save_symbol:{lightning}
    \save_symbol:{Box}
@@ -851,14 +610,14 @@ ball was her favorite plaything.}%
 \ExplSyntaxOff
 \newif\ifPI
 \newcommand\PI{\pkgname{pifont}}
-\IfStyFileExists{pifont}
+\ifstylefileexists{pifont}
   {\PItrue\RequirePackage{pifont}}
   {}
 
 \ExplSyntaxOn
 \newif\ifDING
 \newcommand\DING{\pkgname{bbding}}
-\IfStyFileExists{bbding}
+\ifstylefileexists{bbding}
   {\DINGtrue
    \save_symbol:{Cross}
    \save_symbol:{Square}
@@ -905,7 +664,7 @@ ball was her favorite plaything.}%
 \ExplSyntaxOn
 \newif\ifEUSYM\EUSYMfalse
 \newcommand\EUSYM{\pkgname{eurosym}}
-\IfStyFileExists{eurosym}
+\ifstylefileexists{eurosym}
   {\EUSYMtrue
    \save_symbol:{EUR}
    \usepackage{eurosym}
@@ -918,7 +677,7 @@ ball was her favorite plaything.}%
 
 \newif\ifMAN
 \newcommand\MAN{\pkgname{manfnt}}
-\IfStyFileExists{manfnt}
+\ifstylefileexists{manfnt}
   {\MANtrue\RequirePackage{manfnt}}
   {}
 
@@ -937,7 +696,7 @@ ball was her favorite plaything.}%
 \ExplSyntaxOn
 \newif\ifIFS
 \newcommand\IFS{\pkgname{ifsym}}
-\IfStyFileExists{ifsym}
+\ifstylefileexists{ifsym}
   {\IFStrue
    \save_symbol:{Letter}
    \save_symbol:{Square}
@@ -964,7 +723,7 @@ ball was her favorite plaything.}%
 
 \newif\ifUTILD
 \newcommand\UTILD{\pkgname{undertilde}}
-\IfStyFileExists{undertilde}
+\ifstylefileexists{undertilde}
   {\UTILDtrue\RequirePackage{undertilde}}
   {}
 \RequirePackage{phdfilecontents}
@@ -975,22 +734,24 @@ ball was her favorite plaything.}%
 \PassOptionsToPackage{nomessages}{fp}
 \RequirePackage{fp}
 
-\RequirePackage{xspace}
-\RequirePackage{xstring}
-\RequirePackage{multido}
-\RequirePackage{etoolbox}
+\ifstylefileexists{xspace}{
+\RequirePackage{xspace}}{}
+\ifstylefileexists{xstring}{
+\RequirePackage{xstring}}{}
+\ifstylefileexists{multido}{
+\RequirePackage{multido}}{}
+\ifstylefileexists{}{
+\RequirePackage{etoolbox}}{}
 
 \RequirePackage{parselines}
-\def\TRUE{ \meta{true code} }
-\def\FALSE{ \meta{false code} }
-\def\PASS{\par{\bfseries\textcolor{green!50!blue}{PASS}}\ ~}
-\def\FAIL{\par{\bfseries\textcolor{red!70!black}{FAIL}}\ ~}
 
 \RequirePackage{upquote}
 \RequirePackage{calc}
 
-\RequirePackage{pict2e}
-\RequirePackage{picture}
+\ifstylefileexists{pict2e}{
+\RequirePackage{pict2e}}{}
+\ifstylefileexists{picture}{
+\RequirePackage{picture}}{}
 \RequirePackage{tikz}
 \usetikzlibrary{%
   arrows,%
@@ -1030,12 +791,15 @@ ball was her favorite plaything.}%
   decorations.markings,%
   shadows}
 \usetikzlibrary{tikzmark}
-\RequirePackage{pgfplots}
-\RequirePackage{pgfplotstable}
-\IfStyFileExists{forest}
+\ifstylefileexists{pgfplots}{
+\RequirePackage{pgfplots}}{}
+\ifstylefileexists{pgfplotstable}{
+\RequirePackage{pgfplotstable}}{}
+\ifstylefileexists{forest}
   {\RequirePackage {forest}}
   {}
-\RequirePackage{drawstack}
+\ifstylefileexists{drawstack}{
+\RequirePackage{drawstack}}{}
 \ExplSyntaxOn
 \tl_new:N \beforehyperhook
 \cs_gset:Npn \putbeforehyperhook #1
@@ -1122,18 +886,19 @@ ball was her favorite plaything.}%
   {
     \RequirePackage{makeidx}[2000/03/29]
   }
-\RequirePackage{multicol}
+\ifstylefileexists{multicol}{
+\RequirePackage{multicol}}{}
 \newif\ifULEM
-\IfStyFileExists{ulem}
+\ifstylefileexists{ulem}
 {\ULEMtrue\RequirePackage[normalem]{ulem}}
 {}
 \newif\ifhaveslashed
-\IfStyFileExists*{slashed}
+\ifstylefileexists*{slashed}
   {\haveslashedtrue\RequirePackage{slashed}}
   {}
 
 \newif\ifhavecancel
-\IfStyFileExists*{cancel}
+\ifstylefileexists*{cancel}
   {\havecanceltrue\RequirePackage{cancel}}
   {}
 
@@ -1141,31 +906,43 @@ ball was her favorite plaything.}%
 \rlap{\raisebox{.45\ht0}{\textcolor{#1}{\rule{\wd0}{1pt}}}}#2}
 \newif\ifSTAVE
 \newcommand\STAVE{\pkgname{staves}}
-\IfStyFileExists{staves}
+\ifstylefileexists{staves}
   {\STAVEtrue\usepackage{staves}}
   {}
-\RequirePackage{framed}
-\RequirePackage{varioref}
+\ifstylefileexists{framed}{
+\RequirePackage{framed}}{}
+\ifstylefileexists{alltt}{
+\RequirePackage{varioref}}{}
 \RequirePackage{setspace}
 
 \providecommand*\switch[2]{{\fontfamily{#1}\selectfont #2}}
 
 \newif\ifhavecenternot
-\IfStyFileExists*{centernot}%
+\ifstylefileexists*{centernot}%
   {\havecenternottrue\RequirePackage{centernot}}
   {}
 
-\RequirePackage{genealogytree}
-\RequirePackage{chngcntr}
-\RequirePackage{eso-pic}
-\RequirePackage{alphalph}
-\RequirePackage{fmtcount}
+\ifstylefileexists{alltt}{
+\RequirePackage{genealogytree}}{}
+\ifstylefileexists{alltt}{
+\RequirePackage{chngcntr}}{}
+\ifstylefileexists{alltt}{
+\RequirePackage{eso-pic}}{}
+\ifstylefileexists{alltt}{
+\RequirePackage{alphalph}}{}
+\ifstylefileexists{alltt}{
+\RequirePackage{fmtcount}}{}
 
-\RequirePackage{varwidth}
-\RequirePackage{comment}
-\RequirePackage{textcase}
-\RequirePackage[autostyle=false]{csquotes}
-\RequirePackage{alltt}[1997/06/16]
+\ifstylefileexists{alltt}{
+\RequirePackage{varwidth}}{}
+\ifstylefileexists{alltt}{
+\RequirePackage{comment}}{}
+\ifstylefileexists{alltt}{
+\RequirePackage{textcase}}{}
+\ifstylefileexists{alltt}{
+\RequirePackage[autostyle=false]{csquotes}}{}
+\ifstylefileexists{alltt}{
+\RequirePackage{alltt}[1997/06/16]}{}
 
 \RequirePackage{caption} % check
 \RequirePackage{subcaption}
@@ -1174,97 +951,19 @@ ball was her favorite plaything.}%
 \RequirePackage{pdfpages}
 \newif\ifCCLIC
 \newcommand\CCLIC{\pkgname{cclicenses}}
-\IfStyFileExists{cclicenses}
+\ifstylefileexists{cclicenses}
   {\CCLICtrue
    \RequirePackage{cclicenses}
    \DeclareTextAccentDefault{\textcircled}{OMS}
   }
   {}
-\ifxetex\else
-\newif\ifFOUR
-\newcommand\FOUR{\pkgname{fourier}}
-\IfStyFileExists{fourier}
-  {\FOURtrue
-   \RequirePackage{fourier-orns}
-   % Define single-glyph symbols.
-   \DeclareFontEncoding{FMS}{}{}
-   \DeclareFontSubstitution{FMS}{futm}{m}{n}
-   \DeclareFontEncoding{FML}{}{}
-   \DeclareFontSubstitution{FML}{futmi}{m}{it}
-   \newcommand{\fourierdef}[6]{%
-     \DeclareRobustCommand{##1}{{\usefont{##2}{##3}{##4}{##5}\char##6}}}
-   \fourierdef{\parallelslant}{FMS}{futm}{m}{n}{134}
-   \fourierdef{\nparallelslant}{FMS}{futm}{m}{n}{143}
-   \fourierdef{\FOURrho}{FML}{futmi}{m}{it}{26}
-   \fourierdef{\FOURvarrho}{FML}{futmi}{m}{it}{37}
-   \fourierdef{\varvarrho}{FML}{futmi}{m}{it}{129}
-   \fourierdef{\FOURpi}{FML}{futmi}{m}{it}{25}
-   \fourierdef{\FOURvarpi}{FML}{futmi}{m}{it}{36}
-   \fourierdef{\varvarpi}{FML}{futmi}{m}{it}{131}
-   \fourierdef{\FOURpartial}{FML}{futmi}{m}{it}{64}
-   \fourierdef{\varpartialdiff}{FML}{futmi}{m}{it}{130}
-   \fourierdef{\FOURtexteuro}{TS1}{futx}{m}{n}{191}
-   % Fake a math accent with text-mode commands.
-   \DeclareRobustCommand{\FOURfakewidetopaccent}[5]{%
-     \setbox0=\hbox{\ensuremath{##1}}%
-     \setbox1=\hbox{\ensuremath{abc}}%
-     \leavevmode
-     \ifdim\wd0<\wd1
-       \kern1pt
-       \rlap{\raisebox{##2}{\makebox[\wd0]{\usefont{FMX}{futm}{m}{n}\char##3}}}%
-       \kern-0.1em
-       \box0
-     \else
-       \rlap{\raisebox{##4}{\makebox[\wd0]{\usefont{FMX}{futm}{m}{n}\char##5}}}%
-       \box0
-     \fi
-   }
-
-   % Manually define Fourier's extensible accents.  Note that we don't
-   % bother trying to use Fourier's \mathring to construct the
-   % \FOURwidering symbol.
-   \DeclareFontEncoding{FMX}{}{}
-   \DeclareFontSubstitution{FMX}{futm}{m}{n}
-   \DeclareRobustCommand{\FOURwidearc}[1]{%
-     \FOURfakewidetopaccent{##1}{0ex}{216}{0.5ex}{217}}
-   \DeclareRobustCommand{\FOURwideOarc}[1]{%
-     \FOURfakewidetopaccent{##1}{0ex}{228}{0.5ex}{229}}
-   \DeclareRobustCommand{\FOURwideparen}[1]{%
-     \FOURfakewidetopaccent{##1}{0ex}{148}{0.5ex}{150}}
-   \DeclareRobustCommand{\FOURwidering}[1]{\overset{\smash{\vbox to .2ex{%
-     \hbox{$\mathring{}$}}}}{\FOURwideparen{##1}}}
-
-   % Manually define Fourier's variable-sized delimiters.
-   \newcommand{\fouriercdef}[6]{%
-     \DeclareRobustCommand{##1}{%
-       \textvcenter{\usefont{##2}{##3}{##4}{##5}\char##6}}}
-   \fouriercdef{\FOURtllbracket}{FMX}{futm}{m}{n}{133}
-   \fouriercdef{\FOURdllbracket}{FMX}{futm}{m}{n}{139}
-   \fouriercdef{\FOURtrrbracket}{FMX}{futm}{m}{n}{134}
-   \fouriercdef{\FOURdrrbracket}{FMX}{futm}{m}{n}{140}
-   \newcommand*{\FOURverticals}[1]{%
-     \vbox{%
-       \baselineskip=-\maxdimen
-       \lineskiplimit=\maxdimen
-       \lineskip=0pt%
-       \usefont{FMX}{futm}{m}{n}%
-       \ialign{####\cr##1}%
-     }%
-   }
-   \DeclareRobustCommand{\FOURtVERT}{%
-     \raisebox{0.5ex}{\textvcenter{\FOURverticals{\char147\cr\char147\cr}}}}
-   \DeclareRobustCommand{\FOURdVERT}{%
-     \raisebox{0.5ex}{\textvcenter{\FOURverticals{\char147\cr\char147\cr\char147\cr\char147\cr}}}}
-  }
-  {}
-\fi
-\IfStyFileExists{dirtree}
+\ifstylefileexists{dirtree}
 {
   \RequirePackage{dirtree}}
 {}
-\IfStyFileExists*{needspace}
+\ifstylefileexists{needspace}
   {\RequirePackage{needspace}}
-  {\newcommand{\Needspace}[2]{\par \penalty-100\begingroup
+  {\newcommand{\Needspace}[2]{\penalty-100\begingroup
      \setlength{\dimen@}{##2}%
      \dimen@ii\pagegoal \advance\dimen@ii-\pagetotal
      \ifdim \dimen@>\dimen@ii
@@ -1278,34 +977,34 @@ ball was her favorite plaything.}%
 
 \newif\ifLINA
 \newcommand\LINA{\pkgname{lineara}}
-\IfStyFileExists{lineara}
+\ifstylefileexists{lineara}
   {\LINAtrue\RequirePackage{lineara}}
   {}
 \newif\ifLINB
 \newcommand\LINB{\pkgname{linearb}}
-\IfStyFileExists{linearb}
+\ifstylefileexists{linearb}
   {\LINBtrue\RequirePackage{linearb}}
   {}
 \newif\ifCYPR
 \newcommand\CYPR{\pkgname{cypriot}}
-\IfStyFileExists{cypriot}
+\ifstylefileexists{cypriot}
   {\CYPRtrue\RequirePackage{cypriot}}
   {}
 \newif\ifSARAB
 \newcommand\SARAB{\pkgname{sarabian}}
-\IfStyFileExists{sarabian}
+\ifstylefileexists{sarabian}
   {\SARABtrue\RequirePackage{sarabian}}
   {}
 \newif\ifPRSN
 \newcommand\PRSN{\pkgname{oldprsn}}
-\IfStyFileExists{oldprsn}
+\ifstylefileexists{oldprsn}
   {\PRSNtrue\RequirePackage{oldprsn}}
   {}
 \RequirePackage{hieroglf}
 \newif\ifUGAR
 \newcommand\UGAR{\pkgname{ugarite}}
 \RequirePackage{ugarite}
-\IfStyFileExists{ugarite}
+\ifstylefileexists{ugarite}
   {\UGARtrue\RequirePackage{ugarite}}
   {}
 \newif\ifOLMEC
@@ -1314,7 +1013,7 @@ ball was her favorite plaything.}%
 \cxset{olmec=true}
 \ifscriptolmec
 \RequirePackage{epiolmec}
-\IfStyFileExists{epiolmec}
+\ifstylefileexists{epiolmec}
   {\OLMECtrue\RequirePackage{epiolmec}}
   {}
 \fi
@@ -1339,6 +1038,7 @@ ball was her favorite plaything.}%
   \fi
 \fi
 
-
-\RequirePackage{fontawesome}
-
+\newif\ifFNTAWE
+\ifstylefileexists{fontawesome}{
+  \FNTAWEtrue
+  \RequirePackage{fontawesome}}{}

@@ -1,4 +1,4 @@
-###The `phd` LaTeX2e package
+## The `phd` LaTeX2e package
 
 The `phd` latex package and the class with the same name provide
 convenient methods to create new styles for books, reports
@@ -63,10 +63,10 @@ They consist of:
 15.0 The [phd-logos](https://github.com/yannisl/phd/blob/master/docs/phd-logos.md)
      package. Supplementary commands for logos.
 
-###Installation
+## Installation
 
 run
-        `phd-lua phd-i18n.dtx` on windows
+        `phd-lua phd.dtx` on windows
 
 If you have any difficulties with the package come and join us at
 http://tex.stackexchange.com and post a new question or
@@ -82,7 +82,7 @@ equivalent of classes) plus there is a lot of write-up on the inner
 workings of TeX and LaTeX2e. However, you don't need to know much
 to use it.
 
-      \usepackage{phd-i18n}
+      \usepackage{phd}
       \input{style13}
 
 All choices, are made via an extended key-value interface.
@@ -105,4 +105,5 @@ that I have completed about 70% of the work that needs
 to be done.
 
 __The package as it stands is not production stable.__
+
 

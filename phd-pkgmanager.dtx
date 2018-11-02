@@ -147,14 +147,14 @@ See http://www.latex-project.org/lppl.txt
 
 %\listfiles
 %gdef\@onlypreamble{} % TO BE REMOVED NEEDED FOR TUTS
-\documentclass[oneside,11pt,a4paper,nomessages]{ltxdoc}
+\documentclass[book,oneside,11pt,a4paper,nomessages]{phddoc}
 %\usepackage{etex}
 \usepackage[bottom=2cm]{geometry}
 \savegeometry{std}
-
 \usepackage{phd}
+\usepackage{phd-pkgmanager}
+%\usepackage{phd-runningheads}
 
-\usepackage{phd-runningheads}
 \sethyperref
 \addbibresource{phd1.bib}% Syntax requires the .bib
 \cxset{palette bbc}
@@ -291,9 +291,9 @@ See http://www.latex-project.org/lppl.txt
 %
 %    \begin{macrocode}
 \NeedsTeXFormat{LaTeX2e}[2017/04/15]%%
-\ProvidesFile{phd-packagemanager}[2015/1/13 v1.0 less preamble (YL)]%
+\ProvidesPackage{phd-pkgmanager}[2015/1/13 v1.0 less preamble (YL)]%
 \let\ltxtoday\today
-
+\let\oldcontentsline\contentsline
 \RequirePackage{expl3}
 %    \end{macrocode}
 
@@ -367,28 +367,7 @@ See http://www.latex-project.org/lppl.txt
 % \begin{docCommand} {g_phd_packages_loaded_clist} {\marg{clist}}
 %    Holds a list of all packages loaded by the \pkgname{phd} package.
 % \end{docCommand}
-%    \begin{macrocode}
-\ExplSyntaxOn
-\clist_new:N \g_phd_packages_loaded_clist
-\ExplSyntaxOff
-%    \end{macrocode}
-%
-%
-%    \begin{macrocode}
-\ExplSyntaxOn
-\clist_new:N \g_phd_packages_not_found
-\ExplSyntaxOff
-%    \end{macrocode}
-%
-% \begin{docCommand} {g_phd_packages_loaded_by_others} { \marg{clist} }
-%    Holds a list of all packages loaded by the \pkgname{phd} package.
-% \end{docCommand}
-%
-%    \begin{macrocode}
-\ExplSyntaxOn
-\clist_new:N \g_phd_packages_loaded_by_others
-\ExplSyntaxOff
-%    \end{macrocode}
+
 % 
 % These are really long names, but I want to follow the \latex3 Teams' suggestions
 %  and recommendations.
@@ -440,76 +419,92 @@ See http://www.latex-project.org/lppl.txt
   \expandafter\ifnotsavedsym@helper\string#1!%
 }
 %    \end{macrocode}
-% {ifcomplete}
+% 
 %    \begin{macrocode}
-\let\oldcontentsline\contentsline
+
 \newif\ifcomplete
 %    \end{macrocode}
 %    
-%
-%    \begin{macrocode}
-\ExplSyntaxOn
-\global\let\origRequirePackage\RequirePackage
-\DeclareDocumentCommand\RequirePackage {o m o}
-  {
-     \IfValueTF{#3}
-       {\IfValueTF {#1}
-           { \origRequirePackage [{#1}] {#2} [{#3}] }
-           { \origRequirePackage {#2} [{#3}]      }
-       }
-       {   
-        \IfValueTF{#1}
-           {
-             \origRequirePackage  [{#1}] {#2} 
-           }
-           { 
-             \origRequirePackage {#2}      
-           }
-      } 
-  }       
-
-    
-\ExplSyntaxOff  
-%    \end{macrocode} 
 %    
 % For debugging purposes we define a switch that enables us to toggle
 % on and off the loading of packages.
 % 
-%    \begin{macrocode}
-\newif\ifloadpackages
-\loadpackagestrue
-%    \end{macrocode}
 %    
-% |\IfStyFileExists*| is just like |\IfFileExists|, except that it appends
-% ".sty" to its first argument.  |\IfStyFileExists| is the same as
-% |\IfStyFileExists*|, but it additionally adds its first argument to a list
+% |\ifstylefileexists*| is just like |\IfFileExists|, except that it appends
+% ".sty" to its first argument.  |\ifstylefileexists| is the same as
+% |\ifstylefileexists*|, but it additionally adds its first argument to a list
 % (|\missingpkgs|) and marks the document as incomplete (with
 % |\completefalse|) if the |.sty| file doesn't exist.
 % 
 % {missingpkgs}
 % {foundpkgs}
-%   \begin{macrocode}
+%    \begin{macrocode}
+\ExplSyntaxOn
+\clist_new:N \g_phd_packages_loaded_clist:n 
+\clist_new:N \g_phd_packages_not_found:n 
+\newif\ifloadpackages
+\loadpackagestrue
+
 \newcommand{\missingpkgs}{}
 \newcommand{\foundpkgs}{}
-\newcommand{\if@sty@file@exists@star}[3]{%
-  \ifloadpackages
-    \IfFileExists{#1.sty}{#2}{#3}%
-  \else
-    #3%
-  \fi
+
+
+
+
+\cs_new:Npn \ifstylefileexists_star #1 #2 #3 {
+\ifloadpackages
+\file_if_exist:nTF {#1} 
+  {
+    #2
+    \clist_gput_right:Nn \g_phd_packages_loaded_clist:n {#1}
+  } 
+  
+  {
+   #3
+    \clist_gput_right:Nn \g_phd_packages_not_found:n {#1}
+     
+  }
+\fi  
 }
-\newcommand{\if@sty@file@exists}[3]{%
-  \ifloadpackages
-    \IfFileExists{#1.sty}%
-                 {#2\@cons\foundpkgs{{#1}}}%
-                 {#3\completefalse\@cons\missingpkgs{{#1}}}%
-  \else
-    #3\completefalse\@cons\missingpkgs{{#1}}%
-  \fi
+
+\cs_new:Npn \ifstylefileexists_aux #1 #2 #3 {
+\ifloadpackages
+\file_if_exist:nTF {#1.sty} 
+  {
+    #2
+    \clist_gput_right:Nn \g_phd_packages_loaded_clist:n {#1}
+  } 
+  
+  {
+   #3
+    \clist_gput_right:Nn \g_phd_packages_not_found:n {#1}
+     
+  }
+\fi  
 }
-\newcommand{\IfStyFileExists}{%
-  \@ifstar{\if@sty@file@exists@star}{\if@sty@file@exists}%
+
+\NewDocumentCommand\ifstylefileexists {s m m m } {
+ \IfBooleanTF #1 
+ {\ifstylefileexists_star {#2}{#3}{#4} }
+ {\ifstylefileexists_aux {#2}{#3}{#4}} 
 }
+\ExplSyntaxOff
+%    \end{macrocode}
+%
+% \begin{docCommand}{ifstylefileexists}{\marg{true code}\marg{false code}}
+%   Checks if a  |.sty| file exists
+% \end{docCommand}
+%
+%    \begin{macrocode}    
+%\newcommand{\IfPackageFileExists}[4]{%
+%  \ifloadpackages
+%    \IfFileExists{#2}%
+%                 {#3\@cons\foundpkgs{{#1}}}%
+%                 {#4\completefalse\@cons\missingpkgs{{#1}}}%
+%  \else
+%    #4\completefalse\@cons\missingpkgs{{#1}}%
+%  \fi
+%}
 %    \end{macrocode}
 % 
 % 
@@ -545,7 +540,7 @@ See http://www.latex-project.org/lppl.txt
 %  I think we now have enough.
 %    \begin{macrocode}
 \ExplSyntaxOn
-\IfStyFileExists{calligra}
+\ifstylefileexists{calligra}
   {\save_symbol:{filename}
    \RequirePackage{calligra}
    \restore_symbol:{CAL}{filename}
@@ -569,9 +564,11 @@ See http://www.latex-project.org/lppl.txt
 % \section{Chancery}
 %
 %    \begin{macrocode}
-\IfStyFileExists{chancery}
-  {\newcommand{\mathpzc}[1]{\mbox{\usefont{OT1}{pzc}{m}{it}##1}}}
-  {}
+%\ifstylefileexists{chancery}
+%  {
+%    \newcommand{\mathpzc}[1]{\mbox{\usefont{OT1}{pzc}{m}{it}##1}}
+%  }
+%  {}
 %    \end{macrocode}
 % \section{Best practices macros} 
 % 
@@ -603,37 +600,34 @@ See http://www.latex-project.org/lppl.txt
 %
 % \begin{environment}{etex}
 %    \begin{macrocode}
-\ifxetex
-   \else
-     \ifluatex
-        \RequirePackage{etex}
-     \else
-        \RequirePackage{etex}
-  \fi
-\fi
+%\ifxetex
+%   \else
+%     \ifluatex
+%        \RequirePackage{etex}
+%     \else
+%        \RequirePackage{etex}
+%  \fi
+%\fi
 %    \end{macrocode}
 % \end{environment}
 %
 
 %    \begin{macrocode}
-\cxset{nag keys/.store in =\nagkeys@cx,
-       onlyamsmath keys/.store in=\onlyamsmathkeys@cx,
-       xcolor keys/.store in=\xcolorkeys@cx}
+%\cxset{nag keys/.store in =\nagkeys@cx,
+%       onlyamsmath keys/.store in=\onlyamsmathkeys@cx,
+%       xcolor keys/.store in=\xcolorkeys@cx}
 %        
 %
 %\input{settings} % experimental
 %    \end{macrocode}
-%\cxset{nag keys = {l2tabu,%
-%                   orthodox,%
-%                   %
-%                  }}
+%
 %
 % {xcolor}
 % 	For |xcolor| we try and load as many pre-defined colornames as
 % 	possible.
 %    \begin{macrocode}
-\cxset{xcolor keys={fixpdftex,usenames,dvipsnames,
-                  svgnames,x11names,table}}                     
+%\cxset{xcolor keys={fixpdftex,usenames,dvipsnames,
+%                  svgnames,x11names,table}}                     
 % Set amsmath keys
 %
 %    \end{macrocode}
@@ -669,12 +663,12 @@ See http://www.latex-project.org/lppl.txt
 % With LuaTeX \pkgname{microtype}\footcite{microtype} must come after fontspec.
 %    \begin{macrocode}
 % 
-%\ifMICROTYPE
-%\ifengine%
-%	  {\RequirePackage[tracking=true]{microtype}}%
-%	  {\RequirePackage[tracking=true]{microtype}}%
-%	  {\RequirePackage[tracking=true]{microtype}}%
-%\fi	  
+\ifMICROTYPE
+\ifengine%
+	  {\RequirePackage[tracking=true]{microtype}}%
+	  {\RequirePackage[tracking=true]{microtype}}%
+	  {\RequirePackage[tracking=true]{microtype}}%
+\fi	  
 %    \end{macrocode}
 % 
 %
@@ -692,16 +686,22 @@ See http://www.latex-project.org/lppl.txt
 % \index{justification>ragged2e (package)}
 % 
 %    \begin{macrocode}
+\ExplSyntaxOn
 \newif\ifRAGGEDTWOE
 \newif\ifEVERYSEL
 \newif\ifFOOTMISC
-\IfStyFileExists{ragged2e}
-{\RAGGEDTWOEtrue
- \EVERYSELtrue 
- \FOOTMISCtrue
-  \PassOptionsToPackage{footnotes,raggedrightboxes}{ragged2e}
-  \RequirePackage{ragged2e}}
-{}
+\ifstylefileexists{ragged2e}{
+  \RAGGEDTWOEtrue
+  \EVERYSELtrue 
+  \FOOTMISCtrue
+  \PassOptionsToPackage{footnotes,raggedrightboxes}{ragged2e}%
+  \RequirePackage{ragged2e}}{}
+\ExplSyntaxOff
+
+
+
+
+
 %    \end{macrocode}
 % 
 %
@@ -714,11 +714,10 @@ See http://www.latex-project.org/lppl.txt
 % the color for soul's \hl{highlight} command \cmd{\hl}.
 % \end{docCommand}
 %    \begin{macrocode}
-\newif\ifSOUL
-\IfStyFileExists{soul}
-{\SOULtrue\RequirePackage{soul}
-    \sethlcolor{thehighlight}}
-{}
+%
+\ifstylefileexists{soul}%
+{\RequirePackage{soul}%
+ \sethlcolor{thehighlight}}{}
 %    \end{macrocode}
 % 
 
@@ -730,12 +729,34 @@ See http://www.latex-project.org/lppl.txt
 % that we think are generally acceptable. 
 % Has a conflict with Philokalia.
 %    \begin{macrocode}
+\newif\ifLETTRINE
+\ifstylefileexists{lettrine}{%
+\LETTRINEtrue
 \RequirePackage{lettrine}
-\ifx\dropcap\undefined
-  \def\dropcap#1#2{%
-    \lettrine[lines=3, lraise=0.1, nindent=0em, slope=.1em]{#1}{#2}
-  }%
-\fi
+\def\dropcap#1#2{
+\lettrine[lines=3, lraise=0.1, nindent=0em, slope=.1em]{#1}{#2}}
+}{}
+%    \end{macrocode}
+%
+% \subsection{Acronyms}
+%
+% For acronyms and abbreviations we load the \pkgname{acronym} package
+% by Tobias Oetiker.\footcite{acronym} This package makes sure, that all acronyms used 
+% in the text are spelled out in full at least once. In one of its
+% options it loads the |relsize| package. My recommendation is to
+% load the package with the options |smaller, printonly| and 
+% |withpage|. Please note that the |withpage| option only works, if the
+% |printonlyused| option is present. The package loads \pkg{relsize}, \pkgname{suffix}\footnote{suffix} and xstring.
+% At the latest update gave a problem, so we enforcing it to be loaded
+% with the latest version.
+% 
+%    \begin{macrocode}
+\ifstylefileexists{acronym}%
+{%
+    \PassOptionsToPackage{smaller,printonlyused,withpage}{acronym}
+    \RequirePackage{acronym}[2015/03/21]
+}%
+{}
 %    \end{macrocode}
 %
 % \subsection{Units and formatting of numbers}
@@ -748,37 +769,20 @@ See http://www.latex-project.org/lppl.txt
 % useful macros for formatting large numbers. We use it for some
 % of the examples.
 %    \begin{macrocode}
-\IfStyFileExists{siunitx}{
-   \RequirePackage{siunitx}
-   \sisetup{fixed-exponent =0,
-            scientific-notation = false}}
-{}           
+\newif\ifSIUNITX
+\ifstylefileexists{siunitx}{\SIUNITXtrue
+   \RequirePackage{siunitx}}{}   
+\ifSIUNITX           
+  \sisetup{fixed-exponent =0,
+          scientific-notation = false}   
+\fi         
 %\RequirePackage{numprint} 
 %    \end{macrocode}
 % 
 % 
 %
 %
-% \subsection{Acronyms}
-%
-% For acronyms and abbreviations we load the \pkgname{acronym} package
-% by Tobias Oetiker.\footcite{acronym} This package makes sure, that all acronyms used 
-% in the text are spelled out in full at least once. In one of its
-% options it loads the |relsize| package. My recommendation is to
-% load the package with the options |smaller, printonly| and 
-% |withpage|. Please note that the |withpage| option only works, if the
-% |printonlyused| option is present. The package loads relsize, \pkgname{suffix}\footnote{suffix} and xstring.
-% At the latest update gave a problem, so we enforcing it to be loaded
-% with the latest version.
-% 
-%    \begin{macrocode}
-\cxset{acronym keys/.store in = \acronymkeys@cx}
-\cxset{acronym keys={smaller,printonlyused,withpage}}
-%
-\PassOptionsToPackage{smaller,printonlyused,withpage}{acronym}
-\RequirePackage{acronym}[2015/03/21]
-%    \end{macrocode}
-%
+
 % \subsection{mdframed}
 % The package \pkgname{mdframed}\footcite{mdframed} is included here, as a more lightweight package to \pkgname{tcolorbox}, which largely
 % supercedes it. The standard methods for framing text (\cs{fbox} or \cs{fcolorbox}) require you to handle
@@ -788,18 +792,23 @@ See http://www.latex-project.org/lppl.txt
 %By defining new environments the user may choose between several individual
 %designs.
 %    \begin{macrocode}
-\RequirePackage{mdframed}
+%
+%
+%{\RequirePackage{mdframed}}
+%{}
 %    \end{macrocode}
 %
 % \section{adjustbox}
 %
 %The \pkgname{adjustbox}\footcite{adjustbox} package allows to adjust general (LA)TEX material in several ways using a
 %key value interface. It got inspired by the interface of \cs{includegraphics} from
-%the graphicx package. This package also loads the \pkgname{trimclip}\footcite{trimclip} package which
+%the graphicx package. This package also loads the \pkg{trimclip}\footcite{trimclip} package which
 %code was once included in this package.
 
 %    \begin{macrocode}
-\RequirePackage{adjustbox}
+%
+%\RequirePackage{adjustbox}
+%
 %    \end{macrocode}
 %
 % \section{fancybox}
@@ -811,7 +820,9 @@ See http://www.latex-project.org/lppl.txt
 % \pkgname{mdframed}.
 %
 %    \begin{macrocode}
-\RequirePackage{fancybox}
+\ifstylefileexists{fancybox}
+  {\RequirePackage{fancybox}}
+  {}
 %    \end{macrocode}
 % 
 % 
@@ -841,66 +852,14 @@ See http://www.latex-project.org/lppl.txt
 %
 % 
 %    \begin{macrocode}
-\RequirePackage{graphicx}[1999/02/16]
+\ifstylefileexists{graphicx}{
+\RequirePackage{graphicx}
 \DeclareGraphicsExtensions{.jpg, .JPG, .jpeg, .png, .eps}
-\graphicspath{{graphics/}{graphics//}{../images/}{images//}{./images/}{./graphics/}%
-   {../graphics/}{./pic/}{../pic}}
+  \graphicspath{{graphics/}{graphics//}{../images/}{images//}{./images/}{./graphics/}%
+    {../graphics/}{./pic/}{../pic}}}{}
 %    \end{macrocode}
 % 
-% 
 %
-% Various `keys' or named arguments are supported.
-% \begin{description}
-% \item[bb] Set the bounding box. The argument should be four
-% dimensions, separated by spaces. 
-% \item[bbllx,bblly,bburx,bbury] Set the bounding box. Mainly for
-% compatibility with older packages. |bbllx=a,bblly=b,bburx=c,bbury=d|
-% is equivalent to |bb = a b c d|.
-% \item[natwidth,natheight] Again an alternative to |bb|. 
-% |natheight=h,natwidth=w| is equivalent to |bb = 0 0 h w|.
-% \item[viewport] Modify the bounding box specified in the file.
-% The four values specify a bounding box \emph{relative} to the
-% |llx|,|lly| coordinate of the original box.
-% \item[trim] Modify the bounding box specified in the file.
-% The four values specify the amounts to remove from
-% the left, bottom, right and top of the original box.
-% \item[hiresbb] Boolean valued key. Defaults to |true|. 
-% Causes \TeX\ to look for |%%HiResBoundingBox| comments rather than
-% the standard |%%BoundingBox|. May be set to |false| to override
-% a default setting of true specified by the |hiresbb| package option.
-% \item[angle] Rotation angle.
-% \item[origin] Rotation origin (see |\rotatebox|, below).
-% \item[width] Required width, a dimension (default units |bp|). The
-% graphic will be scaled to make the width the specified dimension.
-% \item[height] Required height. a dimension (default units |bp|).
-% \item[totalheight] Required totalheight (ie height $+$ depth). a
-% dimension (default units |bp|). Most useful after a rotation (when the
-% height might be zero).
-% \item[keepaspectratio] Boolean valued key (like |clip|). If it is set
-%  to true, modify the meaning of the |width| and |height| (and
-% |totalheight|) keys such that if both are specified then rather than
-% distort the figure the figure is scaled such that neither dimension
-% \emph{exceeds} the stated dimensions.
-% \item[scale] Scale factor.
-% \item[clip] Either `true' or `false' (or no value, which is equivalent
-% to `true'). Clip the graphic to the bounding box (or viewport if one
-% is specified).
-% \item[draft] a boolean valued key, like `clip'. locally switches to
-% draft mode, ie.\ do not include the graphic, but leave the
-% correct space, and print the filename.
-% \item[type] Specify the file type. (Normally determined from the file
-% extension.) 
-% \item[ext] Specify the file extension.
-%        \emph{Only} for use with |type|.
-% \item[read] Specify the `read file' which is used for determining the
-% size of the graphic. \emph{Only} for use with |type|.
-% \item[command] Specify the file command.
-%         \emph{Only} for use with |type|.
-% \end{description}
-%
-% The arguments are interpreted left to right. |clip|, |draft|, |bb|,,
-% and |bbllx| etc.\ have the same effect wherever they appear. but the
-% scaling and rotation keys interact.
 %
 % \section{wrapfig} 
 
@@ -908,7 +867,8 @@ See http://www.latex-project.org/lppl.txt
 % can be used to wrap text around figures, with some coercion and caveats.
 % 
 %    \begin{macrocode}
-\RequirePackage{wrapfig}
+\newif\ifWRAPFIG
+\ifstylefileexists{wrapfig}{\WRAPFIGtrue\RequirePackage{wrapfig}}{}  
 %    \end{macrocode} 
 % 
 %
@@ -920,62 +880,14 @@ See http://www.latex-project.org/lppl.txt
 % package is rather verbose.
 %
 %    \begin{macrocode}
-\PassOptionsToPackage{quiet}{rotating}
-\RequirePackage{rotating}
+\ifstylefileexists{rotating}
+{\PassOptionsToPackage{quiet}{rotating}
+\RequirePackage{rotating}}
+{}
 %    \end{macrocode} 
 %
 %
-% \section{Rules}
-% We need to define a number of rules to use in typesetting styles.
-%	We will use later on different styles of rules to decorate chapter headings.
-%	We define a few here to simplify code later on.
-%
-%    \begin{macrocode}
-\DeclareRobustCommand\thickrule{%
-    \leavevmode \leaders \hrule height 2pt \hfill \kern \z@}
-\DeclareRobustCommand\thinrule{\vrule width\textwidth height0.4pt depth0pt\relax}%
-%
-\DeclareRobustCommand\mediumrule{\rule{\textwidth}{0.8pt}}
-%    Adjusted to get toc parameters in
-\DeclareRobustCommand\Rule{{\color{\tocchapternumberfill@cx}\rule[-4.1pt]{13cm}{0.4pt}}}
-\DeclareRobustCommand\bottomline{\medskip
-   \noindent\rule{\linewidth}{0.4pt}\medskip}
-\DeclareRobustCommand\topline{\par\medskip
-   \noindent\rule{\linewidth}{0.4pt}\medskip} 
-%    \end{macrocode}
-% 
-% 
-% 
-%
-%  Some chapter and sectioning heads include rules, we define them here for convenience.
-%
-%    \begin{macrocode}
-\cxset{chapter rule color/.store in={\chapter@rule@color}}%
-\cxset{chapter rule color=spot!30}
-\DeclareRobustCommand\tikzrule{%
-  \tikz [color=\chapter@rule@color, very thick, inner sep=0pt, outer sep=0pt]%
-        \draw(0,0)--(\the\linewidth,0);
-}%
-%  The trim left is required to align the rule exactly
-%    \begin{macrocode}           
-%#1  options #2 width  #3 height           
-\newcommand\drawrule[3][]{%
-    \offinterlineskip
-          \tikz [ name=s,trim left,
-                   anchor=base,
-                   draw=black, 
-                 % double distance=.2pt,
-                  line width=#3,
-                  %very thick,
-                  inner sep=0pt, 
-                  outer sep=0pt,#1]   \draw(0,0)--(#2,0);
-}
- \def\drawdoublerule#1#2{%
-    \drawrule{#1}{#2}%
-    \vskip2.5pt
-    \drawrule{#1}{#2}%
- }
-%    \end{macrocode}
+
 %
 % \chapter{Filler Text}
 %
@@ -984,7 +896,7 @@ See http://www.latex-project.org/lppl.txt
 % 	presentation, such as font, typography, and layout, by removing the distraction 
 % 	of meaningful content. The lorem ipsum text is typically a section of a Latin text 
 % 	by Cicero with words altered, added and removed that make it nonsensical in meaning 
-% 	and not proper Latin. Other packages exist such as \pkgname{kantlipsum} and \pkgname{blindtext}, 
+% 	and not proper Latin. Other packages exist such as \pkg{kantlipsum} and \pkgname{blindtext}, 
 % 	however, both result in somewhat legible texts, which defeats the purpose of 
 % 	providing texts that the reader is not going to read. the extensions |lipsumx| 
 % 	aim at providing a gap between the three packages. It provides extensions
@@ -994,8 +906,12 @@ See http://www.latex-project.org/lppl.txt
 %
 %    \begin{macrocode}
 \newif\ifLIPSUM
-\RequirePackage{lipsum}
+\ifstylefileexists{lipsum}{\LIPSUMtrue
+\RequirePackage{lipsum}}{}
 %    \end{macrocode}
+%
+% \meaning\IfStyleFileExists
+%
 %
 % \section{kantlipsum}
 %
@@ -1007,141 +923,153 @@ See http://www.latex-project.org/lppl.txt
 %rather long, as it’s common in philosophical prose.
 
 %    \begin{macrocode}
-\RequirePackage[par]{kantlipsum}
+ \RequirePackage[par]{kantlipsum}
 %    \end{macrocode}
 %
 % \section{blindtext}
 %
 %With the package \pkgname{blindtext}\footcite{blindtext} you can create dummy text. Use \docAuxCmd{blindtext} to get
 %some text and \docAuxCmd{Blindtext} to get a long text. With \docAuxCmd{blinddocument} (or
-%\docAuxCmd{Blinddocument}) you get complete dummy document.
+%\docAuxCmd{Blinddocument}) you get a complete dummy document.
 %
 %    \begin{macrocode}
-\RequirePackage{blindtext}
+\ifstylefileexists{blindtext}{
+\RequirePackage{blindtext}}{}
 %    \end{macrocode}
 % 
-% \section{phd additonal macros}
+% \section{phd-lorems}
+%
+% The \pkg{phd-lorems} provides a set of additional control sequences for generating
+% shorter sets of text for shorter tests. 
+%
+%    \begin{macrocode}
+\newif\ifPHDLOREMS
+%
+\ifstylefileexists{phd-lorems}{\PHDLOREMStrue
+  \RequirePackage{phd-lorems}}{}
+%    \end{macrocode}
 %
 % \begin{docCommand}{lorem}{\meta{*} }
 %	 We declare a short macro \cs{lorem} to be used for testing, as well as 
 %	 testing captions and the like. The star version does not provide a par
 % \end{docCommand}
 %    \begin{macrocode}
-\DeclareDocumentCommand\lorem{ s }{Fusce adipiscing justo nec ante. Nullam in enim.
- Pellentesque felis orci, sagittis ac, malesuada et, facilisis in,
- ligula. Nunc non magna sit amet mi aliquam dictum. In mi. Curabitur
- sollicitudin justo sed quam et quadd. 
- \IfBooleanTF{#1}%
- {}%
- {\par}}
-%    \end{macrocode}
-% 
 %
-% \begin{docCommand}{fox} {\meta{void}} 
-%  A classic one liner containing all the letters
-%	 of the alphabet, used as a testing code.
-% \end{docCommand}
-%    \begin{macrocode}
-\newcommand{\fox}{``The quick brown fox jumps over the lazy dog''} 
-%    \end{macrocode}
-% 
+%\DeclareDocumentCommand\lorem{ s }{Fusce adipiscing justo nec ante. Nullam in enim.
+% Pellentesque felis orci, sagittis ac, malesuada et, facilisis in,
+% ligula. Nunc non magna sit amet mi aliquam dictum. In mi. Curabitur
+% sollicitudin justo sed quam et quadd. 
+% \IfBooleanTF{#1}%
+% {}%
+% {\par}}
+%%    \end{macrocode}
+%% 
+%%
+%% \begin{docCommand}{fox} {\meta{void}} 
+%%  A classic one liner containing all the letters
+%%	 of the alphabet, used as a testing code.
+%% \end{docCommand}
+%%    \begin{macrocode}
+%\newcommand{\fox}{``The quick brown fox jumps over the lazy dog''} 
+%%    \end{macrocode}
+%% 
+%%
+%% \begin{docCommand} {frogking} { \meta {void}}
+%% \end{docCommand}
+%%    \begin{macrocode}
+%\newcommand\frogking{%
+%\leavevmode
+%\hskip1em In olden times when wishing
+%still helped one, there lived a
+%king whose daughters were all
+%beautiful, but the youngest was so
+%beautiful that the sun itself,
+%which has seen so much, was
+%astonished whenever it shone in
+%her face. Close by the king's
+%castle lay a great dark forest,
+%and under an old lime-tree in the
+%forest was a well, and when
+%the day was very warm, the
+%king's child went out into the 
+%forest and sat down by the side
+%of the cool fountain, and when she was bored she
+%took a golden ball, and threw it up on a high and caught it, and this
+%ball was her favorite plaything. \par}%
+%%    \end{macrocode}
+%%
+%%
+%%    \begin{macrocode}
+%\newcommand\onepar{In olden times when wishing
+%still helped one, there lived a
+%king whose daughters were all
+%beautiful, but the youngest was so
+%beautiful that the sun itself,
+%which has seen so much, was
+%astonished whenever it shone in
+%her face. Close by the king's
+%castle lay a great dark forest,
+%and under an old lime-tree in the
+%forest was a well, and when
+%the day was very warm, the
+%king's child went out into the 
+%forest and sat down by the side
+%of the cool fountain, and when she was bored she
+%took a golden ball, and threw it up on a high and caught it, and this
+%ball was her favorite plaything.}%
 %
-% \begin{docCommand} {frogking} { \meta {void}}
-% \end{docCommand}
-%    \begin{macrocode}
-\newcommand\frogking{%
-\leavevmode
-\hskip1em In olden times when wishing
-still helped one, there lived a
-king whose daughters were all
-beautiful, but the youngest was so
-beautiful that the sun itself,
-which has seen so much, was
-astonished whenever it shone in
-her face. Close by the king's
-castle lay a great dark forest,
-and under an old lime-tree in the
-forest was a well, and when
-the day was very warm, the
-king's child went out into the 
-forest and sat down by the side
-of the cool fountain, and when she was bored she
-took a golden ball, and threw it up on a high and caught it, and this
-ball was her favorite plaything. \par}%
-%    \end{macrocode}
+%\newcommand\alicei{%	
+%  The King and Queen of Hearts were seated on their throne
+%  when they arrived, with a great crowd assembled about them
+%  ---all sorts of little birds and beasts, as well as the
+%  whole pack of cards: the Knave was standing before them,
+%  in chains, with a soldier on each side to guard him; and
+%  near the King was the White Rabbit, with a trumpet in one
+%  hand, and a scroll of parchment in the other.  In the very
+%  middle of the court was a table, with a large dish of
+%  tarts upon it: they looked so good, that it made Alice
+%  quite hungry to look at them---``I wish they'd get the
+%  trial done,'' she thought, ``and hand round the
+%  refreshments!''.  But there seemed to be no chance of this,
+%  so she began looking at everything about her to pass away
+%  the time.}%
 %
+%\newcommand\aliceii{%
+%  Alice had never been in a court of justice before, but she
+%  had read about them in books, and she was quite pleased to
+%  find that she knew the name of nearly everything there.
+%  ``That's the judge,'' she said to herself, ``because of his
+%  great wig.''.
+%  
+%  The judge, by the way, was the King, and as he wore his
+%  crown over the wig, (look at the frontispiece if you want
+%  to see how he did it,) he did not look at all comfortable,
+%  and it was certainly not becoming.
+%}
 %
-%    \begin{macrocode}
-\newcommand\onepar{In olden times when wishing
-still helped one, there lived a
-king whose daughters were all
-beautiful, but the youngest was so
-beautiful that the sun itself,
-which has seen so much, was
-astonished whenever it shone in
-her face. Close by the king's
-castle lay a great dark forest,
-and under an old lime-tree in the
-forest was a well, and when
-the day was very warm, the
-king's child went out into the 
-forest and sat down by the side
-of the cool fountain, and when she was bored she
-took a golden ball, and threw it up on a high and caught it, and this
-ball was her favorite plaything.}%
-
-\newcommand\alicei{%	
-  The King and Queen of Hearts were seated on their throne
-  when they arrived, with a great crowd assembled about them
-  ---all sorts of little birds and beasts, as well as the
-  whole pack of cards: the Knave was standing before them,
-  in chains, with a soldier on each side to guard him; and
-  near the King was the White Rabbit, with a trumpet in one
-  hand, and a scroll of parchment in the other.  In the very
-  middle of the court was a table, with a large dish of
-  tarts upon it: they looked so good, that it made Alice
-  quite hungry to look at them---``I wish they'd get the
-  trial done,'' she thought, ``and hand round the
-  refreshments!''.  But there seemed to be no chance of this,
-  so she began looking at everything about her to pass away
-  the time.}%
-
-\newcommand\aliceii{%
-  Alice had never been in a court of justice before, but she
-  had read about them in books, and she was quite pleased to
-  find that she knew the name of nearly everything there.
-  ``That's the judge,'' she said to herself, ``because of his
-  great wig.''.
-  
-  The judge, by the way, was the King, and as he wore his
-  crown over the wig, (look at the frontispiece if you want
-  to see how he did it,) he did not look at all comfortable,
-  and it was certainly not becoming.
-}
-
- \newcommand\aliceiii{``And that's the jury-box,'' thought Alice, ``and those
-  twelve creatures,'' (she was obliged to say ``creatures,''
-  you see, because some of them were animals, and some were
-  birds) ``I suppose they are the jurors.''.  She said this
-  last word two or three times over to herself being rather
-  proud of it: for she thought, and rightly too, that very
-  few little girls of her age knew the meaning of it at all.
-  However, ``jurymen'' would have done just as well.}
-
- \newcommand\aliceiv{The twelve jurors were all writing very busily on slates.
-  ``What are they doing?'' Alice whispered to the Gryphon.
-  ``They can't have anything to put down yet, before the
-  trial's begun.''.}
-  
-\newcommand\alicev{``They're putting down their names,'' the Gryphon
-  whispered in reply, ``for fear they should forget them
-  before the end of the trial.''.}
-  
-\newcommand\alicevi{``Stupid things!'' Alice began in a loud indignant voice,
-  but she stopped herself hastily, for the White Rabbit
-  cried out, ``Silence in the court!''; and the King put on
-  his spectacles and looked anxiously round, to make out who
-  was talking.\par}
+% \newcommand\aliceiii{``And that's the jury-box,'' thought Alice, ``and those
+%  twelve creatures,'' (she was obliged to say ``creatures,''
+%  you see, because some of them were animals, and some were
+%  birds) ``I suppose they are the jurors.''.  She said this
+%  last word two or three times over to herself being rather
+%  proud of it: for she thought, and rightly too, that very
+%  few little girls of her age knew the meaning of it at all.
+%  However, ``jurymen'' would have done just as well.}
+%
+% \newcommand\aliceiv{The twelve jurors were all writing very busily on slates.
+%  ``What are they doing?'' Alice whispered to the Gryphon.
+%  ``They can't have anything to put down yet, before the
+%  trial's begun.''.}
+%  
+%\newcommand\alicev{``They're putting down their names,'' the Gryphon
+%  whispered in reply, ``for fear they should forget them
+%  before the end of the trial.''.}
+%  
+%\newcommand\alicevi{``Stupid things!'' Alice began in a loud indignant voice,
+%  but she stopped herself hastily, for the White Rabbit
+%  cried out, ``Silence in the court!''; and the King put on
+%  his spectacles and looked anxiously round, to make out who
+%  was talking.\par}
 %    \end{macrocode}
 %
 % \section{Functions for testing fonts}
@@ -1149,9 +1077,9 @@ ball was her favorite plaything.}%
 % This is a short assembly of commands that can be used to test fonts.
 %
 %    \begin{macrocode}
-\def\ALPHABET {A B C D E F G H I J K L M N O P Q R S T U V W X Y Z}
-\def\alphabet {a b c d e f g h i j k l m n o p q r s t u v w x y z}
-\newcommand{\punctuation}{! ? . / , : }
+%\def\ALPHABET {A B C D E F G H I J K L M N O P Q R S T U V W X Y Z}
+%\def\alphabet {a b c d e f g h i j k l m n o p q r s t u v w x y z}
+%\newcommand{\punctuation}{! ? . / , : }
 %    \end{macrocode}
 % The package fonttable provides a number of interesting testing tests
 % for fonts
@@ -1205,20 +1133,28 @@ ball was her favorite plaything.}%
 % 
 %    \begin{macrocode}
 % \RequirePackage{delarray} gives problems
-\RequirePackage{array}
+\ifstylefileexists{array}{
+\RequirePackage{array}}{}
 %    \end{macrocode}
 % 
 % 
 %
 % \subsection{dcolumn}
-%  The |dcolumn| package also by David Carlisle is loaded next. This package 
+%  The \pkg{dcolumn} package also developed by David Carlisle is loaded next. This package 
 %  defines a system for defining columns of entries in an |array|
 %  or tabular which are to be aligned on a `decimal point'. It also loads the |array|
 %  package, which we have already loaded.
 % 
 %    \begin{macrocode}
-\RequirePackage{dcolumn}
-\RequirePackage{rccol}
+\ifstylefileexists{dcolumn}{
+\RequirePackage{dcolumn}}{}
+%    \end{macrocode}
+%
+% \subsection{rccol}
+% The rccol package provides right-centered numbers: corresponding digits aligned, centered to other entries (e.g., the title). Furthermore, rounding to the desired precision is possible. It requires the \pkg{array} and the \pkg{fltpoint} packages.
+%    \begin{macrocode}
+\ifstylefileexists{rccol}{
+\RequirePackage{rccol}}{}
 %    \end{macrocode}
 % 
 %
@@ -1303,22 +1239,25 @@ ball was her favorite plaything.}%
 % to get right and in most instances one can redesign the tables better without
 % resorting to multi-rows. It has a strange interaction with the \pkgname{colortbl}
 % and a hack around its usage which we will load next.
+%
+% If we have multirow.sty, use it.
+%    \begin{macrocode}
+\newif\ifhavemultirow
+\ifstylefileexists{multirow}
+  {\havemultirowtrue
+  \RequirePackage{multirow}
+  }
+  {}  
+%    \end{macrocode}  
 % 
 % \section{type1cm}
 % If we have \pkgname{type1cm}\footcite{type1cm}, use it. This is totally unecessary
 % for newer engines.
 %
 %    \begin{macrocode}
-\IfStyFileExists*{type1cm}
-  {\usepackage{type1cm}}
-  {}
-% If we have multirow.sty, use it.
-\newif\ifhavemultirow
-\IfStyFileExists{multirow}
-  {\havemultirowtrue
-  \RequirePackage{multirow}
-  }
-  {}  
+%\ifstylefileexists*{type1cm}
+%  {\usepackage{type1cm}}
+%  {}
 %    \end{macrocode}
 %
 % \section{colortbl}
@@ -1328,7 +1267,7 @@ ball was her favorite plaything.}%
 %
 %    \begin{macrocode}
 \newif\ifhavecolortbl
-\IfStyFileExists{colortbl}  
+\ifstylefileexists{colortbl}  
   {\havecolortbltrue\RequirePackage{colortbl}}
   {}
 %    \end{macrocode}
@@ -1374,7 +1313,7 @@ ball was her favorite plaything.}%
 %  
 %    \begin{macrocode}
 
-\IfStyFileExists {pdflscape}
+\ifstylefileexists {pdflscape}
   {\RequirePackage{pdflscape}}
   {}
 %    \end{macrocode}
@@ -1385,7 +1324,7 @@ ball was her favorite plaything.}%
 % drawing diagonal lines in table cells. It also loads the \pkgname{fp} package.
 %
 %    \begin{macrocode}
-\IfStyFileExists {diagbox}
+\ifstylefileexists {diagbox}
   {\RequirePackage{diagbox} }
   {}
 %    \end{macrocode}
@@ -1438,88 +1377,88 @@ ball was her favorite plaything.}%
 %    \end{macrocode}
 %    \begin{macrocode}
 %
-\ExplSyntaxOn
-\newif\ifMTOOLS
-\newcommand\MTOOLS{\pkgname{mathtools}}
- \RequirePackage{mathtools}
- \RequirePackage{suffix}
-\IfStyFileExists{mathtools}
-  {\MTOOLStrue
-   \save_symbol:{xleftrightarrow} \save_symbol:{xLeftarrow}
-   \save_symbol:{xRightarrow} \save_symbol:{xLeftrightarrow}
-   \save_symbol:{xrightharpoondown} \save_symbol:{xrightharpoonup}
-   \save_symbol:{xleftharpoondown} \save_symbol:{xleftharpoonup}
-   \save_symbol:{xleftrightharpoons} \save_symbol:{xrightleftharpoons}
-   \save_symbol:{xhookleftarrow} \save_symbol:{xhookrightarrow}
-   \save_symbol:{xmapsto} \save_symbol:{underbracket}
-   \save_symbol:{overbracket} \save_symbol:{lparen} \save_symbol:{rparen}
-   \save_symbol:{dblcolon} \save_symbol:{coloneqq} \save_symbol:{Coloneqq}
-   \save_symbol:{coloneq} \save_symbol:{Coloneq} \save_symbol:{eqqcolon}
-   \save_symbol:{Eqqcolon} \save_symbol:{eqcolon} \save_symbol:{Eqcolon}
-   \save_symbol:{colonapprox} \save_symbol:{Colonapprox}
-   \save_symbol:{colonsim} \save_symbol:{Colonsim} \save_symbol:{overbrace}
-   \save_symbol:{underbrace}%NEW
-   \save_symbol:{underbrace}
-   \save_symbol:{overleftrightarrow}%NEW
-   \save_symbol:{mathscr}
-   \save_symbol:{ulcorner}
-   \save_symbol:{urcorner}
-   \save_symbol:{llcorner}
-   \save_symbol:{lrcorner}
-   \save_symbol:{backepsilon}
-   \save_symbol:{digamma}  
-   \save_symbol:{underrightarrow}
-   \save_symbol:{underleftarrow} 
-   \save_symbol:{underleftrightarrow}
-   \save_symbol:{eth}
-   \save_symbol:{underbracket}
-   \save_symbol:{smash}
-   % The mathtools package delays the definitions of some of its symbols
-   % to the \begin{document}.  We redefine \AtBeginDocument to force
-   % mathtools to define everything immediately.
-   \let\origAtBeginDocument=\AtBeginDocument
-   \def\AtBeginDocument##1{##1}
-  % \let\RequirePackage\origRequirePackage
-  \PassOptionsToPackage{donotfixmathbugs}{mathtools}
-   \RequirePackage{mathtools}
-   
-   \let\AtBeginDocument=\origAtBeginDocument
-
-   \restore_symbol:{MTOOLS}{xleftrightarrow}
-   \restore_symbol:{MTOOLS}{xLeftarrow}
-   \restore_symbol:{MTOOLS}{xRightarrow}
-   \restore_symbol:{MTOOLS}{xLeftrightarrow}
-   \restore_symbol:{MTOOLS}{xrightharpoondown}
-   \restore_symbol:{MTOOLS}{xrightharpoonup}
-   \restore_symbol:{MTOOLS}{xleftharpoondown}
-   \restore_symbol:{MTOOLS}{xleftharpoonup}
-   \restore_symbol:{MTOOLS}{xleftrightharpoons}
-   \restore_symbol:{MTOOLS}{xrightleftharpoons}
-   \restore_symbol:{MTOOLS}{xhookleftarrow}
-   \restore_symbol:{MTOOLS}{xhookrightarrow}
-   \restore_symbol:{MTOOLS}{xmapsto}
-   \restore_symbol:{MTOOLS}{underbracket}
-   \restore_symbol:{MTOOLS}{overbracket} \restore_symbol:{MTOOLS}{lparen}
-   \restore_symbol:{MTOOLS}{rparen} \restore_symbol:{MTOOLS}{dblcolon}
-   \restore_symbol:{MTOOLS}{coloneqq} \restore_symbol:{MTOOLS}{Coloneqq}
-   \restore_symbol:{MTOOLS}{coloneq} \restore_symbol:{MTOOLS}{Coloneq}
-   \restore_symbol:{MTOOLS}{eqqcolon} \restore_symbol:{MTOOLS}{Eqqcolon}
-   \restore_symbol:{MTOOLS}{eqcolon} \restore_symbol:{MTOOLS}{Eqcolon}
-   \restore_symbol:{MTOOLS}{colonapprox}
-   \restore_symbol:{MTOOLS}{Colonapprox}
-   \restore_symbol:{MTOOLS}{colonsim} \restore_symbol:{MTOOLS}{Colonsim}
-   \restore_symbol:{MTOOLS}{overbrace} \restore_symbol:{MTOOLS}{underbrace}
-   \restore_symbol:{MTOOLS}{underbracket}
-   \restore_symbol:{MTOOLS}{smash}
-
-   % Some of the above are defined in terms of \dblcolon.  At the time
-   % of this writing it doesn't seem like any other package uses the
-   % name \dblcolon so it should be safe to retain its mathtools
-   % definition.
-   \let\dblcolon=\MTOOLSdblcolon
-  }
-  {}
-\ExplSyntaxOff  
+%\ExplSyntaxOn
+%\newif\ifMTOOLS
+%\newcommand\MTOOLS{\pkgname{mathtools}}
+% \RequirePackage{mathtools}
+% \RequirePackage{suffix}
+%\ifstylefileexists{mathtools}
+%  {\MTOOLStrue
+%   \save_symbol:{xleftrightarrow} \save_symbol:{xLeftarrow}
+%   \save_symbol:{xRightarrow} \save_symbol:{xLeftrightarrow}
+%   \save_symbol:{xrightharpoondown} \save_symbol:{xrightharpoonup}
+%   \save_symbol:{xleftharpoondown} \save_symbol:{xleftharpoonup}
+%   \save_symbol:{xleftrightharpoons} \save_symbol:{xrightleftharpoons}
+%   \save_symbol:{xhookleftarrow} \save_symbol:{xhookrightarrow}
+%   \save_symbol:{xmapsto} \save_symbol:{underbracket}
+%   \save_symbol:{overbracket} \save_symbol:{lparen} \save_symbol:{rparen}
+%   \save_symbol:{dblcolon} \save_symbol:{coloneqq} \save_symbol:{Coloneqq}
+%   \save_symbol:{coloneq} \save_symbol:{Coloneq} \save_symbol:{eqqcolon}
+%   \save_symbol:{Eqqcolon} \save_symbol:{eqcolon} \save_symbol:{Eqcolon}
+%   \save_symbol:{colonapprox} \save_symbol:{Colonapprox}
+%   \save_symbol:{colonsim} \save_symbol:{Colonsim} \save_symbol:{overbrace}
+%   \save_symbol:{underbrace}%NEW
+%   \save_symbol:{underbrace}
+%   \save_symbol:{overleftrightarrow}%NEW
+%   \save_symbol:{mathscr}
+%   \save_symbol:{ulcorner}
+%   \save_symbol:{urcorner}
+%   \save_symbol:{llcorner}
+%   \save_symbol:{lrcorner}
+%   \save_symbol:{backepsilon}
+%   \save_symbol:{digamma}  
+%   \save_symbol:{underrightarrow}
+%   \save_symbol:{underleftarrow} 
+%   \save_symbol:{underleftrightarrow}
+%   \save_symbol:{eth}
+%   \save_symbol:{underbracket}
+%   \save_symbol:{smash}
+%   % The mathtools package delays the definitions of some of its symbols
+%   % to the \begin{document}.  We redefine \AtBeginDocument to force
+%   % mathtools to define everything immediately.
+%   \let\origAtBeginDocument=\AtBeginDocument
+%   \def\AtBeginDocument##1{##1}
+%  % \let\RequirePackage\origRequirePackage
+%  \PassOptionsToPackage{donotfixmathbugs}{mathtools}
+%   \RequirePackage{mathtools}
+%   
+%   \let\AtBeginDocument=\origAtBeginDocument
+%
+%   \restore_symbol:{MTOOLS}{xleftrightarrow}
+%   \restore_symbol:{MTOOLS}{xLeftarrow}
+%   \restore_symbol:{MTOOLS}{xRightarrow}
+%   \restore_symbol:{MTOOLS}{xLeftrightarrow}
+%   \restore_symbol:{MTOOLS}{xrightharpoondown}
+%   \restore_symbol:{MTOOLS}{xrightharpoonup}
+%   \restore_symbol:{MTOOLS}{xleftharpoondown}
+%   \restore_symbol:{MTOOLS}{xleftharpoonup}
+%   \restore_symbol:{MTOOLS}{xleftrightharpoons}
+%   \restore_symbol:{MTOOLS}{xrightleftharpoons}
+%   \restore_symbol:{MTOOLS}{xhookleftarrow}
+%   \restore_symbol:{MTOOLS}{xhookrightarrow}
+%   \restore_symbol:{MTOOLS}{xmapsto}
+%   \restore_symbol:{MTOOLS}{underbracket}
+%   \restore_symbol:{MTOOLS}{overbracket} \restore_symbol:{MTOOLS}{lparen}
+%   \restore_symbol:{MTOOLS}{rparen} \restore_symbol:{MTOOLS}{dblcolon}
+%   \restore_symbol:{MTOOLS}{coloneqq} \restore_symbol:{MTOOLS}{Coloneqq}
+%   \restore_symbol:{MTOOLS}{coloneq} \restore_symbol:{MTOOLS}{Coloneq}
+%   \restore_symbol:{MTOOLS}{eqqcolon} \restore_symbol:{MTOOLS}{Eqqcolon}
+%   \restore_symbol:{MTOOLS}{eqcolon} \restore_symbol:{MTOOLS}{Eqcolon}
+%   \restore_symbol:{MTOOLS}{colonapprox}
+%   \restore_symbol:{MTOOLS}{Colonapprox}
+%   \restore_symbol:{MTOOLS}{colonsim} \restore_symbol:{MTOOLS}{Colonsim}
+%   \restore_symbol:{MTOOLS}{overbrace} \restore_symbol:{MTOOLS}{underbrace}
+%   \restore_symbol:{MTOOLS}{underbracket}
+%   \restore_symbol:{MTOOLS}{smash}
+%
+%   % Some of the above are defined in terms of \dblcolon.  At the time
+%   % of this writing it doesn't seem like any other package uses the
+%   % name \dblcolon so it should be safe to retain its mathtools
+%   % definition.
+%   \let\dblcolon=\MTOOLSdblcolon
+%  }
+%  {}
+%\ExplSyntaxOff  
 %    \end{macrocode}
 %    \begin{macrocode}
 %\cxset{tag left bracket/.store in = \leftbracket@cx,
@@ -1558,34 +1497,34 @@ ball was her favorite plaything.}%
 %
 %    \begin{macrocode}
 %
-\newif\ifFontIsAvailable
-\def\testFontAvailability#1{%
-  \count255=\interactionmode
-  \batchmode
-  \let\preload=\nullfont
-  \font\preload="#1" at 10pt
-  \ifx\preload\nullfont \FontIsAvailablefalse
-  \else \FontIsAvailabletrue \fi
-  \interactionmode=\count255
-}
-
-\def\FindAnInstalledFont#1#2{
-  \expandafter\getFirstFontName#1/\end
-  \let\next\gobbleTwo
-  \ifx\trialFontName\empty
-    \def#2{<No suitable font found>}%
-  \else
-    \testFontAvailability{\trialFontName}
-    \ifFontIsAvailable
-      \edef#2{\trialFontName}%
-    \else
-      \let\next\FindAnInstalledFont
-    \fi
-  \fi
-  \expandafter\next\expandafter{\remainingNames}{#2}
-}
-\def\getFirstFontName#1/#2\end{\def\trialFontName{#1}\def\remainingNames{#2}}
-\def\gobbleTwo#1#2{}
+%\newif\ifFontIsAvailable
+%\def\testFontAvailability#1{%
+%  \count255=\interactionmode
+%  \batchmode
+%  \let\preload=\nullfont
+%  \font\preload="#1" at 10pt
+%  \ifx\preload\nullfont \FontIsAvailablefalse
+%  \else \FontIsAvailabletrue \fi
+%  \interactionmode=\count255
+%}
+%
+%\def\FindAnInstalledFont#1#2{
+%  \expandafter\getFirstFontName#1/\end
+%  \let\next\gobbleTwo
+%  \ifx\trialFontName\empty
+%    \def#2{<No suitable font found>}%
+%  \else
+%    \testFontAvailability{\trialFontName}
+%    \ifFontIsAvailable
+%      \edef#2{\trialFontName}%
+%    \else
+%      \let\next\FindAnInstalledFont
+%    \fi
+%  \fi
+%  \expandafter\next\expandafter{\remainingNames}{#2}
+%}
+%\def\getFirstFontName#1/#2\end{\def\trialFontName{#1}\def\remainingNames{#2}}
+%\def\gobbleTwo#1#2{}
 %
 %    \end{macrocode}
 % {ligatures}
@@ -1607,7 +1546,7 @@ ball was her favorite plaything.}%
 \ifUNICODE
 \else
 \newcommand\YH{yhmaths}
-\IfStyFileExists{yhmath}
+\ifstylefileexists{yhmath}
   {\YHtrue
     \RequirePackage{yhmath}
   }
@@ -1622,7 +1561,8 @@ ball was her favorite plaything.}%
 % optional argument provides for consecutive numbering of the array items,
 % or an even-only or odd-only numbering scheme
 %    \begin{macrocode}
-\RequirePackage{multienum}
+\ifstylefileexists{multienum}{
+\RequirePackage{multienum}}{}
 %    \end{macrocode}
 %
 % \section{The accents package}
@@ -1639,7 +1579,7 @@ ball was her favorite plaything.}%
 %    \begin{macrocode}
 \ExplSyntaxOn
 \newif\ifACCENTS
-\IfStyFileExists{accents}
+\ifstylefileexists{accents}
   {\ACCENTStrue
    \save_symbol:{undertilde}
    \save_symbol:{dddot}
@@ -1657,14 +1597,14 @@ ball was her favorite plaything.}%
 % \section{mathrsfs}
 %
 %  The package \pkgname{mathrsfs}\footcite{mathrsfs} which is part of a suite of packages developed by \citeauthor{mathrsfs} provides calligraphic style fonts.
-%  \mathscr{A B C D E F G} to be overwriiten by unicode-math
+%  |\mathscr{A B C D E F G}| to be overwriiten by unicode-math
 %  options later. Need to study it.
 % {mathscr} needs fixing !!!!
 %    \begin{macrocode}
 %
-\IfStyFileExists{mathrsfs}
-  {\newcommand{\mathscr}[1]{\mbox{\usefont{U}{rsfs}{m}{n}##1}}}
-  {}
+%\ifstylefileexists{mathrsfs}
+%  {\newcommand{\mathscr}[1]{\mbox{\usefont{U}{rsfs}{m}{n}##1}}}
+%  {}
 %    \end{macrocode}
 % 
 %
@@ -1742,7 +1682,7 @@ ball was her favorite plaything.}%
 %
 %\let\proofmode=1
 %\RequirePackage{mathabx}
-%\IfStyFileExists{mathabx}
+%\ifstylefileexists{mathabx}
 %  {\ABXtrue
 %   \save_symbol:{not} \save_symbol:{widering}\save_symbol:{Moon}
 %   \save_symbol:{notowner} \save_symbol:{iint} \save_symbol:{iiint}
@@ -1852,8 +1792,11 @@ ball was her favorite plaything.}%
 % The package \pkgname{xfrac}\footcite{xfrac} produces better fractions. 
 % The \pkgname{nicefrac}\footcite[For docs type textdoc units]{nicefrac} is an older package. I am told some people still use it.
 %    \begin{macrocode}
-\RequirePackage{nicefrac}
-\RequirePackage{xfrac}
+\ifstylefileexists{nicefrac}{
+\RequirePackage{nicefrac}}{}
+%
+\ifstylefileexists{xfrac}{
+\RequirePackage{xfrac}}{}
 %    \end{macrocode}
 % 
 % 
@@ -1884,7 +1827,7 @@ ball was her favorite plaything.}%
 % 
 %    \begin{macrocode} 
 \ifengine{}{}{% 
-  \IfStyFileExists{dsfont}%
+  \ifstylefileexists{dsfont}%
     { \newcommand{\mathds}[1]{\mbox{\usefont{U}{dsrom}{m}{n}##1}}
       \newcommand{\mathdsss}[1]{\mbox{\usefont{U}{dsss}{m}{n}##1}}}
     {}
@@ -1932,7 +1875,7 @@ ball was her favorite plaything.}%
 %\ExplSyntaxOn 
 \newif\ifFEYN
 \newcommand\FEYN{\pkgname{feyn}}
-\IfStyFileExists{feyn}
+\ifstylefileexists{feyn}
   {\FEYNtrue
       %\RequirePackage{feyn}
 %   \let\origProvidesPackage=\ProvidesPackage
@@ -1959,10 +1902,9 @@ ball was her favorite plaything.}%
 %   \DeclareRobustCommand{\smallbosonloopA}{\feyn{\char"5C}}
 %   \DeclareRobustCommand{\bigbosonloopV}{\feyn{\char"1B}}
 %   \DeclareRobustCommand{\smallbosonloopV}{\feyn{\char"1C}}
-  }
-
-  {}
- \DeclareRobustCommand\FIRE{{\large\color{red}Fire}}
+  }{}
+%
+\DeclareRobustCommand\FIRE{{\large\color{red}Fire}}
 \ExplSyntaxOff 
 %    \end{macrocode} 
 % \begin{macrocode} 
@@ -2001,7 +1943,7 @@ ball was her favorite plaything.}%
 %\newif\ifIGO
 %\newcommand\IGO{\pkgname{igo}}
 %
-%\IfStyFileExists{xigo}
+%\ifstylefileexists{xigo}
 %  {
 %  \save_symbol:{black}
 %%   \save_symbol:{white}
@@ -2045,7 +1987,7 @@ ball was her favorite plaything.}%
 %    \begin{macrocode}
 \newif\ifULSY
 \newcommand\ULSY{\pkgname{ulsy}}
-\IfStyFileExists{ulsy}
+\ifstylefileexists{ulsy}
   {\ULSYtrue\usepackage{ulsy}}
   {}
 %    \end{macrocode}  
@@ -2055,7 +1997,7 @@ ball was her favorite plaything.}%
 \ExplSyntaxOn
 \newif\ifCEQ
 \newcommand\CEQ{\pkgname{colonequals}}
-\IfStyFileExists{colonequals}
+\ifstylefileexists{colonequals}
   {\save_symbol:{colonapprox}
    \save_symbol:{colonsim}
    \CEQtrue
@@ -2072,27 +2014,27 @@ ball was her favorite plaything.}%
 % The \pkgname{cmll}\footcite{cmll} font defines a handful of symbols useful in linear logic that were not defined in other fonts and packages. The package needs to be loaded
 % after txtfonts. We rename some of them. 
 %
-%   \CMLLbigparr 
-%   \CMLLbigwith
+%   |\CMLLbigparr| 
+%   |\CMLLbigwith|
 %
 %    \begin{macrocode}
-\newif\ifCMLL
-\newcommand\CMLL{\pkgname{cmll}}
-\IfStyFileExists{cmll}
-  {\CMLLtrue
-   \newcommand*{\textCMLL}[1]{{\usefont{U}{cmllr}{m}{n}##1}}
-   \DeclareRobustCommand{\CMLLparr}{\textCMLL{\char0}}
-   \DeclareRobustCommand{\CMLLshpos}{\textCMLL{\char1}}
-   \DeclareRobustCommand{\CMLLshneg}{\textCMLL{\char2}}
-   \DeclareRobustCommand{\CMLLshift}{\textCMLL{\char3}}
-   \DeclareRobustCommand{\CMLLcoh}{\textCMLL{\char4}}
-   \DeclareRobustCommand{\CMLLscoh}{\textCMLL{\char5}}
-   \DeclareRobustCommand{\CMLLincoh}{\textCMLL{\char6}}
-   \DeclareRobustCommand{\CMLLsincoh}{\textCMLL{\char7}}
-   \DeclareRobustCommand{\CMLLbigwith}{\raisebox{2ex}{\textCMLL{\char8}}}
-   \DeclareRobustCommand{\CMLLbigparr}{\raisebox{2ex}{\textCMLL{\char10}}}
-  }
-  {}
+%\newif\ifCMLL
+%\newcommand\CMLL{\pkgname{cmll}}
+%\ifstylefileexists{cmll}
+%  {\CMLLtrue
+%   \newcommand*{\textCMLL}[1]{{\usefont{U}{cmllr}{m}{n}##1}}
+%   \DeclareRobustCommand{\CMLLparr}{\textCMLL{\char0}}
+%   \DeclareRobustCommand{\CMLLshpos}{\textCMLL{\char1}}
+%   \DeclareRobustCommand{\CMLLshneg}{\textCMLL{\char2}}
+%   \DeclareRobustCommand{\CMLLshift}{\textCMLL{\char3}}
+%   \DeclareRobustCommand{\CMLLcoh}{\textCMLL{\char4}}
+%   \DeclareRobustCommand{\CMLLscoh}{\textCMLL{\char5}}
+%   \DeclareRobustCommand{\CMLLincoh}{\textCMLL{\char6}}
+%   \DeclareRobustCommand{\CMLLsincoh}{\textCMLL{\char7}}
+%   \DeclareRobustCommand{\CMLLbigwith}{\raisebox{2ex}{\textCMLL{\char8}}}
+%   \DeclareRobustCommand{\CMLLbigparr}{\raisebox{2ex}{\textCMLL{\char10}}}
+%  }
+%  {}
 %    \end{macrocode}
 %
 % \section{stmaryd}
@@ -2102,7 +2044,7 @@ ball was her favorite plaything.}%
 \ExplSyntaxOn
  \newif\ifST
  \newcommand\ST{\pkgname{stmaryrd}}
- \IfStyFileExists{stmaryrd}
+ \ifstylefileexists{stmaryrd}
   {\STtrue
    \save_symbol:{lightning}
    \save_symbol:{bigtriangleup} \save_symbol:{bigtriangledown}
@@ -2127,7 +2069,7 @@ ball was her favorite plaything.}%
 \ExplSyntaxOn 
 \newif\ifXPFEIL
 \newcommand\XPFEIL{\pkgname{extpfeil}}
-\IfStyFileExists{extpfeils}
+\ifstylefileexists{extpfeils}
   {\XPFEILtrue
    % extpfeil tries to do a \RequirePackage of stmaryrd with
    % conflicting options from what we used to load stmaryd.  We
@@ -2160,7 +2102,7 @@ ball was her favorite plaything.}%
 \newif\ifEU \EUfalse
 
 \iffalse
-\IfStyFileExists{euscript}
+\ifstylefileexists{euscript}
   {\EUtrue\RequirePackage[mathcal]{euscript}
    \renewcommand{\mathcal}[1]{\mbox{\usefont{U}{eus}{m}{n}##1}}
   }
@@ -2184,7 +2126,7 @@ ball was her favorite plaything.}%
 \ifUNICODE
 \else
   \newif\ifBM
-  \IfStyFileExists{bm}
+  \ifstylefileexists{bm}
     {\BMtrue
       \RequirePackage{bm}
     }
@@ -2201,7 +2143,7 @@ ball was her favorite plaything.}%
 %    \begin{macrocode}  
 \ifUNICODE
  \else
-\IfStyFileExists{bbm}
+\ifstylefileexists{bbm}
   {\newcommand{\mathbbm}[1]{\mbox{\usefont{U}{bbm}{m}{n}##1}}
    \newcommand{\mathbbmss}[1]{\mbox{\usefont{U}{bbmss}{m}{n}##1}}
    \newcommand{\mathbbmtt}[1]{\mbox{\usefont{U}{bbmtt}{m}{n}##1}}}
@@ -2213,11 +2155,14 @@ ball was her favorite plaything.}%
 % The package \pkgname{bbold} developed by Alan Jeffrey provides an
 % open or `blackboard bold' geometric sans serif. The package bbold-type1,
 % offers type-1 fonts for the same. We use the latter, but conflicts with
-% the staves?? \FIRE font or metric data bad.
+% the staves?? 
+% \begin{ddanger}
+%   font or metric data bad with \luatex. 
+% \end{ddanger}
 %    \begin{macrocode}
 \ifUNICODE
 \else
-\IfStyFileExists{bbold}
+\ifstylefileexists{bbold}
   {
   %</fontdef
   \newcommand{\BBmathbb}[1]{\mbox{\usefont{U}{bbold}{m}{n}##1}}
@@ -2245,7 +2190,7 @@ ball was her favorite plaything.}%
 %
 %  
 %    \begin{macrocode}
-\IfStyFileExists{mbboard}
+\ifstylefileexists{mbboard}
   {\newcommand{\MBBmathbb}[1]{\mbox{\usefont{OT1}{mbb}{m}{n}##1}}}
   {}
 \ifx\MBBmathbb\undefined
@@ -2318,7 +2263,7 @@ ball was her favorite plaything.}%
 \newcommand\MDOTS{\pkgname{mathdots}}
 \ifUNICODE
 \else
-\IfStyFileExists{mathdots}
+\ifstylefileexists{mathdots}
   {\MDOTStrue
    \save_symbol:{ddots}
    \save_symbol:{vdots}
@@ -2358,7 +2303,7 @@ ball was her favorite plaything.}%
 %\let\SI\undefined
 %\newif\ifASCII
 %\newcommand\ASCII{\pkgname{ascii}}
-%\IfStyFileExists{ascii}
+%\ifstylefileexists{ascii}
 %	  {\ASCIItrue
 %	   \save_symbol:{HT}
 %	   \RequirePackage{ascii}
@@ -2378,7 +2323,8 @@ ball was her favorite plaything.}%
 %  major use.
 %
 %  ^^AOf interest is some useful maths commands. \cmd{\Natural} \cmd{\NATURAL}
-%  ^^A{\huge\color{thered}\Fire} \seedocs{china}.
+%  ^^A {\huge\color{thered}\Fire}
+%  \seedocs{china}.
 % 
 %    \begin{macrocode}
 \ExplSyntaxOn
@@ -2388,7 +2334,7 @@ ball was her favorite plaything.}%
   \index{china2e=\textsf{china2e} (package)}%
   \index{packages>china2e=\textsf{china2e}}}
 %  
-\IfStyFileExists{china2e}
+\ifstylefileexists{china2e}
   {\CHINAtrue
    \save_symbol:{Info}
    \save_symbol:{Earth}
@@ -2422,7 +2368,7 @@ ball was her favorite plaything.}%
 %    \begin{macrocode}
 \newif\ifHARP
 \newcommand\HARP{\pkgname{harpoon}}
-\IfStyFileExists{harpoon}
+\ifstylefileexists{harpoon}
   {\HARPtrue\usepackage{harpoon}}
   {}
 
@@ -2752,12 +2698,15 @@ ball was her favorite plaything.}%
 %traditional (OT1-encoded) CM-Roman fonts. Other symbols are provided in the
 %AMS symbol fonts, too, and can be accessed using either the amssymb or the
 %amsfonts package.
-%\footnote{\protect\url{http://tex.stackexchange.com/questions/80053/wasysym-symbols-render-to-something-different}}
+%
+% \WASYlightning
+%
+% See also\footnote{\protect\url{http://tex.stackexchange.com/questions/80053/wasysym-symbols-render-to-something-different}}
 %    \begin{macrocode}
 \ExplSyntaxOn
 \newif\ifWASY
 \newcommand\WASY{\pkgname{wasysym}}
-\IfStyFileExists{wasysym}
+\ifstylefileexists{wasysym}
   {\WASYtrue
    \save_symbol:{lightning}
    \save_symbol:{Box}
@@ -2787,7 +2736,7 @@ ball was her favorite plaything.}%
 %    \begin{macrocode}
 \newif\ifPI
 \newcommand\PI{\pkgname{pifont}}
-\IfStyFileExists{pifont}
+\ifstylefileexists{pifont}
   {\PItrue\RequirePackage{pifont}}
   {}  
 %    \end{macrocode}
@@ -2806,7 +2755,7 @@ ball was her favorite plaything.}%
 %\ExplSyntaxOn
 %\newif\ifMARV
 %\newcommand\MARV{\pkgname{marvosym}}
-%\IfStyFileExists*{marvosym}
+%\ifstylefileexists*{marvosym}
 %  {\save_symbol:{CheckedBox}
 %   \RequirePackage{marvosym}[2000/05/01]% Major rewrite at this version.
 %   \global\MARVtrue
@@ -2834,7 +2783,7 @@ ball was her favorite plaything.}%
 \ExplSyntaxOn 
 \newif\ifDING
 \newcommand\DING{\pkgname{bbding}}
-\IfStyFileExists{bbding}
+\ifstylefileexists{bbding}
   {\DINGtrue
    \save_symbol:{Cross} 
    \save_symbol:{Square}
@@ -2891,7 +2840,7 @@ ball was her favorite plaything.}%
 \ExplSyntaxOn
 \newif\ifEUSYM\EUSYMfalse
 \newcommand\EUSYM{\pkgname{eurosym}}
-\IfStyFileExists{eurosym}
+\ifstylefileexists{eurosym}
   {\EUSYMtrue
    \save_symbol:{EUR}
    \usepackage{eurosym}
@@ -2906,7 +2855,7 @@ ball was her favorite plaything.}%
 %\newif\ifESV\ESVfalse
 %\newcommand\ESV{\pkgname{esvect}}
 %\ExplSyntaxOff
-%\IfStyFileExists{esvect}
+%\ifstylefileexists{esvect}
 %  {\ESVtrue
 %   \RequirePackage{esvect}
 %   \DeclareMathSymbol{\fldra}{\mathrel}{esvector}{'021}
@@ -2943,7 +2892,7 @@ ball was her favorite plaything.}%
 %    \begin{macrocode}
 \newif\ifMAN
 \newcommand\MAN{\pkgname{manfnt}}
-\IfStyFileExists{manfnt}
+\ifstylefileexists{manfnt}
   {\MANtrue\RequirePackage{manfnt}}
   {} 
 
@@ -2987,7 +2936,7 @@ ball was her favorite plaything.}%
 \ExplSyntaxOn
 \newif\ifIFS
 \newcommand\IFS{\pkgname{ifsym}}
-\IfStyFileExists{ifsym}
+\ifstylefileexists{ifsym}
   {\IFStrue
    \save_symbol:{Letter} 
    \save_symbol:{Square} 
@@ -3022,7 +2971,7 @@ ball was her favorite plaything.}%
 %    \begin{macrocode}    
 \newif\ifUTILD
 \newcommand\UTILD{\pkgname{undertilde}}
-\IfStyFileExists{undertilde}
+\ifstylefileexists{undertilde}
   {\UTILDtrue\RequirePackage{undertilde}}
   {}
 %    \end{macrocode}
@@ -3074,23 +3023,27 @@ ball was her favorite plaything.}%
 % characters.
 
 %    \begin{macrocode}
-\RequirePackage{xspace}
+\ifstylefileexists{xspace}{
+\RequirePackage{xspace}}{}
 %    \end{macrocode}
 %
 % \section{xstring}
 %    \begin{macrocode}
-\RequirePackage{xstring}
+\ifstylefileexists{xstring}{
+\RequirePackage{xstring}}{}
 % \RequirePackage{cool, coolstr} conflicts to be resolved.
 %    \end{macrocode}
 %
 % \section{multido}
 %    \begin{macrocode}
-\RequirePackage{multido}
+\ifstylefileexists{multido}{
+\RequirePackage{multido}}{}
 %    \end{macrocode}
 %
 % \section{etoolbox}
 %    \begin{macrocode}
-\RequirePackage{etoolbox}
+\ifstylefileexists{}{
+\RequirePackage{etoolbox}}{}
 %    \end{macrocode}
 %
 % \section{parselines}
@@ -3102,16 +3055,6 @@ ball was her favorite plaything.}%
 %    \end{macrocode}
 %
 %
-% \section{Assertions}
-% some assertions
-%    \begin{macrocode}
-\def\TRUE{ \meta{true code} }
-\def\FALSE{ \meta{false code} }
-\def\PASS{\par{\bfseries\textcolor{green!50!blue}{PASS}}\ ~}
-\def\FAIL{\par{\bfseries\textcolor{red!70!black}{FAIL}}\ ~}
-%    \end{macrocode}
-% upquote needs to be loaded before listings? Must test
-% does not seem to matter actually...
 %
 %
 % \section{Calculations}
@@ -3141,8 +3084,11 @@ ball was her favorite plaything.}%
 %
 % Used in chapter for picture environment. \pkgname{pict2e} must be used before \pkgname{picture}.
 %    \begin{macrocode}
-\RequirePackage{pict2e}
-\RequirePackage{picture}
+\ifstylefileexists{pict2e}{
+\RequirePackage{pict2e}}{}
+%
+\ifstylefileexists{picture}{
+\RequirePackage{picture}}{}
 %\RequirePackage{xpicture}
 %    \end{macrocode}
 %     
@@ -3193,15 +3139,17 @@ ball was her favorite plaything.}%
 %
 % \section {pgfplots}
 %    \begin{macrocode}
-\RequirePackage{pgfplots}
+\ifstylefileexists{pgfplots}{
+\RequirePackage{pgfplots}}{}
 %pgfplotsset{compat=1.11}
-\RequirePackage{pgfplotstable}
+\ifstylefileexists{pgfplotstable}{
+\RequirePackage{pgfplotstable}}{}
 %    \end{macrocode}
 %
 % \section{forest}
 % A very useful package developed by \citeauthor{forest} for all sorts of trees, linguistic or otherwise. It is a fairly new package, but very popular on \texttt{SX.TX}.\footcite{forest}
 %    \begin{macrocode}
-\IfStyFileExists{forest}
+\ifstylefileexists{forest}
   {\RequirePackage {forest}}
   {}
 %    \end{macrocode}
@@ -3211,7 +3159,8 @@ ball was her favorite plaything.}%
 %  the list for computer science packags.
 %
 %    \begin{macrocode}
-\RequirePackage{drawstack}
+\ifstylefileexists{drawstack}{
+\RequirePackage{drawstack}}{}
 %    \end{macrocode}
 %
 % \section{Float}
@@ -3420,8 +3369,9 @@ ball was her favorite plaything.}%
 % The structuring commands, should ideally be loaded by the class. In case the class
 % does not loaded them. We use the \pkg{multicol}, for multiple columns.\footcite{multicol}
 %    \begin{macrocode}
-\RequirePackage{multicol}
-%\RequirePackage[toc]{multitoc}
+\ifstylefileexists{multicol}{
+\RequirePackage{multicol}}{}
+%  \RequirePackage[toc]{multitoc}
 %    \end{macrocode} 
 %    
 % \section{cancel}  
@@ -3456,7 +3406,7 @@ ball was her favorite plaything.}%
 % We pass the option |ulem| to allow \cs{em} and \cs{emph} to be used.
 %    \begin{macrocode}
 \newif\ifULEM
-\IfStyFileExists{ulem}
+\ifstylefileexists{ulem}
 {\ULEMtrue\RequirePackage[normalem]{ulem}}
 {}
 %    \end{macrocode}
@@ -3476,12 +3426,12 @@ ball was her favorite plaything.}%
 %    \begin{macrocode}
 % If we have slashed.sty, use it.
 \newif\ifhaveslashed
-\IfStyFileExists*{slashed}
+\ifstylefileexists*{slashed}
   {\haveslashedtrue\RequirePackage{slashed}}
   {}
 
 \newif\ifhavecancel
-\IfStyFileExists*{cancel}
+\ifstylefileexists*{cancel}
   {\havecanceltrue\RequirePackage{cancel}}
   {}
 
@@ -3520,7 +3470,7 @@ ball was her favorite plaything.}%
 %    \begin{macrocode}
 \newif\ifSTAVE
 \newcommand\STAVE{\pkgname{staves}}
-\IfStyFileExists{staves}
+\ifstylefileexists{staves}
   {\STAVEtrue\usepackage{staves}}
   {}
 %    \end{macrocode}
@@ -3532,7 +3482,7 @@ ball was her favorite plaything.}%
 %    \begin{macrocode}
 %\newif\ifSHUF
 %\newcommand\SHUF{\pkgname{shuffle}}
-%\IfStyFileExists{shuffle}
+%\ifstylefileexists{shuffle}
 %  {\let\origDeclareSymbolFont=\DeclareSymbolFont
 %   \let\origDeclareMathSymbol=\DeclareMathSymbol
 %   \renewcommand{\DeclareSymbolFont}[5]{}
@@ -3549,7 +3499,8 @@ ball was her favorite plaything.}%
 %
 % \subsection{framed}
 %    \begin{macrocode}
-\RequirePackage{framed}
+\ifstylefileexists{framed}{
+\RequirePackage{framed}}{}
 %    \end{macrocode}
 %
 % \subsection{varioref}
@@ -3564,7 +3515,8 @@ ball was her favorite plaything.}%
 %Generated strings are customizable so that these commands are usable with
 %various languages. see \fullref{staves}
 %    \begin{macrocode}
-\RequirePackage{varioref}
+\ifstylefileexists{alltt}{
+\RequirePackage{varioref}}{}
 %    \end{macrocode}
 %
 % \subsection{cleveref}
@@ -3601,7 +3553,7 @@ ball was her favorite plaything.}%
 % (\seedocs{centernot}).
 %    \begin{macrocode}
 \newif\ifhavecenternot
-\IfStyFileExists*{centernot}%
+\ifstylefileexists*{centernot}%
   {\havecenternottrue\RequirePackage{centernot}}
   {}
 %    \end{macrocode}
@@ -3618,7 +3570,8 @@ ball was her favorite plaything.}%
 % structures. The package uses an auto-layout algorithm which can be customized to
 % e.g. prioritize certain paths.
 %    \begin{macrocode} 
-\RequirePackage{genealogytree}
+\ifstylefileexists{alltt}{
+\RequirePackage{genealogytree}}{}
 %    \end{macrocode}  
 %
 % \subsection{chngcntr}
@@ -3631,7 +3584,8 @@ ball was her favorite plaything.}%
 % counters. However, if you use them do use the star version of the commands.
 %
 %    \begin{macrocode}
-\RequirePackage{chngcntr}
+\ifstylefileexists{alltt}{
+\RequirePackage{chngcntr}}{}
 %    \end{macrocode}
 %
 % \subsection{eso-pic}
@@ -3640,7 +3594,8 @@ ball was her favorite plaything.}%
 % if we should leave this in the long-term.
 %
 %    \begin{macrocode}
-\RequirePackage{eso-pic}
+\ifstylefileexists{alltt}{
+\RequirePackage{eso-pic}}{}
 %\RequirePackage{layouts}
 %    \end{macrocode}
 %
@@ -3650,7 +3605,8 @@ ball was her favorite plaything.}%
 % it for counters in the |phd| package.\footnote{Eventually we will incorporate most of the functionality in the \pkgname{phdcounters} as the functionality is essential to the smooth operation of the \pkgname{phd}.}
 %
 %    \begin{macrocode}
-\RequirePackage{alphalph}
+\ifstylefileexists{alltt}{
+\RequirePackage{alphalph}}{}
 %    \end{macrocode}
 %
 % \subsection{fmtcount}
@@ -3659,8 +3615,9 @@ ball was her favorite plaything.}%
 %numbers rather than counter names. Limited multilingual support is available.
 %Currently, there is only support for English, French (including Belgian
 %and Swiss variations), Spanish, Portuguese, German and Italian.
-%    \begin{macrocode}    
-\RequirePackage{fmtcount}
+%    \begin{macrocode} 
+\ifstylefileexists{alltt}{   
+\RequirePackage{fmtcount}}{}
 %    \end{macrocode}
 %
 % \subsection{varwidth}
@@ -3669,7 +3626,8 @@ ball was her favorite plaything.}%
 % minipage, but whose resulting width is the natural width of its contents.:
 
 %    \begin{macrocode} 
-\RequirePackage{varwidth}
+\ifstylefileexists{alltt}{
+\RequirePackage{varwidth}}{}
 %    \end{macrocode}
 %
 % \subsection{comment}
@@ -3680,7 +3638,8 @@ ball was her favorite plaything.}%
 % This style can be used with plain TEX or LATEX, and probably most other
 % packages too.
 %    \begin{macrocode}
-\RequirePackage{comment}
+\ifstylefileexists{alltt}{
+\RequirePackage{comment}}{}
 %    \end{macrocode}
 %
 % \subsection{textcase}
@@ -3688,7 +3647,8 @@ ball was her favorite plaything.}%
 % With expl3 this will eventually not be required, but I have found it very valuable for key
 % development in the phd package.
 %    \begin{macrocode}
-\RequirePackage{textcase}
+\ifstylefileexists{alltt}{
+\RequirePackage{textcase}}{}
 %    \end{macrocode}
 %
 % \subsection{csquotes}
@@ -3703,7 +3663,8 @@ ball was her favorite plaything.}%
 %optional active quotes are freely configurable.
 %
 %    \begin{macrocode}
-\RequirePackage[autostyle=false]{csquotes}
+\ifstylefileexists{alltt}{
+\RequirePackage[autostyle=false]{csquotes}}{}
 %    \end{macrocode}
 %
 % \subsection{alltt}
@@ -3713,7 +3674,8 @@ ball was her favorite plaything.}%
 % part of the basic \latexe distribution.
 %
 %    \begin{macrocode}
-\RequirePackage{alltt}[1997/06/16]
+\ifstylefileexists{alltt}{
+\RequirePackage{alltt}[1997/06/16]}{}
 %    \end{macrocode}
 %
 % \subsection{caption}
@@ -3758,7 +3720,7 @@ ball was her favorite plaything.}%
 \newif\ifCCLIC
 \newcommand\CCLIC{\pkgname{cclicenses}}
 % 
-\IfStyFileExists{cclicenses}
+\ifstylefileexists{cclicenses}
   {\CCLICtrue
    \RequirePackage{cclicenses}
    \DeclareTextAccentDefault{\textcircled}{OMS}
@@ -3777,84 +3739,84 @@ ball was her favorite plaything.}%
 %distributable (but it is not free software: see the licence in the read-me file!).
 % 
 %    \begin{macrocode} 
-\ifxetex\else
-\newif\ifFOUR
-\newcommand\FOUR{\pkgname{fourier}}
-\IfStyFileExists{fourier}
-  {\FOURtrue
-   \RequirePackage{fourier-orns}
-   % Define single-glyph symbols.
-   \DeclareFontEncoding{FMS}{}{}
-   \DeclareFontSubstitution{FMS}{futm}{m}{n}
-   \DeclareFontEncoding{FML}{}{}
-   \DeclareFontSubstitution{FML}{futmi}{m}{it}
-   \newcommand{\fourierdef}[6]{%
-     \DeclareRobustCommand{##1}{{\usefont{##2}{##3}{##4}{##5}\char##6}}}
-   \fourierdef{\parallelslant}{FMS}{futm}{m}{n}{134}
-   \fourierdef{\nparallelslant}{FMS}{futm}{m}{n}{143}
-   \fourierdef{\FOURrho}{FML}{futmi}{m}{it}{26}
-   \fourierdef{\FOURvarrho}{FML}{futmi}{m}{it}{37}
-   \fourierdef{\varvarrho}{FML}{futmi}{m}{it}{129}
-   \fourierdef{\FOURpi}{FML}{futmi}{m}{it}{25}
-   \fourierdef{\FOURvarpi}{FML}{futmi}{m}{it}{36}
-   \fourierdef{\varvarpi}{FML}{futmi}{m}{it}{131}
-   \fourierdef{\FOURpartial}{FML}{futmi}{m}{it}{64}
-   \fourierdef{\varpartialdiff}{FML}{futmi}{m}{it}{130}
-   \fourierdef{\FOURtexteuro}{TS1}{futx}{m}{n}{191}
-   % Fake a math accent with text-mode commands.
-   \DeclareRobustCommand{\FOURfakewidetopaccent}[5]{%
-     \setbox0=\hbox{\ensuremath{##1}}%
-     \setbox1=\hbox{\ensuremath{abc}}%
-     \leavevmode
-     \ifdim\wd0<\wd1
-       \kern1pt
-       \rlap{\raisebox{##2}{\makebox[\wd0]{\usefont{FMX}{futm}{m}{n}\char##3}}}%
-       \kern-0.1em
-       \box0
-     \else
-       \rlap{\raisebox{##4}{\makebox[\wd0]{\usefont{FMX}{futm}{m}{n}\char##5}}}%
-       \box0
-     \fi
-   }
-
-   % Manually define Fourier's extensible accents.  Note that we don't
-   % bother trying to use Fourier's \mathring to construct the
-   % \FOURwidering symbol.
-   \DeclareFontEncoding{FMX}{}{}
-   \DeclareFontSubstitution{FMX}{futm}{m}{n}
-   \DeclareRobustCommand{\FOURwidearc}[1]{%
-     \FOURfakewidetopaccent{##1}{0ex}{216}{0.5ex}{217}}
-   \DeclareRobustCommand{\FOURwideOarc}[1]{%
-     \FOURfakewidetopaccent{##1}{0ex}{228}{0.5ex}{229}}
-   \DeclareRobustCommand{\FOURwideparen}[1]{%
-     \FOURfakewidetopaccent{##1}{0ex}{148}{0.5ex}{150}}
-   \DeclareRobustCommand{\FOURwidering}[1]{\overset{\smash{\vbox to .2ex{%
-     \hbox{$\mathring{}$}}}}{\FOURwideparen{##1}}}
-
-   % Manually define Fourier's variable-sized delimiters.
-   \newcommand{\fouriercdef}[6]{%
-     \DeclareRobustCommand{##1}{%
-       \textvcenter{\usefont{##2}{##3}{##4}{##5}\char##6}}}
-   \fouriercdef{\FOURtllbracket}{FMX}{futm}{m}{n}{133}
-   \fouriercdef{\FOURdllbracket}{FMX}{futm}{m}{n}{139}
-   \fouriercdef{\FOURtrrbracket}{FMX}{futm}{m}{n}{134}
-   \fouriercdef{\FOURdrrbracket}{FMX}{futm}{m}{n}{140}
-   \newcommand*{\FOURverticals}[1]{%
-     \vbox{%
-       \baselineskip=-\maxdimen
-       \lineskiplimit=\maxdimen
-       \lineskip=0pt%
-       \usefont{FMX}{futm}{m}{n}%
-       \ialign{####\cr##1}%
-     }%
-   }
-   \DeclareRobustCommand{\FOURtVERT}{%
-     \raisebox{0.5ex}{\textvcenter{\FOURverticals{\char147\cr\char147\cr}}}}
-   \DeclareRobustCommand{\FOURdVERT}{%
-     \raisebox{0.5ex}{\textvcenter{\FOURverticals{\char147\cr\char147\cr\char147\cr\char147\cr}}}}
-  }
-  {}
-\fi
+%\ifxetex\else
+%\newif\ifFOUR
+%\newcommand\FOUR{\pkgname{fourier}}
+%\ifstylefileexists{fourier}
+%  {\FOURtrue
+%   \RequirePackage{fourier-orns}
+%   % Define single-glyph symbols.
+%   \DeclareFontEncoding{FMS}{}{}
+%   \DeclareFontSubstitution{FMS}{futm}{m}{n}
+%   \DeclareFontEncoding{FML}{}{}
+%   \DeclareFontSubstitution{FML}{futmi}{m}{it}
+%   \newcommand{\fourierdef}[6]{%
+%     \DeclareRobustCommand{##1}{{\usefont{##2}{##3}{##4}{##5}\char##6}}}
+%   \fourierdef{\parallelslant}{FMS}{futm}{m}{n}{134}
+%   \fourierdef{\nparallelslant}{FMS}{futm}{m}{n}{143}
+%   \fourierdef{\FOURrho}{FML}{futmi}{m}{it}{26}
+%   \fourierdef{\FOURvarrho}{FML}{futmi}{m}{it}{37}
+%   \fourierdef{\varvarrho}{FML}{futmi}{m}{it}{129}
+%   \fourierdef{\FOURpi}{FML}{futmi}{m}{it}{25}
+%   \fourierdef{\FOURvarpi}{FML}{futmi}{m}{it}{36}
+%   \fourierdef{\varvarpi}{FML}{futmi}{m}{it}{131}
+%   \fourierdef{\FOURpartial}{FML}{futmi}{m}{it}{64}
+%   \fourierdef{\varpartialdiff}{FML}{futmi}{m}{it}{130}
+%   \fourierdef{\FOURtexteuro}{TS1}{futx}{m}{n}{191}
+%   % Fake a math accent with text-mode commands.
+%   \DeclareRobustCommand{\FOURfakewidetopaccent}[5]{%
+%     \setbox0=\hbox{\ensuremath{##1}}%
+%     \setbox1=\hbox{\ensuremath{abc}}%
+%     \leavevmode
+%     \ifdim\wd0<\wd1
+%       \kern1pt
+%       \rlap{\raisebox{##2}{\makebox[\wd0]{\usefont{FMX}{futm}{m}{n}\char##3}}}%
+%       \kern-0.1em
+%       \box0
+%     \else
+%       \rlap{\raisebox{##4}{\makebox[\wd0]{\usefont{FMX}{futm}{m}{n}\char##5}}}%
+%       \box0
+%     \fi
+%   }
+%
+%   % Manually define Fourier's extensible accents.  Note that we don't
+%   % bother trying to use Fourier's \mathring to construct the
+%   % \FOURwidering symbol.
+%   \DeclareFontEncoding{FMX}{}{}
+%   \DeclareFontSubstitution{FMX}{futm}{m}{n}
+%   \DeclareRobustCommand{\FOURwidearc}[1]{%
+%     \FOURfakewidetopaccent{##1}{0ex}{216}{0.5ex}{217}}
+%   \DeclareRobustCommand{\FOURwideOarc}[1]{%
+%     \FOURfakewidetopaccent{##1}{0ex}{228}{0.5ex}{229}}
+%   \DeclareRobustCommand{\FOURwideparen}[1]{%
+%     \FOURfakewidetopaccent{##1}{0ex}{148}{0.5ex}{150}}
+%   \DeclareRobustCommand{\FOURwidering}[1]{\overset{\smash{\vbox to .2ex{%
+%     \hbox{$\mathring{}$}}}}{\FOURwideparen{##1}}}
+%
+%   % Manually define Fourier's variable-sized delimiters.
+%   \newcommand{\fouriercdef}[6]{%
+%     \DeclareRobustCommand{##1}{%
+%       \textvcenter{\usefont{##2}{##3}{##4}{##5}\char##6}}}
+%   \fouriercdef{\FOURtllbracket}{FMX}{futm}{m}{n}{133}
+%   \fouriercdef{\FOURdllbracket}{FMX}{futm}{m}{n}{139}
+%   \fouriercdef{\FOURtrrbracket}{FMX}{futm}{m}{n}{134}
+%   \fouriercdef{\FOURdrrbracket}{FMX}{futm}{m}{n}{140}
+%   \newcommand*{\FOURverticals}[1]{%
+%     \vbox{%
+%       \baselineskip=-\maxdimen
+%       \lineskiplimit=\maxdimen
+%       \lineskip=0pt%
+%       \usefont{FMX}{futm}{m}{n}%
+%       \ialign{####\cr##1}%
+%     }%
+%   }
+%   \DeclareRobustCommand{\FOURtVERT}{%
+%     \raisebox{0.5ex}{\textvcenter{\FOURverticals{\char147\cr\char147\cr}}}}
+%   \DeclareRobustCommand{\FOURdVERT}{%
+%     \raisebox{0.5ex}{\textvcenter{\FOURverticals{\char147\cr\char147\cr\char147\cr\char147\cr}}}}
+%  }
+%  {}
+%\fi
 %    \end{macrocode} 
 %
 % \section{dirtree}
@@ -3862,7 +3824,7 @@ ball was her favorite plaything.}%
 % The \pkgname{dirtree}\footcite{dirtree} developed by \person{Jean-Come}{Charpentier} provides commands to draw directory-like charts. The \pkgname{forest}  is a much better
 % alternative in many instances. I use it for Organization charts. 
 %    \begin{macrocode}
-\IfStyFileExists{dirtree}
+\ifstylefileexists{dirtree}
 {
   \RequirePackage{dirtree}}
 {}
@@ -3876,9 +3838,9 @@ ball was her favorite plaything.}%
 % will reserve an additional amount of space on the page as specified by the parameter \emph{length}. 
 % 
 %    \begin{macrocode}
-\IfStyFileExists*{needspace}
+\ifstylefileexists{needspace}
   {\RequirePackage{needspace}}
-  {\newcommand{\Needspace}[2]{\par \penalty-100\begingroup
+  {\newcommand{\Needspace}[2]{\penalty-100\begingroup
      \setlength{\dimen@}{##2}%
      \dimen@ii\pagegoal \advance\dimen@ii-\pagetotal
      \ifdim \dimen@>\dimen@ii
@@ -3909,7 +3871,7 @@ ball was her favorite plaything.}%
 %    \begin{macrocode}  
 \newif\ifLINA
 \newcommand\LINA{\pkgname{lineara}}
-\IfStyFileExists{lineara}
+\ifstylefileexists{lineara}
   {\LINAtrue\RequirePackage{lineara}}
   {}
 %    \end{macrocode}
@@ -3919,7 +3881,7 @@ ball was her favorite plaything.}%
 %    \begin{macrocode}
 \newif\ifLINB
 \newcommand\LINB{\pkgname{linearb}}
-\IfStyFileExists{linearb}
+\ifstylefileexists{linearb}
   {\LINBtrue\RequirePackage{linearb}}
   {}
 %    \end{macrocode}
@@ -3928,7 +3890,7 @@ ball was her favorite plaything.}%
 %    \begin{macrocode}
 \newif\ifCYPR
 \newcommand\CYPR{\pkgname{cypriot}}
-\IfStyFileExists{cypriot}
+\ifstylefileexists{cypriot}
   {\CYPRtrue\RequirePackage{cypriot}}
   {}
 %    \end{macrocode}
@@ -3938,7 +3900,7 @@ ball was her favorite plaything.}%
 %    \begin{macrocode}
 \newif\ifSARAB
 \newcommand\SARAB{\pkgname{sarabian}}
-\IfStyFileExists{sarabian}
+\ifstylefileexists{sarabian}
   {\SARABtrue\RequirePackage{sarabian}}
   {}
 %    \end{macrocode}
@@ -3949,7 +3911,7 @@ ball was her favorite plaything.}%
 %    \begin{macrocode}
 \newif\ifPRSN
 \newcommand\PRSN{\pkgname{oldprsn}}
-\IfStyFileExists{oldprsn}
+\ifstylefileexists{oldprsn}
   {\PRSNtrue\RequirePackage{oldprsn}}
   {}
 %    \end{macrocode}
@@ -3967,7 +3929,7 @@ ball was her favorite plaything.}%
 \newif\ifUGAR
 \newcommand\UGAR{\pkgname{ugarite}}
 \RequirePackage{ugarite}
-\IfStyFileExists{ugarite}
+\ifstylefileexists{ugarite}
   {\UGARtrue\RequirePackage{ugarite}}
   {}
 %end archaic   
@@ -3986,7 +3948,7 @@ ball was her favorite plaything.}%
 % 
 \ifscriptolmec
 \RequirePackage{epiolmec}
-\IfStyFileExists{epiolmec}
+\ifstylefileexists{epiolmec}
   {\OLMECtrue\RequirePackage{epiolmec}}
   {}
 \fi
@@ -4007,7 +3969,7 @@ ball was her favorite plaything.}%
 %\def\loadphilokalia{%
 %  \@namedef{ver@xltxtra.sty}{}% a fake for a "xlextra" package
 %  \RequirePackage{philokalia}
-%  \IfStyFileExists{philokalia}
+%  \ifstylefileexists{philokalia}
 %    {\PHILOKALIAtrue\RequirePackage{philokalia}}
 %    {}
 %}%
@@ -4059,13 +4021,13 @@ ball was her favorite plaything.}%
 %\newif\ifTIPX
 %\newcommand\TIPX{\pkgname{tipx}}
 %\setpkgnameopts{tipx}{pkg=tipa}
-%\IfStyFileExists{tipx}
+%\ifstylefileexists{tipx}
 %  {\TIPXtrue\usepackage{tipx}}
 %  {}
 %  
 % \newif\ifWIPA
 %\newcommand\WIPA{\pkgname{wsuipa}}
-%\IfStyFileExists*{ipa}
+%\ifstylefileexists*{ipa}
 %  {\@cons\foundpkgs{{wsuipa}}
 %   \WIPAtrue
 %   \savesymbol{baro} \savesymbol{eth} \savesymbol{openo} \savesymbol{thorn}
@@ -4095,11 +4057,15 @@ ball was her favorite plaything.}%
 % to load the included original otf font), as well as pdf(LA)TEX (using an included
 % type1 conversion and character mapping of the font).
 %    \begin{macrocode}
-
-\RequirePackage{fontawesome}
+\newif\ifFNTAWE
+\ifstylefileexists{fontawesome}{
+  \FNTAWEtrue
+  \RequirePackage{fontawesome}}{}
 %    \end{macrocode}
+%\ExplSyntaxOn
+% ^^A\file_show_list:
+%\ExplSyntaxOff
 %</PKG>
-
 \endinput
 % \subsection{Weather Symbols}
 % \begin{figure}[h] \small 
