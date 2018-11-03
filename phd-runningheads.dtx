@@ -13,7 +13,7 @@ See http://www.latex-project.org/lppl.txt
 This file provides a template for defining a class.
 %</readme>
 %<*readmemd>
-###The `phd-runningheads` LaTeX2e package (version 0.08.0)
+### The `phd-runningheads` LaTeX2e package (version 1.0.0)
 
 The `phd` latex package and the class with the same name provide
 convenient methods to create new styles for books, reports
@@ -70,7 +70,7 @@ interface in future releases. There is a large amount of
 work still to be carried out to improve the template styles
 provided, to test it more thoroughly and to add a number of
 improvements in the special designs. At present I estimate
-that I have completed about 70% of the work that needs
+that I have completed about 80% of the work that needs
 to be done.
 
 __The package as it stands is not production stable.__ 
@@ -141,14 +141,15 @@ See http://www.latex-project.org/lppl.txt
 
 \ProvidesFile{phd-runningheads.drv}%
   [2013/01/13 v1.0 ]%
-\documentclass[twoside,12pt,a4paper]{ltxdoc}
+\documentclass[book,twoside,12pt,a4paper]{phddoc}
 
 \usepackage[bottom=4cm,footskip=3cm,headheight=17.15pt,
             headsep=1.5\baselineskip]{geometry}
 \savegeometry{std}
 \usepackage{microtype}
 \usepackage{phd}
-%\usepackage{phd-fontmanager}
+\usepackage{phd-pkgmanager}
+\usepackage{phd-fontmanager}
 \usepackage{phd-scriptsmanager}
 \usepackage{documentation}
 \usepackage{phd-lowersections}
@@ -162,8 +163,6 @@ See http://www.latex-project.org/lppl.txt
   
    
   
-%\newfontfamily\symbola{Symbola}
-
 \makeatletter
 \long\def\auxm#1(#2);{%
   \def\Xtemp{#1}%
@@ -182,7 +181,7 @@ See http://www.latex-project.org/lppl.txt
 \let\citep\cite
 \tcbuselibrary{raster}
 \begin{document}
-\DEBUGOFF
+\DEBUGON
 
  \frontmatter
   \pagestyle{empty}
@@ -193,12 +192,8 @@ See http://www.latex-project.org/lppl.txt
  \newpage
  \tableofcontents
  \mainmatter
- \pagestyle{headings}
+ \pagestyle{centerheadings}
  
-  % \catcode `\| =12
-  %  \DeleteShortVerb
- 
-  
   \makeatletter
   \@debugtrue
   \makeatother
@@ -212,7 +207,7 @@ See http://www.latex-project.org/lppl.txt
   \def\halftitleleft{\textls{\sffamily DOHA OASIS}}
   \def\halftitleright{\sffamily\textls{MEP COMMERCIAL ANALYSIS}}
              
- %  \include{./sections/paragraphs}  
+  \include{./sections/paragraphs}  
    
     
 %   \include{./lua/luaio}   
@@ -367,7 +362,7 @@ See http://www.latex-project.org/lppl.txt
 % \providecommand*{\url}{\texttt}
 %  \def\fileversion{v1.0}          
 %  \def\filedate{2012/03/06}
-% \pagestyle{headings}
+% \pagestyle{centerheadings}
 % \title{The \textsf{\jobname} package.
 % \author{Dr. Yiannis Lazarides}
 % \thanks{This
@@ -514,7 +509,7 @@ See http://www.latex-project.org/lppl.txt
 %<*RH>
 \NeedsTeXFormat{LaTeX2e}[2017/04/15]%
 \ProvidesPackage{phd-runningheads}%
-  [2017/04/15 v1.0 Running heads styling]%
+  [2017/04/15 v1.0 Running heads styling (YL)]%
 %    \end{macrocode}
 %
 % \section{Marks and pagestyles}
@@ -1644,9 +1639,11 @@ See http://www.latex-project.org/lppl.txt
 \cs_gset:Npn \phd_create_new_ps:nnn #1 #2 #3
   {
      \cs_gset:cpn {#1#2} 
-       {  \cxset{#2~style}
+       {  \SaveCurrentPalette
+          \cxset{#2~style}
            % calls a function with the name ps_aux_box
            \cs:w ps_aux_#3\cs_end: {#3}{#2}
+          \
        }
   }   
 \ExplSyntaxOff 
@@ -1666,7 +1663,9 @@ See http://www.latex-project.org/lppl.txt
     \create_pagestyle_keys:n {#3} 
     \set_pagestyle_key_defaults:n {#3}
 %   modify the defaults here and create a style
-    \cxset{#3~style/.style = {#1,}}
+%   set the palette and add other keys
+    \SaveCurrentPalette
+    \cxset{#3~style/.style = {palette~\previouspalette,}}
     \phd_create_new_ps:nnn {#2}{#3} {#4}
    }
 %    \end{macrocode}
@@ -1694,7 +1693,7 @@ See http://www.latex-project.org/lppl.txt
                                       {orange~sakura}{box}
 
 
-\CreateNewPagestyle[palette~orange~sakura]{ps@}
+\CreateNewPagestyle[palette~spring~onion]{ps@}
                                       {headings}{box}
 \CreateNewPagestyle[palette~rouge]{ps@}{headings-rouge}{box}
 \CreateNewPagestyle[palette~spring~onion]{ps@}
@@ -1705,6 +1704,7 @@ See http://www.latex-project.org/lppl.txt
                                   {headings-budapest}{box}
 \CreateNewPagestyle[palette~sugar~hearts]{ps@}
                                   {headings-sugar-hearts}{box}
+\CreateNewPagestyle[palette~architectural]{ps@}{headings-architectural}{box}                                  
 \ExplSyntaxOff
   \def\docauthoright{Y Lazarides}
   \def\headingslogo{\tikz[remember picture, overlay,inner sep=0pt,outer sep=0pt ]\node[midway]{\includegraphics[width=2cm]{latex3.png}};}
@@ -1715,6 +1715,19 @@ See http://www.latex-project.org/lppl.txt
 %
 %  
 %    \begin{macrocode} 
+    \def\chaptermark#1{%
+      \markboth {{%
+      \begingroup
+      \color{thechaptercolor}\MakeUppercase{%
+        \ifnum \c@secnumdepth >\m@ne
+          \if@mainmatter
+            \@chapapp\ \thechapter}. \ %
+          \fi
+        \fi
+        \endgroup
+      {\color{thechaptercolor}#1}}}{}}%
+
+
 \edef\@copyrightline{}
 \newcommand\c@pyrightline[1]{%
   \gdef\@c@pyrightline{#1}}
@@ -1743,46 +1756,47 @@ See http://www.latex-project.org/lppl.txt
 % \end{docCommand}
 % 
 %    \begin{macrocode}
-%\def\ps@centerheadings{%
-% \let\@mkboth=\markboth
-% \def\@evenfoot{}
-%  \def\@oddfoot {}
-%  
-%  \def\@evenhead{
-%   \verbatimsize
-%    \vbox{
-%     \tikzi[even center]
-%     \noindent
-%     \global\hoffset=0pc
-%      \mbox{\rm \thepage}%
-%      \it \strut
-%       \leftmark\hfill\hbox{}%\par\vbox to 13pt{}%
-%%    \noindent\rule{37pc}{0.25pt}%
-%    }%
-%  }%
-%  \def\@oddhead{
-%    \vbox{%
-%    \tikzi[odd center]
-%     \global\hoffset=0pc
-%    \noindent\hfill
-%    \mbox{}\it 
-%    \verbatimsize
-%    \rightmark\hfill\hbox{}
-%      \makebox[\z@][r]{\rm
-%      \thepage}\par\nointerlineskip%
-%      \vskip0pt
-%    \noindent\hspace*{0pc}\rule{37pc}{0.25pt}%
-%     }%
-%  }%
-%  
-%  \def\chaptermark##1{\markboth{##1}{##1}}
-%  
-%  \def\sectionmark##1{\markright{\ifnum \c@secnumdepth >\z@
-%    \thesection\enskip\fi ##1}}%
-%   \def\chaptermark##1{\markboth{##1}{##1}}
-%   \def\sectionmark##1{\markright{\ifnum \c@secnumdepth >\z@
-%      \thesection\hspace{0.5em}\fi ##1}}%
-%}
+\def\ps@centerheadings{%
+ \let\@mkboth=\markboth
+ \def\@evenfoot{}
+  \def\@oddfoot {}
+  
+  \def\@evenhead{
+   \verbatimsize
+    \vbox{
+     \tikzi[even center]
+     \noindent
+     \global\hoffset=0pc
+      \mbox{\rm \thepage}~%
+      \it \strut
+       \leftmark\hfill\hbox{}%\par\vbox to 13pt{}%
+%    \noindent\rule{37pc}{0.25pt}%
+    }%
+  }%
+  \def\@oddhead{
+    \vbox{%
+    \tikzi[odd center]
+     \global\hoffset=0pc
+    \noindent\hfill
+    \mbox{}\it 
+    \verbatimsize
+    \rightmark\hfill\hbox{}
+      \makebox[\z@][r]{\rm
+      \thepage}\par\nointerlineskip%
+      \hfill
+      \vskip0pt
+    %\noindent\hspace*{0pc}\rule{37pc}{0.25pt}%
+     }%
+  }%
+  
+  \def\chaptermark##1{\markboth{##1}{##1}}
+  
+  \def\sectionmark##1{\markright{\ifnum \c@secnumdepth >\z@
+    \thesection\enskip\fi ##1}}%
+   \def\chaptermark##1{\markboth{##1}{##1}}
+   \def\sectionmark##1{\markright{\ifnum \c@secnumdepth >\z@
+      \thesection\hspace{0.5em}\fi ##1}}%
+}
 %    \end{macrocode}
 %
 % \end{document}
