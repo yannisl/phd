@@ -9,10 +9,10 @@ E-mail: yannislaz@gmail.com
 Released under the LaTeX Project Public License v1.3c or later
 See http://www.latex-project.org/lppl.txt
 ----------------------------------------------------------------
-This file provides a phd for defining a class.
+This file provides the file package phd-pkgmanager.dtx.
 %</readme>
 %<*readmemd>
-###The `phd` LaTeX2e package
+# The `phd` LaTeX2e package
 
 The `phd-pkgmanager` latex package is part of the `phd` budle and the class 
 with the same name provide
@@ -23,7 +23,7 @@ and resolves conflicts.
 This work consists of the file  `phd-pkgmanager.dtx`,
 and the derived files   `phd-pkgmanager.ins`,  `phd-pkgmanager.pdf`, and `phd-pkgmanager.sty`.
 
-###Installation
+## Installation
 
 run the script `phd-lua`
 
@@ -34,7 +34,7 @@ http://tex.stackexchange.com and post a new question or
 add a comment at http://tex.stackexchange.com/a/45023/963.
 or send me a message at  yannislaz at gmail.com
 
-### Documentation
+## Documentation
 
 The package was written using the `doc` and `docscript` packages,
 so that it is self documented in a literary programming style. 
@@ -55,14 +55,14 @@ To set or add a key we only use one command:
       \cxset{chapter name font-size: Huge,
              chapter number font-size: HUGE} 
 
-### Future Development
+## Future Development
 
 This is still an experimental version, but I will retain the
 interface in future releases. There is a large amount of
 work still to be carried out to improve the template styles
 provided, to test it more thoroughly and to add a number of
 improvements in the special designs. At present I estimate
-that I have completed about 70% of the work that needs
+that I have completed about 90% of the work that needs
 to be done.
 
 The package as it stands is production stable. 
@@ -71,18 +71,9 @@ The package as it stands is production stable.
 %</readmemd>
 %
 %<*TODO>
-1. On final round add pkg options. This was left as last in order not to solve problems by adding
-    options. Too many options are not a good User Interface.
-2.  Finish symbol management, both text and math. Math already 60% incorporated.
-3.  Better integration of indexing commands.   
-4.  Revisit layout manager for Chapters. Broke again in tests.
-5.  Docs. Add all references.
-6.  Incorporate phd class for more flexibility.
-7. Improve package manager.
-8. Group script loading for better font management.
-9. General font management to relook it again.
-10. Add all style sections (about 100 already prepared). Once they
-     are all working issue beta version.
+1. Write final tests against a symbols document.
+2. Improve on documentation.
+3. Compatibility with KOMAscript and checks against other classes.
 %</TODO>
 %<*internal>
 \fi
@@ -107,13 +98,13 @@ See http://www.latex-project.org/lppl.txt
 %\BaseDirectory{C:/users/admin/my documents/github/phd}
 %\usedir{MWE}
 \generate{\file{\jobname.sty}{
-  \from{\jobname.dtx}{PKG}}
+  \from{\jobname.dtx}{package}}
   }
-
-%\nopreamble\nopostamble
-
+%
+%
+%
 %</install>
-
+%
 %<install>\endbatchfile
 %<*internal>
 %\usedir{tex/latex/phd}
@@ -127,7 +118,7 @@ See http://www.latex-project.org/lppl.txt
   }
 
 \generate{
-	\file{\jobname.sty}{\from{\jobname.dtx}{PKG}}
+	\file{\jobname.sty}{\from{\jobname.dtx}{package}}
   }
   
 \generate{
@@ -144,7 +135,7 @@ See http://www.latex-project.org/lppl.txt
 \fi
 %</internal>
 %<*driver>
-
+%
 %\listfiles
 %gdef\@onlypreamble{} % TO BE REMOVED NEEDED FOR TUTS
 \documentclass[book,oneside,11pt,a4paper,nomessages]{phddoc}
@@ -174,7 +165,7 @@ See http://www.latex-project.org/lppl.txt
 
 \printindex
 \end{document}
- %
+%
 % 
 %</driver>
 % \fi
@@ -232,14 +223,14 @@ See http://www.latex-project.org/lppl.txt
 %  ^^A\OnlyDescription
 %
 %  ^^A\StopEventually{\printindex}
-
+%
 % \CodelineNumbered
 % \pagestyle{headings}
 % 
-%<*PKG>
+%<*package>
 % \part{IMPLEMENTATION}
 % 
-
+%
 % \chapter{Implementation Strategy}
 %
 % The implementation is divided into parts. Perhaps cutting,
@@ -430,7 +421,7 @@ See http://www.latex-project.org/lppl.txt
 % on and off the loading of packages.
 % 
 %    
-% |\ifstylefileexists*| is just like |\IfFileExists|, except that it appends
+% |\ifstylefileexists*| is just like \latexe's \docAuxCommand{IfFileExists}, except that it appends
 % ".sty" to its first argument.  |\ifstylefileexists| is the same as
 % |\ifstylefileexists*|, but it additionally adds its first argument to a list
 % (|\missingpkgs|) and marks the document as incomplete (with
@@ -454,15 +445,19 @@ See http://www.latex-project.org/lppl.txt
 \cs_new:Npn \ifstylefileexists_star #1 #2 #3 {
 \ifloadpackages
 \file_if_exist:nTF {#1} 
-  {
-    #2
-    \clist_gput_right:Nn \g_phd_packages_loaded_clist:n {#1}
+  {  
+    \exp_after:w \ifx\csname ver@#1.sty\endcsname\relax
+            \PackageInfo{phd-pkgmanager}{package~#1~loaded.}
+    \else
+      \PackageInfo{phd-pkgmanager}{package~#1~already~loaded.}
+    \fi 
+     \clist_gput_right:Nn \g_phd_packages_loaded_clist:n {#1}
+     #2
   } 
-  
   {
-   #3
+    #3
     \clist_gput_right:Nn \g_phd_packages_not_found:n {#1}
-     
+    \PackageInfo{phd-pkgmanager}{package~#1~not~found.}
   }
 \fi  
 }
@@ -471,14 +466,20 @@ See http://www.latex-project.org/lppl.txt
 \ifloadpackages
 \file_if_exist:nTF {#1.sty} 
   {
-    #2
+   
     \clist_gput_right:Nn \g_phd_packages_loaded_clist:n {#1}
+    \expandafter\ifx\csname ver@#1.sty\endcsname\relax
+      \PackageInfo{phd-pkgmanager}{package~#1~loaded.}
+    \else
+      \PackageInfo{phd-pkgmanager}{package~#1~already~loaded.}
+    \fi 
+     #2
   } 
   
   {
    #3
     \clist_gput_right:Nn \g_phd_packages_not_found:n {#1}
-     
+    \PackageInfo{phd-pkgmanager}{package~#1~not~found.}
   }
 \fi  
 }
@@ -651,7 +652,7 @@ See http://www.latex-project.org/lppl.txt
 % |\RequirePackage{onlyamsmath} |
 % 
 %
-% \section{Typography}
+% \chapter{Typography}
 %
 % The package \pkgname{microtype} is loaded with no options
 % as it provides facilities for loading individual features
@@ -782,20 +783,21 @@ See http://www.latex-project.org/lppl.txt
 % 
 %
 %
-
-% \subsection{mdframed}
-% The package \pkgname{mdframed}\footcite{mdframed} is included here, as a more lightweight package to \pkgname{tcolorbox}, which largely
+% \chapter{Boxes}
+% \section{mdframed}
+% The package \pkgname{mdframed}\footcite{mdframed} is included here, as a more lightweight package to \pkg{tcolorbox}, which largely
 % supercedes it. The standard methods for framing text (\cs{fbox} or \cs{fcolorbox}) require you to handle
-%page breaks by hand, meaning that you have to split the \fbox into two. The present
+%page breaks by hand, meaning that you have to split the \docAuxCommand{fbox} into two. The 
 %package defines the environment mdframed which automatically deals with pagebreaks
 %in framed text.
 %By defining new environments the user may choose between several individual
 %designs.
 %    \begin{macrocode}
-%
-%
-%{\RequirePackage{mdframed}}
-%{}
+\newif\ifMDFRAMED
+\ifstylefileexists{mdframed}{%
+  \MDFRAMEDtrue 
+  \RequirePackage{mdframed}}%
+{}
 %    \end{macrocode}
 %
 % \section{adjustbox}
@@ -826,7 +828,7 @@ See http://www.latex-project.org/lppl.txt
 %    \end{macrocode}
 % 
 % 
-% \section{Graphics}
+% \chapter{Graphics}
 % 
 %  The package \pkg{graphicx}\footcite{graphicx} developed by David Carlisle and Sebastian Rahtz is 
 %  part of the 
@@ -852,14 +854,41 @@ See http://www.latex-project.org/lppl.txt
 %
 % 
 %    \begin{macrocode}
-\ifstylefileexists{graphicx}{
+\newif\ifGRAPHICX
+\ifstylefileexists{graphicx}{%
+\GRAPHICXtrue
 \RequirePackage{graphicx}
-\DeclareGraphicsExtensions{.jpg, .JPG, .jpeg, .png, .eps}
+%    \end{macrocode}
+% \begin{docCommand}{DeclareGraphicsExtensions}{\marg{comma list of extensions}}
+% Graphics files are included i by macro \docAuxCommand{includegraphics}. The file
+% name extension can be omitted. Then the graphics package goes through a list
+% of known extensions until it finds the graphics file. This extension list is set by
+% |\DeclareGraphicsExtensions|. The previous contents of the list is overwritten
+% \end{docCommand}
+%    \begin{macrocode}
+\DeclareGraphicsExtensions{.jpg, .JPG, .jpeg, .JPEG, .eps, .pdf, .PDF}
   \graphicspath{{graphics/}{graphics//}{../images/}{images//}{./images/}{./graphics/}%
-    {../graphics/}{./pic/}{../pic}}}{}
+    {../graphics/}{./pic/}{../pic}}
+}{}
 %    \end{macrocode}
 % 
+% \subsection{grfext}
 %
+% The package \pkg{grfext}\footcite{grfext} provides macros that adds entries to the list or remove them. 
+% The list
+% maybe empty or even undefined before.
+%    \begin{macrocode}
+\newif\ifGRFEXT
+\ifstylefileexists{grfext}{%
+\GRFEXTtrue
+  \RequirePackage{grfext}   
+}{}
+% We print the extensions in the log file
+\ifGRFEXT
+\AppendGraphicsExtensions{.png}
+\PrintGraphicsExtensions
+\fi
+%    \end{macrocode}
 %
 % \section{wrapfig} 
 
@@ -949,138 +978,7 @@ See http://www.latex-project.org/lppl.txt
   \RequirePackage{phd-lorems}}{}
 %    \end{macrocode}
 %
-% \begin{docCommand}{lorem}{\meta{*} }
-%	 We declare a short macro \cs{lorem} to be used for testing, as well as 
-%	 testing captions and the like. The star version does not provide a par
-% \end{docCommand}
-%    \begin{macrocode}
-%
-%\DeclareDocumentCommand\lorem{ s }{Fusce adipiscing justo nec ante. Nullam in enim.
-% Pellentesque felis orci, sagittis ac, malesuada et, facilisis in,
-% ligula. Nunc non magna sit amet mi aliquam dictum. In mi. Curabitur
-% sollicitudin justo sed quam et quadd. 
-% \IfBooleanTF{#1}%
-% {}%
-% {\par}}
-%%    \end{macrocode}
-%% 
-%%
-%% \begin{docCommand}{fox} {\meta{void}} 
-%%  A classic one liner containing all the letters
-%%	 of the alphabet, used as a testing code.
-%% \end{docCommand}
-%%    \begin{macrocode}
-%\newcommand{\fox}{``The quick brown fox jumps over the lazy dog''} 
-%%    \end{macrocode}
-%% 
-%%
-%% \begin{docCommand} {frogking} { \meta {void}}
-%% \end{docCommand}
-%%    \begin{macrocode}
-%\newcommand\frogking{%
-%\leavevmode
-%\hskip1em In olden times when wishing
-%still helped one, there lived a
-%king whose daughters were all
-%beautiful, but the youngest was so
-%beautiful that the sun itself,
-%which has seen so much, was
-%astonished whenever it shone in
-%her face. Close by the king's
-%castle lay a great dark forest,
-%and under an old lime-tree in the
-%forest was a well, and when
-%the day was very warm, the
-%king's child went out into the 
-%forest and sat down by the side
-%of the cool fountain, and when she was bored she
-%took a golden ball, and threw it up on a high and caught it, and this
-%ball was her favorite plaything. \par}%
-%%    \end{macrocode}
-%%
-%%
-%%    \begin{macrocode}
-%\newcommand\onepar{In olden times when wishing
-%still helped one, there lived a
-%king whose daughters were all
-%beautiful, but the youngest was so
-%beautiful that the sun itself,
-%which has seen so much, was
-%astonished whenever it shone in
-%her face. Close by the king's
-%castle lay a great dark forest,
-%and under an old lime-tree in the
-%forest was a well, and when
-%the day was very warm, the
-%king's child went out into the 
-%forest and sat down by the side
-%of the cool fountain, and when she was bored she
-%took a golden ball, and threw it up on a high and caught it, and this
-%ball was her favorite plaything.}%
-%
-%\newcommand\alicei{%	
-%  The King and Queen of Hearts were seated on their throne
-%  when they arrived, with a great crowd assembled about them
-%  ---all sorts of little birds and beasts, as well as the
-%  whole pack of cards: the Knave was standing before them,
-%  in chains, with a soldier on each side to guard him; and
-%  near the King was the White Rabbit, with a trumpet in one
-%  hand, and a scroll of parchment in the other.  In the very
-%  middle of the court was a table, with a large dish of
-%  tarts upon it: they looked so good, that it made Alice
-%  quite hungry to look at them---``I wish they'd get the
-%  trial done,'' she thought, ``and hand round the
-%  refreshments!''.  But there seemed to be no chance of this,
-%  so she began looking at everything about her to pass away
-%  the time.}%
-%
-%\newcommand\aliceii{%
-%  Alice had never been in a court of justice before, but she
-%  had read about them in books, and she was quite pleased to
-%  find that she knew the name of nearly everything there.
-%  ``That's the judge,'' she said to herself, ``because of his
-%  great wig.''.
-%  
-%  The judge, by the way, was the King, and as he wore his
-%  crown over the wig, (look at the frontispiece if you want
-%  to see how he did it,) he did not look at all comfortable,
-%  and it was certainly not becoming.
-%}
-%
-% \newcommand\aliceiii{``And that's the jury-box,'' thought Alice, ``and those
-%  twelve creatures,'' (she was obliged to say ``creatures,''
-%  you see, because some of them were animals, and some were
-%  birds) ``I suppose they are the jurors.''.  She said this
-%  last word two or three times over to herself being rather
-%  proud of it: for she thought, and rightly too, that very
-%  few little girls of her age knew the meaning of it at all.
-%  However, ``jurymen'' would have done just as well.}
-%
-% \newcommand\aliceiv{The twelve jurors were all writing very busily on slates.
-%  ``What are they doing?'' Alice whispered to the Gryphon.
-%  ``They can't have anything to put down yet, before the
-%  trial's begun.''.}
-%  
-%\newcommand\alicev{``They're putting down their names,'' the Gryphon
-%  whispered in reply, ``for fear they should forget them
-%  before the end of the trial.''.}
-%  
-%\newcommand\alicevi{``Stupid things!'' Alice began in a loud indignant voice,
-%  but she stopped herself hastily, for the White Rabbit
-%  cried out, ``Silence in the court!''; and the King put on
-%  his spectacles and looked anxiously round, to make out who
-%  was talking.\par}
-%    \end{macrocode}
-%
-% \section{Functions for testing fonts}
-%
-% This is a short assembly of commands that can be used to test fonts.
-%
-%    \begin{macrocode}
-%\def\ALPHABET {A B C D E F G H I J K L M N O P Q R S T U V W X Y Z}
-%\def\alphabet {a b c d e f g h i j k l m n o p q r s t u v w x y z}
-%\newcommand{\punctuation}{! ? . / , : }
-%    \end{macrocode}
+% 
 % The package fonttable provides a number of interesting testing tests
 % for fonts
 %
@@ -1106,7 +1004,8 @@ See http://www.latex-project.org/lppl.txt
 % \section{booktabs and helper macros}
 % 
 %    \begin{macrocode}
-\RequirePackage{booktabs}
+\ifstylefileexists{booktabs}{
+\RequirePackage{booktabs}}{}
 \newcounter{step}
 \newcommand\resetinc{\setcounter{step}{0}}
 \newcommand\inc{\stepcounter{step}\thestep}
@@ -1120,7 +1019,8 @@ See http://www.latex-project.org/lppl.txt
 % |infoshow| and |debugshow| which we don't bother at this stage to load.
 % 
 %    \begin{macrocode}
-\RequirePackage{tabularx}
+\ifstylefileexists{booktabs}{
+\RequirePackage{tabularx}}{}
 %    \end{macrocode}
 % 
 %
@@ -1812,7 +1712,8 @@ See http://www.latex-project.org/lppl.txt
 %    \end{macrocode}
 %
 % \subsection{bmatrix columns}
-% We increase the number of bmatrix columns, as this is a common requirement.
+% We increase the number of bmatrix columns, as this is a common requirement, 
+% by setting the counter \docCounter{MaxMatrixCols} to 20.
 %    \begin{macrocode}
 \setcounter{MaxMatrixCols}{20}
 %    \end{macrocode}
@@ -2056,7 +1957,7 @@ See http://www.latex-project.org/lppl.txt
 \ExplSyntaxOff  
 %    \end{macrocode}
 % The package has a lot of options. 
-% $\merge$. I need to think more as to how to handle it.
+% I need to think more as to how to handle it.
 % 
 % \section{extpfeil}
 %
@@ -2164,7 +2065,7 @@ See http://www.latex-project.org/lppl.txt
 \else
 \ifstylefileexists{bbold}
   {
-  %</fontdef
+  %font definition
   \newcommand{\BBmathbb}[1]{\mbox{\usefont{U}{bbold}{m}{n}##1}}
    % We have to manually define all of the symbols we care about.
    \newcommand{\BBsym}[1]{\ensuremath{\BBmathbb{\char##1}}}
@@ -2182,7 +2083,7 @@ See http://www.latex-project.org/lppl.txt
 \fi  
 %    \end{macrocode}  
 %  
-%  |$\scriptsize\bbalpha \bbbeta \bbgamma $| Fails
+%  |$\scriptsize\Rparen$| Fails with metric load bad for \lualatex.
 %
 % 
 %
@@ -2232,7 +2133,9 @@ See http://www.latex-project.org/lppl.txt
 % 
 %    \begin{macrocode}
 \newif\ifUPGR
-    \RequirePackage[Symbol]{upgreek}
+ \RequirePackage[Symbol]{upgreek}
+%    \end{macrocode}
+% Compare $\beta$  with $\upbeta$
 % \[
 %  \begin{array}{lll}
 %   \upalpha    &\upbeta    &\upgamma\\ 
@@ -2246,10 +2149,10 @@ See http://www.latex-project.org/lppl.txt
 %   \upvartheta &\upvarpi   &\\
 %  \end{array}
 % \]    
-%    \end{macrocode}
+%
 % 
 %
-
+%
 %
 % 
 % \section{mathdots}
@@ -2990,24 +2893,86 @@ See http://www.latex-project.org/lppl.txt
 % The below packages offer some good utilities that you may find useful, if you are
 % going to program and develop additional macros.
 %
-% \section{The changepage package}
-% |\strictpagecheck| can be used effectively for a number of situations, where you need to 
-% know if you are on an odd or even page.
+% \section{Packages for key value interfaces}
+% \subsection{keyval}
+% The \pkg{keyval}\footcite{keyval} by David Carlisle is now on version 1.15 and is one of the earliest
+% packages dealing with key definitions in sets (families). We load it if you need to write package
+% patches for packages wriiten with it (for example graphicx). The file is included earlier by other
+% packages. Adding it here so we can add it to the list of files, loaded by the packae.
 %    \begin{macrocode}
-\RequirePackage{changepage}  
-\RequirePackage{keyval}
+\newif\ifKEYVAL
+\ifstylefileexists{keyval}{%
+\KEYVALtrue
+\RequirePackage{keyval}}{}
+%    \end{macrocode}
+%
+% \subsection{kvdefinekeys}
+% The keyval package left some gaps. The \pkg{kvdefinekeys} closed some of those gaps by providing
+% a redefinition of keyval's \docAuxCommand{setkeys}. The defined keys are made robust, allow \pkg{babel}
+% shorthands and also allow |\par| inside values. The package is included earlier by other packages
+% in the Oberdiek bundles. Included here so we can add it to our lists of loaded packages.
+%    \begin{macrocode}
+\newif\ifKVDEFINEKEYS
+\ifstylefileexists{kvdefinekeys}{%
+  \KVDEFINEKEYStrue
+  \RequirePackage{kvdefinekeys}}{}
+%    \end{macrocode}
+% \subsection{kvsetkeys}
+%
+% Like the previous package \pkg{kvsetkeys}  serves as a replacement for \pkg{keyval} \docAuxCommand{setkeys}.
+%    \begin{macrocode}
 \RequirePackage{xkvview}
+%    \end{macrocode}
+%
+% \subsection{pgfopts}
+%
+% The \pkg{pgfkeys} package does not include any native
+%functionality for processing \latex package and class
+%options. However, the \pkg{pgfopts} package (Wright,
+%2008) adds this ability, using a modified copy of the
+%functionality in kvoptions.
+%The pgfopts package provides only a single user
+%macro, \docAuxCommand{ProcessPgfOptions}. Keys are created
+%using the pgfkeys interface discussed above, and can
+%then be uses as package (or class) options using the
+%|\ProcessPgfOptions| macro. The requirement
+%to have no spaces in the key names for this to work
+%remains exactly the same as for \pkg{xkeyval} or \pkg{kvoptions}
+%processing of options
+%    \begin{macrocode}
+\RequirePackage{kvoptions}
+\newif\ifPGFOPTS
+\ifstylefileexists{pgfopts}{
+\RequirePackage{pgfopts}}{}
+%    \end{macrocode}
+%    \begin{macrocode}
 \RequirePackage{ifmtarg}
 % clashes with diagbox
 %    \end{macrocode}
 %
+% % \section{The changepage package}
+% |\strictpagecheck| can be used effectively for a number of situations, where you need to 
+% know if you are on an odd or even page.
+%    \begin{macrocode}
+\RequirePackage{changepage}  
+%    \end{macrocode}
+%
+% \section{Calculations}
 % \subsection{The fp package}
 %
 % The \pkgname{fp}\footcite{fp} can be used for floating point calculations. As it conflicts with
 % options of the \pkgname{diagbox} we load it with the \option{nomessages}. 
 %    \begin{macrocode}
-\PassOptionsToPackage{nomessages}{fp}
-\RequirePackage{fp}
+\newif\ifFP
+\ifstylefileexists{fp}{%
+  \FPtrue
+  \PassOptionsToPackage{nomessages}{fp}
+  \RequirePackage{fp}}{}
+  
+\newif\ifCALC  
+\ifstylefileexists{calc}{%
+ \CALCtrue  
+ \RequirePackage{calc}}{}
 %    \end{macrocode}
 %
 % \section{ifthenx}
@@ -3023,8 +2988,10 @@ See http://www.latex-project.org/lppl.txt
 % characters.
 
 %    \begin{macrocode}
+\newif\ifXSPACE
 \ifstylefileexists{xspace}{
-\RequirePackage{xspace}}{}
+ \XSPACEtrue 
+ \RequirePackage{xspace}}{}
 %    \end{macrocode}
 %
 % \section{xstring}
@@ -3057,12 +3024,12 @@ See http://www.latex-project.org/lppl.txt
 %
 %
 %
-% \section{Calculations}
+% 
 
 %    \begin{macrocode}
 % \RequirePackage{remreset}
 \RequirePackage{upquote}
-\RequirePackage{calc}
+
 %    \end{macrocode}
 %
 % \chapter{Graphics packages}
@@ -3579,22 +3546,22 @@ See http://www.latex-project.org/lppl.txt
 % It is sometimes desireable to change a counter that has been defined by 
 % |\newcounter{〈ctr〉}| to act as though it had been defined as
 % |\newcounter{〈ctr〉}[〈within〉]|. The \pkgname{chngcntr}\footcite{chngcntr} by \person{Peter}{Wilson}
-% provides the \docAuxCmd{counterwithin} and \docAuxCmd{counterwithout} to do this.
+% provides the \docAuxCommand{counterwithin} and \docAuxCommand{counterwithout} to do this.
 % This is really not necessary, as the |phd| package provides settings to set these
 % counters. However, if you use them do use the star version of the commands.
 %
 %    \begin{macrocode}
-\ifstylefileexists{alltt}{
+\ifstylefileexists{chngcntr}{
 \RequirePackage{chngcntr}}{}
 %    \end{macrocode}
 %
 % \subsection{eso-pic}
 %
-% Since we loading pgf, many of the things that \pkgname{eso-pic}\footcite{eso-pic} does can be taken over by |pgf|. I am not too sure
-% if we should leave this in the long-term.
+% Since we loading pgf, many of the things that \pkg{eso-pic}\footcite{eso-pic} does can be taken over by |pgf|. I am not too sure
+% if we should leave this in the long term.
 %
 %    \begin{macrocode}
-\ifstylefileexists{alltt}{
+\ifstylefileexists{eso-pic}{
 \RequirePackage{eso-pic}}{}
 %\RequirePackage{layouts}
 %    \end{macrocode}
@@ -3605,7 +3572,7 @@ See http://www.latex-project.org/lppl.txt
 % it for counters in the |phd| package.\footnote{Eventually we will incorporate most of the functionality in the \pkgname{phdcounters} as the functionality is essential to the smooth operation of the \pkgname{phd}.}
 %
 %    \begin{macrocode}
-\ifstylefileexists{alltt}{
+\ifstylefileexists{alphalph}{
 \RequirePackage{alphalph}}{}
 %    \end{macrocode}
 %
@@ -3702,7 +3669,7 @@ See http://www.latex-project.org/lppl.txt
 % 
 %    \begin{macrocode}
 \PassOptionsToPackage{final}{pdfpages}
-\RequirePackage{pdfpages}
+\PassOptionsToPackage{draft,nodemo}{pdfpages}
 %    \end{macrocode}
 % 
 %
@@ -4064,8 +4031,9 @@ See http://www.latex-project.org/lppl.txt
 %    \end{macrocode}
 %\ExplSyntaxOn
 % ^^A\file_show_list:
+%
 %\ExplSyntaxOff
-%</PKG>
+%</package>
 \endinput
 % \subsection{Weather Symbols}
 % \begin{figure}[h] \small 
