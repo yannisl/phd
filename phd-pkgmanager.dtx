@@ -144,7 +144,7 @@ See http://www.latex-project.org/lppl.txt
 \savegeometry{std}
 \usepackage{phd}
 \usepackage{phd-pkgmanager}
-%\usepackage{phd-runningheads}
+\usepackage{phd-runningheads}
 
 \sethyperref
 \addbibresource{phd1.bib}% Syntax requires the .bib
@@ -153,12 +153,15 @@ See http://www.latex-project.org/lppl.txt
 \makeindex
  \urlstyle{rm}
 \begin{document}
-
+\selectcolormodel{gray}
 \frontmatter
 \tableofcontents
 \mainmatter
+\input{./sections/maths-01}
+\input{./sections/symbols}
+\input{./sections/chemistry}
 \DocInput{\jobname.dtx}
-
+\backmatter
 {\parskip12pt
 \printbibliography
 }
@@ -358,8 +361,10 @@ See http://www.latex-project.org/lppl.txt
 % \begin{docCommand} {g_phd_packages_loaded_clist} {\marg{clist}}
 %    Holds a list of all packages loaded by the \pkgname{phd} package.
 % \end{docCommand}
-
-% 
+% \begin{docCommand}{g_phd_packages_not_found:n}{\marg{clist}} 
+%    Holds a list of all packages not found.
+% \end{docCommand}
+%
 % These are really long names, but I want to follow the \latex3 Teams' suggestions
 %  and recommendations.
 %
@@ -375,12 +380,14 @@ See http://www.latex-project.org/lppl.txt
     \cs_gset_eq:cc {orig#1} {#1} 
     \cs_undefine:c {#1}
   }
+%
+% \begin{docCommand}{savesymbol}{\marg{symbol name}}  
+%  An alias for |save_symbol:|.
+% \end{docCommand}
 \cs_set_eq:NN \savesymbol\save_symbol:   
 \ExplSyntaxOff
 %    \end{macrocode}
 % 
-%    
-%
 % \begin{docCommand} {restore_symbol:} { \meta{symbol prefix} \meta{symbol name} }
 % 	Restore a previously saved symbol, and rename the current one.
 % \end{docCommand}
@@ -427,8 +434,7 @@ See http://www.latex-project.org/lppl.txt
 % (|\missingpkgs|) and marks the document as incomplete (with
 % |\completefalse|) if the |.sty| file doesn't exist.
 % 
-% {missingpkgs}
-% {foundpkgs}
+%
 %    \begin{macrocode}
 \ExplSyntaxOn
 \clist_new:N \g_phd_packages_loaded_clist:n 
@@ -439,9 +445,12 @@ See http://www.latex-project.org/lppl.txt
 \newcommand{\missingpkgs}{}
 \newcommand{\foundpkgs}{}
 
-
-
-
+%    \end{macrocode}
+% \begin{docCommand}{ifstylefileexists}{\marg{true code}\marg{false code}}
+%   Checks if a  |.sty| file exists
+% \end{docCommand}
+%
+%    \begin{macrocode}
 \cs_new:Npn \ifstylefileexists_star #1 #2 #3 {
 \ifloadpackages
 \file_if_exist:nTF {#1} 
@@ -492,23 +501,6 @@ See http://www.latex-project.org/lppl.txt
 \ExplSyntaxOff
 %    \end{macrocode}
 %
-% \begin{docCommand}{ifstylefileexists}{\marg{true code}\marg{false code}}
-%   Checks if a  |.sty| file exists
-% \end{docCommand}
-%
-%    \begin{macrocode}    
-%\newcommand{\IfPackageFileExists}[4]{%
-%  \ifloadpackages
-%    \IfFileExists{#2}%
-%                 {#3\@cons\foundpkgs{{#1}}}%
-%                 {#4\completefalse\@cons\missingpkgs{{#1}}}%
-%  \else
-%    #4\completefalse\@cons\missingpkgs{{#1}}%
-%  \fi
-%}
-%    \end{macrocode}
-% 
-% 
 %
 % \section{Utility macros for displaying symbols and fonts}
 %
@@ -535,7 +527,7 @@ See http://www.latex-project.org/lppl.txt
 %    \end{macrocode}
 % 
 % 
-%
+% \chapter{Font Packages}
 %  \section{calligra}
 %  The \pkgname{calligra}\footcite{calligra} is a calligraphic font, we also declare it as a math alphabet, 
 %  I think we now have enough.
@@ -565,11 +557,11 @@ See http://www.latex-project.org/lppl.txt
 % \section{Chancery}
 %
 %    \begin{macrocode}
-%\ifstylefileexists{chancery}
-%  {
-%    \newcommand{\mathpzc}[1]{\mbox{\usefont{OT1}{pzc}{m}{it}##1}}
-%  }
-%  {}
+\ifstylefileexists{chancery}
+  {
+    \newcommand{\mathpzc}[1]{\mbox{\usefont{OT1}{pzc}{m}{it}#1}}
+  }
+  {}
 %    \end{macrocode}
 % \section{Best practices macros} 
 % 
@@ -733,9 +725,9 @@ See http://www.latex-project.org/lppl.txt
 \newif\ifLETTRINE
 \ifstylefileexists{lettrine}{%
 \LETTRINEtrue
-\RequirePackage{lettrine}
-\def\dropcap#1#2{
-\lettrine[lines=3, lraise=0.1, nindent=0em, slope=.1em]{#1}{#2}}
+  \RequirePackage{lettrine}
+  \def\dropcap#1#2{
+   \lettrine[lines=3, lraise=0.1, nindent=0em, slope=.1em]{#1}{#2}}
 }{}
 %    \end{macrocode}
 %
@@ -771,17 +763,25 @@ See http://www.latex-project.org/lppl.txt
 % of the examples.
 %    \begin{macrocode}
 \newif\ifSIUNITX
-\ifstylefileexists{siunitx}{\SIUNITXtrue
-   \RequirePackage{siunitx}}{}   
+\ifstylefileexists{siunitx}{
+  \SIUNITXtrue
+  \RequirePackage{siunitx}}{}   
 \ifSIUNITX           
   \sisetup{fixed-exponent =0,
           scientific-notation = false}   
-\fi         
-%\RequirePackage{numprint} 
+\fi 
+%    \end{macrocode}
+%
+% \subsection{numprint}
+% CHECK for language management
+%    \begin{macrocode}        
+\newif\ifNUMPRINT
+\ifstylefileexists{numprint}{%
+ \NUMPRINTtrue
+ \RequirePackage{numprint}}
+ {} 
 %    \end{macrocode}
 % 
-% 
-%
 %
 % \chapter{Boxes}
 % \section{mdframed}
@@ -822,8 +822,11 @@ See http://www.latex-project.org/lppl.txt
 % \pkgname{mdframed}.
 %
 %    \begin{macrocode}
+\newif\ifNUMPRINT
 \ifstylefileexists{fancybox}
-  {\RequirePackage{fancybox}}
+  {
+    \NUMPRINTtrue
+    \RequirePackage{fancybox}}
   {}
 %    \end{macrocode}
 % 
@@ -856,8 +859,8 @@ See http://www.latex-project.org/lppl.txt
 %    \begin{macrocode}
 \newif\ifGRAPHICX
 \ifstylefileexists{graphicx}{%
-\GRAPHICXtrue
-\RequirePackage{graphicx}
+  \GRAPHICXtrue
+  \RequirePackage{graphicx}
 %    \end{macrocode}
 % \begin{docCommand}{DeclareGraphicsExtensions}{\marg{comma list of extensions}}
 % Graphics files are included i by macro \docAuxCommand{includegraphics}. The file
@@ -866,7 +869,7 @@ See http://www.latex-project.org/lppl.txt
 % |\DeclareGraphicsExtensions|. The previous contents of the list is overwritten
 % \end{docCommand}
 %    \begin{macrocode}
-\DeclareGraphicsExtensions{.jpg, .JPG, .jpeg, .JPEG, .eps, .pdf, .PDF}
+  \DeclareGraphicsExtensions{.jpg, .JPG, .jpeg, .JPEG, .eps, .pdf, .PDF}
   \graphicspath{{graphics/}{graphics//}{../images/}{images//}{./images/}{./graphics/}%
     {../graphics/}{./pic/}{../pic}}
 }{}
@@ -880,10 +883,10 @@ See http://www.latex-project.org/lppl.txt
 %    \begin{macrocode}
 \newif\ifGRFEXT
 \ifstylefileexists{grfext}{%
-\GRFEXTtrue
+  \GRFEXTtrue
   \RequirePackage{grfext}   
 }{}
-% We print the extensions in the log file
+% We print the extensions in the log file and testing everything is ok, by adding one more extension.
 \ifGRFEXT
 \AppendGraphicsExtensions{.png}
 \PrintGraphicsExtensions
@@ -897,7 +900,9 @@ See http://www.latex-project.org/lppl.txt
 % 
 %    \begin{macrocode}
 \newif\ifWRAPFIG
-\ifstylefileexists{wrapfig}{\WRAPFIGtrue\RequirePackage{wrapfig}}{}  
+\ifstylefileexists{wrapfig}{%
+  \WRAPFIGtrue\RequirePackage{wrapfig}}
+  {}  
 %    \end{macrocode} 
 % 
 %
@@ -939,7 +944,7 @@ See http://www.latex-project.org/lppl.txt
 \RequirePackage{lipsum}}{}
 %    \end{macrocode}
 %
-% \meaning\IfStyleFileExists
+% 
 %
 %
 % \section{kantlipsum}
@@ -952,7 +957,11 @@ See http://www.latex-project.org/lppl.txt
 %rather long, as it’s common in philosophical prose.
 
 %    \begin{macrocode}
- \RequirePackage[par]{kantlipsum}
+\newif\ifKANTLIPSUM
+\ifstylefileexists{}{% 
+ \PassOptionsToPackage{par}{kantlipsum}
+ \RequirePackage{kantlipsum}}
+ {}
 %    \end{macrocode}
 %
 % \section{blindtext}
@@ -962,8 +971,11 @@ See http://www.latex-project.org/lppl.txt
 %\docAuxCmd{Blinddocument}) you get a complete dummy document.
 %
 %    \begin{macrocode}
-\ifstylefileexists{blindtext}{
-\RequirePackage{blindtext}}{}
+\newif\ifBLINDTEXT
+\ifstylefileexists{blindtext}{%
+  \BLINDTEXTtrue 
+  \RequirePackage{blindtext}}
+  {}
 %    \end{macrocode}
 % 
 % \section{phd-lorems}
@@ -1212,9 +1224,10 @@ See http://www.latex-project.org/lppl.txt
 % It has to be loaded after \pkgname{lscape} so we let it load it itself.
 %  
 %    \begin{macrocode}
-
+\newif\ifPDFLSCAPE
 \ifstylefileexists {pdflscape}
-  {\RequirePackage{pdflscape}}
+  { \PDFLSCAPEtrue
+    \RequirePackage{pdflscape}}
   {}
 %    \end{macrocode}
 % 
@@ -1224,8 +1237,10 @@ See http://www.latex-project.org/lppl.txt
 % drawing diagonal lines in table cells. It also loads the \pkgname{fp} package.
 %
 %    \begin{macrocode}
+\newif\ifDIAGBOX
 \ifstylefileexists {diagbox}
-  {\RequirePackage{diagbox} }
+  { \DIAGBOXtrue
+    \RequirePackage{diagbox} }
   {}
 %    \end{macrocode}
 %  
@@ -1269,60 +1284,61 @@ See http://www.latex-project.org/lppl.txt
 %\ExplSyntaxOn
 \newif\ifAMS
 \newcommand\AMS{\AmS\index{AMS=\AmS}}
-   
+%    \end{macrocode} 
 %
 % This provides a useful way to hook into the package options
 % using our setting interface.
 %
-%    \end{macrocode}
+
 %    \begin{macrocode}
 %
-%\ExplSyntaxOn
-%\newif\ifMTOOLS
-%\newcommand\MTOOLS{\pkgname{mathtools}}
-% \RequirePackage{mathtools}
-% \RequirePackage{suffix}
-%\ifstylefileexists{mathtools}
-%  {\MTOOLStrue
-%   \save_symbol:{xleftrightarrow} \save_symbol:{xLeftarrow}
-%   \save_symbol:{xRightarrow} \save_symbol:{xLeftrightarrow}
-%   \save_symbol:{xrightharpoondown} \save_symbol:{xrightharpoonup}
-%   \save_symbol:{xleftharpoondown} \save_symbol:{xleftharpoonup}
-%   \save_symbol:{xleftrightharpoons} \save_symbol:{xrightleftharpoons}
-%   \save_symbol:{xhookleftarrow} \save_symbol:{xhookrightarrow}
-%   \save_symbol:{xmapsto} \save_symbol:{underbracket}
-%   \save_symbol:{overbracket} \save_symbol:{lparen} \save_symbol:{rparen}
-%   \save_symbol:{dblcolon} \save_symbol:{coloneqq} \save_symbol:{Coloneqq}
-%   \save_symbol:{coloneq} \save_symbol:{Coloneq} \save_symbol:{eqqcolon}
-%   \save_symbol:{Eqqcolon} \save_symbol:{eqcolon} \save_symbol:{Eqcolon}
-%   \save_symbol:{colonapprox} \save_symbol:{Colonapprox}
-%   \save_symbol:{colonsim} \save_symbol:{Colonsim} \save_symbol:{overbrace}
-%   \save_symbol:{underbrace}%NEW
+\ExplSyntaxOn
+\newif\ifMTOOLS
+\newcommand\MTOOLS{\pkgname{mathtools}}
+ \RequirePackage{mathtools}
+ \RequirePackage{suffix}
+\ifstylefileexists{mathtools}
+  {\MTOOLStrue
+   \save_symbol:{xleftrightarrow} \save_symbol:{xLeftarrow}
+   \save_symbol:{xRightarrow} \save_symbol:{xLeftrightarrow}
+   \save_symbol:{xrightharpoondown} \save_symbol:{xrightharpoonup}
+   \save_symbol:{xleftharpoondown} \save_symbol:{xleftharpoonup}
+   \save_symbol:{xleftrightharpoons} \save_symbol:{xrightleftharpoons}
+   \save_symbol:{xhookleftarrow} \save_symbol:{xhookrightarrow}
+   \save_symbol:{xmapsto} \save_symbol:{underbracket}
+   \save_symbol:{overbracket} \save_symbol:{lparen} \save_symbol:{rparen}
+   \save_symbol:{dblcolon} \save_symbol:{coloneqq} \save_symbol:{Coloneqq}
+   \save_symbol:{coloneq} \save_symbol:{Coloneq} \save_symbol:{eqqcolon}
+   \save_symbol:{Eqqcolon} \save_symbol:{eqcolon} \save_symbol:{Eqcolon}
+   \save_symbol:{colonapprox} \save_symbol:{Colonapprox}
+   \save_symbol:{colonsim} \save_symbol:{Colonsim} \save_symbol:{overbrace}
+   \save_symbol:{underbrace}%NEW
 %   \save_symbol:{underbrace}
-%   \save_symbol:{overleftrightarrow}%NEW
-%   \save_symbol:{mathscr}
-%   \save_symbol:{ulcorner}
-%   \save_symbol:{urcorner}
-%   \save_symbol:{llcorner}
-%   \save_symbol:{lrcorner}
-%   \save_symbol:{backepsilon}
-%   \save_symbol:{digamma}  
-%   \save_symbol:{underrightarrow}
-%   \save_symbol:{underleftarrow} 
-%   \save_symbol:{underleftrightarrow}
-%   \save_symbol:{eth}
-%   \save_symbol:{underbracket}
-%   \save_symbol:{smash}
+   \save_symbol:{overleftrightarrow}%NEW
+   \save_symbol:{mathscr}
+   \save_symbol:{ulcorner}
+   \save_symbol:{urcorner}
+   \save_symbol:{llcorner}
+   \save_symbol:{lrcorner}
+   \save_symbol:{backepsilon}
+   \save_symbol:{digamma}  
+   \save_symbol:{underrightarrow}
+   \save_symbol:{underleftarrow} 
+   \save_symbol:{underleftrightarrow}
+   \save_symbol:{eth}
+   \save_symbol:{underbracket}
+   \save_symbol:{smash}
 %   % The mathtools package delays the definitions of some of its symbols
 %   % to the \begin{document}.  We redefine \AtBeginDocument to force
 %   % mathtools to define everything immediately.
-%   \let\origAtBeginDocument=\AtBeginDocument
-%   \def\AtBeginDocument##1{##1}
-%  % \let\RequirePackage\origRequirePackage
-%  \PassOptionsToPackage{donotfixmathbugs}{mathtools}
-%   \RequirePackage{mathtools}
+%   \let\origAtBeginDocument\AtBeginDocument
+%   \def\AtBeginDocument#1{#1}
+   
+  %\let\RequirePackage\origRequirePackage
+   \PassOptionsToPackage{donotfixmathbugs}{mathtools}
+   \RequirePackage{mathtools}
 %   
-%   \let\AtBeginDocument=\origAtBeginDocument
+   %\let\AtBeginDocument=\origAtBeginDocument
 %
 %   \restore_symbol:{MTOOLS}{xleftrightarrow}
 %   \restore_symbol:{MTOOLS}{xLeftarrow}
@@ -1338,7 +1354,8 @@ See http://www.latex-project.org/lppl.txt
 %   \restore_symbol:{MTOOLS}{xhookrightarrow}
 %   \restore_symbol:{MTOOLS}{xmapsto}
 %   \restore_symbol:{MTOOLS}{underbracket}
-%   \restore_symbol:{MTOOLS}{overbracket} \restore_symbol:{MTOOLS}{lparen}
+%   \restore_symbol:{MTOOLS}{overbracket} 
+%   \restore_symbol:{MTOOLS}{lparen}
 %   \restore_symbol:{MTOOLS}{rparen} \restore_symbol:{MTOOLS}{dblcolon}
 %   \restore_symbol:{MTOOLS}{coloneqq} \restore_symbol:{MTOOLS}{Coloneqq}
 %   \restore_symbol:{MTOOLS}{coloneq} \restore_symbol:{MTOOLS}{Coloneq}
@@ -1347,18 +1364,19 @@ See http://www.latex-project.org/lppl.txt
 %   \restore_symbol:{MTOOLS}{colonapprox}
 %   \restore_symbol:{MTOOLS}{Colonapprox}
 %   \restore_symbol:{MTOOLS}{colonsim} \restore_symbol:{MTOOLS}{Colonsim}
-%   \restore_symbol:{MTOOLS}{overbrace} \restore_symbol:{MTOOLS}{underbrace}
-%   \restore_symbol:{MTOOLS}{underbracket}
-%   \restore_symbol:{MTOOLS}{smash}
+   \restore_symbol:{MTOOLS}{overbrace} 
+   \restore_symbol:{MTOOLS}{underbrace}
+   \restore_symbol:{MTOOLS}{underbracket}
+   \restore_symbol:{MTOOLS}{smash}
 %
 %   % Some of the above are defined in terms of \dblcolon.  At the time
 %   % of this writing it doesn't seem like any other package uses the
 %   % name \dblcolon so it should be safe to retain its mathtools
 %   % definition.
 %   \let\dblcolon=\MTOOLSdblcolon
-%  }
-%  {}
-%\ExplSyntaxOff  
+  }
+  {}
+\ExplSyntaxOff  
 %    \end{macrocode}
 %    \begin{macrocode}
 %\cxset{tag left bracket/.store in = \leftbracket@cx,
@@ -1461,8 +1479,10 @@ See http://www.latex-project.org/lppl.txt
 % optional argument provides for consecutive numbering of the array items,
 % or an even-only or odd-only numbering scheme
 %    \begin{macrocode}
-\ifstylefileexists{multienum}{
-\RequirePackage{multienum}}{}
+\newif\ifMULTIENUM
+\ifstylefileexists{multienum}{%
+  \MULTIENUMtrue
+  \RequirePackage{multienum}}{}
 %    \end{macrocode}
 %
 % \section{The accents package}
@@ -1688,15 +1708,19 @@ See http://www.latex-project.org/lppl.txt
 % We load two packages for fractions, but our preference is to use the
 % \pkgname{xfrac}. We load \pkgname{nicefrac} in case anyone disagrees.
 % 
-% \subsection{The nicefrac and xfrac package}
+% \subsection{The nicefrac and xfrac packages}
 % The package \pkgname{xfrac}\footcite{xfrac} produces better fractions. 
 % The \pkgname{nicefrac}\footcite[For docs type textdoc units]{nicefrac} is an older package. I am told some people still use it.
 %    \begin{macrocode}
+\newif\ifNICEFRAC
 \ifstylefileexists{nicefrac}{
-\RequirePackage{nicefrac}}{}
+  \NICEFRACtrue
+  \RequirePackage{nicefrac}}{}
 %
+\newif\ifXFRAC
 \ifstylefileexists{xfrac}{
-\RequirePackage{xfrac}}{}
+  \XFRACtrue
+  \RequirePackage{xfrac}}{}
 %    \end{macrocode}
 % 
 % 
@@ -2133,7 +2157,10 @@ See http://www.latex-project.org/lppl.txt
 % 
 %    \begin{macrocode}
 \newif\ifUPGR
- \RequirePackage[Symbol]{upgreek}
+\ifstylefileexists{upgreek}%
+  {\UPGRtrue
+   \RequirePackage[Symbol]{upgreek}}
+  {}
 %    \end{macrocode}
 % Compare $\beta$  with $\upbeta$
 % \[
@@ -2265,7 +2292,7 @@ See http://www.latex-project.org/lppl.txt
 %  \section{The harpoon package}
 %  This \pkgname{harpoon}\footcite{harpoon} package was developed by Tobias Kuipers back in 1994.
 %  \overleftharp{This is some text}, 
-%  \overrightharp {Other text}. I do not know if any ever uses it, but is lightweight,
+%  \overrightharp {Other~text}. I do not know if any ever uses it, but is light weight,
 %  so I included it here.
 %
 %    \begin{macrocode}
@@ -2778,7 +2805,7 @@ See http://www.latex-project.org/lppl.txt
 % The inclusion of \pkgname{mhchem}\footcite{mhchem} and \pkgname{chemfig}\footcite{chemfig} are provisional as I did get random errors which
 % eventually disappeared. Both are great packages for typesetting chemistry. 
 %    \begin{macrocode}
-  \RequirePackage{mhchem}
+  \RequirePackage[version=4]{mhchem}
   \RequirePackage{chemfig}
 %    \end{macrocode}
 

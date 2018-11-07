@@ -17,19 +17,26 @@
 \@ifpackageloaded{xcolor}{}%
  {\PassOptionsToPackage{\xcolorkeys@cx}{xcolor}
   \RequirePackage{xcolor}}
+\long\def\docColorBox#1{%
+\tcbox[on line,arc=0pt,outer arc=0pt,colback=#1,colframe=white,
+   boxsep=0pt,left=0pt,right=0pt,top=1pt,bottom=1pt,
+   boxrule=0pt,bottomrule=1pt,toprule=1pt]{\ZZ}%
+}
 \def\palettename{palette}
 \definecolor{glyphbox}{rgb}{0.86,0.86,0.8}
 \definecolor{theblue} {rgb}{0.02,0.04,0.48}
 \definecolor{thered}  {rgb}{0.65,0.04,0.07}
-\colorlet{thefontname}{black}%font examples
-\colorlet{thehighlight}{yellow}%soul  highlight
-\colorlet{thecancel}{thered}%for cancel commands
 \definecolor{thegreen}{rgb}{0.06,0.44,0.08}
 \definecolor{thelightgreen}{rgb}{0.06,0.44,0.06}
 \definecolor{thegrey} {gray}{0.5}
 \definecolor{thegray} {gray}{0.5}
 \definecolor{thedarkgray} {gray}{0.95}
-\definecolor{lightgray}{gray}{0.6}
+\definecolor{thelightgray}{gray}{0.6}
+
+\colorlet{thefontname}{black}%font examples
+\colorlet{thehighlight}{yellow}%soul  highlight
+\colorlet{thecancel}{thered}%for cancel commands
+
 \definecolor{shadedcolor}{gray}{0.6}
 \definecolor{thelightgray}{gray}{0.6}
 \definecolor{theshade}{gray}{0.94}
@@ -45,12 +52,19 @@
 \colorlet{preciscolor}{sweet}
 \definecolor{creamy}{HTML}{FDEBD7}
 \definecolor{tofu}{HTML}{e7e3d8}
-\newcommand{\TODO}{\textcolor{red}{\bf TODO!}\xspace}
+\colorlet{thetodo}{thegreen}
+\newcommand{\TODO}{\textcolor{thetodo}{\bf TODO!}\xspace}
+\cxset{shadecolor/.code = \colorlet{shadecolor}{#1},
+       thetodo/.code    = \colorlet{thetodo}{#1}}
+\cxset{shadecolor = thecream,
+       thetodo    = thetodo,}
 \ExplSyntaxOn
 \cs_gset:Npn \createpalette #1#2#3#4
   { \tl_gset:cn {auxpalette#1_tl} {}
     \addtotl {#1}{#2}{#3}{#4}
-    \cxset{palette~#1/.code  = \cs:w auxpalette#1_tl \cs_end: }
+    \cxset{palette~#1/.code  = \cs:w auxpalette#1_tl \cs_end:
+                               \edef\currentpalette{#1},
+     }
     % the below are useless
     \definecolor{primary}{#2}{#3}
     \definecolor{#1}{#2}{#3}
@@ -220,6 +234,8 @@
 \def\done{\cellcolor{teal}done}
 \def\partialdone{\cellcolor{yellow}done}
 \def\hcyan#1{{\color{teal} #1}}
+\edef\SaveCurrentPalette{%
+  \noexpand\edef\noexpand\previouspalette{\noexpand\currentpalette}}
 \endinput
 %%
 %% End of file `phd-colorpalette.sty'.

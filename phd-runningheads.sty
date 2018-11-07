@@ -16,7 +16,7 @@
 
 \NeedsTeXFormat{LaTeX2e}[2017/04/15]%
 \ProvidesPackage{phd-runningheads}%
-  [2017/04/15 v1.0 Running heads styling]%
+  [2017/04/15 v1.0 Running heads styling (YL)]%
 \global\let\tikz@ensure@dollar@catcode=\relax
 \ExplSyntaxOn
   \pgfkeys{/handlers/.mark/.code =
@@ -25,26 +25,36 @@
         \pgfkeyscurrentpath/.code=
           \str_case_x:nnTF {##1}
             {
-              { none       } { \tl_gset:cn  {#1} { \empty}         }
+              { none       } { \tl_gset:cn  {#1} { \empty        } }
               { leftmark   } { \tl_gset:cn  {#1} { \leftmark     } }
               { rightmark  } { \tl_gset:cn  {#1} { \rightmark    } }
               { page       } { \tl_gset:cn  {#1} { \thepage      } }
               { today      } { \tl_gset:cn  {#1} { \today        } }
               { jobname    } { \tl_gset:cn  {#1} { \jobname      } }
               { author     } { \tl_gset:cn  {#1}
-                                   { \docauthoright }  }
+                                   { \docauthoright              } }
               { copyright  } { \tl_gset:cn  {#1}
-                                  { \headingscopyrightline } }
-              { logo       } { \tl_gset:cn  {#1} { \headingslogo } }
-              { shorttitle } { \tl_gset:cn  {#1} { \shorttitle } }
-              { fulltitle  } { \tl_gset:cn  {#1} { \fulltitle } }
-              { filedate   } { \tl_gset:cn  {#1} { \filedate  } }
+                                  { \headingscopyrightline       } }
+              { logo       } { \tl_gset:cn  {#1} { \headlogo     } }
+              { shorttitle } { \tl_gset:cn  {#1} { \shorttitle   } }
+              { fulltitle  } { \tl_gset:cn  {#1} { \fulltitle    } }
+              { filedate   } { \tl_gset:cn  {#1} { \filedate     } }
             }
             {                         }
             {   \tl_gset:cn {#1} { } \tl_put_right:cn {#1}
                         {\csname ##1 \endcsname}   }
     }
   }
+\ExplSyntaxOff
+\def\@docauthor{Y Lazarides}
+
+\def\docauthoright{\@docauthor}
+
+\def\headlogo{\tikz[remember picture, overlay,inner sep=0pt,outer sep=0pt ]\node[midway]     {\includegraphics[width=1.2cm]{latex3.png}};}
+  \def\fulltitle{\textsl{ON RUNNING HEADS AND THEIR DESIGN}}
+  \def\halftitleleft{\textls{\sffamily DOHA OASIS}}
+  \def\halftitleright{\sffamily\textls{MEP COMMERCIAL ANALYSIS}}
+\ExplSyntaxOn
 \dim_new:N \phd_headerwidth_dim
 \dim_new:N \phd_footerwidth_dim
 \ExplSyntaxOff
@@ -254,7 +264,7 @@
     #1~even~header~right~font-family = sffamily,
     #1~even~header~right~font-weight = normal,
     #1~even~header~right~font-size   = small,
-    #1~even~header~right~font-shape  = upshape,
+    #1~even~header~right~font-shape  = itshape,
    % #1~odd~header~left~font-face     = tiresias,
     #1~odd~header~left~font-family   = rmfamily,
     #1~odd~header~left~font-weight   = normal,
@@ -545,10 +555,6 @@
      %drop~shadow=black,
   }
 
- \msg_new:nnnn { phd-runningheads }{ undefined-variable }
-  { #1~is~not~defined. }
-  { Use~the~settings~command~to~set~it.}
-
 \def\getcolorback#1{#1}
 
 \tcbset{framed/.style={nobeforeafter,
@@ -613,6 +619,9 @@
  }
 
 \ExplSyntaxOn
+ \msg_new:nnnn { phd-runningheads }{ undefined-variable }
+  { #1~is~not~defined. }
+  { Use~the~settings~command~to~set~it.}
 
 \msg_new:nnnn {phd-runningheads}{font / font-face-property-undefined}
   {font-face~property~for~#1~is~not~defined.}
@@ -745,9 +754,11 @@
 \cs_gset:Npn \phd_create_new_ps:nnn #1 #2 #3
   {
      \cs_gset:cpn {#1#2}
-       {  \cxset{#2~style}
+       {  \SaveCurrentPalette
+          \cxset{#2~style}
            % calls a function with the name ps_aux_box
            \cs:w ps_aux_#3\cs_end: {#3}{#2}
+          \
        }
   }
 \ExplSyntaxOff
@@ -755,8 +766,10 @@
 \NewDocumentCommand\CreateNewPagestyle {o m m m}
   {
     \create_pagestyle_keys:n {#3}
+    % create standard defaults for the template
     \set_pagestyle_key_defaults:n {#3}
-    \cxset{#3~style/.style = {#1,}}
+    \SaveCurrentPalette
+    \cxset{#3~style/.style = {palette~\previouspalette,}}
     \phd_create_new_ps:nnn {#2}{#3} {#4}
    }
 \CreateNewPagestyle[palette~bbc]{ps@}{test}{parbox}
@@ -764,7 +777,7 @@
 \CreateNewPagestyle[palette~orange~sakura]{ps@}
                                       {orange~sakura}{box}
 
-\CreateNewPagestyle[palette~orange~sakura]{ps@}
+\CreateNewPagestyle[palette~spring~onion]{ps@}
                                       {headings}{box}
 \CreateNewPagestyle[palette~rouge]{ps@}{headings-rouge}{box}
 \CreateNewPagestyle[palette~spring~onion]{ps@}
@@ -775,12 +788,21 @@
                                   {headings-budapest}{box}
 \CreateNewPagestyle[palette~sugar~hearts]{ps@}
                                   {headings-sugar-hearts}{box}
+\CreateNewPagestyle[palette~architectural]{ps@}{headings-architectural}{box}
 \ExplSyntaxOff
-  \def\docauthoright{Y Lazarides}
-  \def\headingslogo{\tikz[remember picture, overlay,inner sep=0pt,outer sep=0pt ]\node[midway]{\includegraphics[width=2cm]{latex3.png}};}
-  \def\fulltitle{\textsl{ON RUNNING HEADS AND THEIR DESIGN}}
-  \def\halftitleleft{\textls{\sffamily DOHA OASIS}}
-  \def\halftitleright{\sffamily\textls{MEP COMMERCIAL ANALYSIS}}
+
+    \def\chaptermark#1{%
+      \markboth {{%
+      \begingroup
+      \color{thechaptercolor}\MakeUppercase{%
+        \ifnum \c@secnumdepth >\m@ne
+          \if@mainmatter
+            \@chapapp\ \thechapter}. \ %
+          \fi
+        \fi
+        \endgroup
+      {\color{thechaptercolor}#1}}}{}}%
+
 \edef\@copyrightline{}
 \newcommand\c@pyrightline[1]{%
   \gdef\@c@pyrightline{#1}}
@@ -795,7 +817,46 @@
 }
 
 \NewDocumentCommand\headingscopyrightline{ }{\copyright\ Y Lazarides (2013-2018)}
-%%    \noindent\rule{37pc}{0.25pt}%
+\def\ps@centerheadings{%
+ \let\@mkboth=\markboth
+ \def\@evenfoot{}
+  \def\@oddfoot {}
+
+  \def\@evenhead{
+   \verbatimsize
+    \vbox{
+     \tikzi[even center]
+     \noindent
+     \global\hoffset=0pc
+      \mbox{\rm \thepage}~%
+      \it \strut
+       \leftmark\hfill\hbox{}%\par\vbox to 13pt{}%
+    }%
+  }%
+  \def\@oddhead{
+    \vbox{%
+    \tikzi[odd center]
+     \global\hoffset=0pc
+    \noindent\hfill
+    \mbox{}\it
+    \verbatimsize
+    \rightmark\hfill\hbox{}
+      \makebox[\z@][r]{\rm
+      \thepage}\par\nointerlineskip%
+      \hfill
+      \vskip0pt
+    %\noindent\hspace*{0pc}\rule{37pc}{0.25pt}%
+     }%
+  }%
+
+  \def\chaptermark##1{\markboth{##1}{##1}}
+
+  \def\sectionmark##1{\markright{\ifnum \c@secnumdepth >\z@
+    \thesection\enskip\fi ##1}}%
+   \def\chaptermark##1{\markboth{##1}{##1}}
+   \def\sectionmark##1{\markright{\ifnum \c@secnumdepth >\z@
+      \thesection\hspace{0.5em}\fi ##1}}%
+}
 \ExplSyntaxOn
 \cs_set:Npn \ps@flush
   {

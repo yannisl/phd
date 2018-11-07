@@ -1,4 +1,4 @@
-###The `phd` LaTeX2e package
+# The `phd` LaTeX2e package
 
 The `phd-pkgmanager` latex package is part of the `phd` budle and the class
 with the same name provide
@@ -9,7 +9,7 @@ and resolves conflicts.
 This work consists of the file  `phd-pkgmanager.dtx`,
 and the derived files   `phd-pkgmanager.ins`,  `phd-pkgmanager.pdf`, and `phd-pkgmanager.sty`.
 
-###Installation
+## Installation
 
 run the script `phd-lua`
 
@@ -20,7 +20,7 @@ http://tex.stackexchange.com and post a new question or
 add a comment at http://tex.stackexchange.com/a/45023/963.
 or send me a message at  yannislaz at gmail.com
 
-### Documentation
+## Documentation
 
 The package was written using the `doc` and `docscript` packages,
 so that it is self documented in a literary programming style.
@@ -41,17 +41,15 @@ To set or add a key we only use one command:
       \cxset{chapter name font-size: Huge,
              chapter number font-size: HUGE}
 
-### Future Development
+## Future Development
 
 This is still an experimental version, but I will retain the
 interface in future releases. There is a large amount of
 work still to be carried out to improve the template styles
 provided, to test it more thoroughly and to add a number of
 improvements in the special designs. At present I estimate
-that I have completed about 70% of the work that needs
+that I have completed about 90% of the work that needs
 to be done.
 
 The package as it stands is production stable.
-
-
 

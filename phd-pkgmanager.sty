@@ -1,6 +1,3 @@
-
-
-
 \NeedsTeXFormat{LaTeX2e}[2017/04/15]%%
 \ProvidesPackage{phd-pkgmanager}[2015/1/13 v1.0 less preamble (YL)]%
 \let\ltxtoday\today
@@ -12,7 +9,6 @@
       \newcounter{chapter}
       \def\thechapter{\@arabic\c@chapter}
 }{}
-
 \ExplSyntaxOn
 \cs_new:Npn \save_symbol: #1
   {
@@ -53,14 +49,18 @@
 \ifloadpackages
 \file_if_exist:nTF {#1}
   {
-    #2
-    \clist_gput_right:Nn \g_phd_packages_loaded_clist:n {#1}
+    \exp_after:w \ifx\csname ver@#1.sty\endcsname\relax
+            \PackageInfo{phd-pkgmanager}{package~#1~loaded.}
+    \else
+      \PackageInfo{phd-pkgmanager}{package~#1~already~loaded.}
+    \fi
+     \clist_gput_right:Nn \g_phd_packages_loaded_clist:n {#1}
+     #2
   }
-
   {
-   #3
+    #3
     \clist_gput_right:Nn \g_phd_packages_not_found:n {#1}
-
+    \PackageInfo{phd-pkgmanager}{package~#1~not~found.}
   }
 \fi
 }
@@ -69,14 +69,20 @@
 \ifloadpackages
 \file_if_exist:nTF {#1.sty}
   {
-    #2
+
     \clist_gput_right:Nn \g_phd_packages_loaded_clist:n {#1}
+    \expandafter\ifx\csname ver@#1.sty\endcsname\relax
+      \PackageInfo{phd-pkgmanager}{package~#1~loaded.}
+    \else
+      \PackageInfo{phd-pkgmanager}{package~#1~already~loaded.}
+    \fi
+     #2
   }
 
   {
    #3
     \clist_gput_right:Nn \g_phd_packages_not_found:n {#1}
-
+    \PackageInfo{phd-pkgmanager}{package~#1~not~found.}
   }
 \fi
 }
@@ -107,6 +113,11 @@
   {}
 \ExplSyntaxOff
 
+\ifstylefileexists{chancery}
+  {
+    \newcommand{\mathpzc}[1]{\mbox{\usefont{OT1}{pzc}{m}{it}#1}}
+  }
+  {}
 
 %% |\PassOptionsToPackage{\onlyamsmathkeys@cx}{onlyamsmath}|
 \ifMICROTYPE
@@ -134,9 +145,9 @@
 \newif\ifLETTRINE
 \ifstylefileexists{lettrine}{%
 \LETTRINEtrue
-\RequirePackage{lettrine}
-\def\dropcap#1#2{
-\lettrine[lines=3, lraise=0.1, nindent=0em, slope=.1em]{#1}{#2}}
+  \RequirePackage{lettrine}
+  \def\dropcap#1#2{
+   \lettrine[lines=3, lraise=0.1, nindent=0em, slope=.1em]{#1}{#2}}
 }{}
 \ifstylefileexists{acronym}%
 {%
@@ -145,25 +156,52 @@
 }%
 {}
 \newif\ifSIUNITX
-\ifstylefileexists{siunitx}{\SIUNITXtrue
-   \RequirePackage{siunitx}}{}
+\ifstylefileexists{siunitx}{
+  \SIUNITXtrue
+  \RequirePackage{siunitx}}{}
 \ifSIUNITX
   \sisetup{fixed-exponent =0,
           scientific-notation = false}
 \fi
+\newif\ifNUMPRINT
+\ifstylefileexists{numprint}{%
+ \NUMPRINTtrue
+ \RequirePackage{numprint}}
+ {}
+\newif\ifMDFRAMED
+\ifstylefileexists{mdframed}{%
+  \MDFRAMEDtrue
+  \RequirePackage{mdframed}}%
+{}
 
-
+\newif\ifNUMPRINT
 \ifstylefileexists{fancybox}
-  {\RequirePackage{fancybox}}
+  {
+    \NUMPRINTtrue
+    \RequirePackage{fancybox}}
   {}
-\ifstylefileexists{graphicx}{
-\RequirePackage{graphicx}
-\DeclareGraphicsExtensions{.jpg, .JPG, .jpeg, .png, .eps}
+\newif\ifGRAPHICX
+\ifstylefileexists{graphicx}{%
+  \GRAPHICXtrue
+  \RequirePackage{graphicx}
+  \DeclareGraphicsExtensions{.jpg, .JPG, .jpeg, .JPEG, .eps, .pdf, .PDF}
   \graphicspath{{graphics/}{graphics//}{../images/}{images//}{./images/}{./graphics/}%
-    {../graphics/}{./pic/}{../pic}}}{}
+    {../graphics/}{./pic/}{../pic}}
+}{}
+\newif\ifGRFEXT
+\ifstylefileexists{grfext}{%
+  \GRFEXTtrue
+  \RequirePackage{grfext}
+}{}
+\ifGRFEXT
+\AppendGraphicsExtensions{.png}
+\PrintGraphicsExtensions
+\fi
 
 \newif\ifWRAPFIG
-\ifstylefileexists{wrapfig}{\WRAPFIGtrue\RequirePackage{wrapfig}}{}
+\ifstylefileexists{wrapfig}{%
+  \WRAPFIGtrue\RequirePackage{wrapfig}}
+  {}
 \ifstylefileexists{rotating}
 {\PassOptionsToPackage{quiet}{rotating}
 \RequirePackage{rotating}}
@@ -173,37 +211,28 @@
 \ifstylefileexists{lipsum}{\LIPSUMtrue
 \RequirePackage{lipsum}}{}
 
- \RequirePackage[par]{kantlipsum}
-\ifstylefileexists{blindtext}{
-\RequirePackage{blindtext}}{}
+\newif\ifKANTLIPSUM
+\ifstylefileexists{}{%
+ \PassOptionsToPackage{par}{kantlipsum}
+ \RequirePackage{kantlipsum}}
+ {}
+\newif\ifBLINDTEXT
+\ifstylefileexists{blindtext}{%
+  \BLINDTEXTtrue
+  \RequirePackage{blindtext}}
+  {}
 \newif\ifPHDLOREMS
 \ifstylefileexists{phd-lorems}{\PHDLOREMStrue
   \RequirePackage{phd-lorems}}{}
-%%    \end{macrocode}
-%%
-%%
-%% \begin{docCommand}{fox} {\meta{void}}
-%%  A classic one liner containing all the letters
-%%  of the alphabet, used as a testing code.
-%% \end{docCommand}
-%%    \begin{macrocode}
-%%    \end{macrocode}
-%%
-%%
-%% \begin{docCommand} {frogking} { \meta {void}}
-%% \end{docCommand}
-%%    \begin{macrocode}
-%%    \end{macrocode}
-%%
-%%
-%%    \begin{macrocode}
 \RequirePackage{fonttable}
 
-\RequirePackage{booktabs}
+\ifstylefileexists{booktabs}{
+\RequirePackage{booktabs}}{}
 \newcounter{step}
 \newcommand\resetinc{\setcounter{step}{0}}
 \newcommand\inc{\stepcounter{step}\thestep}
-\RequirePackage{tabularx}
+\ifstylefileexists{booktabs}{
+\RequirePackage{tabularx}}{}
 \ifstylefileexists{array}{
 \RequirePackage{array}}{}
 \ifstylefileexists{dcolumn}{
@@ -271,12 +300,15 @@
   {\havecolortbltrue\RequirePackage{colortbl}}
   {}
 \RequirePackage{threeparttable}
-
+\newif\ifPDFLSCAPE
 \ifstylefileexists {pdflscape}
-  {\RequirePackage{pdflscape}}
+  { \PDFLSCAPEtrue
+    \RequirePackage{pdflscape}}
   {}
+\newif\ifDIAGBOX
 \ifstylefileexists {diagbox}
-  {\RequirePackage{diagbox} }
+  { \DIAGBOXtrue
+    \RequirePackage{diagbox} }
   {}
 \ifUNICODE
 \else
@@ -294,6 +326,53 @@
 \newif\ifAMS
 \newcommand\AMS{\AmS\index{AMS=\AmS}}
 
+\ExplSyntaxOn
+\newif\ifMTOOLS
+\newcommand\MTOOLS{\pkgname{mathtools}}
+ \RequirePackage{mathtools}
+ \RequirePackage{suffix}
+\ifstylefileexists{mathtools}
+  {\MTOOLStrue
+   \save_symbol:{xleftrightarrow} \save_symbol:{xLeftarrow}
+   \save_symbol:{xRightarrow} \save_symbol:{xLeftrightarrow}
+   \save_symbol:{xrightharpoondown} \save_symbol:{xrightharpoonup}
+   \save_symbol:{xleftharpoondown} \save_symbol:{xleftharpoonup}
+   \save_symbol:{xleftrightharpoons} \save_symbol:{xrightleftharpoons}
+   \save_symbol:{xhookleftarrow} \save_symbol:{xhookrightarrow}
+   \save_symbol:{xmapsto} \save_symbol:{underbracket}
+   \save_symbol:{overbracket} \save_symbol:{lparen} \save_symbol:{rparen}
+   \save_symbol:{dblcolon} \save_symbol:{coloneqq} \save_symbol:{Coloneqq}
+   \save_symbol:{coloneq} \save_symbol:{Coloneq} \save_symbol:{eqqcolon}
+   \save_symbol:{Eqqcolon} \save_symbol:{eqcolon} \save_symbol:{Eqcolon}
+   \save_symbol:{colonapprox} \save_symbol:{Colonapprox}
+   \save_symbol:{colonsim} \save_symbol:{Colonsim} \save_symbol:{overbrace}
+   \save_symbol:{underbrace}%NEW
+   \save_symbol:{overleftrightarrow}%NEW
+   \save_symbol:{mathscr}
+   \save_symbol:{ulcorner}
+   \save_symbol:{urcorner}
+   \save_symbol:{llcorner}
+   \save_symbol:{lrcorner}
+   \save_symbol:{backepsilon}
+   \save_symbol:{digamma}
+   \save_symbol:{underrightarrow}
+   \save_symbol:{underleftarrow}
+   \save_symbol:{underleftrightarrow}
+   \save_symbol:{eth}
+   \save_symbol:{underbracket}
+   \save_symbol:{smash}
+
+  %\let\RequirePackage\origRequirePackage
+   \PassOptionsToPackage{donotfixmathbugs}{mathtools}
+   \RequirePackage{mathtools}
+   %\let\AtBeginDocument=\origAtBeginDocument
+   \restore_symbol:{MTOOLS}{overbrace}
+   \restore_symbol:{MTOOLS}{underbrace}
+   \restore_symbol:{MTOOLS}{underbracket}
+   \restore_symbol:{MTOOLS}{smash}
+  }
+  {}
+\ExplSyntaxOff
 %%
 \newcommand\ligatures[2][Old Standard-Regular]{%
   \bgroup
@@ -311,8 +390,10 @@
   }
   {}
 \fi
-\ifstylefileexists{multienum}{
-\RequirePackage{multienum}}{}
+\newif\ifMULTIENUM
+\ifstylefileexists{multienum}{%
+  \MULTIENUMtrue
+  \RequirePackage{multienum}}{}
 \ExplSyntaxOn
 \newif\ifACCENTS
 \ifstylefileexists{accents}
@@ -333,10 +414,14 @@
   % Do the same for \DeclareMathDelimiter.
   % Define only those accents that are not defined elsewhere.
 %%
+\newif\ifNICEFRAC
 \ifstylefileexists{nicefrac}{
-\RequirePackage{nicefrac}}{}
+  \NICEFRACtrue
+  \RequirePackage{nicefrac}}{}
+\newif\ifXFRAC
 \ifstylefileexists{xfrac}{
-\RequirePackage{xfrac}}{}
+  \XFRACtrue
+  \RequirePackage{xfrac}}{}
 \RequirePackage{amssymb}[2002/01/22]
 \RequirePackage{amsthm}[2002/01/22]
 \RequirePackage{amsopn}
@@ -458,7 +543,7 @@
 \else
 \ifstylefileexists{bbold}
   {
-  %</fontdef
+  %font definition
   \newcommand{\BBmathbb}[1]{\mbox{\usefont{U}{bbold}{m}{n}##1}}
    % We have to manually define all of the symbols we care about.
    \newcommand{\BBsym}[1]{\ensuremath{\BBmathbb{\char##1}}}
@@ -501,8 +586,10 @@
   \renewcommand{\mathfrak}[1]{\mbox{\fontencoding{U}\fontfamily{euf}\selectfont#1}}
 \fi
 \newif\ifUPGR
-    \RequirePackage[Symbol]{upgreek}
-
+\ifstylefileexists{upgreek}%
+  {\UPGRtrue
+   \RequirePackage[Symbol]{upgreek}}
+  {}
 \ExplSyntaxOn
 \newif\ifMDOTS
 \newcommand\MDOTS{\pkgname{mathdots}}
@@ -672,7 +759,7 @@
   }
   {}
 
-  \RequirePackage{mhchem}
+  \RequirePackage[version=4]{mhchem}
   \RequirePackage{chemfig}
 
 \newif\ifMAN
@@ -727,15 +814,36 @@
   {\UTILDtrue\RequirePackage{undertilde}}
   {}
 \RequirePackage{phdfilecontents}
-\RequirePackage{changepage}
-\RequirePackage{keyval}
+\newif\ifKEYVAL
+\ifstylefileexists{keyval}{%
+\KEYVALtrue
+\RequirePackage{keyval}}{}
+\newif\ifKVDEFINEKEYS
+\ifstylefileexists{kvdefinekeys}{%
+  \KVDEFINEKEYStrue
+  \RequirePackage{kvdefinekeys}}{}
 \RequirePackage{xkvview}
+\RequirePackage{kvoptions}
+\newif\ifPGFOPTS
+\ifstylefileexists{pgfopts}{
+\RequirePackage{pgfopts}}{}
 \RequirePackage{ifmtarg}
-\PassOptionsToPackage{nomessages}{fp}
-\RequirePackage{fp}
+\RequirePackage{changepage}
+\newif\ifFP
+\ifstylefileexists{fp}{%
+  \FPtrue
+  \PassOptionsToPackage{nomessages}{fp}
+  \RequirePackage{fp}}{}
 
+\newif\ifCALC
+\ifstylefileexists{calc}{%
+ \CALCtrue
+ \RequirePackage{calc}}{}
+
+\newif\ifXSPACE
 \ifstylefileexists{xspace}{
-\RequirePackage{xspace}}{}
+ \XSPACEtrue
+ \RequirePackage{xspace}}{}
 \ifstylefileexists{xstring}{
 \RequirePackage{xstring}}{}
 \ifstylefileexists{multido}{
@@ -746,7 +854,7 @@
 \RequirePackage{parselines}
 
 \RequirePackage{upquote}
-\RequirePackage{calc}
+
 
 \ifstylefileexists{pict2e}{
 \RequirePackage{pict2e}}{}
@@ -924,11 +1032,11 @@
 
 \ifstylefileexists{alltt}{
 \RequirePackage{genealogytree}}{}
-\ifstylefileexists{alltt}{
+\ifstylefileexists{chngcntr}{
 \RequirePackage{chngcntr}}{}
-\ifstylefileexists{alltt}{
+\ifstylefileexists{eso-pic}{
 \RequirePackage{eso-pic}}{}
-\ifstylefileexists{alltt}{
+\ifstylefileexists{alphalph}{
 \RequirePackage{alphalph}}{}
 \ifstylefileexists{alltt}{
 \RequirePackage{fmtcount}}{}
@@ -948,7 +1056,7 @@
 \RequirePackage{subcaption}
 
 \PassOptionsToPackage{final}{pdfpages}
-\RequirePackage{pdfpages}
+\PassOptionsToPackage{draft,nodemo}{pdfpages}
 \newif\ifCCLIC
 \newcommand\CCLIC{\pkgname{cclicenses}}
 \ifstylefileexists{cclicenses}
