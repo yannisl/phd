@@ -143,7 +143,7 @@ See http://www.latex-project.org/lppl.txt
   \expandafter\endgroup
 \fi
 %</internal>
-
+%
 %
 %<class>\NeedsTeXFormat{LaTeX2e}
 %<class>\ProvidesClass{phddoc}
@@ -160,39 +160,46 @@ See http://www.latex-project.org/lppl.txt
       It contains the code for \texttt{phddoc.cls}}
 \date{\filedate}
 \author{Yannis Lazarides}
-\usepackage{phd}
-\usepackage{phd-colorpalette}
-\usepackage{phd-runningheads}
+%\usepackage{phd}
+%\usepackage{phd-pkgmanager}
+%\usepackage{phd-documentation}
+%\usepackage{phd-colorpalette}
+%\usepackage{phd-runningheads}
 \usepackage{phd-lowersections}
-\usepackage{phd-runningheads}
-\usepackage{phd-documentation}
-\usepackage{phd-toc}
+%\usepackage{phd-toc}
 \usepackage[cache=false]{minted} 
 \usemintedstyle[latex]{borland} 
 
 
 \cxset{section format=hang}
 \cxset{subsection afterindent=off}
-\pagestyle{headings}
-\sethyperref
+
+
 \addbibresource{phd1.bib}
 \input{defaults-chapters}
 \cxset{palette spring onion}
+\makeindex
+\CodelineIndex
+\EnableCrossrefs
+
+
 \begin{document}
 \DEBUGOFF
 \frontmatter
 \maketitle
 \clearpage
 \mainmatter
+\pagestyle{headings}
 \tableofcontents
 \input{./sections/classes}
- \DocInput{phddoc.dtx}
+\DocInput{phddoc.dtx}
+\printindex
 \end{document}
 %</driver>
 %
 % \fi
 %
-% \CheckSum{392}
+% \CheckSum{402}
 %
 %  \pagestyle{headings}
 % \cxset{chapter format=stewart}
@@ -288,10 +295,12 @@ See http://www.latex-project.org/lppl.txt
 % |article| class which is loaded by \pkg{phddoc}. For instance if you wish
 % all the documentation to be formated for A4 paper, add the following
 % line to |phddoc.cfg|:
-%\begin{verbatim}
-% \PassOptionsToClass{a4paper}{article}
-%\end{verbatim}
 %
+% \medskip
+%\begin{teX}
+% \PassOptionsToClass{a4paper}{article}
+%\end{teX}
+% \medskip
 % All the source files are in two parts, separated by |\StopEventually|.
 % The first part (should) contain `user' documentation. The second part
 % is a full documented listing of the source code. The |doc| package
@@ -361,6 +370,7 @@ See http://www.latex-project.org/lppl.txt
 \newif\if@scrbook
 \newif\if@scrartcl
 \newif\if@scrreprt
+\newif\if@masterthesis
 
 \DeclareOption{article}{\@articletrue} 
 \DeclareOption{book}{\@booktrue} 
@@ -368,6 +378,7 @@ See http://www.latex-project.org/lppl.txt
 \DeclareOption{scrbook}{\@scrbooktrue}
 \DeclareOption{scrartcl}{\@scrartcltrue}
 \DeclareOption{scrreprt}{\@scrreprttrue}
+\DeclareOption{masterthesis}{\@masterthesis}
 
 %    \end{macrocode}
 %
@@ -428,6 +439,12 @@ See http://www.latex-project.org/lppl.txt
 %    \begin{macrocode}
 \RequirePackage{doc}
 \RequirePackage{expl3}
+\RequirePackage{phd}
+\RequirePackage{phd-pkgmanager}
+\sethyperref
+\RequirePackage{phd-documentation}
+\RequirePackage{phd-colorpalette}
+\RequirePackage{phd-runningheads}
 %    \end{macrocode}
 %
 % Make \verb+|+ be a `short verb' character, but not in the document
@@ -453,8 +470,9 @@ See http://www.latex-project.org/lppl.txt
 %    \end{macrocode}
 %
 %    \begin{macrocode}
+\CodelineIndex
 \CodelineNumbered
-\DisableCrossrefs
+\EnableCrossrefs
 %    \end{macrocode}
 %
 % Increase the text width slightly so that width the standard fonts
@@ -555,12 +573,15 @@ See http://www.latex-project.org/lppl.txt
   \relax
   \clearpage
   \docincludeaux
-  \IfFileExists{#1.fdd}{\def\currentfile{#1.fdd}}{\def\currentfile{#1.dtx}}%
+  \IfFileExists{#1.fdd}{%
+    \def\currentfile{#1.fdd}}{\def\currentfile{#1.dtx}
+   }%
   \ifnum\@auxout=\@partaux
     \@latexerr{\string\include\space cannot be nested}\@eha
   \else \@docinclude#1 \fi}
+%  
 \def\@docinclude#1 {\clearpage
-\if@filesw \immediate\write\@mainaux{\string\@input{#1.aux}}\fi
+  \if@filesw \immediate\write\@mainaux{\string\@input{#1.aux}}\fi
 \@tempswatrue\if@partsw \@tempswafalse\edef\@tempb{#1}\@for
 \@tempa:=\@partlist\do{\ifx\@tempa\@tempb\@tempswatrue\fi}\fi
 \if@tempswa \let\@auxout\@partaux \if@filesw
@@ -625,21 +646,25 @@ See http://www.latex-project.org/lppl.txt
 \def\docincludeaux{%
   \def\thepart{\aalph{part}}\def\filesep{\thepart-}%
   \let\filekey\@gobble
+% add to index prologue  
   \g@addto@macro\index@prologue{%
     \gdef\@oddfoot{\parbox{\textwidth}{\strut\footnotesize
        \raggedright{\bfseries File Key:} \filekey}}%
     \let\@evenfoot\@oddfoot}%
   \global\let\docincludeaux\relax
+% 
  \gdef\@oddfoot{%
    \expandafter\ifx\csname ver@\currentfile\endcsname\relax
     File \thepart: {\ttfamily\currentfile} %
    \else
     \GetFileInfo{\currentfile}%
-    File \thepart: {\ttfamily\filename} %
+    File \thepart: {\ttfamily\filena
+    me} %
     Date: \filedate\ %
     Version \fileversion
     \fi
     \hfill\thepage}%
+% one sided paper    
  \let\@evenfoot\@oddfoot}%
 %    \end{macrocode}
 % \end{macro}
@@ -674,3 +699,4 @@ See http://www.latex-project.org/lppl.txt
 %    \end{macrocode}
 % \Finale
 %
+\endinput

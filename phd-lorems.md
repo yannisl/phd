@@ -1,19 +1,27 @@
-##The `phd-handlers` LaTeX2e package
+# The `phd-quote` LaTeX2e package version 1.0.0
 
 The `phd` latex package and the class with the same name provide
 convenient methods to create new styles for books, reports
 and articles. It also loads the most commonly used packages
 and resolves conflicts.
 
-This work consists of the file  `phd.dtx`,
-and the derived files   `phd.ins`,  `phd.pdf`, and `phd.sty`.
+This work consists of the file
+
+   `phd-quote.dtx`,
+
+and the derived files
+
+   `phd-quote.ins`,
+   `phd.pdf`,
+   `phd.sty`.
 
 ## Installation
 
-run
-          phd-lua.bat on windows
-           pdflatex phd.dtx
-           makeindex -s gind.ist -g phd
+run the provide script
+
+     `phd-lua phd-quote.dtx` on windows
+
+     or manually on other OSs.
 
 If you have any difficulties with the package come and join us at
 http://tex.stackexchange.com and post a new question or
@@ -48,10 +56,8 @@ interface in future releases. There is a large amount of
 work still to be carried out to improve the template styles
 provided, to test it more thoroughly and to add a number of
 improvements in the special designs. At present I estimate
-that I have completed about 80% of the work that needs
+that I have completed about 70% of the work that needs
 to be done.
 
 __The package as it stands is not production stable.__
-
-
 

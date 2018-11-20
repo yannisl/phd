@@ -10,16 +10,16 @@
 \label{kernel:ltmath}
 
 
-This module is in |kernel-ltmath.dtx|. The file provides a number of math environments,
+This module is in \docClass{kernel-ltmath.dtx}. The file provides a number of math environments,
 and for the rest is mostly a copy of plain.
 
 %
 %
-% \section{Math commands based on plain \TeX}
+\section{Math commands based on plain \TeX}
 %
-% \subsection{The log-like functions}
+\subsection{The log-like functions}
 %
-Note that \refCom{operator@font} is defined in the fontdef.dtx file (see chapter~\ref{ch:fontdef}).
+Note that \docAuxCommand{operator@font} is defined in the \docClass{fontdef.dtx} file (see chapter~\ref{ch:fontdef}).
 
 The standard operators:
 \begin{teX}
@@ -561,7 +561,9 @@ $$
 \end{docCommand}
 \end{docCommand}
 %
- \begin{environment}{math}
+
+\begin{environment}{math}
+\end{environment} 
   \begin{environment}{displaymath}
   Disguises for |\(...\)| and |\[...\]|.
 \begin{teX}
@@ -574,24 +576,29 @@ $$
 \def\enddisplaymath{\]\@ignoretrue}
 \end{teX}
  \end{environment}
- \end{environment}
+
 %
 %
- \begin{environment}{equation}
- \begin{docCommand}{c@equation} {}
-  Numbered equations, using the counter |\c@equation|.
+\begin{environment}{equation}
+  The equation environment. 
+\end{environment}
+
+\begin{docCommand}{c@equation} {}
+  Numbered equations, using the counter \docCounter{c@equation}.
   \emph{Note}: The document style must define |\theequation| etc., and
   do the appropriate |\@addtoreset|. It should also redefine |\@eqnnum|
   if another format for the equation number is desired other than the
   standard (...), or to move the equation numbers to the flushleft.
-   (See comment on the |\def| of |\@eqnnum|.)
+  (See comment on the |\def| of |\@eqnnum|.)
+\end{docCommand}
+
 \begin{teX}
 \@definecounter{equation}
 \def\equation{$$\refstepcounter{equation}}
 \def\endequation{\eqno \hbox{\@eqnnum}$$\@ignoretrue}
 \end{teX}
-\end{docCommand}
-\end{environment}
+
+
 %
 \begin{docCommand}{@eqnnum}{}
 % \changes{LaTeX2.09}{1991/09/29}{RmS: \cs{reset@font} added.}
@@ -844,7 +851,7 @@ $$
     To put the equation number on the left side of an equation we
     have to use a little trick. The number is shifted |\displaywidth|
     to the left inside a box of (approximately) zero width. This
-    fails when the quation is too wide, the equation number than may
+    fails when the equation is too wide, the equation number than may
     overprint the equation itself.
 \end{docCommand}
 
@@ -857,14 +864,17 @@ $$
 \end{teX}
 %  \end{macro}
 %
- \subsubsection{Flush left equations}
 
-    To get the displayed math environments to print the contents
-    flush left (with an indentation) we have to redefine all of
-    \LaTeXe's displayed math environments.
+\subsubsection{Flush left equations}
 
-\begin{docCommand}{mathindent}{}
-    The amount of indentation of the equations is stored in a register.
+To get the displayed math environments to print the contents
+flush left (with an indentation) we have to redefine all of
+\LaTeXe's displayed math environments.
+
+\begin{docCommand}{mathindent}{\marg{length}}
+    The amount of indentation of the equations is stored in a register. Currently in this
+    document it is 
+\end{docCommand}    
 \begin{teX}
 %<*fleqn>
 \newdimen\mathindent
@@ -881,25 +891,28 @@ wide at the moment \texttt{fleqn.clo} is read in.
 \begin{teX}
 \AtEndOfClass{\mathindent\leftmargini}
 \end{teX}
-\end{docCommand}
+
 %
 \begin{docCommand}{[} {}
-Begin display math;
+ The \docAuxCommand{[} is defined here to begin display math. Note that in the later releases
+ it has been made robust.
+\end{docCommand}
 \begin{teX}
 \IncludeInRelease{2015/01/01}{\[}{Make \[ robust}%
 \DeclareRobustCommand\[{\relax
-                \ifmmode\@badmath
-                \else
-                  \begin{trivlist}%
-                    \@beginparpenalty\predisplaypenalty
-                    \@endparpenalty\postdisplaypenalty
-                    \item[]\leavevmode
-                    \hb@xt@\linewidth\bgroup $\m@th\displaystyle %$
-                      \hskip\mathindent\bgroup
-                \fi}
+  \ifmmode\@badmath
+  \else
+  \begin{trivlist}%
+     \@beginparpenalty\predisplaypenalty
+     \@endparpenalty\postdisplaypenalty
+     \item[]\leavevmode
+            \hb@xt@\linewidth\bgroup $\m@th\displaystyle %$
+            \hskip\mathindent\bgroup
+  \fi}
 \EndIncludeInRelease
 \end{teX}
 %
+Restore in earlier releases as:
 \begin{teX}
 \IncludeInRelease{0000/00/00}{\[}{Make \[ robust}%
 \renewcommand\[{\relax
@@ -914,7 +927,11 @@ Begin display math;
                 \fi}
 \EndIncludeInRelease
 \end{teX}
-\end{docCommand}
+
+
+\begin{texexample}{Check if is robust}{ex:dispmath}
+\meaning\[
+\end{texexample}
 %
 \begin{docCommand}{]}{}
 The end display math is defined in a similar fashion to the begin math command.
@@ -963,24 +980,26 @@ The \textsf{equation} environment
 \end{teX}
 
 %
-% \begin{environment}{eqnarray}
+ \begin{docEnvironment}{eqnarray}{}
+ \end{docEnvironment}
 %    The \textsf{eqnarray} environment
 \begin{teX}
 \renewenvironment{eqnarray}{%
-    \stepcounter{equation}%
-    \def\@currentlabel{\p@equation\theequation}%
-    \global\@eqnswtrue\m@th
-    \global\@eqcnt\z@
-    \tabskip\mathindent
-    \let\\=\@eqncr
-    \setlength\abovedisplayskip{\topsep}%
-    \ifvmode
-      \addtolength\abovedisplayskip{\partopsep}%
-    \fi
+  \stepcounter{equation}%
+  \def\@currentlabel{\p@equation\theequation}%
+  \global\@eqnswtrue\m@th
+  \global\@eqcnt\z@
+  \tabskip\mathindent
+  \let\\=\@eqncr
+  \setlength\abovedisplayskip{\topsep}%
+  \ifvmode
+    \addtolength\abovedisplayskip{\partopsep}%
+  \fi
 \end{teX}
-%    When the documentclass uses a non-zero |\parskip| setting the
-%    |\topsep| might have a negative value to compensate for
-%    that. Therefore we add |\parskip| to |\abovedisplayskip|.
+
+When the documentclass uses a non-zero |\parskip| setting the
+    \docAuxCommand{topsep} might have a negative value to compensate for
+    that. Therefore we add \docAuxCommand{parskip} to \docAuxCommand{abovedisplayskip}.
 % \changes{v1.2v classes}{1994/11/10}{Added value of \cs{parskip} to
 %    \cs{abovedisplayskip} to compensate for negative \cs{topsep}}
 \begin{teX}

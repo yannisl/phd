@@ -53,3 +53,6 @@ to be done.
 
 The package as it stands is production stable.
 
+\wlog{*******************************}
+\wlog{  END PHD-PKGMANAGER}
+\wlog{*******************************}

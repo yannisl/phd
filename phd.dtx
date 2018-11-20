@@ -224,11 +224,10 @@ See http://www.latex-project.org/lppl.txt
 \immediate\write18{makeindex -s gind.ist -g phd.ind phd.idx} %needs checking from Joseph’s trivfloat
 %</internal>
 %<*driver>
-
+%
 %\listfiles
 %gdef\@onlypreamble{} % TO BE REMOVED NEEDED FOR TUTS
 \NeedsTeXFormat{LaTeX2e}[2017/04/15]%
-
 \documentclass[book,twoside,11pt,a4paper]{phddoc}
 \let\HUGE\Huge
 \makeatletter
@@ -247,7 +246,8 @@ See http://www.latex-project.org/lppl.txt
 
 % \usepackage[style=mla]{biblatex}
 
-\usepackage[microtype=off]{phd}
+%\usepackage[microtype=on]{phd}
+%\usepackage{phd-pkgmanager}
 \usepackage{fontspec}
 
 \usepackage{phd-fontmanager}
@@ -263,7 +263,7 @@ See http://www.latex-project.org/lppl.txt
 \cxset{part format=stewart,
        chapter afterindent=on,
        part afterindent=on,
-       section format=hang,
+       section format=traditional,
        chapter format=block,
        chapter opening=left}
 \newfontfamily\symbola{Symbola.ttf}       
@@ -375,7 +375,7 @@ See http://www.latex-project.org/lppl.txt
 %
 % \part{IMPLEMENTATION}
 % 
-
+% \def\chaptername{Chapter}
 % \chapter{Implementation Strategy}
 %
 % The implementation is divided into different parts. 
@@ -406,7 +406,7 @@ See http://www.latex-project.org/lppl.txt
 %  \item [quote] Provides environments and keys for quotes and quotations.
 %
 %  \item [Indexing and Documentation] This is managed through the
-%        package \pkgname{phd-documentation}.
+%        package \pkg{phd-documentation}.
 %
 %  \item [The Image Page Manager] This section manages the design of 
 %       pages that consist primarily of images and complex
@@ -465,7 +465,7 @@ See http://www.latex-project.org/lppl.txt
 \let\latexendenumerate\endenumerate
 %    \end{macrocode}
 
-% Load the package \pkgname{fixltx2e} to update \LaTeX2e for various fixes. The package fixes a number things in the LaTeX2e kernel. Due to LaTeX's stability policy, these corrections have not been incorporated into the LaTeX2e kernel, but this package does things most people would agree are bugfixes. So to load this package is always recommended for newly created documents. The corrections have no commonalities, but the package's description has a nice summary:
+% Load the package \pkg{fixltx2e} to update \LaTeX2e for various fixes. The package fixes a number things in the LaTeX2e kernel. Due to LaTeX's stability policy, these corrections have not been incorporated into the LaTeX2e kernel, but this package does things most people would agree are bugfixes. So to load this package is always recommended for newly created documents. The corrections have no commonalities, but the package's description has a nice summary:
 %
 %ensure one-column floats don't get ahead of two-column floats;
 %correct page headers in twocolumn documents;
@@ -491,7 +491,7 @@ See http://www.latex-project.org/lppl.txt
 %
 % \section{Essential packages}
 %
-% Some packages are essential and we load them here. First we load all the \pkgname{expl3} packages,
+% Some packages are essential and we load them here. First we load all the \pkg{expl3} packages,
 % that we require. These are under continuous development, so please ensure you have the
 % latest versions. 
 %
@@ -504,13 +504,25 @@ See http://www.latex-project.org/lppl.txt
 \RequirePackage{phd-logos}
 %    \end{macrocode}
 %
-% We require the \pkgname{morewrites} to enable us to use in excess of 16 files.
-%
+% \begin{docCommand}{MakePrivateLetters}{}
+%   The \pkg{doc} provides the user with a command to define which characters
+%   can be treated as letters when scanning the contents of a |macrocode| environment.
+%   Since we are using l3 macros as well we redefine it as:
+% \end{docCommand}
 %    \begin{macrocode} 
-\RequirePackage{morewrites}
-\RequirePackage{pgf}      
-\usepgfmodule{parser}%for svg     
-\usepgflibrary{svg.path}%for futurelet and parser demo 
+\DeclareDocumentCommand\MakePrivateLetters{}{\catcode`\@11\relax \catcode`_11}
+%    \end{macrocode}
+% We require the \pkg{morewrites} to enable us to use in excess of 16 files.
+%
+%    \begin{macrocode}
+\ifluatex 
+\else
+ \RequirePackage{morewrites}
+\fi
+ 
+\RequirePackage{pgfkeys}      
+%\usepgfmodule{parser}%for svg     
+%\usepgflibrary{svg.path}%for futurelet and parser demo 
 %    \end{macrocode}
 %
 % All the bundled packages use the |/phd/| family for setting keys.
@@ -529,7 +541,7 @@ See http://www.latex-project.org/lppl.txt
 %    \end{macrocode}
 %
 % We use handlers extensively when setting keys, they are all bundled
-% in the package \pkgname{phd-handlers}.
+% in the package \pkg{phd-handlers}.
 % 
 %    \begin{macrocode}
 \RequirePackage{phd-handlers} 
@@ -676,13 +688,14 @@ See http://www.latex-project.org/lppl.txt
 %    \end{macrocode}
 %    \begin{macrocode}
 \RequirePackage{ifluatex}
+
 \RequirePackage{ifxetex}
 %    \end{macrocode}
 
-% \begin{docCmd}{ifengine} { \marg{code for XeTeX} \marg{code for LuaTeX} \marg{code for LaTeX} }
+% \begin{docCommand}{ifengine} { \marg{code for XeTeX} \marg{code for LuaTeX} \marg{code for LaTeX} }
 %   This is a three way switch. Check for XeTeX and then for LuaTeX and insert code
 %   as required.
-% \end{docCmd}
+% \end{docCommand}
 %    \begin{macrocode}
 \ExplSyntaxOn
 \cs_set:Npn \ifengine #1 #2 #3
@@ -700,12 +713,12 @@ See http://www.latex-project.org/lppl.txt
 \ExplSyntaxOff
 %    \end{macrocode}
 %
-% We use \pkgname{luacode} and luatextra only if we are using LuaTeX. Many of the
+% We use \pkg{luacode} and luatextra only if we are using LuaTeX. Many of the
 % packages we load ourselves later in any case. We need to check this. This loads 
 % \pkg{luatexbase}.
 %    \begin{macrocode}
 \ifluatex
-  \RequirePackage{luacode}
+   \RequirePackage{luacode}
   %\RequirePackage{luatextra}
 \fi
 %    \end{macrocode}
@@ -728,19 +741,19 @@ See http://www.latex-project.org/lppl.txt
 % of errors, as classes load it with mostly different options.
 % Because of this is also a good example to test our code
 % in a number of minimal working examples. We also load our
-% own \pkgname{phd-colorpalette} to setup all color codes.
+% own \pkg{phd-colorpalette} to setup all color codes.
 %
 %    \begin{macrocode}
 \@ifpackageloaded{xcolor}{}%
- {\PassOptionsToPackage{\xcolorkeys@cx}{xcolor}
+ {%\PassOptionsToPackage{\xcolorkeys@cx}{xcolor}
   \RequirePackage{xcolor}}
 \RequirePackage{phd-colorpalette}  
 %    \end{macrocode}
 %
 % \section{Language Manager} 
 %
-% We use the package \pkgname{polyglossia} for language management for the
-% newer engines and \pkgname{babel} for pdfLaTeX.
+% We use the package \pkg{polyglossia} for language management for the
+% newer engines and \pkg{babel} for pdfLaTeX.
 % This is full of holes which need to be closed for cases where the
 % bidi package is loaded. Be careful of babel shorthands! They corrupt
 % the table
@@ -749,12 +762,12 @@ See http://www.latex-project.org/lppl.txt
 %
 % \section{Scripts Management}
 %
-% Scripts for the worlds languages are handled through the \pkgname{phd-scriptsmanager}. 
+% Scripts for the worlds languages are handled through the \pkg{phd-scriptsmanager}. 
 % The package can assist in typesetting over 120 different scripts. I am also toying
 % with the idea to extend it to include for language management.
 %
 %    \begin{macrocode}
-\RequirePackage{phd-scriptsmanager}
+%\RequirePackage{phd-scriptsmanager}
 %    \end{macrocode}
 %
 % \section{Date and Time}
@@ -810,7 +823,7 @@ See http://www.latex-project.org/lppl.txt
 % as possible. There are two or three packages providing logos. In
 % the end we provide our own.
 %
-% The package \pkgname{scalefnt} should not be used, with XeLaTeX or LuaTeX.
+% The package \pkg{scalefnt} should not be used, with XeLaTeX or LuaTeX.
 % It might have some uses with older schemes.
 %    \begin{macrocode}
 \ifengine{}{}{\RequirePackage{scalefnt}	}
@@ -856,10 +869,10 @@ See http://www.latex-project.org/lppl.txt
 %
 % \section{documentation and indexing macros}
 %
-% We load the package \pkgname{phd-documentation}.
+% We load the package \pkg{phd-documentation}.
 %
 %    \begin{macrocode}
-  \RequirePackage{phd-documentation}
+  %\RequirePackage{phd-documentation}
 %    \end{macrocode}
 
 %  \section{Front matter Macros}
@@ -889,11 +902,12 @@ See http://www.latex-project.org/lppl.txt
 %such as section or page numbers. \cs{ref} or \cs{pageref} cannot be used for
 %counter assignments or calculations because they are not expandable, generate
 %warnings, or can even be links. The package provides expandable macros
-%to extract the data from references. Packages \pkgname{hyperref}, \pkgname{nameref}\footfullcite{nameref}, 
-% \pkgname{titleref}\footfullcite{}, and
-% \pkgname{babel} are supported.
+%to extract the data from references. Packages \pkg{hyperref}, 
+%\pkg{nameref}\footfullcite{nameref}, 
+% \pkg{titleref}\footfullcite{}, and
+% \pkg{babel} are supported.
 %    \begin{macrocode}  
-\RequirePackage{refcount}[2011/10/16]
+%\RequirePackage{refcount}[2011/10/16]
 %    \end{macrocode}
 %    \begin{macrocode}
 
@@ -1074,7 +1088,7 @@ See http://www.latex-project.org/lppl.txt
 % the \pkg{etoolbox} |\ifdef| macro.
 %
 %    \begin{macrocode}
-\RequirePackage{phd-counters}
+%\RequirePackage{phd-counters}
 %    \end{macrocode}
 %
 %    \begin{macrocode}

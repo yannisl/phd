@@ -1,0 +1,87 @@
+\documentclass{article}
+\usepackage{expl3, xparse}
+
+\ExplSyntaxOn
+
+\clist_new:N \g_phd_packages_loaded_clist:n 
+\clist_new:N \g_phd_packages_not_found:n 
+\newif\ifloadpackages
+\loadpackagestrue
+
+\cs_new:Npn \ifstylefileexists_star #1 #2 #3 {
+\ifloadpackages
+\file_if_exist:nTF {#1} 
+  {
+    #2
+    \clist_gput_right:Nn \g_phd_packages_loaded_clist:n {#1}
+  } 
+  
+  {
+   #3
+    \clist_gput_right:Nn \g_phd_packages_not_found:n {#1}
+     
+  }
+\fi  
+}
+
+\cs_new:Npn \ifstylefileexists_aux #1 #2 #3 {
+\ifloadpackages
+\file_if_exist:nTF {#1.sty} 
+  {
+    #2
+    \clist_gput_right:Nn \g_phd_packages_loaded_clist:n {#1}
+  } 
+  
+  {
+   #3
+    \clist_gput_right:Nn \g_phd_packages_not_found:n {#1}
+     
+  }
+\fi  
+}
+
+\NewDocumentCommand\IfStyleFileExists {s m m m } {
+ \IfBooleanTF #1 
+ {\ifstylefileexists_star {#2}{#3}{#4} }
+ {\ifstylefileexists_aux {#2}{#3}{#4}} 
+}
+
+\newif\ifLIPSUM
+\IfStyleFileExists*{lipsum.sty}
+  { \LIPSUMtrue
+    \RequirePackage{lipsum}
+  }
+  {}{}
+
+
+\IfStyleFileExists*{phd}{\RequirePackage{phd}}{}
+\loadpackagesfalse
+\IfStyleFileExists*{phd-pkgmanager}{\RequirePackage{phd-pkgmanager}}{}
+\loadpackagestrue
+\IfStyleFileExists{phd-colorpalette}{\RequirePackage{phd-colorpalette}}{}
+
+\newif\ifRAGGEDTWOE
+\newif\ifEVERYSEL
+\newif\ifFOOTMISC
+\IfStyleFileExists{ragged2e}{
+  \RAGGEDTWOEtrue
+  \EVERYSELtrue 
+  \FOOTMISCtrue
+  \PassOptionsToPackage{footnotes,raggedrightboxes}{ragged2e}%
+  \RequirePackage{ragged2e}}{}
+
+\ExplSyntaxOff
+\begin{document}
+\ifLIPSUM 
+  \color{thegreen}\lipsum  
+\else
+ \color{thecs}\lipsum[1] 
+\fi
+\ExplSyntaxOn
+%\file_show_list:
+\clist_use:Nnnn  \g_phd_packages_loaded_clist:n {,~}{,~} {~and~}
+
+\ExplSyntaxOff
+
+\
+\end{document}

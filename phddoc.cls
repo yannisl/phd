@@ -12,7 +12,6 @@
 %% See http://www.latex-project.org/lppl.txt
 %% ----------------------------------------------------------------
 
-
 \NeedsTeXFormat{LaTeX2e}
 \ProvidesClass{phddoc}
          [2007/11/11 v2.0u Standard LaTeX documentation class]
@@ -24,6 +23,7 @@
 \newif\if@scrbook
 \newif\if@scrartcl
 \newif\if@scrreprt
+\newif\if@masterthesis
 
 \DeclareOption{article}{\@articletrue}
 \DeclareOption{book}{\@booktrue}
@@ -31,6 +31,7 @@
 \DeclareOption{scrbook}{\@scrbooktrue}
 \DeclareOption{scrartcl}{\@scrartcltrue}
 \DeclareOption{scrreprt}{\@scrreprttrue}
+\DeclareOption{masterthesis}{\@masterthesis}
 
 \DeclareOption*{%
     \PassOptionsToClass  {\CurrentOption}{book}}
@@ -67,14 +68,21 @@
 \fi
 \RequirePackage{doc}
 \RequirePackage{expl3}
+\RequirePackage{phd}
+\RequirePackage{phd-pkgmanager}
+\sethyperref
+\RequirePackage{phd-documentation}
+\RequirePackage{phd-colorpalette}
+\RequirePackage{phd-runningheads}
 \AtBeginDocument{\MakeShortVerb{\|}}
 \DeclareFontShape{OT1}{cmtt}{bx}{n}{<-> ssub * cmtt/m/n}{}
 \DeclareFontFamily{OMS}{cmtt}{\skewchar\font 48}  % '60
 \DeclareFontShape{OMS}{cmtt}{m}{n}{<-> ssub * cmsy/m/n}{}
 \DeclareFontShape{OMS}{cmtt}{bx}{n}{<-> ssub * cmsy/b/n}{}
 \DeclareFontShape{OT1}{cmss}{m}{it}{<->ssub*cmss/m/sl}{}
+\CodelineIndex
 \CodelineNumbered
-\DisableCrossrefs
+\EnableCrossrefs
 \setlength{\textwidth}{355pt}
 \addtolength\marginparwidth{30pt}
 \addtolength\oddsidemargin{20pt}
@@ -91,12 +99,14 @@
   \relax
   \clearpage
   \docincludeaux
-  \IfFileExists{#1.fdd}{\def\currentfile{#1.fdd}}{\def\currentfile{#1.dtx}}%
+  \IfFileExists{#1.fdd}{%
+    \def\currentfile{#1.fdd}}{\def\currentfile{#1.dtx}
+   }%
   \ifnum\@auxout=\@partaux
     \@latexerr{\string\include\space cannot be nested}\@eha
   \else \@docinclude#1 \fi}
 \def\@docinclude#1 {\clearpage
-\if@filesw \immediate\write\@mainaux{\string\@input{#1.aux}}\fi
+  \if@filesw \immediate\write\@mainaux{\string\@input{#1.aux}}\fi
 \@tempswatrue\if@partsw \@tempswafalse\edef\@tempb{#1}\@for
 \@tempa:=\@partlist\do{\ifx\@tempa\@tempb\@tempswatrue\fi}\fi
 \if@tempswa \let\@auxout\@partaux \if@filesw
@@ -145,7 +155,8 @@
     File \thepart: {\ttfamily\currentfile} %
    \else
     \GetFileInfo{\currentfile}%
-    File \thepart: {\ttfamily\filename} %
+    File \thepart: {\ttfamily\filena
+    me} %
     Date: \filedate\ %
     Version \fileversion
     \fi

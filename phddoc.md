@@ -62,4 +62,3 @@ to be done.
 __The class as it stands is not production stable.__
 
 
-

@@ -1,0 +1,96 @@
+% https://tex.stackexchange.com/questions/7037/what-does-marks-do
+% 
+\documentclass{book}
+
+\newmarks\mymark
+\newmarks\mysecondmark
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\lhead{\topmarks\mymark \botmarks\mymark  \firstmarks\mysecondmark  }
+\begin{document}
+text
+\marks\mymark{A first mark}
+\marks\mysecondmark{TITLE OF PAGE}
+\marks\mymark{A second mark}
+
+\newpage
+
+text \marks\mysecondmark{SUBTITLE}
+
+\mysecondmark
+\end{document}
+http://tex.loria.fr/moteurs/etex_ref.html#marks
+\marks:
+this is one of Knuth's `possibly good ideas', listed at the end of TeX82.Bug; whereas TeX has only one \mark, which has to be over-loaded if more than one class of information is to be saved (e.g. over-loading is necessary if separate information for recto and verso pages is to be maintained), e-TeX has a whole class of \marks (256, in the first release); thus rather than writing \mark <general text> as in TeX, in e-TeX one writes \marks 8-bit number <general text>. For example, \marks 0 could be used to retain information for the verso page, whilst \marks 1 could retain information for the recto. There are equivalent classes for the five \marks variables \botmarks, \firstmarks, \topmarks, \splitfirstmarks and \splitbotmarks. It should be noted that \marks 0 and \mark are in fact identical, as are \topmarks 0 and \topmark, \botmarks 0 and \botmark and so on.
+
+For those of you who are interested, after having toiled over this problem
+with the kind help of Dr. Michael Barr at McGill University, here is a
+summary of using the \mark command in LaTeX and some trouble spots/fixes.
+------------------------------------------------------------------------------
+Ok, here's the scoop.  TeX has a command, namely \mark, which allows you to
+mark certain locations on a page.  You can mark anything, and that will be
+remembered by TeX when the page is output.  It will not be expanded in the
+text, so you will have to put it in twice, e.g.:
+marked text\mark{marked text}
+
+In order to refer to the marks, then, you need to use the commands \firstmark,
+\botmark, and \topmark.  \firstmark is the first mark on the page to be
+output, and \botmark is the last mark on the page to be output.  (There is
+also \topmark, but I cannot recall what this one does.  I think it is
+assigned the last value of \botmark before the page is \shipout'd.  Refer to
+the TeXbook for the facts.)
+
+However, there's a catch.  In using article.sty of LaTeX, the first
+\firstmark of the first page will be set to nothing.  There's a line in
+article.sty, "\mark{{}{}}", which does that.  If you need to you can make a
+copy of article.sty and comment this line out.  This is what I had to do.
+
+Also, there's another catch.  If you are using twocolumn format, you will
+have to redefine \@outputdblcol to save the \firstmark of the first column.
+The problem lies in the fact that each column, in LaTeX, is treated as a
+separate page, thus the \firstmark command won't work, since it will
+actually be the \firstmark in the second column, not the first.
+
+Anyway, include this in your code (from M.Barr):
+
+\makeatletter
+\def\@outputdblcol{\if@firstcolumn
+\edef\firstcolmark{\firstmark}%%%%%%%%%% Added line %%%%%%%%%%
+\global\@firstcolumnfalse
+    \global\setbox\@leftcolumn\box\@outputbox
+  \else \global\@firstcolumntrue
+    \setbox\@outputbox\vbox{\hbox to\textwidth{\hbox to\columnwidth
+      {\box\@leftcolumn \hss}\hfil \vrule width\columnseprule\hfil
+       \hbox to\columnwidth{\box\@outputbox \hss}}}\@combinedblfloats
+       \@outputpage \begingroup \@dblfloatplacement \@startdblcolumn
+       \@whilesw\if@fcolmade \fi{\@outputpage\@startdblcolumn}\endgroup
+    \fi}
+\makeatother
+
+Then, when you want to refer to the first mark on the page, use
+\firstcolmark instead.
+
+Thus, in summary, for one column format, \firstmark and \lastmark are what
+you need, but remember to edit out the \mark{{}{}} command in article.sty if
+you want the first mark on the first page.  For two column format, use the
+redefinition code above, and use \firstcolmark and \lastmark.  But, as well,
+remember to edit out the \mark{{}{}} command in article.sty.
+
+I must give credit to Michael Barr at McGill University for all of his help.
+In fact, most of the credit is due to him and I am very grateful.
+
+Lastly, if anyone has anything else to add regarding this, please do.  I'm
+not a TeX expert, so I probably have overlooked some finer points.  For my
+purposes, however, this summary will suffice.  I should also note that I am
+using this material in conjunction with the fancyheadings style, though this
+is not necessary for those who would prefer to use either \markboth,
+\markright, etc., or their own set of macros.
+
+--
+Andrew Biewer
+Language Resource Center
+University of Wisconsin--Milwaukee
+----------------------------------
+``Using TeX/LaTeX is sometimes like living in Alice's Wonderland.''
+        Alan D. Corr\'{e} (paraphrase)
