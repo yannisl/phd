@@ -1,0 +1,2250 @@
+%%
+%% This is file `xfancyvrb.sty',
+%% generated with the docstrip utility.
+%%
+%% The original source files were:
+%%
+%% xfancyvrb.dtx  (with options: `package')
+%% ----------------------------------------------------------------
+%% phd --- A package to beautify documents.
+%% E-mail: yannislaz@gmail.com
+%% Released under the LaTeX Project Public License v1.3c or later
+%% See http://www.latex-project.org/lppl.txt
+%% ----------------------------------------------------------------
+%%
+%% This is file `fancyvrb.sty',
+%%
+%% COPYRIGHT 1992-1999, by Timothy Van Zandt <tvz@zandtwerk.kellogg.nwu.edu>
+%%           2010-2018, by Herbert Voss <hvoss@tug.org>
+%%
+%% This package may be distributed under the terms of the LaTeX Project Public
+%% License, as described in lppl.txt in the base LaTeX distribution.
+%% Either version 1.3 or, at your option, any later version.
+%%
+%% DESCRIPTION:
+%%   fancyvrb.sty is a LaTeX style option, containing flexible
+%%   verbatim environments and commands and extensive documentation.
+%%
+
+\NeedsTeXFormat{LaTeX2e}
+\def\fileversion{3.1a}
+\def\filedate{2018/11/20}
+\ProvidesPackage{xfancyvrb}[\filedate]
+\message{Style option: `xfancyvrb' v\fileversion \space  <\filedate> (YL)}
+\csname xfancyvrb@loaded\endcsname
+\let\xfancyvrb@loaded\endinput
+\@ifpackageloaded{xcolor}{}{\RequirePackage{xcolor}}
+\ExplSyntaxOn
+\let\fv_define_key:nnnn\define@key
+\ExplSyntaxOff
+
+\ExplSyntaxOn
+
+\cs_set:Npn \FV@Error#1#2{%
+  \edef\@tempc{#2}\exp_after:wN \errhelp\exp_after:wN {\@tempc}%
+  \errmessage{FancyVerb Error:^^J\space\space #1^^J}}
+
+\def\FV@eha{Your command was ignored. Type <return> to continue.}
+\ExplSyntaxOff
+\ExplSyntaxOn
+\cs_new:Npn \__fv_error:n     { \msg_error:nn     {xfancyvrb} }
+\cs_new:Npn \__fv_error:nn    { \msg_error:nnn    {xfancyvrb} }
+\cs_new:Npn \__fv_error:nx    { \msg_error:nnx    {xfancyvrb} }
+\cs_new:Npn \__fv_warning:n   { \msg_warning:nn   {xfancyvrb} }
+\cs_new:Npn \__fv_warning:nx  { \msg_warning:nnx  {xfancyvrb} }
+\cs_new:Npn \__fv_warning:nxx { \msg_warning:nnxx {xfancyvrb} }
+\cs_new:Npn \__fv_info:n      { \msg_info:nn      {xfancyvrb} }
+\cs_new:Npn \__fv_info:nx     { \msg_info:nnx     {xfancyvrb} }
+\cs_new:Npn \__fv_info:nxx    { \msg_info:nnxx    {xfancyvrb} }
+\cs_new:Npn \__fv_trace:n     { \msg_trace:nn     {xfancyvrb} }
+\ExplSyntaxOff
+\ExplSyntaxOn
+\cs_generate_variant:Nn \msg_new:nnn  {nnx}
+\cs_generate_variant:Nn \msg_new:nnnn {nnxx}
+\cs_new:Nn \__fv_msg_new:nnn
+  { \msg_new:nnx {#1} {#2} { \tl_trim_spaces:n {#3} } }
+\cs_new:Nn \__fv_msg_new:nnnn
+  {
+    \msg_new:nnxx {#1} {#2} { \tl_trim_spaces:n {#3} }
+                            { \tl_trim_spaces:n {#4} }
+  }
+\char_set_catcode_space:n {32}
+
+\__fv_msg_new:nnn {xverbatim}{not-vervbatim-command}
+  {
+    Command \string#1 is not an xverbatim command.
+  }
+
+\ExplSyntaxOff
+
+%% DG/SR modification begin - Jan. 21, 1998
+%% Suggested by Bernard Gaulle to solve a compatibility problem with `french'
+%% (it introduce the restriction to put \VerbatimFootnotes AFTER the preambule)
+%% \def\VerbatimFootnotes{\cs_set_eq:NN \@footnotetext\V@footnotetext}
+\ExplSyntaxOn
+\cs_set_eq:NN \V@footnote\footnote
+\def\VerbatimFootnotes
+  {
+    \cs_set_eq:NN \@footnotetext\V@footnotetext
+    \cs_set_eq:NN \footnote\V@footnote
+  }
+
+%% DG/SR modification end
+\cs_set:Npn \V@footnotetext
+  {
+    \afterassignment\v_footnotetext_aux
+    \cs_set_eq:NN \@tempa
+  }
+
+\def\v_footnotetext_aux{%
+  \insert\footins\bgroup
+  \csname reset@font\endcsname
+  \footnotesize
+  \interlinepenalty\interfootnotelinepenalty
+  \splittopskip\footnotesep
+  \splitmaxdepth\dp\strutbox
+  \floatingpenalty \@MM
+  \hsize\columnwidth
+  \@parboxrestore
+  \edef\@currentlabel{\csname p@footnote\endcsname\@thefnmark}%
+  \@makefntext{}%
+  \rule{\z@}{\footnotesep}%
+  \bgroup
+  \aftergroup\fv_footnotetext_auxiii
+  \ignorespaces}
+
+\cs_set:Npn \fv_footnotetext_auxiii {\strut\egroup}
+\ExplSyntaxOff
+\RequirePackage{keyval}
+\ExplSyntaxOn
+\int_new:N  \l__fv_tmp_int
+\prop_new:N \l__fv_tmp_prop
+\tl_new:N   \l__fv_tmp_tl
+\cs_set:Npn   \l__fv_tmpa: {}
+\ExplSyntaxOff
+\ExplSyntaxOn
+\cs_gset:Npx \g__fv_prefix_tl{KV}
+
+\cs_set:Npn \fv_space_tl{\c_space_token}
+
+\cs_set:Npn \define@booleankey#1#2#3#4
+  {
+    \cs_set:cpn {\g__fv_prefix_tl @#1@#2@default}{#3}%
+    \cs_set:cpn {KV@#1@#2@false}{#4}%
+    \cs_set:cpn {KV#1@#2}##1{\KV@booleankey{##1}{#1}{#2}}
+  }
+
+\cs_set:Npn\KV@booleankey#1#2#3{%
+  \edef\@tempa{#1}
+  \exp_after:wN \KV_booleankey_aux:nnnn \@tempa\scan_stop:\@nil{#2}{#3}
+  }
+
+\cs_set:Npn \KV_booleankey_aux:nnnn #1#2\@nil#3#4{%
+  \use:c {KV@#3@#4@\if t#1default\else\if T#1default\else false\fi\fi}}
+\cs_gset_eq:NN \fv_define_boolean_key:nnTF \define@booleankey
+\ExplSyntaxOff
+\ExplSyntaxOn
+\tl_new:N \fv_none_tl
+\tl_new:N \fv_auto_tl
+\tl_set:Nn \fv_none_tl {none}
+\tl_set:Nn \fv_auto_tl {auto}
+
+\cs_set_nopar:Npn\fvset#1{\setkeys{FV}{#1}}
+\ExplSyntaxOff
+
+\ExplSyntaxOn
+\tl_new:N \fv_key_values_tl
+
+\cs_new:Npn \fv_command:nn#1#2
+  {
+    \@ifstar
+      {
+      \tl_gput_left:Nn \fv_key_values_tl{#1,showspaces}\fv_command_auxi{#2}}%
+      {\tl_gput_left:Nn \fv_key_values_tl{#1}\fv_command_auxi{#2}}
+  }
+\cs_set:Npn \fv_command_auxi#1{%
+  \@ifnextchar[%
+    {\fv_get_keyvalues:nn {\use:c {FVC@#1}}}
+    {\use:c {FVC@#1}}}
+
+\cs_set:Npn \fv_get_keyvalues:nn #1[#2]
+  {
+    \tl_gput_left:Nn\fv_key_values_tl {#2}
+    \tl_use:N #1
+  }
+\ExplSyntaxOff
+\ExplSyntaxOn
+\cs_set:Npn \fv_custom_verbatim_command:nnnn  #1 #2 #3 #4
+  {
+    \bgroup
+      \fvset{#4}
+    \egroup
+    \cs_if_free:cTF {FVC@#3}
+      {\__fv_warning:nx {verbatim-not-defined} {#1}}
+      {#1{#2}{\fv_command:nn{#4}{#3}}}
+  }
+\ExplSyntaxOff
+\ExplSyntaxOn
+\cs_set:Npn \CustomVerbatimCommand
+  {
+    \fv_custom_verbatim_command:nnnn \newcommand
+  }
+
+\cs_set:Npn \RecustomVerbatimCommand
+  {
+    \fv_custom_verbatim_command:nnnn \renewcommand
+  }
+\ExplSyntaxOff
+\ExplSyntaxOn
+\cs_set:Npn \fv_environment:nn #1 #2
+{
+  \tl_gput_left:Nn \fv_key_values_tl{#1}
+  \char_set_catcode_active:N \^^M
+   \@ifnextchar[
+    {
+     \char_set_catcode_end_line:N \^^M
+     \fv_get_keyvalues:nn { \use:c {FVB@#2} }
+    }
+    {
+      \char_set_catcode_end_line:N \^^M
+      \use:c {FVB@#2}
+    }
+}
+\ExplSyntaxOff
+
+\ExplSyntaxOn
+\cs_set:Npn \NewVerbatimEnvironment
+  {
+    \fv_make_verbatim_env:nnnn \newenvironment
+  }
+
+\cs_set:Npn \RenewVerbatimEnvironment
+  {
+    \fv_make_verbatim_env:nnnn \renewenvironment
+  }
+
+\cs_set_eq:NN \CustomVerbatimEnvironment\NewVerbatimEnvironment
+\cs_set_eq:NN \RecustomVerbatimEnvironment\RenewVerbatimEnvironment
+\cs_set:Npn \fv_make_verbatim_env:nnnn #1#2#3#4
+ {
+    \bgroup
+      \fvset{#4}
+    \egroup
+    \cs_if_free:cTF {FVB@#3}%
+      {\FV@Error{`#3' is not an xfancyvrb environment.}\@eha}
+      {
+         #1{#2}{\fv_environment:nn{#4}{#3}}{\use:c{FVE@#3}}
+         #1{#2*}{\fv_environment:nn{#4,showspaces}{#3}}{\use:c {FVE@#3}}
+      }
+  }
+\ExplSyntaxOff
+
+\ExplSyntaxOn
+\cs_set:Npn \DefineVerbatimEnvironment #1 #2 #3
+  {
+    \cs_set:cpn {#1}     { \fv_environment:nn{#3}{#2} }
+    \cs_set:cpn {end#1}  { \use:c {FVE@#2} }
+    \cs_set:cpn {#1*}    { \fv_environment:nn{#3,showspaces}{#2} }
+    \cs_set:cpn {end#1*} { \use:c {FVE@#2} }
+  }
+\ExplSyntaxOff
+\ExplSyntaxOn
+\cs_set:Npn \fv_use_values:
+  {
+    \cs_if_eq:NNTF \fv_key_values_tl \c_empty_tl {}
+    {
+
+      \cs_set:Npn \KV@prefix{KV@FV@}
+      \exp_after:wN \KV@do\fv_key_values_tl,\scan_stop:,
+
+      % we cannot just use this, as keyval handles defaults etc.
+      %\clist_map_inline:Nn \fv_key_values_tl {\cs:w \KV@prefix##1\cs_end:w}
+      \tl_gclear:N \fv_key_values_tl
+    }
+  }
+\ExplSyntaxOff
+\ExplSyntaxOn
+\cs_set:Npn \fv_catcodes:
+  {
+    \cs_set_eq:NN \do\@makeother\dospecials  % The usual stuff.
+    \fv_active_white_space_tl                % See below.
+    \FV@FontScanPrep                         % See below.
+    \fv_catcodes_hook_tl                     % A style hook.
+    \fv_verb_codes_tl                        % A user-defined hook.
+  }
+\ExplSyntaxOff
+\ExplSyntaxOn
+\cs_set:Npn \fv_active_white_space_tl
+  {
+    \char_set_catcode_active:N \^^M   % End of line
+    \catcode`\ =\active               % Space
+    \catcode`\^^I=\active             % Tab
+  }
+
+\cs_set_eq:NN \FV@ActiveWhiteSpace \fv_active_white_space_tl
+\ExplSyntaxOff
+
+\ExplSyntaxOn
+\tl_new:N \fv_catcodes_hook_tl
+
+\cs_set:Npn \fv_add_to_hook:nn #1 #2
+  {
+    %\exp_after:wN \def\exp_after:wN #1\exp_after:wN {#1#2\scan_stop:}
+    \tl_put_right:Nn #1{#2}
+  }
+\ExplSyntaxOff
+
+\ExplSyntaxOn
+\fv_define_key:nnnn{FV}{codes}[]
+  {
+    \cs_set:Npn \fv_verb_codes_tl {#1\scan_stop:}
+  }
+
+\fv_define_key:nnnn{FV}{codes*}
+  {
+    \exp_after:wN
+      \def\exp_after:wN\fv_verb_codes_tl \exp_after:wN {\fv_verb_codes_tl #1\scan_stop:}
+  }
+\fvset{codes}
+\fv_define_key:nnnn{FV}{vspace}[\topsep]
+  {
+    \def\FancyVerbVspace {#1}
+  }
+\fvset{vspace}
+\ExplSyntaxOff
+\ExplSyntaxOn
+\fv_define_key:nnnn{FV}{commandchars}[\\\{\}]
+  {\cs_set_nopar:Npx \@tempa{#1}%
+    \if_meaning:w \@tempa\fv_none_tl
+      \cs_set_eq:NN \fv_command_chars:nnn\scan_stop:
+    \else
+      \fv_define_command_chars:nnn #1 \scan_stop:\scan_stop:\scan_stop:
+    \fi}
+\ExplSyntaxOff
+\ExplSyntaxOn
+\cs_set:Npn \fv_define_command_chars:nnn #1 #2 #3
+  {
+    \cs_set:Npn \fv_command_chars
+      {
+        \catcode`#1=0\scan_stop:
+        \catcode`#2=1\scan_stop:
+        \catcode`#3=2\scan_stop:
+      }
+  }
+\ExplSyntaxOff
+\ExplSyntaxOn
+\fv_add_to_hook:nn \fv_catcodes_hook_tl \fv_command_chars:nnn
+\ExplSyntaxOff
+
+\ExplSyntaxOn
+\fv_define_key:nnnn{FV}{commentchar}[\!]{
+    \cs_set_nopar:Npn \@tempa{#1}
+    \if_meaning:w \@tempa\fv_none_tl
+      \cs_set_eq:NN \fv_comment_char\scan_stop:
+    \else
+      \def\fv_comment_char{\catcode`#1=14}
+    \fi
+  }
+
+\fv_add_to_hook:nn\fv_catcodes_hook_tl\fv_comment_char
+
+\fvset{commandchars=none,commentchar=none}
+\fv_define_key:nnnn{FV}{firstline}
+  {
+    \afterassignment
+      \fv_parse_start:n \@tempcnta=0#1\scan_stop:\@nil{#1}
+  }
+
+\def\fv_parse_start:n #1\scan_stop:\@nil#2
+  {
+  \if_meaning:w \@nil#1\@nil
+    \edef\fv_start_num_int{\the\@tempcnta}%
+    \cs_set_eq:NN \FancyVerbStartString\scan_stop:
+  \else
+    \edef\FancyVerbStartString{#2}%
+  \fi}
+\cs_new:Npn \fv_define_default_key:nn #1#2
+  {
+    \cs_set:cpn {KV@FV@#1@default} {#2}
+  }
+
+
+\fv_define_default_key:nn {firstline}
+  {
+    \cs_set_eq:NN \fv_start_num_int\c_zero_int
+    \cs_set_eq:NN \FancyVerbStartString\scan_stop:
+  }
+\fv_define_key:nnnn{FV}{lastline}{%
+  \afterassignment\fv_parse_stop:nn \@tempcnta=0#1\scan_stop:\@nil{#1}}
+\ExplSyntaxOff
+\ExplSyntaxOn
+\cs_set:Npn \fv_parse_stop:nn #1\scan_stop:\@nil#2
+  {
+    \if_meaning:w \@nil#1\@nil
+      \cs_set_nopar:Npx \fv_verb_stop_num:n{\the\@tempcnta}
+      \cs_set_eq:NN \fv_verb_stop_string_tl\scan_stop:
+    \else
+      \cs_set_nopar:Npx \fv_verb_stop_string_tl{#2}
+    \fi
+  }
+
+\def\fv_define_key_default:nn {lastline}
+  {
+     \cs_set_eq:NN \fv_verb_stop_num:n \c_zero_int
+    \cs_set_eq:NN \fv_verb_stop_string_tl\scan_stop:
+  }
+\ExplSyntaxOff
+\fvset{firstline,lastline}
+\ExplSyntaxOn
+\int_zero_new:N \fv_codeline_int
+\ExplSyntaxOff
+
+\ExplSyntaxOn
+\def\fv_preprocess_line:
+  {
+    % increase counter by one
+    \int_gincr:N \fv_codeline_int
+    \FV@FindStartStop
+  }
+\ExplSyntaxOff
+\ExplSyntaxOn
+\cs_set:Npn \fv_preprocessline_auxii
+  {
+    \FV@StepLineNo
+    \fv_gobble:
+    \exp_after:wN \fv_process_line:n\exp_after:wN {\fv_line}
+  }
+\ExplSyntaxOff
+\ExplSyntaxOn
+\cs_set:Npn \FV@FindStartStop{\FV@DefineFindStart\FV@FindStartStop}
+\ExplSyntaxOff
+
+%% \def\FV@DefinePreProcessLine{%
+%%   \setcounter{FancyVerbLine}{0}%
+%%   \FV@DefineFindStart}
+\ExplSyntaxOn
+ \int_new:N \c@fv_verbline_int
+ \cs_set:Npn \FV@DefineFindStart
+  {
+    \if_meaning:w  \FancyVerbStartString\scan_stop:
+      \if_int_compare:w \fv_start_num_int < \c_two
+        \FV@DefineFindStop
+      \else:
+        \cs_set_eq:NN \FV@FindStartStop\FV@FindStartNum
+      \fi:
+    \else:
+      \cs_set_eq:NN \FV@FindStartStop\FV@FindStartString
+    \fi:
+  }
+\ExplSyntaxOff
+
+\ExplSyntaxOn
+\cs_set:Npn \FV@FindStartNum
+  {
+    \if_int_compare:w \fv_start_num_int > \fv_codeline_int
+    \else:
+      \FV@DefineFindStop
+      \exp_after:wN \fv_preprocessline_auxii
+    \fi:
+  }
+\ExplSyntaxOff
+\ExplSyntaxOn
+\cs_set:Npn \FV@FindStartString
+  {
+    \exp_after:wN \fv_find_startstring_aux:
+    {\meaning\fv_line}
+    {\meaning\FancyVerbStartString}
+  }
+\ExplSyntaxOff
+
+\ExplSyntaxOn
+\cs_set:Npn \fv_find_startstring_aux: #1 #2
+  {
+     \edef\@fooA{#1} \edef\@fooB{#2}
+     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+     \typeout{\meaning\@fooA \space\space \meaning\@fooB}
+     \if_meaning:w  \@fooA\@fooB
+       \typeout{Call stop}
+       \FV@DefineFindStop
+     \fi:
+  }
+\ExplSyntaxOff
+\ExplSyntaxOn
+\cs_set:Npn \FV@DefineFindStop
+  {
+    \if_meaning:w \fv_verb_stop_string_tl\scan_stop:
+      \if_int_compare:w \FancyVerbStopNum < \@ne
+        \cs_set_eq:NN \FV@FindStartStop\fv_preprocessline_auxii
+      \else:
+        \cs_set_eq:NN \FV@FindStartStop\FV@FindStopNum
+      \fi:
+    \else:
+      \cs_set_eq:NN \FV@FindStartStop\FV@FindStopString
+    \fi:
+  }
+
+\cs_set:Npn \FV@FindStopNum
+  {
+    \if_int_compare:w \FancyVerbStopNum>\fv_codeline_int
+    \else:
+      \cs_set_eq:NN \FV@FindStartStop\scan_stop:
+      \ifeof\fv_infile\else
+        \immediate\closein\fv_infile
+      \fi:
+    \fi:
+    \if_int_compare:w\FancyVerbStopNum<\fv_codeline_int
+    \else:
+      \fv_preprocessline_auxii
+    \fi:
+  }
+\ExplSyntaxOff
+
+\ExplSyntaxOn
+\cs_set:Npn \FV@FindStopString
+  {
+    \exp_after:wN \fv_FindStopString_aux:nn
+    {\meaning\fv_line}
+    {\meaning\fv_verb_stop_string_tl}
+  }
+
+\cs_set:Npn \fv_FindStopString_aux:nn #1#2
+  {
+    \edef\@fooA{#1} \edef\@fooB{#2}%
+    \if_meaning:w \@fooA\@fooB
+      \cs_set_eq:NN \FV@FindStartStop\scan_stop:
+      \ifeof\fv_infile
+      \else
+        \immediate\closein\fv_infile
+      \fi
+    \else
+      \exp_after:wN \fv_preprocessline_auxii
+    \fi
+  }
+\ExplSyntaxOff
+
+\ExplSyntaxOn
+\cs_set:Npn \fv_gobbleii
+  {
+  \exp_after:wN \exp_after:wN \exp_after:wN \fv_gobbleiii
+  \exp_after:wN \fv_gobbleiiii\fv_line
+    \@nil\@nil\@nil\@nil\@nil\@nil\@nil\@nil\@nil\@nil\__fvnil
+  }
+
+\cs_set:Npn \fv_gobbleiii#1\@nil#2\__fvnil{\cs_set:Npn \fv_line{#1}}
+\fv_define_key:nnnn{FV}{gobble}{%
+  \@tempcnta=#1\scan_stop:
+  \if_int_compare:w\@tempcnta<\@ne
+    \cs_set_eq:NN \fv_gobble:\scan_stop:
+  \else
+    \if_int_compare:w\@tempcnta>9
+      \FV@Error{gobble parameter must be less than 10}\FV@eha
+    \else
+      % why is teh counter here?
+      \renewcommand{\fv_gobbleiiii}[\@tempcnta]{}
+      \cs_set_eq:NN \fv_gobble: \fv_gobbleii
+    \fi
+  \fi}
+\cs_set:Npn \fv_gobbleiiii {}
+\def\KV@FV@gobble@default
+  {
+    \cs_set_eq:NN \fv_gobble:\relax
+  }
+\fvset{gobble}
+\ExplSyntaxOff
+\ExplSyntaxOn
+\cs_set:Npn \FV@Scan
+  {
+    \fv_catcodes:
+    \VerbatimEnvironment
+    \FV@DefineCheckEnd
+    \FV@BeginScanning
+  }
+\ExplSyntaxOff
+
+\ExplSyntaxOn
+\cs_set:Npn \VerbatimEnvironment
+  {
+     \if_meaning:w \FV@EnvironName \scan_stop:
+       \cs_gset_nopar:Npx \FV@EnvironName{\@currenvir}
+     \fi:
+  }
+
+\cs_set_eq:NN \FV@EnvironName\scan_stop:
+\ExplSyntaxOff
+
+\ExplSyntaxOn
+\bgroup
+\catcode`\!=0
+\catcode`\[=1
+\catcode`\]=2
+!gdef!FV@CheckEnd@i#1[!FV__fvCheckEnd#1\end{}!@nil]
+
+!gdef!FV__fvCheckEnd@i#1\end#2#3!@nil[!def!@tempa[#2]!def!@tempb[#3]]
+
+!gdef!fv_checkendiii_i[\end{}]
+\catcode`!\=12
+
+!gdef!FV@CheckEnd@ii#1[!FV__fvCheckEnd#1\end{}!@nil]
+!gdef!FV__fvCheckEnd@ii#1\end#2#3!@nil[!def!@tempa[#2]!def!@tempb[#3]]
+!gdef!fv_checkendiii_ii[\end{}]
+!catcode`!{=12
+!catcode`!}=12
+
+!gdef!FV@CheckEnd@iii#1[!FV__fvCheckEnd#1\end{}!@nil]
+!gdef!FV__fvCheckEnd@iii#1\end{#2}#3!@nil[!def!@tempa[#2]!def!@tempb[#3]]
+!gdef!fv_checkendiii_iii[\end{}]
+!catcode`!\=0
+
+!gdef!FV@CheckEnd@iv#1[!FV__fvCheckEnd#1\end{}!@nil]
+!gdef!FV__fvCheckEnd@iv#1\end{#2}#3!@nil[!def!@tempa[#2]!def!@tempb[#3]]
+!gdef!fv_checkendiii_iv[\end{}]
+\egroup
+\ExplSyntaxOff
+\ExplSyntaxOn
+\def\FV@BadCodes#1{%
+  \FV@Error
+    {\string\catcode\space of \exp_after:wN \@gobble\string#1 is wrong:
+    \the\catcode`#1}%
+    {Only the following catcode values are allowed:
+    ^^J\@spaces \exp_after:wN \@gobble\string\\ \space\space --> 0 or 12.
+    ^^J\@spaces \string{ \string} --> 1 and 2, resp., or both 12.
+    ^^JTo get this error, either you are a hacker or you got bad advice.}%
+  \def\FV@CheckEnd##1{\iftrue}}
+
+\def\FV@DefineCheckEnd{%
+  \if_int_compare:w\catcode`\\=\z@
+    \if_int_compare:w\catcode`\{=\@ne
+      \cs_set_eq:NN \FV@CheckEnd\FV@CheckEnd@i
+      \cs_set_eq:NN \FV__fvCheckEnd\FV__fvCheckEnd@i
+      \cs_set_eq:NN \FV__fv@CheckEnd\fv_checkendiii_i
+    \else
+      \if_int_compare:w\catcode`\{=12
+        \cs_set_eq:NN \FV@CheckEnd\FV@CheckEnd@iv
+        \cs_set_eq:NN \FV__fvCheckEnd\FV__fvCheckEnd@iv
+        \cs_set_eq:NN \FV__fv@CheckEnd\fv_checkendiii_iv
+      \else
+        \FV@BadCodes\{%
+      \fi
+    \fi
+  \else
+    \if_int_compare:w\catcode`\\=12
+      \if_int_compare:w\catcode`\{=\@ne
+        \cs_set_eq:NN \FV@CheckEnd\FV@CheckEnd@ii
+        \cs_set_eq:NN \FV__fvCheckEnd\FV__fvCheckEnd@ii
+        \cs_set_eq:NN \FV__fv@CheckEnd\fv_checkendiii_ii
+      \else
+        \if_int_compare:w\catcode`\{=12
+          \cs_set_eq:NN \FV@CheckEnd\FV@CheckEnd@iii
+          \cs_set_eq:NN \FV__fvCheckEnd\FV__fvCheckEnd@iii
+          \cs_set_eq:NN \FV__fv@CheckEnd\fv_checkendiii_iii
+        \else
+          \FV@BadCodes%check this
+        \fi
+      \fi
+    \else
+      \FV@BadCodes%
+    \fi
+  \fi}
+
+\bgroup
+  \char_set_catcode_active:N \^^M
+  \cs_gset:Npn \FV@BeginScanning #1^^M
+    {
+      \def\@tempa{#1}\if_meaning:w \@tempa\@empty\else\__fv_bad_begin_error:\fi%
+      \FV@GetLine
+    }
+\egroup
+
+\cs_set:Npn \__fv_bad_begin_error: #1
+ {
+  \exp_after:wN \@temptokena\exp_after:wN {\@tempa}%
+  \FV@Error
+    {Extraneous input `\the\@temptokena' between
+      \string\begin{\FV@EnvironName}[<key=value>] and line end}%
+   {This input will be discarded. Hit <return> to continue.}
+ }
+\ExplSyntaxOff
+\ExplSyntaxOn
+\cs_set:Npn \FV@GetLine
+  { \@noligs\exp_after:wN \fv_check_scan:n \FancyVerbGetLine }
+\ExplSyntaxOff
+\ExplSyntaxOn
+\bgroup
+  \char_set_catcode_active:N \^^M
+  \cs_gset:Npn \FancyVerbGetLine#1^^M
+    {
+      \@nil%
+      % check if line contains |\end|
+      \FV@CheckEnd{#1}%
+      % check if we are within the environment
+      \if_meaning:w \@tempa\FV@EnvironName
+        \if_meaning:w \@tempb\FV__fv@CheckEnd
+        \else
+          \FV@BadEndError
+        \fi
+        \cs_set_eq:NN \next\fv_end_scanning:
+      \else:
+        \cs_set:Npn \fv_line{#1}%
+        \cs_set:Npn \next {\fv_preprocess_line:\FV@GetLine}%
+      \fi:
+    \next
+    }
+\egroup
+\ExplSyntaxOff
+
+\ExplSyntaxOn
+\cs_set:Npn \fv_end_scanning:
+  {
+    \cs_set_nopar:Npx \next{\exp_not:N \end{\FV@EnvironName}}
+    % tex_global:Dly set the marker for the comparisons
+    \cs_gset_eq:NN \FV@EnvironName\scan_stop:
+    % iterate
+    \next
+  }
+\ExplSyntaxOff
+\def\FV@BadEndError{%
+  \exp_after:wN \@temptokena\exp_after:wN {\@tempb}%
+  \FV@Error
+      {Extraneous input `\the\@temptokena' between
+        \string\end{\FV@EnvironName} and line end}%
+      {This input will be discarded. Type <return> to continue.}}
+
+\ExplSyntaxOn
+\cs_if_free:cTF {@currenvline}
+   { \cs_set_eq:NN \@currenvline\@empty } {}
+
+\def\fv_check_scan:n #1{\@ifnextchar\@nil{\@gobble}{\FV@EOF}}
+
+\msg_new:nnn {xfancyvrb}{no-end} {I~could~not~find~
+    `\string\end{\FV@EnvironName}'~to~end~
+    a~verbatim~environment~\@currenvline.
+    Probably~ you~mistyped~the environment~name or
+    included an extraneous
+    space, or are using an improperly defined
+    verbatim environment.
+    Hit return and I will try to terminate this job.}
+
+\cs_set:Npn \fv_check_scan:n  #1
+  {
+    \if_meaning:w \@nil#1\@empty
+    \else:
+    \exp_after:wN
+    \msg_fatal:nn {xfancyvrb}{no-end}
+    \fi:
+  }
+
+\ExplSyntaxOff
+\ExplSyntaxOn
+\def\FV@EOF{%
+  \FV@Error{Couldn't find `\string\end{\FV@EnvironName}' to end
+    a verbatim environment\@currenvline.}%
+    {Probably you mistyped the environment name or included an extraneous
+    ^^Jspace, or are using an improperly defined verbatim environment.
+    ^^JHit return and I will try to terminate this job.}%
+  \fv_end_scanning:
+  \end{document}}
+\ExplSyntaxOff
+
+\ExplSyntaxOn
+\ior_new:N \fv_infile
+
+\cs_set:Npn \fv_input: #1
+  {
+    \ior_open:Nn \fv_infile{#1}
+    \ior_if_eof:NTF \fv_infile
+      {
+        \FV@Error{No verbatim file #1}\FV@eha
+        \ior_close:N \fv_infile
+      }
+      {
+        \fv_catcodes:
+        \fv_input_aux:
+      }
+  }
+
+\cs_set:Npn \fv_input_aux:
+  {
+    \cs_set:Npn \fv_line{}
+    \fv_readline:
+    \ior_if_eof:NTF\fv_infile
+      {
+        \if_meaning:w \fv_line\@empty
+        \else
+          \fv_preprocess_line:
+        \fi
+        \ior_close:N \fv_infile
+      }
+      {
+        \fv_preprocess_line:
+        \fv_input_aux:
+      }
+  }
+\ExplSyntaxOff
+
+\ExplSyntaxOn
+\bgroup
+\char_set_catcode_active:N \^^M
+\cs_gset:Npn \fv_readline:
+  {
+    \ifeof\fv_infile
+    \else
+      %\immediate\read\fv_infile to\@tempa%
+      \ior_get:NN \fv_infile\@tempa
+      \exp_after:wN
+        \fv_readLine_aux:nnn \@tempa^^M\scan_stop:^^M\@nil
+    \fi
+  }
+\cs_gset:Npn \fv_readLine_aux:nnn #1^^M#2^^M#3\@nil
+  {
+    \exp_after:wN \def\exp_after:wN\fv_line\exp_after:wN{%
+      \fv_line#1}%
+   \if_meaning:w \scan_stop:#2\@empty\exp_after:wN \fv_readline:\fi
+  }
+\egroup
+\ExplSyntaxOff
+\ExplSyntaxOn
+\cs_set:Npn \fv_formatting_prep:
+  {
+    \tex_global:D\fv_codeline_int\z@
+    \frenchspacing                   % Cancels special punctuation spacing.
+    \fv_setup_font:                  % See below.
+    \fv_define_whitespace:           % See below.
+    \tl_use:N \fv_define_active_tl   % Use any active user definitions
+    \FancyVerbFormatCom
+
+  }       % A user-defined hook (formatcom parameter).
+\ExplSyntaxOff
+
+\ExplSyntaxOn
+\exp_after:wN
+  \if_meaning:w \csname selectfont\endcsname\scan_stop:
+    \cs_set:Npn \fv_setup_font:
+      {
+        \FV@BaseLineStretch
+        \if_meaning:w \@currsize\small
+          \normalsize
+        \else
+          \small
+        \fi
+        \@currsize
+        \fv_fontsize:
+        \FV@FontFamily
+      }
+  \else:
+    \cs_set:Npn \fv_setup_font:
+     {
+
+       \FV@BaseLineStretch
+       \bfseries\color{blue}
+       \macro@font\normalsize
+       \fv_fontsize:
+       \FV@FontFamily
+       \selectfont
+       \@noligs
+     }
+  \fi:
+\ExplSyntaxOff
+
+\ExplSyntaxOn
+\fv_define_key:nnnn{FV}{fontsize}
+  {
+     %\show\fv_auto_tl
+     \cs_set_nopar:Npx \@tempa{#1}
+     %\show\@tempa
+     \cs_if_eq:NNTF\@tempa\fv_auto_tl
+    {
+      \cs_set_eq:NN \fv_fontsize:\scan_stop:
+    }
+    {
+      \cs_set:Npn \fv_fontsize:{#1}
+
+    }
+  }
+
+\cs_set:Npn \KV@FV@fontsize@default
+  {
+    \cs_set_eq:NN \fv_fontsize:\scan_stop:
+  }
+
+\ExplSyntaxOff
+\ExplSyntaxOn
+\fv_define_key:nnnn{FV}{baselinestretch}[auto]{%
+  \cs_set_nopar:Npx \@tempa{#1}%
+  \if_meaning:w \@tempa\fv_auto_tl
+    \cs_set_eq:NN \FV@BaseLineStretch\scan_stop:
+  \else:
+    \cs_set:Npn\FV@BaseLineStretch{\cs_set:Npn \baselinestretch{#1}}%
+  \fi:
+}
+
+\def\KV@FV@baselinestretch@default{\cs_set_eq:NN \FV@BaseLineStretch\scan_stop:}
+
+\fv_define_key:nnnn{FV}{fontfamily}{%
+  \cs_if_free:cTF {FV@fontfamily@#1}%
+    {\cs_set:Npn \FV@FontScanPrep{}\cs_set:Npn \FV@FontFamily{\fontfamily{#1}}}
+    {\use:c {FV@fontfamily@#1}}
+}
+\ExplSyntaxOff
+\ExplSyntaxOn
+\fv_define_key:nnnn{FV}{fontseries}{%
+  \cs_set_nopar:Npx \@tempa{#1}%
+  \if_meaning:w \@tempa\fv_auto_tl
+    \cs_set_eq:NN \FV@FontSeries\scan_stop:
+  \else:
+    \cs_set:Npn \FV@FontSeries{\fontseries{#1}}%
+  \fi:
+}
+\ExplSyntaxOff
+\ExplSyntaxOn
+\fv_define_key:nnnn{FV}{fontshape}{%
+  \cs_set_nopar:Npx \@tempa{#1}%
+  \if_meaning:w \@tempa\fv_auto_tl
+    \cs_set_eq:NN \FV@FontShape\scan_stop:
+  \else
+    \def\FV@FontShape{\fontshape{#1}}%
+  \fi}
+\ExplSyntaxOff
+\ExplSyntaxOn
+\char_set_catcode_other:N \~
+\def\FV@MakeActive#1{%
+  \catcode`#1=\active
+
+  % this can be simplified?
+  \def\next##1{\expandafter\def\expandafter\FV@MakeUnActive\expandafter{%
+      \FV@MakeUnActive\def##1{\string##1}}}%
+
+    % use lccode to keep original catcode of token
+    \bgroup
+      \lccode`~=`#1\relax\expandafter\next\expandafter~
+    \egroup
+  }
+
+\cs_set:Npn \FV@MakeUnActive{}
+\bgroup
+\char_set_catcode_active:N \`
+
+\cs_gset:Npn \FV@fontfamily@tt%
+  {%
+    \def\FV@FontScanPrep{\FV@MakeActive\`}%
+    \def\FV@FontFamily{\ttfamily\edef`{{\string`}}}%
+  }
+
+\cs_gset:Npn \FV@fontfamily@cmtt
+  {
+    \def\FV@FontScanPrep{\FV@MakeActive\`}
+    \def\FV@FontFamily
+      {
+        \edef`{{\string`}}\fontfamily{cmtt}
+      }
+  }
+\egroup
+\ExplSyntaxOff
+\ExplSyntaxOn
+\cs_set:cpn {FV@fontfamily@cmtt-spanish}
+  {
+    \def\FV@FontScanPrep{}
+    \def\FV@FontFamily{\fontfamily{cmtt}}
+  }
+\cs_set:cpn {FV@fontfamily@courier}
+  {
+    \cs_set:Npn \FV@FontScanPrep{}%
+    \cs_set:Npn \FV@FontFamily{\fontfamily{pcr}}
+  }
+\cs_set:cpn {FV@fontfamily@helvetica}
+  {
+    \def\FV@FontScanPrep{}
+    \let\FV@FontFamily\sffamily
+  }
+\cs_set:cpn {FV@fontfamily@helvetica}
+  {
+    \def\FV@FontScanPrep{}
+    \cs_set_eq:NN \FV@FontFamily\sffamily
+  }
+\cs_set:cpn {FV@fontfamily@panunicode}
+  {\def\FV@FontScanPrep{}\let\FV@FontFamily\panunicode
+  }
+\ExplSyntaxOff
+\fvset{fontfamily=pcr}
+
+
+\ExplSyntaxOn
+\def\myFont{}
+\use:c {FV@fontfamily@myFont}{\def\FV@FontScanPrep{}\def\FV@FontFamily{\myFont}}
+\fvset{fontfamily=tt,fontsize=auto,fontshape=auto,%
+       baselinestretch=1}
+\ExplSyntaxOff
+
+\ExplSyntaxOn
+\bgroup
+  \catcode`\ =\active
+  \catcode`\^^I=\active
+
+  \gdef\fv_define_whitespace:{\def {\fv_space_tl}\def^^I{\fv_tab:}}%
+\egroup
+\ExplSyntaxOff
+
+\ExplSyntaxOn
+\cs_set:Npn \fv_tab:
+  {
+    \dim_set:Nn \l_tmpa_dim {\fv_verb_tab_size_tl\fontdimen2\font}
+    \hbox_to_wd:nn\l_tmpa_dim {\hss\fv_tab_char}
+  }
+\ExplSyntaxOff
+\ExplSyntaxOn
+\tl_new:N \fv_define_active_tl
+\fv_define_key:nnnn{FV}{defineactive}[]
+  {
+    \cs_set:Npn \fv_define_active_tl{#1\scan_stop:}
+  }
+
+\fv_define_key:nnnn{FV}{defineactive*}
+  {
+    \tl_put_right:Nn \fv_define_active_tl {#1}
+  }
+\fvset{defineactive}
+\ExplSyntaxOff
+
+\ExplSyntaxOn
+\fv_define_boolean_key:nnTF{FV}{showspaces}
+  {\def\fv_space_tl{{\FancyVerbSpace}}}
+  {\def\fv_space_tl{\ }}
+  {\catcode`\~=12 \cs_gset:Npn \FancyVerbSpace{\textvisiblespace}}
+
+\fvset{showspaces=false}
+\ExplSyntaxOff
+\ExplSyntaxOn
+\fv_define_key:nnnn{FV}{tabsize}
+  {
+    \int_set:Nn \l_tmpa_int{#1}
+    \if_int_compare:w \l_tmpa_int > 100
+      \FV@Error{Tab size too large: `\int_use:N\l_tmpa_int'. (Max size = 100)}\FV@eha
+    \else:
+    \cs_set_nopar:Npx \fv_verb_tab_size_tl { \int_use:N\l_tmpa_int }
+    \fi:
+  }
+\ExplSyntaxOff
+\ExplSyntaxOn
+\fv_define_boolean_key:nnTF{FV}{showtabs}
+  {\cs_set:Npn \fv_tab_char{\fancy_verb_tab}}
+  {\cs_set_eq:NN \fv_tab_char\scan_stop:}
+
+\fvset{tabsize=2,showtabs=true}
+\ExplSyntaxOff
+\ExplSyntaxOn
+\cs_set:Npn \fancy_verb_tab
+  {
+    \tex_valign:D
+      {
+        \vfil##\vfil\tex_cr:D
+        \hbox:n {$\scriptscriptstyle-$} \tex_cr:D
+        \hbox_to_wd:nn {0pt}
+          {
+            \hss$\scriptscriptstyle\rangle\mskip -.8mu$
+          }\tex_cr:D
+        \hbox:n
+          {
+            $\scriptstyle\mskip -3mu\mid\mskip -1.4mu$
+          }\cr
+    }
+  }
+\let\FancyVerbTab \fancy_verb_tab
+\ExplSyntaxOff
+\ExplSyntaxOn
+
+\box_new:N \fv_tab_box
+\cs_set:Npn \fv_obey_tabs_init_aux:
+  {
+    \dim_set:Nn\l_tmpb_dim {\fv_verb_tab_size_tl\fontdimen\tw@\font}
+
+    \edef\fv_obey_tab_size: {\number\l_tmpb_dim}
+
+    \dim_add:Nn\@tempdimb{\fontdimen\tw@\font}
+    \advance\@tempdimb-\fv_verb_tab_size_tl~sp
+
+    \cs_set:Npx \FV__fvObeyTabSize{\number\@tempdimb}
+    \cs_set_eq:NN \fv_obey_tabs:\__fv_obey_tabs:
+    \cs_set_eq:NN \fv_tab:\FV@TrueTab
+  }
+
+\cs_set:Npn \__fv_obey_tabs: #1
+  {
+    \hbox_set:Nn \fv_tab_box {#1}
+    \box_use:N \fv_tab_box
+  }
+
+\cs_set_eq:NN \fv_obey_tabs:\scan_stop:
+
+\cs_set:Npn \FV@TrueTab
+  {
+    \egroup
+    \@tempdima=\fv_obey_tab_size: ~sp\scan_stop:
+    \@tempcnta=\wd\fv_tab_box
+    \advance\@tempcnta\FV__fvObeyTabSize\scan_stop:
+    \divide\@tempcnta\@tempdima
+    \multiply\@tempdima\@tempcnta
+    \advance\@tempdima-\wd\fv_tab_box
+    \setbox\fv_tab_box\hbox\bgroup
+    \unhbox\fv_tab_box\kern\@tempdima\hbox_to_wd:nn \z@ {\hss\fv_tab_char}
+  }
+\ExplSyntaxOff
+\ExplSyntaxOn
+\fv_define_boolean_key:nnTF{FV}{obeytabs}%
+  {\cs_set_eq:NN \fv_obey_tabs_init: \fv_obey_tabs_init_aux:}%
+  {\cs_set_eq:NN \fv_obey_tabs_init: \scan_stop:}
+\fvset{obeytabs=false}
+\ExplSyntaxOff
+\ExplSyntaxOn
+\fv_define_key:nnnn{FV}{formatcom}[]{\def\FancyVerbFormatCom{#1\scan_stop:}}
+
+\fv_define_key:nnnn{FV}{formatcom*}{%
+  \exp_after:wN \def\exp_after:wN \FancyVerbFormatCom\exp_after:wN {%
+    \FancyVerbFormatCom#1\scan_stop:}}
+
+\fvset{formatcom}
+\ExplSyntaxOff
+\ExplSyntaxOn
+\cs_set:Npn \FancyVerbFormatLine #1
+  {
+    \fv_obey_tabs:{#1}
+  }
+
+\fv_define_key:nnnn{FV}{xleftmargin}{\def\FV@XLeftMargin{#1}}
+\cs_set_eq:NN \FV@XLeftMargin\z@
+
+\fv_define_key:nnnn{FV}{xrightmargin}{\def\FV@XRightMargin{#1}}
+\cs_set_eq:NN \FV@XRightMargin\z@
+
+\ExplSyntaxOff
+\ExplSyntaxOn
+\fv_define_boolean_key:nnTF{FV}{resetmargins}%
+  {\cs_set_eq:NN \if@FV@ResetMargins\iftrue}
+  {\cs_set_eq:NN \if@FV@ResetMargins\iffalse}
+\fvset{resetmargins=false}
+\ExplSyntaxOff
+\ExplSyntaxOn
+\fv_define_key:nnnn{FV}{listparameters}{\def\FV@ListParameterHook{#1}}
+\def\FV@ListParameterHook{}
+\ExplSyntaxOff
+\ExplSyntaxOn
+\fv_define_key:nnnn{FV}{hfuzz}
+  {
+    \cs_set_nopar:Npx \fv_hfuzz {\dim_to_decimal_in_sp:n { #1 }sp}
+  }
+\fvset{hfuzz=2pt}
+\ExplSyntaxOff
+\ExplSyntaxOn
+\fv_define_boolean_key:nnTF{FV}{samepage}%
+  {\cs_set:Npn \fv_interline_penalty{\interlinepenalty\@M}}%
+  {\cs_set_eq:NN \fv_interline_penalty\scan_stop:}
+\fvset{samepage=false}
+\ExplSyntaxOff
+\ExplSyntaxOn
+\cs_set:Npn \FV@List#1
+  {
+    \bgroup
+    \fv_use_values:
+    \fv_leave_vmode:
+    \if@inlabel
+    \else
+       \setbox\@labels=\box\voidb@x
+   \fi
+   \fv_list_nesting:n {#1}%
+   \FV@ListParameterHook
+   \FV@ListVSpace
+   \FV@SetLineWidth
+   \fv_interline_penalty
+   \cs_set_eq:NN \fv_process_line:n\fv_list_process_line_i:n
+   \fv_catcodes:
+   \fv_formatting_prep:
+   \fv_obey_tabs_init:
+   \FV@BeginListFrame
+  }
+\ExplSyntaxOff
+
+\ExplSyntaxOn
+\cs_set:Npn \fv_leave_vmode:
+  {
+    \if@noskipsec
+      \mode_leave_vertical:
+    \else
+      \if@FV@ResetMargins
+        \if@inlabel
+          \mode_leave_vertical:
+        \fi
+      \fi
+    \fi
+    \if_mode_vertical:
+      \@noparlisttrue
+    \else:
+      \@noparlistfalse\unskip\par
+    \fi:
+  }
+\ExplSyntaxOff
+
+\ExplSyntaxOn
+\cs_set:Npn\fv_list_nesting:n  #1
+  {
+    \if@FV@ResetMargins
+      \@listdepth=\z@
+    \else
+      \if_int_compare:w\@listdepth>5\scan_stop:
+        \@toodeep
+      \else
+        \advance\@listdepth\@ne
+      \fi
+    \fi
+    \rightmargin\z@
+    \cs:w @list\romannumeral\the\@listdepth\cs_end:
+    \if_int_compare:w #1 = \z@
+      \rightmargin\z@
+      \leftmargin\z@
+    \fi
+  }
+\ExplSyntaxOff
+\ExplSyntaxOn
+\cs_set:Npn \FV@ListVSpace
+  {
+    \@topsepadd=\FancyVerbVspace
+    \if@noparlist
+      \advance\@topsepadd\partopsep
+    \fi
+    \if@inlabel
+      \skip_vertical:n \parskip
+    \else
+      \if@nobreak
+        \skip_vertical:n \parskip
+        \tex_clubpenalty:D \@M
+      \else
+        \addpenalty\@beginparpenalty
+        \@topsep\@topsepadd
+        \advance\@topsep\parskip
+        \addvspace\@topsep
+      \fi
+    \fi
+    \tex_global:D\@nobreakfalse
+    \tex_global:D\@inlabelfalse
+    \tex_global:D\@minipagefalse
+    \tex_global:D\@newlistfalse
+  }
+\ExplSyntaxOff
+
+\ExplSyntaxOn
+\cs_set:Npn \FV@SetLineWidth
+  {
+    \if@FV@ResetMargins
+    \else
+      \advance\leftmargin\@totalleftmargin
+    \fi
+    \advance\leftmargin\FV@XLeftMargin\scan_stop:
+    \advance\rightmargin\FV@XRightMargin\scan_stop:
+    \linewidth\tex_hsize:D
+    \advance\linewidth-\leftmargin
+    \advance\linewidth-\rightmargin
+    \hfuzz\fv_hfuzz\scan_stop:
+  }
+\ExplSyntaxOff
+\ExplSyntaxOn
+\cs_set:Npn \fv_list_process_line:n #1
+  {
+    \hbox_to_wd:nn \tex_hsize:D
+      {
+        \kern\leftmargin
+        \hbox_to_wd:nn \linewidth
+          {
+            \FV@LeftListNumber
+            \FV@LeftListFrame
+            \FancyVerbFormatLine{#1}\hss
+            \FV@RightListFrame
+            \FV@RightListNumber
+          }
+        \hss
+      }
+  }
+\ExplSyntaxOff
+
+\ExplSyntaxOn
+\cs_set:Npn \fv_list_process_line_i:n #1
+ {
+  \hbox:n
+    {
+      \if_box_empty:N     %if_void
+        \@labels
+      \else:
+        \hbox_to:nn \z@{\kern\@totalleftmargin\box_use_drop:N \@labels\hss}
+      \fi:
+      \fv_list_process_line:n {#1}
+    }
+  \cs_set_eq:NN \fv_process_line:n\fv_list_process_line_ii:n
+  }
+\ExplSyntaxOff
+
+\ExplSyntaxOn
+\cs_set:Npn \fv_list_process_line_ii:n #1
+  {
+    \setbox\@tempboxa = \fv_list_process_line:n{#1}%
+    \cs_set_eq:NN \fv_process_line:n \fv_list_process_line_iii:n
+  }
+\ExplSyntaxOff
+\ExplSyntaxOn
+\cs_set:Npn \fv_list_process_line_iii:n#1{%
+  {\advance\interlinepenalty\clubpenalty\penalty\interlinepenalty}%
+  \box\@tempboxa
+  \setbox\@tempboxa=\fv_list_process_line:n {#1}%
+  \cs_set_eq:NN \fv_process_line:n\fv_list_process_line_iv:n}
+\ExplSyntaxOff
+\ExplSyntaxOn
+\cs_set:Npn \fv_list_process_line_iv:n#1{%
+  \penalty\interlinepenalty
+  \box\@tempboxa
+  \setbox\@tempboxa=\fv_list_process_line:n {#1}}%
+\ExplSyntaxOff
+\ExplSyntaxOn
+\cs_set:Npn \FV@EndList
+  {
+    \fv_list_process_last_line:
+    \FV@EndListFrame
+    \@endparenv
+    \egroup
+    \@endpetrue
+  }
+\ExplSyntaxOff
+\ExplSyntaxOn
+\cs_set:Npn \fv_list_process_last_line:
+  {
+    \if_meaning:w \fv_process_line:n\fv_list_process_line_iv:n
+      {\advance\interlinepenalty\widowpenalty\penalty\interlinepenalty}
+      \box\@tempboxa
+    \else
+      \if_meaning:w \fv_process_line:n\fv_list_process_line_iii:n
+        {\advance\interlinepenalty\widowpenalty
+          \advance\interlinepenalty\clubpenalty
+          \penalty\interlinepenalty}
+        \box\@tempboxa
+      \else
+        \if_meaning:w \fv_process_line:n\fv_list_process_line_i:n
+          \FV@Error{Empty verbatim environment}{}
+          \fv_process_line:n{}
+        \fi
+      \fi
+    \fi
+  }
+\ExplSyntaxOff
+\ExplSyntaxOn
+\cs_set:Npn \FV@VerbatimBegin{\FV@List\z@}
+\ExplSyntaxOff
+\ExplSyntaxOn
+\cs_set:Npn \FV@VerbatimEnd{\FV@EndList}
+\ExplSyntaxOff
+\ExplSyntaxOn
+\cs_set:Npn \FVB@Verbatim{\FV@VerbatimBegin\FV@Scan}
+\cs_set:Npn \FVE@Verbatim{\FV@VerbatimEnd}
+\ExplSyntaxOff
+\DefineVerbatimEnvironment{Verbatim}{Verbatim}{}
+\ExplSyntaxOn
+\cs_set:Npn \FV@UseVerbatim #1
+  {
+    \FV@VerbatimBegin#1\FV@VerbatimEnd
+    \@doendpe\tex_global:D\@ignorefalse\ignorespaces
+  }
+\ExplSyntaxOff
+\ExplSyntaxOn
+\cs_set:Npn \VerbatimInput {\fv_command:nn{}{VerbatimInput}}
+\ExplSyntaxOff
+\ExplSyntaxOn
+\cs_set:Npn \FVC@VerbatimInput#1{\FV@UseVerbatim{\fv_input: {#1}}}
+\ExplSyntaxOff
+\ExplSyntaxOn
+\cs_set:Npn \FV@LVerbatimBegin{\FV@List\@ne}
+\cs_set:Npn \FV@LVerbatimEnd{\FV@EndList}
+\ExplSyntaxOff
+\ExplSyntaxOn
+\cs_set:Npn \FVB@LVerbatim{\FV@LVerbatimBegin\FV@Scan}
+\cs_set:Npn \FVE@LVerbatim{\FV@LVerbatimEnd}
+
+\DefineVerbatimEnvironment{LVerbatim}{LVerbatim}{}
+
+\cs_set:Npn \FV@LUseVerbatim#1
+  {
+    \FV@LVerbatimBegin#1\FV@LVerbatimEnd
+    \@doendpe\tex_global:D\@ignorefalse\ignorespaces
+  }
+\ExplSyntaxOff
+\ExplSyntaxOn
+\cs_set:Npn \LVerbatimInput{\fv_command:nn{}{LVerbatimInput}}
+\cs_set:Npn \FVC@LVerbatimInput#1{\FV@LUseVerbatim{\fv_input: {#1}}}
+\ExplSyntaxOff
+\ExplSyntaxOn
+\cs_set:Npn  \FV@Frame@none
+  {
+    \cs_set_eq:NN \FV@BeginListFrame\scan_stop:
+    \cs_set_eq:NN \FV@LeftListFrame\scan_stop:
+    \cs_set_eq:NN \FV@RightListFrame\scan_stop:
+    \cs_set_eq:NN \FV@EndListFrame\scan_stop:
+  }
+
+\cs_set:Npn  \FV@Frame@single
+  {
+    \cs_set_eq:NN \FV@BeginListFrame\FV@BeginListFrame@Single
+    \cs_set_eq:NN \FV@LeftListFrame\FV@LeftListFrame@Single
+    \cs_set_eq:NN \FV@RightListFrame\FV@RightListFrame@Single
+    \cs_set_eq:NN \FV@EndListFrame\FV@EndListFrame@Single
+  }
+
+\cs_set:Npn  \FV@Frame@lines
+  {
+    \cs_set_eq:NN \FV@BeginListFrame\FV@BeginListFrame@Lines
+    \cs_set_eq:NN \FV@LeftListFrame\scan_stop:
+    \cs_set_eq:NN \FV@RightListFrame\scan_stop:
+    \cs_set_eq:NN \FV@EndListFrame\FV@EndListFrame@Lines
+  }
+
+\cs_set:Npn  \FV@Frame@topline
+  {
+    \cs_set_eq:NN \FV@BeginListFrame\FV@BeginListFrame@Lines
+    \cs_set_eq:NN \FV@LeftListFrame\scan_stop:
+    \cs_set_eq:NN \FV@RightListFrame\scan_stop:
+    \cs_set_eq:NN \FV@EndListFrame\scan_stop:
+  }
+
+\cs_set:Npn  \FV@Frame@bottomline{%
+  \cs_set_eq:NN \FV@BeginListFrame\scan_stop:
+  \cs_set_eq:NN \FV@LeftListFrame\scan_stop:
+  \cs_set_eq:NN \FV@RightListFrame\scan_stop:
+  \cs_set_eq:NN \FV@EndListFrame\FV@EndListFrame@Lines}
+
+%% To define a frame with only a left line
+\cs_set:Npn  \FV@Frame@leftline{%
+  % To define the \FV@FrameFillLine macro (from \FV@BeginListFrame)
+  \if_meaning:w \fv_fillcolor_tl\scan_stop:
+    \cs_set_eq:NN \FV@FrameFillLine\scan_stop:
+  \else
+    \@tempdima\FV@FrameRule\scan_stop:
+    \multiply\@tempdima-\tw@
+    \edef\FV@FrameFillLine{%
+      {\noexpand\fv_fillcolor_tl{\vrule\@width\number\@tempdima sp}%
+      \kern-\number\@tempdima sp}}%
+  \fi
+  \cs_set_eq:NN \FV@BeginListFrame\scan_stop:
+  \cs_set_eq:NN \FV@LeftListFrame\FV@LeftListFrame@Single
+  \cs_set_eq:NN \FV@RightListFrame\scan_stop:
+  \cs_set_eq:NN \FV@EndListFrame\scan_stop:}
+
+\cs_set:Npn  \FV@BeginListFrame@Single{%
+  \lineskip\z@
+  \baselineskip\z@
+  \if_meaning:w \fv_fillcolor_tl\scan_stop:
+    \cs_set_eq:NN \FV@FrameFillLine\scan_stop:
+  \else
+    \@tempdima\FV@FrameRule\scan_stop:
+    \multiply\@tempdima-\tw@
+    \edef\FV@FrameFillLine{%
+      {\noexpand\fv_fillcolor_tl{\vrule\@width\number\@tempdima sp}%
+      \kern-\number\@tempdima sp}}%
+  \fi
+%% DG/SR modification begin - May. 19, 1998
+%%  \fv_single_frameline:n
+  \fv_single_frameline:n {\z@}%
+%% DG/SR modification end
+  \penalty\@M
+  \FV@SingleFrameSep
+  \penalty\@M}
+
+\fv_define_key:nnnn{FV}{label}
+  {
+    \cs_set_nopar:Npx  \@tempa{#1}
+    \if_meaning:w \@tempa\fv_none_tl
+      \cs_set_eq:NN \fv_label_begin:n \scan_stop:
+      \cs_set_eq:NN \fv_label_end:n \scan_stop:
+    \else:
+      \fv_labeli:n#1\@nil
+    \fi:
+  }
+\ExplSyntaxOff
+\ExplSyntaxOn
+\cs_set:Npn \fv_labeli:n{\@ifnextchar[{\fv_label_ii}{\fv_label_ii[]}}
+
+\cs_set:Npn \fv_label_ii[#1]#2\@nil
+  {
+    \cs_set_nopar:Npn \@tempa{#1}%
+    \cs_if_eq:NNTF \@tempa\empty
+      {\cs_set:Npn \fv_label_begin:n {#2}}
+      {
+        \cs_set:Npn \fv_label_begin:n {#1}
+        \cs_set:Npn \__fv_label_position_bottomline:{\@ne}
+      }
+
+      \cs_set:Npn \fv_label_end:n {#2}
+  }
+
+\fvset{label={Test}}
+\fv_define_key:nnnn{FV}{labelposition}[none]
+  {
+    \cs_if_free:cTF {FV@LabelPosition@#1}
+      { \FV@Error{Label position `#1' not defined.}\FV@eha }
+      { \use:c {FV@LabelPosition@#1} }
+    }
+
+\cs_set:Npn  \FV@LabelPosition@none
+  {
+    \cs_set_eq:NN   \__fv_label_position_topline:\scan_stop:
+    \cs_set_eq:NN   \__fv_label_position_bottomline:\scan_stop:
+  }
+
+\cs_set:Npn  \FV@LabelPosition@topline
+  {
+    \cs_set:Npn   \__fv_label_position_topline:{\@ne}
+    \cs_set_eq:NN \__fv_label_position_bottomline:\scan_stop:
+  }
+
+\cs_set:Npn  \FV@LabelPosition@bottomline
+  {
+    \cs_set_eq:NN \__fv_label_position_topline:\scan_stop:
+    \cs_set:Npn  \__fv_label_position_bottomline:{\@ne}
+  }
+\cs_set:Npn  \__fv_label_position_all
+  {
+  \cs_set:Npn  \__fv_label_position_topline: {\c_one_int}
+  \cs_set:Npn  \__fv_label_position_bottomline: {\c_one_int}
+  }
+
+\cs_set_eq:NN \FV@LabelPosition@all \__fv_label_position_all
+
+\fvset{labelposition=topline}
+
+\cs_set:Npn  \fv_single_frameline:n #1
+  {
+    \hbox_to_wd:nn \z@
+      {
+        \kern\leftmargin
+        \if_int_compare:w#1=\z@
+          \cs_set_eq:NN \FV@Label\fv_label_begin:n
+        \else
+          \cs_set_eq:NN \FV@Label\fv_label_end:n
+        \fi
+        \if_meaning:w \FV@Label\scan_stop:
+          \fv_verb_rule_color:{\vrule \@width\linewidth \@height\FV@FrameRule}
+        \else
+          \if_int_compare:w#1=\z@
+            \setbox\z@\hbox:n {\strut\enspace\fv_label_begin:n \enspace\strut}%
+          \else
+            \setbox\z@\hbox:n {\strut\enspace\fv_label_end:n \enspace\strut}%
+          \fi
+          \@tempdimb=\dp\z@
+          \advance\@tempdimb -.5\ht\z@
+          \@tempdimc=\linewidth
+          \advance\@tempdimc -\wd\z@
+          \divide\@tempdimc\tw@
+
+          % topline
+          \if_int_compare:w#1=\z@
+            \if_meaning:w \__fv_label_position_topline:\scan_stop:
+              \fv_verb_rule_color:
+                {
+                  \vrule \@width\linewidth \@height\FV@FrameRule
+                }
+            \else
+              \fv_frame_line_with_label:
+            \fi
+          % bottomline
+          \else
+            \if_meaning:w \__fv_label_position_bottomline:\scan_stop:
+            \fv_verb_rule_color:{\vrule \@width\linewidth \@height\FV@FrameRule}%
+            \else
+              \fv_frame_line_with_label:
+            \fi
+          \fi
+        \fi
+        \hss
+      }
+  }
+\ExplSyntaxOff
+\ExplSyntaxOn
+\cs_set:Npn \fv_frame_line_with_label:
+  {
+    \ht\z@\@tempdimb\dp\z@\@tempdimb%
+    \fv_verb_rule_color:
+      {
+        \vrule \@width\@tempdimc \@height\FV@FrameRule
+        \raise\@tempdimb\box\z@
+        \vrule \@width\@tempdimc \@height\FV@FrameRule
+      }
+  }
+\cs_set:Npn \FV@BeginListFrame@Lines{%
+  \bgroup
+    \lineskip\z@skip
+    \fv_single_frameline:n {\z@}%
+    \kern-0.5\baselineskip\scan_stop:
+    \baselineskip\z@skip
+    \kern\FV@FrameSep\scan_stop:
+  \egroup }%
+
+\cs_set:Npn    \FV@EndListFrame@Lines{%
+  \bgroup
+    \baselineskip\z@skip
+    \kern\FV@FrameSep\scan_stop:
+    \fv_single_frameline:n {\@ne}%
+  \egroup }
+\cs_set:Npn    \FV@SingleFrameSep{%
+  \hbox_to_wd:nn \z@{%
+    \kern\leftmargin
+    \hbox_to_wd:nn \linewidth{%
+      \fv_verb_rule_color:{%
+        \if_meaning:w \fv_fillcolor_tl\scan_stop:
+          \vrule\@width 0pt\@height\FV@FrameSep\scan_stop:
+        \fi
+        \vrule\@width\FV@FrameRule\scan_stop:
+        \if_meaning:w \fv_fillcolor_tl\scan_stop:
+          \hfil
+        \else
+          {\fv_fillcolor_tl\leaders\hrule\@height\FV@FrameSep\hfil}%
+        \fi
+        \if_meaning:w \fv_fillcolor_tl\scan_stop:
+          \vrule\@width 0pt\@height\FV@FrameSep\scan_stop:
+        \fi
+        \vrule\@width\FV@FrameRule\scan_stop:}}%
+    \hss}}
+\cs_set:Npn \FV@LeftListFrame@Single{%
+  \strut
+  {\fv_verb_rule_color:{\vrule \@width\FV@FrameRule}}%
+  \FV@FrameFillLine
+  \if_meaning:w \fv_fillcolor_tl\scan_stop:
+    \kern\FV@FrameSep
+  \else
+    {\noexpand\leavevmode\fv_fillcolor_tl{\vrule\@width\FV@FrameSep}}%
+  \fi}
+\cs_set:Npn \FV@RightListFrame@Single
+  {
+    \if_meaning:w \fv_fillcolor_tl\scan_stop:
+      \kern\FV@FrameSep
+    \else
+      {\noexpand\leavevmode\fv_fillcolor_tl{\vrule\@width\FV@FrameSep}}%
+    \fi
+  {
+    \noexpand\leavevmode\fv_verb_rule_color:{\vrule\@width\FV@FrameRule}}
+  }
+
+\cs_set:Npn \FV@EndListFrame@Single
+  {
+    \penalty\@M
+    \FV@SingleFrameSep
+    \penalty\@M
+    \fv_single_frameline:n {\@ne}
+  }
+\fv_define_key:nnnn{FV}{framerule}{%
+  \@tempdima=#1\scan_stop:
+  \edef\FV@FrameRule{\number\@tempdima sp\scan_stop:}}
+
+\cs_set:Npn \KV@FV@framerule@default{\cs_set_eq:NN \FV@FrameRule\fboxrule}
+\fv_define_key:nnnn{FV}{framesep}{%
+  \@tempdima=#1\scan_stop:
+  \edef\FV@FrameSep{\number\@tempdima sp\scan_stop:}}
+
+\def\KV@FV@framesep@default{\cs_set_eq:NN \FV@FrameSep\fboxsep}
+
+\fvset{framerule,framesep}
+\ExplSyntaxOff
+\ExplSyntaxOn
+\fv_define_key:nnnn{FV}{rulecolor}
+  {
+    \cs_set_nopar:Npx \@tempa{#1}%
+    \if_meaning:w \@tempa\fv_none_tl
+      \cs_set_eq:NN \fv_verb_rule_color:\scan_stop:
+    \else
+      \cs_set_eq:NN \fv_verb_rule_color:\@tempa
+    \fi
+  }
+\ExplSyntaxOff
+\ExplSyntaxOn
+\fv_define_key:nnnn{FV}{fillcolor}
+  {
+    \cs_set_nopar:Npx \@tempa{#1}
+    \if_meaning:w \@tempa\fv_none_tl
+      \cs_set_eq:NN \fv_fillcolor_tl\scan_stop:
+    \else:
+      \cs_set_eq:NN \fv_fillcolor_tl\@tempa
+    \fi:
+  }
+\fvset{rulecolor=none,fillcolor=none}
+\ExplSyntaxOff
+\ExplSyntaxOn
+\cs_set:Npn \FV@Frame@double
+  {
+    \cs_set_eq:NN \__fv_frame_begin:\FV@FrameBegin@double
+    \cs_set_eq:NN \__fv_frame_line: \FV@FrameLine@double
+    \cs_set_eq:NN \__fv_frame_end: \FV@FrameEnd@double
+  }
+
+\fv_define_key:nnnn{FV}{frame}[none]{%
+  \@ifundefined{FV@Frame@#1}%
+    {\FV@Error{Frame style `#1' not defined.}\FV@eha}%
+    {\use:c {FV@Frame@#1}}}
+\fvset{frame=none}
+\ExplSyntaxOff
+\ExplSyntaxOn
+\fv_define_key:nnnn{FV}{firstnumber}[auto]
+{
+    \cs_set:Npn \@tempa{#1}\cs_set:Npn \@tempb{auto}
+    \if_meaning:w \@tempa\@tempb
+      \cs_set:Npn \fv_set_lineno:n
+        {
+          \int_set:Nn \c@fv_verbline_int\fv_codeline_int
+          \int_set:NN \c@fv_verbline_int\m@ne
+        }
+    \else:
+      \def\@tempb{last}
+      \if_meaning:w \@tempa\@tempb
+        \cs_set_eq:NN \fv_set_lineno:n\scan_stop:
+      \else:
+        \cs_set:Npn \fv_set_lineno:n
+          {
+            \int_set:Nn \c@fv_verbline_int {#1}
+            \int_add:Nn \c@fv_verbline_int {\m@ne}
+          }
+      \fi:
+   \fi:
+}
+\ExplSyntaxOff
+\ExplSyntaxOn
+\fv_define_boolean_key:nnTF{FV}{numberblanklines}
+  {\cs_set_eq:NN \if@FV@NumberBlankLines\iftrue}
+  {\cs_set_eq:NN \if@FV@NumberBlankLines\iffalse}
+\fvset{numberblanklines=true}
+\ExplSyntaxOff
+\ExplSyntaxOn
+\cs_set:Npn \fv_refstepcounter:n#1
+  {
+    \int_gincr:c {c@#1}
+    \protected@edef\@currentlabel{\csname p@#1\endcsname\arabic{fv_verbline_int}}
+  }
+\cs_set:Npn \FV@StepLineNo
+  {
+    % defined when counter is stepped
+    \fv_set_lineno:n
+    \cs_set:Npn \FV@StepLineNo
+      {
+        \if@FV@NumberBlankLines
+          \fv_refstepcounter:n{fv_verbline_int}
+        \else
+          \if_meaning:w \fv_line\empty
+          \else:
+            \fv_refstepcounter:n {fv_verbline_int}
+          \fi:
+        \fi
+      }
+    \FV@StepLineNo
+  }
+\ExplSyntaxOff
+\ExplSyntaxOn
+\cs_set:Npn \theFancyVerbLine{\rmfamily\tiny\arabic{fv_verbline_int}}
+\ExplSyntaxOff
+\ExplSyntaxOn
+\fv_define_key:nnnn{FV}{numbers}[none]{%
+  \cs_if_free:cTF {FV@Numbers@#1}
+    {\FV@Error{Numbers~style~`#1'~not~defined.}\FV@eha}
+    {\use:c {FV@Numbers@#1}}}
+
+\cs_set:Npn \FV@Numbers@none
+  {
+    \cs_set_eq:NN \FV@LeftListNumber\scan_stop:
+    \cs_set_eq:NN \FV@RightListNumber\scan_stop:
+  }
+\ExplSyntaxOff
+\ExplSyntaxOn
+\int_new:N \fv_stepnumber_int
+\fv_define_key:nnnn{FV}{stepnumber}{\fv_stepnumber_int#1}
+\cs_set:Npn \KV@FV@stepnumber@default{\fv_stepnumber_int\c_one_int}
+
+\fvset{stepnumber=1}
+\cs_set:Npn \FV@Numbers@left
+  {
+    \cs_set_eq:NN \FV@RightListNumber\scan_stop:
+
+    \cs_set:Npn \FV@LeftListNumber
+      {
+        \@tempcnta=\fv_codeline_int
+        \@tempcntb=\fv_codeline_int
+        \divide\@tempcntb\fv_stepnumber_int
+        \multiply\@tempcntb\fv_stepnumber_int
+        \if_int_compare:w\@tempcnta=\@tempcntb
+          \if@FV@NumberBlankLines
+            \hbox_to_wd:nn \z@{\hss\theFancyVerbLine\kern\fv_number_sep:n }%
+          \else
+            \if_meaning:w \fv_line\empty
+            \else
+              \hbox_to_wd:nn \z@{\hss\theFancyVerbLine\kern\fv_number_sep:n }%
+            \fi
+          \fi
+        \fi
+      }
+  }
+\cs_set:Npn \FV@Numbers@right
+  {
+  \cs_set_eq:NN \FV@LeftListNumber\scan_stop:
+
+  \cs_set:Npn \FV@RightListNumber
+    {
+      \@tempcnta=\fv_codeline_int
+      \@tempcntb=\fv_codeline_int
+      \divide\@tempcntb\fv_stepnumber_int
+      \multiply\@tempcntb\fv_stepnumber_int
+      \if_int_compare:w\@tempcnta=\@tempcntb
+        \if@FV@NumberBlankLines
+          \hbox_to_wd:nn \z@ {\kern\fv_number_sep:n \theFancyVerbLine\hss}
+        \else
+          \if_meaning:w \fv_line\empty
+          \else
+            \hbox_to_wd:nn \z@ {\kern\fv_number_sep:n \theFancyVerbLine\hss}%
+          \fi
+        \fi
+      \fi
+    }
+  }
+\ExplSyntaxOff
+\ExplSyntaxOn
+\dim_new:N \l_numbersep_dim
+\fv_define_key:nnnn{FV}{numbersep}
+  {
+    \dim_set:Nn \l_numbersep_dim {#1}
+    \cs_set_nopar:Npx \fv_number_sep:n  {\dim_use:N \l_numbersep_dim}
+  }
+\fvset{numbers=left,numbersep=12pt,firstnumber=1}
+\ExplSyntaxOff
+\ExplSyntaxOn
+\cs_set:Npn \FV@BVerbatimBegin
+  {
+    \bgroup
+      \fv_use_values:
+      \FV@BeginVBox
+      \cs_set_eq:NN \fv_process_line:n\FV@BProcessLine
+      \fv_formatting_prep:
+      \fv_obey_tabs_init:
+  }
+
+\cs_set:Npn \FV@BVerbatimEnd{\FV@EndVBox\egroup }
+\cs_set:Npn \FV@BeginVBox
+  {
+  \leavevmode
+    \hbox\if_meaning:w \FV@boxwidth\scan_stop:\else~to\FV@boxwidth\fi\bgroup
+    \ifcase
+      \FV@baseline
+      \vbox
+      \or \vtop
+      \or$\vcenter
+    \fi\bgroup
+  }
+
+\cs_set:Npn \FV@EndVBox{\egroup\ifmmode$\fi\hfil\egroup}
+\ExplSyntaxOn
+\fv_define_key:nnnn{FV}{boxwidth}{%
+  \def\@tempa{#1}\def\@tempb{auto}%
+  \if_meaning:w \@tempa\@tempb
+    \cs_set_eq:NN \FV@boxwidth\scan_stop:
+  \else
+    \@tempdima=#1\scan_stop:
+    \edef\FV@boxwidth{\number\@tempdima sp}%
+  \fi
+}
+\ExplSyntaxOff
+\ExplSyntaxOn
+\cs_set:Npn \KV@FV@boxwidth@default
+  {
+    \cs_set_eq:NN \FV@boxwidth\scan_stop:
+  }
+\ExplSyntaxOff
+\ExplSyntaxOn
+\fv_define_key:nnnn{FV}{baseline}{
+  \ExplSyntaxOn
+  \if t#1\@empty\cs_set_eq:NN \FV@baseline\@ne
+  \else
+    \if c#1\@empty\cs_set_eq:NN \FV@baseline\tw@
+      \else \cs_set_eq:NN \FV@baseline\z@
+   \fi
+  \fi
+  \ExplSyntaxOff
+  }
+
+\ExplSyntaxOff
+
+\fvset{baseline=b,boxwidth}
+\ExplSyntaxOn
+\cs_set:Npn \FV@BProcessLine #1
+  {
+    \hbox{\FancyVerbFormatLine{#1}}
+  }
+\ExplSyntaxOff
+\ExplSyntaxOn
+\cs_set:Npn \FVB@BVerbatim {\FV@BVerbatimBegin\FV@Scan}
+\cs_set:Npn \FVE@BVerbatim{\FV@BVerbatimEnd}
+\ExplSyntaxOff
+\DefineVerbatimEnvironment{BVerbatim}{BVerbatim}{}
+\ExplSyntaxOn
+\cs_set:Npn \FV@BUseVerbatim#1{\FV@BVerbatimBegin#1\FV@BVerbatimEnd}
+\cs_set:Npn \BVerbatimInput{\fv_command:nn{}{BVerbatimInput}}
+\cs_set:Npn \FVC@BVerbatimInput#1{\FV@BUseVerbatim{\fv_input: {#1}}}
+\cs_set:Npn \SaveVerbatim{\fv_environment:nn{}{SaveVerbatim}}
+\ExplSyntaxOff
+\ExplSyntaxOn
+\cs_set:Npn \FVB@SaveVerbatim#1
+  {
+    \@bsphack
+    \bgroup
+      \fv_use_values:
+      \cs_set:Npn \SaveVerbatim@Name{#1}%
+      \cs_gset:Npn \FV@TheVerbatim{}%
+      \cs_set:Npn \fv_process_line:n ##1
+        {
+          \exp_after:wN \cs_gset:Npn \exp_after:wN \FV@TheVerbatim\exp_after:wN
+            {
+              \FV@TheVerbatim\fv_process_line:n {##1}
+            }
+        }
+      \cs_gset:Npn \FV@TheVerbatim{}%
+      \FV@Scan
+  }
+
+\cs_set:Npn \FVE@SaveVerbatim
+  {
+    \exp_after:wN \tex_global:D\exp_after:wN \cs_set_eq:NN
+    \csname FV@SV@\SaveVerbatim@Name\endcsname\FV@TheVerbatim
+    \egroup\@esphack
+  }
+
+\DefineVerbatimEnvironment{SaveVerbatim}{SaveVerbatim}{}
+
+\def\FV@CheckIfSaved#1#2{%
+  \@ifundefined{FV@SV@#1}%
+  {\FV@Error{No verbatim text has been saved under name `#1'}\FV@eha}%
+  {#2{\csname FV@SV@#1\endcsname}}}
+
+\cs_set:Npn \UseVerbatim{\fv_command:nn{}{UseVerbatim}}
+\cs_set:Npn \FVC@UseVerbatim#1{\FV@CheckIfSaved{#1}{\FV@UseVerbatim}}
+\cs_set:Npn \LUseVerbatim{\fv_command:nn{}{LUseVerbatim}}
+\cs_set:Npn \FVC@LUseVerbatim#1{\FV@CheckIfSaved{#1}{\FV@LUseVerbatim}}
+\cs_set:Npn \BUseVerbatim{\fv_command:nn{}{BUseVerbatim}}
+\cs_set:Npn \FVC@BUseVerbatim#1{\FV@CheckIfSaved{#1}{\FV@BUseVerbatim}}
+
+\newwrite\FV@OutFile
+\cs_set:Npn \VerbatimOut{\fv_environment:nn{}{VerbatimOut}}
+\cs_set:Npn \FVB@VerbatimOut#1
+  {
+    \@bsphack
+    \bgroup
+    \fv_use_values:
+    \fv_define_whitespace:
+    \cs_set:Npn \fv_space_tl{\c_space_tl}
+    \FV@DefineTabOut
+    \cs_set:Npn \fv_process_line:n{\immediate
+
+    \FV@OutFile}
+    \immediate\openout\FV@OutFile #1\scan_stop:
+    \cs_set_eq:NN \FV@FontScanPrep\scan_stop:
+    \cs_set_eq:NN \@noligs\scan_stop:
+    \FV@Scan
+  }
+
+\def\FVE@VerbatimOut{\immediate\closeout\FV@OutFile\egroup\@esphack}
+
+\DefineVerbatimEnvironment{VerbatimOut}{VerbatimOut}{}
+\cs_set:Npn \FV@DefineTabOut
+  {
+    \def\fv_tab:{}%
+    \@tempcnta=\fv_verb_tab_size_tl\scan_stop:
+    \loop\if_int_compare:w\@tempcnta>\z@
+      \edef\fv_tab:{\fv_tab:\space}%
+      \advance\@tempcnta\m@ne
+    \repeat
+  }
+\ExplSyntaxOff
+\ExplSyntaxOn
+
+\cs_set:Npn \SaveVerb{\fv_command:nn{}{SaveVerb}}
+\ExplSyntaxOff
+\ExplSyntaxOn
+\bgroup
+
+\catcode`\^^M=\active%
+
+\cs_gset:Npn \FVC@SaveVerb#1#2
+  {
+    \cs_set:cpn {FV@SV@#1}{}%
+    \bgroup
+
+      % use any setttings
+      \fv_use_values:%
+      \fv_catcodes:%
+
+      % define the EOL as outer to give an error if the user
+      % missed an enclosing token.
+      % we could use balance token from verbatim to improve
+      % the user interface messages here.
+      \outer\def^^M{\FV@EOL}%
+
+      % The key is defined using |\FancyVerbAfterSave|
+      % Change original definitions to a tl
+      \tl_gset_eq:NN \g__fv_after_save_code\FancyVerbAfterSave
+
+      % change the character to other =
+      \char_set_catcode_other:N #2
+
+      % This is a strange consruct revisit
+      \tl_set:Nn\l_tmpa_tl {\tl_to_str:n{#2}}
+
+      \cs_set:Npn\@tempa{\def\FancyVerbGetVerb####1####2}
+      % #2 for example can be an =, change to string
+      \exp_after:wN \@tempa\tl_to_str:n {#2}
+      {
+        \egroup
+        \cs_set:cpn {FV@SV@#1}{##2}\g__fv_after_save_code
+      }
+      % if the delimiter is not found continue with error
+      \FancyVerbGetVerb\FV@EOL
+  }
+\egroup
+
+\cs_set:Npn \FV@EOL{%
+  \egroup
+  \FV@Error%
+    {Could not find the end delimiter of a short verb command}%
+    {You probably just forget the end delimiter of a \string\Verb\space or
+      \string\SaveVerb^^J%
+      command, or you broke the literal text across input lines.^^J%
+      Hit <return> to proceed.}}
+
+\fv_define_key:nnnn{FV}{aftersave}{\def\FancyVerbAfterSave{#1}}
+
+\fvset{aftersave=}
+
+\cs_set:Npn \FV@UseVerb#1{\mbox{\fv_use_values:\fv_formatting_prep:#1}}
+
+\ExplSyntaxOff
+\ExplSyntaxOn
+\DeclareRobustCommand\UseVerb{\fv_command:nn{}{UseVerb}}
+
+\cs_set:Npn \FVC@UseVerb #1
+  {
+    \@ifundefined{FV@SV@#1}%
+      {\FV@Error{Short verbatim text never saved to name `#1'}\FV@eha}%
+      {\FV@UseVerb{\use:c {FV@SV@#1}}}
+  }
+\ExplSyntaxOff
+\ExplSyntaxOn
+\cs_set_nopar:Npn \Verb{\fv_command:nn{}{Verb}}
+\ExplSyntaxOff
+\ExplSyntaxOn
+\char_set_catcode_other:N \~
+\bgroup
+\catcode`\^^M=\active%
+\cs_gset:Npn \FVC@Verb#1
+  {
+  \bgroup%
+    \fv_use_values:
+
+    \fv_formatting_prep:
+
+    \fv_catcodes:
+
+    \outer\def^^M{}%
+
+    \catcode`#1=12%
+
+    \def\@tempa{\def\FancyVerbGetVerb####1####2}
+    \exp_after:wN \@tempa\string#1{\mbox{##2}\egroup }%
+
+    \FancyVerbGetVerb\FV@EOL
+  }
+\egroup
+
+
+\ExplSyntaxOn
+
+\seq_new:N \fv_sanitize_seq:N
+\seq_gset_split:Nnn \fv_sanitize_seq { }
+  { \ \" \# \$ \% \& \\ \^ \_ \~ }
+
+\cs_set_eq:NN \fv_sanitize_add:Nn \seq_gput_right:Nn
+\cs_set_eq:NN \fv_sanitize_pop_right:NN \seq_pop_right:NN
+
+\cs_if_exist:NTF\add@special
+  {
+      \cs_gset_eq:NN \fv_add_special:Nn \add@special
+  }
+  {
+    \cs_gset:Npn \fv_add_special:Nn
+      {
+        \rem@special{#1}
+        \exp_after:wN
+          \gdef\expandafter
+            \dospecials
+              \expandafter {\dospecials \do #1}
+      }
+
+    \cs_set:Npn \rem@special#1
+      {
+        \def\do##1
+          {
+            \ifnum`#1=`##1 \else \noexpand\do\noexpand##1\fi
+          }
+
+         % update the list globally
+         \xdef\dospecials{\dospecials}%
+
+         % fixing \@sanitize is the same except that we need to
+         % redefine \@makeother
+        \group_begin:
+        \cs_set:Npn \@makeother ##1
+          {
+            % left original definition here
+            \ifnum`#1=`##1 \else \noexpand\@makeother\noexpand##1\fi
+          }
+            \xdef\@sanitize{\@sanitize}
+        \group_end:
+     }
+  }
+
+\cs_set:Npn \DefineShortVerb{\FV@Command{}{DefineShortVerb}}
+
+\char_set_catcode_other:N \~
+\cs_set:Npn\FVC__fvDefineShortVerb#1
+  {
+
+  \group_begin:
+    % maybe not needed but to make sure
+    \char_gset_catcode_active:N #1
+
+    % remember the `#1 is a number so that the lowercase `\~
+    % will behave differently
+    \lccode`\~=`#1%
+    \lowercase{\gdef\@tempg{\edef~}\global\let\@temph~}
+  \group_end:
+
+  % Save the lowercase definition? In doc saved as
+  \cs_set_eq:cN {FV@AC@\string#1} \@temph
+
+  % Save the catcode of the short verb marker globally. Note
+  % doc saves it in cc\string#1
+  \cs_gset:cpx {FV@CC@\string#1} {\the\catcode`#1}
+
+  \cs_set_eql:cN {FV@KV@\string#1} \FV@KeyValues
+
+  \@tempg{
+    \let\noexpand\FV@KeyValues\expandafter\noexpand
+      \csname FV@KV@\string#1\endcsname
+      \noexpand\FVC@Verb\expandafter\@gobble\string#1}
+
+  % Add to specials the escaped character (say\")
+  % Since we have checked already if it is included in the list, we have no worries to
+  % add it.
+  %\expandafter\def\expandafter\dospecials\expandafter{\dospecials\do#1}%
+  \fv_add_special:Nn\dospecials{\do#1}
+  % Add to the sanitize list
+  %\expandafter\def\expandafter\@sanitize\expandafter{\@sanitize\@makeother#1}
+
+  % Make the character active
+  \catcode`#1=\active
+  }
+
+\ExplSyntaxOff
+
+\ExplSyntaxOn
+\def\UndefineShortVerb#1
+  {
+    \@ifundefined{FV@CC@\string#1}%
+      {\FV@Error{`\expandafter\@gobble\string#1' is not a short
+        verb character}\FV@eha}%
+      {\FV@UndefineShortVerb#1}
+  }
+
+\def\FV@UndefineShortVerb#1
+  {
+    \catcode`#1=\csname FV@CC@\string#1\endcsname
+%% DG/SR modification begin - Jun. 12, 1998
+    \expandafter\let\csname FV@CC@\string#1\endcsname\relax
+%% DG/SR modification end
+
+}
+
+\def\SaveMVerb{\FV@Command{}{SaveMVerb}}
+\begingroup
+\catcode`\^^M=\active%
+\gdef\FVC@SaveMVerb#1#2{%
+  \@ifundefined{FV@SVM@#1}{}%
+    {\FV@Error{Moving verbatim name `#1' already used}%
+      {I will overwrite the old definition. Hit <return> to continue.}}%
+  \global\@namedef{FV@SVM@#1}{}%
+  \begingroup%
+    \let\FV@SavedKeyValues\FV@KeyValues%
+    \FV@UseKeyValues%
+    \FV@CatCodes%
+    \outer\def^^M{}%
+    \global\let\@tempg\FancyVerbAfterSave%
+    \catcode`#2=12%
+    \def\@tempa{\def\FancyVerbGetVerb####1####2}%
+    \expandafter\@tempa\string#2{%
+      \if@filesw
+        \FV@DefineWhiteSpace%
+        \let\FV@Space\space%
+        \let\FV@Tab\space%
+        \FV@MakeUnActive%
+        \let\protect\string
+        \immediate\write\@auxout{%
+          \noexpand\SaveGVerb[\FV@SavedKeyValues]{#1}\string#2##2\string#2}%
+      \fi
+      \endgroup%
+      \@namedef{FV@SV@#1}{##2}%
+      \@tempg}%
+    \FancyVerbGetVerb\FV@EOL}%
+\endgroup
+\def\SaveGVerb{\FV@Command{}{SaveGVerb}}
+\begingroup
+\catcode`\^^M=\active%
+\gdef\FVC@SaveGVerb#1#2{%
+  \global\@namedef{FV@SVG@#1}{}%
+  \begingroup%
+    \FV@UseKeyValues%
+    \FV@CatCodes%
+    \outer\def^^M{}%
+    \catcode`#2=12%
+    \def\@tempa{\def\FancyVerbGetVerb####1####2}%
+    \expandafter\@tempa\string#2{\endgroup\global\@namedef{FV@SVG@#1}{##2}}%
+    \FancyVerbGetVerb\FV@EOL}%
+\endgroup
+\def\UseMVerb{\protect\pUseMVerb}
+\def\pUseMVerb{\FV@Command{}{pUseMVerb}}
+\def\FVC@pUseMVerb#1{%
+  \expandafter\ifx \csname FV@SVM@#1\endcsname\relax
+    \expandafter\ifx \csname FV@SVG@#1\endcsname\relax
+      \@warning{Moving verbatim text not defined for name `#1'}\FV@eha
+      {\bf ??}%
+    \else
+      \FV@UseVerb{\@nameuse{FV@SVG@#1}}%
+    \fi
+  \else
+    \FV@UseVerb{\@nameuse{FV@SVM@#1}}%
+  \fi}
+
+\ExplSyntaxOn
+\exp_after:wN \if_meaning:w \csname documentclass\endcsname\scan_stop:
+  \def\lrbox#1
+    {%
+      \edef\@tempa
+        {
+          \egroup
+          \setbox#1\hbox{%
+            \bgroup\aftergroup}%
+              \def\noexpand\@currenvir{\@currenvir}
+        }
+      \@tempa
+      \@endpefalse
+      \bgroup
+        \ignorespaces
+    }
+
+    \def\endlrbox{\unskip\egroup}
+\fi
+\ExplSyntaxOff
+
+\InputIfFileExists{fancyvrb.cfg}{}{}
+%%
+\endinput
+%%
+%% End of file `xfancyvrb.sty'.

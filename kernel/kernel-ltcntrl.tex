@@ -1,6 +1,7 @@
 \chapter{Control Structures}
 
 \label{ch:ltcntrl}
+\section{Introduction}
 
 Looping structures are an absolute necessity to handle lists and other constructions.
 As \tex is so different from traditional programming languages, macro writers propose
@@ -16,9 +17,9 @@ functional equivalents are already there, although perhaps
 hidden, and not tagged by familiar names.\footcite{laan1992} 
 
 Leslie Lamport provided a somewhat limited amount of macros, but adequate for
-\latex. It must be emphasized that \pkgname{expl3} did a tremendous job in providing
+\latex. It must be emphasized that \pkg{expl3} did a tremendous job in providing
 tens of alternatives in a more organized manner. If you need to program any serious amount of code
-you are advised to move over to these. The \pkgname{etoolbox} package\footcite{etoolbox} also provides many
+you are advised to move over to these. The \pkg{etoolbox} package\footcite{etoolbox} also provides many
 alternatives. However it is advisable to go over these older methods in order to understand
 the rest of the kernel.\footcite{Kabelschacht1987}
 %
@@ -93,9 +94,10 @@ the rest of the kernel.\footcite{Kabelschacht1987}
 \begin{docCmd}{@whilenoop}{}
 \begin{docCmd}{@whilenum}{}
 \begin{docCmd}{@iwhilenum}{}
-% \changes{v1.0f}{1995/07/09}{Reimplemented using Kabelschacht method}
-% \changes{v1.0g}{1995/08/16}{Removed \cs{@whilenoop}}
-% \changes{v1.0g}{1995/08/16}{Made defs long}
+ Changes 
+ \footnotechanges{v1.0f}{1995/07/09}{Reimplemented using Kabelschacht method}
+ \footnotechanges{v1.0g}{1995/08/16}{Removed \cs{@whilenoop}}
+ \footnotechanges{v1.0g}{1995/08/16}{Made defs long}
 \begin{teX}
 \long\def\@whilenum#1\do #2{\ifnum #1\relax #2\relax\@iwhilenum{#1\relax
      #2\relax}\fi}
@@ -122,8 +124,8 @@ the rest of the kernel.\footcite{Kabelschacht1987}
 \begin{docCmd}{@whileswnoop}{}
 \begin{docCmd}{@whilesw}{}
 \begin{docCmd}{@iwhilesw}{}
-% \changes{v1.0f}{1995/07/09}{Reimplemented using Kabelschacht method}
-% \changes{v1.0g}{1995/08/16}{Removed \cs{@whileswnoop}}
+% \footnotechanges{v1.0f}{1995/07/09}{Reimplemented using Kabelschacht method}
+% \footnotechanges{v1.0g}{1995/08/16}{Removed \cs{@whileswnoop}}
 \begin{teX}
 \long\def\@whilesw#1\fi#2{#1#2\@iwhilesw{#1#2}\fi\fi}
 \long\def\@iwhilesw#1\fi{#1\expandafter\@iwhilesw
@@ -174,6 +176,7 @@ the rest of the kernel.\footcite{Kabelschacht1987}
 % \end{oldcomments}
 %
 \begin{docCmd}{@nnil}{}
+A quark to mark delimited macros. 
 \begin{teX}
 \def\@nnil{\@nil}
 \end{teX}
@@ -186,16 +189,20 @@ the rest of the kernel.\footcite{Kabelschacht1987}
 \end{docCmd}
 %
 \begin{docCmd}{@fornoop}{}
-% \changes{v1.0g}{1995/08/16}{Made defs long}
-% \changes{v1.0h}{2007/08/06}{Really make defs long}
+% \footnotechanges{v1.0g}{1995/08/16}{Made defs long}
+% \footnotechanges{v1.0h}{2007/08/06}{Really make defs long}
 \begin{teX}
 \long\def\@fornoop#1\@@#2#3{}
 \end{teX}
 \end{docCmd}
 %
-\begin{docCmd}{@for}{}
-% \changes{v1.0d}{1995/04/24}
+\begin{docCmd}{@for}{\Arg{:}\Arg{=}\Arg{comma list}}
+% \footnotechanges{v1.0d}{1995/04/24}
 %      {Dont expand second argument with \cs{edef}: /1317 (DPC)}
+Note that this is a macro delimited with |:=| and |\do|. After expanding |#2|
+it handles control to |\@forloop| which takes over control. If you wandering why
+|:=|, this was the |becomes| symbol used in Pascal and people were familiar with
+the convention.
 \begin{teX}
 \long\def\@for#1:=#2\do#3%
   {%
@@ -216,8 +223,8 @@ the rest of the kernel.\footcite{Kabelschacht1987}
 \end{docCmd}
 %
 \begin{docCmd}{@iforloop}{}
-% \changes{v1.0f}{1995/07/09}{Reimplemented using Kabelschacht method}
-% \changes{v1.0g}{1995/08/16}{Made defs long}
+% \footnotechanges{v1.0f}{1995/07/09}{Reimplemented using Kabelschacht method}
+% \footnotechanges{v1.0g}{1995/08/16}{Made defs long}
 \begin{teX}
 \long\def\@iforloop#1,#2\@@#3#4{\def#3{#1}\ifx #3\@nnil
        \expandafter\@fornoop \else
@@ -235,14 +242,19 @@ if in a macro, using an appropriate number of |\expandafter| commands.
 \def\alist{ABCDE FGH}
 \expandafter\@tfor\expandafter\next%
  \expandafter:\expandafter=\alist\do{%
-  [\next]\tikz[inner sep=0pt, outer sep=0pt]\node (X) {]};%
+  [\next]\tikz[inner sep=0pt, outer sep=0pt]\node (X) {\&};%
 }
 \makeatother
 \end{texexample}
+\end{docCmd}
 
 \begin{teX}
 \def\@tfor#1:={\@tf@r#1 }
+\end{teX}
 
+\begin{macro}{\@tf@r}
+
+\begin{teX}
 \long\def\@tf@r#1#2\do#3{\def\@fortmp{#2}\ifx\@fortmp\space\else
     \@tforloop#2\@nil\@nil\@@#1{#3}\fi}
     
@@ -250,9 +262,12 @@ if in a macro, using an appropriate number of |\expandafter| commands.
        \expandafter\@fornoop \else
       #4\relax\expandafter\@tforloop\fi#2\@@#3{#4}}
 \end{teX}
-Note that it ignore any spaces in the list
-\end{docCmd}
-%
+
+Note that it ignores any spaces in the list
+\end{macro}
+
+
+
 \begin{docCmd}{@break@tfor}{}
  Break out of a |\@tfor| loop. This should be called \emph{inside}
  the scope of an |\if|. See \refCmd{@iffileonpath} for an example.
@@ -260,7 +275,7 @@ Note that it ignore any spaces in the list
 \long\def\@break@tfor#1\@@#2#3{\fi\fi}
 \end{teX}
 \end{docCmd}
-%
+
 \begin{docCmd}{@removeelement}{}
     Removes an element from a comma-separated list and puts it into
     a control sequence, called as
@@ -278,4 +293,5 @@ Note that it ignore any spaces in the list
 \end{docCmd}
 
 %\Finale
+\vfill
 \endinput

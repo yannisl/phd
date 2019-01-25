@@ -177,6 +177,7 @@ See http://www.latex-project.org/lppl.txt
 \let\citet\footcite
 \newfontfamily\aegean{Aegean}
 \urlstyle{rm}
+\usepackage{fancyvrb}
 \begin{document}
 \DEBUGOFF
 \cxset{subsection afterindent=false}
@@ -503,25 +504,53 @@ See http://www.latex-project.org/lppl.txt
 % that inaccuracies due to point calculations do not cause a number of non-integer
 % lines.
 %
-% \begin{macrocode}
+% The |\@setfontsize| is defined in the kernel for level sizing changing commands,
+% such as |\large|. 
+% |\#1|  |\large|
+% [\#2]  current value of baseline stretch. Normally this is set to 1
+% [\#3]  baseline
+%
+% The definition in the kernel is:
+%
+% \begin{Verbatim}
+% \def\@setfontsize#1#2#3{\@nomath#1%
+% For the benefit of people relying on keeping the name of the current font command
+% saved in \@currsize we define it. To ensure that \@setfontsize keeps
+% being robust we omit this assignment during times where \protect differs from
+% \@typeset@protect.
+% \ifx\protect\@typeset@protect
+%  \let\@currsize#1%
+% \fi
+% \fontsize{#2}{#3}\selectfont}
+% \end{Verbatim}
+%
+%    \begin{macrocode}
 \ExplSyntaxOn
-\let\set_fontsize \@setfontsize
-
-\int_const:Nn \c_seventeen  { 17 }
-\int_const:Nn \c_eightteen  { 18 }
-\int_const:Nn \c_nineteen   { 19 }
-\int_const:Nn \c_twenty     { 20 }
-\int_const:Nn \c_twentyfour { 24 }
-\int_const:Nn \c_twentyfive { 25 }
-\int_const:Nn \c_thirty     { 30 }
-\int_const:Nn \c_thirtysix  { 36 }
-\int_const:Nn \c_fortyeight { 48 }
-\int_const:Nn \c_sixty      { 60 }
+\let\set_fontsize:Nnn \@setfontsize
+%    \end{macrocode} 
+% The Kernel defines constants for various sizes. Map them to expl3 style.
+% There is a problem with \pkg{microtype} picking up these constants, sometimes.
+%
+% These are not integer constants nor they store points as the kernel commands
+% indicate at first sight. I included the pt suffix as an aide to match them to
+% the kernel terminology and to colorize appropriately in the documentation.
+% 
+%    \begin{macrocode}
+\tl_set:Nn \c_seventeen_pt_tl     { 17.28 } %\xviipt
+\tl_set:Nn \c_eighteen_pt_tl      { 18    }
+\tl_set:Nn \c_nineteen_pt_tl      { 19    }
+\tl_set:Nn \c_twenty_pt_tl        { 20.74 }
+\tl_set:Nn \c_twentyfour_pt_tl    { 24.88 }
+\tl_set:Nn \c_twentyfive_pt_tl    { 25    }
+\tl_set:Nn \c_thirty_pt_tl        { 30    }
+\tl_set:Nn \c_thirtysix_pt_tl     { 36    }
+\tl_set:Nn \c_fortyeight_pt_tl    { 48    }
+\tl_set:Nn \c_sixty_pt_tl         { 60    }
 \ExplSyntaxOff
 %    \end{macrocode}
 %
-% The user level command for the main text size is \docAuxCmd{normalsize}. 
-% Internally \latexe uses \docAuxCmd{@normalsize} when it refers to the main
+% The user level command for the main text size is \docAuxCommand{normalsize}. 
+% Internally \latexe uses \docAuxCommand{@normalsize} when it refers to the main
 % size. In the normal classes it simply selects a 10pt/12pt size.
 %
 % The larger classes such as |memoir| and |koma| extend the range, as we have
@@ -548,11 +577,16 @@ See http://www.latex-project.org/lppl.txt
 \large Fontsize    \xdef\largesize{\f@size/\the\baselineskip} & \largesize  & \cmd{\large}\\
        Fontsize    \xdef\normalsizei{\f@size/\the\baselineskip} & \normalsizei  & \cmd{\normalsize}\\
 \small Fontsize    \xdef\smallsize{\f@size/\the\baselineskip}  &\smallsize  &  \cmd{\smallsize}\\
-\scriptsize Fontsize \xdef\scriptsizesize{\f@size/\the\baselineskip} & \scriptsizesize &\cmd{\scriptsize}\\
 \footnotesize Fontsize \xdef\footnotesizesize{\f@size/\the\baselineskip} & \footnotesizesize &\cmd{\footnotesize}\\
+\scriptsize Fontsize \xdef\scriptsizesize{\f@size/\the\baselineskip} & \scriptsizesize &\cmd{\scriptsize}\\
 \tiny Fontsize             \xdef\tinysize{\f@size/\the\baselineskip} & \tinysize &\cmd{\tiny}\\
 \end{longtable}%
-
+%    \end{macrocode}
+%
+% \fontsizetest{9}{10}
+%
+%    \begin{macrocode}
+%
 %\drawfontbox{#1 Querty}
 %
 %\printfontparams
@@ -567,14 +601,14 @@ See http://www.latex-project.org/lppl.txt
 \ExplSyntaxOn
 \cs_set:Npn \textfontnine
   {
-    \set_fontsize\normalsize \c_nine \c_ten
+    \set_fontsize:Nnn \normalsize \c_nine \c_ten
     \abovedisplayskip      10pt plus 2pt minus5pt
     \abovedisplayshortskip  0pt plus 3pt
     \belowdisplayshortskip  6pt plus 3pt minus3pt
 
     \cs_set:Npn \small 
       {
-        \set_fontsize\small \c_eight {9.5}
+        \set_fontsize:Nnn\small \c_eight {9.5}
         \abovedisplayskip      6pt plus 2pt minus 4pt
         \abovedisplayshortskip 0pt plus 2pt
         \belowdisplayshortskip 4pt plus 2pt minus 2pt
@@ -589,7 +623,7 @@ See http://www.latex-project.org/lppl.txt
      
     \cs_set:Npn \footnotesize
       {
-        \set_fontsize \footnotesize\@viipt{8}
+        \set_fontsize:Nnn \footnotesize\@viipt {8}
         \abovedisplayskip      6pt plus 2pt minus 4pt
         \abovedisplayshortskip 0pt plus 2pt
         \belowdisplayshortskip 4pt plus 2pt minus 2pt
@@ -610,14 +644,14 @@ See http://www.latex-project.org/lppl.txt
 %    \begin{macrocode}
 \cs_set:Npn \textfontninepointfive
   {
-    \set_fontsize \normalsize {9.5} {10.5}
+    \set_fontsize:Nnn \normalsize {9.5} {10.5}
     \abovedisplayskip     10pt plus 2pt minus 5pt
     \abovedisplayshortskip 0pt plus 3pt 
     \belowdisplayshortskip 6pt plus 3pt minus 3pt
     
      \cs_set:Npn \small %check
      {
-       \set_fontsize\small {8.5} {10}
+       \set_fontsize:Nnn\small {8.5} {10}
        \abovedisplayskip      6pt plus 2pt minus 4pt
        \abovedisplayshortskip 0pt plus 2pt
        \belowdisplayshortskip 4pt plus 2pt minus 2pt
@@ -638,14 +672,14 @@ See http://www.latex-project.org/lppl.txt
 %    \begin{macrocode}
 \cs_set:Npn \textfontten
   {
-    \set_fontsize \normalsize \c_ten \c_twelve
+    \set_fontsize:Nnn \normalsize \c_ten \c_twelve
     \abovedisplayskip 10pt plus2pt minus5pt
     \abovedisplayshortskip 0pt plus3pt
     \belowdisplayshortskip 6pt plus3pt minus3pt
    
     \cs_set:Npn \small
       {
-        \set_fontsize \small \c_nine \c_eleven
+        \set_fontsize:Nnn \small \c_nine \c_eleven
         \abovedisplayskip      8.5pt plus 3pt minus 4pt
         \abovedisplayshortskip   0pt plus 2pt
         \belowdisplayshortskip   4pt plus 2pt minus 2pt
@@ -660,7 +694,7 @@ See http://www.latex-project.org/lppl.txt
    
    \cs_set:Npn \footnotesize
      {
-       \set_fontsize\footnotesize\@viiipt{9.5}
+       \set_fontsize:Nnn\footnotesize\@viiipt{9.5}
        \abovedisplayskip 6pt plus2pt minus4pt
        \abovedisplayshortskip 0pt plus 1pt
        \belowdisplayshortskip 3pt plus0pt minus2pt
@@ -673,13 +707,13 @@ See http://www.latex-project.org/lppl.txt
          }
      }
    
-   \cs_set:Npn \scriptsize { \set_fontsize \scriptsize \c_seven \c_eight }
-   \cs_set:Npn \tiny       { \set_fontsize \tiny       \c_five \c_six    }
-   \cs_set:Npn \large      { \set_fontsize \large      \c_twelve {14}    }
-   \cs_set:Npn \Large      { \set_fontsize \Large      \c_sixteen {18}   }
-   \cs_set:Npn \LARGE      { \set_fontsize \LARGE      \c_seventeen {22} }
-   \cs_set:Npn \huge       { \set_fontsize \huge       {22} {25}    }
-   \cs_set:Npn \Huge       { \set_fontsize \Huge       \c_thirty {30}    }
+   \cs_set:Npn \scriptsize { \set_fontsize:Nnn \scriptsize \c_seven \c_eight  }
+   \cs_set:Npn \tiny       { \set_fontsize:Nnn \tiny       \c_five  \c_six    }
+   \cs_set:Npn \large      { \set_fontsize:Nnn \large      \c_twelve {14}     }
+   \cs_set:Npn \Large      { \set_fontsize:Nnn \Large      \c_sixteen {18}   }
+   \cs_set:Npn \LARGE      { \set_fontsize:Nnn \LARGE      \c_seventeen_pt_tl {22} }
+   \cs_set:Npn \huge       { \set_fontsize:Nnn \huge       {22} {25}    }
+   \cs_set:Npn \Huge       { \set_fontsize:Nnn \Huge       \c_thirty_pt_tl {30}    }
    \setlength\parindent{15pt} 
  }
 %    \end{macrocode}
@@ -694,7 +728,7 @@ See http://www.latex-project.org/lppl.txt
 %   \begin{macrocode}  
 \cs_set:Npn \textfonttenpointfive
 {
-   \set_fontsize\normalsize {10.5} {12.5}
+   \set_fontsize:Nnn\normalsize {10.5} {12.5}
    \abovedisplayskip     10pt plus2pt minus5pt
    \abovedisplayshortskip 0pt plus3pt
    \belowdisplayshortskip 6pt plus3pt minus3pt
@@ -708,14 +742,14 @@ See http://www.latex-project.org/lppl.txt
 %    \begin{macrocode}   
 \cs_set:Npn \textfonteleven
   { 
-    \set_fontsize\normalsize \c_eleven {13.6}
+    \set_fontsize:Nnn\normalsize \c_eleven {13.6}
     \abovedisplayskip     11pt plus3pt minus6pt
     \abovedisplayshortskip 0pt plus3pt
     \belowdisplayshortskip 6.5pt plus3.5pt minus3pt
     
    \cs_set:Npn \small
      {
-       \set_fontsize \small {10}{12} 
+       \set_fontsize:Nnn \small {10}{12} 
        \abovedisplayskip     10pt plus2pt minus5pt
        \abovedisplayshortskip 0pt plus3pt
        \belowdisplayshortskip 6pt plus3pt minus3pt
@@ -730,7 +764,7 @@ See http://www.latex-project.org/lppl.txt
     
     \cs_set:Npn \footnotesize 
       {
-        \set_fontsize\footnotesize \@ixpt{11}
+        \set_fontsize:Nnn\footnotesize \@ixpt{11}
         \abovedisplayskip      8pt plus2pt minus4pt
         \abovedisplayshortskip 0pt plus1pt
         \belowdisplayshortskip 4pt plus2pt minus2pt
@@ -744,13 +778,13 @@ See http://www.latex-project.org/lppl.txt
       
       }
     
-    \cs_set:Npn\scriptsize { \set_fontsize \scriptsize \c_eight     {9.5} }
-    \cs_set:Npn\tiny       { \set_fontsize \tiny       \c_six  \c_seven   }
-    \cs_set:Npn\large      { \set_fontsize \large      \c_twelve     {14} }
-    \cs_set:Npn\Large      { \set_fontsize \Large      \c_fourteen   {18} }
-    \cs_set:Npn\LARGE      { \set_fontsize \LARGE      \c_seventeen  {22} }
-    \cs_set:Npn\huge       { \set_fontsize \huge       \c_twenty     {25} }
-    \cs_set:Npn\Huge       { \set_fontsize \Huge       \c_twentyfive {30} }
+    \cs_set:Npn\scriptsize { \set_fontsize:Nnn \scriptsize \c_eight     {9.5} }
+    \cs_set:Npn\tiny       { \set_fontsize:Nnn \tiny       \c_six  \c_seven   }
+    \cs_set:Npn\large      { \set_fontsize:Nnn \large      \c_twelve     {14} }
+    \cs_set:Npn\Large      { \set_fontsize:Nnn \Large      \c_fourteen   {18} }
+    \cs_set:Npn\LARGE      { \set_fontsize:Nnn \LARGE      \c_seventeen_pt_tl  {22} }
+    \cs_set:Npn\huge       { \set_fontsize:Nnn \huge       \c_twenty_pt_tl     {25} }
+    \cs_set:Npn\Huge       { \set_fontsize:Nnn \Huge       \c_twentyfive_pt_tl {30} }
     \setlength\parindent{17pt}
   }
 %    \end{macrocode}
@@ -761,14 +795,14 @@ See http://www.latex-project.org/lppl.txt
 %    \begin{macrocode} 
 \cs_set:Npn \textfonttwelve
  {
-   \set_fontsize \normalsize \c_twelve {14.5}
+   \set_fontsize:Nnn \normalsize \c_twelve {14.5}
    \abovedisplayskip     12pt plus3pt minus7pt
    \abovedisplayshortskip 0pt plus3pt
    \belowdisplayshortskip 6.5pt plus3.5pt minus3pt
    
    \cs_set:Npn \small
      {
-       \set_fontsize \small \c_eleven {13.6}
+       \set_fontsize:Nnn \small \c_eleven {13.6}
        \abovedisplayskip      11pt  plus   3pt minus6pt
        \abovedisplayshortskip  0pt  plus   3pt
        \belowdisplayshortskip 6.5pt plus 3.5pt minus3pt
@@ -783,7 +817,7 @@ See http://www.latex-project.org/lppl.txt
    
    \cs_set:Npn \footnotesize
      {
-       \set_fontsize\footnotesize\@xpt\@xiipt
+       \set_fontsize:Nnn\footnotesize\@xpt\@xiipt
        \abovedisplayskip 10pt plus2pt minus5pt
        \abovedisplayshortskip \z@  plus3pt
        \belowdisplayshortskip 6pt plus3pt minus3pt
@@ -796,12 +830,12 @@ See http://www.latex-project.org/lppl.txt
          }
      }
    
-   \cs_set:Npn\tiny       { \set_fontsize \tiny       \c_six \c_seven     }   
-   \cs_set:Npn\scriptsize { \set_fontsize \scriptsize \c_eight      {9.5} }
-   \cs_set:Npn\large      { \set_fontsize \large      \c_nine       {18}  }
-   \cs_set:Npn\Large      { \set_fontsize \Large      \c_seventeen  {22}  }
-   \cs_set:Npn\LARGE      { \set_fontsize \LARGE      \c_twenty     {25}  }
-   \cs_set:Npn\huge       { \set_fontsize \huge       \c_twentyfour {30}  }
+   \cs_set:Npn\tiny       { \set_fontsize:Nnn \tiny       \c_six \c_seven     }   
+   \cs_set:Npn\scriptsize { \set_fontsize:Nnn \scriptsize \c_eight      {9.5} }
+   \cs_set:Npn\large      { \set_fontsize:Nnn \large      \c_nine       {18}  }
+   \cs_set:Npn\Large      { \set_fontsize:Nnn \Large      \c_seventeen_pt_tl  {22}  }
+   \cs_set:Npn\LARGE      { \set_fontsize:Nnn \LARGE      \c_twenty_pt_tl     {25}  }
+   \cs_set:Npn\huge       { \set_fontsize:Nnn \huge       \c_twentyfour_pt_tl {30}  }
    
    \let\Huge=\huge
    
@@ -816,7 +850,7 @@ See http://www.latex-project.org/lppl.txt
 %    \begin{macrocode} 
 \cs_set:Npn \textfontthirteen
  {
-   \set_fontsize \normalsize \c_thirteen {15.5}%
+   \set_fontsize:Nnn \normalsize \c_thirteen {15.5}%
    \abovedisplayskip 12pt plus3pt minus7pt
    \abovedisplayshortskip 0pt plus3pt
    \belowdisplayshortskip 6.5pt plus3.5pt minus3pt
@@ -830,14 +864,14 @@ See http://www.latex-project.org/lppl.txt
 %    \begin{macrocode} 
 \cs_set:Npn \textfontfourteen 
   {  
-     \set_fontsize \normalsize \c_fourteen {17.5}
+     \set_fontsize:Nnn \normalsize \c_fourteen {17.5}
      \abovedisplayskip     14pt plus   3pt minus8pt
      \abovedisplayshortskip 0pt plus   3pt
      \belowdisplayshortskip 7pt plus 3.5pt minus3pt
      
      \cs_set:Npn \small
        {
-         \set_fontsize \small \c_twelve {14.5}
+         \set_fontsize:Nnn \small \c_twelve {14.5}
          \abovedisplayskip      12pt  plus   3pt minus 7pt
          \abovedisplayshortskip  0pt  plus   3pt
          \belowdisplayshortskip 6.5pt plus 3.5pt minus 3pt
@@ -851,7 +885,7 @@ See http://www.latex-project.org/lppl.txt
        }
     \cs_set:Npn \footnotesize
        {
-         \set_fontsize \footnotesize \c_eleven {13.6}
+         \set_fontsize:Nnn \footnotesize \c_eleven {13.6}
          \abovedisplayskip        11pt plus3pt minus6pt
          \abovedisplayshortskip    0pt plus3pt
          \belowdisplayshortskip  6.5pt plus3.5pt minus3pt
@@ -863,15 +897,15 @@ See http://www.latex-project.org/lppl.txt
              \itemsep \parsep
            }
         }     
-   \cs_set:Npn \miniscule  { \set_fontsize \miniscule   \@viiipt {9.5}     }
-   \cs_set:Npn \tiny       { \set_fontsize \tiny        \@ixpt   {10}      }
-   \cs_set:Npn \scriptsize { \set_fontsize \scriptsize  \c_ten{12}         }
-   \cs_set:Npn \large      { \set_fontsize \large       \c_seventeen {22}  }
-   \cs_set:Npn \Large      { \set_fontsize \Large       \c_twenty{25}      }
-   \cs_set:Npn \LARGE      { \set_fontsize \LARGE       \c_twentyfive {30} }
-   \cs_set:Npn \huge       { \set_fontsize \Huge        \c_thirty     {37} }
-   \cs_set:Npn \Huge       { \set_fontsize \Huge        \c_thirtysix  {45} }
-   \cs_set:Npn \HUGE       { \set_fontsize \HUGE        \@xlviiipt    {60} }
+   \cs_set:Npn \miniscule  { \set_fontsize:Nnn \miniscule   \@viiipt {9.5}     }
+   \cs_set:Npn \tiny       { \set_fontsize:Nnn \tiny        \@ixpt   {10}      }
+   \cs_set:Npn \scriptsize { \set_fontsize:Nnn \scriptsize  \c_ten{12}         }
+   \cs_set:Npn \large      { \set_fontsize:Nnn \large       \c_seventeen_pt_tl {22}  }
+   \cs_set:Npn \Large      { \set_fontsize:Nnn \Large       \c_twenty_pt_tl{25}      }
+   \cs_set:Npn \LARGE      { \set_fontsize:Nnn \LARGE       \c_twentyfive_pt_tl {30} }
+   \cs_set:Npn \huge       { \set_fontsize:Nnn \Huge        \c_thirty_pt_tl     {37} }
+   \cs_set:Npn \Huge       { \set_fontsize:Nnn \Huge        \c_thirtysix_pt_tl {45} }
+   \cs_set:Npn \HUGE       { \set_fontsize:Nnn \HUGE        \@xlviiipt    {60} }
  }
 %    \end{macrocode}
 % \bgroup
@@ -884,14 +918,14 @@ See http://www.latex-project.org/lppl.txt
 %    \begin{macrocode}
 \cs_set:Npn \textfontseventeen 
   {  
-    \set_fontsize \normalsize \c_seventeen {22}
+    \set_fontsize:Nnn \normalsize \c_seventeen_pt_tl {22}
     \abovedisplayskip     15pt plus4pt minus8pt
     \abovedisplayshortskip 0pt plus4pt
     \belowdisplayshortskip 8pt plus4pt minus3pt
      
     \cs_set:Npn \small
       {
-        \set_fontsize \small \c_fourteen {17}
+        \set_fontsize:Nnn \small \c_fourteen {17}
         \abovedisplayskip      12pt plus3pt minus7pt
         \abovedisplayshortskip  0pt plus3pt
         \belowdisplayshortskip  7pt plus4pt minus3pt
@@ -906,7 +940,7 @@ See http://www.latex-project.org/lppl.txt
       
     \cs_set:Npn \footnotesize
       {
-        \set_fontsize \footnotesize \@xiipt {14}
+        \set_fontsize:Nnn \footnotesize \@xiipt {14}
         \abovedisplayskip       12pt plus 3pt   minus7pt
         \abovedisplayshortskip   0pt plus 3pt
         \belowdisplayshortskip 6.5pt plus 3.5pt minus3pt
@@ -918,15 +952,15 @@ See http://www.latex-project.org/lppl.txt
             \itemsep \parsep
           }
       }  
-    \cs_gset:Npn \miniscule  { \set_fontsize \miniscule  \@ixpt{10}   }
-    \cs_gset:Npn \tiny       { \set_fontsize \tiny       \c_ten{12}         }
-    \cs_gset:Npn \scriptsize { \set_fontsize \scriptsize \@xipt{13.6}}
-    \cs_gset:Npn \large      { \set_fontsize \large      \c_twenty{25}       }
-    \cs_gset:Npn \Large      { \set_fontsize \Large      \@xxvpt{30}      }
-    \cs_gset:Npn \LARGE      { \set_fontsize \LARGE      \@xxxpt{37}      }
-    \cs_gset:Npn \huge       { \set_fontsize \huge       \@xxxvipt{45}     }
-    \cs_gset:Npn \Huge       { \set_fontsize \Huge       {58}{60}    }
-    \cs_gset:Npn \HUGE       { \set_fontsize \HUGE       {60}{72}        }
+    \cs_gset:Npn \miniscule  { \set_fontsize:Nnn \miniscule  \@ixpt{10}   }
+    \cs_gset:Npn \tiny       { \set_fontsize:Nnn \tiny       \c_ten{12}         }
+    \cs_gset:Npn \scriptsize { \set_fontsize:Nnn \scriptsize \@xipt{13.6}}
+    \cs_gset:Npn \large      { \set_fontsize:Nnn \large      \c_twenty_pt_tl{25}       }
+    \cs_gset:Npn \Large      { \set_fontsize:Nnn \Large      \@xxvpt{30}      }
+    \cs_gset:Npn \LARGE      { \set_fontsize:Nnn \LARGE      \@xxxpt{37}      }
+    \cs_gset:Npn \huge       { \set_fontsize:Nnn \huge       \@xxxvipt{45}     }
+    \cs_gset:Npn \Huge       { \set_fontsize:Nnn \Huge       {58}{60}    }
+    \cs_gset:Npn \HUGE       { \set_fontsize:Nnn \HUGE       {60}{72}        }
   }
 %    \end{macrocode}
 %
@@ -938,14 +972,14 @@ See http://www.latex-project.org/lppl.txt
 %    \begin{macrocode}
 \cs_set:Npn \textfonttwenty
   {
-    \set_fontsize \normalsize \c_twenty {25}
+    \set_fontsize:Nnn \normalsize \c_twenty_pt_tl {25}
     \abovedisplayskip        20pt plus 5pt minus9pt
     \abovedisplayshortskip    0pt plus 5pt
     \belowdisplayshortskip 12.5pt plus 6pt minus3pt
     
     \cs_set:Npn \small
       {
-        \set_fontsize \small \@xivpt {17}
+        \set_fontsize:Nnn \small \@xivpt {17}
         \abovedisplayskip     12pt plus 3pt minus 7pt
         \abovedisplayshortskip 0pt plus 3pt
         \belowdisplayshortskip 7pt plus 4pt minus 3pt
@@ -960,7 +994,7 @@ See http://www.latex-project.org/lppl.txt
     
     \cs_set:Npn \footnotesize
       {
-        \set_fontsize \footnotesize \c_eleven {17.5}
+        \set_fontsize:Nnn \footnotesize \c_eleven {17.5}
         \abovedisplayskip       14pt plus   3pt minus8pt
         \abovedisplayshortskip   0pt plus   3pt
         \belowdisplayshortskip   7pt plus 3.5pt minus3pt
@@ -972,15 +1006,15 @@ See http://www.latex-project.org/lppl.txt
             \itemsep \parsep}
       } 
       
-    \cs_set:Npn \miniscule  { \set_fontsize \miniscule  \c_ten {12} }
-    \cs_set:Npn \tiny       { \set_fontsize \tiny       \c_eleven {13.6} }
-    \cs_set:Npn \scriptsize { \set_fontsize \scriptsize \c_twelve {14.5}}
-    \cs_set:Npn \large      { \set_fontsize \large      \c_twentyfive {30} }
-    \cs_set:Npn \Large      { \set_fontsize \Large      \c_thirty {37} }
-    \cs_set:Npn \LARGE      { \set_fontsize \LARGE      {36}{45} }
-    \cs_set:Npn \huge       { \set_fontsize \huge       \@xlviiipt {60} }
-    \cs_set:Npn \Huge       { \set_fontsize \Huge       {70} {72} }
-    \cs_set:Npn \HUGE       { \set_fontsize \HUGE       {82} {86} }  
+    \cs_set:Npn \miniscule  { \set_fontsize:Nnn \miniscule  \c_ten {12} }
+    \cs_set:Npn \tiny       { \set_fontsize:Nnn \tiny       \c_eleven {13.6} }
+    \cs_set:Npn \scriptsize { \set_fontsize:Nnn \scriptsize \c_twelve {14.5}}
+    \cs_set:Npn \large      { \set_fontsize:Nnn \large      \c_twentyfive_pt_tl {30} }
+    \cs_set:Npn \Large      { \set_fontsize:Nnn \Large      \c_thirty_pt_tl {37} }
+    \cs_set:Npn \LARGE      { \set_fontsize:Nnn \LARGE      {36}{45} }
+    \cs_set:Npn \huge       { \set_fontsize:Nnn \huge       \@xlviiipt {60} }
+    \cs_set:Npn \Huge       { \set_fontsize:Nnn \Huge       {70} {72} }
+    \cs_set:Npn \HUGE       { \set_fontsize:Nnn \HUGE       {82} {86} }  
       
   }
 %    \end{macrocode}
@@ -992,14 +1026,14 @@ See http://www.latex-project.org/lppl.txt
 %    \begin{macrocode}
 \cs_set:Npn \textfonttwentyfive
   {
-    \set_fontsize\normalsize \c_twentyfive \c_thirty
+    \set_fontsize:Nnn\normalsize \c_twentyfive_pt_tl \c_thirty_pt_tl
     \abovedisplayskip      25pt plus  6pt minus10pt
     \abovedisplayshortskip  0pt plus  6pt
     \belowdisplayshortskip 15pt plus 7.5pt minus4pt
     
     \cs_set:Npn \small
       {
-        \set_fontsize \small \c_twenty{25}
+        \set_fontsize:Nnn \small \c_twenty_pt_tl{25}
         \abovedisplayskip         20pt    plus 5pt minus 9pt
         \abovedisplayshortskip     0pt    plus 5pt
         \belowdisplayshortskip  12.5pt    plus 6pt minus 3pt
@@ -1013,7 +1047,7 @@ See http://www.latex-project.org/lppl.txt
       }
     \cs_set:Npn \footnotesize
       {  
-        \set_fontsize\footnotesize\@xviipt{22}
+        \set_fontsize:Nnn\footnotesize\@xviipt{22}
         \abovedisplayskip      17pt plus 4pt minus 8pt
         \abovedisplayshortskip  0pt plus 4pt
         \belowdisplayshortskip 11pt plus 4pt minus 3pt
@@ -1025,15 +1059,15 @@ See http://www.latex-project.org/lppl.txt
             \itemsep \parsep
           }
       }          
-    \cs_set:Npn \miniscule  { \set_fontsize \miniscule  \c_eleven   {13.6} }
-    \cs_set:Npn \tiny       { \set_fontsize \tiny       \c_tweleve  {14.5} }
-    \cs_set:Npn \scriptsize { \set_fontsize \scriptsize \c_fourteen {17.5} }
-    \cs_set:Npn \large      { \set_fontsize \large      \c_thirty   {37}   }
-    \cs_set:Npn \Large      { \set_fontsize \Large      \@xxxvipt   {45}   }
-    \cs_set:Npn \LARGE      { \set_fontsize \LARGE      \@xlviiipt  {60}   }
-    \cs_set:Npn \huge       { \set_fontsize \huge       \@lxpt      {72}   }
-    \cs_set:Npn \Huge       { \set_fontsize \Huge       \@lxxiipt   {86}   }
-    \cs_set:Npn \HUGE       { \set_fontsize \HUGE       \@lxxxivpt  {100}  }  
+    \cs_set:Npn \miniscule  { \set_fontsize:Nnn \miniscule  \c_eleven   {13.6} }
+    \cs_set:Npn \tiny       { \set_fontsize:Nnn \tiny       \c_tweleve  {14.5} }
+    \cs_set:Npn \scriptsize { \set_fontsize:Nnn \scriptsize \c_fourteen {17.5} }
+    \cs_set:Npn \large      { \set_fontsize:Nnn \large      \c_thirty_pt_tl   {37}   }
+    \cs_set:Npn \Large      { \set_fontsize:Nnn \Large      \@xxxvipt   {45}   }
+    \cs_set:Npn \LARGE      { \set_fontsize:Nnn \LARGE      \@xlviiipt  {60}   }
+    \cs_set:Npn \huge       { \set_fontsize:Nnn \huge       \@lxpt      {72}   }
+    \cs_set:Npn \Huge       { \set_fontsize:Nnn \Huge       \@lxxiipt   {86}   }
+    \cs_set:Npn \HUGE       { \set_fontsize:Nnn \HUGE       \@lxxxivpt  {100}  }  
   }
 %    \end{macrocode}
 %
@@ -1044,14 +1078,14 @@ See http://www.latex-project.org/lppl.txt
 %    \begin{macrocode}  
 \cs_set:Npn \textfontthirty
   {
-   \set_fontsize\normalsize \c_thirty {37}%
+   \set_fontsize:Nnn\normalsize \c_thirty_pt_tl {37}%
    \abovedisplayskip      30pt plus 7pt minus 11pt
    \abovedisplayshortskip  0pt plus 7pt
    \belowdisplayshortskip 18pt plus 9pt minus 4pt
    
    \cs_set:Npn \small
      {
-       \set_fontsize\small \c_twentyfive {30}
+       \set_fontsize:Nnn\small \c_twentyfive_pt_tl {30}
        \abovedisplayskip      25pt plus 6pt minus10pt
        \abovedisplayshortskip  0pt plus 6pt
        \belowdisplayshortskip 15pt plus 7.5pt minus4pt
@@ -1065,7 +1099,7 @@ See http://www.latex-project.org/lppl.txt
      }
    \cs_set:Npn \footnotesize
       {
-        \set_fontsize \footnotesize \c_twenty {25}
+        \set_fontsize:Nnn \footnotesize \c_twenty_pt_tl {25}
         \abovedisplayskip        20pt plus 5pt minus9pt
         \abovedisplayshortskip    0pt plus 5pt
         \belowdisplayshortskip 12.5pt plus 6pt minus3pt
@@ -1077,15 +1111,15 @@ See http://www.latex-project.org/lppl.txt
             \itemsep \parsep
           }
       }
-    \cs_set:Npn \miniscule  { \set_fontsize \miniscule  \c_twelve {14.5} }
-    \cs_set:Npn \tiny       { \set_fontsize \tiny       \c_fourteen  {17.5} }
-    \cs_set:Npn \scriptsize { \set_fontsize \scriptsize \c_seventeen{22}}
-    \cs_set:Npn \large      { \set_fontsize \large      \@xxxvipt{   45}}
-    \cs_set:Npn \Large      { \set_fontsize \Large      \@xlviiipt  {60}}
-    \cs_set:Npn \LARGE      { \set_fontsize \LARGE      \@lxpt    {72}}
-    \cs_set:Npn \huge       { \set_fontsize \huge       \@lxxiipt {86}}
-    \cs_set:Npn \Huge       { \set_fontsize \Huge       \@lxxxivpt {100}}
-    \cs_set:Npn \HUGE       { \set_fontsize \HUGE       \@xcvipt  {116}} 
+    \cs_set:Npn \miniscule  { \set_fontsize:Nnn \miniscule  \c_twelve {14.5} }
+    \cs_set:Npn \tiny       { \set_fontsize:Nnn \tiny       \c_fourteen  {17.5} }
+    \cs_set:Npn \scriptsize { \set_fontsize:Nnn \scriptsize \c_seventeen_pt_tl{22}}
+    \cs_set:Npn \large      { \set_fontsize:Nnn \large      \@xxxvipt{   45}}
+    \cs_set:Npn \Large      { \set_fontsize:Nnn \Large      \@xlviiipt  {60}}
+    \cs_set:Npn \LARGE      { \set_fontsize:Nnn \LARGE      \@lxpt    {72}}
+    \cs_set:Npn \huge       { \set_fontsize:Nnn \huge       \@lxxiipt {86}}
+    \cs_set:Npn \Huge       { \set_fontsize:Nnn \Huge       \@lxxxivpt {100}}
+    \cs_set:Npn \HUGE       { \set_fontsize:Nnn \HUGE       \@xcvipt  {116}} 
   }  
 %    \end{macrocode}
 %
@@ -1096,14 +1130,14 @@ See http://www.latex-project.org/lppl.txt
 %    \begin{macrocode}   
 \cs_set:Npn \textfontthirtysix
   {  
-    \set_fontsize \normalsize \c_thirtysix {45}
+    \set_fontsize:Nnn \normalsize \c_thirtysix_pt_tl{45}
     \abovedisplayskip      36pt plus  8pt minus 12pt
     \abovedisplayshortskip 0pt  plus  8pt
     \belowdisplayshortskip 22pt plus 11pt minus  5pt
     
     \cs_set:Npn \small 
       {
-        \set_fontsize \small \c_thirty {37}
+        \set_fontsize:Nnn \small \c_thirty_pt_tl {37}
         \abovedisplayskip      30pt plus 7pt minus 11pt
         \abovedisplayshortskip  0pt plus 7pt
         \belowdisplayshortskip 18pt plus 9pt minus 4pt
@@ -1118,7 +1152,7 @@ See http://www.latex-project.org/lppl.txt
       }      
     \cs_set:Npn \footnotesize
       {
-        \set_fontsize \footnotesize\@xxxpt{37}%
+        \set_fontsize:Nnn \footnotesize\@xxxpt{37}%
         \abovedisplayskip      30pt plus 7pt minus 11pt
         \abovedisplayshortskip  0pt plus 7pt
         \belowdisplayshortskip 18pt plus 9pt minus 4pt
@@ -1130,15 +1164,15 @@ See http://www.latex-project.org/lppl.txt
             \itemsep \parsep
           }
        }  
-    \cs_set:Npn \miniscule  { \set_fontsize \miniscule  \@xivpt{17.5}}
-    \cs_set:Npn \tiny       { \set_fontsize \tiny       \@xviipt{22}     }
-    \cs_set:Npn \scriptsize { \set_fontsize \scriptsize \c_twenty{25} }
-    \cs_set:Npn \large      { \set_fontsize \large      \@xlviiipt{60}  }
-    \cs_set:Npn \Large      { \set_fontsize \Large      \@lxpt{72}      }
-    \cs_set:Npn \LARGE      { \set_fontsize \LARGE      \@lxxiipt{86}   }
-    \cs_set:Npn \huge       { \set_fontsize \huge       \@lxxxivpt{100}  }
-    \cs_set:Npn \Huge       { \set_fontsize \Huge       \@xcvipt{116}    }
-    \cs_set:Npn \HUGE       { \set_fontsize \HUGE       \@cviiipt{132}   }  
+    \cs_set:Npn \miniscule  { \set_fontsize:Nnn \miniscule  \@xivpt{17.5}}
+    \cs_set:Npn \tiny       { \set_fontsize:Nnn \tiny       \@xviipt{22}     }
+    \cs_set:Npn \scriptsize { \set_fontsize:Nnn \scriptsize \c_twenty_pt_tl{25} }
+    \cs_set:Npn \large      { \set_fontsize:Nnn \large      \@xlviiipt{60}  }
+    \cs_set:Npn \Large      { \set_fontsize:Nnn \Large      \@lxpt{72}      }
+    \cs_set:Npn \LARGE      { \set_fontsize:Nnn \LARGE      \@lxxiipt{86}   }
+    \cs_set:Npn \huge       { \set_fontsize:Nnn \huge       \@lxxxivpt{100}  }
+    \cs_set:Npn \Huge       { \set_fontsize:Nnn \Huge       \@xcvipt{116}    }
+    \cs_set:Npn \HUGE       { \set_fontsize:Nnn \HUGE       \@cviiipt{132}   }  
       
    }
 %    \end{macrocode} 
@@ -1149,14 +1183,14 @@ See http://www.latex-project.org/lppl.txt
 %    \begin{macrocode}    
 \cs_set:Npn \textfontfortyeight
   {  
-    \set_fontsize\normalsize \c_fortyeight \c_sixty
+    \set_fontsize:Nnn\normalsize \c_fortyeight_pt_tl \c_sixty_pt_tl
     \abovedisplayskip      48pt plus 9pt minus13pt
     \abovedisplayshortskip  0pt plus 9pt
     \belowdisplayshortskip 30pt plus 15pt minus7pt
     
     \cs_set:Npn \small
       {
-        \set_fontsize \small \@xxxvipt {45}
+        \set_fontsize:Nnn \small \@xxxvipt {45}
         \abovedisplayskip      36pt plus 8pt minus 12pt
         \abovedisplayshortskip  0pt plus 8pt
         \belowdisplayshortskip 22pt plus 11pt minus 5pt
@@ -1170,15 +1204,15 @@ See http://www.latex-project.org/lppl.txt
       
       }
 
-    \cs_set:Npn \miniscule  { \set_fontsize \miniscule  \c_seventeen {22} }
-    \cs_set:Npn \tiny       { \set_fontsize \tiny       \c_twenty {25}    }
-    \cs_set:Npn \scriptsize { \set_fontsize \scriptsize \@xxvpt {30}      }
-    \cs_set:Npn \large      { \set_fontsize \large      \@lxpt {72}       }
-    \cs_set:Npn \Large      { \set_fontsize \Large      \@lxxiipt {86}    }
-    \cs_set:Npn \LARGE      { \set_fontsize \LARGE      \@lxxxivpt {100}  }
-    \cs_set:Npn \huge       { \set_fontsize \huge       \@xcvipt {116}    }
-    \cs_set:Npn \Huge       { \set_fontsize \Huge       \@cviiipt {132}   }
-    \cs_set:Npn \HUGE       { \set_fontsize \HUGE       \@cxxpt {144}     }  
+    \cs_set:Npn \miniscule  { \set_fontsize:Nnn \miniscule  \c_seventeen_pt_tl {22} }
+    \cs_set:Npn \tiny       { \set_fontsize:Nnn \tiny       \c_twenty_pt_tl {25}    }
+    \cs_set:Npn \scriptsize { \set_fontsize:Nnn \scriptsize \@xxvpt {30}      }
+    \cs_set:Npn \large      { \set_fontsize:Nnn \large      \@lxpt {72}       }
+    \cs_set:Npn \Large      { \set_fontsize:Nnn \Large      \@lxxiipt {86}    }
+    \cs_set:Npn \LARGE      { \set_fontsize:Nnn \LARGE      \@lxxxivpt {100}  }
+    \cs_set:Npn \huge       { \set_fontsize:Nnn \huge       \@xcvipt {116}    }
+    \cs_set:Npn \Huge       { \set_fontsize:Nnn \Huge       \@cviiipt {132}   }
+    \cs_set:Npn \HUGE       { \set_fontsize:Nnn \HUGE       \@cxxpt {144}     }  
   }
 %    \end{macrocode} 
 %
@@ -1188,14 +1222,14 @@ See http://www.latex-project.org/lppl.txt
 %    \begin{macrocode}
 \cs_set:Npn \textfontsixty
   {  
-    \set_fontsize \normalsize \c_sixty {72}
+    \set_fontsize:Nnn \normalsize \c_sixty_pt_tl {72}
     \abovedisplayskip      60pt plus10pt minus14pt
     \abovedisplayshortskip  0pt plus10pt
     \belowdisplayshortskip 36pt plus18pt minus9pt
     
     \cs_set:Npn \small 
       {
-        \set_fontsize \small \@xlviiipt {60} 
+        \set_fontsize:Nnn \small \@xlviiipt {60} 
         \abovedisplayskip      48pt plus  9pt minus 13pt
         \abovedisplayshortskip  0pt plus  9pt
         \belowdisplayshortskip 30pt plus 15pt minus 7pt
@@ -1210,7 +1244,7 @@ See http://www.latex-project.org/lppl.txt
       
     \cs_set:Npn \footnotesize
       {
-        \set_fontsize \footnotesize  \c_seven  {8}
+        \set_fontsize:Nnn \footnotesize  \c_seven  {8}
         \abovedisplayskip      6pt plus 2pt minus 4pt
         \abovedisplayshortskip 0pt plus 2pt
         \belowdisplayshortskip 4pt plus 2pt minus 2pt
@@ -1223,15 +1257,15 @@ See http://www.latex-project.org/lppl.txt
           }
       }  
       
-     \cs_set:Npn \miniscule  { \set_fontsize \miniscule  \c_twenty  {25} }
-     \cs_set:Npn \tiny       { \set_fontsize \tiny       \@xxvpt {30}}
-     \cs_set:Npn \scriptsize { \set_fontsize \scriptsize \@xxxpt{37}}
-     \cs_set:Npn \large      { \set_fontsize \large      \@lxxiipt{86}}
-     \cs_set:Npn \Large      { \set_fontsize \Large      \@lxxxivpt{100}}
-     \cs_set:Npn \LARGE      { \set_fontsize \LARGE      \@xcvipt{116}}
-     \cs_set:Npn \huge       { \set_fontsize \huge       \@cviiipt{132}}
-     \cs_set:Npn \Huge       { \set_fontsize \Huge       \@cxxpt{144}}
-     \cs_set:Npn \HUGE       { \set_fontsize \HUGE       \@cxxxiipt{162}} 
+     \cs_set:Npn \miniscule  { \set_fontsize:Nnn \miniscule  \c_twenty_pt_tl  {25} }
+     \cs_set:Npn \tiny       { \set_fontsize:Nnn \tiny       \@xxvpt {30}}
+     \cs_set:Npn \scriptsize { \set_fontsize:Nnn \scriptsize \@xxxpt{37}}
+     \cs_set:Npn \large      { \set_fontsize:Nnn \large      \@lxxiipt{86}}
+     \cs_set:Npn \Large      { \set_fontsize:Nnn \Large      \@lxxxivpt{100}}
+     \cs_set:Npn \LARGE      { \set_fontsize:Nnn \LARGE      \@xcvipt{116}}
+     \cs_set:Npn \huge       { \set_fontsize:Nnn \huge       \@cviiipt{132}}
+     \cs_set:Npn \Huge       { \set_fontsize:Nnn \Huge       \@cxxpt{144}}
+     \cs_set:Npn \HUGE       { \set_fontsize:Nnn \HUGE       \@cxxxiipt{162}} 
   }  
 %    \end{macrocode} 
 %
@@ -1292,11 +1326,12 @@ See http://www.latex-project.org/lppl.txt
 % \bgroup
 % \cxset{main font-size = 9pt} 
 % (9pt) \lorem
-% {\Huge TEST   }
+% 
 
 % \cxset{main font-size = 9.5pt}
-% \normalsize (9.5pt) \lorem
-
+% \normalsize (9.5pt) \Alphabet\\
+% \alphabet
+% \fox
 % \cxset{main font-size = 10pt}
 % \normalsize \lorem
 %
@@ -1400,13 +1435,13 @@ See http://www.latex-project.org/lppl.txt
 
 %    \begin{macrocode}
 \ExplSyntaxOn
-\cs_set:Npn \HHUGE  { \set_fontsize \HHUGE {58}{67}  }
-\cs_set:Npn \HHHUGE { \set_fontsize \HHHUGE{94}{105} }
+\cs_set:Npn \HHUGE  { \set_fontsize:Nnn \HHUGE {58}{67}  }
+\cs_set:Npn \HHHUGE { \set_fontsize:Nnn \HHHUGE{94}{105} }
 
 \newcommand\verbatimsize
   {
     \phd@baseskip 13pt%
-    \set_fontsize \verbatimsize\c_ten {13} \phd@setskips\phd@setlists
+    \set_fontsize:Nnn \verbatimsize\c_ten {13} \phd@setskips\phd@setlists
  }
 \ExplSyntaxOff
 %
@@ -1624,8 +1659,8 @@ See http://www.latex-project.org/lppl.txt
     main font-size                 = 10pt,     
     main font-face                 = Georgia,
     main sans font-face            = Georgia, %Arial, 
-    main mono font-face            = Consolas, %Apl385, %Consolas,%Source Code Pro,
-    chapter label font-face        = Times New Roman,
+    main mono font-face            = Source Code Pro, %Consolas, %Apl385, %Consolas,%Source Code Pro,B-612,%
+    chapter label font-face        = Georgia,
     chapter number font-face       = Arial,
     chapter title font-face        = Times New Roman,
 %    

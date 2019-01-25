@@ -1,0 +1,99 @@
+\chapter{Expansion and LaTeX3}
+
+Expansion and variants are central to the concept of \latex3. The module |l3expan| provides generic methods for expanding \tex arguments in a systematic manner. The functions in the module all have prefix the |exp|.
+
+The module provides functions to produce \enquote{variants}. This is one of the most fundamental concepts of \latex3 and is good before we proceed further to recap on some of the \latex3 concepts.
+
+\begin{description}
+\item [naming conventions] The naming convention for command in \latex3 (expl3)  structures for command names is:
+
+\textbackslash \meta{module}\textunderscore \meta{description}: \meta{arg-specifiers}
+
+\textit{module} identifies the (main) type of data the function manipulates or use (for example, int (integers), prop (property lists), etc., or it might be the name of a package or some specific concept. 
+
+\textit{description} says what is being done, e.g., |put_left|, |get|, |clear|, |count|, etc. If it makes sense the same descriptions are reused, but for special tasks there can, of course, be some that are used only once.
+
+\textit{arg-specifiers} finally describe what arguments the function has and how they should be treated (more on this below).
+
+
+\item[Base functions] \lorem 
+
+\item[Variant functions]  Any command that uses one or more of these \emph{arg-specifiers} is called a \emph{variant} of the corresponding \emph{base function}. What these functions do is that they modify the argument one way or another and \textbf{only} then pass it to the underlying base function. For example:
+
+\begin{teXXX}
+\foo_bar:cVno {cmd} \VAR {text} \CMD
+\end{teXXX}
+
+would
+
+\begin{itemize}
+\item generate from the string |cmd| the command name \cs{cmd}
+\item look up the value of the variable \cs{VAR}
+\item leave text alone
+\item expand \cs{CMD} once and surround the result with braces
+\end{itemize}
+
+It is important to stress that the variants do not produce aliases for the functions, they are also not overloading them. They just expand the base function arguments in a different way. 
+
+\begin{teXXX}
+ \foo_bar:Nnnn \cmd {<value-of-\VAR>} {text} {<one-level-expansion-of-\CMD>}
+\end{teXXX}
+
+Now ideally we want any possible variant of a base function automatically available for a programmer. Unfortunately, this can only be reliably done if all variants have all been predefined (as TeX doesn't offer you to trap the \enquote{undefined csname} error and do something on the fly).
+
+Given the number of arg-specifier and the possible permutations predefining all variants, of which 90\% would never be needed, is not realistic. As Fank Mittelbach wrote on TEX.SX Q\&A site the \latex3 Team adopted the following strategy:
+
+\begin{enumerate}
+\item conceptually all variants are available and everybody can assume this is the case
+
+\item in reality the kernel only defines a small subset that is often needed
+
+\item any variant not defined by the kernel needs to be defined by the programmer using \docAuxCommand*{cs_generate_variant:Nn}
+
+\item \docAuxCommand*{cs_generate_variant:Nn} has been designed in such a way that it doesn't matter if it is called several times: if the variant already exists it will do nothing. So if two programmers define the same variant in their packages it doesn't hurt, the first one executed will define the variant the second one will simply be ignored (with very little overhead).
+\end{enumerate}
+
+If some variants are used fairly often they may eventually get defined already in the kernel. Because of the last point it doesn't hurt if some packages still define the variant, i.e., there is no need for programmers to modify their packages in that case.
+
+So in summary: Whenever you need a variant that is not predefined, define it at the beginning of your code. This is even sensible if you need the variant only once, because the code using the variant will be much more readable than any manual preprocessing of the argument and the speed difference is close to zero.
+
+\item[The exp\_args:N.. functions]
+
+Technicically speaking a variant defined via |\cs_generate_variant:Nn| has a very simple definition: |\foo_bar:cVno| above would simply expand to
+\end{description}
+
+\section{How to define variants}
+
+The workhorse function used to define variants is:
+
+\begin{docCommand}{cs_generate_variant:Nn} { \meta{parent control sequence} \marg{variant arg-spec}}
+This function is used to define arguments-specific variants of the \emph{parent control sequence} for \latex3 
+code level macros. The \emph{parent control sequence} is first separated into the \emph{base name} and \emph{original specifier}. 
+\end{docCommand}
+
+
+\begin{texexample}{Generating Variants}{ex:variants}
+
+\ExplSyntaxOn
+\group_begin:
+  \cs_set:Npn \test: {Some code here}
+  \cs_set:Npn \foo:Nn #1 #2 {\csname #1\endcsname \par #2\par}
+  
+  % creates \foo:cn
+  \cs_generate_variant:Nn \foo:Nn {c}
+  
+  %test 1
+  \foo:Nn {\test:}{12}
+  
+  %test 2
+  \foo:cn {test:}{15}
+  
+\group_end:  
+\ExplSyntaxOff
+\end{texexample}
+
+
+
+
+
+ 

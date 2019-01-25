@@ -22,7 +22,6 @@
 \let\latexenditemize\enditemize
 \let\latexenumerate\enumerate
 \let\latexendenumerate\endenumerate
-
 \@ifundefined{c@chapter}{%
       \newcounter{chapter}
       \def\thechapter{\@arabic\c@chapter}
@@ -31,12 +30,36 @@
 \RequirePackage{l3keys2e}
 \RequirePackage{xtemplate}
 \RequirePackage{phd-logos}
-\DeclareDocumentCommand\MakePrivateLetters{}{\catcode`\@11\relax \catcode`_11}
-\ifluatex
-\else
- \RequirePackage{morewrites}
-\fi
+\ExplSyntaxOn
+\cs_gset:Npn \MakePrivateLetters
+  {
+   \char_set_catcode_letter:N \@
+   \char_set_catcode_letter:N \_
+   \char_set_catcode_letter:N \:
+  }
+\ExplSyntaxOff
 
+\RequirePackage{phdsort}%% to check
+\RequirePackage{ifluatex}
+
+\RequirePackage{ifxetex}
+
+\ExplSyntaxOn
+\cs_set:Npn \ifengine #1 #2 #3
+  {
+    \ifxetex
+      #1
+    \else
+      \ifluatex
+        #2
+      \else
+        #3
+      \fi
+    \fi
+  }
+
+\ExplSyntaxOff
+\ifengine{}{}{\RequirePackage{morewrites}}
 \RequirePackage{pgfkeys}
 \def\pkgfamilyname{phd}
 \pgfkeys{/\pkgfamilyname/.is family}
@@ -161,25 +184,6 @@
   \DeclareOption{#1}{\edef\cx@optionlist{\cx@optionlist,#1}}%
 }
 
-\RequirePackage{phdsort}%% to check
-\RequirePackage{ifluatex}
-
-\RequirePackage{ifxetex}
-
-\ExplSyntaxOn
-\cs_set:Npn \ifengine #1 #2 #3
-  {
-    \ifxetex
-      #1
-    \else
-      \ifluatex
-        #2
-      \else
-        #3
-      \fi
-    \fi
-  }
-\ExplSyntaxOff
 \ifluatex
    \RequirePackage{luacode}
   %\RequirePackage{luatextra}

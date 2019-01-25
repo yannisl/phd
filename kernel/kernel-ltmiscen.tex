@@ -24,6 +24,8 @@
 % The list of derived (unpacked) files belonging to the distribution
 % and covered by LPPL is defined by the unpacking scripts (with
 % extension .ins) which are part of the distribution.
+\cxset{fashion image=fashion-04.jpg,
+       palette budapest}
 \chapter{Miscellaneous class}
 \label{kernel:ltmiscen}
 %
@@ -32,27 +34,27 @@
 \message{environments,}
 \end{teX}
 %
-% \subsection{Environments}
-%
-%  |\begin{foo}| and |\end{foo}| are used to delimit environment |foo|.
-%
-%  |\begin{foo}| starts a group and calls |\foo| if it is defined,
-%  otherwise it does nothing.
-%
-% |\end{foo}| checks to see that it matches the
-%  corresponding |\begin| and if so, it calls |\endfoo| and does an
-%  |\endgroup|.  Otherwise, |\end{foo}| does nothing.
-%
-%  If |\end{foo}| needs to ignore blanks after it, then |\endfoo| should
-%  globally set the |@ignore| switch true with |\@ignoretrue|
-%  (this will automatically be global).
-%
-%
-%  NOTE: |\@@end| is defined to be the |\end| command of \TeX82.
-%
-%  |\enddocument| is the user's command for ending the manuscript file.
-%
-%  |\stop| is a panic button --- to end \TeX\ in the middle.
+ \section{Environments}
+
+  |\begin{foo}| and |\end{foo}| are used to delimit environment |foo|.
+
+  |\begin{foo}| starts a group and calls |\foo| if it is defined,
+  otherwise it does nothing.
+
+ |\end{foo}| checks to see that it matches the
+  corresponding |\begin| and if so, it calls |\endfoo| and does an
+  |\endgroup|.  Otherwise, |\end{foo}| does nothing.
+
+  If |\end{foo}| needs to ignore blanks after it, then |\endfoo| should
+  globally set the |@ignore| switch true with |\@ignoretrue|
+  (this will automatically be global).
+
+
+  NOTE: |\@@end| is defined to be the |\end| command of \TeX82.
+
+  |\enddocument| is the user's command for ending the manuscript file.
+
+  |\stop| is a panic button --- to end \TeX\ in the middle.
 %
 % \begin{oldcomments}
 % \enddocument ==
@@ -323,13 +325,17 @@
 % \end{oldcomments}
 %
 %
-\begin{macro}{\begin}
+\begin{docCommand}{begin}{}
 % \changes{LaTeX2.09}{1992/03/18}{Changed \cs{@ignoretrue} to
 %               \cs{@ignorefalse} (as documented)}
 % \changes{LaTeX2.09}{1992/08/24}{Added code to \cs{begin} to
 %      remember line number. Used by \cs{@badend} to display
 %      position of non-matching \cs{begin}.}
 % \changes{v1.1e}{1996/07/26}{remove \cs{global} before \cs{@ignore...}}
+The \cs{begin} command takes one argument, checks if the argument is 
+defined as a command and provides code to remember the line number. 
+It also captures the environment name.
+
 \begin{teX}
 \def\begin#1{%
   \@ifundefined{#1}%
@@ -340,9 +346,33 @@
   \@ignorefalse
   \begingroup\@endpefalse\reserved@a}
 \end{teX}
-\end{macro}
-%
+\end{docCommand}
+
+
+\begin{texexample}{Environment examples}{ex:begin}
+\newenvironment{mytest}{}{}
+\begin{mytest}
+\makeatletter
+% Typesets mytest
+Environment name: \@currenvir\\ 
+% Typesets on input line 7
+Environment line: \on@line 
+
+\ExplSyntaxOn
+\cs_generate_variant:Nn \str_if_eq:nnTF {xnTF}
+\str_if_eq:xnTF {\@currenvir}{mytest}{\PASS}{\FAIL}
+\ExplSyntaxOff
+\makeatother
+\end{mytest}
+\end{texexample}
+
+
+
 \begin{macro}{\end}
+The definition of |\end| is straight forward. It defines
+the end command for the environment such as |\endmyenvironment|.
+Checks that we ar ein the same environment, if not will
+issue @badend error.
 % \changes{v1.1e}{1996/07/26}{remove \cs{global} before \cs{@ignore...}}
 \begin{teX}
 \def\end#1{%
@@ -351,29 +381,29 @@
   \if@ignore\@ignorefalse\ignorespaces\fi}
 \end{teX}
 \end{macro}
-%
+
 \begin{macro}{\@checkend}
 \begin{teX}
 \def\@checkend#1{\def\reserved@a{#1}\ifx
       \reserved@a\@currenvir \else\@badend{#1}\fi}
 \end{teX}
 \end{macro}
-%
+
 \begin{macro}{\@currenvline}
-%    We do need a default value for |\@currenvline| on top-level since
-%    the document environment cancels the brace group. This means that
-%    a mismatch with |\begin|\allowbreak|{document}| will not produce
-%    a line number. Thus the outer default must be |\@empty| or we
-%    will end up with two spaces.
-% \changes{v1.0q}{1994/05/24}{Use \cs{@empty} as outer default}
+    We do need a default value for |\@currenvline| on top-level since
+    the document environment cancels the brace group. This means that
+    a mismatch with |\begin|\allowbreak|{document}| will not produce
+    a line number. Thus the outer default must be |\@empty| or we
+    will end up with two spaces.
+\footnotechanges{v1.0q}{1994/05/24}{Use \cs{@empty} as outer default}
 \begin{teX}
 \let\@currenvline\@empty
 \end{teX}
 \end{macro}
-%
-%
-% \subsection{Center, Flushright, Flushleft}
-%
+
+
+\section{Center, Flushright, Flushleft}
+
 \begin{teX}
 \message{center,}
 \end{teX}
@@ -411,35 +441,35 @@
        \par\@ifstar{\nobreak\@xcentercr}\@xcentercr}
 \end{teX}
 \end{macro}
-%
+
 \begin{macro}{\@xcentercr}
 \begin{teX}
 \def\@xcentercr{\addvspace{-\parskip}\@ifnextchar
     [\@icentercr\ignorespaces}
 \end{teX}
 \end{macro}
-%
+
 \begin{macro}{\@icentercr}
 \begin{teX}
 \def\@icentercr[#1]{\vskip #1\ignorespaces}
 \end{teX}
 \end{macro}
-%
-%
-% \begin{environment}{center}
+
+
+\begin{environment}{center}
 % \changes{v0.9h}{1993/12/13}{Removed optional argument of \cs{item}}
 % \changes{v1.0u}{1994/11/12}{Changed end macro to \cs{def}: safer and
 % consistent}
-%    We use |\relax| to prevent |\item| scanning too far.
+    We use |\relax| to prevent |\item| scanning too far.
 \begin{teX}
 \def\center{\trivlist \centering\item\relax}
 \end{teX}
-%
+
 \begin{teX}
 \def\endcenter{\endtrivlist}
 \end{teX}
-% \end{environment}
-%
+ \end{environment}
+
 \begin{macro}{\centering}
 \begin{teX}
 \def\centering{%
@@ -448,7 +478,7 @@
   \parindent\z@\parfillskip\z@skip}
 \end{teX}
 \end{macro}
-%
+
 \begin{macro}{\@rightskip}
 \begin{teX}
 \newskip\@rightskip \@rightskip \z@skip
@@ -504,10 +534,8 @@
 \begin{teX}
 \message{verbatim,}
 \end{teX}
-%
- \subsection{Verbatim}
 
-
+\section{Verbatim}
   The verbatim environment uses the fixed-width |\ttfamily| font, turns
   blanks into spaces, starts a new line for each carriage return (or
   sequence of consecutive carriage returns), and interprets
@@ -739,4 +767,5 @@ put there by the list macros: another use of |\unpenalty|!
 \def\@noligs{\let\do\do@noligs \verbatim@nolig@list}
 \end{teX}
 \end{macro}
-
+\vfill
+\endinput

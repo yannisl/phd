@@ -16,7 +16,14 @@
 \wlog{************************************************}
 \NeedsTeXFormat{LaTeX2e}[2017/04/15]%
 \ProvidesPackage{phd-documentation}[2017/04/15 v1.0 less preamble (YL)]%
-\DeclareDocumentCommand\MakePrivateLetters{}{\catcode`\@11\relax \catcode`_11}
+\DeclareDocumentCommand\MakePrivateLetters{}%
+  {\catcode`\@11\relax \catcode`_11 \catcode`:11}
+\ExplSyntaxOn
+\definecolor{thecodelinecolor}{HTML}{140F15}
+\tl_replace_once:Nnn {\theCodelineNo}
+  {\HDorg@theCodelineNo}
+  {{\color{thecodelinecolor}\ttfamily\scriptsize\arabic{CodelineNo}}}
+\ExplSyntaxOff
 \newcommand*{\verbatimfont}{\ttfamily}%
 
 \let\displayverbfont\ttfamily
@@ -39,31 +46,123 @@
                    }
 \tcbset{halostyle/.style={fuzzy halo=2mm with magenta!5}}
 
-\renewenvironment{docCommand}[3][]{\tcbset{#1}%
-  \begin{tcb@manual@entry}%
-  \begin{tcb@doc@head}{doc@head@command}%
-  %\tcb@Print@Com{#2}%
-  \tcb@cs{#2}
-  %\tcb@index@Com{#2}% remove
-  \SpecialMainIndex{#2}% will need to add backslash?
-  \protected@edef\@currentlabel{\noexpand\tcb@cs{#2}}
-  \label{com:#2}{\ttfamily #3}%
-  \tcb@doc@do@description%
-  \end{tcb@doc@head}\nobreak\tcbset{before upper=}\kvtcb@doc@body@command@before\ignorespaces}%
-  {\ifvmode\else\unskip\fi\kvtcb@doc@body@command@after\end{tcb@manual@entry}}
+\ExplSyntaxOn
+\def\phdlabelprefix{com-}
+\ExplSyntaxOff
 
-\renewenvironment{docCommand*}{\bgroup\tcb@doc@toindexfalse\begin{docCommand}}{\end{docCommand}\egroup}
-
-\def\tcb@index@Com#1{\iftcb@doc@toindex%
-  \kvtcb@index@command{#1\idx@actual{\tcbIndexPrintComC{#1}}\encapchar hyperpage}\fi}
-\DeclareDocumentCommand\docAuxCommand{sm}{%
-  \tcb@Print@Com{#2}%
-  \IfBooleanTF{#1}{}{\tcb@index@Com{#2}}%
+\ExplSyntaxOn
+\cxset{
+    color~command/.store~in        = \phdd_key_color_command_tl,
+    color~environment/.store~in    = \phdd_key_color_environment_tl,
+    color~key/.store~in            = \phdd_key_color_tl,
+    color~value/.store~in          = \phdkv@col@value,
+    color~color/.store~in          = \phdd_key_color_color_tl,
+    color~definition/.style={color~command={#1},
+                             color~environment={#1},
+                             color~key={#1},
+                             color~value={#1},
+                             color~color={#1}},
+    color~option/.store~in         = \phdkv@col@opt,
+    color~hyperlink/.store~in      = \phdkv@colhyper,
+    color~frame/.store~in          = \phdkv@colhyper,
+    color~meta/.store~in           = \pkdkv@colmeta,
+    before~example/.store~in       = \phdkv@beforeexample,
+    after~example/.store~in        = \phdkv@afterexample,
 }
+\ExplSyntaxOff
+\cxset {
+   color command     = themacrocolor,
+   color environment = theenvironment,
+   color key         = thekey,
+   color value       = thevalue,
+   color color       = black,%leaks to index
+   color option      = theoption,
+   color meta        = themeta,
+   color frame       = theframe,
+ }
 
-\wlog{************************************************}
-\wlog{ END TCOLORBOX                          }
-\wlog{************************************************}
+\ExplSyntaxOn
+\bool_new:N \phdd_index_typeset_bool
+\bool_gset_true:N \phdd_typeset_bool
+\cs_new:Npn \phdd_typeset_command #1
+  {
+    \group_begin:
+    \color{\phdd_key_color_command_tl}
+    \cs[no-index]{#1}
+    \group_end:
+  }
+
+\cs_set:Npn \phdd_typeset_index_command #1
+  {
+    \bool_if:NT \phdd_index_typeset_bool
+      {
+        \kvtcb@index@command
+          {
+            #1\idx@actual{\tcbIndexPrintComC{#1}}
+            \encapchar hyperpage
+          }
+      }
+    \phdd_typeset_command {#1}
+  }
+
+\ExplSyntaxOn
+\newrobustcmd{\phdindexprintcolc}[1]
+  {
+    \phd_index_print_c{#1}{\phdd_key_color_color_tl}
+  }
+
+\cs_set:Npn \phd_print_col #1
+  {
+    \textcolor{\phdd_key_color_color_tl}{\ttfamily\bfseries#1}
+  }
+
+\cs_set:Npn \@@_doc_color_aux:n #1
+  {
+    \phd_print_col {#1}
+    \phd_index_col {#1}
+  }
+
+\cs_set:Npn \@@_doc_color_star:n #1
+  {
+    \phd_print_col{#1}
+  }
+
+\DeclareDocumentCommand {\docColor} { s m }
+  {
+    \IfBooleanTF {#1}
+      { \@@_doc_color_star:n {#2} }
+      { \@@_doc_color_aux:n {#2} }
+  }
+\ExplSyntaxOff
+\ExplSyntaxOn
+\cs_set:Npn \phd_index_val #1
+  {
+    \ifphd@doc@toindex
+      \index
+      {
+        #1\idx@actual
+        \phdindexprintvalca{#1}
+      }
+      \index
+        {
+          \phdkv@text@values
+          \idx@level #1
+          \idx@actual
+          \phdIndexPrintValC{#1}
+        }
+    \fi
+  }
+
+\cs_set:Npn \docValue@ #1 {\phd@Print@Val{#1}\phd_index_val{#1}}%
+\cs_set:Npn \docValue@star #1 {\phd@Print@Val{#1}}%
+
+\DeclareDocumentCommand \docValue { s m }
+  {
+    \IfBooleanTF {#1}
+      { \docValue@star {#2} }
+      { \docValue@ {#2} }
+  }
+\ExplSyntaxOff
 \cxset {doc command color/.code = \tcbset{color command = #1}}
 \cxset {doc command color= thecmdcolor}
 \lstdefinelanguage{extras}{morekeywords={%
@@ -74,6 +173,7 @@
       includegraphics, newarray,readarray,of
 }}
 \lstloadlanguages{[LaTeX]TeX, [primitive]TeX, extras}
+
 \newtcolorbox{scriptexample}[2][]{colback=thecodebackground,
 boxrule=0pt,toprule=0pt,colframe=white,#1}
 \newtcolorbox{commands}[2][]{colback=thecodebackground,
@@ -100,28 +200,36 @@ boxrule=0pt,toprule=0pt,colframe=white}
        belowskip=7pt plus1pt minus1pt,
        backgroundcolor=\color{theshade},
 }
+\def\footnotechanges#1#2#3{\footnote{#1#2#3}}
 \lstdefinestyle{simple}{%
        escapeinside={{(*@}{@*)}},
        numbers=left,
        gobble=0,
        stepnumber=1,
        numbersep=5pt,
-       numberstyle={\footnotesize\color{gray}},
-       breaklines=false,
-       framesep=5pt,
+       firstnumber=last,
+       numberstyle={\ttfamily\scriptsize\color{thecodelinecolor}},
+       breaklines=true,
+       % we do not use frames
+       framesep=0pt,
+       framexleftmargin=0pt,
        basicstyle=\small\ttfamily,
        showstringspaces=true,
        stringstyle={\color{thestringstyle}\footnotesize},
        commentstyle=\color{thecommentstyle},
        rulecolor=\color{theshade},
        breakatwhitespace=true,
+       prebreak={\Righttorque},
+       postbreak={\space\Lefttorque},
        showspaces=false,
-       xleftmargin=10pt,
+       xleftmargin=1.5pt,
        xrightmargin=0pt,
        aboveskip=3pt plus1pt minus1pt,
        belowskip=3pt plus1pt minus1pt,
        backgroundcolor=\color{white},
-       showlines=true,
+       showlines=false,
+       gobble=0,
+       resetmargins,
 }
 
 \lstdefinestyle{singleline}{%
@@ -130,26 +238,32 @@ boxrule=0pt,toprule=0pt,colframe=white}
        gobble=0,
        stepnumber=1,
        numbersep=5pt,
-       numberstyle={\footnotesize\color{gray}},
+       numberstyle={\footnotesize\color{thecodelinecolor}},
        breaklines=false,
-       framesep=5pt,
+       framesep=0pt,
+       framexleftmargin=0pt,
        basicstyle=\small\ttfamily,
        showstringspaces=false,
        stringstyle={\color{thestringstyle}\footnotesize},
        commentstyle=\color{thecommentstyle},
        rulecolor=\color{theshade},
        breakatwhitespace=true,
+       prebreak={\Righttorque},
+       postbreak={\space\Lefttorque},
        showspaces=false,
-       xleftmargin=0pt,
+       xleftmargin=-10pt,
        xrightmargin=0pt,
        aboveskip=3pt plus1pt minus1pt,
        belowskip=3pt plus1pt minus1pt,
-       backgroundcolor=\color{thecodebackground},
-       showlines=true,
+       backgroundcolor=\color{white},
+       showlines=false,
        numbers=none,
+       resetmargins,
 }
 
-\def\phd@print@LstStyle#1{\textcolor{\kvtcb@col@counter}{\tcb@doc@bfseries\tcb@scantokens{#1}}}
+\def\phd@print@LstStyle#1{%
+  \textcolor{\kvtcb@col@counter}{\tcb@doc@bfseries\tcb@scantokens{#1}}
+}
 
 \DeclareDocumentCommand\docAuxListingsStyle{s m}{%
   \phd@print@LstStyle{#2}%
@@ -221,8 +335,8 @@ boxrule=0pt,toprule=0pt,colframe=white}
       showstringspaces=false,
       keywordstyle=\ttfamily\color{thered},%\color{primary},
       keywordstyle=[2]\ttfamily\color{black},
-      stringstyle=\color{thestringstyle},
-      commentstyle=\color{thecommentstyle},
+      stringstyle=\color{thecommentscolor},
+      commentstyle=\color{thecommentscolor},
       rulecolor=\color{gray!10},
       breakatwhitespace=true,
       prebreak={\Righttorque},
@@ -234,6 +348,8 @@ boxrule=0pt,toprule=0pt,colframe=white}
       aboveskip=\medskipamount,
       belowskip=\medskipamount,
       backgroundcolor=,
+      tabsize=2,%
+      mathescape=true,%
 }
 
 \lstnewenvironment{teXXX}[1][]
@@ -595,7 +711,7 @@ belowskip=\medskipamount,
   xleftmargin          =15pt,
   xrightmargin         =5pt,
   aboveskip            =\medskipamount,
-  belowskip             =\medskipamount,
+  belowskip            =\medskipamount,
   #1}}
 {}
 
@@ -655,6 +771,7 @@ belowskip=\medskipamount,
       %colupper=spot!,
    },
    listing options = {%
+     gobble=2
      keywordstyle=\color{thekeywordstyle},
      belowskip=0pt,
      escapeinside={(*@}{@*)},%
@@ -664,7 +781,7 @@ belowskip=\medskipamount,
      stepnumber=1,%
      upquote=true,%
      alsoletter={_,:},%
-     commentstyle=\color{thecommentstyle},%
+     commentstyle=\color{thecommentscolor},%
      emph={cs,new,seq,map,inline,eq,gincr,incr,IfNoValueF,if,%
             If,exist,protect,nopar,gset,%
             set,undefine,define,add,gadd,remove,div,%
@@ -680,7 +797,7 @@ belowskip=\medskipamount,
           % For LaTeX3 we need to add these, note % is important
           % dn’t miss, at the end...
           moretexcs    = {DeclareDocumentCommand,IfBooleanTF,tex_def:D,%
-          cs_new:Nn,cs_new:Npn,cs_new:cn,cs_set_nopar:Npn,token_to_meaning:N,%
+          cs_new:Nn,cs_new:Npn,cs_new:cn,cs_set_nopar:Npn,cs_meaning:N,%
           %primitives
           cs:w,cs_end:,tex_underline,group_begin:, group_end:,%
           %coffins
@@ -712,7 +829,7 @@ belowskip=\medskipamount,
           keys_set,keys_define,%
           },%
          emphstyle=\verbatimfont\bfseries\color{theemphasiscolor},%
-          %
+         %framexleftmargin=-14pt,numbersep=-7pt,xleftmargin=-28pt,
    },%close listings options
       % added for better control
       arc=0pt,
@@ -730,10 +847,12 @@ belowskip=\medskipamount,
     coltitle=black,
     colback = thecodebackground,% background
     colframe=thecodebackground,
-    %process code={\def\dcircle##1{\ding{\numexpr181 + ##1}}},
+      %process code={\def\dcircle##1{\ding{\numexpr181 + ##1}}},
       %colupper=spot!,
    },
    listing options = {%
+     gobble=1,
+     tabsize=2,
      keywordstyle=\color{thekeywordstyle},
      belowskip=0pt,
      escapeinside={(*@}{@*)},%
@@ -787,11 +906,12 @@ belowskip=\medskipamount,
           DeclareObjectType,%
           DeclareTemplateInterface,%
           DeclareTemplateCode,%
-          DeclareInstance,UseInstance,AssignTemplateKeys%
+          DeclareInstance,UseInstance,AssignTemplateKeys,%
           keys_set,keys_define,%
           },%
      emphstyle=\verbatimfont\bfseries\color{theemphasiscolor},%
-          %
+    %framexleftmargin=-14pt,numbersep=-7pt,xleftmargin=-28pt,
+    %
    },%close listings options
       % added for better control
       arc=0pt,
@@ -804,6 +924,7 @@ belowskip=\medskipamount,
     {\endtcblisting}
 \newenvironment{texexample}[3][]{\noindent\tcblisting{example1={#2}{#3},#1}}%
     {\endtcblisting }
+
 \newenvironment{texcode}[3][listing only]{\noindent\tcblisting{example1={#2}{#3},#1}}%
     {\endtcblisting }
 \let\luaexample\texexample
@@ -817,7 +938,7 @@ belowskip=\medskipamount,
   }
 \ExplSyntaxOff
 \ExplSyntaxOn
-\cs_set:Npn \cvaref#1{\textcolor{\phdkv@col@command}{#1}}
+\cs_set:Npn \cvaref#1{\textcolor{\phdd_key_color_command_tl}{#1}}
 \cs_set:Npn \colOpt#1{\textcolor{\phdkv@col@opt}{#1}}
 \ExplSyntaxOff
 \lstdefinestyle{tcbdocumentation}{language={[LaTeX]TeX},
@@ -833,12 +954,15 @@ belowskip=\medskipamount,
     extendedchars=true,
     nolol,
     inputencoding = \phdkv@listingencoding}
-\DeclareRobustCommand\phdcs[1]{{\color{thecs}{\texttt{\char`\\\detokenize{#1}}}}}
-\let\phd@doc@orig@meta\meta%
+\DeclareRobustCommand\phdcs[1]{{\color{thecs}{%
+           \texttt{\char`\\\detokenize{#1}}}}}
+\ExplSyntaxOn
+\cs_gset_eq:NN \phd@doc@orig@meta\meta%
+\ExplSyntaxOff
 \ExplSyntaxOn
 \cs_set:Npn \meta #1 {
    \group_begin:
-   \def\meta@font@select{\rmfamily\itshape\color{themeta}}
+   \def\meta@font@select{\rmfamily\upshape\color{themeta}}
    \phd@doc@orig@meta{#1}
    \group_end:
 }
@@ -862,24 +986,26 @@ belowskip=\medskipamount,
 \newif\ifphd@doc@toindex
 \newif\ifphd@doc@colorize
 \newif\ifphd@doc@annotate
+ \ExplSyntaxOn
 \cxset{
-  pageshort/.store in=\phdkv@text@pageshort,
+  pageshort/.store~in           = \phdkv@text@pageshort,
   doclang/.cd,
-  color/.store in=\phdkv@text@color,
-  colors/.store in=\phdkv@text@colors,
-  environment content/.store in=\phdkv@text@envcontent,
-  environment/.store in=\phdkv@text@env,
-  environments/.store in=\phdkv@text@envs,
-  key/.store in=\phdkv@text@key,
-  keys/.store in=\phdkv@text@keys,
-  index/.store in=\phdkv@text@index,
-  pageshort/.store in=\phdkv@text@pageshort,
-  value/.store in=\phdkv@text@value,
-  values/.store in=\phdkv@text@values,
+  color/.store~in               = \phdkv@text@color,
+  colors/.store~in              = \phdkv@text@colors,
+  environment~content/.store~in = \phdkv@text@envcontent,
+  environment/.store~in         = \phdkv@text@env,
+  environments/.store~in        = \phdkv@text@envs,
+  key/.store~in                 = \phdkv@text@key,
+  keys/.store~in                = \phdkv@text@keys,
+  index/.store~in               = \phdkv@text@index,
+  pageshort/.store~in           = \phdkv@text@pageshort,
+  value/.store~in               = \phdkv@text@value,
+  values/.store~in              = \phdkv@text@values,
   % List Styles text in english
-  lst styles/.store in=\phd@text@lststyles,
+  lst~styles/.store~in          = \phd@text@lststyles,
 }
-\cxset{doclang/lst styles=Listings Styles}
+\cxset{doclang/lst~styles       = Listings~Styles}
+\ExplSyntaxOff
 \cxset
   {
     documentation listing options/.store in=\phdkv@doclistingoptions,%
@@ -888,67 +1014,48 @@ belowskip=\medskipamount,
     documentation minted options/.store in=\phdkv@docmintoptions,
   }
 \cxset{
-    color command/.store in=\phdkv@col@command,
-    color environment/.store in=\phdkv@col@environment,
-    color key/.store in=\phdkv@col@key,
-    color value/.store in=\phdkv@col@value,
-    color color/.store in=\phdkv@col@color,
-    color definition/.style={color command={#1},
-                                       color environment={#1},
-                                       color key={#1},
-                                       color value={#1},
-                                       color color={#1}},
-    color option/.store in=\phdkv@col@opt,
-    color hyperlink/.store in=\phdkv@colhyper,
-    color frame/.store in=\phdkv@colhyper,
-    color meta/.store in =\pkdkv@colmeta,
-    before example/.store in=\phdkv@beforeexample,
-    after example/.store in=\phdkv@afterexample,
-}
-\cxset {
-   color command     = thecs,
-   color environment = theenvironment,
-   color key         = thekey,
-   color value       = thevalue,
-   color color       = black,%leaks to index
-   color option      = theoption,
-   color meta        = themeta,
-   color frame       = theframe,
- }
-\cxset{
     % indexing
     index actual/.store in   = \idx@actual,
     index quote/.store in    = \idx@quote,
-    index level/.store in      = \idx@level,
+    index level/.store in    = \idx@level,
     index format/.store in   = \idx@format,
     index encap/.store in    = \idx@encap,
-    index colorize/.is if       = phd@doc@colorize,%
-    index annotate/.is if     = phd@doc@annotate,%
+    index colorize/.is if    = phd@doc@colorize,%
+    index annotate/.is if    = phd@doc@annotate,%
   }
  \cxset{
-    index default settings/.style={index actual={@},index quote={"},index level={!}},
-    index german settings/.style={index actual={=},index quote={!},index level={>}},
-    index doc settings/.style={index actual={=},index quote={!},index level={>}},
+    index default settings/.style = {index actual={@},
+                                    index quote={"},
+                                    index level={!}},
+    index german settings/.style = {index actual={=},
+                                    index quote={!},
+                                    index level={>}},
+    index doc settings/.style    = {index actual={=},
+                                    index quote={!},
+                                    index level={>}},
  }
  \cxset{
    % indexing
    index actual  = {@},
    index quote   = {!},
-   index level    = {>},
+   index level   = {>},
    index doc settings,
  }
 \cxset{
-    doc left/.dimstore in=\phdkv@doc@left,
-    doc right/.dimstore in=\phdkv@doc@right,
-    doc left indent/.dimstore in=\phdkv@doc@indentleft,
-    doc right indent/.dimstore in=\phdkv@doc@indentright,
-    doc head command/.style={doc@head@command/.style={#1}},
-    doc head environment/.style={doc@head@environment/.style={#1}},
-    doc head key/.style={doc@head@key/.style={#1}},
-    doc head/.style={doc head command={#1},doc head environment={#1},doc head key={#1}},
-    doc description/.store in=\phdkv@doc@description,%
-    doc into index/.is if=phd@doc@toindex,%
+    doc left/.dimstore in                   = \phdkv@doc@left,
+    doc right/.dimstore in                  = \phdkv@doc@right,
+    doc left indent/.dimstore in            = \phdkv@doc@indentleft,
+    doc right indent/.dimstore in = \phdkv@doc@indentright,
+    doc head command/.style       = {doc@head@command/.style={#1}},
+    doc head environment/.style   = {doc@head@environment/.style={#1}},
+    doc head key/.style           = {doc@head@key/.style={#1}},
+    doc head/.style               = {doc head command= {#1},
+                                     doc head environment={#1},
+                                     doc head key={#1}},
+    doc description/.store in     = \phdkv@doc@description,%
+    doc into index/.is if         = phd@doc@toindex,%
   }
+\cxset{doc description = {some test}}
 \cxset{
   docexample/.style={colframe=ExampleFrame,colback=ExampleBack,fontlower=\footnotesize},
   documentation minted style=,
@@ -962,15 +1069,14 @@ belowskip=\medskipamount,
     pageshort={P.},
     value=value,values=Values}},
  }
- %</DOCUM|DFLT>
 \AtBeginDocument{%
   \csname phd@doc@index@\idx@format\endcsname%
   \hypersetup{
-  citecolor=\phdkv@colhyper,
-  linkcolor=\phdkv@colhyper,
-  urlcolor=\phdkv@colhyper,
-  filecolor=\phdkv@colhyper,
-  menucolor=\phdkv@colhyper
+    citecolor  = \phdkv@colhyper,
+    linkcolor  = \phdkv@colhyper,
+    urlcolor   = \phdkv@colhyper,
+    filecolor  = \phdkv@colhyper,
+    menucolor  = \phdkv@colhyper
 }}
 \lstdefinestyle{smalldisplay}{%
   numbers=none,
@@ -990,16 +1096,16 @@ belowskip=\medskipamount,
 
 
 \ExplSyntaxOn
-\cs_set:Npn \phdindexprintca #1#2#3 {%
+\cs_set:Npn \phdindexprintca #1#2#3 {
   \ifphd@doc@colorize
     \textcolor{#2}
     { \texttt{#1} }
   \else
     \texttt{#1}
-  \fi%
+  \fi
   \ifphd@doc@annotate\
    #3
-  \fi%
+  \fi
 }
 
 \cs_set:Npn \phd_index_print_c#1#2{%
@@ -1007,48 +1113,45 @@ belowskip=\medskipamount,
     \textcolor{#2}{\texttt{#1}}
   \else\texttt{#1}
   \fi%
+
 }
 
 \NewDocumentCommand{\phdindexprintcomc}{ m }
   {
-    \phd_index_print_c {\phdcs{#1}}{\phdkv@col@command}
+    \phd_index_print_c {\phdcs{#1}}{\phdd_key_color_command_tl}
   }
-\ExplSyntaxOff
-\ExplSyntaxOn
+%%
+
+
 \cs_new:Npn \phd_print_com #1
   {
-    \textcolor{black}{\ttfamily\bfseries\phdcs{#1}}%\phdkv@col@command
+    \textcolor{black}{\ttfamily\bfseries\phdcs{#1}}%\phdd_key_color_command_tl
   }
 \ExplSyntaxOff
 
 \ExplSyntaxOn
 \newrobustcmd{\phdindexprintenvca}[1]
   {
-    \phdindexprintca{#1}{\phdkv@col@environment}{\phdkv@text@env}
+    \phdindexprintca{#1}{\phdd_key_color_environment_tl}{\phdkv@text@env}
   }
 
 \newrobustcmd{\phdindexprintenvc}[1]
   {
-    \phd_index_print_c{#1}{\phdkv@col@environment}
+    \phd_index_print_c{#1}{\phdd_key_color_environment_tl}
   }
 \ExplSyntaxOff
 \ExplSyntaxOn
 \cs_set:Npn \phd_print_env#1
   {
-    \textcolor{\phdkv@col@environment}{\ttfamily\bfseries#1}
+    \textcolor{\phdd_key_color_environment_tl}{\ttfamily\bfseries#1}
   }
 
 \newrobustcmd{\phdindexprintkeyca}[1]
   {
-    \phdindexprintca{#1}{\phdkv@col@key}{\phdkv@text@key}
+    \phdindexprintca{#1}{\phdd_key_color_tl}{\phdkv@text@key}
   }
 
-\newrobustcmd{\phdindexprintkeyc}[1]{\phd_index_print_c{#1}{\phdkv@col@key}}
-
-\cs_set:Npn \phd_print_key #1
-  {
-    \textcolor{\phdkv@col@key}{\ttfamily\bfseries#1}
-  }
+\newrobustcmd{\phdindexprintkeyc}[1]{\phd_index_print_c{#1}{\phdd_key_color_tl}}
 
 \newrobustcmd {\phdindexprintvalca}[1]
   {
@@ -1067,17 +1170,7 @@ belowskip=\medskipamount,
 
 \newrobustcmd{\phdindexprintcolca}[1]
   {
-    \phdindexprintca{#1}{\phdkv@col@color}{\phdkv@text@color}
-  }
-
-\newrobustcmd{\phdindexprintcolc}[1]
-  {
-    \phd_index_print_c{#1}{\phdkv@col@color}
-  }
-
-\cs_set:Npn \phd_print_col #1
-  {
-    \textcolor{\phdkv@col@color}{\ttfamily\bfseries#1}
+    \phdindexprintca{#1}{\phdd_key_color_color_tl}{\phdkv@text@color}
   }
 
 \cs_set:Npn \phdindexcom #1
@@ -1108,21 +1201,6 @@ belowskip=\medskipamount,
         }
     \fi
   }
-\cs_set:Npn \phd_index_key #1
-  {
-    \ifphd@doc@toindex
-      \index{#1\idx@actual \phdindexprintkeyca{#1}}
-      \index
-        {
-          \phdkv@text@keys
-          \idx@level
-          #1
-          \idx@actual
-          \phdindexprintkeyc{#1}
-        }
-    \fi
-  }
-
 \cs_set:Npn \phd_index_key_path #1#2
   {
     \ifphd@doc@toindex\index{#2\idx@actual
@@ -1137,23 +1215,7 @@ belowskip=\medskipamount,
       }
     \fi
   }
-\cs_set:Npn \phd_index_val #1
-  {
-    \ifphd@doc@toindex
-      \index
-      {
-        #1\idx@actual
-        \phdindexprintvalca{#1}
-      }
-      \index
-        {
-          \phdkv@text@values
-          \idx@level #1
-          \idx@actual
-          \phdIndexPrintValC{#1}
-        }
-    \fi
-  }
+
 \cs_set:Npn \phd_index_col #1
   {
     \ifphd@doc@toindex
@@ -1181,7 +1243,7 @@ belowskip=\medskipamount,
   }
 \ExplSyntaxOff
 \ExplSyntaxOn
-\newenvironment{phd@manual@entry}%
+\newenvironment{phdd_manual_entry}%
   {%
    \begin{list}{}
     {%
@@ -1205,7 +1267,8 @@ belowskip=\medskipamount,
 \cs_set:Npn \phd_doc_do_description:
   {
     \ifx\phdkv@doc@description\@empty
-    \else\phdlower
+    \else
+      \tcblower
       \raggedleft(\phdkv@doc@description)
     \fi
   }
@@ -1214,7 +1277,7 @@ belowskip=\medskipamount,
 \newtcolorbox{phd@doc@head}[1]
  {
   blank,
-  colback=white,
+  colback=red!10,
   colframe=white,
   code={\tcbdimto\tcb@temp@grow@left{-\phdkv@doc@indentleft}%
         \tcbdimto\tcb@temp@grow@right{-\phdkv@doc@indentright}},
@@ -1231,7 +1294,7 @@ belowskip=\medskipamount,
 \ExplSyntaxOn
 \newenvironment{docCmd}[3][]{
   \cxset{#1}%
-  \begin{phd@manual@entry}%
+  \begin{phdd_manual_entry}%
   \begin{phd@doc@head}{doc@head@command}%
   \phd_print_com{#2}
   \phdindexcom{#2}
@@ -1239,7 +1302,7 @@ belowskip=\medskipamount,
   \label{com:#2}{\ttfamily #3}%
   \phd_doc_do_description:%
   \end{phd@doc@head}}%
-  {\end{phd@manual@entry}}
+  {\end{phdd_manual_entry}}
 \ExplSyntaxOff
 
 \ExplSyntaxOn
@@ -1255,7 +1318,7 @@ belowskip=\medskipamount,
   }
 
 \newenvironment{docEnv}[3][]{\cxset{#1}%
-  \begin{phd@manual@entry}%
+  \begin{phdd_manual_entry}%
   \begin{phd@doc@head}{doc@head@environment}%
   \strut
   \phdcs{begin}
@@ -1267,7 +1330,7 @@ belowskip=\medskipamount,
   \phd_brackets{\phd_print_env{#2}}%
   \phd_doc_do_description:%
   \end{phd@doc@head}}%
-  {\end{phd@manual@entry}}
+  {\end{phdd_manual_entry}}
 \ExplSyntaxOff
 \newenvironment{docEnv*}
   {
@@ -1277,121 +1340,130 @@ belowskip=\medskipamount,
   }
   { \end{docEnv}\egroup }
 
-%% \begin{docEnv}{docKey} {}{}
-%% \end{docEnv}
-%%    \begin{macrocode}
+%% \end{docEnvironment}
+\ExplSyntaxOn
+\renewenvironment{docKey}[4][\@empty]{
+  \begin{phdd_manual_entry}%
+    \cxset{doc~description={#4}}%
+      \begin{phd@doc@head}{doc@head@key}
+        \ifx#1\@empty%
+          \phd_print_key:n {#2}
+          \phd_index_key{#2}
+          \protected@edef\@currentlabel{#2}
+          \label{key:#2}{\ttfamily #3}%
+        \else
+          \phd_print_key:n {/#1/#2}
+          \phd_index_key_path{#1}{#2}
+          % redefine current label
+          \protected@edef\@currentlabel{/#1/#2}
+          % label
+          \label{key:/#1/#2}{\ttfamily#3}%
+        \fi%
+     \phd_doc_do_description:
+     \end{phd@doc@head}}
+  {\end{phdd_manual_entry}}
+
+\renewenvironment{docKey*}
+  {\bgroup\phd@doc@toindexfalse\begin{docKey}}
+  {\end{docKey}\egroup}
+
+\cs_set:Npn \phdmakedocSubKey#1#2{%
+  \newenvironment{#1}[4][\@empty]{%
+    \ifx##1\@empty
+      \cs_set:Npn \phd@key@path {#2}
+    \else
+     \cs_set:Npn \phd@key@path{#2/##1}
+    \fi%
+    \begin{docKey}[\phd@key@path]{##2}{##3}{##4}}%
+    {\end{docKey}}%
+  \newenvironment{#1*}{\bgroup\phd@doc@toindexfalse\begin{#1}}{\end{#1}\egroup}%
+}
 \ExplSyntaxOff
 
 \ExplSyntaxOn
-\cs_set:Npn \docAuxCmd: #1
-  {
-    \phdindexprintcomc {#1}
-    \phdindexcom{#1}
-  }
-
-\cs_set:Npn \docAuxCmd_star #1
-  {
-    \phdindexprintcomc {#1}
-  }
-
-\NewDocumentCommand \docAuxCmd { s m }
-  {
-    \IfBooleanTF {#1}
-    {\docAuxCmd_star {#2} }
-    {\docAuxCmd: {#2} }
-  }
-\ExplSyntaxOff
-\ExplSyntaxOn
-\cs_set:Npn \doc_aux_env: #1
+\cs_set:Npn \@@_doc_aux_env: #1
   {
     \phd_print_env{#1}
     \phd_index_env{#1}
   }
 
-\cs_set:Npn \doc_aux_env_star #1
+\cs_set:Npn \@@_doc_aux_env_star #1
   {
     \phd_print_env{#1}
   }
 \NewDocumentCommand\docAuxEnv { s m }
   {
     \IfBooleanTF {#1}
-    {\doc_aux_env_star{#2} }
-    {\doc_aux_env: {#2} }
+    {\@@_doc_aux_env_star{#2} }
+    {\@@_doc_aux_env: {#2} }
   }
 \ExplSyntaxOff
 \ExplSyntaxOn
-\NewDocumentCommand {\doc_aux_key:} {O{\@empty} m}
+\cs_set:Npn \phd_print_key:n #1
+  {
+    \textcolor{\phdd_key_color_tl}{\ttfamily\bfseries#1}
+  }
+
+\cs_set:Npn \phd_index_key #1
+  {
+    \ifphd@doc@toindex
+      \index{#1\idx@actual \phdindexprintkeyca{#1}}
+      \index
+        {
+          \phdkv@text@keys
+          \idx@level
+          #1
+          \idx@actual
+          \phdindexprintkeyc{#1}
+        }
+    \fi
+  }
+
+\NewDocumentCommand {\@@_doc_aux_key:} {O{\@empty} m}
   {%
      \ifx#1\@empty%
-     \phd_print_key{#2}
-     \phd_index_key{#2}%
+       \phd_print_key:n {#2}
+       \phd_index_key {#2}%
      \else%
-     \phd_print_key{/#1/#2}\phd_index_key_path{#1}{#2}%
+       \phd_print_key:n {/#1/#2}
+       \phd_index_key_path {#1}{#2}%
   \fi
   }%
 
-\newcommand{\doc_aux_key_star}[2][\@empty]{%
+\newcommand{\@@_doc_aux_key_star}[2][\@empty]{%
   \ifx#1\@empty%
    \phd_print_key {#2}%
   \else%
    \phd_print_key {/#1/#2}%
   \fi}%
 
-\DeclareDocumentCommand {\docAuxKey} { s m }
+\DeclareDocumentCommand {\docAuxKey} { s O{} m }
   {
     \IfBooleanTF {#1}
-      { \doc_aux_key_star {#2} } { \doc_aux_key: [#1]{#2} }
-  }
-\ExplSyntaxOff
-\ExplSyntaxOn
-
-\cs_set:Npn \doc_color_aux #1
-  {
-    \phd_print_col {#1}
-    \phd_index_col {#1}
-  }
-
-\cs_set:Npn \doc_color_star: #1
-  {
-    \phd_print_col{#1}
-  }
-
-\DeclareDocumentCommand {\docColor} { s m }
-  {
-    \IfBooleanTF {#1}
-      { \doc_color_star: {#2} }
-      { \doc_color_aux {#2} }
-  }
-\ExplSyntaxOff
-
-\ExplSyntaxOn
-\cs_set:Npn \docValue@#1{\phd@Print@Val{#1}\phd_index_val{#1}}%
-\cs_set:Npn \docValue@star#1{\phd@Print@Val{#1}}%
-
-\DeclareDocumentCommand \docValue { s m }
-  {
-    \IfBooleanTF {#1}
-      { \docValue@star {#2} }
-      { \docValue@ {#2} }
+      { \@@_doc_aux_key_star {#3} }
+      { \@@_doc_aux_key: [#2]{#3} }
   }
 \ExplSyntaxOff
 \ExplSyntaxOn
 \setrefcountdefault{-1}
-
-\cs_set:Npn \phd_ref_doc #1
+\cs_set:Npn \phd_ref_doc #1 #2
 {
-  \hyperref[#1]
-  {\texttt{\ref*{#1}}%
-    \ifnum\getpagerefnumber{#1}=\thepage
-    \else%
-      \textsuperscript
+  \IfRefUndefinedExpandable {#2}
+    {{\bfseries\phdd_typeset_command {#1} }}
+    {
+      \hyperref[#2]
+      {{\color{themacrocolor}\texttt{\ref*{#2}}}%
+      \ifnum\getpagerefnumber{#2}=\thepage
+      \else
+        \textsuperscript
       {
         \ding{213}\,
         \phdkv@text@pageshort\,
-        \pageref*{#1}
+        \pageref*{#2}
       }
-   \fi
+     \fi
    }
+  }
  }
 
 \cs_set:Npn \phd_ref_doc_star#1
@@ -1402,14 +1474,13 @@ belowskip=\medskipamount,
 \ExplSyntaxOn
 \cs_set:Npn \ref_com: #1
   {
-    \phd_ref_doc{com:#1}
+    \phd_ref_doc {#1} {com:#1}
   }
 
 \cs_set:Npn \ref_com_star #1
   {
     \phd_ref_doc_star{com:#1}
   }
-
 \DeclareDocumentCommand {\refCmd} { s m }
   {
     \IfBooleanTF {#1}
@@ -1551,16 +1622,19 @@ belowskip=\medskipamount,
 \def\main#1{{\color{red}\uline{#1}}}
 
 \ExplSyntaxOn
-\def\phdprintdocfile:Npn #1 {
-\bgroup
-  \detokenize{#1}
-\egroup
+\cs_set:Npn \@@_print_docfile:n #1 {%
+    \begingroup
+    \color{thered}
+    \ttfamily {\tl_to_str:n{#1}}
+    \endgroup
 }
 
 \cs_set:Npn \docFile #1
   {
-    \texttt {\detokenize{#1}}
-    \index{files\idx@level\protect\detokenize{#1}\encapchar hyperpage}
+    \begingroup
+      \@@_print_docfile:n {#1}
+    \endgroup
+    \index{files:\idx@level\protect\detokenize{#1}\encapchar hyperpage}
   }
 \cs_set:Npn \docExtension #1
   {
@@ -2096,7 +2170,7 @@ belowskip=\medskipamount,
    &\scriptsize\ttfamily\string#1}
 
 \ExplSyntaxOn
-\cs_set:Npn \Z #1
+\cs_set:Npn \docZ #1
   {
     \incsyms
     \indexcommand[$\string#1$] {#1}
@@ -2411,7 +2485,6 @@ belowskip=\medskipamount,
     \draw (0pt,.5ex) -- (1.5cm,.5ex);
   \end{tikzpicture}
 }
-
 %% Macros taken fro PGF manual
 \newcommand\patternindex[1]{%
   \HD@target
@@ -2706,14 +2779,14 @@ narrow/.style={width=6.9cm},
   \if@minipage\else\vskip\parskip\fi
   \leftskip\@totalleftmargin\rightskip\z@skip
   \parindent\z@\parfillskip\@flushglue\parskip\z@skip
-  \@@par
+  \@@@@par %chaned
   \@tempswafalse
   \def\par{%
     \if@tempswa
       \leavevmode \null \@@par\penalty\interlinepenalty
     \else
       \@tempswatrue
-      \ifhmode\@@par\penalty\interlinepenalty\fi
+      \ifhmode\@@@@par\penalty\interlinepenalty\fi
     \fi}%
   \let\do\@makeother \dospecials
   \obeylines \small \@noligs%\smallverbatim@font to FIX
@@ -2752,17 +2825,18 @@ narrow/.style={width=6.9cm},
 \@@par
 \smallskip\parindent=1em }
 
-\DeclareRobustCommand{\phdidxfont}[1]{\index{#1 (font)}\index{Fonts\idx@level #1}}%
+\DeclareRobustCommand{\phdidxfont}[1]{%
+  \index{#1 (font)}\index{fonts\idx@level{#1}\encapchar hyperpage}}%
 \def\docFont#1{
     \enquote{#1}
     \phdidxfont{#1}%
 }
 \newenvironment{handler}[2][]{%
-  \begin{phd@manual@entry}%
+  \begin{phdd_manual_entry}%
    \begingroup
    \sffamily\textbf{Key handler} \meta{key}/\bfseries\ttfamily{\color{thered}#2}\color{black}#1
    \endgroup
- \end{phd@manual@entry}
+ \end{phdd_manual_entry}
  }
 {}
 
@@ -2827,6 +2901,2186 @@ narrow/.style={width=6.9cm},
   \string #1 $^{#3}$
   \indexmathcmd [Math over and under brackets] {#1{xxxxxx}}
   }
+\ExplSyntaxOn
+\NewDocumentEnvironment{ arguments }  {}
+  {
+    \enumerate
+  }
+  {
+    \endenumerate
+  }
+\ExplSyntaxOff
+
+
+\ExplSyntaxOn
+
+\clist_new:N \g_docinput_clist
+\seq_new:N \g_doc_functions_seq
+\seq_new:N \g_doc_macros_seq
+\bool_new:N \l__phdd_detect_internals_bool
+\bool_set_true:N \l__phdd_detect_internals_bool
+\tl_new:N \l__phdd_detect_internals_tl
+\tl_new:N \l__phdd_detect_internals_cs_tl
+\coffin_new:N \l__phdd_output_coffin
+\coffin_new:N \l__phdd_functions_coffin
+\coffin_new:N \l__phdd_descr_coffin
+\coffin_new:N \l__phdd_syntax_coffin
+\box_new:N \g__phdd_syntax_box
+\bool_new:N \l__phdd_in_function_bool
+\bool_new:N \l__phdd_long_name_bool
+\dim_new:N \l__phdd_trial_width_dim
+\int_new:N \l__phdd_nested_macro_int
+\bool_new:N \l__phdd_macro_tested_bool
+\prop_new:N \g__phdd_missing_tests_prop
+\seq_new:N \g__phdd_not_tested_seq
+\seq_new:N \g__phdd_testfiles_seq
+\bool_new:N \l__phdd_macro_internal_set_bool
+\bool_new:N \l__phdd_macro_internal_bool
+\bool_new:N \l__phdd_macro_TF_bool
+\bool_new:N \l__phdd_macro_pTF_bool
+\bool_new:N \l__phdd_macro_noTF_bool
+\bool_new:N \l__phdd_macro_EXP_bool
+\bool_new:N \l__phdd_macro_rEXP_bool
+\bool_new:N \l__phdd_macro_var_bool
+\tl_new:N \l__phdd_override_module_tl
+\tl_set:Nn \l__phdd_override_module_tl { \q_no_value }
+\tl_new:N \l__phdd_macro_documented_tl
+\bool_new:N \g__phdd_lmodern_bool
+\bool_new:N \g__phdd_checkfunc_bool
+\bool_new:N \g__phdd_checktest_bool
+\bool_new:N \g__phdd_kernel_bool
+\bool_new:N \g__phdd_cs_break_bool
+\bool_gset_true:N \g__phdd_cs_break_bool
+\tl_new:N \l__phdd_tmpa_tl
+\tl_new:N \l__phdd_tmpb_tl
+\int_new:N \l__phdd_tmpa_int
+\int_new:N \l__phdd_tmpa_seq
+\tl_new:N \l__phdd_names_block_tl
+\seq_new:N \g__phdd_variants_seq
+\bool_new:N \l__phdd_names_verb_bool
+\seq_new:N \l__phdd_names_seq
+\seq_new:N \g__phdd_nested_names_seq
+\tl_new:N \l__phdd_index_macro_tl
+\tl_new:N \l__phdd_index_key_tl
+\tl_new:N \l__phdd_index_module_tl
+\bool_new:N \l__phdd_index_internal_bool
+\tl_new:N \g__phdd_module_name_tl
+\tl_const:Nn \c__phdd_iow_rule_tl
+  { ======================================== }
+\tl_const:Nn \c__phdd_iow_mid_rule_tl
+  { -------------------------------------- }
+\box_new:N \l__phdd_macro_box
+\box_new:N \l__phdd_macro_index_box
+\int_new:N \l__phdd_macro_int
+\tl_new:N \l__phdd_cmd_tl
+\tl_new:N \l__phdd_cmd_index_tl
+\tl_new:N \l__phdd_cmd_module_tl
+\bool_new:N \l__phdd_cmd_noindex_bool
+\bool_new:N \l__phdd_cmd_replace_bool
+\bool_new:N \l__phdd_in_implementation_bool
+\bool_new:N \g__phdd_typeset_documentation_bool
+\bool_new:N \g__phdd_typeset_implementation_bool
+\bool_set_true:N \g__phdd_typeset_documentation_bool
+\bool_set_true:N \g__phdd_typeset_implementation_bool
+\tl_new:N \g__phdd_base_name_tl
+\prop_new:N \l__phdd_variants_prop
+\clist_new:N \l__phdd_function_label_clist
+\bool_new:N \l__phdd_no_label_bool
+\tl_new:N \l__phdd_date_added_tl
+\tl_new:N \l__phdd_date_updated_tl
+\tl_new:N \l__phdd_macro_argument_tl
+\cs_new_eq:NN \__phdd_tmpa:w ?
+\cs_new_eq:NN \__phdd_tmpb:w ?
+\cs_generate_variant:Nn \seq_set_split:Nnn { NoV }
+\cs_generate_variant:Nn \seq_gput_right:Nn { Nf }
+\cs_generate_variant:Nn \str_case:nn { fn }
+\cs_generate_variant:Nn \tl_count:n { f }
+\cs_generate_variant:Nn \tl_greplace_all:Nnn { Nx , Nno }
+\cs_generate_variant:Nn \tl_if_empty:nTF { f }
+\cs_generate_variant:Nn \tl_if_head_eq_charcode:nNTF { o }
+\cs_generate_variant:Nn \tl_if_head_eq_charcode:nNT  { o }
+\cs_generate_variant:Nn \tl_if_head_eq_charcode:nNF  { o }
+\cs_generate_variant:Nn \tl_if_head_eq_meaning:nNF  { V }
+\cs_generate_variant:Nn \tl_if_in:nnTF { no , oo }
+\cs_generate_variant:Nn \tl_if_in:NnTF { No }
+\cs_generate_variant:Nn \tl_if_in:NnT  { No }
+\cs_generate_variant:Nn \tl_if_in:NnF  { No }
+\cs_generate_variant:Nn \tl_remove_all:Nn   { Nx }
+\cs_generate_variant:Nn \tl_replace_all:Nnn { Nx , Nnx, No , Nno }
+\cs_generate_variant:Nn \tl_replace_once:Nnn { Noo }
+\cs_generate_variant:Nn \tl_to_str:n { f , o }
+\cs_generate_variant:Nn \prop_get:NnNTF { Nx }
+\cs_generate_variant:Nn \prop_put:Nnn { Nx }
+\cs_generate_variant:Nn \prop_gput:Nnn { NVx }
+\prg_new_protected_conditional:Npnn \__phdd_if_almost_str:n #1 { TF , T , F }
+  {
+    \int_compare:nNnTF
+      { \tl_count:n {#1} }
+      < { \tl_count:f { \tl_to_str:f {#1} } }
+      { \prg_return_false: }
+      { \prg_return_true: }
+  }
+\cs_generate_variant:Nn \__phdd_if_almost_str:nT { V }
+\cs_new_protected:Npn \__phdd_trim_right:Nn #1#2
+  {
+    \cs_set:Npn \__phdd_tmp:w ##1 #2 ##2 \q_stop { \exp_not:n {##1} }
+    \tl_set:Nx #1 { \exp_after:wN \__phdd_tmp:w #1 #2 \q_stop }
+  }
+\cs_generate_variant:Nn \__phdd_trim_right:Nn { No }
+\prg_new_protected_conditional:Npnn \__phdd_str_if_begin:nn #1#2 { TF , T , F }
+  {
+    \tl_if_in:ooTF
+      { \exp_after:wN \scan_stop: \tl_to_str:n {#1} }
+      { \exp_after:wN \scan_stop: \tl_to_str:n {#2} }
+      { \prg_return_true: }
+      { \prg_return_false: }
+  }
+\prg_generate_conditional_variant:Nnn \__phdd_str_if_begin:nn
+  { oo } { TF , T , F }
+\cs_new_protected:Npn \__phdd_replace_at_at:N #1
+  {
+    \tl_if_empty:NF \g__phdd_module_name_tl
+      {
+        \exp_args:NNo \__phdd_replace_at_at_aux:Nn
+          #1 \g__phdd_module_name_tl
+      }
+  }
+\cs_new_protected:Npx \__phdd_replace_at_at_aux:Nn #1#2
+  {
+
+   \tl_replace_all:Nnn #1 { \token_to_str:N @ } { @ }
+    \tl_replace_all:Nnn #1 { \token_to_str:N _ } { _ }
+    \tl_replace_all:Nnn #1 { \token_to_str:N ! } { ! }
+    \tl_replace_all:Nnn #1 { @ @ @ @ } { \token_to_str:N a a }
+    \tl_replace_all:Nnn #1 { _ _ @ @ } { _ _ #2 }
+    \tl_replace_all:Nnn #1 {   _ @ @ } { _ _ #2 }
+    \tl_replace_all:Nnn #1 {    !@ @ } {     #2 }
+    \tl_replace_all:Nnn #1 {     @ @ } { _ _ #2 }
+
+    \tl_replace_all:Nnn #1 { \token_to_str:N a a } { @ @ }
+  }
+\cs_new_protected:Npn \__phdd_detect_internals:N #1
+  {
+    \bool_if:NT \l__phdd_detect_internals_bool
+      { \__phdd_detect_internals_aux:N #1 }
+  }
+\group_begin:
+  \char_set_catcode_active:N \^^M
+  \cs_new_protected:Npn \__phdd_detect_internals_aux:N #1
+    {
+      \tl_set_eq:NN \l__phdd_detect_internals_tl #1
+      \tl_replace_all:Non \l__phdd_detect_internals_tl { \token_to_str:N _ } { _ }
+      \seq_set_split:NnV \l__phdd_tmpa_seq { _ _ } \l__phdd_detect_internals_tl
+      \seq_pop_left:NN \l__phdd_tmpa_seq \l__phdd_detect_internals_tl
+      \seq_map_variable:NNn \l__phdd_tmpa_seq \l__phdd_detect_internals_tl
+        {
+          \__phdd_trim_right:No \l__phdd_detect_internals_tl
+            \c_catcode_active_space_tl
+          \__phdd_trim_right:Nn \l__phdd_detect_internals_tl ^^M
+          \__phdd_if_detect_internals_ok:NF \l__phdd_detect_internals_tl
+            {
+              \tl_set_eq:NN \l__phdd_detect_internals_cs_tl \l__phdd_detect_internals_tl
+              \__phdd_trim_right:Nn \l__phdd_detect_internals_tl _
+              \__phdd_trim_right:Nn \l__phdd_detect_internals_tl :
+              \__phdd_trim_right:No \l__phdd_detect_internals_tl { \token_to_str:N : }
+              \msg_warning:nnxxx { !__phdd } { foreign-internal }
+                { \tl_to_str:N \l__phdd_detect_internals_cs_tl }
+                { \tl_to_str:N \l__phdd_detect_internals_tl }
+                { \tl_to_str:N \g__phdd_module_name_tl }
+            }
+        }
+    }
+\group_end:
+\prg_new_protected_conditional:Npnn \__phdd_if_detect_internals_ok:N #1 { F }
+  {
+    \__phdd_str_if_begin:ooTF {#1} { \g__phdd_module_name_tl _ }
+      { \prg_return_true: }
+      {
+        \__phdd_str_if_begin:ooTF {#1} { \g__phdd_module_name_tl : }
+          { \prg_return_true: }
+          {
+            \bool_if:NTF \g__phdd_kernel_bool
+              {
+                \__phdd_str_if_begin:ooTF {#1} { kernel _ }
+                  { \prg_return_true: }
+                  { \prg_return_false: }
+              }
+              { \prg_return_false: }
+          }
+      }
+  }
+\cs_new:Npn \__phdd_signature_base_form:n #1
+  { \__phdd_signature_base_form_aux:n #1 \q_stop }
+\cs_new:Npn \__phdd_signature_base_form_aux:n #1
+  {
+    \str_case:nnTF {#1}
+      {
+        { N } { N }
+        { c } { N }
+        { n } { n }
+        { o } { n }
+        { f } { n }
+        { x } { n }
+        { V } { n }
+        { v } { n }
+      }
+      { \__phdd_signature_base_form_aux:n }
+      { \__phdd_signature_base_form_aux:w #1 }
+  }
+\cs_new:Npn \__phdd_signature_base_form_aux:w #1 \q_stop
+  { \exp_not:n {#1} }
+\cs_new:Npn \__phdd_predicate_from_base:n #1
+  {
+    \__phdd_get_function_name:n {#1}
+    \tl_to_str:n { _p: }
+    \__phdd_get_function_signature:n {#1}
+  }
+\cs_new:Npn \__phdd_get_function_name:n #1
+  { \__phdd_split_function_do:nn {#1} { \use_i:nnn } }
+\cs_new:Npn \__phdd_get_function_signature:n #1
+  { \__phdd_split_function_do:nn {#1} { \use_ii:nnn } }
+\cs_set_protected:Npn \__phdd_tmpa:w #1
+  {
+    \cs_new:Npn \__phdd_split_function_do:nn ##1
+      {
+        \exp_after:wN \__phdd_split_function_auxi:w
+        \tl_to_str:n {##1} \q_mark \c_true_bool
+        #1 \q_mark \c_false_bool
+        \q_stop
+      }
+    \cs_new:Npn \__phdd_split_function_auxi:w
+      ##1 #1 ##2 \q_mark ##3##4 \q_stop ##5
+      { \__phdd_split_function_auxii:w {##5} ##1 \q_mark \q_stop {##2} ##3 }
+    \cs_new:Npn \__phdd_split_function_auxii:w
+      ##1##2 \q_mark ##3 \q_stop
+      { ##1 {##2} }
+  }
+\exp_args:No \__phdd_tmpa:w { \token_to_str:N : }
+\cs_generate_variant:Nn \__phdd_split_function_do:nn { o }
+\cs_new_protected:Npn \__phdd_key_get_base:nN #1#2
+  {
+    \__phdd_if_almost_str:nTF {#1}
+      {
+        \__phdd_key_get_base_TF:nN {#1} \l__phdd_tmpa_tl
+        \tl_set:Nx #2
+          { \__phdd_split_function_do:on \l__phdd_tmpa_tl { \__phdd_base_form_aux:nnN } }
+      }
+      { \tl_set:Nn #2 {#1} }
+  }
+\cs_new:Npx \__phdd_key_get_base_TF:nN #1#2
+  {
+    \tl_set:Nx #2 { \exp_not:N \tl_to_str:n {#1} }
+    \tl_if_in:NoF #2 { \tl_to_str:n {:} }
+      { \exp_not:N \prg_break: }
+    \tl_if_in:onT { #2 z } { \tl_to_str:n {TF} z }
+      { \exp_not:N \prg_break: }
+    \tl_if_in:onT { #2 z } { \tl_to_str:n {T} z }
+      {
+        \tl_put_right:Nn #2 { \tl_to_str:n {F} }
+        \exp_not:N \prg_break:
+      }
+    \tl_if_in:onT { #2 z } { \tl_to_str:n {F} z }
+      {
+        \tl_put_right:Nn #2 { z }
+        \tl_replace_once:Nnn #2 { \tl_to_str:n {F} z } { \tl_to_str:n {TF} }
+        \exp_not:N \prg_break:
+      }
+    \exp_not:N \prg_break_point:
+  }
+\cs_new:Npn \__phdd_base_form_aux:nnN #1#2#3
+  {
+    \exp_not:n {#1}
+    \bool_if:NT #3
+      {
+        \token_to_str:N :
+        \str_if_eq:nnTF { #1 ~ } { \exp_args }
+          { \exp_not:n {#2} }
+          { \__phdd_signature_base_form:n {#2} }
+      }
+  }
+\cs_new_protected:Npn \__phdd_base_form_signature_do:nnn #1#2#3
+  {
+    \__phdd_split_function_do:nn {#1}
+      { \__phdd_base_form_aux:nnnnnN {#1} {#2} {#3} }
+  }
+\cs_new_protected:Npn \__phdd_base_form_aux:nnnnnN #1#2#3#4#5#6
+  {
+    \bool_if:NTF #6
+      {
+        \tl_if_head_eq_charcode:nNTF {#4} :
+          { #2 {#1} }
+          {
+            \use:x
+              {
+                \exp_not:n {#3}
+                { \__phdd_base_form_aux:nnN {#4} {#5} #6 }
+              }
+                {#4} {#5}
+          }
+      }
+      { #2 {#1} }
+  }
+\prg_new_conditional:Npnn \__phdd_date_compare:nNn #1#2#3 { TF , T , F , p }
+  { \__phdd_date_compare_aux:w #1--- \q_mark #2 #3--- \q_stop }
+\cs_new:Npn \__phdd_date_compare_aux:w
+    #1 - #2 - #3 - #4 \q_mark #5 #6 - #7 - #8 - #9 \q_stop
+  {
+    \__phdd_date_compare_aux:nnnNnnn
+      { \tl_if_empty:nTF {#1} { 0 } {#1} }
+      { \tl_if_empty:nTF {#2} { 0 } {#2} }
+      { \tl_if_empty:nTF {#3} { 0 } {#3} }
+      #5
+      { \tl_if_empty:nTF {#6} { 0 } {#6} }
+      { \tl_if_empty:nTF {#7} { 0 } {#7} }
+      { \tl_if_empty:nTF {#8} { 0 } {#8} }
+  }
+\cs_new:Npn \__phdd_date_compare_aux:nnnNnnn #1#2#3#4#5#6#7
+  {
+    \int_compare:nNnTF {#1} = {#5}
+      {
+        \int_compare:nNnTF {#2} = {#6}
+          {
+            \int_compare:nNnTF {#3} #4 {#7}
+              { \prg_return_true: } { \prg_return_false: }
+          }
+          {
+            \int_compare:nNnTF {#2} #4 {#6}
+              { \prg_return_true: } { \prg_return_false: }
+          }
+      }
+      {
+        \int_compare:nNnTF {#1} #4 {#5}
+          { \prg_return_true: } { \prg_return_false: }
+      }
+    \use_none:n
+    \q_stop
+  }
+\cs_new:Npn \__phdd_gprop_name:n #1 { g__phdd ~ \tl_to_str:n {#1} }
+\cs_new:Npn \__phdd_lseq_name:n #1 { l__phdd ~ \tl_to_str:n {#1} }
+\msg_new:nnnn { !__phdd } { no-signature-TF }
+  { Function/macro~'#1'~cannot~be~turned~into~a~conditional. }
+  {
+    A~function~or~macro~environment~with~option~pTF,~TF~or~noTF~
+    received~the~argument~'#1'.~This~function's~name~has~no~
+    ':'~hence~it~is~not~clear~where~to~add~'_p'~or~'TF'.~
+    Please~follow~expl3~naming~conventions.
+  }
+\msg_new:nnn { !__phdd } { deprecated-function }
+  { The~deprecated~function(s)~'#1'~should~have~been~removed~on~#2. }
+
+\msg_new:nnn { !__phdd } { date-format }
+  { The~date~'#1'~should~be~given~in~YYYY-MM-DD~format. }
+
+\msg_new:nnn { !__phdd } { syntax-nested-function }
+  {
+    The~'syntax'~environment~should~be~used~in~the~
+    innermost~'function'~environment.
+  }
+\msg_new:nnn { !__phdd } { multiple-syntax }
+  {
+    The~'syntax'~environment~should~only~be~used~once~in~
+    a~'function'~environment.
+  }
+\msg_new:nnn { !__phdd } { deprecated-option }
+  { The~option~'#1'~has~been~deprecated~for~'#2'. }
+
+\msg_new:nnn { !__phdd } { foreign-internal }
+  {
+    A~control~sequence~of~the~form~'...__#1'~was~used.~
+    It~should~only~be~used~in~the~module~'#2'
+    \tl_if_empty:nF {#3} { ,~not~in~'#3' } .
+  }
+\cs_gset:Npn \MakePrivateLetters
+  {
+    \char_set_catcode_letter:N \@
+    \char_set_catcode_letter:N \_
+    \char_set_catcode_letter:N \:
+  }
+\setcounter{StandardModuleDepth}{1}
+
+\cs_set_protected:Npn \ifnot@excluded
+  {
+    \exp_args:Nxx \expanded@notin
+      { \c_backslash_str \tl_to_str:N \macro@namepart , }
+      { \exp_args:NV \tl_to_str:n \index@excludelist }
+  }
+\cs_new:Npn \pdfstringnewline { : ~ }
+\DeclareExpandableDocumentCommand
+  { \__phdd_pdfstring_newline:w } { s o m } { \pdfstringnewline #3 }
+\pdfstringdefDisableCommands
+  { \cs_set_eq:NN \\ \__phdd_pdfstring_newline:w }
+\DeclareDocumentCommand \cmd { O{} m }
+  { \__phdd_cmd:no {#1} { \token_to_str:N #2 } }
+
+\DeclareDocumentCommand \cs  { O{} m }
+  { \__phdd_cmd:no {#1} { \c_backslash_str #2 } }
+
+\DeclareDocumentCommand \tn  { O{} m }
+  {
+    \__phdd_cmd:no
+      { module = TeX , replace = false , #1 }
+      { \c_backslash_str #2 }
+  }
+\DeclareDocumentCommand \meta { m }
+  { \__phdd_meta:n {#1} }
+\DeclareExpandableDocumentCommand
+  { \__phdd_pdfstring_cmd:w } { o m } { \token_to_str:N #2 }
+\DeclareExpandableDocumentCommand
+  { \__phdd_pdfstring_cs:w }  { o m } { \textbackslash \tl_to_str:n {#2} }
+\cs_new:Npn \__phdd_pdfstring_meta:w #1
+  { < \tl_to_str:n {#1} > }
+\pdfstringdefDisableCommands
+  {
+    \cs_set_eq:NN \cmd  \__phdd_pdfstring_cmd:w
+    \cs_set_eq:NN \cs   \__phdd_pdfstring_cs:w
+    \cs_set_eq:NN \tn   \__phdd_pdfstring_cs:w
+    \cs_set_eq:NN \meta \__phdd_pdfstring_meta:w
+  }
+\newcommand\Arg[1]
+  { \texttt{\char`\{} \meta{#1} \texttt{\char`\}} }
+\providecommand\marg[1]{ \Arg{#1} }
+\providecommand\oarg[1]{ \texttt[ \meta{#1} \texttt] }
+\providecommand\parg[1]{ \texttt( \meta{#1} \texttt) }
+\DeclareRobustCommand \file {\nolinkurl}
+\DeclareRobustCommand \env {\texttt}
+
+
+\NewDocumentCommand \EnableDocumentation { }
+  { \bool_gset_true:N \g__phdd_typeset_documentation_bool }
+\NewDocumentCommand \EnableImplementation { }
+  { \bool_gset_true:N \g__phdd_typeset_implementation_bool }
+\NewDocumentCommand \DisableDocumentation { }
+  { \bool_gset_false:N \g__phdd_typeset_documentation_bool }
+\NewDocumentCommand \DisableImplementation { }
+  { \bool_gset_false:N \g__phdd_typeset_implementation_bool }
+\NewDocumentEnvironment { documentation } { }
+  {
+    \bool_if:NTF \g__phdd_typeset_documentation_bool
+      { \bool_set_false:N \l__phdd_in_implementation_bool }
+      { \comment }
+  }
+  { \bool_if:NF \g__phdd_typeset_documentation_bool { \endcomment } }
+\NewDocumentEnvironment { implementation } { }
+  {
+    \bool_if:NTF \g__phdd_typeset_implementation_bool
+      { \bool_set_true:N \l__phdd_in_implementation_bool }
+      { \comment }
+  }
+  { \bool_if:NF \g__phdd_typeset_implementation_bool { \endcomment } }
+
+\DeclareDocumentEnvironment { variable } { O{} +v }
+  {
+    \bool_if:NTF \l__phdd_in_implementation_bool
+      { \__phdd_macro:nnw { var , #1 } {#2} }
+      { \__phdd_function:nnw {#1} {#2} }
+  }
+  {
+    \bool_if:NTF \l__phdd_in_implementation_bool
+      { \__phdd_macro_end: }
+      { \__phdd_function_end: }
+  }
+\DeclareDocumentEnvironment { function } { O{} +v }
+  { \__phdd_function:nnw {#1} {#2} }
+  { \__phdd_function_end: }
+\DeclareDocumentEnvironment { macro } { O{} +v }
+  { \__phdd_macro:nnw {#1} {#2} }
+  { \__phdd_macro_end: }
+\NewDocumentEnvironment { syntax } { }
+  { \__phdd_syntax:w }
+  {
+    \__phdd_syntax_end:
+    \ignorespacesafterend
+  }
+\NewDocumentEnvironment { texnote } { }
+  {
+    \endgraf
+    \vspace{3mm}
+    \small\textbf{\TeX~hackers~note:}
+  }
+  {
+    \vspace{3mm}
+  }
+\NewDocumentCommand { \CodedocExplain } { }
+  { \CodedocExplainEXP \ \CodedocExplainREXP \ \CodedocExplainTF }
+\NewDocumentCommand { \CodedocExplainEXP } { }
+  {
+    \raisebox{\baselineskip}[0pt][0pt]{\hypertarget{expstar}{}}%
+    \__phdd_typeset_exp:\ indicates~fully~expandable~functions,~which~
+    can~be~used~within~an~\texttt{x}-type~argument~(in~plain~
+    \TeX{}~terms,~inside~an~\cs{edef}),~as~well~as~within~an~
+    \texttt{f}-type~argument.
+  }
+\NewDocumentCommand { \CodedocExplainREXP } { }
+  {
+    \raisebox{\baselineskip}[0pt][0pt]{\hypertarget{rexpstar}{}}%
+    \__phdd_typeset_rexp:\ indicates~
+    restricted~expandable~functions,~which~can~be~used~within~an~
+    \texttt{x}-type~argument~but~cannot~be~fully~expanded~within~an~
+    \texttt{f}-type~argument.
+  }
+\NewDocumentCommand { \CodedocExplainTF } { }
+  {
+    \raisebox{\baselineskip}[0pt][0pt]{\hypertarget{explTF}{}}%
+    \__phdd_typeset_TF:\ indicates~conditional~(\texttt{if})~functions~
+    whose~variants~with~\texttt{T},~\texttt{F}~and~\texttt{TF}~
+    argument~specifiers~expect~different~
+    \enquote{true}/\enquote{false}~branches.
+  }
+\keys_define:nn { phdd/cmd }
+  {
+    index     .tl_set:N     = \l__phdd_cmd_index_tl        ,
+    module    .tl_set:N     = \l__phdd_cmd_module_tl       ,
+    no-index  .bool_set:N   = \l__phdd_cmd_noindex_bool    ,
+    replace   .bool_set:N   = \l__phdd_cmd_replace_bool    ,
+  }
+\cs_new_protected:Npn \__phdd_cmd:nn #1#2
+  {
+    \bool_set_false:N \l__phdd_cmd_noindex_bool
+    \bool_set_true:N \l__phdd_cmd_replace_bool
+    \tl_set:Nn \l__phdd_cmd_index_tl { \q_no_value }
+    \tl_set:Nn \l__phdd_cmd_module_tl { \q_no_value }
+    \keys_set:nn { phdd/cmd } {#1}
+    \tl_set:Nn \l__phdd_cmd_tl {#2}
+    \bool_if:NT \l__phdd_cmd_replace_bool
+      {
+        \tl_set_rescan:Nnn \l__phdd_tmpb_tl { } { _ }
+        \tl_replace_all:Non \l__phdd_cmd_tl \l__phdd_tmpb_tl { _ }
+        \__phdd_replace_at_at:N \l__phdd_cmd_tl
+        \tl_replace_all:Nno \l__phdd_cmd_tl { _ } \l__phdd_tmpb_tl
+      }
+\def\BreakableUnderscore{\leavevmode\nobreak\hskip\z@skip
+ %\ifx\f@family\ttdefault \string \else
+ \textunderscore
+ %\fi
+ \@dischyph\nobreak\hskip\z@skip}
+    \mode_if_math:T { \mbox }
+      {
+        \verbatim@font
+        \__phdd_if_almost_str:VT \l__phdd_cmd_tl
+          {
+            \tl_set:Nx \l__phdd_cmd_tl { \tl_to_str:N \l__phdd_cmd_tl }
+            \bool_if:NT \g__phdd_cs_break_bool
+              {
+                % underscore is replaced with breakable underscore.
+                \regex_replace_all:nnN
+                  {([^\\])_([^\_])}
+                  {\1\c{BreakableUnderscore}\2}
+                  \l__phdd_cmd_tl
+              }
+          }
+        \tl_replace_all:Nnn \l__phdd_cmd_tl { ~ } { \@xobeysp }
+        \l__phdd_cmd_tl
+        \@
+      }
+    \bool_if:NF \l__phdd_cmd_noindex_bool
+      {
+        \quark_if_no_value:NF \l__phdd_cmd_index_tl
+          {
+            \tl_set:Nx \l__phdd_cmd_tl
+              { \c_backslash_str \exp_not:o { \l__phdd_cmd_index_tl } }
+          }
+
+        \exp_args:No \__phdd_key_get:n { \l__phdd_cmd_tl }
+        \quark_if_no_value:NF \l__phdd_cmd_module_tl
+          {
+            \tl_set:Nx \l__phdd_index_module_tl
+              { \tl_to_str:N \l__phdd_cmd_module_tl }
+          }
+        \__phdd_special_index_module:ooonN
+          { \l__phdd_index_key_tl }
+          { \l__phdd_index_macro_tl }
+          { \l__phdd_index_module_tl }
+          { usage }
+          \l__phdd_index_internal_bool
+      }
+  }
+\cs_generate_variant:Nn \__phdd_cmd:nn { no }
+\cs_new_protected:Npn \__phdd_meta:n #1
+  {
+    \tl_set:Nn \l__phdd_tmpa_tl {#1}
+    \tl_map_inline:nn
+      { { 3 } { 4 } { 7 } { 8 } { 11 } { 12 } { 13 } }
+      {
+        \tl_set_rescan:Nnn \l__phdd_tmpb_tl
+          { \char_set_catcode:nn { `_ } {##1} } { _ }
+        \tl_replace_all:Non \l__phdd_tmpa_tl \l__phdd_tmpb_tl
+          { \__phdd_ensuremath_sb:n }
+      }
+    \exp_args:NV \__phdd_meta_original:n \l__phdd_tmpa_tl
+  }
+
+\cs_new_protected:Npn \__phdd_ensuremath_sb:n #1
+  { \ensuremath { \sb {#1} } }
+
+\cs_new_protected:Npn \__phdd_meta_original:n #1
+  {
+    \ensuremath \langle
+    \mode_if_math:T { \nfss@text }
+    {
+      \meta@font@select
+      \edef \meta@hyphen@restore
+        { \hyphenchar \the \font \the \hyphenchar \font }
+      \hyphenchar \font \m@ne
+      \language \l@nohyphenation
+      \color{themeta}#1 \/
+      \meta@hyphen@restore
+    }
+    \ensuremath \rangle
+  }
+\cs_new_protected:Npn \__phdd_typeset_exp: % check
+  { \hyperlink{expstar} {$\star$} }
+
+\cs_new_protected:Npn \__phdd_typeset_rexp:
+  { \hyperlink{rexpstar} {\ding{73}} } % hollow star
+
+\cs_new_protected:Npn \__phdd_typeset_TF:
+  {
+    \hyperlink{explTF}
+      {
+        \color{themacrocolor} % was black
+        \itshape TF
+        \makebox[0pt][r]
+          {
+            \color{red}
+            \underline { \phantom{\itshape TF} \kern-0.1em }
+          }
+      }
+  }
+\cs_new_protected:Npn \__phdd_typeset_aux:n #1
+  {
+    {
+    %\color[gray]{0.5}
+    %YL
+    \color{themacrocolor} #1
+    }
+  }
+\cs_new_protected:Npn \__phdd_get_hyper_target:nN #1#2
+  {
+    \tl_set:Nx #2 { \tl_to_str:n {#1} }
+    \tl_replace_all:Nxn #2 { \c_underscore_str } { / }
+    \tl_remove_all:Nx   #2 { \c_backslash_str }
+    \tl_put_left:Nn #2 { doc/function// }
+  }
+\cs_generate_variant:Nn \__phdd_get_hyper_target:nN { o , x }
+\cs_new_protected:Npn \__phdd_names_get_seq:nN #1#2
+  {
+    \tl_set:Nx \l__phdd_tmpa_tl { \tl_to_str:n {#1} }
+    \bool_if:NTF \l__phdd_names_verb_bool
+      {
+        \seq_clear:N #2
+        \seq_put_right:NV #2 \l__phdd_tmpa_tl
+      }
+      {
+        \tl_remove_all:Nx \l__phdd_tmpa_tl
+          { \iow_char:N \^^M \c_percent_str }
+        \tl_remove_all:Nx \l__phdd_tmpa_tl { \tl_to_str:n { ^ ^ A } }
+        \tl_remove_all:Nx \l__phdd_tmpa_tl { \iow_char:N \^^I }
+        \tl_remove_all:Nx \l__phdd_tmpa_tl { \iow_char:N \^^M }
+        \__phdd_detect_internals:N \l__phdd_tmpa_tl
+        \__phdd_replace_at_at:N \l__phdd_tmpa_tl
+        \exp_args:NNx \seq_set_from_clist:Nn #2
+          { \tl_to_str:N \l__phdd_tmpa_tl }
+      }
+  }
+\cs_new_protected:Npn \__phdd_names_parse:
+  {
+    \tl_clear:N \l__phdd_names_block_tl
+    \seq_map_function:NN
+      \l__phdd_names_seq
+      \__phdd_names_parse_one:n
+  }
+\cs_new_protected:Npn \__phdd_names_parse_one:n #1
+  {
+    \__phdd_split_function_do:nn {#1}
+      { \__phdd_names_parse_one_aux:nnNn }
+    {#1}
+  }
+\cs_new_protected:Npn \__phdd_names_parse_one_aux:nnNn #1#2#3#4
+  {
+    \bool_if:NTF #3
+      {
+        \tl_if_head_eq_charcode:nNTF {#2} :
+          { \__phdd_names_parse_aux:nnn {#4} {#4} { \scan_stop: } }
+          {
+            \exp_args:Nx \__phdd_names_parse_aux:nnn
+              { \__phdd_base_form_aux:nnN {#1} {#2} #3 }
+              {#1} {#2}
+          }
+      }
+      {
+        \bool_if:NT \l__phdd_macro_TF_bool
+          { \msg_error:nnx { l3doc } { no-signature-TF } {#4} }
+        \__phdd_names_parse_aux:nnn {#4} {#4} { \scan_stop: }
+      }
+  }
+\cs_new_protected:Npn \__phdd_names_parse_aux:nnn #1
+  { \exp_args:Nc \__phdd_names_parse_aux:Nnn { \__phdd_lseq_name:n {#1} } }
+\cs_new_protected:Npn \__phdd_names_parse_aux:Nnn #1#2#3
+  {
+    \tl_if_in:NnF \l__phdd_names_block_tl {#1}
+      {
+        \tl_put_right:Nn \l__phdd_names_block_tl {#1}
+        \seq_clear_new:N #1
+        \seq_put_right:Nn #1 {#2}
+      }
+    \seq_put_right:Nn #1 {#3}
+  }
+\cs_new_protected:Npn \__phdd_names_typeset:
+  {
+    \tl_map_function:NN \l__phdd_names_block_tl
+      \__phdd_names_typeset_auxi:n
+  }
+\cs_new_protected:Npn \__phdd_names_typeset_auxi:n #1
+  {
+    \seq_pop:NN #1 \l__phdd_tmpa_tl
+    \tl_gset_eq:NN \g__phdd_base_name_tl \l__phdd_tmpa_tl
+    \tl_greplace_all:Nno \g__phdd_base_name_tl
+      { ~ } { \c_catcode_other_space_tl }
+    \seq_get:NN #1 \l__phdd_tmpa_tl
+    \str_if_eq:VnTF \l__phdd_tmpa_tl { \scan_stop: }
+      {
+        \seq_gclear:N \g__phdd_variants_seq
+        \__phdd_names_typeset_auxii:x { \g__phdd_base_name_tl }
+      }
+      {
+        \seq_gset_eq:NN \g__phdd_variants_seq #1
+        \seq_gpop:NN \g__phdd_variants_seq \l__phdd_tmpb_tl
+        \__phdd_names_typeset_auxii:x
+          { \g__phdd_base_name_tl : \l__phdd_tmpb_tl }
+      }
+  }
+\cs_new_protected:Npn \__phdd_names_typeset_auxii:n #1
+  {
+    \bool_if:NT \l__phdd_macro_pTF_bool
+      {
+        \__phdd_names_typeset_block:xN
+          { \__phdd_predicate_from_base:n {#1} }
+          \c_false_bool
+      }
+    \bool_if:NT \l__phdd_macro_noTF_bool
+      { \__phdd_names_typeset_block:nN {#1} \c_false_bool }
+    \__phdd_names_typeset_block:nN {#1} \l__phdd_macro_TF_bool
+  }
+\cs_generate_variant:Nn \__phdd_names_typeset_auxii:n { x }
+\cs_new_protected:Npn \__phdd_names_typeset_block:nN
+  {
+    \int_compare:nNnTF \l__phdd_nested_macro_int = 0
+      { \__phdd_typeset_function_block:nN }
+      { \__phdd_macro_typeset_block:nN }
+  }
+\cs_generate_variant:Nn \__phdd_names_typeset_block:nN { x }
+\prg_new_conditional:Npnn \__phdd_if_macro_internal:n #1 { p , T , F , TF }
+  {
+    \bool_if:NTF \l__phdd_macro_internal_set_bool
+      {
+        \bool_if:NTF \l__phdd_macro_internal_bool
+          { \prg_return_true: } { \prg_return_false: }
+      }
+      {
+        \tl_if_empty:fTF
+          {
+            \exp_after:wN \__phdd_if_macro_internal_aux:w
+            \tl_to_str:n { #1 ~ __ }
+          }
+          { \prg_return_false: } { \prg_return_true: }
+      }
+  }
+\exp_last_unbraced:NNNNo
+  \cs_new:Npn \__phdd_if_macro_internal_aux:w #1 { \tl_to_str:n { __ } } { }
+\cs_new_protected:Npn \__phdd_names_block_base_map:N #1
+  {
+    \tl_map_inline:Nn \l__phdd_names_block_tl
+      {
+        \group_begin:
+          \seq_set_eq:NN \l__phdd_tmpa_seq ##1
+          \seq_pop:NN \l__phdd_tmpa_seq \l__phdd_tmpa_tl
+          \seq_get:NN \l__phdd_tmpa_seq \l__phdd_tmpb_tl
+          \exp_args:NNx
+        \group_end:
+        #1
+          {
+            \l__phdd_tmpa_tl
+            \str_if_eq:VnF \l__phdd_tmpb_tl { \scan_stop: }
+              { : \l__phdd_tmpb_tl }
+            \bool_if:NT \l__phdd_macro_TF_bool { TF }
+          }
+      }
+  }
+\keys_define:nn { l3doc/function }
+  {
+    TF .value_forbidden:n = true ,
+    TF .code:n =
+      {
+        \bool_set_true:N \l__phdd_macro_TF_bool
+      } ,
+    EXP .value_forbidden:n = true ,
+    EXP .code:n =
+      {
+        \bool_set_true:N \l__phdd_macro_EXP_bool
+        \bool_set_false:N \l__phdd_macro_rEXP_bool
+      } ,
+    rEXP .value_forbidden:n = true ,
+    rEXP .code:n =
+      {
+        \bool_set_false:N \l__phdd_macro_EXP_bool
+        \bool_set_true:N \l__phdd_macro_rEXP_bool
+      } ,
+    pTF .value_forbidden:n = true ,
+    pTF .code:n =
+      {
+        \bool_set_true:N \l__phdd_macro_pTF_bool
+        \bool_set_true:N \l__phdd_macro_TF_bool
+        \bool_set_true:N \l__phdd_macro_EXP_bool
+        \bool_set_false:N \l__phdd_macro_rEXP_bool
+      } ,
+    noTF .value_forbidden:n = true ,
+    noTF .code:n =
+      {
+        \bool_set_true:N \l__phdd_macro_noTF_bool
+        \bool_set_true:N \l__phdd_macro_TF_bool
+      } ,
+    added .code:n = { \__phdd_date_set:Nn \l__phdd_date_added_tl {#1} },
+    updated .code:n = { \__phdd_date_set:Nn \l__phdd_date_updated_tl {#1} } ,
+    deprecated .code:n = { \__phdd_deprecated_on:n {#1} } ,
+    tested .code:n = { } ,
+    label .code:n =
+      {
+        \clist_set:Nn \l__phdd_function_label_clist {#1}
+        \bool_set_true:N \l__phdd_no_label_bool
+      } ,
+    verb .value_forbidden:n = true ,
+    verb .bool_set:N = \l__phdd_names_verb_bool ,
+    module .tl_set:N = \l__phdd_override_module_tl ,
+  }
+\cs_new_protected:Npn \__phdd_date_set:Nn #1#2
+  {
+    \tl_set:Nn #1 {#2}
+    \regex_replace_once:nnNF
+      { \A(\d\d\d\d)[-/](\d\d?)[-/](\d\d?)\Z } { \1-\2-\3 } #1
+      {
+        \msg_error:nnn { !__phdd } { date-format } {#2}
+        \tl_set:Nn #1 { 1970-01-01 }
+      }
+  }
+\cs_new_protected:Npn \__phdd_deprecated_on:n #1
+  {
+    \__phdd_date_set:Nn \l__phdd_tmpa_tl {#1}
+    \exp_args:No \__phdd_date_compare:nNnT
+      { \l__phdd_tmpa_tl } < { \tex_year:D - \tex_month:D - \tex_day:D }
+      {
+        \msg_error:nnxx { l3doc } { deprecated-function }
+          { \tl_to_str:N \l__phdd_macro_argument_tl }
+          { \l__phdd_tmpa_tl }
+      }
+    \bool_set_true:N \l__phdd_macro_internal_bool
+    \bool_set_true:N \l__phdd_macro_internal_set_bool
+  }
+\cs_new_protected:Npn \__phdd_function:nnw #1#2
+  {
+    \__phdd_function_typeset_start:
+    \__phdd_function_init:
+    \tl_set:Nn \l__phdd_macro_argument_tl {#2}
+    \keys_set:nn { l3doc/function } {#1}
+    \__phdd_names_get_seq:nN {#2} \l__phdd_names_seq
+    \__phdd_names_parse:
+    \__phdd_function_typeset:
+    \__phdd_function_reset:
+    \__phdd_function_descr_start:w
+  }
+\cs_new_protected:Npn \__phdd_function_end:
+  {
+    \__phdd_function_descr_stop:
+    \__phdd_function_assemble:
+    \__phdd_function_typeset_stop:
+  }
+\cs_new_protected:Npn \__phdd_function_typeset_start:
+  {
+    \par \bigskip \noindent
+  }
+\cs_new_protected:Npn \__phdd_function_typeset_stop:
+  {
+    \par
+    \allowbreak
+  }
+\cs_new_protected:Npn \__phdd_function_init:
+  {
+    \box_if_empty:NF \g__phdd_syntax_box
+      { \msg_error:nn { l3doc } { syntax-nested-function } }
+    \coffin_clear:N \l__phdd_descr_coffin
+    \box_gclear:N \g__phdd_syntax_box
+    \coffin_clear:N \l__phdd_syntax_coffin
+    \coffin_clear:N \l__phdd_functions_coffin
+    \bool_set_false:N \l__phdd_macro_TF_bool
+    \bool_set_false:N \l__phdd_macro_pTF_bool
+    \bool_set_false:N \l__phdd_macro_noTF_bool
+    \bool_set_false:N \l__phdd_macro_EXP_bool
+    \bool_set_false:N \l__phdd_macro_rEXP_bool
+    \bool_set_false:N \l__phdd_no_label_bool
+    \bool_set_false:N \l__phdd_names_verb_bool
+    \bool_set_true:N \l__phdd_in_function_bool
+    \clist_clear:N \l__phdd_function_label_clist
+    \tl_set:Nn \l__phdd_override_module_tl { \q_no_value }
+    \char_set_active_eq:NN \< \__phdd_shorthand_meta:
+    \char_set_catcode_active:N \<
+  }
+\cs_new_protected:Npn \__phdd_shorthand_meta:
+  { \mode_if_math:TF { < } { \__phdd_shorthand_meta:w } }
+
+\cs_new_protected_nopar:Npn \__phdd_shorthand_meta:w #1 > { \meta {#1} }
+\cs_new_protected:Npn \__phdd_function_reset:
+  {
+    \tl_set:Nn \l__phdd_override_module_tl { \q_no_value }
+  }
+\cs_new_protected:Npn \__phdd_function_typeset:
+  {
+    \dim_zero:N \l__phdd_trial_width_dim
+    \hcoffin_set:Nn \l__phdd_functions_coffin { \__phdd_typeset_functions: }
+    \dim_set:Nn \l__phdd_trial_width_dim
+      { \box_wd:N \l__phdd_functions_coffin }
+    \bool_set:Nn \l__phdd_long_name_bool
+      { \dim_compare_p:nNn \l__phdd_trial_width_dim > \marginparwidth }
+  }
+\cs_new_protected:Npn \__phdd_function_descr_start:w
+  {
+    \vcoffin_set:Nnw \l__phdd_descr_coffin { \textwidth }
+      \noindent \ignorespaces
+  }
+\cs_new_protected:Npn \__phdd_function_descr_stop:
+  { \vcoffin_set_end: }
+\cs_new_protected:Npn \__phdd_function_assemble:
+  {
+    \hcoffin_set:Nn  \l__phdd_syntax_coffin
+      { \box_use_drop:N \g__phdd_syntax_box }
+    \bool_if:NTF \l__phdd_long_name_bool
+      {
+        \coffin_join:NnnNnnnn
+          \l__phdd_output_coffin {hc} {vc}
+          \l__phdd_syntax_coffin {l} {T}
+          {0pt} {0pt}
+        \coffin_join:NnnNnnnn
+          \l__phdd_output_coffin {l} {t}
+          \l__phdd_functions_coffin  {r} {t}
+          {-\marginparsep} {0pt}
+        \coffin_join:NnnNnnnn
+          \l__phdd_output_coffin {l} {b}
+          \l__phdd_descr_coffin  {l} {t}
+          {0.75\marginparwidth + \marginparsep} {-\medskipamount}
+        \coffin_typeset:Nnnnn \l__phdd_output_coffin
+          {\l__phdd_descr_coffin-l} {\l__phdd_descr_coffin-t}
+          {0pt} {0pt}
+      }
+      {
+        \coffin_join:NnnNnnnn
+          \l__phdd_output_coffin {hc} {vc}
+          \l__phdd_syntax_coffin {l} {t}
+          {0pt} {0pt}
+        \coffin_join:NnnNnnnn
+          \l__phdd_output_coffin {l} {b}
+          \l__phdd_descr_coffin  {l} {t}
+          {0pt} {-\medskipamount}
+        \coffin_join:NnnNnnnn
+          \l__phdd_output_coffin {l} {t}
+          \l__phdd_functions_coffin  {r} {t}
+          {-\marginparsep} {0pt}
+        \coffin_typeset:Nnnnn \l__phdd_output_coffin
+          {\l__phdd_syntax_coffin-l} {\l__phdd_syntax_coffin-T}
+          {0pt} {0pt}
+      }
+  }
+\cs_new_protected:Npn \__phdd_typeset_functions:
+  {
+    \small\ttfamily
+    \HD@savedestfalse
+    \HD@target
+    \Hy@MakeCurrentHref { HD. \int_use:N \c@HD@hypercount }
+    \renewcommand{\arraystretch}{1.6}
+    \begin{tabular} [b] { @{} l @{} >{\hspace{\tabcolsep}} r @{} }
+      \hline
+      \__phdd_function_extra_labels:
+      \__phdd_names_typeset:
+      \__phdd_typeset_dates:
+      \hline
+    \end{tabular}
+    \normalfont\normalsize
+  }
+\cs_new_protected:Npn \__phdd_typeset_function_block:nN #1#2
+  {
+    \__phdd_function_index:x
+      { #1 \bool_if:NT #2 { \tl_to_str:n {TF} } }
+    \__phdd_function_label:xN {#1} #2
+    #1
+    \bool_if:NT #2 { \__phdd_typeset_TF: }
+    \__phdd_typeset_expandability:
+    \seq_if_empty:NF \g__phdd_variants_seq
+      { \__phdd_typeset_variant_list:nN {#1} #2 }
+    \\
+  }
+\cs_generate_variant:Nn \__phdd_typeset_function_block:nN { x }
+\cs_new_protected:Npn \__phdd_function_index:n #1
+  {
+    \seq_gput_right:Nn \g_doc_functions_seq {#1}
+    \__phdd_special_index:nn {#1} { usage }
+  }
+\cs_generate_variant:Nn \__phdd_function_index:n { x }
+\cs_new_protected:Npn \__phdd_typeset_expandability:
+  {
+    &
+    \bool_if:NT \l__phdd_macro_EXP_bool  { \__phdd_typeset_exp: }
+    \bool_if:NT \l__phdd_macro_rEXP_bool { \__phdd_typeset_rexp: }
+  }
+\cs_new_protected:Npn \__phdd_typeset_variant_list:nN #1#2
+  {
+    \\
+    \__phdd_typeset_aux:n { \__phdd_get_function_name:n {#1} }
+    :
+    \int_compare:nTF { \seq_count:N \g__phdd_variants_seq == 1 }
+      { \seq_use:Nn \g__phdd_variants_seq { } }
+      {
+        \textrm(
+          \seq_use:Nn \g__phdd_variants_seq { \textrm| }
+        \textrm)
+      }
+    \bool_if:NT #2 { \__phdd_typeset_TF: }
+    \__phdd_typeset_expandability:
+  }
+\cs_new_protected:Npn \__phdd_function_extra_labels:
+  {
+    \bool_if:NT \l__phdd_no_label_bool
+      {
+        \clist_map_inline:Nn \l__phdd_function_label_clist
+          {
+            \__phdd_get_hyper_target:oN { \token_to_str:N ##1 }
+              \l__phdd_tmpa_tl
+            \exp_args:No \label { \l__phdd_tmpa_tl }
+          }
+      }
+  }
+\cs_new_protected:Npn \__phdd_function_label:nN #1#2
+  {
+    \bool_if:NF \l__phdd_no_label_bool
+      {
+        \__phdd_get_hyper_target:xN
+          {
+            \exp_not:n {#1}
+            \bool_if:NT #2 { \tl_to_str:n {TF} }
+          }
+          \l__phdd_tmpa_tl
+        \exp_args:No \label { \l__phdd_tmpa_tl }
+      }
+  }
+\cs_generate_variant:Nn \__phdd_function_label:nN { x }
+\cs_new:Npn \__phdd_typeset_dates:
+  {
+    \bool_lazy_and:nnF
+      { \tl_if_empty_p:N \l__phdd_date_added_tl }
+      { \tl_if_empty_p:N \l__phdd_date_updated_tl }
+      { \midrule }
+    \tl_if_empty:NF \l__phdd_date_added_tl
+      {
+        \multicolumn { 2 } { @{} r @{} }
+          { \scriptsize New: \, \l__phdd_date_added_tl } \\
+      }
+
+    \tl_if_empty:NF \l__phdd_date_updated_tl
+      {
+        \multicolumn { 2 } { @{} r @{} }
+          { \scriptsize Updated: \, \l__phdd_date_updated_tl } \\
+      }
+  }
+\dim_new:N \l__phdd_syntax_dim
+\cs_new_protected:Npn \__phdd_syntax:w
+  {
+    \box_if_empty:NF \g__phdd_syntax_box
+      { \msg_error:nn { l3doc } { multiple-syntax } }
+    \dim_set:Nn \l__phdd_syntax_dim
+      {
+        \textwidth
+        \bool_if:NT \l__phdd_long_name_bool
+          { + 0.75 \marginparwidth - \l__phdd_trial_width_dim }
+      }
+    \hbox_gset:Nw \g__phdd_syntax_box
+      \small \ttfamily
+      \arrayrulecolor{white}
+      \begin{tabular} { @{} l @{} }
+        \toprule
+        \begin{minipage}[t]{\l__phdd_syntax_dim}
+          \raggedright
+          \obeyspaces
+          \obeylines
+  }
+\cs_new_protected:Npn \__phdd_syntax_end:
+  {
+        \end{minipage}
+      \end{tabular}
+      \arrayrulecolor{black}
+    \hbox_gset_end:
+    \bool_if:NF \l__phdd_in_function_bool
+      {
+        \begin{quote}
+          \mode_leave_vertical:
+          \box_use_drop:N \g__phdd_syntax_box
+        \end{quote}
+      }
+  }
+\keys_define:nn { !__phdd/macro }
+  {
+    aux .value_forbidden:n = true ,
+    aux .code:n =
+      {
+        \msg_warning:nnnn { !__phdd } { deprecated-option }
+          { aux } { function/macro }
+      } ,
+    internal .value_forbidden:n = true ,
+    internal .code:n =
+      {
+        \bool_set_true:N \l__phdd_macro_internal_bool
+        \bool_set_true:N \l__phdd_macro_internal_set_bool
+      } ,
+    int .value_forbidden:n = true ,
+    int .code:n =
+      {
+        \bool_set_true:N \l__phdd_macro_internal_bool
+        \bool_set_true:N \l__phdd_macro_internal_set_bool
+      } ,
+    var .value_forbidden:n = true ,
+    var .code:n =
+      { \bool_set_true:N \l__phdd_macro_var_bool } ,
+    TF .value_forbidden:n = true ,
+    TF .code:n =
+      { \bool_set_true:N \l__phdd_macro_TF_bool } ,
+    pTF .value_forbidden:n = true ,
+    pTF .code:n =
+      {
+        \bool_set_true:N \l__phdd_macro_TF_bool
+        \bool_set_true:N \l__phdd_macro_pTF_bool
+        \bool_set_true:N \l__phdd_macro_EXP_bool
+        \bool_set_false:N \l__phdd_macro_rEXP_bool
+      } ,
+    noTF .value_forbidden:n = true ,
+    noTF .code:n =
+      {
+        \bool_set_true:N \l__phdd_macro_TF_bool
+        \bool_set_true:N \l__phdd_macro_noTF_bool
+      } ,
+    EXP .value_forbidden:n = true ,
+    EXP .code:n =
+      {
+        \bool_set_true:N \l__phdd_macro_EXP_bool
+        \bool_set_false:N \l__phdd_macro_rEXP_bool
+      } ,
+    rEXP .value_forbidden:n = true ,
+    rEXP .code:n =
+      {
+        \bool_set_false:N \l__phdd_macro_EXP_bool
+        \bool_set_true:N \l__phdd_macro_rEXP_bool
+      } ,
+    tested .code:n =
+      {
+        \bool_set_true:N \l__phdd_macro_tested_bool
+      } ,
+    added .code:n = {} , % TODO
+    updated .code:n = {} , % TODO
+    deprecated .code:n = { \__phdd_deprecated_on:n {#1} } ,
+    verb .bool_set:N = \l__phdd_names_verb_bool ,
+    module .tl_set:N = \l__phdd_override_module_tl ,
+    documented-as .tl_set:N = \l__phdd_macro_documented_tl ,
+  }
+\cs_new_protected:Npn \__phdd_macro:nnw #1#2
+  {
+    \__phdd_macro_init:
+    \tl_set:Nn \l__phdd_macro_argument_tl {#2}
+    \keys_set:nn { !__phdd/macro } {#1}
+    \__phdd_names_get_seq:nN {#2} \l__phdd_names_seq
+    \__phdd_names_parse:
+    \__phdd_macro_save_names:
+    \__phdd_names_typeset:
+    \__phdd_macro_dump:
+    \__phdd_macro_reset:
+  }
+\cs_new_protected:Npn \__phdd_macro_init:
+  {
+    \int_incr:N \l__phdd_nested_macro_int
+    \bool_set_false:N \l__phdd_macro_internal_bool
+    \bool_set_false:N \l__phdd_macro_internal_set_bool
+    \bool_set_false:N \l__phdd_macro_TF_bool
+    \bool_set_false:N \l__phdd_macro_pTF_bool
+    \bool_set_false:N \l__phdd_macro_noTF_bool
+    \bool_set_false:N \l__phdd_macro_EXP_bool
+    \bool_set_false:N \l__phdd_macro_rEXP_bool
+    \bool_set_false:N \l__phdd_macro_var_bool
+    \bool_set_false:N \l__phdd_macro_tested_bool
+    \bool_set_false:N \l__phdd_names_verb_bool
+    \tl_set:Nn \l__phdd_override_module_tl { \q_no_value }
+    \tl_clear:N \l__phdd_macro_documented_tl
+    \cs_set_eq:NN \testfile \__phdd_print_testfile:n
+    \box_clear:N \l__phdd_macro_index_box
+    \vbox_set:Nn \l__phdd_macro_box
+      {
+        \hbox:n
+          {
+            \strut
+            \int_compare:nNnT \l__phdd_macro_int = 0
+              { \HD@target }
+          }
+        \vskip \int_eval:n { \l__phdd_macro_int - 1 } \baselineskip
+      }
+  }
+\cs_new_protected:Npn \__phdd_macro_reset:
+  {
+    \tl_set:Nn \l__phdd_override_module_tl { \q_no_value }
+  }
+\cs_new_protected:Npn \__phdd_macro_save_names:
+  {
+    \tl_if_empty:NTF \l__phdd_macro_documented_tl
+      { \__phdd_names_block_base_map:N \__phdd_macro_save_names_aux:n }
+      {
+        \seq_gput_right:Nf \g__phdd_nested_names_seq
+          { \exp_after:wN \token_to_str:N \l__phdd_macro_documented_tl }
+      }
+  }
+\cs_new_protected:Npn \__phdd_macro_save_names_aux:n #1
+  { \seq_gput_right:Nn \g__phdd_nested_names_seq {#1} }
+\cs_new_protected:Npn \__phdd_macro_dump:
+  {
+    \topsep\MacroTopsep
+    \trivlist
+    \cs_set:Npn \makelabel ##1
+      {
+        \llap
+          {
+            \hbox_unpack_clear:N \l__phdd_macro_index_box
+            \vtop to \baselineskip
+              {
+                \vbox_unpack_clear:N \l__phdd_macro_box
+                \vss
+              }
+          }
+      }
+    \item [ ]
+  }
+\cs_new_protected:Npn \__phdd_macro_typeset_block:nN #1#2
+  {
+    \__phdd_macro_single:nNN {#1} \c_true_bool #2
+    \seq_if_empty:NF \g__phdd_variants_seq
+      {
+        \__phdd_macro_typeset_variant_list:xN
+          { \__phdd_get_function_name:n {#1} } #2
+      }
+  }
+\cs_generate_variant:Nn \__phdd_macro_typeset_block:nN { x }
+\cs_new_protected:Npn \__phdd_macro_typeset_variant_list:nN #1#2
+  {
+    \seq_map_inline:Nn \g__phdd_variants_seq
+      { \__phdd_macro_single:nNN { #1 : ##1 } \c_false_bool #2 }
+  }
+\cs_generate_variant:Nn \__phdd_macro_typeset_variant_list:nN { x }
+\cs_new_protected:Npn \__phdd_macro_single:nNN #1#2#3
+  {
+    \tl_set:Nn \saved@macroname {#1}
+    \__phdd_macro_typeset_one:nN {#1} #3
+    \bool_if:NT #3 { \DoNotIndex {#1} }
+    \exp_args:Nx \__phdd_macro_index:nN
+      { #1 \bool_if:NT #3 { \tl_to_str:n { TF } } }
+      #2
+  }
+\cs_new_protected:Npn \__phdd_macro_index:nN #1#2
+  {
+    \DoNotIndex {#1}
+    \bool_if:NT #2
+      {
+        \__phdd_if_macro_internal:nF {#1}
+          { \seq_gput_right:Nn \g_doc_macros_seq {#1} }
+        \hbox_set:Nw \l__phdd_macro_index_box
+          \hbox_unpack_clear:N \l__phdd_macro_index_box
+          \int_gincr:N \c@CodelineNo
+          \__phdd_special_index:nn {#1} { main }
+          \int_gdecr:N \c@CodelineNo
+        \exp_args:NNNo \hbox_set_end:
+          \tl_set:Nn \saved@indexname { \l__phdd_index_key_tl }
+      }
+  }
+\cs_new_protected:Npn \__phdd_macro_typeset_one:nN #1#2
+  {
+    \vbox_set:Nn \l__phdd_macro_box
+      {
+        \vbox_unpack_clear:N \l__phdd_macro_box
+        % YL added 15pt if used in conjuction with listings to avoid overlapping
+        % still probelms lining up with codeline. Need to hack doc or doc-v3.
+        \hbox { \llap { \__phdd_print_macroname:nN {#1} #2 \space}\space\space\space\space }
+      }
+    \int_incr:N \l__phdd_macro_int
+  }
+\cs_new_protected:Npn \__phdd_print_macroname:nN #1#2
+  {
+    \strut
+    \__phdd_get_hyper_target:xN
+      {
+        \exp_not:n {#1}
+        \bool_if:NT #2 { \tl_to_str:n {TF} }
+      }
+      \l__phdd_tmpa_tl
+    \cs_if_exist:cTF { r@ \l__phdd_tmpa_tl }
+      { \exp_last_unbraced:NNo \hyperref [ \l__phdd_tmpa_tl ] }
+      { \use:n }
+      {
+        \int_compare:nTF { \str_count:n {#1} <= 28 }
+          { \MacroFont } {\MacroFont} %{ \MacroLongFont }
+        \tl_set:Nn \l__phdd_tmpa_tl {#1}
+        \tl_replace_all:Nno \l__phdd_tmpa_tl
+          { ~ } { \c_catcode_other_space_tl }
+        \__phdd_macroname_prefix:o \l__phdd_tmpa_tl
+        \__phdd_macroname_suffix:N #2
+      }
+  }
+\cs_new_protected:Npn \__phdd_macroname_prefix:n #1
+  {
+    \__phdd_if_macro_internal:nTF {#1}
+      { \__phdd_typeset_aux:n {#1} } {#1}
+  }
+\cs_generate_variant:Nn \__phdd_macroname_prefix:n { o }
+\cs_new_protected:Npn \__phdd_macroname_suffix:N #1
+  { \bool_if:NTF #1 { \__phdd_typeset_TF: } { } }
+\providecommand \MacroLongFont
+  {
+    \fontfamily{lmtt}\fontseries{lc}\small
+  }
+\cs_new_protected:Npn \__phdd_print_testfile:n #1
+  {
+    \bool_set_true:N \l__phdd_macro_tested_bool
+    \tl_if_eq:nnF {#1} {*}
+      {
+        \seq_if_in:NnF \g__phdd_testfiles_seq {#1}
+          {
+            \seq_gput_right:Nn \g__phdd_testfiles_seq {#1}
+            \par
+            \__phdd_print_testfile_aux:n {#1}
+          }
+      }
+  }
+\cs_new_protected:Npn \__phdd_print_testfile_aux:n #1
+  {
+    \footnotesize
+    (
+    \textit
+      {
+        The~ test~ suite~ for~ this~ command,~
+        and~ others~ in~ this~ file,~ is~ \textsf{#1}
+      }.
+    )\par
+  }
+\DeclareDocumentCommand \TestFiles {m}
+  {
+    \par
+    \textit
+      {
+        The~ following~ test~ files~ are~
+        used~ for~ this~ code:~ \textsf{#1}.
+      }
+    \par \ignorespaces
+  }
+\DeclareDocumentCommand \UnitTested { } { \testfile* }
+\DeclareDocumentCommand \TestMissing { m }
+  { \__phdd_test_missing:n {#1} }
+\cs_new_protected:Npn \__phdd_test_missing:n #1
+  {
+    \__phdd_test_missing_aux:Nxn
+      \g__phdd_missing_tests_prop
+      { \seq_use:Nn \l__phdd_names_seq { , } }
+      { { \g_file_curr_name_str \c_space_tl (#1) } }
+  }
+\cs_new_protected:Npn \__phdd_test_missing_aux:Nnn #1#2#3
+  {
+    \prop_get:NnNTF #1 {#2} \l__phdd_tmpa_tl
+      { \tl_put_right:Nn \l__phdd_tmpa_tl { , #3 } }
+      { \tl_set:Nn \l__phdd_tmpa_tl {#3} }
+    \prop_put:Nno #1 {#2} \l__phdd_tmpa_tl
+  }
+\cs_generate_variant:Nn \__phdd_test_missing_aux:Nnn { Nx }
+\cs_new_protected:Npn \__phdd_macro_end:
+  {
+    \endtrivlist
+    \__phdd_macro_end_check_tested:
+    \int_compare:nNnT \l__phdd_nested_macro_int = 1
+      { \__phdd_macro_end_style:n { \__phdd_print_end_definition: } }
+  }
+\cs_new_protected:Npn \__phdd_macro_end_check_tested:
+  {
+    \bool_lazy_all:nT
+     {
+       { \g__phdd_checktest_bool }
+       { ! \l__phdd_macro_var_bool }
+       { ! \l__phdd_macro_tested_bool }
+     }
+     {
+       \seq_set_filter:NNn \l__phdd_tmpa_seq \l__phdd_names_seq
+         { ! \__phdd_if_macro_internal_p:n {##1} }
+       \seq_gput_right:Nx \g__phdd_not_tested_seq
+         {
+           \seq_use:Nn \l__phdd_tmpa_seq { , }
+           \bool_if:NTF \l__phdd_macro_pTF_bool {~(pTF)}
+             { \bool_if:NT \l__phdd_macro_TF_bool {~(TF)} }
+         }
+     }
+  }
+\cs_new_protected:Npn \__phdd_macro_end_style:n #1
+  {
+    \nobreak \noindent
+    { \footnotesize ( \emph{#1} ) \par }
+  }
+\cs_new_protected:Npn \__phdd_macro_end_wrap_item:n #1
+  {
+    \tl_set:Nn \l__phdd_tmpa_tl {#1}
+    \tl_replace_all:Non \l__phdd_tmpa_tl
+      { \token_to_str:N _ } { \_ }
+    \texttt { \l__phdd_tmpa_tl }
+  }
+\cs_new_protected:Npn \__phdd_print_end_definition:
+  {
+    \seq_set_map:NNn \l__phdd_tmpa_seq
+      \g__phdd_nested_names_seq
+      { \exp_not:n { \__phdd_macro_end_wrap_item:n {##1} } }
+    End~ definition~ for~
+    \int_compare:nTF { \seq_count:N \l__phdd_tmpa_seq <= 3 }
+      {
+        \seq_use:Nnnn \l__phdd_tmpa_seq
+          { \,~and~ } { \,,~ } { \,,~and~ }
+      }
+      { \seq_item:Nn \l__phdd_tmpa_seq {1}\,~and~others }
+    \@.
+    \__phdd_print_documented:
+  }
+\cs_new_protected:Npn \__phdd_print_documented:
+  {
+    \seq_gset_filter:NNn \g__phdd_nested_names_seq
+      \g__phdd_nested_names_seq
+      { ! \__phdd_if_macro_internal_p:n {##1} }
+
+    \seq_if_empty:NF \g__phdd_nested_names_seq
+      {
+        \int_set:Nn \l__phdd_tmpa_int
+          { \seq_count:N \g__phdd_nested_names_seq }
+        %\int_compare:nNnTF \l__phdd_tmpa_int = 1 {~This~} {~These~}
+        %\bool_if:NTF \l__phdd_macro_var_bool {variable} {function}
+        % add switch for this
+
+      }
+    \seq_gclear:N \g__phdd_nested_names_seq
+  }
+\newcommand*{\DescribeOption}
+  {
+    \leavevmode
+    \@bsphack
+    \begingroup
+      \MakePrivateLetters
+      \Describe@Option
+  }
+\newcommand*{\Describe@Option}[1]
+  {
+    \endgroup
+    \marginpar{
+      \raggedleft
+      \PrintDescribeEnv{#1}
+    }
+    \SpecialOptionIndex{#1}
+    \@esphack
+    \ignorespaces
+  }
+\newcommand*{\SpecialOptionIndex}[1]
+  {
+    \@bsphack
+    \begingroup
+      \HD@target
+      \let\HDorg@encapchar\encapchar
+      \edef\encapchar usage
+        {
+          \HDorg@encapchar hdclindex{\the\c@HD@hypercount}{usage}
+        }
+      \index
+        {
+          #1\actualchar{\protect\ttfamily#1}~(option)
+          \encapchar usage
+        }
+      \index
+        {
+          options:\levelchar#1\actualchar{\protect\ttfamily#1}
+          \encapchar usage
+        }
+    \endgroup
+    \@esphack
+  }
+\font \manual = manfnt \scan_stop:
+\cs_gset:Npn \dbend { {\manual\char127} }
+\newenvironment{TemplateInterfaceDescription}[1]
+  {
+    \subsection{The~object~type~`#1'}
+    \begingroup
+    \@beginparpenalty\@M
+    \description
+    \def\TemplateArgument##1##2{\item[Arg:~##1]##2\par}
+    \def\TemplateSemantics
+      {
+        \enddescription\endgroup
+        \subsubsection*{Semantics:}
+      }
+  }
+  {
+    \par\bigskip
+  }
+\newenvironment{TemplateDescription}[2]
+  {
+    \subsection{The~template~`#2'~(object~type~#1)}
+    \subsubsection*{Attributes:}
+    \begingroup
+    \@beginparpenalty\@M
+    \description
+    \def\TemplateKey##1##2##3##4
+      {
+        \item[##1~(##2)]##3%
+        \ifx\TemplateKey##4\TemplateKey\else
+          \hfill\penalty500\hbox{}\hfill Default:~##4%
+          \nobreak\hskip-\parfillskip\hskip0pt\relax
+        \fi
+        \par
+      }
+    \def\TemplateSemantics
+      {
+        \enddescription\endgroup
+        \subsubsection*{Semantics~\&~Comments:}
+      }
+  }
+  { \par \bigskip }
+\newenvironment{InstanceDescription}[4][xxxxxxxxxxxxxxx]
+  {
+    \subsubsection{The~instance~`#3'~(template~#2/#4)}
+    \subsubsection*{Attribute~values:}
+    \begingroup
+    \@beginparpenalty\@M
+    \def\InstanceKey##1##2{\>\textbf{##1}\>##2\\}
+    \def\InstanceSemantics{\endtabbing\endgroup
+      \vskip-30pt\vskip0pt
+      \subsubsection*{Layout~description~\&~Comments:}}
+    \tabbing
+    xxxx\=#1\=\kill
+  }
+  { \par \bigskip }
+\DeclareDocumentCommand \OnlyDescription { }
+  { \bool_gset_false:N \g__phdd_typeset_implementation_bool }
+
+\DeclareDocumentCommand \AlsoImplementation { }
+  { \bool_gset_true:N \g__phdd_typeset_implementation_bool }
+
+\DeclareDocumentCommand \StopEventually { m }
+  {
+    \bool_if:NTF \g__phdd_typeset_implementation_bool
+      {
+        \@bsphack
+        \tl_gset:Nn \g__phdd_finale_tl { #1 \check@checksum }
+        \init@checksum
+        \@esphack
+      }
+      { #1 \endinput }
+  }
+
+\DeclareDocumentCommand \Finale { }
+  { \tl_use:N \g__phdd_finale_tl }
+\tl_new:N \g__phdd_finale_tl
+\cs_new_protected:Npn \__phdd_input:n #1
+  {
+    \tl_gclear:N \g__phdd_module_name_tl
+    \MakePercentIgnore
+    \input{#1}
+    \MakePercentComment
+  }
+
+\DeclareDocumentCommand \DocInput { m }
+  {
+    \clist_map_inline:nn {#1}
+      {
+        \clist_put_right:Nn \g_docinput_clist {##1}
+        \__phdd_input:n {##1}
+      }
+  }
+\DeclareDocumentCommand \DocInputAgain { }
+  { \clist_map_function:NN \g_docinput_clist \__phdd_input:n }
+\DeclareDocumentCommand \DocInclude { m }
+  {
+    \relax\clearpage
+    \docincludeaux
+    \IfFileExists{#1.fdd}
+      { \cs_set:Npn \currentfile{#1.fdd} }
+      { \cs_set:Npn \currentfile{#1.dtx} }
+    \int_compare:nNnTF \@auxout = \@partaux
+      { \@latexerr{\string\include\space cannot~be~nested}\@eha }
+      { \@docinclude #1 }
+  }
+\cs_gset:Npn \@docinclude #1
+  {
+    \clearpage
+    \immediate\write\@mainaux{\string\@input{#1.aux}}
+    \@tempswatrue
+    \if@partsw
+      \@tempswafalse
+      \cs_set:Npx \@tempb{#1}
+      \@for\@tempa:=\@partlist\do
+        {
+          \ifx\@tempa\@tempb\@tempswatrue\fi
+        }
+    \fi
+    \if@tempswa
+      \cs_set_eq:NN \@auxout                 \@partaux
+      \immediate\openout\@partaux #1.aux
+      \immediate\write\@partaux{\relax}
+      \cs_set_eq:NN \@ltxdoc@PrintIndex      \PrintIndex
+      \cs_set_eq:NN \PrintIndex              \relax
+      \cs_set_eq:NN \@ltxdoc@PrintChanges    \PrintChanges
+      \cs_set_eq:NN \PrintChanges            \relax
+      \cs_set_eq:NN \@ltxdoc@theglossary     \theglossary
+      \cs_set_eq:NN \@ltxdoc@endtheglossary  \endtheglossary
+      \part{\currentfile}
+      {
+        \cs_set_eq:NN \ttfamily\relax
+        \cs_gset:Npx \filekey
+          { \filekey, \thepart = { \ttfamily \currentfile } }
+      }
+      \DocInput{\currentfile}
+      \cs_set_eq:NN \PrintIndex              \@ltxdoc@PrintIndex
+      \cs_set_eq:NN \PrintChanges            \@ltxdoc@PrintChanges
+      \cs_set_eq:NN \theglossary             \@ltxdoc@theglossary
+      \cs_set_eq:NN \endtheglossary          \@ltxdoc@endtheglossary
+      \clearpage
+      \@writeckpt{#1}
+      \immediate \closeout \@partaux
+    \else
+      \@nameuse{cp@#1}
+    \fi
+    \cs_set_eq:NN \@auxout \@mainaux
+  }
+\cs_gset:Npn \codeline@wrindex #1
+  {
+    \immediate\write\@indexfile
+      {
+        \string\indexentry{#1}
+          { \filesep \int_use:N \c@CodelineNo }
+      }
+  }
+\tl_gclear:N \filesep
+\cs_gset:Npn \docincludeaux
+  {
+    \tl_set:Nn \thepart { \alphalph { part } }
+    \tl_set:Nn \filesep { \thepart - }
+    \cs_set_eq:NN \filekey \use_none:n
+    \tl_gput_right:Nn \index@prologue
+      {
+        \cs_gset:Npn \@oddfoot
+          {
+            \parbox { \textwidth }
+              {
+                \strut \footnotesize
+                \raggedright { \bfseries File~Key: } ~ \filekey
+              }
+          }
+        \cs_set_eq:NN \@evenfoot \@oddfoot
+      }
+    \cs_gset_eq:NN \docincludeaux \relax
+    \cs_gset:Npn \@oddfoot
+      {
+        \cs_if_exist:cTF { ver @ \currentfile }
+          { File~\thepart :~{\ttfamily\currentfile}~ }
+          {
+            \GetFileInfo{\currentfile}
+            File~\thepart :~{\ttfamily\filename}~
+            Date:~\ExplFileDate\ % space
+            Version~\ExplFileVersion
+          }
+        \hfill \thepage
+      }
+    \cs_set_eq:NN \@evenfoot \@oddfoot
+  }
+\RequirePackage{colorize}
+
+\ExplSyntaxOn
+\group_begin:
+  \char_set_catcode_other:N \^^A
+  \char_set_catcode_active:N \^^S
+  \char_set_catcode_active:N \^^B
+  \char_set_catcode_other:N \^^L
+  \char_set_catcode_other:N \^^R
+  \char_set_lccode:nn { `\^^A } { `\% }
+  \char_set_lccode:nn { `\^^S } { `\  }
+  \char_set_lccode:nn { `\^^B } { `\\ }
+  \char_set_lccode:nn { `\^^L } { `\{ }
+  \char_set_lccode:nn { `\^^R } { `\} }
+  \tex_lowercase:D
+    {
+      \group_end:
+      \cs_set_protected:Npn \xmacro@code #1 ^^A ^^S^^S^^S^^S ^^Bend ^^Lmacrocode^^R
+        {\__phdd_xmacro_code:n {#1} \end{macrocode} }
+    }
+
+\group_begin:
+  \bool_set_false:N \phdd_code_colorize_bool
+  \char_set_catcode_active:N \<
+  \char_set_catcode_active:N \>
+  \cs_new_protected:Npn \__phdd_xmacro_code:n #1
+    {
+      \tl_if_in:nnTF {#1} { < @ @ = }
+        { \__phdd_xmacro_code:w #1 \q_stop }
+        {
+          \tl_if_in:nnTF {#1} { < nocolor }
+          {
+            \bool_set_false:N \phdd_code_colorize_bool
+            \tl_gset:Nn \l__phdd_store_tl {#1}
+            \__phdd_detect_internals:N \l__phdd_store_tl
+            \__phdd_replace_at_at:N \l__phdd_store_tl
+            % Call the pretty printer or skip
+
+            \bool_if:NTF \phdd_code_colorize_bool
+              {
+                \listings_code
+                \tl_use:N \l__phdd_store_tl
+              }
+            {#1}
+
+          }
+          {
+            \tl_gset:Nn \l__phdd_store_tl {#1}
+            \__phdd_detect_internals:N \l__phdd_store_tl
+            \__phdd_replace_at_at:N \l__phdd_store_tl
+            % Call the pretty printer or skip
+
+            \bool_if:NTF \phdd_code_colorize_bool
+              {
+                \listings_code
+                \tl_use:N \l__phdd_store_tl
+              }
+            {
+             \tl_use:N \l__phdd_store_tl
+
+           % #1
+            }
+          }
+        }
+
+
+    }
+
+  \cs_new_protected:Npn \__phdd_xmacro_code:w #1 < @ @ = #2 > #3 \q_stop
+    {
+      \tl_set:Nn \l__phdd_tmpa_tl {#1}
+      \__phdd_detect_internals:N \l__phdd_tmpa_tl
+      \__phdd_replace_at_at:N \l__phdd_tmpa_tl
+
+      \tl_gset:Nn \g__phdd_module_name_tl {#2}
+      \tl_put_right:Nn \l__phdd_tmpa_tl { < @ @ = #2 > }
+
+      \tl_set:Nn \l__phdd_tmpb_tl {#3}
+      \__phdd_detect_internals:N \l__phdd_tmpb_tl
+      \__phdd_replace_at_at:N \l__phdd_tmpb_tl
+      \tl_put_right:No \l__phdd_tmpa_tl { \l__phdd_tmpb_tl }
+      \tl_use:N \l__phdd_tmpa_tl
+    }
+
+\group_end:
+\iow_new:N \g__phdd_func_iow
+\tl_new:N \l__phdd_doc_def_tl
+\tl_new:N \l__phdd_doc_undef_tl
+\tl_new:N \l__phdd_undoc_def_tl
+\cs_new_protected:Npn \__phdd_show_functions_defined:
+  {
+    \bool_lazy_and:nnT
+      { \g__phdd_typeset_implementation_bool } { \g__phdd_checkfunc_bool }
+      {
+        \iow_term:x { \c__phdd_iow_separator_tl \iow_newline: }
+        \iow_open:Nn \g__phdd_func_iow { \c_sys_jobname_str .cmds }
+
+        \tl_clear:N \l__phdd_doc_def_tl
+        \tl_clear:N \l__phdd_doc_undef_tl
+        \tl_clear:N \l__phdd_undoc_def_tl
+        \seq_map_inline:Nn \g_doc_functions_seq
+          {
+            \seq_if_in:NnTF \g_doc_macros_seq {##1}
+              {
+                \tl_put_right:Nx \l__phdd_doc_def_tl
+                  { ##1 \iow_newline: }
+                \iow_now:Nn \g__phdd_func_iow { > ~ ##1 }
+              }
+              {
+                \tl_put_right:Nx \l__phdd_doc_undef_tl
+                  { ##1 \iow_newline: }
+                \iow_now:Nn \g__phdd_func_iow { ! ~ ##1 }
+              }
+          }
+        \seq_map_inline:Nn \g_doc_macros_seq
+          {
+            \seq_if_in:NnF \g_doc_functions_seq {##1}
+              {
+                \tl_put_right:Nx \l__phdd_undoc_def_tl
+                  { ##1 \iow_newline: }
+                \iow_now:Nn \g__phdd_func_iow { ? ~ ##1 }
+              }
+          }
+        \__phdd_functions_typeout:nN
+          {
+            Functions~both~documented~and~defined: \iow_newline:
+            (In~order~of~being~documented)
+          }
+          \l__phdd_doc_def_tl
+        \__phdd_functions_typeout:nN
+          { Functions~documented~but~not~defined: }
+          \l__phdd_doc_undef_tl
+        \__phdd_functions_typeout:nN
+          { Functions~defined~but~not~documented: }
+          \l__phdd_undoc_def_tl
+
+        \iow_close:N \g__phdd_func_iow
+        \iow_term:x { \c__phdd_iow_separator_tl }
+      }
+  }
+\AtEndDocument { \__phdd_show_functions_defined: }
+\cs_new_protected:Npn \__phdd_functions_typeout:nN #1#2
+  {
+    \tl_if_empty:NF #2
+      {
+        \typeout
+          {
+            \c__phdd_iow_midrule_tl \iow_newline:
+            #1 \iow_newline:
+            \c__phdd_iow_midrule_tl \iow_newline:
+            #2
+          }
+        \tl_clear:N #2
+      }
+  }
+\cs_new_protected:Npn \__phdd_show_not_tested:
+  {
+    \bool_if:NT \g__phdd_checktest_bool
+      {
+        \tl_clear:N \l__phdd_tmpa_tl
+        \prop_if_empty:NF \g__phdd_missing_tests_prop
+          {
+            \cs_set:Npn \__phdd_tmpa:w ##1##2
+              {
+                \iow_newline:
+                \space\space\space\space \exp_not:n {##1}
+                \clist_map_function:nN {##2} \__phdd_tmpb:w
+              }
+            \cs_set:Npn \__phdd_tmpb:w ##1
+              {
+                \iow_newline:
+                \space\space\space\space\space\space * ~ ##1
+              }
+            \tl_put_right:Nx \l__phdd_tmpa_tl
+              {
+                \iow_newline: \iow_newline:
+                The~ following~ macro(s)~ have~ incomplete~ tests:
+                \iow_newline:
+                \prop_map_function:NN
+                  \g__phdd_missing_tests_prop \__phdd_tmpa:w
+              }
+          }
+        \seq_if_empty:NF \g__phdd_not_tested_seq
+          {
+            \cs_set:Npn \__phdd_tmpa:w ##1
+              { \clist_map_function:nN {##1} \__phdd_tmpb:w }
+            \cs_set:Npn \__phdd_tmpb:w ##1
+              {
+                \iow_newline:
+                \space\space\space\space ##1
+              }
+            \tl_put_right:Nx \l__phdd_tmpa_tl
+              {
+                \iow_newline:
+                \iow_newline:
+                The~ following~ macro(s)~ do~ not~ have~ any~ tests:
+                \iow_newline:
+                \seq_map_function:NN
+                  \g__phdd_not_tested_seq \__phdd_tmpa:w
+              }
+          }
+        \tl_if_empty:NF \l__phdd_tmpa_tl
+          {
+            \int_set:Nn \l__phdd_tmpa_int { \tex_interactionmode:D }
+            \errorstopmode
+            \ClassError { l3doc } { \l__phdd_tmpa_tl } { }
+            \int_set:Nn \tex_interactionmode:D { \l__phdd_tmpa_int }
+          }
+      }
+  }
+\AtEndDocument { \__phdd_show_not_tested: }
+\g@addto@macro \theindex { \MakePrivateLetters }
+\cs_gset:Npn \verbatimchar {&}
+\setcounter { IndexColumns } { 2 }
+\IndexPrologue
+  {
+    \part*{Index}
+    \markboth{Index}{Index}
+    \addcontentsline{toc}{part}{Index}
+    The~italic~numbers~denote~the~pages~where~the~
+    corresponding~entry~is~described,~
+    numbers~underlined~point~to~the~definition,~
+    all~others~indicate~the~places~where~it~is~used.
+  }
+\cs_gset_protected:Npn \SpecialIndex #1
+  {
+    \@bsphack
+    \__phdd_special_index:nn {#1} { }
+    \@esphack
+  }
+\msg_new:nnn { l3doc } { print-index-howto }
+  {
+    Generate~the~index~by~executing\\
+    \iow_indent:n
+      { makeindex~-s~gind.ist~-o~\c_sys_jobname_str.ind~\c_sys_jobname_str.idx }
+  }
+\tl_gput_right:Nn \PrintIndex
+  { \AtEndDocument { \msg_info:nn { l3doc } { print-index-howto } } }
+\cs_gset_protected:Npn \it@is@a #1
+  {
+    \use:x
+      {
+        \__phdd_special_index_module:nnnnN
+          {#1}
+          { \bslash #1 }
+          { }
+          { }
+          \c_false_bool
+      }
+  }
+\cs_new_protected:Npn \__phdd_special_index:nn #1#2
+  {
+    \__phdd_key_get:n {#1}
+    \quark_if_no_value:NF \l__phdd_override_module_tl
+      { \tl_set_eq:NN \l__phdd_index_module_tl \l__phdd_override_module_tl }
+    \__phdd_special_index_module:ooonN
+      { \l__phdd_index_key_tl }
+      { \l__phdd_index_macro_tl }
+      { \l__phdd_index_module_tl }
+      {#2}
+      \l__phdd_index_internal_bool
+  }
+\cs_generate_variant:Nn \__phdd_special_index:nn { o }
+\tl_new:N \l__phdd_index_escaped_macro_tl
+\tl_new:N \l__phdd_index_escaped_key_tl
+\cs_new_protected:Npn \__phdd_special_index_module:nnnnN #1#2#3#4#5
+  {
+    \use:x
+      {
+        \exp_not:n { \__phdd_special_index_aux:nnnnnn {#1} {#2} }
+          \tl_if_empty:nTF {#3}
+            { { } { } { } }
+            {
+              \str_if_eq:nnTF {#3} { TeX }
+                {
+                  { TeX~and~LaTeX2e }
+                  { \string\TeX{}~and~\string\LaTeXe{} }
+                }
+                {
+                  {#3}
+                  { %\string\pkg our \pkg is a ref use something else
+                   \bgroup\string\color{red}
+                   \string\texttt{#3}~\egroup }
+                }
+              { \bool_if:NT #5 { ~internal } ~commands: }
+            }
+      }
+          {#4}
+  }
+\cs_generate_variant:Nn \__phdd_special_index_module:nnnnN { ooo }
+\cs_new_protected:Npn \__phdd_special_index_aux:nnnnnn #1#2#3#4#5#6
+  {
+    \tl_set:Nn \l__phdd_index_escaped_key_tl {#1}
+    \__phdd_quote_special_char:N \l__phdd_index_escaped_key_tl
+    \__phdd_special_index_set:Nn \l__phdd_index_escaped_macro_tl {#2}
+    \str_if_eq:onTF { \@currenvir } { macrocode }
+      { \codeline@wrindex }
+      {
+        \str_case:nnF {#6}
+          {
+            { main }  { \codeline@wrindex }
+            { usage } { \index }
+          }
+          { \HD@target \index }
+      }
+      {
+        \tl_if_empty:nF { #3 #4 #5 }
+          { #3 #5 \actualchar #4 #5 \levelchar }
+        \l__phdd_index_escaped_key_tl
+        \actualchar
+        {
+          \token_to_str:N \verbatim@font \c_space_tl
+          \l__phdd_index_escaped_macro_tl
+        }
+        \encapchar
+        hdclindex{\the\c@HD@hypercount}{#6}
+      }
+  }
+\cs_new_protected:Npn \__phdd_special_index_set:Nn #1#2
+  {
+    \tl_set:Nx #1 { \tl_to_str:n {#2} }
+    \__phdd_if_almost_str:nTF {#2}
+      {
+        \tl_replace_all:Non #1 { \tl_to_str:n { __ } }
+          {
+            \verbatimchar
+            \token_to_str:N \_ \token_to_str:N \_
+            \token_to_str:N \verb * \verbatimchar
+          }
+        \exp_args:Nx \tl_map_inline:nn
+          { \tl_to_str:N \verbatimchar \token_to_str:N _ }
+          {
+            \tl_replace_all:Nnn #1 {##1}
+              {
+                \verbatimchar \c_backslash_str ##1
+                \token_to_str:N \verb * \verbatimchar
+              }
+          }
+        \tl_set:Nx #1
+          {
+            \token_to_str:N \verb * \verbatimchar
+            #1 \verbatimchar
+          }
+      }
+      {
+        \tl_set:Nn #1 {#2}
+        \tl_replace_all:Non #1
+          { \c_backslash_str }
+          { \token_to_str:N \bslash \c_space_tl }
+      }
+    \__phdd_quote_special_char:N #1
+  }
+\cs_new_protected:Npn \__phdd_quote_special_char:N #1
+  {
+    \tl_map_inline:nn { \quotechar \actualchar \encapchar \levelchar }
+      {
+        \tl_replace_all:Nxn #1
+          { \tl_to_str:N ##1 } { \quotechar \tl_to_str:N ##1 }
+      }
+  }
+\cs_new_protected:Npn \__phdd_key_get:n #1
+  {
+    \__phdd_key_get_base:nN {#1} \l__phdd_index_macro_tl
+    \tl_set:Nx \l__phdd_index_key_tl
+      { \tl_to_str:N \l__phdd_index_macro_tl }
+    \tl_clear:N \l__phdd_index_module_tl
+    \tl_if_in:NoTF \l__phdd_index_key_tl { \tl_to_str:n { __ } }
+      { \bool_set_true:N \l__phdd_index_internal_bool }
+      { \bool_set_false:N \l__phdd_index_internal_bool }
+    \exp_last_unbraced:NNo
+    \tl_if_head_eq_charcode:oNT
+      { \l__phdd_index_key_tl } \c_backslash_str
+      { \__phdd_key_pop: }
+    \tl_if_in:NoTF \l__phdd_index_key_tl { \token_to_str:N : }
+      { \__phdd_key_func: }
+      {
+        \tl_if_in:NoTF \l__phdd_index_key_tl { \token_to_str:N _ }
+          { \__phdd_key_var: }
+          {
+            \tl_if_in:NoT \l__phdd_index_key_tl { \token_to_str:N @ }
+              { \tl_set:Nn \l__phdd_index_module_tl { TeX } }
+          }
+      }
+  }
+\cs_new_protected:Npn \__phdd_key_pop:
+  {
+    \tl_set:Nx \l__phdd_index_key_tl
+      { \tl_tail:N \l__phdd_index_key_tl }
+  }
+\cs_new_protected:Npn \__phdd_key_trim_module:n #1
+  {
+    \cs_set:Npn \__phdd_tmpa:w ##1 #1 ##2 \q_stop
+      { \exp_not:n {##1} }
+    \tl_set:Nx \l__phdd_index_module_tl
+      { \exp_after:wN \__phdd_tmpa:w \l__phdd_index_module_tl #1 \q_stop }
+  }
+\cs_new_protected:Npn \__phdd_key_drop_underscores:
+  {
+    \tl_if_head_eq_charcode:oNT { \l__phdd_index_key_tl } _
+      { \__phdd_key_pop: \__phdd_key_drop_underscores: }
+  }
+\cs_new_protected:Npn \__phdd_key_func:
+  {
+    \tl_if_head_eq_charcode:oNT { \l__phdd_index_key_tl } .
+      { \__phdd_key_pop: }
+    \__phdd_key_drop_underscores:
+    \tl_set_eq:NN \l__phdd_index_module_tl \l__phdd_index_key_tl
+    \exp_args:No \__phdd_key_trim_module:n { \token_to_str:N : }
+    \exp_args:No \__phdd_key_trim_module:n { \token_to_str:N _ }
+  }
+\cs_new_protected:Npn \__phdd_key_var:
+  {
+    \exp_args:Nx \tl_if_head_eq_charcode:nNTF
+      { \exp_args:No \str_tail:n \l__phdd_index_key_tl } _
+      {
+        \str_case:fn { \str_head:N \l__phdd_index_key_tl }
+          {
+            { q } { \tl_set:Nn \l__phdd_index_module_tl { quark } }
+            { s } { \tl_set:Nn \l__phdd_index_module_tl { quark } }
+          }
+        \__phdd_key_pop:
+        \__phdd_key_pop:
+        \__phdd_key_drop_underscores:
+        \tl_if_empty:NT \l__phdd_index_module_tl
+          {
+            \seq_set_split:NoV \l__phdd_tmpa_seq
+              { \token_to_str:N _ } \l__phdd_index_key_tl
+            \tl_set:Nx \l__phdd_index_module_tl
+              {
+                \int_case:nnF { \seq_count:N \l__phdd_tmpa_seq }
+                  {
+                    { 0 } { }
+                    { 1 } { int }
+                    { 2 } { \seq_item:Nn \l__phdd_tmpa_seq { 2 } }
+                  }
+                  { \seq_item:Nn \l__phdd_tmpa_seq { 1 } }
+              }
+          }
+      }
+      {
+        \tl_set_eq:NN \l__phdd_index_module_tl \l__phdd_index_key_tl
+        \exp_args:No \__phdd_key_trim_module:n { \token_to_str:N _ }
+      }
+  }
+\GlossaryPrologue
+  {
+    \part*{Change~History}
+    {\GlossaryParms\ttfamily\hyphenchar\font=`\-}
+    \markboth{Change~History}{Change~History}
+    \addcontentsline{toc}{part}{Change~History}
+  }
+\msg_new:nnn { !__phdd } { print-changes-howto }
+  {
+    Generate~the~change~list~by~executing\\
+    \iow_indent:n
+      { makeindex~-s~gglo.ist~-o~\c_sys_jobname_str.gls~
+                                      \c_sys_jobname_str.glo }
+  }
+\tl_gput_right:Nn \PrintChanges
+  { \AtEndDocument { \msg_info:nn { !__phdd } { print-changes-howto } } }
+
+\newcounter{phddargcount}
+\cs_new:Npn \labelargcount
+  {
+     \texttt{\#\arabic{phddargcount}\hskip\labelsep$=$}
+  }
+\cs_new:Npn \macroarguments
+  {\list\labelargcount
+    {\usecounter{phddargcount}
+     \leftmargin=2\leftmargin
+     \parsep \z@ \@plus\z@ \@minus\z@
+     \topsep 4\p@ \@plus\p@ \@minus2\p@
+     \itemsep\z@ \@plus\z@ \@minus\z@
+     \def\makelabel##1{\hss\llap{##1}}}
+  }
+
+\cs_new:Npn \endmacroaruments {\endlist}
+\def\Module{
+ \color{green800}
+}
+\def\AltMacroFont{
+ \fontfamily{lmtt}\fontseries{lc}
+ }
+
+\ExplSyntaxOff
 \wlog{************************************************}
 \wlog{ END PHD-DOCUMENTATION                          }
 \wlog{************************************************}

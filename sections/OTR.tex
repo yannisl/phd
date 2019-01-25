@@ -1,40 +1,46 @@
-\chapter{Page Breaking and The Output Routine (OTR)}
+\long\def\storyi{
+ This chapter discusses primarily \tex's page breaking
+ algorithm and how the output routines can be used to
+ insert additional material on every page, such as
+ inserts, page numbers and similar.
+ Later the chapter discusses the terminology used in the
+ TeXbook and by experts to describe the routines and we
+ will develop some basic output routines.
+ The last part touches on the main differences between
+ LaTeX output routines and floats as compared to the 
+ original approach in PlainTeX. 
+}
+\chapter{Page Breaking and the Output Routine (OR)}
 \precis{In this chapter we discuss one of the most mysterious aspects of \TeX\ the output routine.}
 \addtocimage{-12pt}{-20pt}{../images/tocblock-flower.jpg}
-
-
 \label{ch:OTR}
 
 \epigraph{Sherlock Holmes in ``The sign of four'': ``'My mind,'' he said, "rebels at stagnation. Give me problems, give me work, give me the most abstruse cryptogram or the most intricate analysis, and I am in my own proper atmosphere.'" }{}
 
+An output routine, most often now abbreviated as OR is the responsible part of the \tex algorithm to divide the document
+material in pages. 
 
-The output routine is one of the more mysterious pieces
-of \tex.
-and as  David Salomon noted\footnote{TUGboat/tb-11-1/tb27salomon.pdf}, advanced users hardly need to be convinced that an unerstanding of OTRs is important, since they must be used whenever, special output is desired.
- The chapter of the \texbook discussing output
-routines claims that designing output routines makes one:
-
-\begin{quote}
-achieve the level of a `\tex Grandmaster'.
+The output routine is considered as one of the more mysterious pieces of \tex.
+David Salomon wrote\footnote{TUGboat/tb-11-1/tb27salomon.pdf} that advanced users hardly need to be convinced that an understanding of ORs is important, since they must be used whenever, special output is desired.
+The chapter of the \texbook discussing output routines claims that designing output routines makes one:
+\ldots achieve the level of a `\tex Grandmaster'.
 As is so often the case, mastery of the concept of an
 output routine in plain \tex will only barely prepare you
 for the complexities awaiting you with \latexe's variant of
 an output routine.
-\end{quote}
-
 
 The subject is considered complex for the following reasons:
 
 \begin{enumerate}
-\item OTRS are asynchronous with the
-rest of TEX (this is explained later) and involve difficult concepts such as splitting boxes and insertions.
-\item Certain features, which could be useful in OTRs are not supported by \tex. Specifically there are no commands to identify marks, rules and |whatsits| in a box and to break up a line of text into individual characters.
+\item ORs are asynchronous with the
+rest of \tex (this is explained later) and involve difficult concepts such as splitting boxes and insertions.
+\item Certain features, which could be useful in ORs are not supported by \tex. Specifically there are no commands to identify marks, rules and |whatsits| in a box and to break up a line of text into individual characters.
 \end{enumerate}
 
 \tex\ 's page breaking algorithm is simpler than the line breaking one. The reason for this is that global optimization
 of page breakpoints, the way is done in the paragraph algorithm is prohibitively in terms of memory (especially in the 1980s).
 
-Theoretically, page breaking is a more complicated \footnote{\href{test}{http://www.cs.utk.edu/~eijkhout/594-LaTeX/handouts/breaking/page-tutorial.pdf}}than line breaking. First we will briefly discuss the algoithms that \tex\ actually
+Theoretically, page breaking is a more complicated \footnote{\href{test}{http://www.cs.utk.edu/~eijkhout/594-LaTeX/handouts/breaking/page-tutorial.pdf}}than line breaking. First we will briefly discuss the algorithms that \tex\ actually
 uses.
 
 
@@ -46,6 +52,18 @@ desirable breakpoints. The other is that of placing ‘floating’ material, suc
 figures. These are typically placed at the top or the bottom of a page, on or after the first
 page where they are referenced. These ‘inserts’, as they are called in TEX, considerably
 complicate the page breaking algorithms, as well as the theory.
+
+First we start with some definitions:
+
+\begin{enumerate}
+\item The \emph{main vertical list} is where \tex collects the material that has not yet been printed.
+The material on the vertical list is logically divided into two parts:
+  \begin{enumerate}
+     \item The \emph{current page}. This is the material \tex intends to print on the current page.
+     \item The \emph{recent contributions}. This is the material, that will be committed to the 
+           current page at a later stage.
+  \end{enumerate}
+\end{enumerate}
 
 \subsection{Typographical constraints}
 
@@ -64,19 +82,14 @@ be specified.
 \item  A page may absolutely not be broken between a section heading and the subsequent
 paragraph or subsection heading.
 
-\item It is desirable that
-
-\begin{enumerate}
-\item the top of the page does not have the last line of a paragraph started on the
-preceding page
-
-\item the bottom of the page does not have the first line of a paragraph that continues
-on the next page.
+\item It is also desirable that:
+    \begin{enumerate}
+      \item the top of the page does not have the last line of a paragraph started on the
+       preceding page
+      \item the bottom of the page does not have the first line of a paragraph that continues
+      on the next page.
+    \end{enumerate}
 \end{enumerate}
-
-\end{enumerate}
-
-
 
 For ordinary purposes you will probably find that \tex's automatic
 method of page breaking is satisfactory. And when it occasionally gives unpleasant
@@ -88,7 +101,7 @@ type | \vfill\eject|  instead.
 
 \section{The current page and the recent contributions list}
 
-The main vertical list of TEX is divided in two parts: the \emph{current page} and the list of \emph{recent
+The main vertical list of \tex is divided in two parts: the \emph{current page} and the list of \emph{recent
 contributions}. Any material that is added to the main vertical list is appended to the recent
 contributions; the act of moving the recent contributions to the current page is known as
 \emph{exercising the page builder}.
@@ -106,9 +119,7 @@ top of the first page. When the first non-discardable item is moved to the curre
 |topskip| glue is inserted; 
 
 
-
 \section{When is the page builder activated?}
-
 
 The page builder comes into play in the following circumstances.
 
@@ -124,8 +135,6 @@ the display has been added to the list.
 
 \item  After an output routine has ended.
 \end{enumerate}
-
-
 
 In these places the page builder moves the recent contributions to the current page. Note that
 \tex\  need not be in vertical mode when the page builder is exercised. In horizontal mode,
@@ -348,12 +357,11 @@ Marks are the main mechanism through which the output routine can obtain informa
 about the contents of the currently broken-off page, in particular its top and bottom. TEX sets
 three variables:
 
-{\obeylines
-\cs{botmark} the last mark occurring on the current page;
-\cs{firstmark} the first mark occurring on the current page;
-\cs{topmark} the last mark of the previous page, that is, the value of \cs{botmark} on the previous
-page.
-}
+\begin{description}
+\item[\cs{botmark}] the last mark occurring on the current page;
+\item[\cs{firstmark}] the first mark occurring on the current page;
+\item[\cs{topmark}] the last mark of the previous page, that is, the value of \cs{botmark} on the previous page.
+\end{description}
 
 
 
@@ -380,7 +388,7 @@ It is important that no page breaks can occur in between the mark and the
 box that places the title:
 
 \emphasis{mark,nobreak}
-\begin{teXXX}
+\begin{teX}
 \def\section#1{ ...
    \penalty\beforesectionpenalty
    \mark{#1}
@@ -388,7 +396,7 @@ box that places the title:
    \nobreak
    \vskip\aftersectionskip
    \noindent}
-\end{teXXX}
+\end{teX}
 
 %%%%%%%%%%%% macro to put TeX references in right margin %%%%%%%% 
 \newdimen\theight 

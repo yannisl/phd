@@ -1,0 +1,50 @@
+\begin{filecontents}{testops.cls}
+    \ProvidesClass{testops}[2018-11-20 v1.0 SE Test package]
+    \RequirePackage{expl3,xparse}
+    \RequirePackage{fontspec}
+    \ExplSyntaxOn
+    \keys_define:nn { testops }
+    { languages .default:n = {english},
+      languages .clist_gset:N = \g_testops_languages_clist,
+      
+      geometry .code:n = {\keys_set:nn {testops/geometry} {#1} },
+      geometry/papername .tl_gset:N = \g_testops_papername_tl,
+      geometry/orientation .tl_gset:N = \g_testops_orientation_tl,
+%      geometry/papername .default = test,
+%      geometry/papername .initial = test,
+%      geometry/orientation .default = anothertest,
+      unknown .code:n = 
+      { \msg_term:n { \l_keys_key_tl\ uknown~option~used }
+         }
+        }
+      }
+\keys_show:nn {testops/geometry} {orientation}
+    \keys_set:nn {testops}{
+       geometry=  {papername=a4paper, orientation=landscape},  
+    }
+    \cs_new_protected_nopar:Nn \__printlanguages:
+    {
+      \clist_use:Nnnn \g_testops_languages_clist { ~and~ } { ,~ } { ~and~ }
+    }
+
+    \NewDocumentCommand { \printlanguages} {}
+    {\__printlanguages:
+    }
+
+    \ProcessKeyOptions { testops } % Parses the option list
+    \ProcessOptions*
+    \ExplSyntaxOff
+
+
+    \LoadClass{book}
+    \RequirePackage{geometry}
+    
+    \endinput
+\end{filecontents}
+% ------------------
+\documentclass[geometry={papername=a5paper},12pt,languages={french,spanish,englis},%
+ ]{testops}
+
+\begin{document}
+\printlanguages
+\end{document}

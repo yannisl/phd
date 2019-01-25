@@ -1,7 +1,8 @@
 % \iffalse
 % <*SPECIALS>
 % \fi
-% \cxset{chapter beforeskip       = 0pt,
+% \cxset{chapter beforeskip   = 0pt,
+%        chapter afterskip=0pt,  
 %        chapter format = fashion}
 % \chapter{Custom Formatters}
 %
@@ -17,9 +18,9 @@
 % covered by the generic keys.
 %
 % As a convention each special format has a unique name. For example the |stewart| format
-% has an associated control sequence \refCom{stewart} and the one shown in this heading
-% is called \refCom{fashion}, as it started as such although I was tempted to name
-% it euro! Most of the additional templates provided by the \pkgname{phd} package use
+% has an associated control sequence |stewart| and the one shown in this heading
+% is called |fashion|, as it started as such although I was tempted to name
+% it euro! Most of the additional templates provided by the \pkg{phd} package use
 % \tikzname to render their output. This is not always necessary and any valid \tex code
 % can be used for templates.
 %
@@ -56,8 +57,8 @@
     image/.store~in          = \image@cx,
     texti/.store~in          = \texti@cx,
     textii/.store~in         = \textii@cx,
-    chapter~beforeskip       = 1sp,
-    chapter~afterskip        = 1sp,
+    %chapter~beforeskip       = 1sp,
+    %chapter~afterskip        = 1sp,
   }
 }
 
@@ -122,8 +123,8 @@
             \bfseries\sffamily\texti@cx
            };
 
-     \node [xshift=6.5cm,yshift=-26cm] at (current~page.north~west)
-           [text~width=12cm,above~right]
+     \node [xshift=5.5cm,yshift=-26cm] at (current~page.north~west)
+           [text~width=10cm,above~right]
            {
              \textii@cx 
            };
@@ -392,26 +393,56 @@
 }
 \ExplSyntaxOff
 %    \end{macrocode}
-% \begin{docCommand} {fashion} { \marg{element name} \marg{title text} }
+%
+% \cxset{chapter format=fashion,}
+% \definecolor{thechaptercolor}{HTML}{140F15}
+% \chapter{The Fashion Template}
+%
+% \noindent The inspiration for this was from a fashion magazine. I ended up with the gridlines that were 
+% used  for testing, but I liked them and left in permanently.
+%
+% The template interacts with the colorpalette in a minimal way to provide a touch of color to
+% the number box and the title. The background of the box uses the |thechaptercolor|. The same color
+% is used to typset the title. 
+%
+% The width of the block is 16cm and the height takes almost the full textblock $\pm$~18cm. 
+% 
+% \begin{docCommand} {fashion} { \Arg{element name} \Arg{title text} }
 % \end{docCommand}
 %
-% \subsubsection{Additional Keys for the template}
-%    \begin{macrocode}
-\cxset{fashion image/.code           = \gdef\fashionimage@cx{#1}}
-% set default image
-\cxset{fashion image                 = shock.jpg}
-\cxset{subtitle font-color/.store in = \subtitlefontcolor@cx}
-\cxset{subtitle font-color           = black!95}
-
 %
-%default value for the image width
-\def\imagewidth@cx{5cm}
-\def\fashionnumberbg@cx{gray!30}
+%    \begin{macrocode}
+%<@@=fashion>
+%    \end{macrocode}
+% \paragraph{Additional keys for the template}
+%    \begin{macrocode}
+\ExplSyntaxOn
+\cxset{
+  fashion~image/.code            = \cs_set:Npn \l_@@_image {#1},
+  subtitle~font-color/.store~in  = \@@_subtitlefontcolor,
+  fashion~image~width/.code      = \cs_set_nopar:Npx \@@_image_width {#1},
+}
+% set default image
+\cxset
+  {
+    fashion~image                = fashion-02.jpg,
+    subtitle~font-color          = black!95,
+    fashion~image~width          = 5cm,
+  }
+\ExplSyntaxOff
+%    \end{macrocode}
+%
+
+%default value for the image width    
+%    \begin{macrocode}
+\ExplSyntaxOn
+\def\fashionnumberbg {gray!30}
 \@debugtrue
 \if@debug
    \tikzset{fashion/.style = rectangle, draw}
 \else   
 \fi
+\ExplSyntaxOff
 
 \DeclareDocumentCommand \storyi {} 
 {
@@ -429,42 +460,56 @@
 }
 \ExplSyntaxOn
 \DeclareDocumentCommand \fashion {m m} {%
-\begin{tikzpicture}
-\if@debug 
-  \draw [help~lines,color=black!10] (0,-1) grid (16,-18);
-  %\draw[fill=red]  (0,0) circle (1.5pt) ;
-  %\draw[fill=red]  (0,-3) circle (1.5pt) ;
-\else
-\fi
-% draw debug rectangles
-\node[fashion, right, baseline] (x) at (0,1) {\LARGE\color{black!30}{}\relax};
-%\draw[fill=red]  (0,1) circle (1.5pt) ;
-\node[fashion, right=1sp] at (0,0) 
-  {
-    %\LARGE\color{black!20} \so\chaptername\relax
-  };
-
-% draw number
+   \dim_set:Nn \l_tmpa_dim {0pt}
+   \ifdim\linewidth<16cm
+    \dim_set:Nn \l_tmpa_dim {-2cm}
+   \fi
+  \hspace*{\dim_use:N \l_tmpa_dim}
+     \begin{tikzpicture}[yshift=-5cm,xshift=-2cm]
+  \if@debug 
+    \draw [help~lines,color=black!10] (0,-1) grid (16,-18);
+    %\draw[fill=red]  (0,0) circle (1.5pt) ;
+    %\draw[fill=red]  (0,-3) circle (1.5pt) ;
+  \else
+  \fi
+  % draw debug rectangles
+  \node[fashion, right, baseline] (x) at (0,1) {\LARGE\color{black!30}{}\relax};
+  %\draw[fill=red]  (0,1) circle (1.5pt) ;
+  \node[fashion, right=1sp] at (0,0) 
+    {
+      %\LARGE\color{black!20} \so\chaptername\relax
+    };
+%    \end{macrocode}
+%
+%    \begin{macrocode}
 \node[rectangle,draw, 
-      color=thechaptercolor, 
+      color = thechaptercolor, 
       below~left, drop~shadow,
-      fill= thechaptercolor, %\fashionnumberbg@cx, 
+      fill= thechaptercolor, 
       text=white,
-      %rounded~corners
-      ] at +(15,-0.5) {\HHUGE\sffamily\bfseries \color{white}\thechapter};
-
-% The title of the block
-\node[fashion, text~width=9cm,below~right, yshift=-1pt] at (0,-3) {%
-        {\sffamily\RaggedRight\language-1
-        \Huge\bfseries\color{thechaptercolor}#2\par}
-         \bigskip
-         \Large% 
-         \centering
-         \color{\subtitlefontcolor@cx}%
+      ] at +(15,-0.5) {\HHUGE\sffamily\bfseries\color{white}\thechapter};
+%    \end{macrocode}
+%
+% Next add the rectangle containing the chapter or section number as well as the story lines.
+% The textwidth is 
+%    \begin{macrocode}
+\node[fashion, text~width=9cm,below~right, yshift=-1pt] at (0,-3) 
+  {%
+        {%
+          \sffamily\RaggedRight
+          %dis-allow hyphenation 
+          \language-1
+          \Huge\bfseries\color{thechaptercolor}#2\par}
+           \bigskip
+           \Large% 
+           \centering
+           \color{\@@_subtitlefontcolor 
+         }%
          %\RaggedRight
-        \storyi\par}; 
+        \storyi\par
+  }; 
 % Add the image        
-        \IfFileExists{./images/\fashionimage@cx}%   
+        \IfFileExists{./images/\l_@@_image}   
            {\node[below~left,
                   outer~sep=0pt,
                   inner~sep=0pt,
@@ -472,17 +517,29 @@
                   shadow~scale=1.0, 
                   shadow~xshift=50pt,
                   shadow~yshift=-10pt,
-                  fill=white,%thelightgray!50,
+                  fill=white,
                   opacity=0.2},
                   rounded~corners,yshift=2cm,
-                  ] at (14.5,-9) {\includegraphics[width=\imagewidth@cx]{\fashionimage@cx}};}%
+                  ] at (14.5,-10.5) {\includegraphics[width=\@@_image_width]{\l_@@_image}};}%
            {\node at (12.5,-10.5) {\includegraphics[width=5cm]{./images/venus}};}%
 \end{tikzpicture}
-\expandafter\vskip\cs:w l_phd_chapter_afterskip_tl \cs_end:
-%
-\par\phd_after_heading:
+\thispagestyle{plain}
+\vfill
+\newpage
 }
 \ExplSyntaxOff
 %    \end{macrocode}
+
+% This template was developed before the xcoffins package had the current stability. It can benefit
+% to using coffins to position the image relative to the text.
+%
+% - Some cropping of the image maybe necessary.
+%
+% - Should have a draft function for speed?
+%
+% - Change tikz keys to fashion style, as a progtammer API.
+%
+% Star version of the command?
+%
 % </SPECIALS>
 \endinput

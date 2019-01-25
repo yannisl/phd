@@ -1,0 +1,977 @@
+\chapter{LaTeX 3 clists module}
+
+\epigraph{``I bet the human brain is a kludge.’’ }{---Marvin Minsky}
+
+\precis{This chapter explores the expl3 comma delimited lists. It provides numerous working examples to demonstrate the use of the numerous available functions, provided by the module.}
+
+\section{Introduction}
+
+One of the most common data structure that computer languages provide are comma delimited lists.
+ Comma lists contain ordered\footnote{Ordered does not mean sorted. It means they keep the order they were entered.} data where items can be added to the left
+ or right end of the list. The resulting ordered list can then
+ be mapped over using \docAuxCommand*{clist_map_function:NN}. Several items can
+ be added at once, and spaces are removed from both sides of each item
+ on input. Hence,
+ \begin{verbatim}
+   \clist_new:N \l_my_clist
+   \clist_put_left:Nn \l_my_clist { ~ a ~ , ~ {b} ~ }
+   \clist_put_right:Nn \l_my_clist { ~ { c ~ } , d }
+ \end{verbatim}
+ results in \docAuxCommand*{l_my_clist} containing |a,{b},{c~},d|.
+ Comma lists cannot contain empty items, thus
+ \begin{verbatim}
+   \clist_clear_new:N \l_my_clist
+   \clist_put_right:Nn \l_my_clist { , ~ , , }
+   \clist_if_empty:NTF \l_my_clist { true } { false }
+ \end{verbatim}
+ will leave \texttt{true} in the input stream. To include an item
+ which contains a comma, or starts or ends with a space,
+ surround it with braces.  The sequence data type should be preferred
+ to comma lists if items are to contain |{|, |}|, or |#| (assuming the
+ usual \TeX{} category codes apply).
+
+Implementation of list data structure normally provide the minimum following operations:
+
+\begin{enumerate}
+\item a constructor for creating an empty list;
+\item an operation for testing whether or not a list is empty;
+\item an operation for prepending an entity to a list
+\item an operation for appending an entity to a list
+\item an operation for determining the first component (or the "head") of a list
+\item an operation for referring to the list consisting of all the components of a list except for its first (this is called the "tail" of the list.)
+\end{enumerate}
+
+ \section{Creating and initialising comma lists}
+
+ \begin{docCommand}{clist_new:N}{ \meta{comma list}}
+   Creates a new \meta{comma list} or raises an error if the name is
+   already taken. The declaration is global. The \meta{comma list} will
+   initially contain no items.
+ \end{docCommand}
+
+
+\begin{docCommand}{clist_const:Nn}{ \meta{clist~var} \marg{comma list}}
+   Creates a new constant \meta{clist~var} or raises an error
+   if the name is already taken. The value of the
+   \meta{clist~var} will be set globally to the
+   \meta{comma list}.
+ \end{docCommand}
+
+\begin{docCommand}{clist_clear:N}{ \meta{comma list}}
+   Clears all items from the \meta{comma list}.
+\end{docCommand}
+
+ \section{Adding data to comma lists}
+
+Adding data to a comma delimited list, is normally done through the use of helper functions and user commands.
+If it is to be done once for example at the beginning of a document then it is a once off operation and we can use one of the \docAuxCommand*{clist_set} variants shown below. If the items are to be added programmatically or by the user in more than one place, then one of the functions \docAuxCommand*{clist_put_left} or \docAuxCommand*{clist_out_right} should be used. These prepend or append to the list, so goodbye \docAuxCommand*{@cdr}, \docAuxCommand*{@car} and their friends. 
+
+
+
+% \begin{function}[added = 2011-09-06]
+%   {
+%     \clist_set:Nn,  \clist_set:NV,
+%     \clist_set:No,  \clist_set:Nx,
+%     \clist_set:cn,  \clist_set:cV,
+%     \clist_set:co,  \clist_set:cx,
+%     \clist_gset:Nn, \clist_gset:NV,
+%     \clist_gset:No, \clist_gset:Nx,
+%     \clist_gset:cn, \clist_gset:cV,
+%     \clist_gset:co, \clist_gset:cx
+%   }
+  \begin{docCommand}{clist_set:Nn}{%
+      \meta{comma list} \{
+      \meta{item$_1$},
+      \ldots,
+      \meta{item$_n$} 
+      \}
+      }
+   Sets \meta{comma list} to contain the \meta{items},
+   removing any previous content from the variable.
+   Spaces are removed from both sides of each item. Variants for : Nv,Nx,cV,cx,NV,cV exist.
+ \end{docCommand}
+
+\begin{texexample}{Creating a Comma delimited list}{ex:clists}
+\ExplSyntaxOn
+\clist_gset:Nn \phd_test_clist {one, two, three, four, five}
+\phd_test_clist
+\clist_gput_right:Nn \phd_test_clist{six, seven, eight}
+\cs_new:Nn \nine: {9}
+\clist_gput_right:Nn \phd_test_clist\nine:
+\clist_gput_right:Nn \phd_test_clist\nine:
+\par\phd_test_clist
+\par\clist_if_in:NnTF\phd_test_clist {eight} {true} {false}
+\ExplSyntaxOff 
+\end{texexample}
+
+
+%   \begin{syntax}
+%     \docAuxCommand*{clist_put_left:Nn} \meta{comma list} \meta{item 1},\ldots{},\meta{item n}}
+%   \end{syntax}
+%   Appends the \meta{items} to the left of the \meta{comma list}.
+%   Spaces are removed from both sides of each item.
+% \end{function}
+%
+% \begin{function}[updated = 2011-09-05]
+%   {
+%     \clist_put_right:Nn,  \clist_put_right:NV,
+%     \clist_put_right:No,  \clist_put_right:Nx,
+%     \clist_put_right:cn,  \clist_put_right:cV,
+%     \clist_put_right:co,  \clist_put_right:cx,
+%     \clist_gput_right:Nn, \clist_gput_right:NV,
+%     \clist_gput_right:No, \clist_gput_right:Nx,
+%     \clist_gput_right:cn, \clist_gput_right:cV,
+%     \clist_gput_right:co, \clist_gput_right:cx
+%   }
+ \begin{docCommand} {clist_put_right:Nn}  {\meta{comma list} \{\meta{item 1},\ldots{},\meta{item n}\}}
+   Appends the \meta{items} to the right of the \meta{comma list}.
+   Spaces are removed from both sides of each item.
+\end{docCommand}
+
+\begin{texexample}{Adding content to the list}{}
+\ExplSyntaxOn
+\clist_new:N \l_my_clist
+\clist_put_right:Nn \l_my_clist{\square, \Diamond, \diamond, d, e, f}
+\clist_put_left:Nn \l_my_clist{1,2,3,4,5,6,7,8,9,\hfill, 0}
+\clist_use:Nn \l_my_clist{~}
+\ExplSyntaxOff
+\end{texexample}
+
+
+
+\begin{texexample}{Adding content to the list}{}
+\ExplSyntaxOn
+\clist_put_right:Nn \l_my_clist {\alpha, \beta, \gamma, \delta, \epsilon}
+\clist_put_left:Nn \l_my_clist {{\alpha\ldots}}
+\[ \clist_use:Nnnn \l_my_clist {,} {,} {,} \]
+\ExplSyntaxOff
+\end{texexample}
+
+\section{Mapping to comma lists}
+
+\begin{texexample}{Mapping}{ex:longimages}
+\ExplSyntaxOn
+\clist_set:Nn \imgdb:n {fig145,fig161,fig162,fig163,fig164,fig165,fig166}
+\clist_map_inline:Nn \imgdb:n {\includegraphics[width=1.5cm]{./images-01/#1}}
+\ExplSyntaxOff
+\end{texexample}
+
+If the inline code is long, it might be preferable to use the function version of the map. This callback function should accept one parameter. Note that the mapping command format does not need the \#1 you only provide it with the function name.
+
+\begin{texexample}{Mapping}{ex:longimages}
+\ExplSyntaxOn
+\cs_set:Npn \put_graphic:n #1 
+   {
+     \includegraphics[width=1.5cm]{./images-01/#1}
+   }
+\cs_set:Npn \put_graphic_with_space:n #1 
+   {
+     \put_graphic:n {#1}
+     \hspace{5pt}
+   }   
+\clist_set:Nn \imgdb:n {fig145,fig161,fig162,fig163,fig164,fig165,fig166}
+
+  \clist_map_function:NN \imgdb:n \put_graphic:n\par  
+  \clist_map_function:NN \imgdb:n \put_graphic_with_space:n
+\ExplSyntaxOff
+\end{texexample}
+
+The inline version is obviously a bit faster, as it does less work, but personally I prefer the callback style as it produces more readable code. Of course we could have used the |clist_if_in:NnTF| conditional. There are numerous conditionals and these are discussed later on.
+
+The mapping function definitions are shown below,
+
+\begin{docCommand}{clist_map_function:NN}{\meta{comma list} \meta{function}}
+Applies a callback function to each item stored in the comma list. The function will receive one argument for each iteration. The items are returned from left to right. 
+\end{docCommand}
+
+\begin{docCommand}{clist_map_inline:NN}{\meta{comma list} \meta{inline function}}
+Applies \meta{inline function} to every \meta{item} stored within the \meta{comma list}. The \meta{inline function} should consist of code which will receive the \meta{item} as \#1. One inline mapping can be nested inside another. The items are returned from left to right.
+\end{docCommand}
+
+There are is a third type of mapping function available where each entry in the list is passed to a variable which is then used in a function.
+
+\begin{docCommand}{clist_map_variable:NNn}{\meta{comma list} \meta{tl. var} \marg{inline function}}
+Stores each entry in the \meta{comma list} in turn in the \meta{tl var} and applies \meta{function} using \meta{tl var}. the function will usually consist of code making use of the \meta{t var}, but this is not enforced. One variable mapping can be nested inside another. the \meta{items} are returned from left to right.
+\end{docCommand}
+
+\subsection{Terminating mapping functions}
+
+All lists in |expl3| can be terminated using a break function. A clist breaks by using the \docAuxCommand*{clist_map_break:n} function. 
+
+\begin{texexample}{Mapping}{ex:longimages}
+\ExplSyntaxOn
+\cs_set:Npn \put_graphic:n # 1 
+   { 
+     \includegraphics[width=1.48cm]{./images-01/#1}
+   }
+\cs_set:Npn \put_graphic_with_space:n #1 
+   {
+      \parbox[b]{1.52cm}{\put_graphic:n {#1}\par\centering #1}
+     \hspace{5pt}
+   }   
+   
+\clist_set:Nn \imgdb:n {fig145,fig161,fig162,fig163,fig164,fig165,fig166}
+
+ \clist_map_function:NN \imgdb:n \put_graphic_with_space:n\par
+ \clist_map_inline:Nn \imgdb:n
+     {
+         \str_if_eq:nnTF {#1} {fig166}
+         {\clist_map_break:n { \PASS~ \put_graphic:n {#1} ~#1} }
+         {
+          \FAIL #1
+         }
+     }
+     
+\ExplSyntaxOff
+\end{texexample}
+
+What just happened have added \docAuxCommand*{clist_map_inline:Nn} which iterates through all the elements in a list until a search string is found. As you can see as a search function it will be slow as it has to iterate through all the elements of a list. A more efficient way would have been to use \tex’s scanning mechanism of delimited functions to find the item. 
+
+I have named the |clist| in the above examples as |imgdb| as one can easily extend the functions to store other information besides the filename. This can be done in many ways for example using the \meta{property} module of |expl3| or using |\csname|. In Chapter~\ref{ch:longfifgures} \nameref{ch:longfigures} we have used traditional techniques to typeset a lot of figures, in a similar fashion to a long table. Here we provide a similar example using |expliii|.
+
+let us consider the simple case of a record for a person.
+
+\begin{texexample}{Person record}{}
+\ExplSyntaxOn
+% create a new clist
+\clist_new:N \personDB 
+
+% auxiliary function to typeset an image
+\cs_gset:Npn \put_graphic:n #1 
+   {
+     \includegraphics[height=3cm]{#1}
+   }
+
+% auxiliary function to enclose the image in a minipage      
+\cs_gset:Npn \put_graphic_with_space:n #1 
+   {
+       \begin{minipage}[b]{3cm}
+             \centering
+             \put_graphic:n {#1}\par
+             \csname#1_name\endcsname\\
+             \csname#1_occupation\endcsname\\
+      \end{minipage}\hspace{5pt}  
+   }   
+
+% helper function to add a person record to the clist (*@\label{lin:personrecord}@*)
+\cs_gset:Npn \addtodb:nn #1#2#3
+    {
+        \cs_gset:cpn { #1_name } { #2 }
+        \cs_gset:cpn { #1_occupation } { #3 }
+        \clist_gput_left:Nn \personDB { #1 }
+    }
+    
+%        
+\addtodb:nn {turner}  {Ted~Turner}  {tycoon}
+\addtodb:nn {britney} {Britney Spears} {actress}
+\addtodb:nn {che} {Che ~Guevara} {revolutionary}
+\clist_map_function:NN \personDB \put_graphic_with_space:n\par
+\ExplSyntaxOff
+\end{texexample}
+
+The Line~\ref{lin:personrecord} creates to macros, one that will hold the name of the person and another that will hold the occupation. Note that the code would have normally used a |\csname| construction. Here |expl3| takes care of both the |expandafter| as well as the |\csname| construct, simply by using |:cpn| version of |gset|.
+
+What is different with this example, we have added the \docAuxCommand*{addtodb:nn} to add the person names to the list. This still has to be done as an author interface, but as it is just an example, I want to keep the code short. 
+
+\textbf{Automating the addition of fields and records} We have named our database |imageDB| and we have called it a database, but it is so far very unfriendly and all the fields are hard wired in the next Chapter we will create a more appropriate record database.
+
+\textbf{Create a new data base} First we concern ourselves with creating a new database. This is the very first activity we need to define. We store the names of the databases in a master list which we have named |\g_DB_dbs_clist|. We will prefix all our functions and variables with |DB| and we will use this as our module name. 
+
+
+
+\textbf{Specifying the database meta data} Our databases will be also records or objects if you want to use an inexactitude name and will also hold information, this is termed \emph{meta data}:
+
+\begin{tabular}{ll}
+  name   & \meta{database name} \\
+  fields & \meta{list containing the fields as fieldnames}\\
+  status & \meta{active or not active}\\
+  number of records &\\
+  tables & \meta{list}\\
+  views  & \\
+\end{tabular}
+
+\def\paragraph#1{{\par\leavevmode\bfseries#1}}
+
+\paragraph {Create the master database list} All databases that we will create will be stored
+as meta data into another list. This is used only internally at this stage, so we give it an |expl3| sexy name \docAuxCommand{g_db_dbs_clist}.
+
+\begin{texexample}{Creating a database package}{ex:master DB list}
+\ExplSyntaxOn
+% already defined no need to have it in the example
+ \clist_new:N \g_db_dbs_clist
+\ExplSyntaxOff
+\end{texexample}
+
+\paragraph{Constructor function} Next we create a function that is called when we
+need to create a new database.
+
+\begin{texexample}{Continued..}{}
+\ExplSyntaxOn
+% constructor function
+\cs_gset:Npn \g_db_construct_clist:n #1
+  { 
+% create new DB
+  \clist_new:c {#1} 
+	% add to master
+  \clist_put_left:Nn \g_db_dbs_clist { #1 }
+% create meta table
+  \g_construct_metatable:n { # 1}
+  }
+\ExplSyntaxOff
+\end{texexample}
+		
+\paragraph{Creating tables} So far we have created the functions that we need to create a new database. Next we can start writing functions for creating tables for a database. In reality, I called them tables, but this is a misnomer as they hold other stuff as well. 
+		
+\begin{texexample}{...continued}{ex:db4}		
+\ExplSyntaxOn
+% persons metatable
+% PERSONS-METANAME
+% PERSONS-STATUS
+% PERSONS-TABLES
+\cs_gset:Npn \g_construct_metatable:n #1 
+  {
+    \cs_gset:cpn   {#1-METANAME  } {   #1    }
+    \cs_gset:cpn   {#1-METASTATUS} {-NoValue-}
+    \clist_gset:cn {#1-METATABLES} {-NoValue-}
+  }		
+  
+% PERSONS-TABLE-TABLENAME 
+% PERSONS-TABLE-TABLENAME-FIELDS (list)		
+
+\cs_gset:Npn \g_construct_table:cc #1 #2 
+  {
+    \cs_gset:cpn   {#1-TABLE-#2-NAME      } {#2}
+    \cs_gset:cpn   {#1-TABLE-#2-STATUS    } {}
+    \clist_gset:cn {#1-TABLE-#2-FIELDNAMES} {}
+    
+    % index key as edef
+    \tl_gset:cx  {#1#2-} {name}
+    
+    % data holding list
+    \clist_gset:cn { #1 #2 } { } %(*@\label{lin:personsfamous}@*)
+  }
+\ExplSyntaxOff  
+\end{texexample}
+
+The interesting part is line~\ref{lin:personsfamous} which is a comma delimited list
+that will hold all the index keys.
+
+\begin{texexample}{Databases...continued}{ex:fields}
+\ExplSyntaxOn
+% adds a fieldname to fieldnames
+% PERSONS-TABLE-TABLENAME-FIELDNAMES
+\cs_gset:Npn \add_fieldname #1 #2 #3
+  {
+    \clist_gput_left:cx {#1-TABLE-#2-FIELDNAMES} {#3}
+
+  }
+%
+
+\cs_gset:Npx \create_index_field #1#2#3#4
+  {
+    \clist_gput_left:cx {#1#2} {#4}
+    
+  }  
+% create DB table FAMOUS 
+\cs_gset:Npx \add_data_index #1#2#3#4
+  {
+    \clist_gput_left:cx {#1#2} {#4}
+    
+  } 
+  
+% add data if is index goes onto clist  
+% PERSONS-FAMOUS-ID-SURNAME-VALUE
+%   
+\cs_gset:Npn \add_field_data #1#2#3#4#5 
+  {
+   \cs_gset:cpn {#1#2#3#4} 
+    { #5    }
+  } 
+  
+
+
+
+% read a field        
+\cs_gset:Npn \get_field #1#2#3#4
+  { 
+    \cs:w #1#2#3#4\cs_end:  
+  }
+                                
+ % create DB PERSONS   
+\g_db_construct_clist:n {PERSONS}
+\g_construct_table:cc {PERSONS}{FAMOUS}                                
+%
+\gdef\AddPerson#1#2#3#4{
+	\add_data_index {PERSONS} {FAMOUS} {name} {#1}
+	\add_field_data {PERSONS} {FAMOUS}{#1} {firstname   } {#1}
+	\add_field_data {PERSONS} {FAMOUS}{#1} {surname   } {#2}
+	\add_field_data {PERSONS} {FAMOUS}{#1} {occupation} {#3} 
+	\add_field_data {PERSONS} {FAMOUS}{#1} {photo} {#4}
+}
+%
+%\get_field {PERSONS} {FAMOUS} {Iggy}  {photo} 
+\gdef\PrintImages#1#2{
+  \centering 
+  \clist_map_inline:cn {#1#2}
+    {
+      \includegraphics[height=3cm]
+      {./martin-schoeller/
+        \get_field {#1}{#2}{##1}{photo}
+      }\hskip1sp
+    }
+}
+\ExplSyntaxOff
+\end{texexample}
+
+What just happened is that we have created two lists one to hold DBs metadata as a simple list and a second |PERSONS|. We have also created the meta-data record. 
+ 
+\begin{texexample}{Database ...continued}{ex:db2}
+\AddPerson {Barack} {Obama} {Actor} {barack_obama_2004}
+\AddPerson {Iggy} {Pop} {Actor} {iggy_pop_2001}
+\AddPerson {Henry} {Kissinger} {Arsehole} {henry_kissinger_2007}
+\AddPerson {Frankie} {Velilla} {Student} {frankie_velilla_2001}
+\AddPerson {Cindy} {Sheman} {Queen} {cindy_sheman_2000}
+\AddPerson {Joe} {Namath} {Tough} {joe_namath_2006}
+\AddPerson {Christopher} {Walken} {Tough} {christopher_walken_2000}
+\AddPerson {Xiakababoi} {Xiakababoi} {Tough} {xiakababoi_2005}
+\AddPerson {Jack} {Nicholson} {Tough} {jack_nicholson_2002}
+\AddPerson {Robert} {Deniro} {Actor} {robert_DeNiro_2006}
+\PrintImages{PERSONS}{FAMOUS}
+\end{texexample}
+
+
+Now what happens if we decide that we want to add another field in 
+our database of famous people, say their biography? we would need to add
+another document level command |\AddPersonBio|
+
+\begin{texexample}{adding a bio field}{ex:bio}
+\ExplSyntaxOn
+\long\gdef\AddPersonBio #1#2 {
+   \add_field_data {PERSONS} {FAMOUS} {#1} {bio} {#2}
+}
+\ExplSyntaxOff
+\end{texexample}
+
+Let us add some data for some of the person records we have in our database.
+
+\ExplSyntaxOn
+\DeclareDocumentCommand \GetBio {m} {
+  \get_field {PERSONS}{FAMOUS}{#1}{bio}
+}
+\DeclareDocumentCommand \GetPhoto {m} {
+  \includegraphics[width=0.8\linewidth] {./martin-schoeller/
+    \get_field {PERSONS} {FAMOUS} {#1} {photo}} 
+  }
+\DeclareDocumentCommand \GetFullName {m} {
+    \get_field {PERSONS} {FAMOUS} {#1} {firstname}
+    \space 
+    \get_field {PERSONS} {FAMOUS} {#1} {surname}
+} 
+\ExplSyntaxOff
+
+
+\begin{texexample}{add bio to some records}{ex:bio1}
+\ExplSyntaxOn
+\DeclareDocumentCommand \GetBio {m} {
+  \get_field {PERSONS}{FAMOUS}{#1}{bio}
+}
+\DeclareDocumentCommand \GetPhoto {m} {
+  \includegraphics[width=0.8\linewidth] {./martin-schoeller/
+    \get_field {PERSONS} {FAMOUS} {#1} {photo}} 
+  }
+\DeclareDocumentCommand \GetFullName {m} {
+    \get_field {PERSONS} {FAMOUS} {#1} {firstname}
+    \space 
+    \get_field {PERSONS} {FAMOUS} {#1} {surname}
+}    
+\ExplSyntaxOff
+\end{texexample}
+\begin{texexample}{add some more declarations}{ex:2}
+\AddPersonBio{Robert}{
+  Robert De Niro (/dəˈnɪroʊ/; born August 17, 1943) is an American actor and producer   who has starred in over 90 films. His first major film roles were in the sports drama Bang the Drum Slowly (1973) and Martin Scorsese's crime film Mean Streets (1973). In 1974, after being turned down for the role of Sonny Corleone in the crime film The Godfather (1972), he was cast as the young Vito Corleone in The Godfather Part II (1974), a role for which he won the Academy Award for Best Supporting Actor.
+
+De Niro's longtime collaboration with Scorsese later earned him an Academy Award for Best Actor for his portrayal of Jake LaMotta in the 1980 film Raging Bull. He also earned nominations for the psychological thrillers Taxi Driver (1976) and Cape Fear (1991), both directed by Scorsese. De Niro received additional Academy Award nominations for Michael Cimino's Vietnam war drama The Deer Hunter (1978), Penny Marshall's drama Awakenings (1990), and David O. Russell's romantic comedy-drama Silver Linings Playbook (2012). His portrayal of gangster Jimmy Conway in Scorsese's crime film Goodfellas (1990) earned him a BAFTA nomination in 1990.[1] De Niro has earned four nominations for the Golden Globe Award for Best Actor – Motion Picture Musical or Comedy, for his work in the musical drama New York, New York (1977), opposite Liza Minnelli, the action comedy Midnight Run (1988), the gangster comedy Analyze This (1999), and the comedy Meet the Parents (2000). He has also simultaneously directed and starred in films such as the crime drama A Bronx Tale (1993) and the spy film The Good Shepherd (2006). De Niro has also received the AFI Life Achievement Award in 2003 and the Golden Globe Cecil B. DeMille Award in 2010.}
+
+\AddPersonBio {Jack}{
+John Joseph "Jack" Nicholson (born April 22, 1937) is an American actor and filmmaker. Throughout his career, Nicholson has portrayed unique and challenging roles, many of which include dark portrayals of excitable, neurotic and psychopathic characters. Nicholson's 12 Academy Award nominations make him the most nominated male actor in the Academy's history.
+
+Nicholson has won the Academy Award for Best Actor twice, one for the drama One Flew Over the Cuckoo's Nest (1975) and the other for the romantic comedy As Good as It Gets (1997). He also won the Academy Award for Best Supporting Actor for the comedy-drama Terms of Endearment (1983). Nicholson is tied with Walter Brennan and Sir Daniel Day-Lewis as one of three male actors to win three Academy Awards. In 1988 Nicholson won a Grammy Award for Best Album for Children for The Elephant's Child. He is well known for playing Frank Costello in the Martin Scorsese-directed crime drama The Departed (2006), Jack Torrance in the Stanley Kubrick–directed psychological horror film The Shining and the Joker in Batman (1989).
+
+Nicholson is one of only two actors to be nominated for an Academy Award for acting in every decade from the 1960s to the 2000s; the other was Michael Caine. He has won six Golden Globe Awards, and received the Kennedy Center Honor in 2001. In 1994, he became one of the youngest actors to be awarded the American Film Institute's Life Achievement Award. Other notable films in which he has starred include the road movie Easy Rider (1969), the drama Five Easy Pieces (1970), the comedy-drama film The Last Detail (1973), the neo-noir mystery film Chinatown (1974), the drama The Passenger (1975), the epic film Reds (1981), the romantic horror film Wolf (1994), the legal drama A Few Good Men (1992), the Sean Penn-directed mystery film The Pledge (2001), and the comedy-drama About Schmidt (2002).
+}
+\end{texexample}
+
+Finally continuing our example we will now define a \docAuxCommand{PrintBio} that can be used
+to finally extract the data and present typeset it.
+
+  
+\begin{texexample}{Printing the Bios}{ex:bio3}
+\long\gdef\PrintBio#1{%
+\par
+ {\pagebreak
+ \leavevmode 
+ \Huge
+ \bfseries
+ \centerline{\GetFullName {#1}}}
+ \par
+ \vspace{20pt}
+
+ {\centering
+  \GetPhoto {#1}\par
+  \vspace{20pt}}
+
+ \parindent1em
+ \GetBio {#1}
+ \vfill
+}
+
+\PrintBio{Robert}
+
+\PrintBio{Jack}
+\end{texexample}
+
+There are a lot of improvements that we can do to the code. Firstly we have not done any error checking. The idea of pre-packaged code is that the finer details can be handled. Error checking should be done for example to verify that an image is available on disk. Also not to hard wired any directories. Sorting is still an issue. Our indexing is also inadequate. What happens if we have Robert DeNiro and Robert Williams? We indexed on the Robert. We would have been better off to add an index key automatically or index by using both name and surname. All these are issues that need to be incorporated. 
+
+
+
+\chapter{Queues}
+\section{Queue Fundamentals}
+
+A queue is an ordered list in which all insertions are made at one end, called the rear end, while all deletions are made at the other end, called the front end. Given a queue $Q=(a_1,a_2,\dots,a_n)$ with $a_1$ as the front element and $a_n$ as the rear element, we say that $a_{i+1}$ is behind $a_1$ $1 \leq i <n$.
+
+\section{Operations on a Queue}
+
+The operations which are carried on queue are similar to these which are carried on a stack, except their semantics are different. The operations are:
+
+\begin{enumerate}
+\item To create a queue
+\item To insert an element into the queue
+\item To delete an element from the queue
+\item To check which element is in the front of  the queue
+\item To check whether a queue is empty or not.
+\end{enumerate}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.5\textwidth]{queue}
+\end{figure}
+
+Since this is a book about typesetting, the next example will create a queue structure that will typeset the operations of a queue and provide diagrams to illustrate the algorithmic steps involved.
+
+
+\begin{docCommand}{CreateQueue}{\meta{queue name}}
+Creates an empty queue .
+\end{docCommand}
+
+\def\anitem{{\color{blue}\vrule height1.5cm width0.4cm}\thinspace}
+\DeclareDocumentCommand\anitem{O{blue}}{%
+{\color{#1}\vrule height1.5cm width0.4cm}\thinspace
+}
+\NewDocumentCommand\EnqueueString{s}{
+  \IfBooleanTF #1
+     {Enqueue $\rightarrow$}
+     {Enqueue \phantom{$\rightarrow$}}
+}
+
+\NewDocumentCommand\DequeueString{s}{
+  \IfBooleanTF #1
+     {\phantom{$\rightarrow$} Dequeue $\rightarrow$ }
+     {\phantom{$\rightarrow$} Dequeue \phantom{$\rightarrow$}}
+}
+\begin{enumerate}
+\item The conventions we will use is that when an item is enqueued it will be typeset in red as shown below, when it enters the front end.
+
+Enqueue $\rightarrow$ \anitem[red]\DequeueString* 
+
+\item When another item is added the above procedure is repeated, but this time the elements not in the front are shown in blue.
+
+\EnqueueString* \anitem[red]\anitem \phantom{$\rightarrow$} Dequeue
+
+\item Enqueue one more item will change the diagram to the following:
+
+\EnqueueString \anitem \anitem \anitem \anitem \anitem \phantom{$\rightarrow$} Dequeue \hfill \anitem[blue!30] 
+
+\item Enqueue one more item will change the diagram to the following:
+
+\EnqueueString \anitem \anitem \anitem \anitem  \DequeueString \hfill \anitem[blue!30] \anitem[blue!30]
+
+\item To summarize the typeset diagram represents the three states of the queue, enqueue, status and dequeue. If a right arrow is shown it either enqueued or dequeued an element. If none is shown it represents the status of the system
+\end{enumerate}
+
+I have specifically made the example a bit more complicated, in order to reinforce some of the concepts discussed in other chapters.
+
+The example requires that when a dequeuing command is entered it is indicated with a right arrow (|dequeue \rightarrow|) the arrow is not shown when the enqueuing operation takes place. To keep the length of the diagram spaced properly it requires that a phantom command is used for the enqueing operation.
+
+\subsection{Coding auxiliary macros}
+
+We will need two auxiliary macros to typese the enqueue and dequeue strings with or without arrows. We will use the \pkgname{xparse} package to create the commands. We will use the star version of the command as a toggle to show the \docAuxCommand*{rightarrow} or not. If the command is enetered with a star it will leave the right amount of space to the right of the string, so that all diagrams line nicely to the left. This is achieved using the  \docAuxCommand*{phantom} command that we have encountered earlier.
+
+\emphasis{IfBooleanTF}
+\begin{teXXX}
+\NewDocumentCommand\EnqueueString{s}{
+  \IfBooleanTF #1
+     {Enqueue $\rightarrow$ }
+     {Enqueue \phantom{$\rightarrow$}}
+}
+\NewDocumentCommand\DequeueString{s}{
+  \IfBooleanTF #1
+     {\phantom{$\rightarrow$} Dequeue $\rightarrow$ }
+     {\phantom{$\rightarrow$} Dequeue \phantom{$\rightarrow$}}
+}
+\end{teXXX}
+
+\subsection{Creating the Queue Macros}
+
+In order to typeset the diagrams we will use two queues. One to store the main queue and a second one to store the dequeue items. Before we code the actual functions it will be nice to think of the  commands we want to offer our users. This will also dictate to an extend the code we require.
+
+\begin{verbatim}
+\DrawQueStatus
+\Enque
+\Deque
+\DrawEnque
+\DrawDeque
+\end{verbatim}
+
+\begin{texexample}{Adding content to the sequence}{}
+\ExplSyntaxOn
+\seq_new:N \g_qlisti
+\seq_new:N \g_qlistii
+\seq_gpush:Nn \g_qlisti{\anitem[blue]}
+\seq_gpush:Nn \g_qlisti{\anitem[blue]}
+
+\seq_push:Nn \g_qlistii{\anitem[blue!30]}
+
+\DeclareDocumentCommand\Enque{O{red}}
+   {
+      \seq_gpush:Nn \g_qlisti{\anitem[#1]}
+   }
+   
+ \DeclareDocumentCommand\Deque{O{blue!30}}
+   {
+      \seq_gpop_left:NN \g_qlisti \@tempa
+      \seq_gpush:Nn\g_qlisti{\anitem[blue]}
+      \seq_gpush:Nn \g_qlistii{\anitem[#1]}
+   }  
+   
+\Enque\Enque\Enque\Enque
+
+\EnqueueString\seq_use:Nn \g_qlisti {} 
+
+\DequeueString*\hfill\seq_use:Nn \g_qlistii{}
+\ExplSyntaxOff
+%%%%
+\end{texexample}
+\ExplSyntaxOn
+\DeclareDocumentCommand\Enque{O{red}}
+   {
+      \seq_gpush:Nn \g_qlisti{\anitem[#1]}
+   }
+   
+ \DeclareDocumentCommand\Deque{O{blue!30}}
+   {
+      \seq_gpop_left:NN \g_qlisti \@tempa
+      \seq_gpush:Nn\g_qlisti{\anitem[blue]}
+      \seq_gpop_right:NN \g_qlisti \@tempa
+      \seq_gpush:Nn \g_qlistii{\anitem[#1]}
+   }  
+\ExplSyntaxOff
+   
+One of the characteristics of the programming process is that it is like painting. Some programmers come up with  excellent code on their first attempt, whereas most of us will \emph{refactor} the code over several passes either to improve it, optimize it or catch possible errors.
+
+A subtle issue with the above code is if we enqueue a number of items and then dequeue only the first item will change from red to blue the rest will be still in the que as red. What we will have to do is modify the \docAuxCommand*{Enque} to check if the list is not empty to remove the head item and replace it with a blue box, before effecting the enque operation. This will also give us a chance to use the sequence conditional functions for emptiness. We should also add the conditional in the \docAuxCommand*{Deque} function as well as the author typesetting commands \docAuxCommand*{DrawEnque} and \docAuxCommand*{DrawDeque}.
+
+\begin{texexample}{The drawing functions}{ex:drgfunctions}
+\ExplSyntaxOn
+\DeclareDocumentCommand\DrawDeque{ O{blue!30} }
+  { 
+   \EnqueueString  \seq_use:Nn \g_qlisti {} 
+   \DequeueString*  \hfill  \seq_use:Nn \g_qlistii{}    
+  }
+\Deque\Deque\Deque
+\DrawDeque
+\ExplSyntaxOff  
+\end{texexample}
+
+The \docAuxCommand*{DrawQues}, draws the two queues. This is very similar to the other two \docAuxCommand*{Draw}{\meta{deque}} or \meta{enque} functions. It just does not draw the arrows.
+
+\begin{texexample}{The drawing functions}{ex:drgfunctions}
+\ExplSyntaxOn
+\DeclareDocumentCommand\DrawQues{ O{blue!30} }
+  { 
+   \EnqueueString  \seq_use:Nn \g_qlisti {} 
+   \DequeueString  \hfill  \seq_use:Nn \g_qlistii{}    
+  }
+\Deque
+\DrawQues
+\ExplSyntaxOff  
+\end{texexample}
+
+
+ \chapter{Using Comma lists as stacks}
+ 
+ In this chapter, we will look at one common Abstract Data Type (ADT), the stack. A stack is a \emph{collection}, meaning that it is a data structure that contains multiple elements. Other collections we have seen include dictionaries and lists. An ADT is defined by the operations that can be performed on it, which is called an interface. The interface for a stack consists of these operations:
+
+\begin{description}
+\item [init] Initialize a new empty stack.
+\item [push]
+Add a new item to the stack.
+\item [pop]
+Remove and return an item from the stack. The item that is returned is always the last one that was added.
+
+\item [emptiness] Check whether the stack is empty.
+\end{description}
+
+A stack is sometimes called a “Last in, First out” or LIFO data structure, because the last item added is the first to be removed.
+
+ Comma lists can be used as stacks, where data is pushed to and popped
+ from the top of the comma list. (The left of a comma list is the top, for
+ performance reasons.) The stack functions for comma lists are not
+ intended to be mixed with the general ordered data functions detailed
+ in the previous section: a comma list should either be used as an
+ ordered data type or as a stack, but not in both ways.
+ 
+ \begin{figure}[htbp]
+ \hspace*{3cm}%optically center it
+ \scalebox{0.7}{\begin{drawstack}
+  \startframe
+  \cell{First cell}
+  \cell{Second cell}
+  \finishframe{Some stack frame}
+  \cell{Not interesting}
+  \startframe
+  \cell{Next stack frame}
+  \cell{Next stack frame}
+  \finishframe{Another stack frame}
+\end{drawstack}}
+\caption{A stack drawn with the \pkgname{drawstack} package. The package can be used to draw different stacks and their frames.}
+\end{figure}
+
+To construct a new empty stack, use the same functions as for a clist or sequence data structure. They are identical and calling them a stack is just syntactic sugar.
+
+ \begin{docCommand}{clist_get:NN}{ \meta{comma list} \meta{token list variable}}
+   Stores the left-most item from a \meta{comma list} in the
+   \meta{token list variable} without removing it from the
+   \meta{comma list}. The \meta{token list variable} is assigned locally.
+   If the \meta{comma list} is empty the \meta{token list variable} will
+   contain the marker value \docAuxCommand*{q_no_value}.
+ \end{docCommand}
+\makeatletter 
+ \global\let\clistsort\lst@BubbleSort
+\makeatother 
+\begin{texexample}{Sequence}{ex:sequence}
+\makeatletter
+\ExplSyntaxOn
+\clist_gset:Nn \title_words_not_capitalized_en 
+ { 
+  a,an,the,at,by,for,in,of,on,to,up,and,as,but,it,or, 
+  nor,do,for,this,be,A,An,The,At,By,For,In,Of,On,To,Up, 
+  And,As,But,It,Or,Nor,Do,For,This,Be, 
+  abaft,aboard,about,above,absent,across,afore,after,against,along,
+  alongside,amid,amidst,among,amongst,an,anenst,apropos,apud,around,
+  as,aside,astride,at,athwart,atop,barring,before,behind,below,beneath,
+  beside,besides,between,beyond,but,by,circa,concerning,despite,down,
+  during,except,excluding,failing,following,for,forenenst,from,given,in,
+  including,inside,into,lest,like,mid,midst,minus,modulo,near,next,
+  notwithstanding,of,off,on,onto,opposite,out,outside,over,pace,past,
+  per,plus,pro,qua,regarding,round,sans,save,since,than,through,
+  throughout,till,times,to,toward,towards,under,underneath,unlike,
+  until,unto,up,upon,Versus,versus,via,vice,with,within,without,worth
+}
+\clist_gset:Nn \abbreviations 
+ {
+   A.B.C.,iTunes
+ }
+
+\clist_gset:Nn \acronyms
+ {
+   NATO,UN,US,Scuba,Laser
+ }  
+\cs_new:Npn \addacronym #1 
+ {
+   \clist_put_left:Nn \acronyms {#1}
+   \lst@BubbleSort\acronyms
+   \clist_remove_duplicates:N\acronyms
+ }  
+
+\addacronym {EU}
+\meaning\acronyms\\
+\addacronym {AA}
+\acronyms
+\ExplSyntaxOff
+\makeatother
+\end{texexample}
+
+
+\endinput
+\end{document}
+
+\section{Moving items from one list to another}{}
+
+\begin{texexample}{Moving items from one stack to another.}{ex:stacks}
+\ExplSyntaxOn
+\clist_new:N \phd_stack_a
+\clist_new:N \phd_stack_b
+\token_to_meaning:N \phd_stack_a
+\Expl_SyntaxOff
+\end{texexample}
+
+If we examine the meaning of the stacks at this stage, they are just empty macros, not holding any values.
+
+\begin{texexample}{put something into the stacks}{}
+\ExplSyntaxOn
+\clist_gset:Nn \phd_stack_a {3,4,5,6,}
+\clist_gpush:Nn\phd_stack_a {\ldots}
+
+STACK a:~\phd_stack_a\par
+\ExplSyntaxOff
+\end{texexample}
+
+
+Let us continue by popping and pushing some more values
+\begin{texexample}{Continue}{}
+\ExplSyntaxOn
+\clist_gpop:NN\phd_stack_a\@tempa
+\clist_gpush:Nx\phd_stack_b\@tempa
+%% Pop a value
+\clist_gpop:NN\phd_stack_a\@tempa
+\clist_gpush:Nx\phd_stack_b\@tempa
+\clist_gpop:NN\phd_stack_a\@tempa
+\clist_gpush:Nx\phd_stack_b\@tempa
+\clist_gpop:NN\phd_stack_a\@tempa
+\clist_gpush:Nx\phd_stack_b\@tempa
+stack a:~\phd_stack_a\par
+stack b:~\phd_stack_b
+\ExplSyntaxOff
+%%%%%%%%%%%%%
+\end{texexample}
+
+The much promised freedom from having to deal with \tex expansion has not arrived---although we can save some frustration and typing. When moving items from |stacka| to |stack b| we have used the |:Nx| form of the command
+so that the temporary token list variable is expanded. If we do not do that the second stack values will only store the last value of |@tempa|.
+
+In practical applications the second stack is normally used as an array to just store the values. The symbol items before being popped are examined and if for example is a |+| sign the items will be summed up and placed again in the second stack to keep tally of our totals.
+
+Our next step is to refactor the code in our example to recursively empty the first stack.
+
+\begin{texexample}{Moving items from one stack to another}{ex:stacks}
+\ExplSyntaxOn
+\fboxsep=2pt
+\fboxrule=0.4pt
+\clist_gset:Nn \phd_stack_a {1,2,3,4,5,6,\ldots}
+\clist_gset:Nn \phd_stack_b {}
+original~stack a:~
+\cs_gset:Nn\recurse:
+ {
+   \clist_gpop:NNTF\phd_stack_a\@tempa{\clist_gpush:Nx\phd_stack_b\@tempa
+      \fbox{\@tempa}~
+      \recurse:}{empty~stack\par}
+ }  
+\recurse: 
+stack b:~\phd_stack_b
+\ExplSyntaxOff
+%%%%%%%%%%%%%
+\end{texexample}
+
+\begin{texexample}{Moving items from one stack to another}{ex:stacks}
+\ExplSyntaxOn
+\fboxsep=2pt
+\fboxrule=0.4pt
+\cs_gset:Nn\recurseb:
+ {
+   \clist_gpop:NNTF\phd_stack_b\@tempa{
+      \if +\@tempa\relax\else\framebox[1.5em]{\strut\@tempa}\\ \fi
+      \recurseb:}{empty~stack\par}
+ }  
+\recurseb: 
+stack b:~\phd_stack_b
+\ExplSyntaxOff
+%%%%%%%%%%%%%
+\end{texexample}
+
+So far so good. We have managed to construct two stacks and to typeset their content in nice boxes. Hopefully, by now if you have been following the examples, you have the rudimentary skills to build our next, more complicate example that would parse a sequence of algebraic expressions and tokenize them. 
+
+
+
+\begin{docCommand}{clist_get:NNTF}{ \meta{comma list} \meta{token list variable} \marg{true code} \marg{false code}}
+ 
+   If the \meta{comma list} is empty, leaves the \meta{false code} in the
+   input stream.  The value of the \meta{token list variable} is
+   not defined in this case and should not be relied upon.  If the
+   \meta{comma list} is non-empty, stores the top item from the
+   \meta{comma list} in the \meta{token list variable} without removing it
+   from the \meta{comma list}. The \meta{token list variable} is assigned
+   locally.
+ \end{docCommand}
+
+
+  \begin{docCommand}{clist_pop:NN}{ \meta{comma list} \meta{token list variable}}
+   Pops the left-most item from a \meta{comma list} into the
+   \meta{token list variable}, \emph{i.e.}~removes the item from the
+   comma list and stores it in the \meta{token list variable}.
+   Both of the variables are assigned locally.
+ \end{docCommand}
+
+
+  \begin{docCommand}{clist_gpop:NN}{ \meta{comma list} \meta{token list variable}}
+   Pops the left-most item from a \meta{comma list} into the
+   \meta{token list variable}, \emph{i.e.}~removes the item from the
+   comma list and stores it in the \meta{token list variable}.
+   The \meta{comma list} is modified globally, while the assignment of
+   the \meta{token list variable} is local. Also available as :cN
+ \end{docCommand}
+
+ \begin{docCommand}{clist_pop:NNTF}{ \meta{sequence} \meta{token list variable} \marg{true code} \marg{false code}}
+   If the \meta{comma list} is empty, leaves the \meta{false code} in the
+   input stream.  The value of the \meta{token list variable} is
+   not defined in this case and should not be relied upon.  If the
+   \meta{comma list} is non-empty, pops the top item from the
+   \meta{comma list} in the \meta{token list variable}, \emph{i.e.}~removes
+   the item from the \meta{comma list}. Both the \meta{comma list} and the
+   \meta{token list variable} are assigned locally.
+ \end{docCommand}
+
+
+   \begin{docCommand}{clist_gpop:NNTF}{\meta{comma list} \meta{token list variable} \marg{true code} \marg{false code}}
+     If the \meta{comma list} is empty, leaves the \meta{false code} in the
+   input stream.  The value of the \meta{token list variable} is
+   not defined in this case and should not be relied upon.  If the
+   \meta{comma list} is non-empty, pops the top item from the
+   \meta{comma list} in the \meta{token list variable}, \emph{i.e.}~removes
+   the item from the \meta{comma list}. The \meta{comma list} is modified
+   globally, while the \meta{token list variable} is assigned locally.
+ \end{docCommand}
+
+% \begin{function}
+%   {
+%     \clist_push:Nn,  \clist_push:NV,  \clist_push:No,  \clist_push:Nx,
+%     \clist_push:cn,  \clist_push:cV,  \clist_push:co,  \clist_push:cx,
+%     \clist_gpush:Nn, \clist_gpush:NV, \clist_gpush:No, \clist_gpush:Nx,
+%     \clist_gpush:cn, \clist_gpush:cV, \clist_gpush:co, \clist_gpush:cx
+%   }
+ \begin{docCommand}{clist_push:Nn}{ \meta{comma list} \marg{items}}
+   Adds the \marg{items} to the top of the \meta{comma list}.
+   Spaces are removed from both sides of each item.
+ \end{docCommand}
+%
+% \section{Using a single item}
+%
+% \begin{function}[added = 2014-07-17, EXP]
+%   {\clist_item:Nn, \clist_item:cn, \clist_item:nn}
+%   \begin{syntax}
+%     \docAuxCommand*{clist_item:Nn} \meta{comma list} \Arg{integer expression}
+%   \end{syntax}
+%   Indexing items in the \meta{comma list} from~$1$ at the top (left), this
+%   function will evaluate the \meta{integer expression} and leave the
+%   appropriate item from the comma list in the input stream. If the
+%   \meta{integer expression} is negative, indexing occurs from the
+%   bottom (right) of the comma list. When the \meta{integer expression}
+%   is larger than the number of items in the \meta{comma list} (as
+%   calculated by \docAuxCommand*{clist_count:N}) then the function will expand to
+%   nothing.
+%   \begin{texnote}
+%     The result is returned within the \tn{unexpanded}
+%     primitive (\docAuxCommand*{exp_not:n}), which means that the \meta{item}
+%     will not expand further when appearing in an \texttt{x}-type
+%     argument expansion.
+%   \end{texnote}
+% \end{function}
+

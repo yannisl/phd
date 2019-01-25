@@ -1,6 +1,13 @@
+\long\def\storyi{
+ The float.dtx file describes the setting up of floating environments
+ for single or double column documents. In itself does very little processing, as
+ its purpose is to handle all the housekeeping and configuration. Processing is
+ carried out at a later stage by the output routine.
+ }
+
 \chapter{ltfloat.dtx}
 \label{kernel:ltfloat}
- \section{Float types}
+\section{Float types}
 
   The different types of floats are identified by a \meta{type} name,
   which is the name of the counter for that kind of float.  For
@@ -16,10 +23,11 @@
 
     \begin{center}
     \begin{tabular}{l@{ : }l@{ --- }l}
+     ! & bang   & indicates that some restrictions should be ignored\\
      h & here   & at the current location in the text.\\
      t & top    & at the top of a text page.\\
      b & bottom & at the bottom of a text page.\\
-     p & page   & on a separate float page
+     p & page   & on a separate float page\\
     \end{tabular}
     \end{center}
 
@@ -27,24 +35,24 @@
   that the current values of the float positioning parameters are
   ignored for this float. (Has no effect on `p', float page
   positioning.)
+  
   For example, `pht' specifies that the float can appear in any of
   three locations: page, here or top. The order of specifying the placement
   specifiers is irrelevant to the float algorithm.
 
+	However, if a letter is not present then the corresponding area will not be tried at all.
 
 \subsection{Floating Environments}
     \begin{teX}
 \message{floats,}
     \end{teX}
 
-
-
  Where floats may appear on a page, and how many may appear there
  are specified by the following float placement parameters.  The
  numbers are named like counters so the user can set them with
  the ordinary counter-setting commands.
 
-\begin{tabular}{lp{6cm}}
+\begin{longtable}{lp{6cm}}
 
   \cs{c@topnumber}      & Number of floats allowed at the top of a column.\\
   \cs{topfraction}      & Fraction of column that can be devoted to floats.
@@ -59,15 +67,15 @@
                           up by float page.\\
   \cs{dblfloatpagefraction} 
                     & Same as above, for double-column floats.\\
-\end{tabular}
+\end{longtable}
 
 
- The document style must define the following.
+ The document class must define the following. 
 
 \begin{longtable}{lp{6cm}}
-    \cs{fps@TYPE}   & The default placement specifier for floats of type
-                  TYPE. \\
-    \cs{ftype@TYPE} & The type number for floats of type TYPE.\\
+    \cs{fps@}\meta{TYPE}   & The default placement specifier for floats of type
+                             TYPE. \\
+    \cs{ftype@}\meta{TYPE} & The type number for floats of type TYPE.\\
     \cs{ext@TYPE}   & The file extension indicating the file on which the
                   contents list for float type TYPE is stored.
                     For example,  \cs{ext@figure = 'lof'}.\\
@@ -79,18 +87,43 @@
               It can assume it's in a \cs{parbox} of the appropriate width.\\
 \end{longtable}
 
-\begin{teX}
- \@float{type}[placement] : This macro begins a float environment for a (*@ float @*)
-     single-column float of type TYPE with PLACEMENT as the placement
-     specifier.  The default value of PLACEMENT is defined by
-     \fps@TYPE.  The environment is ended by \end@float.
-     E.g., \figure == \@float{figure}, \endfigure == \end@float.
+\begin{texexample}{Type parameters}{ex:ftypes}
+\makeatletter
+\fps@figure \\
+\ftype@figure 
+\makeatother
+\end{texexample}
 
+
+%\begin{docCommand}{@float}{}
+%%This macro begins a float environment for a
+%%single-column float of type TYPE with PLACEMENT as the placement
+%%specifier.  The default value of PLACEMENT is defined by
+%%\cs{fps@TYPE}.  The environment is ended by \cs{end@float}.
+%% E.g., |\figure| == |\@float{figure}|, |\endfigure| == |\end@float|.
+%\end{docCommand}
+% 
+ The command is designed to be called by the class in a new environment definition, for example in AmS classes
+ figure is defined as:
+ 
+% \begin{Verbatim}
+% \newenvironment{figure}{%
+%    \@float{figure}%
+% }{%
+%   \end@float
+% }
+% \end{Verbatim}
+
+The |\@float| will take care of the basic structure of the float and to set penalties
+so as to be able to pass this information to the |output| routine.
+
+
+\begin{teX}
   \@float{TYPE}[PLACEMENT] ==
    BEGIN
      if hmode then \@bsphack
                           \@floatpenalty := -10002
-              else      \@floatpenalty := -10003
+              else        \@floatpenalty := -10003
      fi
      \@captype ==L TYPE
      \@dblflset
@@ -246,6 +279,8 @@ is defined as |\def\fps@figure{tbp}|.
 
 
  \begin{docCommand}{@dblflset}{}
+ \end{docCommand}
+
     \begin{teX}
 \def\@float#1{%
   \@ifnextchar[%
@@ -254,7 +289,7 @@ is defined as |\def\fps@figure{tbp}|.
      \reserved@a}}
     \end{teX}
     
- \end{docCommand}
+ 
  
 
 \begin{macro}{\@dblfloat}
@@ -295,8 +330,6 @@ What does the ! do? This goes to default, so it is interesting to find out why t
 in the first place. It just starts overrides all the constraints.
 \end{macro}
 
-
-
     \begin{teX}
 \def\@xfloat #1[#2]{%
   \@nodocument 
@@ -311,32 +344,47 @@ in the first place. It just starts overrides all the constraints.
        \@fpsadddefault
      \fi
    \fi
+%    \end{macrocode}
+% As discussed earlier, floats will set different penalties if it is in horizontal mode
+% from that of other modes.
+%    \begin{macrocode}   
    \ifhmode
      \@bsphack
      \@floatpenalty -\@Mii
    \else
      \@floatpenalty-\@Miii
    \fi
+% If inner obviously we cannot float out of a box, issue an error   
   \ifinner
      \@parmoderr\@floatpenalty\z@
   \else
+%  
     \@next\@currbox\@freelist
       {%
+       % holds the type of float start at 16. Note the same count is used in
+       % the output routine to set the bits.
        \@tempcnta \sixt@@n
+       
+       % iterate through the specification and set the bitmap
        \expandafter \@tfor \expandafter \reserved@a
          \expandafter :\expandafter =\@fps 
          \do
           {%
+           % This is the first position reading from the right.
            \if \reserved@a h%
              \ifodd \@tempcnta
              \else
+               % 17 is here float
                \advance \@tempcnta \@ne
              \fi
            \fi
            \if \reserved@a t%
+             % position 2
              \@setfpsbit \tw@
+             
            \fi
            \if \reserved@a b%
+              
              \@setfpsbit 4%
            \fi
            \if \reserved@a p%
@@ -349,8 +397,12 @@ in the first place. It just starts overrides all the constraints.
            \fi
            }%
        \@tempcntb \csname ftype@\@captype \endcsname
+       
+       % multiply by 32 by the ftype\@captype
        \multiply \@tempcntb \@xxxii
        \advance \@tempcnta \@tempcntb
+       
+       % define globally count |\@currbox| as |\@tempcnta|
        \global \count\@currbox \@tempcnta
        }%
     \@fltovf  %This is for too many floats error for marginpars
@@ -404,7 +456,8 @@ in the first place. It just starts overrides all the constraints.
     \end{teX}
  
   
-  \begin{macro}{\@setnobreak}
+\begin{macro}{\@setnobreak}
+
     \begin{teX}
 \def \@setnobreak{%
   \if@nobreak
@@ -602,23 +655,23 @@ in the first place. It just starts overrides all the constraints.
 \section{Marginal Notes}
 
    Marginal notes use the same mechanism as floats to communicate
-   with the \cs{output} routine.  Marginal notes are distinguished from
+   with the \refCom{output} routine.  Marginal notes are distinguished from
    floats by having a negative placement specification.  The command
-   \cs{marginpar}[LTEXT]{RTEXT} generates a marginal note in a parbox,\marginpar[left] and \marginpar{right}
+   \cs{marginpar}\oarg[LTEXT]\marg{RTEXT} generates a marginal note in a parbox,\marginpar[left] and \marginpar{right}
    using LTEXT if it's on the left and RTEXT if it's on the right.
    (Default is RTEXT = LTEXT.)  It uses the following parameters.
 
 
-
-
-\begin{verbatim}
-
-   \marginparwidth : Width of marginal notes.
-   \marginparsep   : Distance between marginal note and text.
+\begin{longtable}[c]{lp{6.5cm}}
+\cs{marginparwidth} & Width of marginal notes.\\
+\cs{marginparsep}   & Distance between marginal note and text.
         the page layout to determine how to move the marginal
-        note into the margin.   E.g., \@leftmarginskip ==
-        \hskip -\marginparwidth \hskip -\marginparsep .
-   \marginparpush  :  Minimum vertical separation between \marginpar's
+        note into the margin.   E.g., \cs{@leftmarginskip} ==
+        \cs{hskip} -\cs{marginparwidth} \cs{hskip} -\cs{marginparsep}.\\
+\cs{marginparpush}  &  Minimum vertical separation between \cs{marginpar}'s\\
+\end{longtable}
+   
+   
 
   Marginal notes are normally put on the outside of the page
   if \cs{@mparswitch} = true, and on the right if \cs{@mparswitch} = false.
@@ -630,7 +683,7 @@ in the first place. It just starts overrides all the constraints.
   text, then the second one could appear on the next page, in
   a funny position. (I was unable to reproduce the error).
 
-
+\begin{verbatim}
   \marginpar [LTEXT]{RTEXT} ==
    BEGIN
      if hmode then \@bsphack
@@ -951,7 +1004,7 @@ We start with a summary of all user commands.
 %    END
 %
 
-\
+
 \begin{algorithm}
 \cs{footnotetext}[NUM] ==\\
 \Begin{
@@ -1097,7 +1150,6 @@ The meaning of footnote command.\footnote[13]{This is a footnote.}
 
  \begin{docCommand}{footnotemark}{\oarg{number}}
   The footnote mark is defined here. See also the book class.
- \end{docCommand}
     \begin{teX}
 \def\footnotemark{%
    \@ifnextchar[\@xfootnotemark
@@ -1105,7 +1157,7 @@ The meaning of footnote command.\footnote[13]{This is a footnote.}
       \protected@xdef\@thefnmark{\thefootnote}%
       \@footnotemark}}
     \end{teX}
- 
+  \end{docCommand}
 
  \begin{docCommand}{@xfootnotemark}{}
     \begin{teX}
@@ -1119,7 +1171,6 @@ The meaning of footnote command.\footnote[13]{This is a footnote.}
  \end{docCommand}
 
  \begin{macro}{\@footnotemark}
-
  {Add \cs{nobreak} to allow hyphenation. latex/1605}
     \begin{teX}
 \def\@footnotemark{%

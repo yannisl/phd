@@ -84,7 +84,7 @@ for new list environments. The command takes two arguments.
  The trivlist environment is equivalent to a list environment
  whose second argument sets the following parameter values:
  \begin{description}
- \item[{\refCom{leftmargin}} = 0:] causes no indentation of left margin
+ \item[{\refCom{leftmargin}}] = 0: causes no indentation of left margin
  \item[\refCom{labelwidth} = 0:] see below for precise effect this has.
  \item[\refCom{itemindent} = 0:] with a null label, makes first paragraph
         have no indentation.  Succeeding paragraphs have |\parindent|
@@ -352,8 +352,8 @@ The \refCom{@trivlist} is define as,
    NOTE: \cs{@setpar} called on every \refCom{list} in case \cs{par} has been\\
    temporarily  munged before the \refCom{list} command.\\
      \cs{@setpar}{if @newlist = false then {\cs{@@par}} fi}\\
-     \refCom{@newlist}         :=G T\\
-     \refCom{@outerparskip}    :=L \cs{parskip}\\
+     \refCmd{@newlist}         :=G T\\
+     \refCmd{@outerparskip}    :=L \cs{parskip}\\
  }
 \end{algorithm}
 
@@ -396,11 +396,11 @@ The \refCom{@trivlist} is define as,
     \refCom{addpenalty}\marg{@endparpenalty}\\
     \refCom{addvspace}\marg{\refCom{@topsepadd}}\\
      ends the \refCom{begin} command's \refCom{begingroup}\\
-    \refCom{endgroup}\\
-    \refCom{par}  ==  \Begin{%
+    \cs{endgroup}\\
+    \cs{par}  ==  \Begin{%
                   \refCom{@restorepar}\\
-                  \refCom{everypar}|{}|
-                  \refCom{par}
+                  \cs{everypar}|{}|
+                  \cs{par}
                   }
     \refCom{everypar} == \Begin{remove \refCom{lastbox} \refCom{everypar}|{}|}
    to match the \refCom{end} commands \refCom{endgroup}\\
@@ -734,6 +734,7 @@ to typeset items, that do not have an |\item[]|. If we need to step a counter we
 
 
 \begin{texexample}{The list}{k:list}
+\@ifundefined{c@steps}{\newcounter{steps}}{}
 \begin{list}{\bfseries\upshape Step \arabic{steps}:}
 {%
 \usecounter{steps}
@@ -791,7 +792,7 @@ Initialize all margins to 0pt in case the user did not specify anything.
   \listparindent\z@
   \itemindent\z@
   \csname @list\romannumeral\the\@listdepth\endcsname
-   \end{teXXX}
+   \end{teX}
 
 Define the item label here, if it is empty it will be defined to empty   
    \begin{texcode}  
@@ -819,10 +820,10 @@ Define the item label here, if it is empty it will be defined to empty
   routine. As you see we cannot do any typsetting as yet. Both parameters are just commands to be
   entered before the text, is typeset. Probably you guessed, but what follows is |\item|. At this
   point it will just activate an error if it is missing.  
-  \begin{teXXX}  
+  \begin{teX}  
   \parshape \@ne \@totalleftmargin \linewidth
   \ignorespaces}
-    \end{teXXX}
+    \end{teX}
 
 
 \begin{docCommand}{par@deathcycles}{}
@@ -840,7 +841,7 @@ Define the item label here, if it is empty it will be defined to empty
  trapped by \TeX.  We thus need to trap this here by seting |\par| to
  count the number of times a paragraph ii is called with no progress
  being made started.
-    \begin{teXXX}
+    \begin{teX}
 \def\@trivlist{%
   \if@noskipsec \leavevmode \fi
   \@topsepadd \topsep
@@ -873,7 +874,7 @@ Define the item label here, if it is empty it will be defined to empty
            \fi}%
   \global \@newlisttrue
   \@outerparskip \parskip}
-    \end{teXXX}
+    \end{teX}
 
 The function of a |trivlist| is very simple, it sets numbering to false and initializes all  widths to zero, thus at this stage it will default to a normal paragraph then it calls the auxiliary function \refCom{@trivlist}, which will set
 the top and bottom skips and other paragraphing parameters, if set.
@@ -1163,7 +1164,7 @@ the top and bottom skips and other paragraphing parameters, if set.
 Before the label is typeset it is placed in a bo. The latex Team used an |\sbox| so that colour commands can be supported.
 It call |\makelabel| with the item parameters.
 
-    \begin{teXXX}
+    \begin{teX}
   \sbox\@tempboxa{\makelabel{#1}}%
   \global\setbox\@labels\hbox{%
     \unhbox\@labels
@@ -1172,9 +1173,9 @@ It call |\makelabel| with the item parameters.
     \hskip -\labelsep
     \ifdim \wd\@tempboxa >\labelwidth
        \box\@tempboxa
-\end{teXXX}
+\end{teX}
 
-\begin{teXXX}
+\begin{teX}
 %
 % \changes{LaTeX2.09}{1991/11/22}
 %         {(RmS) Changed second call to \refCom{makelabel} to
@@ -1187,7 +1188,7 @@ It call |\makelabel| with the item parameters.
     \fix
     \hskip \labelsep}%
   \ignorespaces}
-    \end{teXXX}
+    \end{teX}
  
  
  
@@ -1267,7 +1268,10 @@ It call |\makelabel| with the item parameters.
 Next the counters for the \refEnv{enumerate} environment, \docCounter{c@enumi}, \docCounter{c@enumii}, \docCounter{c@enumiii} and \docCounter{c@enumiv} are created.
 
     \begin{teX}
-\@definecounter{enumi} \@definecounter{enumii} \@definecounter{enumiii} \@definecounter{enumiv}
+ \@definecounter{enumi} 
+ \@definecounter{enumii} 
+ \@definecounter{enumiii} 
+ \@definecounter{enumiv}
     \end{teX}
 
 
@@ -1279,7 +1283,7 @@ Next the counters for the \refEnv{enumerate} environment, \docCounter{c@enumi}, 
   to define them.
 
      \begin{teX}
-\def\enumerate{%
+ \def\enumerate{%
   \ifnum \@enumdepth >\thr@@\@toodeep\else
     \advance\@enumdepth\@ne
     \edef\@enumctr{enum\romannumeral\the\@enumdepth}%
@@ -1291,7 +1295,7 @@ Next the counters for the \refEnv{enumerate} environment, \docCounter{c@enumi}, 
     \end{teX}
 
     \begin{teX}
-\let\endenumerate =\endlist
+ \let\endenumerate =\endlist
     \end{teX}
 
  \begin{docCommand}{@itemdepth}{}
@@ -1316,7 +1320,7 @@ Itemization is controlled by four commands, which are defined in the standard cl
 
 
      \begin{teX}
-\def\itemize{%
+ \def\itemize{%
   \ifnum \@itemdepth >\thr@@\@toodeep\else
     \advance\@itemdepth\@ne
     \edef\@itemitem{labelitem\romannumeral\the\@itemdepth}% (*@\dcircle{1}@*)
@@ -1355,23 +1359,23 @@ environment. This is a good place to also hook other items to decorate the label
 Remember also that the \docAuxCommand{@itemitem}, defined above is just there to facilitate  
 calling |labelitemi| \ldots |labelitemn| depending on the level.
 
-    \begin{teXXX}
+\begin{teX}[numbers=none]
     \expandafter
     \list
       
       \csname\@itemitem\endcsname
       {\def\makelabel##1{\hss\llap{##1}}}%
   \fi}
-    \end{teXXX}
+\end{teX}
 
 The astude reader will notice at this point that although we defined the name of labeli etc, they still have no meaning. As mentioned earlier there is still some work to be done before we have full lists. These are defined in the standatrd classes and the definitions are shown below.\tcbdocmarginnote{revised\\13-06-2018}
 
-\begin{teXXX}
+\begin{teX}
 \newcommand\labelitemi{\textbullet}
 \newcommand\labelitemii{\normalfont\bfseries \textendash}
 \newcommand\labelitemiii{\textasteriskcentered}
 \newcommand\labelitemiv{\textperiodcentered}
-\end{teXXX}
+\end{teX}
 
 Finally the end of the environment is defined.
 

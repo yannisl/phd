@@ -1,0 +1,671 @@
+\chapter{Sequence lists}
+
+\epigraph{``Where did we get that (equation) from? Nowhere. It is not possible to derive it from anything you know. It came out of the mind of Schrödinger.''}{---Richard Feynman}
+
+One very useful data type, which is incorporated in \latex3 is the ``sequence'' data type. This contains a list of entries which may contain any \meta{balanced text}. One of the most powerful features of lists is that t is possible to map functions to sequences such that the function is applied to every item in the sequence.
+
+Sequences are also used to implement stack functions in \latex3. This is achieved using a number of dedicated stack functions.
+
+\section{Creating sequences}
+
+Like most of the modules new sequences are created using the prefix for the module and the word ``new''.
+
+\begin{docCommand}{seq_new:N}{}
+Creates a new \meta{sequence} or raises an error if the name is already taken. The declaration
+is global. The \meta{sequence} will initially contain no items.
+\end{docCommand}
+
+First let us create and examine the meaning of a simple example of the use of sequences. 
+
+\begin{texexample}{Creating sequences}{ex:seq}
+\ExplSyntaxOn
+\seq_new:N \g_scratch_seq 
+\token_to_meaning:N \g_scratch_seq
+\ExplSyntaxOff
+\end{texexample}
+
+Examining the meaning of the sequence we created with \refCom{seq_new:N} we observe that there is no magic involved, it is just another macro that holds two others. So let us add some material and see what happens next.
+
+\begin{texexample}{Creating sequences}{ex:seq}
+\ExplSyntaxOn
+\gdef\tempa {AAA}
+\gdef\tempb {BBB}
+
+% Add some material left and right
+\seq_gput_left:Nn \g_scratch_seq \tempa
+\seq_gput_right:Nn \g_scratch_seq \tempb
+
+% examine the meaning of the \scratch_seq:N
+% and the marker at the beginning
+\token_to_meaning:N \g_scratch_seq\\
+\token_to_meaning:N \s__seq\\
+\token_to_meaning:N \s__seq_item:n
+\ExplSyntaxOff
+\end{texexample}
+
+We have used two more functions that by now you are familiar to put material both at the left and at the right of the sequence, and again examined its meaning. We also examined the meaning of |s__seq| which is the internal command at the start of the list. The concept is very similar to |\@elt| lists
+
+\begin{texexample}{Creating sequences}{ex:seq}
+\ExplSyntaxOn
+% examine the meaning of the \g_scratch_seq:N
+% and the marker at the beginning again
+\token_to_meaning:N \g_scratch_seq\\
+\token_to_meaning:N \s__seq\\
+\token_to_meaning:N \s__seq_item:n\\
+
+% pop the left of the sequence
+% store in \l_tmpa
+\seq_pop_left:NN \g_scratch_seq \l_tmpa_tl
+
+% typeset contents of left cell
+\tl_use:N \l_tmpa_tl
+
+\ExplSyntaxOff
+\end{texexample}
+
+
+
+\begin{texexample}{Creating sequences}{ex:seq}
+\ExplSyntaxOn
+\def\urlctan   {\url{\http:ctan.org}}
+\def\urlgithub {\url{http:github.org}}
+
+% clearing the sequence
+\seq_clear:N \g_scratch_seq 
+
+\seq_gput_left:Nn \g_scratch_seq \urlctan
+\seq_gput_left:Nn \g_scratch_seq \urlgithub
+% typeset contents of left cell
+% pop the left of the sequence
+% store in \l_tmpa
+\seq_gpop_left:NN \g_scratch_seq \l_tmpa_tl
+
+% typeset contents of left cell
+\tl_use:N \l_tmpa_tl
+
+\ExplSyntaxOff
+\end{texexample}
+
+\begin{texexample}{An equation database}{ex:seq}
+ % #1 name
+ % #2 equation
+ 
+\ExplSyntaxOn   
+\cs_gset:Npn \addEquation #1#2
+  {
+    \cs_set:cpn {-#1} {{\bfseries#1}\begin{gather}#2\end{gather}}
+    \seq_gput_right:Nn \g_scratch_seq {#1}
+  }
+
+\cs_gset:Npn \typesetEquations 
+  {
+    \seq_map_inline:Nn \g_scratch_seq 
+      {
+        \cs:w-##1\cs_end:
+      }
+  }
+  
+  
+% clearing the sequence
+\seq_clear:N \g_scratch_seq 
+
+\ExplSyntaxOff
+
+\addEquation {quadratic} 
+  {
+    ax^2 + bx + c =0
+  }
+\addEquation {linear}    
+  {
+    x = \frac{b}{a}
+  }
+\addEquation {cubic}    
+  {
+    x^3 + 2x^2 + 10x = 20
+  }
+    
+\typesetEquations
+
+\end{texexample}
+
+By the way Leonardo de Pisa, also known as Fibonacci (1170–1250), was able to find the positive solution to the cubic equation \( x^3 + 2x^2 + 10x = 20\), using the Babylonian numerals. He gave the result as \(1,22,7,42,33,4,40\) (equivalent to \(1 + 22/60 + 7/602 + 42/603 + 33/604 + 4/605 + 40/606)\), which differs from the correct value by only about three trillionths.
+
+But let us fill our little database with the quartic, quintic, sextic and septic functions,
+so we can have a few more data in our sequence. Also I suggest you try and run some of the examples on your own to get used to the language, solving syntax errors for typos and the like.
+
+%\tcbset{texexmp/.style={ 
+%        colback = white,% background
+%        colframe=white, 
+%        %bottombox=ignored,   
+%        listing options={
+%          backgroundcolor=\color{white},
+%          keywordstyle=\color{black},
+%          breaklines=true,
+%          breakatwhitespace=true,
+%          commentstyle=\color{thelightgray},
+%          emph={addEquation, typesetEquations},
+%          emphstyle=\color{thegreen},
+%         },
+%        }}%
+
+\emphasize{addEquation,typesetEquations}
+\begin{texexample}{An equation database}{ex:seq}
+% add equations to db
+\addEquation {quartic} 
+  {
+    f(x)=ax^4+bx^3+cx^2+dx+e
+  }
+  
+\addEquation {quintic}    
+  {
+    g(x)=ax^5+bx^4+cx^3+dx^2+ex+f
+  }
+  
+\addEquation {sextic}    
+  {
+    ax^6+bx^5+cx^4+dx^3+ex^2+fx+g=0
+  }
+
+\addEquation {septic}    
+  {
+    ax^7+bx^6+cx^5+dx^4+ex^3+fx^2+gx+h=0
+  } 
+  
+\addEquation {BBGKY}
+  {\scriptstyle  
+   \frac{\partial f_s}{\partial t} + \sum_{i=1}^s \dot{\mathbf{q}}_i \frac{\partial f_s}{\partial \mathbf{q}_i} + \sum_{i=1}^s \left( - \frac{\partial \Phi_i^{ext}}{\partial \mathbf{q}_i} - \sum_{j=1}^s \frac{\partial \Phi_{ij}}{\partial \mathbf{q}_i} \right) \frac{\partial f_s}{\partial \mathbf{p}_i} = (N-s) \sum_{i=1}^s \frac{\partial}{\partial \mathbf{p}_i} \int \frac{\partial \Phi_{is+1}}{\partial \mathbf{q}_i}\cdot f_{s+1} \,d\mathbf{q}_{s+1} d\mathbf{p}_{s+1}.
+  }
+  
+ \addEquation {Borda-Carnot}
+  {
+    \Delta E\, =\, \frac12\, \rho\, \left( v_3\, -\, v_2 \right)^2\,
+           =\, \frac12\, \rho\, \left( \frac{1}{\mu}\, -\, 1 \right)^2\, v_2^2\,
+           =\, \frac12\, \rho\, \left( \frac{1}{\mu}\, -\, 1 \right)^2\, \left( \frac{A_1}{A_2} \right)^2\, v_1^2.} %(*@\label{borda}@*)
+
+% typeset all equations in db                      
+\typesetEquations 
+
+\end{texexample}
+
+If you observe the last example we have hit a small problem, we had to reduce the size of the display
+equation to fit it in. We would have been better to have displayed the equation in a \docAuxEnvironment{multline}
+or a \docAuxEnv{brqew environment}, as shown below. 
+
+
+
+\begin{multline}
+\frac{\partial f_s}{\partial t} + \sum_{i=1}^s \dot{\mathbf{q}}_i \frac{\partial f_s}{\partial \mathbf{q}_i} + \sum_{i=1}^s \left( - \frac{\partial \Phi_i^{ext}}{\partial \mathbf{q}_i} - \sum_{j=1}^s \frac{\partial \Phi_{ij}}{\partial \mathbf{q}_i} \right) \frac{\partial f_s}{\partial \mathbf{p}_i} =\\
+ (N-s) \sum_{i=1}^s \frac{\partial}{\partial \mathbf{p}_i} \int \frac{\partial \Phi_{is+1}}{\partial \mathbf{q}_i}\cdot f_{s+1} \,d\mathbf{q}_{s+1} d\mathbf{p}_{s+1}.
+\end{multline}
+
+Recall how we defined |\addEquation|,
+
+\begin{teXXX}
+\cs_gset:Npn \addEquation #1#2{
+  \expandafter\gdef\csname-#1\endcsname 
+    {
+      {\bfseries#1}\begin{gather}#2\end{gather}
+    }
+  \seq_gput_right:Nn \g_scratch_seq {#1}
+ }
+\end{teXXX}
+
+We can change the function to accept an optional argument and a starred or unstarred version to allow the user to add a field to the input that can determine the output. This is fairly easy with \pkgname{xparse}.
+
+
+\begin{texexample}{An equation database}{ex:seq}
+\addEquation {quartic} 
+  {
+    f(x)=ax^4+bx^3+cx^2+dx+e
+  }
+\addEquation {quintic}    
+  {
+    g(x)=ax^5+bx^4+cx^3+dx^2+ex+f
+  }
+\addEquation {sextic}    
+  {
+    ax^6+bx^5+cx^4+dx^3+ex^2+fx+g=0
+  }
+
+\addEquation {septic}    
+  {
+    ax^7+bx^6+cx^5+dx^4+ex^3+fx^2+gx+h=0
+  } 
+\addEquation {BBGKY}
+  {\scriptstyle  
+   \frac{\partial f_s}{\partial t} + \sum_{i=1}^s \dot{\mathbf{q}}_i \frac{\partial f_s}{\partial \mathbf{q}_i} + \sum_{i=1}^s \left( - \frac{\partial \Phi_i^{ext}}{\partial \mathbf{q}_i} - \sum_{j=1}^s \frac{\partial \Phi_{ij}}{\partial \mathbf{q}_i} \right) \frac{\partial f_s}{\partial \mathbf{p}_i} = (N-s) \sum_{i=1}^s \frac{\partial}{\partial \mathbf{p}_i} \int \frac{\partial \Phi_{is+1}}{\partial \mathbf{q}_i}\cdot f_{s+1} \,d\mathbf{q}_{s+1} d\mathbf{p}_{s+1}.
+  }
+ \addEquation {Borda-Carnot}
+  {
+    \Delta E\, =\, \frac12\, \rho\, \left( v_3\, -\, v_2 \right)^2\,
+           =\, \frac12\, \rho\, \left( \frac{1}{\mu}\, -\, 1 \right)^2\, v_2^2\,
+           =\, \frac12\, \rho\, \left( \frac{1}{\mu}\, -\, 1 \right)^2\, \left( \frac{A_1}{A_2} \right)^2\, v_1^2.}
+\typesetEquations 
+\end{texexample}
+
+
+
+
+
+\begin{texexample}{Sequence}{ex:sequence}
+\ExplSyntaxOn
+\def\exception{}
+\NewDocumentCommand\SplitDemo { +m m } 
+  {
+    \my_seq_split:nn { #1 }{#2}
+  }
+
+\tl_new:N \l_first_word_tl
+
+\cs_new_protected:Npn \my_seq_split:nn #1 #2
+  { 
+    
+    \seq_set_split:Nnn \l_tmpa_seq { #2 } { #1 }
+    \seq_use:Nn   \l_tmpa_seq {\par}
+    \seq_get_left:NN \l_tmpa_seq \l_first_word_tl
+    %\textcolor{blue} { \tl_use:N \l_first_word_tl  }
+  }
+      
+\ExplSyntaxOff
+
+\SplitDemo { This is one sentence. 
+             This is a second one. 
+             This is the third sentence. }{ . }\par
+\SplitDemo { The \exception{A.B.C.} corporation. Another sentence. }{ . }
+\SplitDemo { The \exception{A.B.C.} corporation. Another sentence. }{~}
+\end{texexample}
+
+
+\paragraph{Capitalization and l3} \latex3 provides capitalization related functions in three modules: str, tl and token. Each module handles different cases. These are still listed under l3candidates and have not as yet been moved into the main modules. We normally have three cases for capitalization, changing a word to all capitals, lowercase or the first letter is capitalized and the rest are lowercased. In |l3| this is termed mixed case (my preference is naming it ucfirst), as mixed case should also include camel case, such as |CamelCase|. In example~\ref{ex:capitalization}, we use the three available functions to see how they are working.
+
+\begin{texexample}{Change Lowercase Letters to Capitals}{ex:capitalization}
+\ExplSyntaxOn
+\tl_set:Nn \l_tmpa_tl { Hello~WORLD}
+Input:~ \tl_use:N \l_tmpa_tl\par
+
+Uppercase:~ \tl_upper_case:n { \l_tmpa_tl }\par
+
+Mixedcase:~ \tl_mixed_case:n {\l_tmpa_tl}\par
+
+Lowercase:~ \tl_lower_case:n {\l_tmpa_tl}\par
+\ExplSyntaxOff
+\end{texexample}
+
+
+
+
+In the next example we will consider a difficult problem for machines, but an easy problem for humans, the capitalization rules for titles.words that are not normally capitalized in a title.
+
+
+\begin{texexample}{Sequence}{ex:sequence}
+\ExplSyntaxOn
+\clist_gset:Nn \title_words_not_capitalized_en 
+ {a, an, the, at, by, for, in, of, on, to, up, and, as, but, it, or, nor, do, for, this, be, A, An, The, At, By, For, In, Of, On, To, Up, And, As, But, It, Or, Nor, Do, For, This, Be,abaft, aboard, about, above, absent, across, afore, after, against, along, alongside, amid, amidst, among, amongst, an, anenst, apropos, apud, around, as, aside, astride, at, athwart, atop, barring, before, behind, below, beneath, beside, besides, between, beyond, but, by, circa, concerning, despite, down, during, except, excluding, failing, following, for, forenenst, from, given, in, including, inside, into, lest, like, mid, midst, minus, modulo, near, next, notwithstanding, of, off, on, onto, opposite, out, outside, over, pace, past,  per, plus, pro, qua, regarding, round, sans, save, since, than, through, throughout, till, times, to, toward, towards, under, underneath, unlike, until, unto, up, upon, Versus, versus, via, vice, with, within, without, worth
+}
+
+\clist_gset:Nn \abbreviations 
+ {
+  A.B.C.,iTunes
+ }
+
+\clist_gset:Nn \acronyms
+  {
+    NATO,UN,US
+  }  						
+    
+\cs_new:Npn \ucfirst_aux:w #1#2 \q_stop { \tl_upper_case:n { #1 } #2 }
+
+\cs_new:Npn \ucfirst #1 
+	{
+		\exp_after:wN \ucfirst_aux:w #1 \q_stop
+	}
+
+\cs_new:Npn \lowerfirst #1 
+	{
+		\tl_lower_case:n {#1}
+ 	}
+
+\NewDocumentCommand\UppercaseTitle {s +m }
+  {
+	  \IfBooleanTF { #1 } { {\bfseries {#2} } }
+      {     
+       	\tex_hyphenpenalty:D = 10000
+       	  % split on space
+	       \seq_set_split:Nnn \g_tmpa_seq {~} {#2}
+	       
+	       \seq_use:Nn   \g_tmpa_seq {~}\\
+	       
+	       % pop the left into a temporary token list
+	       % the first letter must always be capitalized 
+	       \seq_pop_left:NN \g_tmpa_seq \l_tmpa_tl  
+	       
+	       % typeset the first letter
+	       {\bfseries\ucfirst \l_tmpa_tl \space} 
+	       
+	       % map it in line
+	       \seq_map_inline:Nn \g_tmpa_seq 
+	       	{
+	         	\clist_if_in:NnTF \title_words_not_capitalized_en { ##1 }
+	           { {\bfseries \lowerfirst {##1}~}} { {\bfseries \ucfirst{##1}~ } }    
+	            
+	         }            
+      }    
+	} 
+	
+\ExplSyntaxOff    
+
+ \UppercaseTitle {Top ten things To do in Paris}\\
+ \UppercaseTitle {How to use LaTeX sequence lists effectively}\\
+ \UppercaseTitle {Senate Votes to Confirm Elena Kagan For U.S. Supreme Court}\\
+ \UppercaseTitle {what would be a ``correct'' capitalization for the title of this question?}\\
+ \UppercaseTitle* {How about {$e=mc^2$}? }\\
+\end{texexample}
+
+The code we just wrote suffers from a lot of deficiencies.
+
+
+\ExplSyntaxOn
+
+\NewDocumentCommand\UppercaseTitle {s +m }
+    {
+      \IfBooleanTF { #1 } { {\bfseries {#2} } }
+        {     \tex_hyphenpenalty:D = 10000
+	        \seq_set_split:Nnn \g_tmpa_seq {~} {#2}
+	        \seq_use:Nn   \g_tmpa_seq {~}\\
+	        
+	        \seq_pop_left:NN \g_tmpa_seq \l_tmpa_tl  
+	       
+	        {\bfseries\ucfirst \l_tmpa_tl \space} 
+	        \seq_map_inline:Nn \g_tmpa_seq 
+	           {
+	              \clist_if_in:NnTF \title_words_not_capitalized_en { ##1 }
+	              { {\bfseries \lowerfirst {##1}~}} { {\bfseries \ucfirst{##1}~ } }    
+	            
+	           }            
+	       
+       }    
+    } 
+\ExplSyntaxOff   
+The rules for capitalization of titles varies from publication to publication and from department to department. A look at \href{http://arxiv.org/pdf/1505.04095v1.pdf}{arxiv} yielded a number of papers that do not follow the above rules. This will remain an unsolved problem, but at least we have moved forward. 
+
+\begin{texexample}{Uppercase Title Issues}{}
+\UppercaseTitle {Measuring Political Polarization: Twitter shows the two sides of Venezuela}\\
+\UppercaseTitle {The Directed Dominating Set Problem: Generalized Leaf Removal and Belief Propagation}\\
+\UppercaseTitle {Cities through the Prism of People's Spending Behavior}\\
+\UppercaseTitle {On the p-th root of a p-adic number}\\
+\UppercaseTitle {Planetary Formation Scenarios Revistied: Core-Accretion Versus Disk Instability}\\
+\UppercaseTitle {de Haas-van Alphen effect versus Integer Quantum Hall effect}\\
+\UppercaseTitle {A Simple Desultory Philippic (or How I Was Robert McNamara'd into Submission)}
+\end{texexample}
+
+
+The first title, shows a rule in many style manuals that words more than five characters should be capitalized, a rule broken by the third in the list above, although it is a preposition and many style books dictate that all prepositions be lowercase. It would make sense to add prepositions to our list. 
+
+The last example is the Dutch and Afrikaans preposition \emph{de} meaning  \enquote{of} or \enquote{from}. This would make an exception on the first word of the sentence but not the last. The prefix von is not capitalised in German-speaking countries. The Duden dictionary recommends capitalizing the prefix von at the beginning of the sentence, but not in its abbreviated form, in order to avoid confusion with an abbreviated first name: \enquote{Von Humboldt kam später.} and \enquote{v. Humboldt kam später.} (Von Humboldt came later.) The Swiss Neue Zürcher Zeitung, however, recommends omitting the von completely at the beginning of the sentence: \enquote{Humboldt kam später.}
+
+
+\begin{description}
+\item [First and last words] These are always capitalized. There is a general agreement for this one by all guides and editors, however there are exceptions.
+
+\item [Prepositions] Do not capitalize English prepositions in the body of the title, but capitalize them if they are the first word.
+
+\item [Foreign language prepositions] These have their own rules and are discussed later.
+\end{description}
+
+Let us now try and improve our code. In Example~\ref{ex:sequence}, we ensured that the first word is always capitalized by popping out the first word from the list and capitalizing it by using:
+
+\begin{teXXX}
+\seq_pop_left:NN \g_tmpa_seq \l_tmpa_tl 
+\end{teXXX}
+
+The first suggestion that comes to mind is to change is to add a pop left operation and perhaps to add both  to an auxiliary function so that we can later on add exceptions for foreign language names, as desribed in the specification earlier.
+
+\begin{texexample}{Renew \textbackslash UppercaseTitle}{}
+\ExplSyntaxOn
+%\cs_new:Npn \ucfirst_aux:w #1#2 \q_stop { \tl_upper_case:n { #1 } #2 }
+%
+%\cs_new:Npn \ucfirst #1 {
+%     \exp_after:wN \ucfirst_aux:w #1 \q_stop
+%}
+%
+%\cs_new:Npn \lowerfirst #1 {
+%       \tl_lower_case:n {#1}
+% }
+
+% Main command
+\RenewDocumentCommand\UppercaseTitle {s +m }
+    {
+      \IfBooleanTF { #1 } { {\bfseries {#2} } }
+        {     \tex_hyphenpenalty:D = 10000
+	        \seq_set_split:Nnn \g_tmpa_seq {~} {#2}
+
+	        % type splitted sequence	        
+	        \seq_use:Nn   \g_tmpa_seq {~}\\
+	        
+	        % 
+	        \pop_first:N  \g_tmpa_seq
+	        \seq_pop_right:NN  \g_tmpa_seq \l_tmpb_tl
+	        %
+	        \seq_map_inline:Nn \g_tmpa_seq 
+	           {
+	              \clist_if_in:NnTF \title_words_not_capitalized_en { ##1 }
+	              { {\bfseries \lowerfirst {##1}~}} { {\bfseries \ucfirst{##1}~ } }    
+	            
+	           }            
+	    {{ \bfseries \ucfirst{\l_tmpb_tl} }}
+       }    
+    } 
+
+ % Function to pop the first item and decorate it    
+\cs_new_nopar:Npn \pop_first:N #1 {
+ 	        \seq_pop_left:NN \g_tmpa_seq\l_tmpa_tl
+	        {\bfseries\ucfirst \l_tmpa_tl \space} 
+  }
+  
+ % Function to pop last word and decorate it 
+\cs_new_nopar:Npn \pop_last:N #1 {
+	        \seq_pop_right:NN \g_tmpa_seq \l_tmpa_tl
+	        {\bfseries\ucfirst  \l_tmpa_tl} 
+}        
+        
+\ExplSyntaxOff    
+\UppercaseTitle {What to do with Versus~}\\
+\UppercaseTitle {What to do with versus?~}\\
+\UppercaseTitle {What to do with versus: Versus or versus~?~}\\
+\end{texexample}
+
+What just happened is that we have also created two new auxiliaries one to pop the first word and another to pop the last word. We are now closer to a final solution, but the decoration of the words, needs to be taken care of as well. These are always better to be functions of their own and we can do it quite easily. By decoration we mean adding fonts colors and the like. We do not consider capitalization as decoration. 
+
+
+\begin{question}
+\begin{tasks}(1)
+\task Develop a function to detect if a token is composed of all capital letters.
+\task Develop a boolean \cs{is_uppecase:nTF} that can return true or false if the text is uppercase.
+\task Develop a boolean \cs{is_lowercase:nTF} that can return true or false if the text is all lowercase.
+\task Develop a boolean \cs{is_mixedcase:nTF} that can return true or false if the text consists of upper first and then lowercase.
+\end{tasks}
+\end{question}
+
+\begin{texexample}{Check if uppercase}{ex:seqif}
+\ExplSyntaxOn
+% create a new sequence
+\seq_new:N \alphabet_en_seq
+
+% split the sequence at empty spaces, use gset to pick in the next
+% example as well
+\seq_gset_split:Nnn \alphabet_en_seq {~} {A~B~C~D~E~F~G~H~I~J~K~L~M~N~O~P~Q~R~S~T~U~V~W~X~Y~Z} 
+
+% create a predicate to check if the letter is uppercase
+\prg_new_protected_conditional:Npnn \is_uppercase:n #1  {TF, T, F}{
+   \seq_if_in:NnTF \alphabet_en_seq 
+   {#1} 
+   {\prg_return_true:}
+   {\prg_return_false:}
+}
+
+\prg_generate_conditional_variant:Nnn \is_uppercase:n {o}{TF, T, F}
+
+
+Z~is~uppercase~ \is_uppercase:nTF {Z} {\TRUE}{\FALSE}\\
+
+v~is~not~uppercase \is_uppercase:nTF {v} {\TRUE}{\FALSE}
+\ExplSyntaxOff 
+\end{texexample}
+
+Now that we have the basic definitions, what we have to do is iterate through all the letters of a single
+token and carry out the tasks of determining if a string is fully capitalized. Fully capitalized strings,
+will be assumed to be acronyms or specific words that the user wishes to have fully capitalized and left in the title as is. This will obviously fail if the title is fully capitalized and we wish to change it to one of the other cases, so first we need to determine that we have a title that is composed of mixed cases.
+
+\begin{texexample}{}{}
+\ExplSyntaxOn
+% check we have not lost the sequence we defined earlier
+%\seq_set_split:Nnn \alphabet_en_seq {~} {A~B~C~D~E~F~G~H~I~J~K~L~M~N~O~P~Q~R~S~T~U~V~W~X~Y~Z} 
+\seq_use:Nn \alphabet_en_seq {,}
+\ExplSyntaxOff
+\end{texexample}
+
+We assume that the title will be split into words and we need to determine if a word is fully
+capitalized:
+
+\begin{texexample}{Determine if a word consists of all capital letters}{ex:allcaps}
+\ExplSyntaxOn
+\tl_gset:Nn \l_my_tl {ALLCAPsa}
+
+\tl_map_inline:Nn \l_my_tl
+{
+% Do something useful
+  \is_uppercase:nTF {#1}{#1~\TRUE}{\FALSE \tl_map_break:}
+}
+\ExplSyntaxOff
+\end{texexample}
+
+We are now on thr right track. We map the word letter by letter and break out at the first occurence of
+a lowercase letter. Notice the \cs{l_my_tl} stores |ALLCAPSsa| we broke out using |tl_map_break:| and never typeset the letter. All is left is to define a number of predicates using the macros we have just developed.
+
+\begin{texexample}{Determine the case of a word}{ex:allcaps2}
+% ... continued
+\ExplSyntaxOn
+% create a predicate to check if the letter is uppercase
+\bool_new:N \word_allcaps_bool
+\bool_new:N \word_mixed_bool
+\bool_new:N \word_alllower_bool
+
+\prg_new_protected_conditional:Npnn \if_is_word_uppercase:n #1  {TF, T, F}
+  {  
+    % Reset all the booleans
+     \bool_gset_false:N \word_allcaps_bool
+     \bool_gset_false:N \word_alllower_bool
+     \bool_gset_false:N \word_mixed_bool
+     
+      \tl_map_inline:nn {#1}
+      {
+        \is_uppercase:nTF {##1}
+           {\bool_gset_true:N \word_allcaps_bool}
+           {
+              \bool_gset_true:N \word_alllower_bool
+           }
+      }
+      
+    \bool_if:NTF\word_allcaps_bool
+       { 
+         % Check for mixed case
+         \bool_if:NTF \word_alllower_bool
+           {
+             % If a word has activated all caps 
+             % it can still conatin lowercase letters
+             % in this case set the mixed case true
+             \bool_gset_true:N \word_mixed_bool
+             \prg_return_false:
+           }
+           {\prg_return_true:}
+       }
+       {
+         \prg_return_false:
+       }
+   }
+
+
+% Tests true
+\if_is_word_uppercase:nTF {ALL}{ALL \TRUE}{\FALSE}\\
+
+% Tests false
+\if_is_word_uppercase:nTF {All}{\TRUE}{All \FALSE}\\
+
+% Since the last test is a mixed case check that the boolean is set
+\bool_if:NTF\word_mixed_bool {\TRUE}{All \FALSE}\\
+
+% One more test
+\if_is_word_uppercase:nTF {N-time}{ALL \TRUE}{\FALSE}\\
+\bool_if:NTF\word_mixed_bool {\TRUE}{All \FALSE}
+
+\ExplSyntaxOff
+\end{texexample}
+
+There are many more tests that one should include in a comprehensive package, with many more tests for edge cases. For example what to do after punctuation etc. One day this partial code will become a proper
+package and integrated into the phd-lowerlevelheadings package.
+
+\subsection{Final approach}
+
+Given the rules above, some words can have three different ways of capitalization depending on their position in the sentence i.e, first, middle or end.
+
+I posted some of the above code on |TEX.SX| and I had some amazing response from two of the developers of |expl3|. Under development there is a version of a |\title_case:n| command, which follows more or less the approach described in the example above.  I  have included the example in the chapter to demonstrate some of the aproaches to programming.
+
+\robustify\url
+\robustify\href
+\robustify\textbf
+\ExplSyntaxOn
+\DeclareDocumentCommand \arxiv {g g}
+{
+  \IfNoValueTF {#1} {\href{http://arxiv.org}{{\color{blue}arxiv}}\xspace}
+ {\href{http://arxiv.org/#1}{{\color{blue}#2}}\xspace}
+}
+\ExplSyntaxOff
+
+\paragraph{The exceptions to the rules}
+The article \arxiv{abs/1505.05148}{ALMA maps the Star-Forming Regions in a Dense Gas Disk at z\char`\~3 } has also a problematic title.  Here the first word is an acronym and is left as is,  and the last word is an abbreviation also left as is. Exclusion list, abbreviation lists perhaps need to be build over time similar to hyphenation lists.  Another paper
+\arxiv{abs/1505.05156}{Statistics of Measuring Neutron Star Radii: The Bayesian vs. The Frequentist Approach} shows some of the problems with abbreviations, such as \enquote{vs.}, so filtering through a list of exclusions before capitalization is unavoidable. 
+\acrodef{QGP}{quark-gluon plasma}
+
+The title  ``\arxiv{abs/1505.04994}{Viscosities of Gluon Dominated QGP Model within Relativistic Non-Abelian Hydrodynamics}'', will only be capitalized properly, except for the  \ac{QGP} acronym, which must be present in an exclusion list.
+
+\paragraph{Problems with NLP}
+Some of the problems described in rationalizing an algorithmic approach fall in what is desribed as Natural Language Processing and such problems are not easy to solve. A solution that maybe can be satisfactory for
+most cases, would involve at least a couple of passes and it will also assume that the author is somehow correct in typing the text, such a sleaving spaces after a stop. Using a second pass with regular expressions, it maybe possible to start filtering some of the abbreviations and acronyms, as well as do sentence detection.
+
+Thanks to the \latex3 Team some problems taht would seem almost impossible to solve previously, at least now we can contemplate solution.
+
+We will revisit the code in the chapter on Regular Expressions.
+
+\begin{enumerate}
+\item Write or ask for a specification. This can clarify requirements and avoid too many iterations of the code development. Have many examples of usage for testing.  Write tests for your code and always test against them. I understood the rules of title casing better from collecting titles from the \arxiv website.
+
+\item Search for similar code and packages before you start developing.
+
+\item Don't be afraid to ask the experts, most of the time they are more than willing to help.
+
+\item Open source development is great. Consider contibuting to it. It is great for you and it is great for the community. The old concept of ``commons'' has more or less disappeared except in programming. Foster it and take care of it.
+\end{enumerate}
+
+
+\section{Summary}
+
+In this chapter we reviewed the basics of the data type \enquote{Sequence lists} and have managed to produce some useful code in our final example. We have also reviewed some of the general concepts behind programming and have even managed to get two of the \latex3 developers to contribute code.
+
+The code with some modifications is included in the \pkgname{phd} to provide title casing for headings and titles. The credit goes to Will Robertson and Joseph Wright. 
+
+This chapter also brings us to the end of the list structures of |expl3|. Lua has its tables which are used to develop any data type and data structure required and similarly |expl3|'s lists can be used to develop and data structure you can imagine. One can think of link lists and tree data structures.
+
+\endinput
+A link list can easily be developed as it consists of elements that point to the next element only.  
+
+\begin{verbatim}
+\expandafter\def \csname link_item_1_next\endcsname {end list marker}
+\end{verbatim}
+
+At creation the link list item will expand to a marker. When the second item is added, the previous item will point to the second element and so on. The advantages of a link list is that if we want to delete an item or insert, we do not have to iterate through the whole list. Of course, if we had to delete it we could just simply mark it as undefined.
+
+All the lists and parsing described in this book depend on one amazing fact, which is what \tex does when scanning the argument specification of a macro (between |\def\acommand | and either the opening bracket |{|. Leverage this fact as much as you can in your parsers. 
+
+During mapping this could be detected and not used. \tex like any language has its own paradigms and we need not   follow other language patterns, but is good to know that we truly have a highly flexible and Turing-complete language available (even if it is a macro language). A macro language is still a language.
+
+

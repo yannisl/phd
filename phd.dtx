@@ -254,20 +254,16 @@ See http://www.latex-project.org/lppl.txt
 \usepackage{phd-runningheads}
 \usepackage{phd-lowersections}
 \usepackage{phd-documentation}
-%\usepackage{phd-toc}
+\usepackage{phd-toc}
 
 %\usepackage{pkgindoc}             %%% danger
 \sethyperref
-\usepackage{makeidx}
+%\usepackage{makeidx}
 \makeindex
-\cxset{part format=stewart,
-       chapter afterindent=on,
-       part afterindent=on,
-       section format=traditional,
-       chapter format=block,
-       chapter opening=left}
 \newfontfamily\symbola{Symbola.ttf}       
 \def\textls{}
+
+\AtBeginDocument{\addtocontents{toc}{\protect\hypersetup{hidelinks}}}
 \begin{document}
 \DEBUGOFF
 \let\luacmd\docAuxCommand
@@ -283,20 +279,20 @@ See http://www.latex-project.org/lppl.txt
 %\input{./sections/symbols}
 %\input{./sections/unicodemath}
  % \input{./sections/i18n}
-  %  \part{LuaTeX}
- %  \input{./sections/luatex}
- %  \input{./lua/variadic}
-%     \input{./lua/strings}    
-%     \input{./lua/pattern-matching} 
-%     \input{./lua/modules}
+  \part{LuaTeX}
+   \input{./sections/luatex}
+   \input{./lua/variadic}
+     \input{./lua/strings}    
+     \input{./lua/pattern-matching} 
+     \input{./lua/modules}
 %     \input{lua/lua-objects}
 %%     \input{./lua/lpeg} 
 
  %%    \input{./lua/nodes} 
-% %     \input{./lua/luaio}
+      \input{./lua/luaio}
 %  \input{./sections/chemistry} 
 %   \input{./lua/metatables} 
-% \input{./lua/modules}
+
 \DocInput{\jobname.dtx}
 %\DocInput{phd-logos.dtx}
 %\DocInput{phd-epigraphs.dtx}
@@ -464,19 +460,8 @@ See http://www.latex-project.org/lppl.txt
 \let\latexenumerate\enumerate
 \let\latexendenumerate\endenumerate
 %    \end{macrocode}
-
-% Load the package \pkg{fixltx2e} to update \LaTeX2e for various fixes. The package fixes a number things in the LaTeX2e kernel. Due to LaTeX's stability policy, these corrections have not been incorporated into the LaTeX2e kernel, but this package does things most people would agree are bugfixes. So to load this package is always recommended for newly created documents. The corrections have no commonalities, but the package's description has a nice summary:
-%
-%ensure one-column floats don't get ahead of two-column floats;
-%correct page headers in twocolumn documents;
-%stop spaces disappearing in moving arguments;
-%allowing |\fnsymbol| to use text symbols;
-%allow the first word after a float to hyphenate;
-% cs{emph} can produce caps/small caps text;
-%bugs in \cs{setlength} and \cs{flushbottom.}
 % 
 %    \begin{macrocode}
-%\RequirePackage{fixltx2e}[2006/03/24]
 % mock chapters where necessary
 \@ifundefined{c@chapter}{%  
       \newcounter{chapter}
@@ -510,16 +495,56 @@ See http://www.latex-project.org/lppl.txt
 %   Since we are using l3 macros as well we redefine it as:
 % \end{docCommand}
 %    \begin{macrocode} 
-\DeclareDocumentCommand\MakePrivateLetters{}{\catcode`\@11\relax \catcode`_11}
+\ExplSyntaxOn
+\cs_gset:Npn \MakePrivateLetters
+  {
+   \char_set_catcode_letter:N \@
+   \char_set_catcode_letter:N \_
+   \char_set_catcode_letter:N \:
+  }
+\ExplSyntaxOff
 %    \end{macrocode}
-% We require the \pkg{morewrites} to enable us to use in excess of 16 files.
+
+% Here is our attempt to play nice with the three
+% main TeX engines.
 %
 %    \begin{macrocode}
-\ifluatex 
-\else
- \RequirePackage{morewrites}
-\fi
- 
+\RequirePackage{phdsort}%% to check
+%    \end{macrocode}
+%    \begin{macrocode}
+\RequirePackage{ifluatex}
+
+\RequirePackage{ifxetex}
+%    \end{macrocode}
+
+% We require the \pkg{morewrites} to enable us to use in excess of 16 files.
+%
+% \begin{docCommand}{ifengine} { \marg{code for XeTeX} \marg{code for LuaTeX} \marg{code for LaTeX} }
+%   This is a three way switch. Check for XeTeX and then for LuaTeX and insert code
+%   as required.
+% \end{docCommand}
+%    \begin{macrocode}
+\ExplSyntaxOn
+\cs_set:Npn \ifengine #1 #2 #3
+  {
+    \ifxetex
+      #1
+    \else
+      \ifluatex
+        #2
+      \else
+        #3
+      \fi
+    \fi
+  }
+  
+\ExplSyntaxOff
+%    \end{macrocode}
+%    \begin{macrocode}
+\ifengine{}{}{\RequirePackage{morewrites}}
+%    \end{macrocode}
+% Load the \pkg{pgfkeys} as we will use it to define the keys,
+%    \begin{macrocode} 
 \RequirePackage{pgfkeys}      
 %\usepgfmodule{parser}%for svg     
 %\usepgflibrary{svg.path}%for futurelet and parser demo 
@@ -680,38 +705,7 @@ See http://www.latex-project.org/lppl.txt
 %    \end{macrocode}
 %
 
-% Here is our attempt to play nice with the three
-% main TeX engines.
-%
-%    \begin{macrocode}
-\RequirePackage{phdsort}%% to check
-%    \end{macrocode}
-%    \begin{macrocode}
-\RequirePackage{ifluatex}
 
-\RequirePackage{ifxetex}
-%    \end{macrocode}
-
-% \begin{docCommand}{ifengine} { \marg{code for XeTeX} \marg{code for LuaTeX} \marg{code for LaTeX} }
-%   This is a three way switch. Check for XeTeX and then for LuaTeX and insert code
-%   as required.
-% \end{docCommand}
-%    \begin{macrocode}
-\ExplSyntaxOn
-\cs_set:Npn \ifengine #1 #2 #3
-  {
-    \ifxetex
-      #1
-    \else
-      \ifluatex
-        #2
-      \else
-        #3
-      \fi
-    \fi
-  }
-\ExplSyntaxOff
-%    \end{macrocode}
 %
 % We use \pkg{luacode} and luatextra only if we are using LuaTeX. Many of the
 % packages we load ourselves later in any case. We need to check this. This loads 

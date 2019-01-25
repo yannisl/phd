@@ -1,4 +1,8 @@
+\cxset{fashion image=fashion-03.jpg,
+       palette rouge}
+       
 \chapter{ltoutput.dtx}
+
 \label{kernel:ltoutput}
 
 \section{Introduction}
@@ -29,7 +33,7 @@ The interesting and complicated part of the OR is its algorithm for handling flo
 the figure as well as the table environments. It is instructive to start the discussion of the algorithm from this point. 
 
 The class defines the default float placement specifier using 
-|\fps@figure| and then goes on to define the figure environment with the help of \refCom{@float} and \refCom{end@float}, which are defined in the generic float.dtx in the kernel.
+|\fps@figure| and then goes on to define the figure environment with the help of \refCom{@float} and \refCom{end@float}, which are defined in the generic \docFile{float.dtx} in the kernel.
 
 
 \begin{teX}
@@ -46,6 +50,11 @@ The class defines the default float placement specifier using
 
 
 A float specifier is made of two parts the float type, which is a power of two--e.g., figures in the case of the book class are type 1 and tables type 2 and the \textit{placement specification} describing where the float can be placed.  The type is defined in powers of two due to the way the specifiers are represented using a binary representation internally.
+
+\ExplSyntaxOn
+\int_to_bin:n {50}\\
+\int_from_bin:n {110010}
+\ExplSyntaxOff
 
 \begin{figure}[h]
 \centering
@@ -328,7 +337,8 @@ This solves two special problems:
  \cs{@outputpage} : Produces an output page with the contents of box
               |\@outputbox| as the text part.
               Also sets |\@colht| :=G |\textheight|.
-              The page style is determined as follows.
+              The page style is determined as follows:
+              
               \begin{algorithm}[H]
                \Begin{
                 \If{\cs{@thispagestyle} = true}{
@@ -573,17 +583,18 @@ A negative float specifier is used to indicate a marginal note.
     END
   \end{verbatim}
 
-\begin{verbatim}
-%
-%
-%  \@bitor\NUM\LIST : Globally sets switch @test to the disjunction for
-%         all I of bit  log2 \NUM of the float specifiers of all the
-%         floats in \LIST.
 
-%         I.e., @test is set to true iff there is at least one
-%         float in \LIST having bit  log2 \NUM  of its float specifier
-%         equal to 1.
-%
+
+\begin{docCommand}{@bitor}{\Arg{num}\Arg{list}}
+  \cs{@bitor}|\NUM\LIST|  Globally sets switch |@test| to the disjunction for
+         all I of bit  log2 |\NUM| of the float specifiers of all the
+         floats in |\LIST|.
+
+         I.e., @test is set to true iff there is at least one
+         float in |\LIST| having bit  log2 |\NUM|  of its float specifier
+         equal to 1.
+\end{docCommand}
+\begin{verbatim}
 %  Note: log2 [(\count I)/32] is the bit number corresponding to the
 %  type of float I.  To see if there is any float in \LIST having
 %  the same type as float I, you run \@bitor with
@@ -614,7 +625,7 @@ A negative float specifier is used to indicate a marginal note.
 
 \section{Box lists for float-placement algorithms}
 
-The \pkgname{fixltx2e} and the now redundant package---as it was incorporated into the fixes
+The \pkg{fixltx2e} the now redundant package---as it was incorporated into the fixes
 provided by |fixltx2e|--- modify the output routine to correct a problem with synchronizing floats in double column texts with those in single column \cite{fix2col,fixltx2e}. Here we will describe the normal behaviour.
 Additional commentary on the changes is discussed later on.
  
@@ -632,7 +643,8 @@ Additional commentary on the changes is discussed later on.
 
 \begin{texexample}{Meaning toplist}{ex:toplist}
 \makeatletter
-\meaning\@freelist
+\meaning\@freelist\\
+\meaning\@toplist
 \makeatother
 \end{texexample}
 
@@ -788,7 +800,7 @@ Additional commentary on the changes is discussed later on.
 \@testfalse
     \end{teX}
 %
-% \changes{v1.1v}{1996/07/26}{remove \cs{global} before \cs{@test...}}
+\footnotechanges{v1.1v}{1996/07/26}{remove \cs{global} before \cs{@test...}}
     \begin{teX}
 \def\@bitor#1#2{\@testfalse {\let\@elt\@xbitor
    \@tempcnta #1\relax #2}}
@@ -807,31 +819,30 @@ Additional commentary on the changes is discussed later on.
    \fi}
     \end{teX}
 %
-\section{Definition of Float Boxes}
+\section{Definition of Float Boxes (inserts)}
 
-All boxes are defined using |\newinsert|.  A total of eighteen boxes are defined here
+All boxes are defined using \refCom{newinsert}.  A total of eighteen insertions are defined here
 and later on inserted in the freelist (See line \ref{freelist}).
-
     \begin{teX}
-\newinsert\bx@A
-\newinsert\bx@B
-\newinsert\bx@C
-\newinsert\bx@D
-\newinsert\bx@E
-\newinsert\bx@F
-\newinsert\bx@G
-\newinsert\bx@H
-\newinsert\bx@I
-\newinsert\bx@J
-\newinsert\bx@K
-\newinsert\bx@L
-\newinsert\bx@M
-\newinsert\bx@N
-\newinsert\bx@O
-\newinsert\bx@P
-\newinsert\bx@Q
-\newinsert\bx@R
+\newinsert\bx@A \newinsert\bx@B \newinsert\bx@C
+\newinsert\bx@D \newinsert\bx@E \newinsert\bx@F
+\newinsert\bx@G \newinsert\bx@H \newinsert\bx@I
+\newinsert\bx@J \newinsert\bx@K \newinsert\bx@L
+\newinsert\bx@M \newinsert\bx@N \newinsert\bx@O
+\newinsert\bx@P \newinsert\bx@Q \newinsert\bx@R
     \end{teX}
+
+\tex allows 255 classes of insertions |\insert0| to |\insert254|. It is important to remember that
+every insert is tied to other registers of the same number. For example, |\insert100| is connected
+with |\count100|, |\dimen100|, |\skip100| and |\box100|. plain \tex provides an allocation function
+for insertions as it does for registers. Appendix B includes the command:
+\begin{quotation}
+|\newinsert\footins|
+\end{quotation} 
+which defines |\footins| as the number for footnote insertions.
+
+\latex2e adopts similar definitions (see Chapter \ref{kernel:ltplain}). In the latest versions
+allocations are extended with |\extrafloats|.
 
 The |\@freelist| is defined next. Notice that |\@elt| is included here to enable
 the manipulation of the list later on.
@@ -858,6 +869,18 @@ The rest of the lists are defined below and they are initialized as empty lists.
 \begin{texexample}{Current list}{ex:currentlist}
 \makeatletter
 \meaning\@currlist
+
+\meaning \bx@A
+
+\the\bx@A
+
+\the\dimen252
+
+\the\count252
+
+\the\skip252
+
+
 \makeatother
 \end{texexample}
 
@@ -885,7 +908,9 @@ are defined here. They are important in building up the page calculations.
     \end{teX}
 
 
-
+After these preliminary definitions are made a box is defined to hold material 
+that is inserterted before the dvi file is produced. This is a general hook
+and widely used by package authors.
 
 \begin{docCommand}{AtBeginDvi}{\marg{contents}}{}
 
@@ -1145,12 +1170,12 @@ as a document always starts at an odd number.
     \ht\@currbox \textheight
   \fi
     \end{teX}
-%
-%    This next line is not essential but it is more robust to make this
-%    value non-zero, in case of weird errors.
-%
-%    This next bit is what is needed from |\@addtodblcol|, plus some
-%    extra checks for error trapping.
+
+    This next line is not essential but it is more robust to make this
+    value non-zero, in case of weird errors.
+
+    This next bit is what is needed from |\@addtodblcol|, plus some
+    extra checks for error trapping.
     \begin{teX}
   \global \count\@currbox \tw@
   \@tempdima -\ht\@currbox
@@ -1163,8 +1188,8 @@ as a document always starts at an odd number.
   \fi
   \@cons \@dbltoplist \@currbox
     \end{teX}
-%    This setting of |\@dbltopnum| is used only to change the
-%    typesetting in\\ |\@combinedblfloats|.
+    This setting of |\@dbltopnum| is used only to change the
+    typesetting in\\ |\@combinedblfloats|.
     \begin{teX}
   \global \@dbltopnum \m@ne
 %<*trace>
@@ -1218,6 +1243,10 @@ as a document always starts at an odd number.
 
 \section{The \textbackslash output routine}
 
+We now arrive at the interesting part. The |\output| is a token register that holds instructions
+as to how the page is to be typeset. This is called automatically by \tex. Think of it as the
+main function.
+
   \begin{docCommand}{output}{}
     This needs some small adjustments.  We cannot
     guarantee that the float mechanism will interact correctly with
@@ -1227,6 +1256,7 @@ as a document always starts at an odd number.
     The reset of |\par| to the output routine.
     This avoids problems when the output routine is
     called within a list where |\par| may be a no-op.
+
 
     \begin{teX}
 \output {%
@@ -1674,19 +1704,26 @@ temporary storage.
   \end{docCommand}
 
 The following macros are just hooks and can be set to add top and
-bottom glue on all pages. They are hardly used by anyone.\footnote{http://tex.stackexchange.com/questions/40469/use-of-texttop-and-textbottom-for-vertical-positioning} 
-  \begin{docCommand}{@texttop}{}
+bottom glue on all pages.\footnote{http://tex.stackexchange.com/questions/40469/use-of-texttop-and-textbottom-for-vertical-positioning}\footnote{https://tex.stackexchange.com/questions/131871/vertically-centering-page-with-texttop-and-textbottom} They are currently used in the definition of \refCom{raggedbottom} and \refCom{flushbottom}. 
+
+\begin{docCommand}{@texttop}{}
+Does nothing by default, otherwise add glue at the top on all pages.
+\begin{teX}
+  \let \@texttop \relax
+\end{teX}  
+\end{docCommand}
+  
   \begin{docCommand}{@textbottom}{}
-    These do nothing as a default.
+    Can be used to add glue at the bottom of a page.
     \begin{teX}
-\let \@texttop \relax
 \let \@textbottom \relax
     \end{teX}
   \end{docCommand}
-  \end{docCommand}
+  
 
-  \begin{docCommand}{@resetactivechars}{}
-  \begin{docCommand}{@activechar@info}{}
+\begin{docCommand}{@resetactivechars}{}
+\end{docCommand}
+\begin{docCommand}{@activechar@info}{}
 
  added hook to protect against certain active characters in the
  output routine. Default checks are for active space and end-of-line.
@@ -1713,7 +1750,7 @@ bottom glue on all pages. They are hardly used by anyone.\footnote{http://tex.st
 \endgroup
     \end{teX}
   \end{docCommand}
-  \end{docCommand}
+
 
 
 
@@ -1752,7 +1789,7 @@ bottom glue on all pages. They are hardly used by anyone.\footnote{http://tex.st
 
     A lot of this code has been in-lined tp prevent mis-use of
     internal commands as hooks.
-\begin{docCommand}{@outputpage}{\marg{void}}
+\begin{docCommand}{@outputpage}{\Arg{void}}
 This essentially calls |\shipout|
 \end{docCommand}        
     \startlineat{472}
@@ -1817,11 +1854,10 @@ This essentially calls |\shipout|
   \@parboxrestore
     \end{teX}
 %    \ldots\ to here was in the command |\@writesetup|. 
-\section{Shipout}
+
 
 Finally we are ready to \docAuxCommand{shipout} the box.
 
-\startlineat{479}
     \begin{teX}
   \shipout \vbox{%
     \set@typeset@protect
@@ -1832,11 +1868,13 @@ Finally we are ready to \docAuxCommand{shipout} the box.
     \end{teX}
 %    This first bit has been moved inside the shipped out box.
 %    
-    Now the setup inside the shipped out box; this should conatin all 
+    Now the setup inside the shipped out box; this should contain all 
     the stuff that could only affect typesetting; other stuff may need 
     to be reset for the writes also.
     
     From here \ldots\ was in the command |\@shipoutsetup|. 
+    
+    The \docAuxCommand{@specialpage} picks up the pagestyle using the |ps@|
     \begin{teX}
   \if@specialpage
     \global\@specialpagefalse\@nameuse{ps@\@specialstyle}%
@@ -1914,10 +1952,10 @@ Finally we are ready to \docAuxCommand{shipout} the box.
   \global \@colht \textheight
   \stepcounter{page}%
     \end{teX}
-%    It is now clear that this does something useful, thanks to Piet
-%    van Oostrum.  It is needed because a float page is made without
-%    using TeX's page-builder; thus the output routine is never called
-%    so the marks are not updated.
+    It is now clear that this does something useful, thanks to Piet
+    van Oostrum.  It is needed because a float page is made without
+    using TeX's page-builder; thus the output routine is never called
+    so the marks are not updated.
     \begin{teX}
   \let\firstmark\botmark
 }
@@ -1930,7 +1968,7 @@ any space. \makeatletter
 
 \the\@themargin
 
-\vbox{\scalebox{0.3}{\@thehead}
+\vbox{\scalebox{0.5}{\@thehead}
 \vskip30pt
 \scalebox{0.3}{\@thefoot}}
 \makeatother
@@ -1957,6 +1995,8 @@ any space. \makeatletter
 The combining of the floats happens here.
 
  \begin{docCommand}{@combinefloats}{}
+  \end{docCommand}
+  
  \begin{docCommand}{@cflb}{}
  
     The |\boxmaxdepth| setting here was not made local to
@@ -1964,14 +2004,16 @@ The combining of the floats happens here.
     by |\@cflt| (and not normally even there), so it has been
     moved there; this also agrees with the original pseudcode.
     
-\startlineat{532}
+The |\@combinefloat| function will add the top and bottom floats
+if their lists are not empty. |\cf|\meta{lt} is or top and |lb| for bottom.
        \begin{teX}
 \def \@combinefloats {%
     \ifx \@toplist\@empty \else \@cflt \fi
     \ifx \@botlist\@empty \else \@cflb \fi
 }
        \end{teX}
-%  
+
+First define the |\@elt| 
        \begin{teX}
 \def \@cflt{%
     \let \@elt \@comflelt
@@ -1985,8 +2027,14 @@ The combining of the floats happens here.
                              \vskip \textfloatsep
                              \unvbox\@outputbox
                              }%
+                             
+    % reset |\@elt| to |\relax|
     \let\@elt\relax
+    
+    % return |\@toplist| to the |\@freelist|
     \xdef\@freelist{\@freelist\@toplist}%
+    
+    % empty the |\@toplist|
     \global\let\@toplist\@empty
 }
        \end{teX}
@@ -2009,7 +2057,7 @@ The combining of the floats happens here.
 }
        \end{teX}
   \end{docCommand}
-  \end{docCommand}
+ 
 %
  \begin{docCommand}{@comflelt}{}
  \begin{docCommand}{@comdblflelt}{}
@@ -2041,14 +2089,14 @@ The combining of the floats happens here.
 %    The setting of |\boxmaxdepth| here has no effect since the
 %    |\@outputbox| should already have depth zero.  Even so, it would
 %    have no effect on the layout of the page.
-% \changes{v1.0l}{1994/03/15}{Removed boxmaxdepth setting.}
+% \footnotechanges{v1.0l}{1994/03/15}{Removed boxmaxdepth setting.}
        \begin{teX}
       {%\boxmaxdepth\maxdepth   %% probably not needed, CAR
        \unvbox\@tempboxa\vskip-\dblfloatsep
        \end{teX}
 %    Here we need different typesetting if the top float comes from
 %    |\@topnewpage|. 
-% \changes{v1.0n}{1994/04/30}{Removed rule in topnewpage case}
+% \footnotechanges{v1.0n}{1994/04/30}{Removed rule in topnewpage case}
        \begin{teX}
        \ifnum \@dbltopnum>\m@ne
          \dblfigrule
@@ -2259,14 +2307,14 @@ The combining of the floats happens here.
   \fi}
     \end{teX}
  \end{docCommand}
-%
-%
-% The major changes for float suppression and the changes to the float
-% mechanism to make it conform to the documentation are in these next
-% macros.
-%
+
+
+ The major changes for float suppression and the changes to the float
+ mechanism to make it conform to the documentation are in these next
+ macros.
+
   \begin{docCommand}{@addtobot}{}
-%
+
     \begin{teX}
 %<*2ekernel|autoload|fltrace>
 \def \@addtobot {%
@@ -2786,7 +2834,9 @@ The combining of the floats happens here.
 %
 %
 %
-% \begin{docCommand}{@addmarginpar}
+\begin{docCommand}{@addmarginpar}{}
+ Defining the marginpar placement function
+\end{docCommand}
        \begin{teX}
 %<*2ekernel|autoload>
 \def\@addmarginpar{\@next\@marbox\@currlist{\@cons\@freelist\@marbox
@@ -2814,7 +2864,8 @@ The combining of the floats happens here.
     \global\advance\@mparbottom\marginparpush
     \advance\@tempdima -\ht\@marbox
        \end{teX}
-% Putting box movement inside the `marbox':
+       
+ Putting box movement inside the `marbox':
        \begin{teX}
     \global\setbox \@marbox
                    \vbox {\vskip \@tempdima
@@ -2845,45 +2896,45 @@ The combining of the floats happens here.
     \hbox{\vrule \@height\z@ \@width\z@ \@depth\@pagedp}}
 %</2ekernel|autoload>
        \end{teX}
-% \end{docCommand}
+ 
 %
-% \subsubsection{Kludgeins}
-%
-% This part of the file is part of the implementation of the following
-% two new commands for \LaTeX2e{}.
-%
-%
-% \begin{verbatim}
-% \enlargethispage{<dim>}
-% \end{verbatim}
-%
-% Adds |<dim>| to the height of the current column only. On the printed
-% page the bottom of this column is extended downwards by exactly
-% |<dim>| without having any effect on the placement of the footer; this
-% may result in an overprinting.
-%
-% \begin{verbatim}
-% \enlargethispage*{<dim>}
-% \end{verbatim}
-%
-% Similar to |\enlargethispage| but it tries to squeeze the column to
-% be printed in as small a space as possible, ie it uses any
-% shrinkability in the column. If the column was not explicitly broken
-% (\eg with |\pagebreak|) this may result in an overfull box message but
-% execpt for this it will come out as expected (if you know what to
-% expect).
-%
-% The star form of this command is dedicated to Leslie Lamport, the
-% other we need for ourselves (FMi, CAR).
-%
-% These commands may well have unwanted effects if used soon
-% before a |\clearpage|: please give keep them clear of such places.
-%
-%  \begin{docCommand}{@kludgeins}
+ \subsection{Kludgeins}
+
+ This part of the file is part of the implementation of the following
+ two new commands for \LaTeX2e{}.
+
+
+ \begin{verbatim}
+ \enlargethispage{<dim>}
+ \end{verbatim}
+
+ Adds |<dim>| to the height of the current column only. On the printed
+ page the bottom of this column is extended downwards by exactly
+ |<dim>| without having any effect on the placement of the footer; this
+ may result in an overprinting.
+
+ \begin{verbatim}
+ \enlargethispage*{<dim>}
+ \end{verbatim}
+
+ Similar to |\enlargethispage| but it tries to squeeze the column to
+ be printed in as small a space as possible, ie it uses any
+ shrinkability in the column. If the column was not explicitly broken
+ (\eg with |\pagebreak|) this may result in an overfull box message but
+ execpt for this it will come out as expected (if you know what to
+ expect).
+
+ The star form of this command is dedicated to Leslie Lamport, the
+ other we need for ourselves (FMi, CAR).
+
+ These commands may well have unwanted effects if used soon
+ before a |\clearpage|: please give keep them clear of such places.
+
+  \begin{docCommand}{@kludgeins}{}
 % \changes{v0.1c}{1993/11/23}{Insert added}
-%    The insert which makes \TeX{} do a lot of the necessary work.
-%    All we need to put into it is the amount by which the pagegoal
-%    should be changed.
+    The insert which makes \TeX{} do a lot of the necessary work.
+    All we need to put into it is the amount by which the pagegoal
+    should be changed.
        \begin{teX}
 %<*2ekernel|def1>
 \newinsert \@kludgeins
@@ -2891,7 +2942,7 @@ The combining of the floats happens here.
 \global\count\@kludgeins 1000
 %</2ekernel|def1>
        \end{teX}
-%  \end{docCommand}
+  \end{docCommand}
 %
 %
 %  \begin{docCommand}{enlargethispage}
@@ -2963,13 +3014,13 @@ The combining of the floats happens here.
        \end{teX}
 %  \end{docCommand}
 %
-% \subsubsection{Float control}
-%
-% This part implements controllable floats and other changes
-% to the float mechanism.
-%
-% It provides, at the doument level, the following command for
-% inclusion in \LaTeX2e{}.
+ \section{Float control}
+
+ This part implements controllable floats and other changes
+ to the float mechanism.
+
+ It provides, at the document level, the following command for
+ inclusion in \LaTeX2e{}.
 %
 % \begin{verbatim}
 %     \suppressfloats
@@ -3079,34 +3130,34 @@ The combining of the floats happens here.
     \end{teX}
   \end{docCommand}
   \end{docCommand}
-%
-%
-% Manipulation of float placement and type; both their strings and the
-% corresponding count registers.
-%
-%  \begin{docCommand}{@fpstype}
-%  \end{docCommand}
-%  \begin{docCommand}{@reqcolroom}
-%  \begin{docCommand}{@textfloatsheight}
-% First a new count register to go with |\@currtype|.
-%
-% Then a new skip register, for information needed to remove the
-% |\@maxsep| conservatism: it is possible that this could use a
-% temporary register.
-%
-% Finally a dimension register to hold the total height of in-text
-% floats on the current page.  This is needed to implement a
-% major change in the functionality of |\@addtocurcol| which is,
-% nevertheless, a bug fix.
-% It is not local and therefore cannot be a temporary register.
-%
+
+
+ Manipulation of float placement and type; both their strings and the
+ corresponding count registers.
+
+  \begin{docCommand}{@fpstype}{}
+  \end{docCommand}
+  \begin{docCommand}{@reqcolroom}{}
+  \begin{docCommand}{@textfloatsheight}{}
+ First a new count register to go with |\@currtype|.
+
+ Then a new skip register, for information needed to remove the
+ |\@maxsep| conservatism: it is possible that this could use a
+ temporary register.
+
+ Finally a dimension register to hold the total height of in-text
+ floats on the current page.  This is needed to implement a
+ major change in the functionality of |\@addtocurcol| which is,
+ nevertheless, a bug fix.
+ It is not local and therefore cannot be a temporary register.
+
        \begin{teX}
 \newcount \@fpstype
 \newdimen \@reqcolroom
 \newdimen \@textfloatsheight
        \end{teX}
-%  \end{docCommand}
-%  \end{docCommand}
+  \end{docCommand}
+  \end{docCommand}
 %
 %  \begin{docCommand}{@fpsadddefault}
 % \changes{v1.0f}{1993/12/05}{Command added}
@@ -3174,9 +3225,7 @@ The combining of the floats happens here.
        \end{teX}
 %  \end{docCommand}
 %
-% Macros for getting, testing and setting bits of the fps.
-%
-%
+ Macros for getting, testing and setting bits of the fps.
   \begin{docCommand}{@getfpsbit}{}
  Sets |\@tempcnta| to required bit of |\count\@currbox|.
 
@@ -3211,11 +3260,11 @@ The combining of the floats happens here.
     \end{teX}
   \end{docCommand}
 
-%
-%  \begin{docCommand}{@setfpsbit}
-% \changes{v1.0f}{1993/12/05}{Command added}
-% Sets required bit of |\@tempcnta| (to 1).
-%
+
+  \begin{docCommand}{@setfpsbit}{}
+ Sets required bit of |\@tempcnta| (to 1). \changes{v1.0f}{1993/12/05}{Command added}.
+ This is used earlier by the @float command to set the bitset of a particular float. 
+
        \begin{teX}
 \def \@setfpsbit #1{%
    \@tempcntb \@tempcnta
@@ -3226,9 +3275,9 @@ The combining of the floats happens here.
    \fi
 }
        \end{teX}
-%  \end{docCommand}
-%
-%
+  \end{docCommand}
+
+
   \begin{docCommand}{@resethfps}{}
  Globally adds t as a possible location for an h or !h only placement:
  this must be done using the count.
@@ -3253,26 +3302,26 @@ The combining of the floats happens here.
   \end{docCommand}
 
 
-% Special stuff for BANG floats.
-%
-%  \begin{docCommand}{@flsetnum}
-%
-% Ignores any zero float counter value in case BANG.
-%
-% It uses a local assignment to the normally global counter: a bit
-% naughty, perhaps?
-%
-% These assgnments are safe so long as the counter involved is only
-% consulted once (\ie only for the `bang float') with the changed value.
-% This is the case within |\@addtocurcol| because it is used only
-% once within a call of the output routine (which forms a group).
-%
-% For |\@addtonextcol| this is achieved by putting a group around its
-% code; this is needed because it is called (by |\@startcolumn|) for
-% each float which was on the deferlist.  Almost identical
-% considerations pertain to |\@addtodblcol|.  There may be more
-% efficient ways to handle this, but the group seems to be the simplest.
-%
+ Special stuff for BANG floats.
+ 
+  \begin{docCommand}{@flsetnum}{}
+
+ Ignores any zero float counter value in case BANG.
+
+ It uses a local assignment to the normally global counter: a bit
+ naughty, perhaps?
+
+ These assgnments are safe so long as the counter involved is only
+ consulted once (\ie only for the `bang float') with the changed value.
+ This is the case within |\@addtocurcol| because it is used only
+ once within a call of the output routine (which forms a group).
+
+ For |\@addtonextcol| this is achieved by putting a group around its
+ code; this is needed because it is called (by |\@startcolumn|) for
+ each float which was on the deferlist.  Almost identical
+ considerations pertain to |\@addtodblcol|.  There may be more
+ efficient ways to handle this, but the group seems to be the simplest.
+
        \begin{teX}
 \def \@flsetnum #1{%
 %<*trace>
@@ -3291,12 +3340,12 @@ The combining of the floats happens here.
 %</trace>
 }
        \end{teX}
-%  \end{docCommand}
-%
-%
-%  \begin{docCommand}{@flsettextmin}
-% This ignores |\textfraction| space restriction in case BANG.
-%
+  \end{docCommand}
+
+
+  \begin{docCommand}{@flsettextmin}{}
+ This ignores |\textfraction| space restriction in case BANG.
+
        \begin{teX}
 \def \@flsettextmin {%
 %<*trace>
@@ -3315,15 +3364,15 @@ The combining of the floats happens here.
    \fi
 }
        \end{teX}
-%  \end{docCommand}
-%
-%
-%  \begin{docCommand}{@flcheckspace}
-% This ignores space restriction in case BANG; this is still slightly
-% conervative since it does not allow for the fact that, if there is
-% no text in the column then |\textfloatsep| is not needed.
-% Sets |@tempswa| true if there is room for |\@currbox|.
-%
+  \end{docCommand}
+
+
+  \begin{docCommand}{@flcheckspace}{}
+ This ignores space restriction in case BANG; this is still slightly
+ conervative since it does not allow for the fact that, if there is
+ no text in the column then |\textfloatsep| is not needed.
+ Sets |@tempswa| true if there is room for |\@currbox|.
+  \end{docCommand}
        \begin{teX}
 \def \@flcheckspace #1#2{%
    \advance \@reqcolroom
@@ -3370,12 +3419,12 @@ The combining of the floats happens here.
    \fi
 }
        \end{teX}
-%  \end{docCommand}
-%
-%
+
+
+
   \begin{docCommand}{@flupdates}{}
-%    This updates everything when a float is placed.
-%
+    This updates everything when a float is placed.
+
        \begin{teX}
 \def \@flupdates #1#2#3{%
    \global \advance #1\m@ne
@@ -3389,8 +3438,7 @@ The combining of the floats happens here.
 }
        \end{teX}
   \end{docCommand}
-%
-%
+
  Interesting facts about float mechanisms past and present, together
  with a summary of various features, some unresolved:
 
@@ -3530,13 +3578,13 @@ The combining of the floats happens here.
   \endgroup
 }
        \end{teX}
-% This will line up the last baselines in the two
-% columns provided they are constructed in the normal way: \ie ending
-% in a skip of minus the original depth, with |\@textbottom| adding
-% nothing. 
-%
-% Thus again it is essential for |\@textbottom| to have depth 0pt.
-% \changes{1.2g}{2000/07/12}{Ensure that rule is in \cs{normalcolor}}
+ This will line up the last baselines in the two
+ columns provided they are constructed in the normal way: \ie ending
+ in a skip of minus the original depth, with |\@textbottom| adding
+ nothing. 
+
+ Thus again it is essential for |\@textbottom| to have depth 0pt.
+ \footnotechanges{1.2g}{2000/07/12}{Ensure that rule is in \cs{normalcolor}}
        \begin{teX}
 \def\@outputdblcol{%
   \if@firstcolumn
@@ -3635,7 +3683,7 @@ entered here.
 \newcommand\bottomfraction{.3}
     \end{teX}
  \end{docCommand}
-%
+
  \begin{docCommand}{c@totalnumber}{}
     This counter holds the maximum number of floats that can appear on
     any text page or column.
@@ -3774,20 +3822,26 @@ entered here.
  \end{docCommand}
  \end{docCommand}
 
+
  \begin{docCommand}{@dblfptop}{}
+ \begin{teX}
+   \newskip\@dblfptop
+ \end{teX}
+ \end{docCommand}
+ 
  \begin{docCommand}{@dblfpsep}{}
  \begin{docCommand}{@dblfpbot}{}
     Double-column `float pages' in two-column mode use similar
     parameters.
     \begin{teX}
-\newskip\@dblfptop
+
 \newskip\@dblfpsep
 \newskip\@dblfpbot
 \setlength\@dblfptop{0\p@ \@plus 1fil}
 \setlength\@dblfpsep{8\p@ \@plus 2fil}
 \setlength\@dblfpbot{0\p@ \@plus 1fil}
     \end{teX}
- \end{docCommand}
+ 
  \end{docCommand}
  \end{docCommand}
  

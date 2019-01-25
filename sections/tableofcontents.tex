@@ -2,26 +2,26 @@
 \label{ch:toc}
 
 \precis{In this chapter we outline a number of settings that have been defined to handle Table of Contents (ToC) formatting. We also review the technical issues facing the construction of Table of Contents and their variants. The relationship of the hyperref package to the ToC and the many issues arising out of it are also discussed.}
-\addtocimage{-12pt}{-20pt}{../images/tocblock-rooster.jpg}
+%\addtocimage{-12pt}{-20pt}{../images/tocblock-rooster.jpg}
 
 
 
 \section{Introduction}
 
 The main purpose of the \pkg{phd-toc} is to give authors the ability to decorate and manipulate  contents lists. It also
-provide methods for template developers to define new templates. For the programmer we provide hooks and other
-useful commands.
+provide methods for template developers to define new templates. For the programmer we provide hooks and a
+naumber of commands.
 
-To set a parameter the |\cxset| command can be used, for example, the following will affect how a part is typeset in the table of comments:
+\paragraph{settings} To set a parameter the |\cxset| command can be used, for example, the following will affect how a part is typeset in the table of comments:
 
 \begin{teX}
 \cxset{
-    toc part font-size       = LARGE,
-    toc part color            =  black,
-    toc part beforeskip    =  1em,
+    toc part font-size    = LARGE,
+    toc part color        =  black,
+    toc part beforeskip   =  1em,
     toc part page before  =,
-    toc part indent          =  0pt,
-    toc part numwidth    = 1.5em,
+    toc part indent       =  0pt,
+    toc part numwidth     = 1.5em,
 }    
 \end{teX}
 
@@ -129,12 +129,20 @@ area (of course, the lines themselves are not printed):
 
 
 \section{Other Packages and Classes}
-The package \pkg{tocloft} provides  provides handles for an author to change the design to meet the needs of the particular document, by providing a number of settings commands.
 
 
+The package \pkg{tocloft}\footcite{tocloft} provides  provides handles for an author to change the design to meet the needs of the particular document, by providing a number of settings commands.
+
+The package \pkg{etoc}\footcite{etoc} provides better capabilities, especially for typesetting mini-toc's below chapter heads.
+
+The package \pkg{tocstyle}\footcite{tocstyle} is part of the KOMAscript distribution and although in alpha is good enough
+for a number of styles and customization.
 
 \chapter{How \latexe Typesets Table of Contents}
 
+\localtableofcontents
+
+\section{Introduction}
 Using one of the standard \latexe classes will normally result in a Table of Contents of the general form shown in Figure~\ref{fig:tocdiagram}.
 
  \newcommand{\maxx}{120}       % picture width
@@ -243,8 +251,7 @@ To understand the way \LaTeX\ formats the ToC, one has to understand that the To
 \subsection{Reading from the ToC file}
 
 \begin{docCommand}{tableofcontents}{}{}
-
-
+Initiates redaing or writing of a table of contents.
 \end{docCommand}
 
 The second operation happens when \latexe sees a \cs{tableofcontents} command. This initiates the read operation, where the information that has been stored in the ToC file is read and typeset.
@@ -254,7 +261,7 @@ The second operation happens when \latexe sees a \cs{tableofcontents} command. T
 We should start dissecting the algorithm by first viewing the \cs{tableofcontents}. This command is provided in
 the standard classes (see \pageref{tableofcontents}) and it does not take any parameters.
 
-\begin{teXXX}
+\begin{teXX}
 \setcounter{tocdepth}{2}
 \newcommand\tableofcontents{%
     \if@twocolumn
@@ -268,14 +275,14 @@ the standard classes (see \pageref{tableofcontents}) and it does not take any pa
           \@starttoc{toc} (*@\label{starttoc}@*)
     \if@restonecol\twocolumn\fi
     }
-\end{teXXX}
+\end{teXX}
 
 
 The important thing to notice here is that the words contents are typeset by calling the star version and hence the contents name is not added to the toc. If we needed to add it we need to explicitly add to the toc as well as format it, if necessary. The other notable item is the \cs{@starttoc}\marg{toc} macro. This command opens the |toc| file to read or write.
 
 \subsubsection{The Contents heading}
  
- The \pkgname{phd}  package redefines the \cmd{\tableofcontents}  to call a specific macro to typeset
+ The \pkg{phd} package redefines the \cmd{\tableofcontents}  to call a specific macro to typeset
  the contents name and provides hooks to provide flexible styling. 
               
 %\begin{texexample}{Contents heading and hooks}{}
@@ -379,8 +386,8 @@ When we use hyperef we get an additional parameter |chapter.1| on line one and i
 
 Predictably |hyperref| redefines the |\contentsline| command. We see from the documentation that 
 the \docAuxCommand{contentsline} now takes four parameters and uses a case statement to handle the options.
-\startlineat{7901}
-\begin{teXXX}
+\startlineat{1}
+\begin{teX}
 \def\contentsline#1#2#3#4{%
   \ifx\\#4\\%
     	\csname l@#1\endcsname{#2}{#3}%
@@ -404,7 +411,7 @@ the \docAuxCommand{contentsline} now takes four parameters and uses a case state
  	\fi
  \fi
 }
-\end{teXXX}
+\end{teX}
 
 %\begin{texexample}{Hyperref Test}{ex:testhyper}
 %\bgroup
@@ -564,7 +571,7 @@ If we take a similarly flexible approach of redefining l@chapter we can try and 
 
 
 
-\begin{teX}
+\begin{teXXX}
 \renewcommand\l@chapter[3]{%
   %#1 number and title  #2 page number
   \ifnum \c@tocdepth >\m@ne
@@ -578,7 +585,7 @@ If we take a similarly flexible approach of redefining l@chapter we can try and 
       \penalty\@highpenalty
     \endgroup
   \fi}
-\end{teX}
+\end{teXXX}
 
 
 
@@ -592,10 +599,10 @@ So far we have examined the reading of the ToC file and next we need to understa
 to the ToC. If we have to ensure that information survives we need to write it to the file. This is done via two macros.
 
 
-\begin{macro}{\addcontentsline}
+\begin{docCommand}{addcontentsline}{}
 The \cs{addcontentsline}\marg{table}\marg{type}\marg{entry} command allows the user to add an entry to a table of contents. The command adds the entry
 \cs{contentsline}\marg{type}\marg{entry}\marg{page} to the \marg{.lot} file.
-\end{macro}
+\end{docCommand}
 
 \addcontentsline{toc}{chapter}{This is a test}
 

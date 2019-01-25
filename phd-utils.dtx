@@ -145,7 +145,7 @@ __The package as it stands is not production stable.__
 \fi
 %</internal>
 %<*install>
-\input docstrip.tex
+\input l3docstrip.tex
 \keepsilent
 \askforoverwritefalse
 \preamble
@@ -192,16 +192,15 @@ See http://www.latex-project.org/lppl.txt
 %</internal>
 %<*driver>
 \NeedsTeXFormat{LaTeX2e}[2017/04/15]%
-\RequirePackage[2017/04/15]{latexrelease}
-\documentclass[book,twoside,10pt,a4paper]{phddoc}
+\documentclass[doctype=book,oneside,10pt,a4paper,colorize=true]{phddoc}
 \usepackage{phdfilecontents}
 \def\partname{Part}
 \let\HUGE\huge
 \usepackage[bottom=2cm]{geometry}
 \savegeometry{std}
-\usepackage[microtype=on]{phd}
-\usepackage{phd-pkgmanager}
-\usepackage{phd-fontmanager}
+%\usepackage[microtype=on]{phd}
+%\usepackage{phd-pkgmanager}
+%\usepackage{phd-fontmanager}
 \usepackage{phd-runningheads}
 \usepackage{phd-lowersections}
 \usepackage{phd-documentation}
@@ -229,7 +228,7 @@ See http://www.latex-project.org/lppl.txt
 \mainmatter
 \pagestyle{headings-sugar-hearts}
 \parindent1em
-%\input{./sections/lowerlevelheadings}
+\input{./l3sections/latex3-basic}
 \DocInput{\jobname.dtx}
 %\bibliography{phd} worked
 %\printindex worked
@@ -336,6 +335,7 @@ See http://www.latex-project.org/lppl.txt
 %    \begin{macrocode}
 \NeedsTeXFormat{LaTeX2e}[2017/04/15]%
 \ProvidesPackage{phd-utils}[2018/1/13 v1.0 various useful utilities (YL)]%
+\RequirePackage{expl3,xparse}
 %    \end{macrocode}
 %
 % \section{spacing}
@@ -450,16 +450,56 @@ See http://www.latex-project.org/lppl.txt
 %    \end{macrocode}
 %
 % \section{Assertions}
-% some assertions
+%  These are used for testing modules, as well as for the self-running examples in tutorials.
 %    \begin{macrocode}
-\def\TRUE{ \meta{true code} }
-\def\FALSE{ \meta{false code} }
-\def\PASS{\par{\bfseries\textcolor{green!50!blue}{PASS}}\ ~}
-\def\FAIL{\par{\bfseries\textcolor{red!70!black}{FAIL}}\ ~}
+%<@@=assert>
 %    \end{macrocode}
-% upquote needs to be loaded before listings? Must test
-% does not seem to matter actually...
+% \begin{macro}{\TRUE,\FALSE,\PASS,\FAIL,\PASSED}
+% Typesets the results of an assertion. 
+%    \begin{macrocode}
+\ExplSyntaxOn
+\cs_set:Npn \l_@@_typeset_true: 
+  {
+    \meta{true code}
+  }
+\cs_set_nopar:Npn \TRUE { \l_@@_typeset_true: }
+\cs_set_nopar:Npn \FALSE { \meta{false code} }
+\cs_set_nopar:Npn \PASS { \tex_par:D \leavevmode {\sffamily\bfseries\textcolor{green!50!blue}{PASS}}\ ~}
+\cs_set_nopar:Npn \FAIL { \tex_par:D \leavevmode {\sffamily\bfseries\textcolor{red!70!black}{FAIL}}\ ~}
 %
+\ProvideDocumentCommand{\PASSED}{ }{\textcolor{green!50!blue}{PASS}}
+
+\cs_set:Npn \assert_eq_meaning:NN #1 #2 
+  {
+   \if_meaning:w #1#2 
+     \PASS
+     \else:
+     \FAIL
+   \fi:
+  }
+
+  
+\cs_set:Npn \assert_not_eq_meaning:NN #1 #2 
+  {
+   \if_meaning:w #1#2 
+     \FAIL
+     \else:
+     \PASS
+   \fi:
+  }  
+\ExplSyntaxOff 
+%    \end{macrocode}
+% \end{macro}
+%
+%    \begin{macrocode}
+%<@@=>
+%    \end{macrocode}
+%
+%
+% \ExplSyntaxOn
+% \assert_eq_meaning:NN \macro\macro
+% \assert_not_eq_meaning:NN \macro\macro
+% \ExplSyntaxOff
 %\iffalse
 %</package>
 %\fi

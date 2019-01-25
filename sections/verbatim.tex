@@ -1,0 +1,626 @@
+\chapter{Verbatim}
+\label{ch:verbatim}
+\epigraph{Please do not attempt to simplify this code.\\
+Keep the space shuttle flying.}{Note form the Kubernettes code at github.com}
+
+\section{Introduction}
+
+The verbatim environment uses the monospaced |\ttfamily| font, turns blanks into spaces, starts a new line  for each carriage return and interprets \emph{every}  character literally. What this means is that all special characters are catcoded to other.
+
+The command \cs{verb} produces in-line verbatim text, where the argument is delimited by any pair of characters.
+
+The star variants of the commands are the same, except that spaces print as in the \tex{}book's space character instead of as blank spaces such as \verb* +test this+. This is font dependent. Some of the fonts may not contain the character.
+
+ \LaTeX's \texttt{verbatim} and \texttt{verbatim*} environments
+ have a few features that may give rise to problems. These are:
+ \begin{itemize}
+   \item
+     Due to the method used to detect the closing |\end{verbatim}|
+     (i.e.\ macro parameter delimiting) you cannot leave spaces
+     between the |\end| token and |{verbatim}|.
+   \item
+     Since \TeX{} has to read all the text between the
+     |\begin{verbatim}| and the |\end{verbatim}| before it can output
+     anything, long verbatim listings may overflow \TeX's memory.
+ \end{itemize}
+ Whereas the first     of these points can be considered
+ only a minor nuisance the other one is a real limitation, for the older engines. For the newer engines this is not a real issue now.
+ 
+The package \pkg{verbatim} eliminates the above limitatiosn by searching for the |\end{verbatim}| string rather than absorbing the full argument of the pseudo environment. The \latexe verbatim code just absorbs the whole argument.
+
+The package \pkg{Fancyvrb} provides a more advanced interface, but also has its limitations.
+
+Full parsers such as listings are discussed in other sections of this Monograph.
+
+
+
+
+\section{LaTeX's verbatim environment}
+
+
+
+The environment and the command are provided in source2e under the \docFile{ltmiscen.dtx}.
+
+A number of other packages were also developed over the years. These will be reviewed here as well as add examples as to how to handle the programming of such matters.
+
+\section{How verbatim code works?}
+
+\begin{texexample}{vobeyspaces}{ex:obeyspaces}
+\makeatletter
+\begingroup
+\obeylines
+\@xobeysp
+
+\ttfamily
+         This is some text
+           Try any shape of line       test
+
+           
+\endgroup
+
+
+\makeatother
+\end{texexample}
+\subsection{Verbatim}
+
+
+  The verbatim environment uses the fixed-width |\ttfamily| font, turns
+  blanks into spaces, starts a new line for each carriage return (or
+  sequence of consecutive carriage returns), and interprets
+  \emph{every} character literally.
+  I.e., all special characters |\, {, $|, etc.
+   are |\catcode|'d to 'other'.
+
+ The command |\verb| produces in-line verbatim text, where the argument
+ is delimited by any pair of characters.  E.g., |\verb #...#| takes
+  `|...|' as its argument, and sets it verbatim in |\ttfamily| font.
+
+The *-variants of these commands are the same, except that spaces
+print as the \TeX{}book's space character instead of as blank spaces.
+
+\begin{macro}{\@vobeyspaces}
+\begin{teX}
+{\catcode`\ =\active%
+\gdef\@vobeyspaces{\catcode`\ \active\let \@xobeysp}}
+\end{teX}
+\end{macro}
+%
+\begin{macro}{\@xobeysp}
+Moved to ltspace.dtx
+% \changes{v1.0z}{1995/07/13}{Use \cs{nobreak}}
+% \changes{v1.1f}{1996/09/28}{Moved to ltspace.dtx}
+\end{macro}
+%
+The next two macros, which follow conventions for star and unstarred versions
+use a common trickery to define environments that capture their contents
+in a pseudo-environment.
+
+Just to refresh a delimited macro can be delimited essentially with almost anything except 
+braces, \# and some other esoteric characters that can confuse \tex's parser. In the 
+example below we will create a delimited macro \cs{test}, which is delimited by
+\cs{endtest}. 
+
+\begin{texexample}{Delimited Refresher}{ex:delim1}
+\def\test#1\endtest{#1}
+\test
+  100
+\endtest
+\end{texexample}
+
+If the braces are changed to the catcode for other so that they can be used
+to delimit the macro and by adding a matching end{} we can trick LaTeX that everything
+is in order.
+
+Our exampel will be a bit more complicated than our normal examples. We will develop a rudimentary environment named \docAuxEnvironment{zverbatim} that will capture the user input, typeset it verbatim and colorize comment strings.
+
+We will mostly use |expl3| syntax to continue our study of the language and also to make the code a bit more readable. The description of the functions are listed below:
+
+
+
+\begin{texexample}{}{}
+\ExplSyntaxOn
+\tl_new:N \g_store_tl
+
+\cs_new:Npn \make_at_letter:
+ {
+  \char_set_catcode_letter:N @
+ }
+  
+\cs_new:Npn \make_at_other:
+ {
+  \char_set_catcode_letter:N @
+ }  
+ 
+\cs_new:Npn \make_other:n #1 
+  {
+ 		\char_set_catcode_other:N #1 \relax
+  } 
+  
+\make_at_letter:
+\begingroup
+\char_set_catcode_escape:N | 
+\char_set_catcode_group_begin:N [
+\char_set_catcode_group_end:N ] 
+\char_set_catcode_other:N\{
+\char_set_catcode_other:N\}
+\char_set_catcode_other:N\\
+
+
+|cs_gset:Npn|phd_xverbatim:n#1\end{zverbatim}
+            [|process_argument[#1]|end[zverbatim]]
+|endgroup
+
+
+\cs_set:Npn \zverbatim_aux: 
+   {
+     \bfseries
+     \let\do\make_other:n\dospecials
+     \obeylines \verbatimfont \@noligs
+     \hyphenchar\font\m@ne
+   }
+
+% just set some preliminaries with
+% |\@zverbatim|
+\cs_gset:Npn \zverbatim
+   {
+     \zverbatim_aux: 
+     \phd_xverbatim:n
+   }
+
+% Cannot do anything more at this time
+\cs_gset:Npn \endzverbatim {}
+
+% Process the argument
+\gdef\process_argument#1 {
+   
+   \tl_set:Nn\g_store_tl{#1}
+  
+   \regex_replace_all:nnN 
+   {\%[a-zA-Z\ \#\d]+}
+   { \cB{\c{color}\cB{green800\cE}\0\cE} }
+   \g_store_tl
+   \tl_use:N \g_store_tl
+}
+\make_at_other:
+
+\ExplSyntaxOff
+
+
+% Output to test that everything is # working
+\begin{zverbatim}
+% Test to see a comment #1  
+    \testing \our 
+      \macrotest{\someother}
+\end{zverbatim}
+
+
+\end{texexample}
+ 
+
+Now that we have more or less understood how verbatim pseudo-environments are
+created, let us examine the \latexe code a bit more carefully and then we will
+revisit our example in a bit more detail to add a few more features.
+
+
+Catcodes are set in a group and the macros |\@xverbatim| and |\@sverbatim|
+are defined exactly in a similar fashion to that of our example.
+
+\begin{macro}{\@xverbatim,\@sxverbatim}
+\begin{teX}
+\begingroup \catcode `|=0 \catcode `[= 1
+\catcode`]=2 \catcode `\{=12 \catcode `\}=12
+\catcode`\\=12 |gdef|@xverbatim#1\end{verbatim}[#1|end[verbatim]]
+|gdef|@sxverbatim#1\end{verbatim*}[#1|end[verbatim*]]
+|endgroup
+\end{teX}
+\end{macro}
+
+
+The next macro is the starting macro that is call by |\verbatim| at the beginning
+of the environment. It is responsible for setting decorative parameters. This is
+done by the use of a |trivlst|. 
+
+\begin{macro}{\@verbatim}
+\begin{teX}
+\def\@verbatim{\trivlist \item\relax
+  \if@minipage\else\vskip\parskip\fi
+  \leftskip\@totalleftmargin\rightskip\z@skip
+  \parindent\z@\parfillskip\@flushglue\parskip\z@skip
+\end{teX}
+% \changes{LaTeX2.09}{1991/08/26}{\cs{@@par} added}
+    Added |\@@par| to clear possible |\parshape| definition
+    from a surrounding list (the verbatim guru says).
+% \changes{v0.9p}{1994/01/18}
+%         {Only add \cs{penalty} if in hmode}
+\begin{teX}
+  \@@par
+  \@tempswafalse
+  \def\par{%
+    \if@tempswa
+\end{teX}
+    A |\leavevmode| added: needed if, for example, a blank verbatim
+    line is the first thing in a list item (wow!).
+% \changes{v1.0f}{1994/04/29}{\cs{leavevmode} added}
+\begin{teX}
+      \leavevmode \null \@@par\penalty\interlinepenalty
+    \else
+      \@tempswatrue
+      \ifhmode\@@par\penalty\interlinepenalty\fi
+    \fi}%
+\end{teX}
+    To allow customization we hide the font used in a separate macro.
+  \changes{v0.9a}{1993/11/21}{use \cs{verbatim@font} instead of \cs{tt}}
+  \changes{v0.9h}{1993/12/13}{Readded \cs{@noligs}}
+  \changes{v1.1d}{1996/06/03}{Exchanged the following two code lines
+           so that \cs{dospecials} cannot reset the category code
+           of characters handled by \cs{@noligs}.}
+  \changes{v1.1h}{2000/01/07}{Disable hyphenation even if the font allows it.}
+\begin{teX}
+  \let\do\@makeother \dospecials
+  \obeylines \verbatim@font \@noligs
+  \hyphenchar\font\m@ne
+\end{teX}
+To avoid a breakpoint after the labels box, we remove the penalty
+put there by the list macros: another use of |\unpenalty|!
+% \changes{v1.0f}{1994/04/29}{Change to \cs{everypar} added}
+\begin{teX}
+  \everypar \expandafter{\the\everypar \unpenalty}%
+}
+\end{teX}
+\end{macro}
+%
+
+\begin{docCommand}{verbatim}{}
+\begin{docCommand}{endverbatim}{}
+%    (RmS 93/09/19) Protected against `missing item' error message
+%               triggered by empty verbatim environment.
+\begin{teX}
+\def\verbatim{\@verbatim \frenchspacing\@vobeyspaces \@xverbatim}
+\def\endverbatim{\if@newlist \leavevmode\fi\endtrivlist}
+\end{teX}
+\end{docCommand}
+\end{docCommand}
+%
+\begin{macro}{\verbatim@font}
+    Macro to select the font  used for verbatim typesetting.
+    It also does other work if necessary for the font used.
+\begin{teX}
+\def\verbatim@font{\normalfont\ttfamily}
+\end{teX}
+\end{macro}
+
+
+\begin{environment}{verbatim*}
+\begin{teX}
+\@namedef{verbatim*}{\@verbatim\@sxverbatim}
+\expandafter\let\csname endverbatim*\endcsname =\endverbatim
+\end{teX}
+\end{environment}
+
+The following code needs no explanation, in our example we collected it at the beginning
+of our code with the possible intention to make a small package with utilities.
+\begin{macro}{\@makeother}
+\begin{teX}
+\def\@makeother#1{\catcode`#112\relax}
+\end{teX}
+\end{macro}
+
+\begin{question}
+\begin{tasks}(1)
+ \task What is the main disantvantages of the method used here to define
+       the |verbatim| environment?
+ \task Using our example, try and insert verbatim code into a list. Is this satisfactory.
+\end{tasks}
+\end{question}
+
+
+\begin{texexample}{}{}
+\begin{itemize}
+\item First verbatim
+      \begin{verbatim}
+      \lorem
+      \end{verbatim}
+\item Second verbatim
+      \begin{verbatim}
+      Second verbatim
+       \end{verbatim}
+\end{itemize}
+
+\end{texexample}
+
+\subsection{Definition of inline verbatim \textbackslash verb}
+
+\begin{macro}{\verb@balance@group}
+% \changes{LaTeX2.09}{1993/09/07}
+%     {(RmS) Changed definition of \cs{verb} so that it detects a
+%              missing second delimiter.}
+\begin{teX}
+\let\verb@balance@group\@empty
+\end{teX}
+\end{macro}
+%
+\begin{macro}{\verb@egroup}
+\begin{teX}
+\def\verb@egroup{\global\let\verb@balance@group\@empty\egroup}
+\end{teX}
+\end{macro}
+%
+\begin{macro}{\verb@eol@error}
+\begin{teX}
+\begingroup
+  \obeylines%
+  \gdef\verb@eol@error{\obeylines%
+    \def^^M{\verb@egroup\@latex@error{%
+            \noexpand\verb ended by end of line}\@ehc}}%
+\endgroup
+\end{teX}
+\end{macro}
+%
+\begin{macro}{\verb}
+% \changes{LaTeX2.09}{1992/08/24}
+%         {Changed \cs{verb} and \cs{@sverb} to work correctly
+%            in math mode}
+% \changes{v0.9a}{1993/11/21}{Use \cs{verbatim@font} instead of
+%                             \cs{tt}.}
+% \changes{v1.1a}{1995/09/19}{Put \cs{@noligs} after
+%                    \cs{verbatim@font} where it belongs.}
+%    Typesetting a small piece verbatim.
+%  \changes{v1.1d}{1996/06/03}{Put setting of verbatim font after
+%           \cs{dospecials}
+%           so that \cs{dospecials} cannot reset the category code
+%           of characters handled by \cs{@noligs}.}
+\begin{teX}
+\def\verb{\relax\ifmmode\hbox\else\leavevmode\null\fi
+  \bgroup
+    \verb@eol@error \let\do\@makeother \dospecials
+    \verbatim@font\@noligs
+    % common latex method for defining star and unstarred commands
+    \@ifstar\@sverb\@verb}
+\end{teX}
+\end{macro}
+
+
+\begin{macro}{\@sverb}
+\begin{teX}
+\def\@sverb#1{%
+  \catcode`#1\active
+  \lccode`\~`#1%
+  \gdef\verb@balance@group{\verb@egroup
+     \@latex@error{\noexpand\verb illegal in command argument}\@ehc}%
+  \aftergroup\verb@balance@group
+  \lowercase{\let~\verb@egroup}}%
+\end{teX}
+\end{macro}
+
+%
+\begin{macro}{\@verb}
+\begin{teX}
+\def\@verb{\@vobeyspaces \frenchspacing \@sverb}
+\end{teX}
+\end{macro}
+%
+\begin{macro}{\verbatim@nolig@list}
+
+\begin{teX}
+\def\verbatim@nolig@list{\do\`\do\<\do\>\do\,\do\'\do\-}
+\end{teX}
+\end{macro}
+%
+\begin{macro}{\do@noligs}
+\begin{teX}
+\def\do@noligs#1{%
+  \catcode`#1\active
+  \begingroup
+     \lccode`\~`#1\relax
+     \lowercase{\endgroup\def~{\leavevmode\kern\z@\char`#1}}}
+\end{teX}
+\end{macro}
+%
+\begin{macro}{\@noligs}
+To stay compatible with packages that use |\@noligs| we keep it.
+\begin{teX}
+\def\@noligs{\let\do\do@noligs \verbatim@nolig@list}
+\end{teX}
+\end{macro}
+
+
+
+\section{The fancyvrb package}
+
+
+The code works by scanning a line at a time from an environment or a file. This allows it to pre-process each line, rejecting it, removing spaces, numbering it, etc., before going on to execute the body of the line with the appropriate catcodes set.
+
+According to Poore\footcite{poore} the first public release of the package was in January 1998, but from the copyright note its first version must have been in 1994; irrespective the package has remained almost  unchanged except for a few bug fixes. \pkg{fancyvrb} has become one of the primary \latex packages for working with verbatim text.
+
+Poore extended the package with \pkg{fvextra}. All commands defined by |fancyverb| can still be used, but additional
+features and keys are made available. The package is used by minted and pythontex which are the only alternatives to
+\pkg{listings}.
+
+
+\begin{texexample}{Using fancyvrb}{ex:fancyvrb}
+\begin{Verbatim}
+  First verbatim line.
+  Second verbatim line.
+\end{Verbatim}
+\end{texexample}
+
+ \subsection{Fonts}
+
+All four axis of the NFSS scheme can be set using a key value interface.
+
+\begin{texexample}{Using fancyvrb}{ex:fancyvrblarge}
+\begin{Verbatim}[commentchar=!,gobble=0,fontfamily=tt]
+ A comment
+ Verbatim line.
+! A comment that you will not see
+\end{Verbatim}
+
+\begin{Verbatim}[commentchar=!,gobble=0,fontfamily=tt]
+ A comment
+ Verbatim line.
+! A comment that you will not see
+\end{Verbatim}
+\end{texexample}
+
+
+
+\begin{texexample}{Using fancyvrb}{ex:fancyvrb1}
+\begin{Verbatim}[commentchar=!,gobble=0]
+ A comment
+ Verbatim line.
+! A comment that you will not see
+\end{Verbatim}
+\end{texexample}
+
+
+\begin{texexample}{Using fancyvrb}{ex:fancyvrb2}
+ \fvset{gobble=0}
+ \begin{Verbatim}[frame=single,
+ label=My text]
+ First verbatim line.
+ Second verbatim line.
+ \end{Verbatim}
+\end{texexample}
+
+\begin{texexample}{Using fancyvrb}{ex:fancyvrb3}
+  \begin{Verbatim*}
+   Verbatim line.
+  \end{Verbatim*}
+\end{texexample}
+
+\begin{docKey}{defineactive}{ = \meta{code}}{default=[]}
+ 
+\end{docKey}
+
+\begin{texexample}{Adding an active character and a command}{ex:defineactive}
+\begin{Verbatim}[frame=single,numbers=left,numbersep=3pt]
+! A small "hello" program
+
+program hello
+  print *, "Hello World"
+\end{Verbatim}
+
+\fvset{frame=single,numbers=left,numbersep=3pt}
+\begin{Verbatim}
+! A small "hello" program
+
+program hello
+  print *, "Hello World"
+\end{Verbatim}
+
+
+\def\ExclamationPoint{\char33}
+ \catcode`!=\active
+ 
+\begin{Verbatim}[defineactive=\def!{\color{cyan}\itshape\ExclamationPoint}]
+! A small "hello" program
+
+program hello
+  print *, "Hello World"
+\end{Verbatim}
+\end{texexample}
+
+\subsection{Writing and reading verbatim to files.}
+
+To write data verbatim to a file the environment \docAuxEnvironment{VerbatimOut} is available.
+It takes one mandatory argument: the file name into which to write the data. If you try and use the
+environment directly inside your own environment, the moment we start the |VerbatimOut| environment everythingis absorbed without processing and so the end of your own environment is not recognized.
+As a solution the package offers the command |\VerbatimEnvironment|, which is executed within the |\begin|
+code of your environment, ensures that the end tag of your environment will be recognized in verbatim mode and the corresponding code executed. To read the file back the command |\VerbatimInput| is used.
+
+\begin{texexample}{Write and read verbatim to file}{ex:vrbout}
+\newenvironment{myexample} 
+{\VerbatimEnvironment\begin{VerbatimOut}{test.vrb}} 
+{\end{VerbatimOut}
+\VerbatimInput[numbers=left,firstnumber=2,firstline=2,fontshape=it,fontseries=b]{test.vrb}}% 
+
+\begin{myexample}
+first line
+second line
+third line
+fourth line
+\end{myexample}
+\end{texexample}
+
+Since we can input and type our verbatim text, it opens the oportunity to have self-running examples, similar to the example boxes I have been using for this book.
+
+\begin{texexample}{Self-running examples}{ex:srexamples}
+\newcommand\Example{%
+\VerbatimEnvironment
+\begin{VerbatimOut}{\jobname.vrb}}
+
+\def\endExample{%
+\end{VerbatimOut}
+{\centering \input{\jobname.vrb}}
+\VerbatimInput{\jobname.vrb}
+\input{\jobname.vrb}
+}
+
+\begin{Example}
+    \def\test{Some test}
+    \test
+\end{Example}
+
+\end{texexample}
+
+
+
+\subsection{Saving and re-using verbatim text}
+
+The package can be used to save and re-use verbatim texts in a document. This enables us to place verbatim in normally inaccessible areas such as the argument of sectioning commands (not recommended) or |\marginpar|.
+
+\DescribeMacro{\SaveVerb}{\oarg{key/val list}=data=}{}
+The syntax of the command is unusual in that we need to write it the same way as we write
+a |\verb| command. It takes one mandatory argument, a \textit{label} denoting the storage
+bin in which to save the parsed data. 
+
+\DescribeMacro{\UseVerb*}{\oarg{key/val-list}\Arg{label}}{}
+
+Not recommended for general use.
+
+\begin{texexample}{Saving Verbatim Text}{ex:saveverb}
+\begin{minipage}{0.5\linewidth}
+ \SaveVerb{danger}=\test \something=
+A verbatim \footnote{\UseVerb*{danger}} test in a minpage.
+ \end{minipage}
+\end{texexample}
+
+In the LaTeX Companion there is an example using the commands to define a macro |\vitem| that can be used
+to replace |\item| 
+
+
+\section{The alltt package}
+
+This package defines the eponymous \docAuxEnvironment{alltt} environment, which is like the \docAuxEnvironment{verbatim} environment except that |\|, |{|, and |}| have their usual meanings.
+Thus, other commands and environments can appear within an |alltt| environment.
+
+
+
+\begin{texexample}{Using the alltt package}{ex:alltt} 
+\begin{alltt} 
+\rmfamily
+One can have font changes, 
+\emph{emphasized text}. 
+Some special characters: # & $ ^ _
+\lorem 
+\end{alltt} 
+\end{texexample}
+
+
+Should you need to typeset mathematical material you will have to use the \latexe constructs |\[|\ldots|\]| as the math toggle |$| is disabled in an |alltt| environment. For subscripts or superscripts you  will need to use the little known \latexe commands \docAuxCommand{sb} or \docAuxCommand{sp} that refer to subscript or superscript respectively.\tcbdocmarginnote{Added Dec 2018}
+
+\begin{texexample}{Using the alltt package}{ex:alltt1} 
+\begin{alltt} 
+\rmfamily
+One can have font changes, 
+\emph{emphasized text}. 
+Some special characters: # & $ ^ _
+\lorem 
+
+\[ a\sb{2} + b\sb{5}  \]
+
+\end{alltt} 
+\end{texexample}
+
+
+

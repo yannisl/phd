@@ -13,166 +13,160 @@
 %% ----------------------------------------------------------------
 
 \NeedsTeXFormat{LaTeX2e}
+\RequirePackage{expl3,xparse}
+\RequirePackage{l3keys2e}
 \ProvidesClass{phddoc}
-         [2007/11/11 v2.0u Standard LaTeX documentation class]
+         [2018/12/13 v1.0 LaTeX documentation class (YL)]
+
+
+
+\ExplSyntaxOn
+\cs_gset:Npn \l_phd_version{1.00}
+\ExplSyntaxOff
+\ExplSyntaxOn
+\bool_new:N \g__phdcl_macrocode_colorize_bool
+\bool_new:N \g__phdcl_book_bool
+\bool_new:N \g__phdcl_article_bool
+\bool_new:N \g__phdcl_report_bool
+\bool_new:N \g__phdcl_scrbook_bool
+\bool_new:N \g__phdcl_scrartcl_bool
+\bool_new:N \g__phdcl_scrreprt_bool
+\bool_new:N \g__phdcl_masterthesis_bool
+\bool_new:N \g__phdcl_ldoc_bool
+\bool_new:N \g__phdcl_ldociii_bool
+\ExplSyntaxOff
+
+\ExplSyntaxOn
+\bool_if:NTF \g__phdcl_macrocode_colorize_bool
+  {\bool_gset_true:N \phdd_code_colorize_bool}
+  {\bool_gset_false:N \phdd_code_colorize_bool}
 \DeclareOption{a5paper}{\@latexerr{Option not supported}%
    {}}
-\newif\if@book
-\newif\if@article
-\newif\if@report
-\newif\if@scrbook
-\newif\if@scrartcl
-\newif\if@scrreprt
-\newif\if@masterthesis
 
-\DeclareOption{article}{\@articletrue}
-\DeclareOption{book}{\@booktrue}
-\DeclareOption{report}{\@reporttrue}
-\DeclareOption{scrbook}{\@scrbooktrue}
-\DeclareOption{scrartcl}{\@scrartcltrue}
-\DeclareOption{scrreprt}{\@scrreprttrue}
-\DeclareOption{masterthesis}{\@masterthesis}
+\DeclareOption { full }
+  {
+    \bool_gset_true:N \g_phdd_typeset_documentation_bool
+    \bool_gset_true:N \g_phdd_typeset_implementation_bool
+  }
+\DeclareOption { onlydoc }
+  {
+    \bool_gset_true:N \g_phdd_typeset_documentation_bool
+    \bool_gset_false:N \g_phdd_typeset_implementation_bool
+  }
+\DeclareOption{colorize}
+  {\bool_gset_true:N \phdd_code_colorize_bool}
+\DeclareOption { check }
+  { \bool_gset_true:N \g__phdcl_checkfunc_bool }
+\DeclareOption { nocheck }
+  { \bool_gset_false:N \g__phdcl_checkfunc_bool }
+\DeclareOption { checktest }
+  { \bool_gset_true:N \g__phdcl_checktest_bool }
+\DeclareOption { nochecktest }
+  { \bool_gset_false:N \g__phdcl_checktest_bool }
+\DeclareOption { kernel }
+  { \bool_gset_true:N \g__phdcl_kernel_bool }
+\DeclareOption { stdmodule }
+  { \bool_gset_false:N \g__phdcl_kernel_bool }
+\DeclareOption { cm-default }
+  { \bool_gset_false:N \g__phdcl_lmodern_bool }
+\DeclareOption { lm-default }
+  { \bool_gset_true:N \g__phdcl_lmodern_bool }
+\DeclareOption { cs-break-off }
+  { \bool_gset_false:N \g__phdcl_cs_break_bool }
+\DeclareOption { cs-break-nohyphen }
+  { \PassOptionsToPackage{nohyphen}{underscore} }
 
-\DeclareOption*{%
-    \PassOptionsToClass  {\CurrentOption}{book}}
-\InputIfFileExists{phddoc.cfg}
-           {\typeout{*************************************^^J%
-                     * Local config file phddoc.cfg used^^J%
-                     *************************************}}
-           {}
+\tl_new:N \g__phdcl_doctype_tl
+\DeclareOption {book}
+  {\tl_gput_right:Nn \g__phdcl_doctype_tl{book} }
+
+\DeclareOption {scrbook}
+  {\tl_gput_right:Nn \g__phdcl_doctype_tl{book} }
+
+\DeclareOption* { \PassOptionsToClass { \CurrentOption } { book } }
+\ExecuteOptions { full, kernel, nocheck, nochecktest, lm-default }
+\PassOptionsToClass { a4paper } { book }
+
+
+\ExplSyntaxOn
+\msg_new:nnn { phddoc } { input-cfg }
+  { Local~config~file~phddoc.cfg~loaded. }
+\file_if_exist:nTF {phddoc.cfg}
+  {
+    \file_input:n {phddoc.cfg}
+  }
+  { \msg_info:nn { phddoc } { input-cfg }  }
+  {}
+\ExplSyntaxOff
+
+\ExplSyntaxOn
+\str_case_e:nnTF { \g__phdcl_doctype_tl }
+   {
+     { book     }    {
+                       %\LoadClass{book}
+                       \bool_gset_true:N \g__phdcl_book_bool
+
+                     }
+     { article  }    {
+                       %\LoadClass{article}
+                       \bool_gset_true:N \g__phdcl_article_bool
+                     }
+     { report        } {
+      %\LoadClass{report}
+      \bool_gset_true:N \g__phdcl_report_bool
+       }
+     { scrbook       } {
+                         %\LoadClass{scrbook}
+                         \KOMAoptions{twoside = false}
+                         \bool_gset_true:N \g__phdcl_scrbook_bool
+                       }
+     { scrartcl      } {
+                         %\LoadClass{scrartcl}
+                         \bool_gset_true:N \g__phdcl_scrartcl_bool
+                       }
+     { l3doc         } { %\LoadClass{l3doc}
+                       }
+     { masterthesis  } {                         }
+     { tufte         } {                         }
+     { ltxdoc        } {                         }
+     { l3doc         } {                         }
+     { memoir        } { %\LoadClass{memoir}
+                                                }
+   }
+   {                                             }
+   { }
+
+\ExplSyntaxOff
+\ExplSyntaxOn
 \ProcessOptions
-\if@book
-  \LoadClass{book}
-    \else
-      \if@article
-        \LoadClass{article}
-        \cxset{section number prefix=,}
-        \else
-          \if@report
-            \LoadClass{report}
-          \else
-             \if@scrbook
-             \LoadClass{scrbook}
-             \else
-             \if@scrartcl
-                 %\cxset{section number prefix=,}
-                 \LoadClass{scrartcl}
-                 \else
-                 \if@scrreprt
-                 \LoadClass{scrreprt}
-              \fi
-           \fi
-      \fi
-    \fi
-  \fi
-\fi
+\LoadClass{\g__phdcl_doctype_tl}
+\ExplSyntaxOff
+
+
 \RequirePackage{doc}
-\RequirePackage{expl3}
 \RequirePackage{phd}
 \RequirePackage{phd-pkgmanager}
 \sethyperref
-\RequirePackage{phd-documentation}
+\RequirePackage{phd-documentation} %modifies doc as necessary
 \RequirePackage{phd-colorpalette}
 \RequirePackage{phd-runningheads}
+\RequirePackage{phd-toc}
+
 \AtBeginDocument{\MakeShortVerb{\|}}
-\DeclareFontShape{OT1}{cmtt}{bx}{n}{<-> ssub * cmtt/m/n}{}
-\DeclareFontFamily{OMS}{cmtt}{\skewchar\font 48}  % '60
-\DeclareFontShape{OMS}{cmtt}{m}{n}{<-> ssub * cmsy/m/n}{}
-\DeclareFontShape{OMS}{cmtt}{bx}{n}{<-> ssub * cmsy/b/n}{}
 \DeclareFontShape{OT1}{cmss}{m}{it}{<->ssub*cmss/m/sl}{}
 \CodelineIndex
 \CodelineNumbered
 \EnableCrossrefs
-\setlength{\textwidth}{355pt}
-\addtolength\marginparwidth{30pt}
-\addtolength\oddsidemargin{20pt}
-\addtolength\evensidemargin{20pt}
 \setcounter{StandardModuleDepth}{1}
 \def\cmd#1{\cs{\expandafter\cmd@to@cs\string#1}}
 \def\cmd@to@cs#1#2{\char\number`#2\relax}
+
+\DeclareRobustCommand\cls{\textcolor{thered}}
+
 \providecommand\parg[1]{%
   {\ttfamily(}\meta{#1}{\ttfamily)}}
-
-\@addtoreset{CodelineNo}{part}
+\@addtoreset{CodelineNo}{chapter}
 \def\partname{File}
-\newcommand*{\DocInclude}[1]{%
-  \relax
-  \clearpage
-  \docincludeaux
-  \IfFileExists{#1.fdd}{%
-    \def\currentfile{#1.fdd}}{\def\currentfile{#1.dtx}
-   }%
-  \ifnum\@auxout=\@partaux
-    \@latexerr{\string\include\space cannot be nested}\@eha
-  \else \@docinclude#1 \fi}
-\def\@docinclude#1 {\clearpage
-  \if@filesw \immediate\write\@mainaux{\string\@input{#1.aux}}\fi
-\@tempswatrue\if@partsw \@tempswafalse\edef\@tempb{#1}\@for
-\@tempa:=\@partlist\do{\ifx\@tempa\@tempb\@tempswatrue\fi}\fi
-\if@tempswa \let\@auxout\@partaux \if@filesw
-\immediate\openout\@partaux #1.aux
-\immediate\write\@partaux{\relax}\fi
-\let\@phddoc@PrintIndex\PrintIndex
-\let\PrintIndex\relax
-\let\@phddoc@PrintChanges\PrintChanges
-\let\PrintChanges\relax
-\let\@phddoc@theglossary\theglossary
-\let\@phddoc@endtheglossary\endtheglossary
-\part{\currentfile}%
-  {\let\ttfamily\relax
-  \xdef\filekey{\filekey, \thepart={\ttfamily\currentfile}}}%
-\DocInput{\currentfile}%
-\let\PrintIndex\@phddoc@PrintIndex
-\let\PrintChanges\@phddoc@PrintChanges
-\let\theglossary\@phddoc@theglossary
-\let\endtheglossary\@phddoc@endtheglossary
-\clearpage
-\@writeckpt{#1}\if@filesw \immediate\closeout\@partaux \fi
-\else\@nameuse{cp@#1}\fi\let\@auxout\@mainaux}
-\gdef\codeline@wrindex#1{\if@filesw
-        \immediate\write\@indexfile
-            {\string\indexentry{#1}%
-            {\filesep\number\c@CodelineNo}}\fi}%
-\let\filesep\@empty
-\def\aalph#1{\@aalph{\csname c@#1\endcsname}}
-\def\@aalph#1{%
-  \ifcase#1\or a\or b\or c\or d\or e\or f\or g\or h\or i\or
-         j\or k\or l\or m\or n\or o\or p\or q\or r\or s\or
-         t\or u\or v\or w\or x\or y\or z\or A\or B\or C\or
-         D\or E\or F\or G\or H\or I\or J\or K\or L\or M\or
-         N\or O\or P\or Q\or R\or S\or T\or U\or V\or W\or
-         X\or Y\or Z\else\@ctrerr\fi}
-\def\docincludeaux{%
-  \def\thepart{\aalph{part}}\def\filesep{\thepart-}%
-  \let\filekey\@gobble
-  \g@addto@macro\index@prologue{%
-    \gdef\@oddfoot{\parbox{\textwidth}{\strut\footnotesize
-       \raggedright{\bfseries File Key:} \filekey}}%
-    \let\@evenfoot\@oddfoot}%
-  \global\let\docincludeaux\relax
- \gdef\@oddfoot{%
-   \expandafter\ifx\csname ver@\currentfile\endcsname\relax
-    File \thepart: {\ttfamily\currentfile} %
-   \else
-    \GetFileInfo{\currentfile}%
-    File \thepart: {\ttfamily\filena
-    me} %
-    Date: \filedate\ %
-    Version \fileversion
-    \fi
-    \hfill\thepage}%
- \let\@evenfoot\@oddfoot}%
-\ExplSyntaxOn
-\newenvironment {ddangernote}
-  {
-    \begin{trivlist}\item[]\noindent
-    \begingroup\hangindent=3.5pc\hangafter=-2
-    \cs_set:Npn \par{\endgraf\endgroup}
-    \hbox to0pt{\hskip-\hangindent\dbend\kern2pt\dbend\hfill}\ignorespaces
-  }{
-      \par\end{trivlist}
-  }
-\ExplSyntaxOff
 \def\task#1#2{}
 \endinput
 %%

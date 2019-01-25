@@ -1,0 +1,112 @@
+\cxset{section align=left,
+       section font-weight=bold}
+       
+\chapter{The LaTeX3 l3msg Module and how to use it for Error, Warning and other Messages}
+\index{messaging>error}\index{messaging>warning}
+\section{Introduction}
+
+Messages need to be passed to the user by modules, either when errors occur or to indicate
+how the code is proceeding. The l3msg module provides a consistent method for doing
+this (as opposed to writing directly to the terminal or log).
+
+The system used by l3msg to create messages divides the process into two distinct
+parts. Named messages are created in the first part of the process; at this stage, no
+decision is made about the type of output that the message will produce. The second
+part of the process is actually producing a message. At this stage a choice of message
+class has to be made, for example error, warning or info.
+
+By separating out the creation and use of messages, several benefits are available.
+First, the messages can be altered later without needing details of where they are used
+in the code. This makes it possible to alter the language used, the detail level and so
+on. Secondly, the output which results from a given message can be altered. This can be
+done on a message class, module or message name basis. In this way, message behaviour
+can be altered and messages can be entirely suppressed.
+
+\section{Creating messages}
+
+Messages \emph{must} be created before they can be used. This has the advantage that they can be used
+over and over and also one could start thinking of internationalizing the package.
+
+Messages can be created as either new or set and there is also a TF to check if the message exists:
+
+\begin{docCommand}{msg_new:nnnn}{ \marg{module} \marg{message} \marg{text} \marg{more text} }
+Creates a hmessagei for a given hmodulei. The message will be defined to first give htexti
+and then \meta{more text} if the user requests it. If no \meta{more text} is available then a standard
+text is given instead. Within htexti and more text four parameters (\#1 to \#4) can be
+used: these will be supplied at the time the message is used. An error will be raised if
+the \meta{message} already exists.
+\end{docCommand}
+
+\section{Messaging classes}
+
+Messages are divided into categories termed message classes. 
+These are according to \emph{severity}, \emph{fatal}, \emph{critical}, \emph{error}, \emph{warning} and \emph{info}. Each one has its own set of creation functions.
+
+\begin{docCommand*}{msg_fatal:nnnnnn}{\marg{module} \marg{message} \marg{arg one} \marg{arg two} \marg{arg three}
+\meta{arg four}}
+Issues \meta{module} error \meta{message}, passing \meta{arg one} to \meta{arg four} to the text-creating
+functions. After issuing a fatal error the \tex run will halt.
+\end{docCommand*}
+
+
+
+\begin{texexample}{Typical package error setup}{ex:errors}
+% Error message example
+%
+% simulate LaTeX2e \fmversion
+\def\fmversion{2000/11/12}
+\makeatletter
+\ExplSyntaxOn 
+
+% create error boolean
+\bool_new:N \l_mypackage_error_bool
+ 
+% redirect package errors here  %(*@\label{l:warning}@*)
+\cs_new_protected:Npn \mypackage_warning:nxx #1 #2 #3 
+  {
+    \bool_set_true:N \l_mypackage_error_bool
+    \msg_info:nnxx { mypackage } { #1 } { #2 } { #3 }
+  }
+ 
+% define some error messages
+\msg_set:nnnn { mypackage } { old-version }
+  { LaTeX~source~files~more~than~5~year~old.~ Is~dated~(year:#1~date:#2-#3) }
+  { Please~update~your~distribution~visit~ctan } %(*@\label{test}@*)
+   
+
+% check version number   	   	
+\cs_new:Npn \mypackage_check_version:n #1 
+  {
+    \exp_after:wN \l_mypackage_check_version_aux:w #1\q_stop
+  }
+
+% check version number auxiliary 
+% #1 relation
+% #2 true code
+% #3 false code  
+\cs_new:Npn \l_mypackage_check_version_aux:w #1/#2/#3\q_stop 
+  {
+    \int_compare:nNnTF { ( \tex_year:D-#1 )*12 + (\tex_month:D-#2) } > { 65 }
+      { \FAIL \mypackage_warning:nxx { old-version } { #1 } { #1 / #2 / #3 } }
+      { \PASS } 
+  }
+  
+\mypackage_check_version:n \fmversion 
+\mypackage_check_version:n \fmtversion 
+  
+\ExplSyntaxOff
+\end{texexample}
+
+In Example~\ref{ex:errors} Line \ref{test} we define our own package command for issuing an error message, rather than typing |\msg_error:nnxx| directly. This is considered good practice and we avoid typing in \enquote{mypackage} all the time. 
+
+\section{How to translate strings}
+\index{internationalization>expl3}
+
+I posted similar code to the |TX.SX| Q\&A site to elicit comments from other users, as to recommended best practices.
+%http://tex.stackexchange.com/questions/246810/latex3-l3msg-best-practices 
+At this moment in time I am not too sure if a LaTeX3 approach to internationalization is appropriate. If one looks at the complexities, it is preferable to use Lua. 
+
+
+
+
+

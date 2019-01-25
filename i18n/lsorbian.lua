@@ -1,0 +1,47 @@
+local strings = strings or {}
+
+strings.lsorbian = {
+  abstract          = "",
+  partname          = "",
+  chaptername       = "",
+  sectionname       = "",
+  subsectionname    = "",
+  subsubsectionname = "",
+  paragraphname     = "",
+  appendixname      = "", 
+  bibliographyname  = "",
+  indexname         = "",
+  glossaryname      = "",
+  tablename         = "",
+  figurename        = "", 
+  pagename          = "",
+  seename           = "",
+  equationname      = "",
+  contentsname      = "",
+  prefacename       = "",
+  listfigurename    = "",
+  listtablename     = "",
+  alsoname          = "",
+  proofname         = "",
+  refname           = "",
+  leftname          = "",
+  rightname         = "",
+  bindingcorrectionname = "",
+  name              = "lsorbian",
+  months              = { -- as per gregorian calendar
+    "januara",
+    "februara",
+    "měrca",
+    "apryla", 
+    "maja",
+    "junija",
+    "julija",
+    "awgusta",
+    "septembra",
+    "oktobra",
+    "nowembra",
+    "decembra", 
+    }
+  }
+  
+  return strings

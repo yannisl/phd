@@ -1,0 +1,103 @@
+ \documentclass{ltxdoc}
+ \usepackage{expl3,xparse}
+ \begin{document}
+ 
+ \makeatletter
+ \def\@texttop{This is something}
+ 
+ \def \@setfpsbit #1{%
+   \@tempcntb \@tempcnta
+   \divide \@tempcntb #1\relax
+   \ifodd \@tempcntb
+   \else
+     \advance \@tempcnta #1\relax
+   \fi
+}
+\NewDocumentCommand\testfps{m m}{%
+   % holds the type of float start at 16. Note the same count is used in
+       % the output routine to set the bits.
+       
+       \def\@fps{#2}
+       \@tempcnta \sixt@@n
+       
+      
+       % iterate through the specification and set the bitmap
+       \expandafter \@tfor \expandafter \reserved@a
+         \expandafter :\expandafter = \@fps 
+         \do
+          {%
+           % This is the first position reading from the right.
+           \if \reserved@a h%
+             \ifodd \@tempcnta
+             \else
+               % 17 is here float
+               \advance \@tempcnta \@ne
+             \fi
+           \fi
+           \if \reserved@a t%
+             % position 2
+             \@setfpsbit \tw@
+             
+           \fi
+           \if \reserved@a b%
+              
+             \@setfpsbit 4%
+           \fi
+           \if \reserved@a p%
+             \@setfpsbit 8%
+           \fi
+           % will set it to zero
+           \if \reserved@a !%
+             \ifnum \@tempcnta>15
+               \advance\@tempcnta -\sixt@@n\relax
+             \fi
+           \fi
+           }%
+           
+           
+       
+       \expandafter\@tempcntb \csname ftype@#1\endcsname 
+       %multiply by 32 by the ftype\@captype
+       \multiply \@tempcntb \@xxxii
+       \advance \@tempcnta \@tempcntb
+       
+             
+       
+       \makebox[50pt][r]{#1[#2] \the\@tempcnta} \makebox[100pt][r]{\hfill\testaux{\the\@tempcnta}}
+       
+       % define globally count |\@currbox| as |\@tempcnta|
+      % \@next\@currbox\@freelist{}
+       \tt\@next\@currbox\@freelist{}{}
+       \tt\@next\@currbox\@freelist{}{}
+        \tt\@next\@currbox\@freelist{}{}
+       \global \count\@currbox \@tempcnta
+}
+ \ExplSyntaxOn
+\tl_new:N \l_tempa_tl
+ \def\testaux #1 
+   {
+     \tl_clear:N \l_tempa_tl
+     \tl_put_right:Nx \l_tempa_tl {\int_to_bin:n{\the\@tempcnta}}
+     \tl_map_inline:Nn \l_tempa_tl 
+       {
+         \fbox{##1}\skip_horizontal:n {1.5pt}
+       }
+   } 
+\parindent0pt   
+\tt
+\testfps{figure}{!}      
+\testfps{figure}{}       
+\testfps{figure}{h}  
+\testfps{figure}{t}
+\testfps{figure}{b}
+\testfps{figure}{p}
+\testfps{figure}{bt}
+\testfps{table}{!}
+
+\ExplSyntaxOff
+
+
+\tt\meaning\@currbox\\
+\the\@currbox
+\makeatother
+\end{document} 

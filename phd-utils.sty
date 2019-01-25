@@ -13,6 +13,7 @@
 %% ----------------------------------------------------------------
 \NeedsTeXFormat{LaTeX2e}[2017/04/15]%
 \ProvidesPackage{phd-utils}[2018/1/13 v1.0 various useful utilities (YL)]%
+\RequirePackage{expl3,xparse}
 \ProvideDocumentCommand{\hairsp}{}{\hspace{1pt}}
 \ProvideDocumentCommand{\hquad}{}{\hskip0.5em\relax}% half quad space
 \ProvideDocumentCommand{\qqquad}{}{\qquad\quad}
@@ -81,10 +82,35 @@
     \vskip2.5pt
     \drawrule{#1}{#2}%
  }
-\def\TRUE{ \meta{true code} }
-\def\FALSE{ \meta{false code} }
-\def\PASS{\par{\bfseries\textcolor{green!50!blue}{PASS}}\ ~}
-\def\FAIL{\par{\bfseries\textcolor{red!70!black}{FAIL}}\ ~}
+\ExplSyntaxOn
+\cs_set:Npn \l__assert_typeset_true:
+  {
+    \meta{true code}
+  }
+\cs_set_nopar:Npn \TRUE { \l__assert_typeset_true: }
+\cs_set_nopar:Npn \FALSE { \meta{false code} }
+\cs_set_nopar:Npn \PASS { \tex_par:D \leavevmode {\sffamily\bfseries\textcolor{green!50!blue}{PASS}}\ ~}
+\cs_set_nopar:Npn \FAIL { \tex_par:D \leavevmode {\sffamily\bfseries\textcolor{red!70!black}{FAIL}}\ ~}
+\ProvideDocumentCommand{\PASSED}{ }{\textcolor{green!50!blue}{PASS}}
+
+\cs_set:Npn \assert_eq_meaning:NN #1 #2
+  {
+   \if_meaning:w #1#2
+     \PASS
+     \else:
+     \FAIL
+   \fi:
+  }
+
+\cs_set:Npn \assert_not_eq_meaning:NN #1 #2
+  {
+   \if_meaning:w #1#2
+     \PASS
+     \else:
+     \FAIL
+   \fi:
+  }
+\ExplSyntaxOff
 \endinput
 %%
 %% End of file `phd-utils.sty'.

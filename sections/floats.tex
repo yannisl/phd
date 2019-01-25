@@ -17,7 +17,7 @@ Automating the placement of images is one of the fundamental benefits of using \
 
 Most publications contain a lot of figures and tables. There are instances where
 a table can be broken across pages (for example using the package |longtable|), but this is unacceptable for figures. For this reason
-figures and short tables need special treatment. The rather naıve method of treating these
+figures and short tables need special treatment. The rather naive method of treating these
 objects is to start a new page every time a floating object is too large to fit on the present
 page. 
 
@@ -80,12 +80,20 @@ forces \latex to actually ignore most of the internal parameters related to floa
 \label{fig:victorian}
 \end{figure}
 
-In many respects it is easier to deal with full page floats. The difficulties for layouts that are a bit out of the ordinary can mostly be handled within the current capabilities of the \latexe output and page breaking routines. However, it does break the author’s train of thought to stop and handle the sizing of pages, zero with boxes and the like. For example to design an algorithm for figure~\ref{fig:victorian}, the following steps need to take place:
+In many respects it is easier to deal with full page floats. The difficulties for layouts that are a bit out of the ordinary can mostly be handled within the current capabilities of the \latexe output and page breaking routines. However, it does break the author’s train of thought to stop and handle the sizing of pages, zero with boxes and the like. For example to design an algorithm for figure~\ref{fig:victorian}, although if done manually is fairly simple to automate it, it needs some serious thought. First such image-caption combinations will need to open on an odd page so the image caption can be read with the book open. Some books may also allow it to open on the right and the caption to be placed on the left of the page. The caption should be of the
+marginpar type, with the marginpar given priority over any others and placed at the top of the margin. It might also be acceptable to be the last.
 
 \begin{enumerate}
-\item  A float is defined as $\Phi \colon \in \{f_i\dots f_n \}$, which we denote as a list containing all float types available. 
+\item  A list of floats is defined as $\Phi \colon \in \{f_i\dots f_n \}$, which we denote as a list containing all float types available. 
 \item Determine the type of figure style that we want to implement. Let us denote it as 
          $f = \{h_i,w_i,p_p, f(z)\}$, where f is a function that determines the positioning and resizing of the image.
+\item A page galley defines rules as to the maximum number and positioning of floats. It consists of a list
+      of areas.
+      $\Gamma = \{a_1\dots a_n\} $.
+\item Each area $a$ has to satisfy a list of constraints, number of floats, maximum height, type of floats it can hold.
+      \[ P_h <= h <= \sum_{n=1}^{n=allowed} a_{1,h} + a_{2,h}+\cdots+ a_{allowed,h} \]  
+\item Each area in a page galley has a priority level. For example a full page image should have a priority level of one, which will force all other areas to shrink to zero width and height and to set it so that it will not accept any floats in these areas. In this case any text collected if it does not fill a page should be deferred to the next page, again based on an algorithm. Footnotes and heasings should also be disabled in such a case. So we need to be constantly communicating with the page builder. Perhaps we will also need more than one |\clearpage| type.       
+\item Each galley                   
 \item Start a new page box.
 \item Measure the width $w_i$  and height of the image $h_i$. If the width $w_i>P_t$ then when the image is placed on the page it needs to be shifted into the left margin by $(P_t-w_i)/2$. We would prefer to shift the image, rather than changing the page geometry to avoid some of the problems of the paging algorithm of \tex. 
 \item Insert the image.
@@ -170,9 +178,8 @@ The automatic placement of figures by \latexe are controlled by a set of counter
 
 \begin{table}[htbp]
 \caption{Float Placement Counters}
-\centering
 
-\begin{tabularx}{0.8\textwidth}{|l|X|}
+\begin{tabular}{|l|p{6.5cm}|}
 \hline
 |topnumber| & The maximum number of floats allowed at the top of a text page (the default is 2).\\
 \hline
@@ -182,15 +189,16 @@ page (the default is 1).\\
 |totalnumber| &The maximum number of floats allowed on any one text page
 (the default is 3)\\
 \hline
-\end{tabularx}\par
+\end{tabular}\par
 
 \end{table}
+
 
 
 \section{Placement Fraction Guidelines}
 
 \begin{macro}{\textfaction}
-    Setting \textfraction smaller than 0.15 is discouraged as it produces hardto-read
+    Setting \textfraction smaller than 0.15 is discouraged as it produces hard to-read
     pages. If a figure’s height is more than 85\% of \cmd{\textheight}, it almost
     certainly looks better by itself on a float page than squeezed on a text page
     with a couple of lines of text below it.
@@ -198,14 +206,14 @@ page (the default is 1).\\
     Setting \refCom{textfraction} to zero as permits a text page to have
    no text, which confuses \latex and leads to badly-formatted pages.
 \end{macro}
-%
+
 \begin{macro}{\topfraction}
 Never set \cmd{\topfraction} larger than 1 - \cmd{\textfraction}, as that causes contradictions
 in the float-placing algorithm.
 \end{macro}
 
 
-\begin{teXXX}
+\begin{teX}
 \renewcommand{\topfraction}{.85}
 \renewcommand{\bottomfraction}{.7} % .3 in kernel.
 \renewcommand{\textfraction}{.15}
@@ -216,7 +224,7 @@ in the float-placing algorithm.
 \setcounter{bottomnumber}{9}
 \setcounter{totalnumber}{20}
 \setcounter{dbltopnumber}{9}
-\end{teXXX}
+\end{teX}
 
 \section{The float package}
  
@@ -236,16 +244,30 @@ for the file that will keep the captions in cases where we want to have a list o
 list of diagrams, or other lists. The optional argument within is used to number float
 objects within some sectioning unit (e.g.,chapter, section). Here is a complete example:
 
-\begin{teXXX}
+\begin{teX}
 \floatstyle{plain}
 \newfloat{Photo}{htbp}{fot}[section]
-\end{teXXX}
+\end{teX}
 
 
 
 
 \floatstyle{plain}
 \newfloat{Photo}{htbp}{fot}
+
+\floatstyle{plain}
+\newfloat{plate}{H}{plt}[within]
+
+The counter \docCounter{float@type}
+
+\begin{texexample}{floattype value}{ex:floattype}
+\makeatletter
+\value{float@type}
+
+\newfloat{plate}{p}{plt}[within]
+\value{float@type}
+\makeatother
+\end{texexample}
 
 \begin{Photo}
  \centering
@@ -274,13 +296,20 @@ its name depends on the `type' (e.g., the example code above will create the pro
 environment). The `float style' can be specified with the \cs{floatstyle} command. The
 command takes only one argument, which is the name of a ‘‘float style’’:
 
-\begin{teXXX}
+\begin{teX}
 \begin{Example}
      First verbatim line.
      Second verbatim line.
      Third verbatim line.
 \end{Example}
-\end{teXXX}
+\end{teX}
+
+Float environments defined with \docAuxCommand{newfloat} do not respect the position of the 
+\refCom{caption} command but always use the selected float style instead which have a fixed, pre-defined caption position. They behave differently regarding this aspect than figure and table. (BTW: To make figure and table behave like environments defined with |\newfloat|, the float package offers \docAux{restylefloat}.)
+
+So if you want to have a floating environment which behaves like figure and table and let you place the |\caption| where you want to, do not use |\newfloat| but |\DeclareFloatingEnvironment| (or |\DeclareCaptionType|) offered by the \pkg{newfloat} package, or |\DeclareNewTOC| offered by the KOMA-Script document classes.\footnote{
+\protect\url{https://tex.stackexchange.com/questions/115499/image-caption-within-newfloat}}
+
 
 \endinput
 

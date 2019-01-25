@@ -152,23 +152,16 @@ See http://www.latex-project.org/lppl.txt
 \generate{\file{\jobname.sty}{
   \from{\jobname.dtx}{SCRIPTS}}
   }
-
 %\nopreamble\nopostamble
-
 %</install>
-
 %<install>\endbatchfile
 %<*internal>
 %\usedir{tex/latex/phd}
-\generate{
-  \file{\jobname.ins}{\from{\jobname.dtx}{install}}
-}
+\generate{\file{\jobname.ins}{\from{\jobname.dtx}{install}}}
 \nopreamble\nopostamble
-
 \generate{
 	\file{README.txt}{\from{\jobname.dtx}{readme}}
   }
-
 \generate{
   \file{\jobname.md}{\from{\jobname.dtx}{readmemd}}
 }
@@ -189,17 +182,15 @@ See http://www.latex-project.org/lppl.txt
 \usepackage[bottom=2cm]{geometry}
 \usepackage{microtype}
 \savegeometry{std}
-\usepackage{phd}
-\usepackage{phd-pkgmanager}
 \let\HUGE\Huge %Needs fixing
-\usepackage{phd-documentation}
-\usepackage{phd-toc}
+%\usepackage{phd-toc}
 %\usepackage{phd-runningheads}
 \usepackage{phd-lowersections}
 \usepackage{makeidx}
-\usepackage{phd-lists}
+%\usepackage{phd-lists}
+\usepackage{phd-counters}
+\usepackage{phd-scriptsmanager}
 
-\usepackage{bera}
 \sethyperref
 
 \addbibresource{phd1.bib}
@@ -224,7 +215,7 @@ See http://www.latex-project.org/lppl.txt
        subsubsection format=hang,
        chapter opening=any}
 
-     
+   
 \begin{document}
 
 
@@ -269,11 +260,13 @@ See http://www.latex-project.org/lppl.txt
 \newfontfamily\inscriptionalpahlavi{Noto Sans Inscriptional Pahlavi}
 \newfontfamily\imperialaramaic{NotoSansImperialAramaic-Regular.ttf}
 \newfontfamily\avestan{NotoSansAvestan-Regular.ttf}
-%\input{./sections/languages} OK
+
+%\input{./l3sections/l3box}
+\input{./l3sections/l3files} 
 
 %\input{./languages/greek}
 %\input{./languages/middle-eastern-scripts} OK
-%\input{./languages/elbasan}
+\input{./languages/elbasan}
 %\input{./languages/south-east-asian-scripts}
 %
 \cxset{chapter afterindent=off,
@@ -282,16 +275,16 @@ See http://www.latex-project.org/lppl.txt
 %\input{./languages/east-asian-scripts}
 %\input{./languages/ancient-and-historic-scripts} %OK
 %\input{./languages/modern-scripts}
-%\input{./sections/i18n} 
-%\input{./l3sections/l3main}
+\input{./sections/i18n} 
+
 %\input{./golang/golang-01}
 %\input{./golang/tools}
 
 
 %\input{./sections/chapterdesign}
 %\cxset{chapter format=block}
-\input{./sections/languages}
-\input{./sections/i18n}
+%\input{./sections/languages}
+%\input{./sections/i18n}
 \DocInput{\jobname.dtx}
 
 \nocite{*}
@@ -484,14 +477,14 @@ See http://www.latex-project.org/lppl.txt
 %
 %    \begin{macrocode}
 \NeedsTeXFormat{LaTeX2e}[2017/04/15]%
-\RequirePackage[2017/04/15]{latexrelease}
-\ProvidesFile{phd-lists}[2015/1/13 v1.0 less preamble (YL)]%
+\ProvidesPackage{phd-scriptsmanager}[2015/1/13 v1.0 less preamble (YL)]%
 %    \end{macrocode}
 %
 % \chapter{Scripts and Languages }
 % 
 %    \begin{macrocode} 
 %
+
 \ifengine
   {
     \PassOptionsToPackage{shorthands=off,italian,french,spanish,greek,ngerman,%
@@ -504,23 +497,74 @@ See http://www.latex-project.org/lppl.txt
                                                 UKenglish}{babel}
    \RequirePackage{babel}
    %babel
-   \selectlanguage{UKenglish}
+   %\setlanguage{UKenglish}
   }
   {\PassOptionsToPackage{shorthands=off,italian,french,spanish,greek,UKenglish }{babel}
     \RequirePackage{babel}
     \setdefaultlanguage{UKenglish}
   }
-\begin{otherlanguage}{french}
-\global\let\frenchenumerate\enumerate
+%\begin{otherlanguage}{french}
+%\global\let\frenchenumerate\enumerate
 %\global\let\endfrenchenumerate\endenumerate
-\end{otherlanguage}
+%\end{otherlanguage}
 %
 %    \end{macrocode}
 %
 %    \begin{macrocode}  
-%\RequirePackage[italian,UKenglish]{xlayouts}
+\RequirePackage{xlayouts}
 %    \end{macrocode} 
-% The clist \refCom{g_phd_scripts_clist} holds a list of all the scripts that have been loaded.
+%
+% \section{Text direction}
+%   A simple approach to bidi for texts is to be developed.  
+%   This is for  versions of LuaTeX > 1.0
+% 
+% 
+% \begin{macro}{\if@RTL}
+%    \begin{macrocode}
+\directlua {tex.enableprimitives('',tex.extraprimitives())}
+\newif\if@RTL
+\newif\if@RTLmain
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{docCommand}{setRTLmain}{}
+%  Sets the whole document in LR mode.
+% \end{docCommand}
+%
+% \begin{macro}{\setRTL} 
+% \begin{macro}{\setRL}
+% The macro |\setRTL| sets the paragraph and text direction to TRT.
+% \begin{texexample}{RTL}{ex:rtl}
+% \bgroup
+% \pardir TRT
+% \lorem
+% \egroup
+% \end{texexample}
+%    \begin{macrocode}
+\NewDocumentCommand\setRTLmain{m }{\pagedir TRT \bodydir TRT \pardir TRT \textdir TRT}
+
+
+\def\setRTL{\@RTLtrue \pardir TRT \textdir TRT}
+
+\let\setRL=\setRTL
+\def\setLTR{\@RTLfalse\pardir TLT \textdir TLT}
+\let\setLR=\setLTR
+\let\unsetRTL=\setLTR
+\let\unsetLTR=\setRTL
+
+\def\RTL{\@RTLtrue\trivlist \pardir TRT \textdir TRT\item\relax}
+\def\endRTL{\@RTLfalse\endtrivlist}
+\def\LTR{\trivlist \pardir TLT \textdir TLT\item\relax}
+\def\endLTR{\endtrivlist}
+
+\def\@ensure@RTL#1{\if@RTL#1\else\RLE{#1}\fi}
+\def\@ensure@LTR#1{\if@RTL#1\else\LRE{#1}\fi}
+\def\@ensure@dir#1{\if@RTL\RLE{#1}\else{#1}\fi}
+\let\@ensure@maindir=\@ensuredir
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%   The clist \refCom{g_phd_scripts_clist} holds a list of all the scripts that have been loaded.
 % Managing the user interface is problematic, we will have users that require
 % only one script and users that might want all of them.
 % There is also the issue between the blurring of alphabets, languages and scripts
@@ -636,7 +680,8 @@ See http://www.latex-project.org/lppl.txt
 %  
 % \begin{docCommand}{createtextscript}{ \marg{script name}}
 %   This creates a command of the form |\text|\meta{script name} i.e., for tibetan
-%   it will produce |\texttibetan|
+%   it will produce \docAuxCommand{texttibetan} and it will use the font family
+%   \docAuxCommand{tibetanfontfamily}.
 % \end{docCommand}
 %    \begin{macrocode}
 \ExplSyntaxOn
@@ -731,6 +776,7 @@ See http://www.latex-project.org/lppl.txt
 \ExplSyntaxOff
 
 \newfontfamily\arabicfont[Script=Arabic]{Amiri}
+
 \newfontfamily\arabicfonttt[Script=Arabic,Scale=.75]{DejaVu   Sans Mono}
 \newenvironment{Arabic}
    {\bgroup \arabicfont}

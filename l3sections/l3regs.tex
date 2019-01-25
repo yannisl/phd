@@ -1,0 +1,351 @@
+\chapter{Regular Expressions}
+
+\section{Introduction}
+The l3regex package provides regular expression testing, extraction of submatches, splitting,
+and replacement, all acting on token lists. The syntax of regular expressions is
+mostly a subset of the pcre syntax (and very close to posix), with some additions due
+to the fact that TEX manipulates tokens rather than characters. For performance reasons,
+only a limited set of features are implemented. Notably, back-references are not
+supported.
+
+\subsection{Simple replacements}
+\begin{texexample}{Replacing text using regex}{ex:regex01}
+\ExplSyntaxOn
+\tl_set:Nn \l_tempab_tl {My~beautiful~cat}
+\regex_replace_all:nnN { cat }{ CAT } \l_tempab_tl
+
+\tl_use:N \l_tempab_tl
+\ExplSyntaxOff
+\end{texexample}
+
+So far so good. The replacement happened flawlessly. Things become a bit more complicated if we need
+to include macros in the replacement text. We need to use \docAuxCommand{c}\Arg{name} to call the command.
+If we need to include parameters the brackets are denoted by \docAuxCommand{cB}|{| for the starting braces
+and \docAuxCommand{cE}|}| for the ending brace. In the next example we will use this method to typeset the capture in italics using |\textit|.
+
+\begin{texexample}{Replacing text using regex}{ex:regex02}
+\ExplSyntaxOn
+\tl_set:Nn \l_tempab_tl {My~beautiful~cat}
+\regex_replace_all:nnN { cat }{ \c{textit}\cB{cat\cE} } \l_tempab_tl
+
+\tl_use:N \l_tempab_tl
+\ExplSyntaxOff
+\end{texexample}
+
+\begin{texexample}{}{}
+\ExplSyntaxOn
+\tl_set:Nn \l_tempab_tl {My~beautiful~cat}
+\regex_replace_all:nnN { cat }{ \c{includegraphics}[width=0.5cm]\cB{amato\cE} } \l_tempab_tl
+
+\tl_use:N \l_tempab_tl
+\ExplSyntaxOff
+\end{texexample}
+
+Can we use more than one command in the replacement text? Let us try it out.
+
+\begin{texexample}{}{}
+\ExplSyntaxOn
+\tl_set:Nn \l_tempab_tl {My~beautiful~cat}
+\regex_replace_all:nnN { cat }
+  { 
+    \cB{\c{bfseries}
+    \c{includegraphics}[width=0.5cm]\cB{amato\cE} 
+    \c{includegraphics}[width=0.5cm]\cB{amato\cE}
+    \c{textit}\cB{~cats\cE} 
+    \c{lorem}
+    \cE}
+  } \l_tempab_tl
+
+\tl_use:N \l_tempab_tl
+\ExplSyntaxOff
+\end{texexample}
+
+
+The capture is indicated using |\0|,|\1|\ldots etc. We modify the last example so we can 
+use a slightly different pattern that can capture the text before the \enquote{cat} as well
+as the text before it.
+
+\begin{texexample}{Simple Captures}{ex:rgxs}
+\ExplSyntaxOn
+\tl_set:Nn \l_tempab_tl {My~beautiful~cat}
+\regex_replace_all:nnN {(.+)(cat) }
+  { 
+    \cB{
+      \c{bfseries}\c{color}\cB{blue300\cE}
+      \1
+      \c{includegraphics}[width=0.5cm]\cB{amato\cE} 
+      \c{includegraphics}[width=0.5cm]\cB{amato\cE}
+      \c{textit}\cB{~\2\cE} 
+      \c{lorem}
+    \cE}
+  } \l_tempab_tl
+
+% typeset the text
+\tl_use:N \l_tempab_tl
+
+% Test that the color does not leak out.
+\lorem
+
+\ExplSyntaxOff
+\end{texexample}
+
+\begin{texexample}{Simple Captures}{ex:rgxs6}
+\ExplSyntaxOn
+\tl_set:Nn \l_tempab_tl {a^1+a^2+a^3}
+\regex_replace_all:nnN {a}
+  { 
+    \c{mbox}\cB{\c{bfseries}a\cE}
+   
+  } \l_tempab_tl
+
+% typeset the text
+\begin{gather}
+\tl_use:N \l_tempab_tl
+\end{gather}
+% Test that the color does not leak out.
+\ExplSyntaxOff
+\end{texexample}
+
+Can we find a better way to type vectors?
+\begin{texexample}{Simple Captures}{ex:rgxs6}
+\def\myequation {v =  v_1, v_2, \dots, v_{n - 1}, v_n + \angle \theta = u + w }
+  
+\ExplSyntaxOn
+\cs_generate_variant:Nn \tl_set:Nn {NV}
+
+\tl_set:NV \l_tempab_tl \myequation
+
+\regex_replace_all:nnN {([u-z])[^_]}
+  { 
+    \c{mbox}\cB{\c{color}\cB{thered\cE}\c{bfseries}\1\cE}
+   
+  } \l_tempab_tl
+
+% typeset the text
+\begin{gather}
+\tl_use:N \l_tempab_tl
+\end{gather}
+\ExplSyntaxOff
+\end{texexample}
+
+This example was a bit more complicated. We had to generate a new variant so we could get the value
+of the function |\myequation|. Also we used a more complex pattern for the regular expression to 
+ensure that we can capture all lowercase letters in the range |u-z| that are not followed by an underscore.
+
+This was a quick and dirty example and I have used color to highlight the capture. A better way for a package
+would be to use |mathbf|. 
+
+\section{Compiling the Regular Expression}
+
+One thing you will notice quickly is that your document will compile slower. Sometimes depending
+on the regular expression it can really become slow.
+Processing can be speeded up tremendously by compiling the regular expressions. The command to use is 
+\docAuxCommand{regex_const:Nn}. 
+
+In the next example we will capture the contents of an equation and change all letters in the range |u-z| to bold. Since we are using LuaLaTeX we have a suitable font. We can also colorize them.
+
+
+\begin{texexample}{Simple Captures}{ex:rgxs6}
+\def\myequation{v =  v_1, v_2, \dots, v_{n - 1}, v_n + \angle \theta = u + w }
+  
+\ExplSyntaxOn
+
+\cs_generate_variant:Nn \tl_set:Nn {NV}
+
+\tl_set:NV \l_tempab_tl \myequation
+
+\regex_const:Nn \c_vector_regex {([u-z])[^_]}
+
+\regex_replace_all:NnN \c_vector_regex
+  { 
+    \c{mbox}
+      \cB{
+        \c{color}\cB{red900\cE}
+        \c{bfseries}
+        \1
+      \cE}
+   
+  } \l_tempab_tl
+
+% typeset the text
+\begin{gather}
+\tl_use:N \l_tempab_tl
+\end{gather}
+\ExplSyntaxOff
+\end{texexample}
+
+
+\begin{texexample}{Using mathbf}{ex:rgxs7}
+\def\myequation{v =  v_1, v_2, \dots, v_{n - 1}, v_n + \angle \theta = u + w }
+  
+\ExplSyntaxOn
+
+\cs_generate_variant:Nn \tl_set:Nn {NV}
+
+\tl_set:NV \l_tempab_tl \myequation
+
+% Defined globally so no need to redefine it here.
+% \regex_const:Nn \c_vector_regex {([u-z])[^_]}
+
+\regex_replace_all:NnN \c_vector_regex
+  { 
+    \c{mathbf}
+      \cB{    
+      \1
+      \cE}
+   
+  } \l_tempab_tl
+
+% typeset the text
+\begin{gather}
+\tl_use:N \l_tempab_tl
+\end{gather}
+\ExplSyntaxOff
+\end{texexample}
+
+
+
+\begin{texexample}{Regex Example}{ex:regex}
+\ExplSyntaxOn
+\seq_new:N \l_path_seq
+
+\regex_split:nnNTF { / } { /path/to/file.tex } \l_path_seq
+{ true } { false }
+
+% Function to map to
+\cs_set:Npn \a_word:n #1{#1\par}
+
+% Map a function
+%\seq_map_function:NN \l_path_seq \a_word:n
+
+% Pop right side
+\seq_pop_right:NN \l_path_seq \l_tempa_tl
+
+\tl_use:N \l_tempa_tl\\
+
+% Count the items
+\seq_count:N \l_path_seq
+\ExplSyntaxOff
+\end{texexample}
+
+
+The next example we will attempt and capture individual lines \url{https://tex.stackexchange.com/questions/398755/are-latex3-regular-expressions-able-to-match-characters-at-the-start-of-a-line}
+
+\begin{texexample}{}{}
+\newcommand\BS{$\backslash$}
+\newcommand\Test[1]{\textbf{Testing:}\quad\texttt{#1}}
+
+\begingroup
+\obeylines
+
+\gdef\Lines{
+    - First line
+    - second line ending with {\LaTeX}
+    - third line with -- in the middle
+    - fourth line that~
+    goes on for a bit
+}
+
+\endgroup
+
+\ExplSyntaxOn
+\seq_new:N \l_tmp_seq
+\cs_generate_variant:Nn \regex_split:nnN { nVN }
+
+\Test{}\verb+^^M\-+
+\regex_replace_once:nnN { \A\^^M?\-\s* } {} \Lines %to get rid of the first ^^M
+
+% Split the lines at \^^M and store in \l_tmp_seq
+\regex_split:nVN { \^^M\-\s* } \Lines \l_tmp_seq
+
+\begin{enumerate}
+\item\seq_use:Nn \l_tmp_seq {\item }
+\end{enumerate}
+
+
+\ExplSyntaxOff
+\end{texexample}
+
+There are a couple of items to explain. The line:
+\begin{verbatim}
+  \item\seq_use:Nn \l_tmp_seq {\item} 
+\end{verbatim}
+needs some explanation. The format of the function is \cs{seq_use:Nn}\Arg{seq var} \Arg{separator}. If the sequence has a single item, it is placed in the input stream with no \meta{separator}, and an empty sequence produces no output. An error is raised if the variable does not exist or is invalid. 
+
+The |V| type argument denotes a single token. This means the \emph{value of a variable}. It is used to get the contents of a variable without needing to worry about the underlying \tex structures containing the data. A V argument should be a single token similar to an |N| argument. A |v| type will construct a csname first, and then the value is recovered, for example \cs{foo:v} \Arg{MyVariable}.
+
+
+
+\begin{question}
+Study the examples above and then write minimal examples for the following tasks.
+\begin{tasks}(1)
+\task Modify the above example so that the lines are captured via an environment. 
+\task Write a regular expression pattern to extract all the vowels from a text.
+\task Modify the previous exercise to count the number of vowels in the text, using regular
+      expressions.
+\end{tasks}
+\end{question}
+
+\settasks{
+	counter-format=(tsk[r]),
+	label-width=4ex
+}
+\begin{question}
+Which of the following functions can be used to precompile a regular expression?
+\begin{tasks}(3)
+\task \cs{regex_comp:Nn}
+\task \cs{regex_const:N}
+\task \cs{regex_const:Nn}
+\end{tasks}
+\end{question}
+\begin{solution}
+The correct one is \cs{regex_const:Nn}. 
+\end{solution}
+
+\begin{lstquestion}[
+pre=What would be the output of this piece of code?,
+listings={style=simple}
+]
+\regex_split:nnN {/}{files/test.tex}\l_tmp_seq
+\end{lstquestion}
+
+
+\section{Revisiting the Titlecase Examples}
+
+What happens when your readers find abbreviations that they don't understand? Sometimes they can figure it out from the context, but otherwise the work that you put into crafting your message can be wrecked. To prevent distractions, you should ensure that every abbreviation is defined when it's first used and you should provide a Table of Abbreviations with your documents.
+
+The trouble is that it requires a lot of work. First you have to locate each abbreviation and then you need to find out whether that's the first use. If it's the first time it appears, the definition needs to be with that instance and not with the later ones. It's a time-consuming task that requires painstaking attention to detail.
+
+ 
+\begin{texexample}{Capturing Acronyms and Abbreviations}{ex:abbreviations}
+\ExplSyntaxOn
+\tl_set:Nn \l_tempab_tl {This~is~the~ABC~company~is~in~the~EU.~B2B~
+                         Business~to~Business~is~contacted~
+                         by~ElectriFi~and~not~3M.}
+
+
+\regex_const:Nn \c_regex_abbreviationss {(\b[A-Z]*[a-z]*[A-Z]s?\d*[A-Z]*[\-\w+]\b)}
+
+\regex_replace_all:NnN \c_regex_abbreviationss 
+   { 
+     \cB{
+     \c{textcolor}\cB{red900\cE}\cB{ \1 \cE}
+     \cE}
+   }
+   \l_tempab_tl
+
+\tl_use:N \l_tempab_tl 
+
+\ExplSyntaxOff
+\end{texexample}
+
+\section{Solutions}
+\printsolutions[chapter]
+
+
+
+
+
+
+
+

@@ -1,0 +1,993 @@
+
+\chapter{The LateX Kernel}
+
+
+\latex is the batteries of \tex. It has given authors the ability to write documents easily and in a consistent way. It has also provided pacakage writers with endless nights of work trying to figure out how things work. In this chapter we will describe briefly the workings of \latex and the areas where one could use it for improvements. The best source for how the \latex kernel works is \latex itself and the publication that comes with it \docFile{sourc2e.pdf}.
+The original developer of \latex was Leslie Lamport. Lamport who is now a recipient of the Turing award, described his philosophy for document production in a paper \textit{Document Production: Visual or Logical?}, presented before the ACM in 1987 \cite{lamport1987}. Although many developers have criticized the original code it is an amazing fact that it has endured. Although in today’s terms the system cannot be considered pluggable, it was
+certainly extensible and the fact that \tex provides the means to write macros on the fly, the main effort
+of the \latexe system was to provide the basic structure for the development of styles (now called classes).
+
+The code was and is well documented and many of the comments are from the first system. I have spent many an
+evening thinking that analyzing latex code, should be mandatory in modern computer classes to instill
+good discipline in being economical with code and for discovering the right amount of abstraction before designing programming and delving into code.
+
+\section{Code Organization.} 
+
+The \latex source code is distributed in a number of classes. These classes are saved in files |a|..|z| and files |A-O| The source files are documented in |source2e|, just |texdoc source2e| to read it. What I am describing here, is a step by step analysis of the classes, supplemented by additional materials, in order to understand the inner workings. 
+
+{\RaggedRight
+\centering
+
+\begin{tabular}{lp{5cm}}
+\toprule
+Filename  				& Description \\
+\midrule
+a ltxdirchk.dtx 	&        \\
+b ltplain.dtx    	&        \\
+c ltvers.dtx     	& Version information       \\
+c ltplain.dtx    	& definitions, mostly from plain\\
+h ltpar.dtx      	& Paragraphs See (\pageref{pars})\\
+i  ltspace				&Spacing commands. See~pg~[\pageref{spc}]\\
+k files.dtx				& File handling, listing of files\\
+n ltlengths				& Length setting commands. See~pg~[\pageref{kernel:lengths}]\\
+\bottomrule
+\end{tabular}
+}
+
+\section{Autoloading}
+
+When LaTeX2e was released, personal computers had much less power than nowadays. Moreover, TeX was often compiled with a rather small amount of available memory.
+\footnote{\url{http://tex.stackexchange.com/questions/38436/what-is-autoload}}.
+
+The inclusion of the New Font Selection Scheme (NFSS2), in particular, posed some challenges when LaTeXing big documents. So the developers provided a solution for people with limited memory available: if the autoload option was set during the extraction of latex.ltx from the sources, not all the kernel was included in the format which was then produced by running initex on this file: some parts of it were included "on demand", for instance the code for the picture environment.
+
+Support of the autoload feature was introduced in the June 1995 release of the LaTeX kernel update and dropped in December 2003.
+
+You can still find a description of this feature in the file
+
+\begin{verbatim}
+<TEX DIST ROOT>/doc/latex/base/autoload.txt
+\end{verbatim}
+
+On some small systems (perhaps most noticeably emTeX for PCs if your machine is unable to use the TeX386 version) LaTeX uses up a large amount of the memory available to TeX, leaving very little for storage of any further commands, complex text (such as tables), floats or cross references that may occur in a typical document. Note that these limits are built into the TeX executable and do not directly correspond to any physical memory that your machine has installed.
+
+In order to help with this problem, we have produced an experimental configuration of LaTeX in which certain functions are not predefined in the format, but are loaded automatically from a style file the first time they are used. This saves a lot of memory in the case that a document does not use these features.
+
+In this release two environments are ‘auto-loaded’ in this way, ‘picture’ and ‘tabbing’, as are various bits of internal code used in error handling, font loading and advanced page makeup.
+
+  autopict.sty      source for picture mode
+  autotabg.sty      source for tabbing environment
+  autoerr.sty       texts of most LaTeX error commands
+  autofss1.sty      little used internal font selection commands
+  autoout1.sty      source for \cs{enlargethispage} and related commands.
+
+\makeatletter
+
+\section{File a ltdirchk.dtx}
+
+This file implements the semi-automatic determination of various system dependent
+parts of the initialisation. The actual definitions may be placed in a file
+|texsys.cfg|. Thus for operating systems for which the tests here do not result in
+acceptable settings, a `hand written' texsys.cfg may be produced.
+Current directoty \cs{@currdir}.
+
+
+|\input@path| For most common operating sytsems is let to undefined. % undefined on window
+
+The routines define a useful macro to parse file name paths:
+
+\begin{texexample}{Parsing directories}{ex:directories}
+\filename@parse{./test/some other paths/path/tex.jpg}
+
+\filename@area
+
+\filename@base,
+
+\filename@ext
+
+\end{texexample}
+
+The |\@TeXversion| is only defined for very old versions of |TeX|, on a reasonable modern distribution, it should be let to undefined.
+
+
+
+\section{File k ltfiles.dtx}
+
+
+\begin{tabular}{lp{5cm}}
+|\document| &\\
+|\nofiles| &\\
+|\includeonly| &\\
+|\include| &\\
+|\input| &\\
+|ifFileExists| &\\
+|\InputIfFileExists| & If the file exists on a system, execute then input the name, otherwise execute \textit{else}\\
+\end{tabular}
+
+
+
+
+
+\section{Listing files}  
+
+A list of files so far. The initial value of |@gobble| eats the comma before the first file name. Here we start encountering \LaTeX's iteration macros:
+
+The |\@filelist| is a comma delimited list that will hold the value of all files. It is let to |\@gobble| in order to eat the first comma. This is a nifty trick. 
+
+\begin{teX}
+204 \let\@filelist\@gobble
+\end{teX}
+
+The next macro adds a file name to the list. If you are not familiar with lists this is an interestin way of understanding, how a comma delimited list is build.
+
+\begin{teXXX}
+205 \def\@addtofilelist#1{\xdef\@filelist{\@filelist,#1}}
+\end{teXXX}
+
+Note that the |\@filelist| gets deactivated if |\listfiles| does not appear in the preamble. The |begin{document}|
+contains code equivalent to:
+
+\begin{teXXX}
+\AtBeginDocument{%
+  \ifx\@listfiles\@undefined
+  \let\@filelist\relax
+  \let\@addtofilelist\@gobble
+\fi}
+229 \@onlypreamble\listfiles
+230 \let\@dofilelist\relax
+\end{teXXX} 
+
+\index{onlypreamble}
+
+
+
+\section{Version name and version date \texttt{File c ltvers.dtx.}}
+
+\begin{docCommand}{fmtname}{}
+LaTeXe's name is stored here as LaTeX2e
+\begin{docCommand}{fmtversion}{}
+\end{docCommand}
+This is a small class,  that its sole purpose is to provide version information. It checks
+if the format is too old. If it is older than 65 months it emits an error. 
+\end{docCommand}
+
+
+
+\begin{teXXX}
+2 \def\fmtname{LaTeX2e}
+3 \edef\fmtversion{2011/06/27}
+\end{teXXX}
+
+After the format version is hardcoded, a macro using one of LaTeX's scratch names is defined. The parameters
+of this macro are delimited in the same way as the date in the format version definition, thus a comparison can be made between the two periods. If it is longer than a preset period it emits an error.
+
+\begin{teXXX}
+4 \iffalse
+5 \def\reserved@a#1/#2/#3\@nil{%
+6   \count@\year
+7   \advance\count@-#1\relax
+8   \multiply\count@ by 12\relax
+9   \advance\count@\month
+10 \advance\count@-#2\relax}
+11 \expandafter\reserved@a\fmtversion\@nil
+12 \ifnum\count@>65
+13     \typeout{^^J%
+14     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!^^J%
+15     ! You are attempting to make a LaTeX format from a source file^^J%
+16     ! That is more than five years old.^^J%
+17     !^^J%
+18     ! If you enter <return> to scroll past this message then the format^^J%
+19     ! will be built, but please consider obtaining newer source files^^J%
+20     ! before continuing to build LaTeX.^^J%
+21     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!^^J%
+22     }
+23     \errhelp{To avoid this error message, obtain new LaTeX sources.}
+24     \errmessage{LaTeX source files more than 5 years old!}
+25 \fi
+26 \let\reserved@a\relax
+27 \fi
+\end{teXXX}
+
+It does not appear that this macro is currently activated, but I can be wrong. One cannot help but notice the conservatism in saving memory by the use of nameless scratch macros. Good practice dictates, that after their use they are let to |\relax|.
+
+\begin{texexample}{}{}
+\fmtname  [\fmtversion]
+\end{texexample}
+
+
+\section{File d ltplain.dtx}
+
+The routines covered by this file go deep into the heart of the kernel. Besides storing some of the plain commands in new macros, this section of the kernel defines its own defining commands like |\newcommand|, |\newenvironment| and similar other macros. We start by summarizing the author and internal commands available in this section.
+
+
+\endinput
+
+\section{File  Bibliographies ltbibl.dtx} 
+
+A bibliography is created by the \cmd{thebibliography} environment, which generates
+a title such as "References", and a list of entries. The \texttt{BIBTEX} program will create
+a file containing such an environment, which will be read in by the \cmd{bibliography}
+command. With BIBTEX, the following commands will be used
+
+
+\cmd{bibliography} This commands reads in all the filenames of the bibliography. |\bibliography{file1,file2,file3,file4}|
+It will then write a \cmd{bibdata} entry on the |.aux| file and tries to read in |mainfile.bbl|.
+
+
+\begin{teX}
+\def\bibliography#1{%
+ \if@filesw
+ \immediate\write\@auxout{\string\bibdata{#1}}%
+ \fi
+ \@input@{\jobname.bbl}
+}
+\end{teX}
+
+The \cmd{if@filesw} is defined in File k (ltfiles.dtx) as follows:
+\begin{teX}
+\newif\if@filesw \@fileswtrue
+\end{teX}
+
+The |bibliograhy| command simply writes the |bibdata|. Notice that |\string| is used to make sure  there is no expansion. \cmd{@input@} is a version of \cmd{@input} that does add the file to \cmd{@filelist}. This is also defined in |ltfiles.dtx|. 
+
+\begin{teX}
+\def\@input@#1{\InputIfFileExists{#1}{}{\typeout{No file #1.}}}
+\end{teX}
+
+
+\noindent It simply checks if the file exists and outputs to 
+
+\startlineat{32}
+\begin{teX}
+ \def\bibliographystyle#1{%
+ \ifx\@begindocumenthook\@undefined\else
+   \expandafter\AtBeginDocument
+ \fi
+ {\if@filesw
+  \immediate\write\@auxout{\string\bibstyle{#1}}%
+ \fi}}
+\end{teX}
+
+
+
+
+
+The bibliography environment is a list environment. Instead of using |\item|, it uses \cmd{bibitem}. The rest of the commands are \cmd{cite} and \cmd{nocite}.
+
+The \cmd{nocite}, puts information on the |.aux| file that causes |\bibtex| to include a citation list in the bibliography, but nothing in the document.\cmd{nocite\{*\}} is special it tells |\bibtex| to put the whole of a collection of citation with comment.
+references into the bibiography.
+
+Most of the Bibliography formatting comes later in the actual classes.
+
+
+\cmd{if@tempswa} General boolean switch used by LATEX kernel commands.
+defines as |\newif\if@tempswa|
+
+The \cmd{@cite} hook determines the \textit{relative formatting} of the two logical parts of a citation
+
+\begin{teX}
+\def\@cite#1#2{[{#1\if@tempswa , #2\fi}]}
+\end{teX}
+
+
+Not the easiest of read and the whole think should have a rethink for better modularity.
+
+
+
+\section{parboxes and other boxed things!}
+
+\label{parbox}\index{parbox}\index{mode!paragraph}
+A \cmd{parbox} is a box whose contents are created in paragraph mode. The |\parbox| has two mandatory arguments:
+
+\begin{teX}
+\parbox[position][height][inner-pos]{width}{text}
+\end{teX}
+
+\noindent For example,
+
+\begin{teX}
+\parbox{7cm}{\onepar}
+\end{teX}
+
+\noindent\parbox{7cm}{\onepar}
+
+\bigskip
+
+\begin{description}
+\item[width]  specifies the width of the parbox, and
+\item[text]   the text that goes inside the parbox.
+\end{description}
+
+
+\latex will position a parbox so its centre lines up with the centre of the text line. The optional position argument allows you to line up either the top or bottom line in the parbox (default is top).
+
+If the height argument is not given, the box will have the natural height of the text.
+
+The [inner-pos] argument controls the placement of the text inside the box. If it is not specified, position is used.
+
+\begin{enumerate}
+\item[t]  text is placed at the top of the box.
+\item[c]  text is centred in the box.
+\item[b]  text is placed at the bottom of the box.
+\item[s]  stretch vertically. The text must contain vertically stretchable space for this to work.
+\end{enumerate}
+
+A parbox command is used for a parbox containing a small piece of text, with nothing fancy inside. In particular, you shouldn't use any of the paragraph-making environments inside a parbox argument. For larger pieces of text, including ones containing a paragraph-making environment, you should use a \cs{minipage} environment 
+
+\begin{teX}
+\def\parbox{%
+  \@ifnextchar[%]
+   \@iparbox
+   {\@iiiparbox c\relax[s]}}
+\end{teX}
+
+The definition of the user command |\parbox| is quite simple and follows the typical pattern found with \latex commands. The macro, uses the |@ifnextcharacter|, to check for a left square bracket ([), to check if an optional argument has been supplied or not. If one was supplied |@iiiparbox| is called else
+|\@iiparbox| is called. This is typical of many \latex commands, where optional arguments are supplied. Four macros are used to provide a user command. The command, in this case |\parbox| and |@iparbox|, |@iiparbox| and |@iiiparbox|. The real work (in the case of |\parbox| is undertaken by the internal command |@iiiparbox|. It takes some time to get used to these patterns and my suggestion is for you to try a few macros for practice, plus read this chapter a couple of times trying some of the examples.
+
+The \index{iparbox} just handles the case again of optional arguments,
+
+\begin{teX}
+\def\@iparbox[#1]{%
+   \@ifnextchar[%]
+   {\@iiparbox{#1}}%
+   {\@iiiparbox{#1}\relax[s]}}
+\end{teX}
+
+
+  
+
+\begin{teX}
+\def\@iiparbox#1[#2]{%
+   \@ifnextchar[%]
+   {\@iiiparbox{#1}{#2}}%
+   {\@iiiparbox{#1}{#2}[#1]}}
+\end{teX}
+
+\begin{teX}
+   \let\@parboxto\@empty
+\end{teX}
+
+\hspace{-1cm}\texttt{\textbackslash @iiiparbox}
+
+The internal version of \texttt{\textbackslash parbox}. The parameter text is as follows:
+
+\begin{verbatim}
+#1 position t, b (default is top)
+#2 height
+#3 inner position t, c, b, c
+#4 width
+#5 text
+\end{verbatim}
+
+\begin{teX}
+  \long\def\@iiiparbox#1#2[#3]#4#5{%
+    \leavevmode
+    \@pboxswfalse
+    \setlength\@tempdima{#4}%
+    \@begin@tempboxa\vbox{\hsize\@tempdima\@parboxrestore#5\@@par}%
+     %check height 
+     \ifx\relax#2\else %empty
+        \setlength\@tempdimb{#2}%set to height
+        \edef\@parboxto{to\the\@tempdimb}%
+        \fi
+      \if#1b\vbox
+        \else\if #1t\vtop
+          \else\ifmmode\vcenter
+            \else\@pboxswtrue $\vcenter
+      \fi\fi\fi
+      %set parbox (originally defined as empty) 
+      \@parboxto{\let\hss\vss\let\unhbox\unvbox
+        \csname bm@#3\endcsname}%
+      \if@pboxsw \m@th$\fi
+    \@end@tempboxa}
+\end{teX}
+
+\noindent The \cmd{bm@} takes various values and is used for spacing. 
+|\bm@l|, |\bm@r|, |\bm@s|, |\bm@t|, |\bm@b|
+
+
+\textbf{Set up spacing}
+
+\startlineat{21}
+\begin{teX}
+  \def\bm@c{\hss\unhbox\@tempboxa\hss}
+  \def\bm@l{\unhbox\@tempboxa\hss}\let\bm@t\bm@l
+  \def\bm@r{\hss\unhbox\@tempboxa}\let\bm@b\bm@r
+  \def\bm@s{\unhbox\@tempboxa}
+\end{teX}
+
+
+\noindent If you are wondering what |\@pboxswfalse| and |\@pboxswtrue| you can checkit out by using \cmd{meaning}. There is also the package \docpkg{reflex} which you can use.
+
+
+%\makeatletter
+%
+%\parindent0pt
+%
+%\def\reflect{\@star@or@long\accommand}
+%\fboxrule=0.0pt
+%
+%\long\def\accommand#1{\framebox[4cm][l]{%
+%     {\tt\string#1 \hfill:}} %
+%     \parbox[t]{7cm}{\tt\expandafter\strip@prefix\meaning#1}} 
+%
+%
+%%% Must change to minipage
+%\def\ccommand#1{\parbox[t]{4cm}{\string#1}\parbox[t]{7cm}{#1}}
+%
+%
+%\reflect{\bm@c}
+%
+%\reflect{\@pboxswtrue}
+%
+%\reflect{\@pboxswtrue}
+%
+%\reflect{\leavevmode}
+%
+%
+%\meaning\@@par
+%
+%\meaning\hss
+%
+%\meaning\ifmmode
+%
+%\meaning\vbox
+%
+%\meaning\voidb@x
+%
+%\def\texprim{\texttt{\protect\TeX\ primitive}}
+%
+%\begin{comment}
+%
+%\def\CMhss{Glue that is infinitely stretchable as well as infinitely strechable \texprim}
+%
+%\def\CMi{The \BS i command is valid in math mode and text mode. It generates an i without dot (Unicode U+131, \i). The \BS I command expands to I, but is converted to \BS i by \BS MakeLowercase. \texprim}
+%
+%
+%\ccommand{\CMi}
+%
+%\reflect{\CMhss}
+%
+%\reflect{\CMi}
+%
+%\CMi
+%
+%\if{\meaning\par}{\meaning\par}{True} \else {false}
+%
+%\ifx{\par\meaning}{\meaning\par}{True}\else{false}
+%
+%
+%\end{comment}
+
+
+To complete the code the \cmd{\@arrayparboxrestore} is defined. This  restores various paragraph parameters. The rational for allowing two normally global 
+flags to be set locally here was stated originally by Donald Arsenau and extended by Chris Rowley. It is because these  flags are only set globally to true by section commands, and these should
+never appear within boxes or, indeed, in any group; and they are only ever set globally to false when they are definitely true.
+File B: ltboxes.dtx Date: 2006/05/18 Version v1.1g 237
+If anyone is unhappy with this argument then both 
+flags should be treated as in |\set@nobreak|; otherwise this command will be redundant.
+
+\begin{teXX}
+176 \def\@arrayparboxrestore{%
+177 \let\if@nobreak\iffalse
+178 \let\if@noskipsec\iffalse
+179 \let\par\@@par
+180 \let\-\@dischyph
+\end{teXX}
+
+Redefined accents to allow changes in font encoding
+\begin{teXX}
+181 \let\'\@acci\let\`\@accii\let\=\@acciii
+182 \parindent\z@ \parskip\z@skip
+183 \everypar{}%
+184 \linewidth\hsize
+185 \@totalleftmargin\z@
+186 \leftskip\z@skip \rightskip\z@skip \@rightskip\z@skip
+187 \parfillskip\@flushglue \lineskip\normallineskip
+188 \baselineskip\normalbaselineskip
+189 \sloppy}
+\end{teXX}
+
+Finally the \cmd{parboxrestore} restores various paragraph parameters, and also |\\|.
+
+\begin{teXX}
+190 \def\@parboxrestore{\@arrayparboxrestore\let\\\@normalcr}
+\end{teXX}
+
+
+\makeatletter
+{\obeylines
+\meaning\if@nobreak
+\meaning\if@noskipsec
+\meaning\@dischyph
+\meaning\discretionary
+}
+\makeatother
+
+The code between \cmd{\@begin@tempboxa} are helper macros for supporting \cmd{height}, \cmd{width} etc. It grabs \#1 into \index{@tempboxa} and measures it. It also allows for macros involved with the coloring of the box.
+
+
+This was a long write and possibly a long read. As \latex was written a long time ago. One could improve the user interface of the command by
+defining the |\parbox| with the |keyval| package. Will it be more intuitive to describe
+
+\begin{teXX}
+
+\parboX[width=7cm, 
+             height=8cm,
+             textposition=t, 
+             outerposition=b]{teX}
+\end{teXX}
+
+\begin{comment}
+%\makeatletter
+%\def\ac{test}
+%\def\Source{this,is, a, short, \string\ac }
+% The string \emph{\Source} contains the following tokens:\\
+% \whiledo{\not\equal{\Source}{}}
+% {
+%     \GetTokens{TokenOne}{TokenTwo}{\Source}
+%     \def\tempa{\TokenOne}
+%     \texttt{\meaning\ac}\\
+%     \let\Source\TokenTwo
+% }
+\end{comment}
+
+\section*{Strip the backslash}
+
+\tex's possibilities are almost infinite. Here is another example of
+an argument that is thrown away\cite{amy1990}, that just strips the backslash:
+
+\begin{teXXX}
+\def\stripbackslash#1#2*{\def\one{#2}}
+\end{teXXX}
+
+which only uses the second argument, throwing away the
+first argument, in this case stripping away a backslash
+from a control sequence supplied by the user. \cmd{stripbackslash}
+can then be used in another macro which
+needs a control sequence without its backslash to work
+correctly, for instance:
+
+\begin{texexample}{Stripping a backslash}{}
+\def\stripbackslash#1#2*{\def\one{#2}}
+\def\newdef#1{\expandafter
+\stripbackslash\string#1* \one}
+
+\newdef\testmacro
+\end{texexample}
+
+
+
+Instead of simply printing the control sequence without
+the backslash, |\newdef| can be rewritten to test to see
+if a given macro has already been defined. In this example,
+|\newdef| tests to see if the expansion of the control
+sequence |\csname\one\endcsname|, (where |\one|,
+was defined by |\stripbackslash| to be the control sequence
+supplied by the user minus its backslash) is equal
+to |\relax|. This takes advantage of the TEX convention
+that a previously undefined control sequence invoked in
+a |\csname...\endcsname| environment will be understood
+to be equal to |\relax|, whereas an already defined
+control sequence will not:
+
+\begin{texexample}{A command to define commands}{}
+\def\newdef#1{%
+  \expandafter\stripbackslash\string#1*
+  %% \stripbackslash defines \one
+  \expandafter
+  \ifx\csname\one\endcsname\relax
+      %% \one is expanded to be the
+      %% control sequence the user supplied
+      %% minus the backslash.
+      %% If csname construction equals
+      %% \relax, do nothing
+  \else %% Else, give error message:
+    {\tt Sorry, \string#1 has already been
+     defined. Please supply a new name.}
+\fi}
+\end{texexample}
+
+
+\chapter{\LaTeX counters}
+
+\thispagestyle{plain}
+{\centering\includegraphics[width=\textwidth]{./images/agnewesclinic.png}\par}
+
+{\centering \onelineheader{THE LATEX COUNTERS}\par}
+
+
+The |File:m ltcounts.dtx| provides the command sequences defined by \latex to use with counters. It is a fairly short file with approximately 
+60 lines of code. It is a good file to study in order to polish your skills in programming \tex. 
+
+The heart of the counter commands are the \index{definecounter}
+
+\index{LaTeX counters}
+\index{LaTeX counters!\textbackslash setcounter}\index{LaTeX counters! \textbackslash addtocounter}\index{LaTeX counters! \textbackslash value}
+The class starts with some definitions for |\setcounter|, |\addtocounter|, |\newcounter|, |\value|:
+
+
+\begin{teXXX}
+2 \def\setcounter#1#2{%
+3   \@ifundefined{c@#1}%
+4      {\@nocounterr{#1}}%
+5      {\global\csname c@#1\endcsname#2\relax}}
+\end{teXXX}
+
+
+Testing for something here
+
+Notice in line [5] that the name of the counter is prefixed with |c@|. This is automatically done for newcounter commands which we explain later on.
+
+
+\index{LaTeX counters!\textbackslash newcounter}
+
+\begin{docCommand}{newcounter}{}
+The |\newcounter{newctr}[oldctr]| macro  Defines |newctr| to be a counter, which is
+reset when counter |oldctr|  is stepped. If |newctr| is  already defined produces
+|c@newctr already| defined  error.
+\end{docCommand}
+
+\begin{teXXX}
+10 \def\newcounter#1{%
+11   \expandafter\@ifdefinable \csname c@#1\endcsname
+12   {\@definecounter{#1}}%
+13   \@ifnextchar[{\@newctr{#1}}{}}
+\end{teXXX}
+
+The code checks to see, if an optional value is provided, using \cs{@ifnextchar} and branches to either
+\cs{@definecounter} or to \cs{@newctr}. The two macros follow:
+
+\begin{teXXX}
+25 \def\@definecounter#1{\expandafter\newcount\csname c@#1\endcsname
+26   \setcounter{#1}\z@
+27   \global\expandafter\let\csname cl@#1\endcsname\@empty
+28   \@addtoreset{#1}{@ckpt}%
+29   \global\expandafter\let\csname p@#1\endcsname\@empty
+30   \expandafter
+31   \gdef\csname the#1\expandafter\endcsname\expandafter
+32       {\expandafter\@arabic\csname c@#1\endcsname}
+}
+\end{teXXX}
+
+\begin{docCommand}{@definecounter}{}
+The command does a lot of work. Firstly, it defines a new counter using the \tex primitive \cmd{newcount} in line [25]. It then sets the counter using \cmd{setcounter} to zero (|\z@|). Lastly line [31], defines the counter as |thefoo|. This is an internal kernel command that provides the routines and definition of the counters to the rest of the macros.
+\end{docCommand}
+
+\begin{teXXX}
+15 \def\@newctr#1[#2]{%
+16   \@ifundefined{c@#2}{\@nocounterr{#2}}{\@addtoreset{#1}{#2}}}
+\end{teXXX}
+
+
+
+
+\begin{docCommand}{arabic} {}
+Next follow a number of commands, for representing the values of counters in different forms, such
+as arabic or roman numerals.
+\end{docCommand}
+
+\begin{teXXX}
+34 \def\arabic#1{\expandafter\@arabic\csname c@#1\endcsname}
+\end{teXXX}
+
+\begin{docCommand}{roman} {}
+\end{docCommand}
+\begin{docCommand}{Roman}{}
+\begin{docCommand}{alph}{}
+\begin{docCommand}{Alph}{}
+Representation of counter as lower-case Roman numerals. \cs{Roman} Representation of hcounteri as upper-case Roman numerals. \cs{alph} Representation of hcounteri as a lower-case letter: 1 = a, 2 = b, etc. \cs{Alph} Representation of hcounteri as an upper-case letter: 1 = A, 2 = B, etc.
+The rest of the number definitions, follow in the same manner.  All of the commands, have internal macro representations. Of interest is the way |\Roman| is defined. The explanation follows after this block.
+
+\end{docCommand}
+\end{docCommand}
+\end{docCommand}
+
+\begin{teXXX}
+35 \def\roman#1{\expandafter\@roman\csname c@#1\endcsname}
+36 \def\Roman#1{\expandafter\@Roman\csname c@#1\endcsname}
+37 \def\alph#1{\expandafter\@alph\csname c@#1\endcsname}
+38 \def\Alph#1{\expandafter\@Alph\csname c@#1\endcsname}
+\end{teXXX}
+
+The internal representation, is straightforward:
+
+\begin{teXXX}
+\@arabic \@arabic\FOOcounter Representation of \FOOcounter as arabic numerals.
+40 \def\@arabic#1{\number #1} %% changed 29 Apr 86
+\@roman \@roman\FOOcounter Representation of \FOOcounter as lower-case Roman numerals.
+41 \def\@roman#1{\romannumeral #1}
+\@Roman \@Roman\FOOcounter Representation of \FOOcounter as upper-case Roman numerals.
+42 \def\@Roman#1{\expandafter\@slowromancap\romannumeral #1@}
+\end{teXXX}
+
+
+
+\begin{teXXX}
+\@slowromancap Fully expandable macro to change a roman number to uppercase.
+43 \def\@slowromancap#1{\ifx @#1% then terminate
+44 \else
+45 \if i#1I\else\if v#1V\else\if x#1X\else\if l#1L\else\if
+46 c#1C\else\if d#1D\else \if m#1M\else#1\fi\fi\fi\fi\fi\fi\fi
+47 \expandafter\@slowromancap
+48 \fi
+49 }
+\end{teXXX}
+
+
+
+\makeatletter
+\begin{teX}
+\@slowromancap iiiv@ 
+\end{teX}
+
+
+
+\def\@Slowroman#1{\ifx @#1% then terminate
+ \else
+   \@fnsymbol#1 \texttt{\textbackslash @fnsymbol\{#1\}\\ } \expandafter\@Slowroman
+ \fi
+ }
+
+
+\noindent \@Slowroman 123456789 @
+
+
+
+
+\section{Footnote symbols}
+
+\LaTeXe provides the \index{fnsymbol} command that holds the symbols for old fashioned footnote symbols. These can be used both in text or math mode. The definition is shown below.
+
+\reflect{\@fnsymbol}
+\bigskip
+
+
+The symbols are as follows:
+
+\noindent \@Slowroman 123456789 @
+
+
+As it happens the \index{fnsymbol} is one of those commands that have been revised in \texttt{fixltx2e} \footnote{see \url{http://www.tex.ac.uk/tex-archive/macros/latex/unpacked/fixltx2e.sty}} and hence the definition shown is that of the \texttt{fixltx2e}.
+
+\begin{teXX}
+\ProvidesPackage{fixltx2e}
+
+\def\@fnsymbol#1{%
+   \ifcase#1\or \TextOrMath\textasteriskcentered *\or
+   \TextOrMath \textdagger \dagger\or
+   \TextOrMath \textdaggerdbl \ddagger \or
+   \TextOrMath \textsection  \mathsection\or
+   \TextOrMath \textparagraph \mathparagraph\or
+   \TextOrMath \textbardbl \|\or
+   \TextOrMath {\textasteriskcentered\textasteriskcentered}{**}\or
+   \TextOrMath {\textdagger\textdagger}{\dagger\dagger}\or
+   \TextOrMath {\textdaggerdbl\textdaggerdbl}{\ddagger\ddagger}\else
+   \@ctrerr \fi
+}
+
+\end{teXX}
+
+The old definition is shown below:
+
+\begin{teXX}
+58 \def\@fnsymbol#1{\ensuremath{\ifcase#1\or *\or \dagger\or \ddagger\or
+59 \mathsection\or \mathparagraph\or \|\or **\or \dagger\dagger
+60 \or \ddagger\ddagger \else\@ctrerr\fi}}
+\end{teXX}
+
+All nice and wonderfully, imaginative stuff that brings the discussion of the |ltcounts.dtx| to an end. This is one of the smaller classes, but important as counters are the heart of \latex. 
+
+
+
+\index{stpelt}\index{LaTeX counters!\textbackslash stpelt}
+
+This command takes one argument, a counter name and sets it to zero.
+
+\begin{teXXX}
+\@stpelt
+23 \def\@stpelt#1{\global\csname c@#1\endcsname \z@}
+\end{teXXX}
+
+
+This can be used creatively in packages as for example the \docpkg{chappg}\footnote{numbers are from the chappg documentation} \footnote{see \url{http://www.tug.org/texlive/Contents/live/texmf-dist/doc/latex/chappg/chappg.pdf}}
+
+\begin{teXXX}
+The next magic makes the page counter be reset to one rather than zero
+93 \renewcommand\@stpelt[1]{%
+94 \global\csname c@#1\endcsname
+95 \expandafter\ifx \csname c@#1\endcsname \c@page
+96 \@ne
+97 \else
+98 \z@
+99 \fi
+100 }
+\end{teXXX}
+
+
+
+\texttt{\textbackslash cl@@ckpt}
+\index{cl@@ckpt} is the  reset list of a dummy counter \index{ckpt}
+used for taking checkpoints for the \cmd{include}\index{\textbackslash include} system.
+
+
+\makeatletter
+\def\@elt{,   }
+
+
+
+\topline
+
+{\footnotesize 
+\cl@@ckpt 
+}
+
+\bottomline
+
+
+\begin{teXX}
+\cl@@ckpt
+24 \def\cl@@ckpt{\@elt{page}}
+\end{teXX}
+
+\footnote{See also \url{http://www.tug.org/TUGboat/Articles/tb18-4/tb57work.pdf}}
+
+The word \textit{elt}\index{elt} is short for element.
+
+
+\begin{comment}
+%This function returns the element of sequence indexed by index. Legitimate values of index are integers ranging from 0 up to one less than the length of sequence. If sequence is a list, then out-of-range values of index return nil; otherwise, they trigger an args-out-of-range error.
+%
+%\begin{verbatim} 	
+%(elt [1 2 3 4] 2)
+%=> 3
+%\end{verbatim}
+%\printindex 
+%\end{document}
+%
+%\def\test#1{\def\res{#1}\ifx\foo\res True\\ \else Error \\ \fi}
+%\edef\foo{\@car 123\@nil} \test{1}
+%\edef\foo{\@car {1}23\@nil} \test{1}
+%\edef\foo{\@car {123}{456}{7}\@nil} \test{123}
+%\edef\foo{\@carcube1234567\@nil}\test{123}
+%\edef\foo{\@cdr 123\@nil} \test{23}
+%\edef\foo{\@cdr {134}{x}\@nil}   \test{x}
+%\edef\foo{\@cdr {134}{{x}}\@nil} \test{{x}}
+%
+%\let\foo\@nnil \test{\@empty}
+%
+%
+%
+%\toks@={abc\foo}\addto@hook\toks@{x\bar}
+%\expandafter\def\expandafter\foo\expandafter{\the\toks@} \test{abc\foo x\bar}
+%\g@addto@macro\foo{y\gee} \test{abc\foo x\bar y\gee}
+%\def\xx{456}
+%\def\foo{123} \@cons\foo{\xx78}\test{123\@elt45678}
+%
+%
+%
+%http://www.tug.org/TUGboat/Articles/tb15-4/tb45braa.pdf
+%
+%
+%
+
+\end{comment}
+
+
+
+%{ltmiscen.dtx}{flushleft}
+%/{ltmiscen.dtx}{flushright}
+%{ltmiscen.dtx}{center}
+
+\section*{Introspection}
+\index{Introspection}
+In everyday life, introspection is the act of self-examination. Introspection refers to the examination of one's own thoughts, feelings, motivations, and actions. The great philosopher Socrates spent much of his life in self-examination, encouraging his fellow Athenians to do the same. He even claimed that, for him, "the unexamined life is not worth living." We can use some \tex trickery and \latex acrobatics to print the listing of a macro. We will call this macro \cmd{reflect}.\index{\textbackslash meaning}
+
+\begin{teX}
+\def\reflect{\@star@or@long\accommand}
+\def\accommand#1{\string#1:%
+  \expandafter\strip@prefix\meaning#1} 
+\end{teX}
+
+\noindent The definition appears deceptively simple (by having removed some cosmetic additions to format the output). Let us see as an example the output of |\reflect{\frogking}|.
+\bigskip
+
+
+\hfil\hfill Results of |\reflect{frogking}| 
+
+\smallskip
+
+
+\hrule
+\medskip
+\makeatletter
+\def\showcommand{\@star@or@long\accommand}
+\fboxrule=0.0pt
+\def\accommand#1{\framebox[3cm][l]{\bf\color{red} 
+    \string#1:~~} %
+     \parbox[t]{7cm}{\expandafter\strip@prefix\meaning#1}} 
+\showcommand*{\frogking}
+\makeatother
+\smallskip
+
+
+
+\bigskip
+
+
+The code captures both the name of the macro (strips the |macro:->| part and displays the definition). I did include some formatting commands to get it to display better.
+
+If you have difficulty in understanding the code the best advice I can give you is to stop driving and take public transport. This applies to hackers as well as writers, but it may not be applied fully to mathematicians and physicists. If a typical commute is 30 minutes by car or 1 hour by public transportation, you may feel like you are losing an hour a day leaving your car at home, but you are actually gaining an hour of time if you bring your laptop, assuming you want to spend at least 2 hours a day working on things on your laptop outside work. Other upsides: cheaper, less stress, safer, better for the environment and you will get closer to understanding \tex.
+
+
+\section*{Lisp relics in \protect\LaTeX\ }
+\index{Lisp}
+\newthought{Introduced in the Lisp programming language}, |car| and |cdr| are primitive operations upon linked lists composed of |cons cells| (or "non-atomic S-expressions"). A |cons cell| is composed of two pointers; the |car| operation extracts the first pointer, and the |cdr| operation extracts the second.
+\index{S-expressions}
+Thus, the expression |(car (cons x y))| evaluates to |x|, and |(cdr (cons x y))| evaluates to |y|.
+
+When |cons| cells are used to implement singly-linked lists (rather than trees and other more complicated structures), the |car| operation returns the first element of the list, while cdr returns the rest of the list. For this reason, the operations are sometimes given the names first and rest or head and tail.
+
+What does this have to do with \latex? Obviously the \latex authors knew their computer science well, as you can find many instances where these concepts are used. They are easily definable using \tex and the definitions can be found in the |ltdefn.dtx| file.
+
+\begin{teX}
+\def\@car#1#2\@nil{#1}
+\def\@cdr#1#2\@nil{#2}
+\@carcube \@carcube T1 ... Tn\@nil = T1 T2 T3 , n > 3
+\def\@carcube#1#2#3#4\@nil{#1#2#3}
+\end{teX}
+
+
+
+
+
+\begin{teX}
+%\LaTeXe The LATEX2" logo as proposed by A-W designers.
+\makeatletter
+ \def\LaTeXe{%
+   \mbox{\m@th%
+    \if b\expandafter\@car\f@series\@nil\boldmath\fi
+     \LaTeX\kern.15em2$_{\textstyle\varepsilon}$}}
+\makeatother
+\end{teX}
+
+\scalebox{5}{\LaTeXe}
+
+To understand the command we first need to check the definition of |\m@th|, which defines the mathsurround to be equal to |\z@|. |\def\m@th{\mathsurround\z@}| \index{\textbackslash mathsurround}. So the first thing we did was to make sure that the space around the maths is set to zero. The strange setting is the |@car|, which picks up the first letter of |\boldmath|?
+
+\makeatletter
+\def\Latex{%
+   \mbox{\m@th%
+    %\if b\expandafter\@car\f@series\@nil\boldmath\fi
+    \boldmath
+     \LaTeX\kern.15em2$_{\textstyle\varepsilon}$}}
+\makeatother
+
+\scalebox{5}{\Latex}
+
+
+Lisp was originally implemented on the IBM 704 computer, in the late 1950s. The 704 hardware had special support for splitting a 36-bit machine word into four parts, an "address part" and "decrement part" of 15 bits each and a "prefix part" and "tag part" of three bits each.
+
+Precursors to Lisp included functions:
+
+\begin{description}
+\item{|car|} (short for "Contents of the Address part of Register number"),\index{car}
+\item{|cdr|} ("Contents of the Decrement part of Register number"),\index{cdr}
+\item{|cpr|} ("Contents of the Prefix part of Register number"), and\index{cpr}
+\item{|ctr|} ("Contents of the Tag part of Register number"),\index{ctr}
+\end{description}
+each of which took a machine address as an argument, loaded the corresponding word from memory, and extracted the appropriate bits.
+
+
+
+
+
+
+
+
+
+
+
+
+
+

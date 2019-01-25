@@ -1,3 +1,4 @@
+
 \chapter{Characters and TeX}
 \label{ch:characters}
 
@@ -40,7 +41,7 @@ Code & Description & Representation\\
 \medskip
 
 When \tex reads a line of text from a file, or a line of text that you entered
-directly on your keyboard, it converts that text into a list of \cmd{\tokens}. A
+directly on your keyboard, it converts that text into a list of \cs{tokens}. A
 token is either (a) a single character with an attached category code, or (b) a control
 sequence. For example, if the normal conventions of plain \tex  are in force, the text
 \verb*+ `{\hskip 36 pt}'+  is converted into a list of \textit{eight} tokens:
@@ -92,10 +93,11 @@ octal the single quote is used: \verb+ \char`142+; hexadecimal uses the double q
 \char`\b,
 \char"70
 \bgroup
-  \panunicode %(*@\dcircle{1}@*)
+  \panunicode 
   \char"6771{}\char"4EAC
 \egroup
 \end{texexample}
+
 
 Modern engines have added improvements to \tex to enable teh typesetting of unicode characters. These can still be accessed with |\char|. In the example above we print two japanese characters. At \dcircle{1}, we have changed the font we using to a code2000, which offers an almost complete repertoire of unicode symbols.
 
@@ -195,7 +197,7 @@ category of \verb+ ^^M+  you can obtain useful special effects, as we shall see 
 
 
 
-The twin operations \docAuxCommand{uppercase}\marg{token list} and \docAuxCommand{lowercase}\marg{token list}
+The twin operations \docAuxCommand{uppercase}\marg{<token list>} and \docAuxCommand{lowercase}\marg{token list}
 go through a given token list and convert all of the character tokens to their
 \enquote{uppercase}  or \enquote{lowercase} equivalents.
 
@@ -225,19 +227,29 @@ One of the most infamous, but powerful \tex command is \docAuxCommand{catcode}. 
 
 \subsection{Active characters}
 
-The term \emph{active character} is another name for a user defined command, which consists of only \emph{one} character. You can think of active characters as control sequences without a slash consisting of only one character. 
+The term \emph{active character} is another name for a user defined command, which consists of only \emph{one} character. You can think of active characters as control sequences without a backslash (|\|) consisting of only one character. 
 
 Control sequences can be classifed as \emph{primitive}, a \emph{character} or \emph{user defined}. The latter category is further subdivided into a macro or an active character. To define such a commands, we first have to assign it a category 13. 
 
 In the example below we will define the tilde as category 13 and then define it to expand so that it typesets the subscript 1.
 
 \begin{texexample}{Active character test}{ex:active}
-\bgroup
+\gdef\aaaa#1{%
     \catcode `~=13
     \def~{$_1$}
+    #1
+} 
 
- a~a~a~a~a~
- \egroup
+\aaaa{a~a~a~b~c~}
+
+\the\catcode`~ \\
+
+\ExplSyntaxOn
+This is some test \\
+
+\the\catcode`~
+\ExplSyntaxOff
+
 \end{texexample}
 
 
@@ -384,19 +396,23 @@ Now what happens when we want to print a backslash command? We may decide to def
 
 \begin{texexample}{A Backslash Command}{ex:backslash}
 % use curly brackets to group
-\bgroup %(*@\dcircle{1}@*)
+\bgroup 
   \catcode`|=0
   |catcode`\\=12
   |gdef|bs{{|color{red}|ttfamily\}}
-|egroup  %(*@\dcircle{2}@*)
+|egroup  
 % test the command
 \bs\bs
 \end{texexample}
 
-What happened in the example is that at \dcircle{1} we open a group so taht we can keep the |catcode| changes
-local to the definition of |\bs|. Since we are redifining \textbackslash to \textbar the |\egroup| we have to write it as
+
+
+What happened in the example is that at \dcircle{1} we open a group so that we can keep the |catcode| changes
+local to the definition of |\bs|. Since we are redifining |\textbackslash| to |\textbar| the |\egroup| we have to write it as
+
 {\ttfamily\textbar egroup} at \dcircle{2}. A more simpler way would have been to just use \{ and \} to group. 
-\edef\@backslashchar{\expandafter\@gobble\string\\}
+
+|\edef\@backslashchar{\expandafter\@gobble\string\\}|
 
 \begin{docCommand}{@makeother}{\marg{character}}
 Changes the character category code to 12. (defined in \docFile{source2e}).
@@ -420,6 +436,7 @@ is |\@makeother|. This is defined similarly to \ref{ex:verbatim} and changes the
 
 After |\@makeother\&|, the character \& becomes a normal character. Instead of \& you can use any single-character command.
 
+
 \begin{docCommand}{@sanitize}{}
 The command |\@sanitize| changes the catcode of all special characters except
 for braces to `other'. It can be used for commands like \index that want to write
@@ -427,10 +444,10 @@ their arguments verbatim. Needless to say, this command should only be executed
 within a group, or chaos will ensue (defined in \docFile{source2e}).
 \end{docCommand}
 
-\begin{commands}[]{}
+\begin{verbatim}
 \def\@sanitize{\@makeother\ \@makeother\\\@makeother\$\@makeother\&%
  \@makeother\#\@makeother\^\@makeother\_\@makeother\%\@makeother\~}
-\end{commands}
+\end{verbatim}
 
 
 \begin{docCommand}{makeatletter}{}
@@ -464,6 +481,7 @@ In \latex the |@| character is special and reserved for internal commands only. 
 \def\makeatletter{\catcode`\@11\relax}
 \def\makeatother{\catcode`\@12\relax}
 \end{teXXX}
+
 
 
 The \docAuxCommand{makeatother} sets it back to be a category 12 code.   Another command \docAuxCommand{@makeother} turns any character to character code 12. \latex3 makes both the underscore as well as the colon letters, so that they can be used in control sequences.
@@ -556,12 +574,7 @@ that do not provide it.
 %\DeclareTextSymbol{\textvisiblespace}{T1}{32}
 \end{texexample}
 
-%\makeatletter
-%\def\textvisiblespace{%
-% \mbox{\kern.06em\vrule \@height.3ex}%
-%  \vbox{\hrule \@width.3em}%
-%  \hbox{\vrule \@height.3ex}}
-%\makeatother
+
 
 
 
@@ -579,6 +592,28 @@ Programming in \tex can get tedious. \textvisiblespace \verb*+ \hskip+
 
 With encoding t1\encone{test\textvisiblespace some text}
 
+\section{LaTeX3}
+\begin{texexample}{Category Tables}{ex:cattable}
+\ExplSyntaxOn
+\protected \gdef\ExplOn {
+\char_set_catcode_ignore:n { 9 } % tab
+%\char_set_catcode_ignore:n { 32 } % space
+\char_set_catcode_other:n { 34 } % double quote
+\char_set_catcode_alignment:n { 38 } % ampersand
+\char_set_catcode_letter:n { 58 } % colon
+\char_set_catcode_math_superscript:n { 94 } % circumflex
+\char_set_catcode_letter:n { 95 } % underscore
+\char_set_catcode_other:n { 124 } % pipe
+%\char_set_catcode_space:n { 126 } % tilde
+\char_set_catcode_space:n { 32 } % space
+\tex_endlinechar:D = 32 \scan_stop:
+}
+\ExplOn
+this is a test
+
+\ExplSyntaxOff
+
+\end{texexample}
 
 \section{Summary}
  
@@ -601,7 +636,7 @@ With encoding t1\encone{test\textvisiblespace some text}
 \setlength{\arrayrulewidth}{2pt}%
 \renewcommand\arraystretch{1.3}
 \begin{longtable}{lp{10cm}}
-\caption{Primitive \tex Commands used Chapter 1}\\
+\caption*{Primitive \tex Commands used Chapter \protect\ref{ch:characters}}\\
 \hline
 |\char| & Denotes explicitly the character to be typeset. \\
 |\chardef| & Defines a control sequence to be a synonym for a character code.  \\
@@ -619,7 +654,6 @@ control sequences are being converted into character tokens. Initex default: 92 
 \hline
 \end{longtable}
 \egroup
-
 
 
 

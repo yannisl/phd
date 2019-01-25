@@ -12,10 +12,9 @@
 %% See http://www.latex-project.org/lppl.txt
 %% ----------------------------------------------------------------
 
-
 \NeedsTeXFormat{LaTeX2e}[2017/04/15]%
-\RequirePackage[2017/04/15]{latexrelease}
-\ProvidesFile{phd-lists}[2015/1/13 v1.0 less preamble (YL)]%
+\ProvidesPackage{phd-scriptsmanager}[2015/1/13 v1.0 less preamble (YL)]%
+
 \ifengine
   {
     \PassOptionsToPackage{shorthands=off,italian,french,spanish,greek,ngerman,%
@@ -28,15 +27,35 @@
                                                 UKenglish}{babel}
    \RequirePackage{babel}
    %babel
-   \selectlanguage{UKenglish}
+   %\setlanguage{UKenglish}
   }
   {\PassOptionsToPackage{shorthands=off,italian,french,spanish,greek,UKenglish }{babel}
     \RequirePackage{babel}
     \setdefaultlanguage{UKenglish}
   }
-\begin{otherlanguage}{french}
-\global\let\frenchenumerate\enumerate
-\end{otherlanguage}
+\RequirePackage{xlayouts}
+\directlua {tex.enableprimitives('',tex.extraprimitives())}
+\newif\if@RTL
+\newif\if@RTLmain
+\NewDocumentCommand\setRTLmain{m }{\pagedir TRT \bodydir TRT \pardir TRT \textdir TRT}
+
+\def\setRTL{\@RTLtrue \pardir TRT \textdir TRT}
+
+\let\setRL=\setRTL
+\def\setLTR{\@RTLfalse\pardir TLT \textdir TLT}
+\let\setLR=\setLTR
+\let\unsetRTL=\setLTR
+\let\unsetLTR=\setRTL
+
+\def\RTL{\@RTLtrue\trivlist \pardir TRT \textdir TRT\item\relax}
+\def\endRTL{\@RTLfalse\endtrivlist}
+\def\LTR{\trivlist \pardir TLT \textdir TLT\item\relax}
+\def\endLTR{\endtrivlist}
+
+\def\@ensure@RTL#1{\if@RTL#1\else\RLE{#1}\fi}
+\def\@ensure@LTR#1{\if@RTL#1\else\LRE{#1}\fi}
+\def\@ensure@dir#1{\if@RTL\RLE{#1}\else{#1}\fi}
+\let\@ensure@maindir=\@ensuredir
 \ExplSyntaxOn
 \clist_new:N \g_phd_scripts_clist
 \clist_new:N \g_phd_noto_clist
@@ -177,6 +196,7 @@
 \ExplSyntaxOff
 
 \newfontfamily\arabicfont[Script=Arabic]{Amiri}
+
 \newfontfamily\arabicfonttt[Script=Arabic,Scale=.75]{DejaVu   Sans Mono}
 \newenvironment{Arabic}
    {\bgroup \arabicfont}

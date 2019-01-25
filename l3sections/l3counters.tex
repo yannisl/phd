@@ -1,0 +1,845 @@
+\parindent1em
+\chapter{LaTeX3 counters and registers}
+
+ \section{Introduction}
+ 
+ This \latex3 module is dealing with integer arithmetic as well as utilizing these to create counter data type structures. It can be used to develop counters in a similar fashion to \latexe, although the user level functions are missing.  All control squences in this module are prefixed with |\int|. Some of the examples are prefixed as |phd_counter| and they emulate \latex’s counter commands. In this chapter also we describe a rather long example to typeset a table of numbers in various notations, such as roman, literal, arabic etc.
+ 
+ \section{Integer expressions}
+
+ Calculation and comparison of integer values can be carried out
+ using literal numbers, \texttt{int} registers, constants and
+ integers stored in token list variables. The standard operators
+ \texttt{+}, \texttt{-}, \texttt{/} and \texttt{*} and
+ parentheses can be used within such expressions to carry
+ arithmetic operations. This module carries out these functions
+ on \emph{integer expressions} (\enquote{\texttt{intexpr}}).
+
+ \begin{docCommand}{int_eval:n} {\marg{integer expression}}
+    Evaluates the \meta{integer expression}, expanding any
+   integer and token list variables within the \meta{expression}
+   to their content (without requiring \docAuxCommand*{int_use:N}/\docAuxCommand*{tl_use:N})
+   and applying the standard mathematical rules. For example both
+ \end{docCommand}
+   
+   \begin{verbatim}
+     \int_eval:n { 5 +  4 * 3 - ( 3 + 4 * 5 ) }
+   \end{verbatim}
+   and
+   \begin{verbatim}
+     \tl_new:N  \l_my_tl
+     \tl_set:Nn \l_my_tl { 5 }
+     \int_new:N  \l_my_int
+     \int_set:Nn \l_my_int { 4 }
+    \int_eval:n { \l_my_tl +  \l_my_int * 3 - ( 3 + 4 * 5 ) }
+   \end{verbatim}
+   both evaluate to \( -6 \). The  \marg{integer expression} may
+   contain the operators \texttt{+}, \texttt{-}, \texttt{*} and
+   \texttt{/}, along with parenthesis \texttt{(} and \texttt{)}.
+   Any functions within the expressions should expand to an
+   \meta{integer denotation}: a sequence of a sign and digits matching
+   the regex |\-?[0-9]+|).
+   After expansion \docAuxCommand*{int_eval:n} yields an  \meta{integer denotation}
+   which is left in the input stream.
+ 
+  
+     Exactly two expansions are needed to evaluate \docAuxCommand*{int eval:n}.
+     The result is \emph{not} an \meta{internal integer}, and therefore
+     requires suitable termination if used in a \TeX{}-style integer
+     assignment.
+   
+ 
+  
+  If you familiar with e-tex’s |numexpr|, this is equivalent code. 
+ 
+  \begin{texexample}{Integer Evaluation}{ex:numexpr}
+  \ExplSyntaxOn
+   \int_eval:n { 5 +  4 * 3 - ( 3 + 4 * 5 )+2*2 }\par
+   \int_to_arabic:n { ( 2+7 ) / 3 }\par
+   \int_to_alph:n { 2+7 } \par
+   \int_to_Alph:n { 6 * 2 }\par
+   \int_to_roman:n { 9 } \par
+   \int_to_Roman:n { 21 } \par
+  \ExplSyntaxOff 
+  \end{texexample} 
+  
+
+ 
+ \section{Creating and initializing integers} 
+  
+These are \latex’s equivalents of counters. Numerous commands are provided by the \latex3 kernel and these in my opinion offer a much better interface to lower level commands. A common question is that what one does if it is required to access a \latexe counter. The more-or-less “official” answer was provided by Joseph Wright at the Stack Exchange\footnote{\protect\url{http://tex.stackexchange.com/questions/167094/manipulate-a-latex2e-counter-with-latex3}} Q\&A site with the recommendation that: `mixing up the two interaces is asking for trouble, and while we are working on several areas we’ve not got a “user level” counter approach at yet. (Indeed, the entire question of how variables at the document-level should be handled is open.)’ 
+  
+  So you have it you keep on using commands such as \docAuxCommand*{setcounter} here is that |\c@..|. is an internal for LaTeX2e, and the entire point of expl3 is to have clear interfaces and internals. There's no reason to abuse the interfaces here (no functionality gain), so stick with them. In my opinion also it is not a good idea to mix |\@| notation with |expl3| notation. When there is a need to use both it is best to clearly separate the two and create an interface if they must somehow share information.
+
+ 
+
+  Before we go further with the code is instructive to peek at the \latex3 kernel and understand what is an integer. An integer is simply a \tex \docAuxCommand*{newcount}, as shown from the code below.
+  
+  \begin{teXXX}
+  \cs_new_protected:Npn \int_new:N #1
+  {
+    \__chk_if_free_cs:N #1(*@\label{allocation}@*)
+    \cs:w newcount \cs_end: #1
+  }
+ \end{teXXX} 
+  
+
+   
+ \begin{texexample}{allocations}{ex:counter allocations} 
+ \ExplSyntaxOn
+ \newcount\somecounter
+ \meaning\somecounter\par
+ 
+ \int_new:N\someothercounter
+ \meaning\someothercounter\par
+ 
+ \tl_map_inline:nn {
+    \somecounter
+    \someothercounter
+  }
+  { \cs_undefine:N #1 }
+  
+  \meaning\somecounter
+ \ExplSyntaxOff
+ \end{texexample}
+ 
+ As you can observe from the example, using |\int_new:N| to create a counter is identical to the \latexe |\newcount|. It is instructive to keep this in mind later on and in your code, during debugging. Line~\ref{allocation} checks if the |\count| is available and then allocates the counter to the command sequence.
+ Once we typeset the example, I have used |\cs_undefined| in a sequence to free the register. This is always good practice.  You must be careful not to get confused here with the terminology, we are dealing with \tex’s primitive |\count| registers.\footnote{To be more specific e-\tex.} Although the original \tex came only with 256 registers the new engines allow up to 65535 count registers. 
+  
+ \begin{docCommand}{int_new:N}{\meta{integer}}
+   Creates a new \meta{integer} or raises an error if the name is
+   already taken. The declaration is global. The \meta{integer} will
+   initially be equal to $0$.
+ \end{docCommand}
+ 
+ In most instances counters involve a three step operation:
+ 
+ \begin{enumerate}
+ \item Creating the counter
+ \item Adding values
+ \item Typesetting the value or using it in another expression
+ \end{enumerate}
+ 
+
+ 
+ \begin{texexample}{Counters}{ex:l3counters}
+ \ExplSyntaxOn
+ \int_new:N \exercise
+ \int_add:Nn \exercise {12+15}
+ \int_to_roman:n \exercise \\
+ 
+ \int_use:N \c_max_register_int
+ \ExplSyntaxOff
+ \end{texexample}
+
+The \docAuxCommand*{int_use:N} is the \tex primitive \docAuxCommand*{the}. This is one of several \latex3 names of the primitive.
+
+
+ \begin{docCommand}{int_const:Nn}{\meta{integer} \marg{integer expression}}
+   Creates a new constant \meta{integer} or raises an error if the name
+   is already taken. The value of the \meta{integer} will be set
+   globally to the \meta{integer expression}.
+ \end{docCommand}
+ 
+The next commands can be used for round off, absolute functions etc.
+
+ \begin{docCommand}{int_abs:n}{\marg{integer expression}}
+   Evaluates the \meta{integer expression} as described for
+   \docAuxCommand*{int_eval:n} and leaves the absolute value of the result in
+   the input stream as an \meta{integer denotation} after two
+   expansions.
+ \end{docCommand}
+ 
+ \begin{docCommand}{int_div_round:nn}{\marg{intexpr1} \marg{intexpr2}}
+   Evaluates the two \meta{integer expressions} as described earlier,
+   then divides the first value by the second, and rounds the result
+   to the closest integer.  Ties are rounded away from zero.
+   Note that this is identical to using
+   |/| directly in an \meta{integer expression}. The result is left in
+   the input stream as an \meta{integer denotation} after two expansions.
+ \end{docCommand}
+ 
+
+ \begin{docCommand}{int_div_truncate:nn}{ \marg{intexpr1} \marg{intexpr2}}
+   Evaluates the two \meta{integer expressions} as described earlier,
+   then divides the first value by the second, and rounds the result
+   towards zero.  Note that division using |/|
+   rounds the result. The result is left in the input stream as an
+   \meta{integer denotation} after two expansions.
+ \end{docCommand}
+ 
+ \begin{texexample}{Truncating}{ex:truncate}
+ \ExplSyntaxOn
+ 
+ \int_div_round:nn  {10}{3}~~
+ \int_div_truncate:nn  {13}{3}
+ 
+ \ExplSyntaxOff
+ \end{texexample}
+
+
+
+
+\begin{docCommand}{int_max:nn}{ \marg{intexpr1} \marg{intexpr2}}
+   Evaluates the \meta{integer expressions} as described for
+   \docAuxCommand*{int_eval:n} and leaves either the larger or smaller value
+   in the input stream as an \meta{integer denotation} after two
+   expansions. The minimum of two numbers an be fund using |\int_min:nn|
+\end{docCommand}
+
+ \begin{texexample}{Finding minima and maxima}{ex:maxima}
+ \ExplSyntaxOn
+ 
+ \int_max:nn  {10}{3}~~
+ \int_min:nn  {13}{3}
+ 
+ \ExplSyntaxOff
+ \end{texexample}
+
+
+  \begin{docCommand}{int_mod:nn}{ \marg{intexpr1} \marg{intexpr2}}
+   Evaluates the two \meta{integer expressions} as described earlier,
+   then calculates the integer remainder of dividing the first
+   expression by the second.  This is obtained by subtracting
+   \docAuxCommand*{int_div_truncate:nn} \marg{intexpr1} \marg{intexpr2} times
+   \meta{intexpr2} from \meta{intexpr1}.  Thus, the result has the
+   same sign as \meta{intexpr1} and its absolute value is strictly
+   less than that of \meta{intexpr2}.  The result is left in the input
+   stream as an \meta{integer denotation} after two expansions.
+   (See example~\ref{ex:mod}).
+   
+ \end{docCommand}
+  
+ \begin{texexample}{Modulus}{ex:mod}
+ \ExplSyntaxOn
+     \int_mod:nn  {10+13}{3+3}~~
+ \ExplSyntaxOff
+ \end{texexample}
+
+\subsection{Setting and incrementing integers}
+
+\begin{docCommand}{int_add:Nn}{\meta{integer} \marg{integer expression}}
+   Adds the result of the \meta{integer expression} to the current
+   content of the \meta{integer}.
+ \end{docCommand}
+
+\begin{docCommand}{int_incr:Nn}{\meta{integer} \marg{integer expression}}
+ Increases the value stored in \meta{integer} by $1$.
+ \end{docCommand}
+
+
+\begin{docCommand}{int_decr:Nn}{\meta{integer} \marg{integer expression}}
+  Decreases the value stored in \meta{integer} by $1$. 
+ \end{docCommand}
+ 
+ \begin{docCommand}{int_set:Nn}{ \meta{integer} \marg{integer expression}}
+   Sets \meta{integer} to the value of \meta{integer expression},
+   which must evaluate to an integer.
+ \end{docCommand}
+ 
+ \begin{docCommand}{int_sub:Nn} {\meta{integer} \marg{integer expression}}
+   Subtracts the result of the \meta{integer expression} from the
+   current content of the \meta{integer}.
+ \end{docCommand}  
+
+  \section{Using integers}
+  
+ Although we have already used \docAuxCommand*{int_use:N} to recover and typeset the value of a counter
+ we now give its formal definition and an example of usage. As this is the primitive |\the| some care needs to 
+ be  taken with expansion.
+ 
+
+ \begin{docCommand}{int_use:N}{ \meta{integer}}
+   Recovers the content of an \meta{integer} and places it directly
+   in the input stream. An error will be raised if the variable does
+   not exist or if it is invalid. Can be omitted in places where an
+   \meta{integer} is required (such as in the first and third arguments
+   of \docAuxCommand*{int_compare:nNnTF}).
+ \end{docCommand}
+ 
+ If we are to follow \latexe’s paradigm counters are names and not command sequences at the user level.
+ With \latex3 of course we can define them as both. In Example~\ref{ex:intuse}, we use the |:c| variant of the commands to define a counter \meta{somecounter}, add globally an integer expression and then retrieve and typeset its value. 
+ 
+ \begin{texexample}{More on retrieving values}{ex:intuse}
+ \ExplSyntaxOn
+   \int_new:c   {somecounter}
+   \int_gadd:cn {somecounter} {(263+223)/23}
+   \int_use:c   {somecounter}
+ \ExplSyntaxOff
+ \end{texexample}
+ 
+\subsection{Longer example}
+
+We wish to create a table that would list numbers and their literal equivalents.
+
+ \begin{texexample}{Creating a numbered table}{ex:inc}
+ \ExplSyntaxOn
+ \int_gzero_new:N \phd_step_int
+ \cs_new:Nn \g_phd_step_counter:n {
+     \int_gincr:N\phd_step_int 
+     \int_use:N \phd_step_int
+ }
+ 
+ \DeclareDocumentCommand\Inc{}{
+    \g_phd_step_counter:n
+ }
+ \begin{tabular}{ll}
+ \Inc  & One \\
+ \Inc  & Two\\
+ \Inc  & Three\\
+ \end{tabular}
+ 
+  \ExplSyntaxOff
+ \end{texexample}
+ 
+ With all these syntactic changes to the \latex code and conventions, perhaps we should retrace our steps to Knuth’s original terminology, Lamport’s structural documents concepts and a more simplistic language as expounded by my own philosophy in the phd package.
+
+So what do we need, first we need to think that all these functions and programming are to produce documents, so our higher level macros should be document focused. 
+
+The intention of the design layer is to provide interfaces that allow specifying layout and typography styles in a declarative way. On the implementation side there are a number of prototype implementations (most notably xtemplate and the recent reimplementation of the ldb). Those need to get unified into a common model which requires some more experimentation and probably also some further thoughts.
+
+But the real importance of this layer is not the implementation of its interfaces but the conceptual view of it: provisioning a rich declarative method (or methods) to describe design and layout. I.e., enabling a designer to think not in programs but in visual representations and relationships.
+
+ \begin{texexample}{Counter concepts}{ex:inc2}
+ \makeatletter
+ \ExplSyntaxOn
+
+  \DeclareDocumentCommand\NewCounter{ m } {
+     \int_gzero_new:c {#1}
+     % create auxiliary functions
+     \cs_set:Nn \g_phd_stepcounter:n {
+         \int_gincr:c {#1} 
+         \int_use:c {#1}
+      }
+  }
+  
+ \DeclareDocumentCommand\StepCounter{ m } { 
+    \g_phd_stepcounter:n {#1} 
+}  
+  
+ \DeclareDocumentCommand\SetCounter { m m } {
+    \int_gset:cn {#1}{#2}
+ }
+
+    
+\NewCounter{phd_temp_counter} 
+
+ \DeclareDocumentCommand\Inc{}{
+    \StepCounter{phd_temp_counter}
+ }
+ 
+ \SetCounter{phd_temp_counter}{12}
+ 
+ \DeclareDocumentCommand\CounterToAlpha{ m }{
+     \edef\x{\int_use:c{#1}}
+     \int_to_Alph:n {\x}
+}   
+ \DeclareDocumentCommand\CounterToalpha{ m }{
+     \edef\x{\int_use:c{#1}}
+     \int_to_alph:n {\x}
+}   
+
+\DeclareDocumentCommand\CounterToRoman{ m }{
+     \edef\x{\int_use:c{#1}}
+     \int_to_Roman:n {\x}
+}
+\DeclareDocumentCommand\CounterToroman{ m }{
+     \edef\x{\int_use:c{#1}}
+     \int_to_roman:n {\x}
+}
+\DeclareDocumentCommand\IncA{}{
+    \CounterToAlpha{phd_temp_counter}
+}
+\DeclareDocumentCommand\Inca{}{
+    \CounterToalpha{phd_temp_counter}
+}
+
+\DeclareDocumentCommand\IncR{}{
+    \CounterToRoman{phd_temp_counter}
+}
+\DeclareDocumentCommand\Incr{}{
+    \CounterToroman{phd_temp_counter}
+}
+\DeclareDocumentCommand\IncW{}{
+    \edef\x{\int_use:c{phd_temp_counter}}
+    \expandafter\Words@cx{\x}
+}
+\DeclareDocumentCommand\Incw{}{
+    \edef\x{\int_use:c{phd_temp_counter}}
+    \expandafter\words@cx{\x}
+}
+
+ \begin{tabular}{c c c c c c c}
+ \toprule
+ Number & Literal & literal &Alpha &alpha &Roman &roman\\
+ \midrule
+ \Inc  & \IncW &\Incw &\IncA &\Inca &\IncR &\Incr\\
+ \Inc  & \IncW &\Incw &\IncA &\Inca &\IncR &\Incr\\
+ \Inc  & \IncW &\Incw &\IncA &\Inca &\IncR &\Incr\\
+ \Inc  & \IncW &\Incw &\IncA &\Inca &\IncR &\Incr\\
+ \bottomrule
+ \end{tabular}
+ 
+ \ExplSyntaxOff
+ \makeatother
+ \end{texexample}
+
+What have just happened in our example, we have emulated most of \latexe counter macros in a kind of a different way, but there is an important part of the counter macros that is missing. This is the ability to reset counters when a master counter is changed. For example when a chapter counter is incremented the section counters in \latexe will reset and start counting from one again.
+
+
+
+\docAuxCommand*{cl@foo} List of counters to be reset when foo stepped. This has a  format
+\begin{verbatim}
+   \@elt{countera}\@elt{counterb}\@elt{counterc}
+\end{verbatim}
+
+\textbf{Adding a prefix to the counters} So what we need to do first decide on some prefixes for counters or another similar convention. I will use a prefix |__counter_| to make the code readable. Although tempting to use |c@|  to make our counters compatible with \latexe counters, as stated earlier this would be against the central philosophy of \latex3 of keeping a onsistent syntax and function aiming conventions. All we have to do is add the prefixes and create the new counter to hold the rest counters and provide helper commands. We can also do some error capturing. 
+
+
+\begin{phdverbatim}
+\DeclareDocumentCommand\NewCounter{ o m } {
+% create new counter if it does not exist and also its resets counters
+  \int_if_exist:NTF {__counter_#2}
+    {
+      \msg_error:nn { counters } { counter exists and cannot be created }
+    }
+    { 
+      \int_gzero_new:c {__counter_#2}
+      \int_gzero_new:c {__counter_resets_#2}
+    }
+ 
+% handle the reset   
+  \IfNoValueF{#1}
+    {
+      \int_if_exist:NTF {__counter_resets_#1} 
+                        {add to reset} {false code}
+    }    
+% create auxiliary functions  to be added later   
+       
+  }
+\end{phdverbatim}
+    
+This is a rough outline of the code we need to develop. It is considered bad practice to mix too many low level commands with high level commands and we should replace these with auxiliary functions. The auxiliary functions will create automated functions such as |\thechapter| in \latexe.
+
+\begin{teXXX}
+\cs_new:Nn \phd_create_new_counter:n {
+    \int_if_exist:NTF {__counter_#2}{error}
+         { 
+             \int_gzero_new:c {__counter_#2}
+             \int_gzero_new:c {__counter_resets_#2}
+         }
+}
+\end{teXXX}
+
+We continue our code development, this time we will add a prefix before the counter name. The code is shown
+in Example~\ref{ex:createcounters}
+
+
+
+\begin{texexample}{Auxiliary constructor function}{ex:createcounters}
+\ExplSyntaxOn
+\makeatletter
+\cs_gset:Nx  \counter_prefix: {c@}
+\cs_gset:Nx  \counter_resets_prefix: {__counter_resets_prefix_}
+
+\cs_gset:Nn  \phd_create_new_counter:n {
+    \int_if_exist:cTF {\counter_prefix:#1}{ERROR~counter~exists}
+        { 
+            \int_gzero_new:c {\counter_prefix:#1}
+            \seq_new:c {\counter_resets_prefix:#1}
+        }
+}
+
+\phd_create_new_counter:n {test}
+
+\phd_create_new_counter:n {test2}
+
+\cs_gset:Nn\stepacounter:n {
+  \int_gincr:c{\counter_prefix: #1}
+}
+
+\cs_gset:Nn\setacounter:cn {
+  \int_set:cn {\counter_prefix: #1}{#2}
+}
+
+\cs_gset:Nn  \countervalue:n {
+    \the\cs:w\counter_prefix: #1\cs_end:\relax
+}
+
+\def\makeauxiliaries#1 {\mycommandaux#1\relax}
+
+\def\mycommandaux#1#2\relax{%
+       \uppercase{
+       \expandafter\gdef\csname #1}
+       #2Value
+       \endcsname
+       {\the\cs:w\counter_prefix: #1#2\cs_end:\relax}
+}
+
+\makeauxiliaries {test}
+
+\setacounter:cn {test}{18}
+
+\countervalue:n {test}\par
+
+
+\makeauxiliaries {section}
+first~test~\TestValue\par 
+\stepacounter:n {test}
+\stepacounter:n {test}
+
+second~test~\TestValue\par 
+
+section~counter~first~test:~\SectionValue\par
+section~counter~with~\docAuxCommand*{thesection}:~\thesection\par
+\stepacounter:n {section}
+section~counter~second~test:~\SectionValue
+\ExplSyntaxOff
+\makeatother
+\end{texexample}
+
+
+
+\ExplSyntaxOn
+\newcommand{\makeauxiliaryfunctions}[1]{\mycommandaux#1\relax}
+\def\mycommandaux#1#2\relax{%
+       \uppercase{\expandafter\gdef\cs:w #1}#2Value\cs_end:
+       {\tex_the:D\cs:w\counter_prefix: #1#2\cs_end:\relax}%
+    }
+\ExplSyntaxOff
+    
+The example above creates a function |\phd_create_new_counter:n| and then tests it. The function uses a conditional to test if the counter exists  and then if it has not been defined earlier it creates the two counters and sets them to zero. If it exists it will typeset an error message. This is of course so that we can view the error in the document, normally this would display an error on the screen. I have not covered the messaging part of the code so far for displaying errors and warnings. These are created with the \pkgname{l3msg} package, which is bundled with |expl3|. We will cover this later on in the book. 
+
+\textbf{Adding the counter to the reset list of another} We now go on to develop a function to add to the reset list of another.
+
+\begin{texexample}{Adding to the reset}{ex:addtoreset}
+\ExplSyntaxOn
+\cs_gset:Nn \addtoreset:nn {
+    \exp_args:Nf\seq_put_left:cn {\counter_resets_prefix:#1}{#2}
+    Added~ to~the~ #1 ~ resets~ #2.~The~resets~list~is~now~\seq_use:cn {\counter_resets_prefix:#1}{,}
+ }
+
+\ExplSyntaxOff
+\end{texexample}
+
+The |\stepcounter:n| will be used to step a counter and to reset all subsidiary counters. 
+
+
+\begin{texexample}{Adding to the reset}{ex:addtoreset}
+\ExplSyntaxOn
+\makeatletter
+\cs_gset:Npn \resetcounter:n 
+  {
+    \int_gset:cn {\counter_prefix: #1}{0}
+  }
+  
+\cs_gset:Npn \stepcounter:n {
+  \int_gincr:c {\counter_prefix: #1}
+  \seq_set_eq:Nc \tempa {__counter_resets_prefix_#1}
+  \seq_map_inline:Nn \tempa {\resetcounter:n{##1}}
+}      
+
+\stepcounter:n {test}
+
+% Test that the value is captured
+\int_use:c {\counter_prefix: test}
+
+\makeatother
+\ExplSyntaxOff
+\end{texexample}
+
+Now that we have developed the code for |\addtoreset:nn| we are ready to modify and finalize our counter creation macro to the following:
+
+\begin{texexample}{Refactor creation macro}{ex:refactor}
+\ExplSyntaxOn
+ \DeclareDocumentCommand \NewCounter{ o m } {
+    \phd_create_new_counter:n {#2}
+    \IfNoValueF{#1}
+      {
+         \int_if_exist:cT {\counter_resets_prefix:#1} 
+             {\addtoreset:nn{#1}{#2}} 
+      }    
+    \makeauxiliaryfunctions {#1}
+ }
+%\NewCounter{Chapter}
+%\NewCounter[Chapter]{Section}\par
+%\NewCounter[Chapter]{Figure}
+%\stepcounter:n{Chapter}
+%\int_use:c {\counter_prefix: Chapter} 
+%\int_use:c {\counter_prefix: Section}
+%\countervalue:n{Chapter}
+%\ChapterValue
+\ExplSyntaxOff
+\end{texexample}
+
+%% Rewrite as the examples are in a group and they cannot leak out
+
+\ExplSyntaxOn
+\NewDocumentCommand\NewCounter{ o m } {
+  \phd_create_new_counter:n {#2}
+    \IfNoValueF{#1}
+      {
+        \int_if_exist:cT {\counter_resets_prefix:#1} 
+             {\addtoreset:nn{#1}{#2}} 
+      }    
+  \makeauxiliaryfunctions {#1}
+}
+\ExplSyntaxOff
+
+All we have to now do is to write some tests. The \latex3 Team provide testing routines with the tests being run using a Lua script. In our case we can run all our tests within the documentation here. These tests are shown in Example~\ref{ex:countertests}. 
+
+
+\begin{texexample}{Counter module tests }{ex:countertests}
+\ExplSyntaxOn
+\NewCounter{Chapter}
+\NewCounter[Chapter]{Section}\par
+\NewCounter[Chapter]{Figure}\par
+\NewCounter[Chapter]{Problems}\par
+\stepcounter:n{Chapter}
+\stepcounter:n{Chapter}
+Value~ of~ Chapte~ counter:~ \int_use:c {\counter_prefix: Chapter}\par 
+Value~of~Section~ counter:~\int_use:c {\counter_prefix: Section}\par
+Value~of~Chapter~ counter~ using \docAuxCommand*{countervalue:n}:~ \countervalue:n{Chapter}\par
+Value~of~Chapter~ counter~ using \docAuxCommand*{ChapterValue}:~ \ChapterValue\par
+\ExplSyntaxOff
+\end{texexample}
+
+
+\begin{docCommand}{ChapterCounter}{}
+   Typesets the Chapter counter. This is equivalent to |\thechapter|. Decorating the actual counter value, should
+   all be based on a key-value system and the author has no access to this function. It is the template designer’s 
+   job to define it.
+   
+  \begin{verbatim}
+   chapter numbering = arabic
+   chapter font-size = huge
+  \end{verbatim} 
+  
+\end{docCommand}
+
+\begin{docCommand}{ChapterCounterValue}{}
+   Typesets the Chapter counter in arabic. This form can also be used in other expressions This is equivalent to \latexe’s \docAuxCommand*{c@chapter}, but not equal, i.e, there is no interface to \latexe counters.
+\end{docCommand}
+  
+  
+ \subsection{Integer conditionals}
+
+Comparing the values of two counters can be achieved with the use of conditional expressions. There are numerous commands provided for this purpose and we outline some of the most important ones. Do consult the manual to view others. The first one we will examine is \docAuxCommand*{int_compare:nNnTF}. This function evaluates each of two expressions and branches to the true or false code. 
+
+\begin{docCommand}{int_compare:nNnTF}{\marg{intexpr1} \meta{relation} \marg{intexpr2}
+\marg{true code} \marg{false code}}
+   This function first evaluates each of the \meta{integer expressions}
+   as described for \docAuxCommand*{int_eval:n}. The two results are then
+   compared using the \meta{relation}:
+   \begin{center}
+     \begin{tabular}{ll}
+       Equal                 & |=| \\
+       Greater than      & |>| \\
+       Less than           & |<| \\
+     \end{tabular}
+   \end{center}
+ \end{docCommand}
+ 
+ Consider two counters \docAuxCommand*{counteri} and \docAuxCommand*{counterii} that we need to compare their values and branch to either false or true code.
+ 
+ \begin{texexample}{Integer conditionals}{ex:intconditionals}
+ \ExplSyntaxOn
+ \int_new:N  \counteri
+ \int_new:N  \counterii
+ 
+ \int_compare:nNnTF {\counteri} = {\counterii}
+     {true~code\par}{false~ code\par}
+     
+ \int_gadd:Nn \counterii {15+12}    
+ 
+  \int_compare:nNnTF {\counteri} = {\counterii}
+     {true~code~\par}{false~ code\par}
+     
+\ifnum\counteri<\counterii primitive~ifnum~true\else primitive~false\fi\par
+   
+ \ExplSyntaxOff
+ \end{texexample}
+ 
+ A common error is to include the \meta{relation} code in curly brackets. This leads to errors during parsing. 
+ 
+   
+ 
+ 
+  \begin{docCommand}{int_case:nnTF} {\marg{test integer expression}
+      \{ 
+     \marg{intexpr case1} \marg{code case1} 
+     \marg{intexpr case2} \marg{code case2} 
+     \ldots 
+     \marg{intexpr casen} \marg{code casen} 
+     \} 
+     \marg{true code}
+     \marg{false code}}
+     
+   This function evaluates the \meta{test integer expression} and
+   compares this in turn to each of the
+   \meta{integer expression cases}. If the two are equal then the
+   associated \meta{code} is left in the input stream. If any of the
+   cases are matched, the \meta{true code} is also inserted into the
+   input stream (after the code for the appropriate case), while if none
+   match then the \meta{false code} is inserted. The function
+   \docAuxCommand*{int_case:nn}, which does nothing if there is no match, is also
+   available. For example
+\end{docCommand}   
+   \begin{texexample}{Case example}{ex:case}
+   \makeatletter
+   \ExplSyntaxOn
+     \int_case:nnF
+       { 2 * 5 }
+       {
+         { 5 }       { Small }
+         { 4 + 6 }   { Medium }
+         { -2 * 10 } { Negative }
+       }
+       { No idea! }
+       
+   
+  \cs_set:Npn \@fnsymbol #1
+   {
+    \int_case:nnF {#1}
+     {
+      {0} {}
+      {1} { \TextOrMath \textasteriskcentered* }
+      {2} { \TextOrMath \textdagger\dagger }
+      {3} { \TextOrMath \textdaggerdbl\ddagger }
+      {4} { \TextOrMath \textsection\mathsection }
+      {5} { \TextOrMath \textparagraph\mathparagraph }
+      {6} { \TextOrMath \textbardbl\| }
+      {7} { \TextOrMath {\textasteriskcentered\textasteriskcentered}{**} }
+      {8} { \TextOrMath {\textdagger\textdagger}{\dagger\dagger} }
+      {9} { \TextOrMath {\textdaggerdbl\textdaggerdbl}{\ddagger\ddagger} }
+     }
+     { \@ctrerr }
+   }
+   
+   
+   \@fnsymbol {3}
+     \ExplSyntaxOff  
+     \makeatother
+    \end{texexample}
+    
+ 
+ 
+ The next case example is from \href{https://github.com/wspr/fontspec/blob/master/fontspec.dtx}{fontspec.dtx}. It just wraps the official \latexe definition from \pkgname{fixltx2e} into the |expl| language. If you are going to utilize code from \latexe verbatim, it is always best to use it as is and only using a wrapper.
+
+ \begin{texexample}{Case example}{ex:case2}
+   \makeatletter
+   \ExplSyntaxOn
+   
+  \cs_set:Npn \@fnsymbol #1
+   {
+    \int_case:nnF {#1}
+     {
+      {0} {}
+      {1} { \TextOrMath \textasteriskcentered* }
+      {2} { \TextOrMath \textdagger\dagger }
+      {3} { \TextOrMath \textdaggerdbl\ddagger }
+      {4} { \TextOrMath \textsection\mathsection }
+      {5} { \TextOrMath \textparagraph\mathparagraph }
+      {6} { \TextOrMath \textbardbl\| }
+      {7} { \TextOrMath {\textasteriskcentered\textasteriskcentered}{**} }
+      {8} { \TextOrMath {\textdagger\textdagger}{\dagger\dagger} }
+      {9} { \TextOrMath {\textdaggerdbl\textdaggerdbl}{\ddagger\ddagger} }
+     }
+     { \@ctrerr }
+ }
+ 
+   
+ \@fnsymbol {3}
+ \ExplSyntaxOff  
+ \makeatother
+ \end{texexample}
+    
+
+%
+% \begin{function}[updated = 2013-01-13, EXP, pTF]{\int_compare:n}
+%   \begin{syntax} 
+%     \docAuxCommand*{int_compare_p:n} \\
+%     ~~\{ \\
+%     ~~~~\meta{intexpr_1} \meta{relation_1} \\
+%     ~~~~\ldots{} \\
+%     ~~~~\meta{intexpr_N} \meta{relation_N} \\
+%     ~~~~\meta{intexpr_{N+1}} \\
+%     ~~\} \\
+%     \docAuxCommand*{int_compare:nTF}
+%     ~~\{ \\
+%     ~~~~\meta{intexpr_1} \meta{relation_1} \\
+%     ~~~~\ldots{} \\
+%     ~~~~\meta{intexpr_N} \meta{relation_N} \\
+%     ~~~~\meta{intexpr_{N+1}} \\
+%     ~~\} \\
+%     ~~\Arg{true code} \Arg{false code}
+%   \end{syntax}
+%   This function evaluates the \meta{integer expressions} as described
+%   for \docAuxCommand*{int_eval:n} and compares consecutive result using the
+%   corresponding \meta{relation}, namely it compares \meta{intexpr_1}
+%   and \meta{intexpr_2} using the \meta{relation_1}, then
+%   \meta{intexpr_2} and \meta{intexpr_3} using the \meta{relation_2},
+%   until finally comparing \meta{intexpr_N} and \meta{intexpr_{N+1}}
+%   using the \meta{relation_N}.  The test yields \texttt{true} if all
+%   comparisons are \texttt{true}.  Each \meta{integer expression} is
+%   evaluated only once, and the evaluation is lazy, in the sense that
+%   if one comparison is \texttt{false}, then no other \meta{integer
+%     expression} is evaluated and no other comparison is performed.
+%   The \meta{relations} can be any of the following:
+%   \begin{center}
+%     \begin{tabular}{ll}
+%       Equal                    & |=| or |==| \\
+%       Greater than or equal to & |>=|        \\
+%       Greater than             & |>|         \\
+%       Less than or equal to    & |<=|        \\
+%       Less than                & |<|         \\
+%       Not equal                & |!=|        \\
+%     \end{tabular}
+%   \end{center}
+% \end{function}
+%
+
+%
+% \begin{function}[EXP,pTF]{\int_if_even:n, \int_if_odd:n}
+%   \begin{syntax}
+%     \docAuxCommand*{int_if_odd_p:n} \Arg{integer expression}
+%     \docAuxCommand*{int_if_odd:nTF} \Arg{integer expression}
+%     ~~\Arg{true code} \Arg{false code}
+%   \end{syntax}
+%   This function first evaluates the \meta{integer expression}
+%   as described for \docAuxCommand*{int_eval:n}. It then evaluates if this
+%   is odd or even, as appropriate.
+% \end{function}
+ \subsection{Integer expression loops}
+ 
+ Integer expression loops, bring \latex nearer to the functionality of other computer languages. In Example~\ref{ex:dowhile} a \emph{do}\ldots \emph{while} loop is constructed to print all even numbers from |0..16|. Many variations to looping structures are also provided and these are discussed after the example.
+ 
+ \begin{texexample}{Integer Expression loops}{ex:dowhile}
+ \ExplSyntaxOn
+ \int_new:N \l_tempa_int
+ \int_zero:N \l_tempa_int 
+ \int_do_while:nn {\l_tempa_int <= 10 + 6 } {
+     \int_use:N \l_tempa_int,~ 
+     \int_add:Nn \l_tempa_int {2}
+ }
+ \ExplSyntaxOff
+ \end{texexample}
+ 
+ In the next example we will use \refCom{int_step_function} and call a function at each iteration. 
+ 
+\begin{texexample}{Step function} {ex:stepfunction}
+\ExplSyntaxOn
+\cs_set:Npn \my_func:n #1 {test~#1}
+\int_step_function:nnnN {1} {1} {5} {\my_func:n}
+\ExplSyntaxOff
+\end{texexample}
+ 
+\section{Summing up} 
+
+This has been a long chapter, and we both deserve some coffee and a break. We have discussed the creation of integer expressions, their use as counters and typesetting commands for counters. We have also examined in depth conditionals associated with integers and also some looping structures that are very robust. I have spent more time than I expected on this module, as it wraps up a lot of the concepts we have been discussing in other chapters and I thought a thorough review and some longer examples would be beneficial. 
+
+By now, if you have been running the examples on your own, you should be more or less start thinking in
+\latex3 speak. It takes a while for the syntax and the concepts to sink in. From my own experience, you need to spend at least 2-3 weeks just programming in the |expl| language and you should avoid the temptation to use \latexe macros or \tex primitives. Easier said that done.
+ 
+
+ 

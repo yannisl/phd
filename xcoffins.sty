@@ -1,0 +1,164 @@
+%%
+%% This is file `xcoffins.sty',
+%% generated with the docstrip utility.
+%%
+%% The original source files were:
+%%
+%% xcoffins.dtx  (with options: `package')
+%% 
+%% Copyright (C) 2010-2017 The LaTeX3 Project
+%% 
+%% It may be distributed and/or modified under the conditions of
+%% the LaTeX Project Public License (LPPL), either version 1.3c of
+%% this license or (at your option) any later version.  The latest
+%% version of this license is in the file:
+%% 
+%%    http://www.latex-project.org/lppl.txt
+%% 
+%% This file is part of the "l3experimental bundle" (The Work in LPPL)
+%% and all files in that bundle must be distributed together.
+%% 
+%% File: xcoffins.dtx Copyright(C) 2010-2012,2014,2016-2018 The LaTeX3 Project
+\RequirePackage{xparse}
+\ProvidesExplPackage{xcoffins}{2018-11-19}{}
+  {L3 Experimental design level coffins}
+\keys_define:nn { coffin }
+  {
+    coffin1-hpole     .tl_set:N         = \l__coffin_A_hpole_tl          ,
+    coffin1-hpole     .value_required:n = true                      ,
+    coffin1-vpole     .tl_set:N         = \l__coffin_A_vpole_tl          ,
+    coffin1-vpole     .value_required:n = true                      ,
+    coffin2-hpole     .tl_set:N         = \l__coffin_B_hpole_tl          ,
+    coffin2-hpole     .value_required:n = true                      ,
+    coffin2-vpole     .tl_set:N         = \l__coffin_B_vpole_tl          ,
+    coffin2-vpole     .value_required:n = true                      ,
+    grow-bounding-box .bool_set:N       = \l__coffin_bound_box_grow_bool ,
+    grow-bounding-box .default:n        = true                      ,
+    hoffset           .dim_set:N        = \l__coffin_hoffset_dim         ,
+    hoffset           .value_required:n = true                      ,
+    voffset           .dim_set:N        = \l__coffin_voffset_dim         ,
+    voffset           .value_required:n = true
+  }
+\keys_set:nn { coffin }
+  {
+    coffin1-hpole     = H    ,
+    coffin1-vpole     = l    ,
+    coffin2-hpole     = H    ,
+    coffin2-vpole     = l    ,
+    grow-bounding-box = true ,
+    hoffset           = 0 pt ,
+    voffset           = 0 pt
+  }
+\cs_new_protected:Npn \__coffin_design_names:N #1
+  {
+    \dim_set:Nn \l__coffin_height_dim { \coffin_ht:N #1 }
+    \dim_set:Nn \l__coffin_depth_dim  { \coffin_dp:N #1 }
+    \dim_set:Nn \l__coffin_width_dim  { \coffin_wd:N #1 }
+    \dim_set:Nn \l__coffin_totalheight_dim
+      { \l__coffin_height_dim + \l__coffin_depth_dim }
+    \cs_set_eq:NN \Height \l__coffin_height_dim
+    \cs_set_eq:NN \Depth \l__coffin_depth_dim
+    \cs_set_eq:NN \Width \l__coffin_width_dim
+    \cs_set_eq:NN \TotalHeight \l__coffin_totalheight_dim
+  }
+\dim_new:N \l__coffin_height_dim
+\dim_new:N \l__coffin_depth_dim
+\dim_new:N \l__coffin_width_dim
+\dim_new:N \l__coffin_totalheight_dim
+\NewDocumentCommand \NewCoffin { m }
+  { \coffin_new:N #1 }
+\NewDocumentCommand \SetHorizontalCoffin { m +m }
+  { \hcoffin_set:Nn #1 {#2} }
+\NewDocumentCommand \SetVerticalCoffin { m m +m }
+  { \vcoffin_set:Nnn #1 {#2} {#3} }
+\NewDocumentCommand \SetHorizontalPole { m m m }
+  {
+    \group_begin:
+      \__coffin_design_names:N #1
+    \use:x
+      {
+        \group_end:
+        \coffin_set_horizontal_pole:Nnn #1
+          { \exp_not:n {#2} } { \dim_eval:n {#3} }
+      }
+  }
+\NewDocumentCommand \SetVerticalPole { m m m }
+  {
+    \group_begin:
+      \__coffin_design_names:N #1
+    \use:x
+      {
+        \group_end:
+        \coffin_set_vertical_pole:Nnn #1
+          { \exp_not:n {#2} } { \dim_eval:n {#3} }
+      }
+  }
+\NewDocumentCommand \JoinCoffins
+  {
+    o
+    s
+    m
+    > { \SplitArgument { 1 } { , } } O { H , l }
+    m
+    > { \SplitArgument { 1 } { , } } O { H , l }
+    > { \SplitArgument { 1 } { , } } D ( ) { 0 pt , 0 pt }
+  }
+  {
+    \IfNoValueTF {#1}
+      {
+        \IfBooleanTF #2
+          { \coffin_attach:NnnNnnnn #3 #4 #5 #6 #7 }
+          { \coffin_join:NnnNnnnn #3 #4 #5 #6 #7 }
+      }
+      {
+        \group_begin:
+          \keys_set:nn { coffin } {#1}
+          \tl_set:Nx \l__coffin_tmp_tl
+            {
+              \group_end:
+              \bool_if:NTF \l__coffin_bound_box_grow_bool
+                { \coffin_join:NnnNnnnn }
+                { \coffin_attach:NnnNnnnn }
+              \exp_not:N #3
+              { \exp_not:o { \l__coffin_A_hpole_tl } }
+              { \exp_not:o { \l__coffin_A_vpole_tl } }
+              \exp_not:N #5
+              { \exp_not:o { \l__coffin_B_hpole_tl } }
+              { \exp_not:o { \l__coffin_B_vpole_tl } }
+              { \dim_use:N \l__coffin_hoffset_dim }
+              { \dim_use:N \l__coffin_voffset_dim }
+            }
+        \l__coffin_tmp_tl
+      }
+  }
+\NewDocumentCommand \TypesetCoffin
+  {
+     m
+     > { \SplitArgument { 1 } { , } } O { H , l }
+     > { \SplitArgument { 1 } { , } } D ( ) { 0 pt , 0 pt }
+  }
+  { \coffin_typeset:Nnnnn #1 #2 #3 }
+\NewDocumentCommand \RotateCoffin  { m m }
+  { \coffin_rotate:Nn #1 {#2} }
+\NewDocumentCommand \ResizeCoffin  { m m m }
+  { \coffin_resize:Nnn #1 {#2} {#3} }
+\NewDocumentCommand \ScaleCoffin  { m m m }
+  { \coffin_scale:Nnn #1 {#2} {#3} }
+\NewDocumentCommand \CoffinDepth { m }
+  { \dim_eval:n { \coffin_dp:N #1 } }
+\NewDocumentCommand \CoffinHeight { m }
+  { \dim_eval:n { \coffin_ht:N #1 } }
+\NewDocumentCommand \CoffinTotalHeight { m }
+  { \dim_eval:n { \coffin_ht:N #1 + \coffin_dp:N #1 } }
+\NewDocumentCommand \CoffinWidth { m }
+  { \dim_eval:n { \coffin_wd:N #1 } }
+\NewDocumentCommand \DisplayCoffinHandles { m m }
+  { \coffin_if_exist:NT #1 { \coffin_display_handles:Nn #1 {#2} } }
+\NewDocumentCommand \MarkCoffinHandle
+  { m > { \SplitArgument { 1 } { , } } O { H , l } m }
+  {  \coffin_if_exist:NT #1 { \coffin_mark_handle:Nnnn #1 #2 {#3} } }
+\NewDocumentCommand \ShowCoffinStructure { m }
+  { \coffin_show_structure:N #1 }
+%% 
+%%
+%% End of file `xcoffins.sty'.

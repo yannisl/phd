@@ -15,6 +15,81 @@ The code was and is well documented and many of the comments are from the first 
 evening thinking that analyzing latex code, should be mandatory in modern computer classes to instill
 good discipline in being economical with code and for discovering the right amount of abstraction before designing programming and delving into code.
 
+\section{Idiomatic LaTeX programming}
+
+My primary reason for recasting the lisitng of the LaTeX kernel code was educational. Programming
+in any language has its idioms and the only way to learn it is by reading other people's programs.
+Also I am not aware of any book that deals with LaTeX as a programming framework rather than
+a typesetting framework.
+
+Of course the ultimate reason why LaTeX exists is to typeset documents. The kernel provides the
+structure and the necessary macros to enable the definition of the LaTeX classes such as books.
+
+Most of the write-up is straight from the kernel files. Now and then I have added a bit of extra 
+explanations, so the credit belongs to the LaTeX Team and to Leslie Lamport. Any mistakes are mine.
+
+\paragraph{Variable and function names}
+\begin{enumerate}
+\item First and foremost use of |@| to avoid conflict between user names and internal control sequences. As a prefix: |\@latexerror|. As a suffix to
+      mark auxiliary macros such as |\newmathalphabet@@| or \refCmd{newmathalphabet@@@}. When used as a suffix
+      it mostly avoids prefixes. To separate the words in a variable |\scan@fontshape|, |\end@float|.
+\item Variables and macro names are mostly in lowercase. If they do not have a |@|, expected to be used 
+      by authors or package writers. |\topmargin|, |\textheight|. Occassionaly uper and lower cased.
+\item If a macro name had |o| use |@| |\hb@xt@|.       
+\item Usage of macros for common numbers |\@ne|, |\@cclv|, |\z@|. 
+\item Usage of scatch macros and registers. This caused me a lot of grief when I was learning. |\@tempa|,
+     |\@tempboxa|. 
+\item Usage of |\@@| as a prefix to \tex primitives, |\@@par|, |\@@input|, |\@@end|.    
+\end{enumerate}
+
+There is no consistency in the convention, which is understable, so the above are just indicative.
+
+\paragraph{Errors}
+\begin{enumerate}
+\item Error trapping, by checking if a command is defined, allowed to be defined etc, before defining
+      it. This partially overcomes the namespacing problems, at least until the point of definitions.
+\end{enumerate}
+
+\paragraph{Use of lists}
+\begin{enumerate}
+\item Use of lists extensively. There are three types of lists used. The first one
+      are straight from the plain TeX code, whereas the second and third types were
+      developed by the \latexe Team. Some go to the initial code by Lamport.
+\begin{teX}[resetmargins=false,numbers=none]
+ \def\@onlypreamble#1{%
+   \expandafter\gdef\expandafter\@preamblecmds \expandafter{%
+     \@preamblecmds\do#1}}
+   \end{teX}    
+      Comma delimited lists are used in numerous places. These are normally constructed
+      using special commands. For example:
+      
+\begin{teX}[numbers=none][resetmargins=false]
+      \def\@addtofilelist#1{\xdef\@filelist{\@filelist,#1}}
+\end{teX}         
+
+     Iterating through the list can get complicated but one can use a |\@for| loop.
+\end{enumerate}
+
+\paragraph{User interface}
+\begin{enumerate}
+\item The kernel tries to provide user commands that have semantic meaning. An extreme example is \refCmd{install@mathalphabet} where it is let to |\gdef|.
+   \begin{teX}[resetmargins=false,numbers=none]
+   \let\install@mathalphabet\gdef
+   \end{teX} 
+\end{enumerate}
+
+\paragraph{Frugality}
+\begin{enumerate}
+\item The use of scratch variables for example |\@tempboxa| is an amazing example of what I call code thriftiness. Firstly there is only
+      one scratch box register ad is used everywhere from the float and output routines to the picture
+      environment. Scary sometimes, that a small mishap somwhere can case chaos to a far off land.
+\item Undefining variable sthat are no longer required |\@onlypreamble| type of commands.       
+\end{enumerate}
+
+\paragraph{Backward compatibility}
+
+\paragraph{Stability}
+
 \section{Code Organization.} 
 
 The \latex source code is distributed in a number of |.dtx| files. These are saved in files |a|..|z| and files |A-O| The source files are documented in \docFile{source2e}, just |texdoc source2e| to read it. 
@@ -22,49 +97,50 @@ The \latex source code is distributed in a number of |.dtx| files. These are sav
 What I am describing here, is a step by step analysis of the kernel code, supplemented by additional materials, in order to provide an understanding of  the inner workings. 
 
 
-\begin{longtable}{llp{5cm}}
+\begin{longtable}{llp{4.2cm}p{4.2cm}}
 \toprule
-Filename  			 & Description & Reference\\
+&Filename  			 & Description & Reference\\
 \midrule
-\inc a ltxdirchk.dtx 	 & &      \\
-\inc b ltplain.dtx    	 & & See Chapter \ref{kernel:ltplain}, page [\pageref{kernel:ltplain}]  \\
-c ltvers.dtx     	 && Version information \ref{kernel:ltvers}      \\
-d ltdefns.dtx     && See Chapter~\ref{ch:ltxdefns},pg~\pageref{ch:ltxdefns}\\
-e ltalloc.dtx     && Allocations, Chapter \ref{kernel:ltalloc}, page [\pageref{kernel:ltalloc}] \\
-f ltcntrl.dtx     && Control structures See Chapter~\ref{ch:ltcntrl}~\pageref{ch:ltcntrl}\\
-g lterror.dtx     && Error handling  \pageref{kernel:lterror}\\ 
-h ltpar.dtx      	 && Paragraphs See (\pageref{kernel:ltpar})\\
-i ltspace.dtx		 && Spacing commands. See~Chapter \ref{kernel:ltspace}, page~[\pageref{kernel:ltspace}]\\
-j ltlogos.dtx     && See \pageref{kernel:ltlogos}\\
-k files.dtx			 && File handling, listing of files. See \pageref{kernel:ltfiles}\\
-l ltoutenc.dtx    && Stadard encoding and commands See Chapter~\pageref{ltoutenc}\\
-m ltcounts.dtx    && Chapter \ref{kernel:ltcounts}, page [\pageref{kernel:ltcounts}]\\
-n ltlengths			 && Length setting commands. See~pg~[\pageref{kernel:lengths}]\\
-o ltfssbas.dtx    && \pageref{kernel:ltfssbas}\\
-p ltfsstrc.dtx    && Tracing fonts See Chapter~\pageref{kernel:ltfsstrc}\\
-q ltfsscmp.dtx    && See Chapter \ref{kernel:ltfntcmd}, page [\pageref{kernel:ltfntcmd}] \\
-s ltfssini.dtx    && NFSS Font initializaton, see Chapter~\ref{kernel:ltfssini}, page~\pageref{kernel:ltfssini}\\
-t fontdef.dtx     && Chapter \ref{kernel:fontdef}, page [\pageref{kernel:fontdef}]\\ 
-u preload.dtx     && Chapter \ref{kernel:preload} page [\pageref{kernel:preload}]\\
-v ltfntcmd.dtx    && \pageref{kernel:ltfntcmd}\\
-w ltpageno.dtx    && See Chapter \ref{kernel:ltpageno}, page [\pageref{kernel:ltpageno}]\\
-x ltref.dtx       && See Chapter \ref{kernel:ltxref}, page [\pageref{kernel:ltxref}] \\
-y ltmiscen.dtx    && See Chapter \ref{kernel:ltmiscen}, page [\pageref{kernel:ltmiscen}]\\
-z ltmath.dtx      && See chapter \ref{kernel:ltmath}, page [\pageref{kernel:ltmath}]\\
-A ltlists.dtx     && See \ref{kernel:ltlists}\\
-B ltboxes.dtx     && See \pageref{kernel:ltboxes}\\
-C lttab.dtx       && See \pageref{kernel:lttab}\\
-D ltpictur.dtx    && See Chapter \ref{kernel:ltpictur}, page [\pageref{kernel:ltpictur}]\\
-E ltthm.dtx       &Theorems& See Chapter \ref{kernel:ltthm}, page [\pageref{kernel:ltthm}]\\
-F ltsect.dtx      &Sectioning& See \ref{kernel:ltsect} \\
-G ltfloat.dtx     &Floats& See \ref{kernel:ltfloat}\\
-H ltidxglo.dtx    &Indices \& Glossaries& See \pageref{kernel:ltidxglo}\\
-I ltbibl.dtx      &Bibliography & See Chapter~\ref{kernel:biblio}, page [\pageref{kernel:biblio}]\\
-J ltpage.dtx      && See Chapter\ref{kernel:ltpage}, page [\pageref{kernel:ltpage}]\\
-K ltoutput.dtx    && \ref{kernel:ltoutput}\\
-L ltclass.dtx     && See Chapter \ref{kernel:ltclass}, page [\pageref{kernel:ltclass}]\\
-M lthyphen.dtx    && See Chapter \ref{kernel:lthyphen}, page [\pageref{kernel:lthyphen}]\\
-N ltfinal.dtx     && See Chapter \ref{kernel:ltfinal}, page [\pageref{kernel:ltfinal}]\\
+a &ltxdirchk.dtx 	 & &      \\
+b &ltplain.dtx    	 & Definitions from PlainTeX &Chapter~\ref{kernel:ltplain}, page \pageref{kernel:ltplain}  \\
+c &ltvers.dtx     	 & Version information    & Chapter \ref{kernel:ltvers}, page~\pageref{kernel:ltvers}\\
+d &ltdefns.dtx      & Definitons              & Chapter~\ref{ch:ltdefns},pg~\pageref{ch:ltdefns}\\
+e &ltalloc.dtx     & Allocations              & Chapter \ref{kernel:ltalloc}, page \pageref{kernel:ltalloc} \\
+f &ltcntrl.dtx     & Control structures       & Chapter~\ref{ch:ltcntrl}, page~\pageref{ch:ltcntrl}\\
+g &lterror.dtx     &Error handling            & Chapter~\ref{kernel:lterror}, page \pageref{kernel:lterror}\\ 
+h &ltpar.dtx      	 &Paragraph related        & Chapter~\ref{kernel:ltpar}, page ~\pageref{kernel:ltpar}\\
+i &ltspace.dtx		 & Spacing commands        & Chapter~\ref{kernel:ltspace}, page~\pageref{kernel:ltspace}\\
+j &ltlogos.dtx     &  Logos                   & Chapter~\ref{kernel:ltlogos}, page~\pageref{kernel:ltlogos}\\
+k &files.dtx			 & File handling           & Chapter~\ref{kernel:ltfiles}, page~\pageref{kernel:ltfiles}\\
+l &ltoutenc.dtx    &Output encodings          & Chapter~\ref{ltoutenc}, page~\pageref{ltoutenc}\\
+m &ltcounts.dtx    & Counters                 & Chapter~\ref{kernel:ltcounts}, page~\pageref{kernel:ltcounts}\\
+n &ltlengths			 & Length macros           &  Chapter \ref{kernel:lengths}, page~[\pageref{kernel:lengths}]\\
+o &ltfssbas.dtx    &  Low level font commands & Chapter~\ref{kernel:ltfssbas},page~\pageref{kernel:ltfssbas}\\
+p &ltfsstrc.dtx    & Tracing fonts            & Chapter~\ref{kernel:ltfsstrc}, page~\pageref{kernel:ltfsstrc}\\
+q &ltfsscmp.dtx    &                          &  Chapter \ref{kernel:ltfntcmd}, page \pageref{kernel:ltfntcmd}\\
+s &ltfssini.dtx    & NFSS font initialization & Chapter~\ref{kernel:ltfssini}, page~\pageref{kernel:ltfssini}\\
+t &fontdef.dtx     & font definitions         & Chapter \ref{kernel:fontdef}, page~\pageref{kernel:fontdef}\\ 
+u &preload.dtx     & font preloading          & Chapter \ref{kernel:preload} page~\pageref{kernel:preload}\\
+v &ltfntcmd.dtx    & font commands            & \pageref{kernel:ltfntcmd}\\
+w &ltpageno.dtx    & page numbers             &  Chapter \ref{kernel:ltpageno}, page [\pageref{kernel:ltpageno}]\\
+x &ltref.dtx       & References               & Chapter \ref{kernel:ltref}, page~\pageref{kernel:ltref}\\
+y &ltmiscen.dtx    & Miscellaneous            & Chapter \ref{kernel:ltmiscen}, page~\pageref{kernel:ltmiscen}\\
+z &ltmath.dtx      & Math                     & Chapter \ref{kernel:ltmath}, page~\pageref{kernel:ltmath}\\
+A &ltlists.dtx     & Lists                    & Chapter \ref{kernel:ltlists}, page~\ref{kernel:ltlists}\\
+B &ltboxes.dtx     & Boxes                    & Chapter \ref{kernel:ltboxes}, page~\pageref{kernel:ltboxes}\\
+C &lttab.dtx       & Tabular and tabbing      & Chapter \ref{kernel:lttab}, page~\pageref{kernel:lttab}\\
+D &ltpictur.dtx    & Picture                  & Chapter \ref{kernel:ltpictur}, page~\pageref{kernel:ltpictur}\\
+E &ltthm.dtx       &Theorems                  &  Chapter \ref{kernel:ltthm}, page~\pageref{kernel:ltthm}\\
+F &ltsect.dtx      &Sectioning                &  Chapter \ref{kernel:ltsec}, page~\ref{kernel:ltsec} \\
+G &ltfloat.dtx     &Floats                    &  Chapter \ref{kernel:ltfloat}, page \ref{kernel:ltfloat}\\
+H &ltidxglo.dtx    &Indices \& Glossaries     &  Chapter \ref{kernel:ltidxglo}, page~\pageref{kernel:ltidxglo}\\
+I &ltbibl.dtx      &Bibliography              &  Chapter~\ref{kernel:biblio}, page~\pageref{kernel:biblio}\\
+J &ltpage.dtx      &Page&  Chapter\ref{kernel:ltpage}, page [\pageref{kernel:ltpage}]\\
+K &ltoutput.dtx    & Output routine           & Chapter \ref{kernel:ltoutput}, page \ref{kernel:ltoutput}\\
+L &ltclass.dtx     & Class and package definitions  &  Chapter \ref{kernel:ltclass}, page [\pageref{kernel:ltclass}]\\
+M &lthyphen.dtx    & Hyphenation              &  Chapter \ref{kernel:lthyphen}, page [\pageref{kernel:lthyphen}]\\
+N &ltfinal.dtx     & Final                    &  Chapter \ref{kernel:ltfinal}, page~\pageref{kernel:ltfinal}\\
+O  &ltluatex        &LuaTeX support            & Chapter \ref{kernel:ltluatex}, page [\pageref{kernel:ltluatex}]\\
 \bottomrule
 \end{longtable}
 
@@ -125,6 +201,7 @@ The routines define a useful macro to parse file name paths:
 The |\@TeXversion| is only defined for very old versions of |TeX|, on a reasonable modern distribution, it should be let to undefined.
 
 
+\endinput
 
 \section{File k ltfiles.dtx}
 
@@ -155,14 +232,14 @@ The |\@filelist| is a comma delimited list that will hold the value of all files
 
 The next macro adds a file name to the list. If you are not familiar with lists this is an interestin way of understanding, how a comma delimited list is build.
 
-\begin{teXXX}
+\begin{teX}
 205 \def\@addtofilelist#1{\xdef\@filelist{\@filelist,#1}}
-\end{teXXX}
+\end{teX}
 
 Note that the |\@filelist| gets deactivated if |\listfiles| does not appear in the preamble. The |begin{document}|
 contains code equivalent to:
 
-\begin{teXXX}
+\begin{teX}
 \AtBeginDocument{%
   \ifx\@listfiles\@undefined
   \let\@filelist\relax
@@ -170,7 +247,7 @@ contains code equivalent to:
 \fi}
 \@onlypreamble\listfiles
 \let\@dofilelist\relax
-\end{teXXX} 
+\end{teX} 
 \index{onlypreamble}
 
 
@@ -188,15 +265,15 @@ prints the format version
 This is a small class,  that its sole purpose is to provide version information. It checks
 if the format is too old. If it is older than 65 months it emits an error. 
 
-\begin{teXXX}
+\begin{teX}
 2 \def\fmtname{LaTeX2e}
 3 \edef\fmtversion{2011/06/27}
-\end{teXXX}
+\end{teX}
 
 After the format version is hardcoded, a macro using one of LaTeX's scratch names is defined. The parameters
 of this macro are delimited in the same way as the date in the format version definition, thus a comparison can be made between the two periods. If it is longer than a preset period it emits an error.
 
-\begin{teXXX}
+\begin{teX}
 4 \iffalse
 5 \def\reserved@a#1/#2/#3\@nil{%
 6   \count@\year
@@ -221,7 +298,7 @@ of this macro are delimited in the same way as the date in the format version de
 25 \fi
 26 \let\reserved@a\relax
 27 \fi
-\end{teXXX}
+\end{teX}
 
 It does not appear that this macro is currently activated, but I can be wrong. One cannot help but notice the conservatism in saving memory by the use of nameless scratch macros. Good practice dictates, that after their use they are let to |\relax|.
 
@@ -556,9 +633,9 @@ defining the |\parbox| with the |keyval| package. Will it be more intuitive to d
 \tex's possibilities are almost infinite. Here is another example of
 an argument that is thrown away\cite{amy1990}, that just strips the backslash:
 
-\begin{teXXX}
+\begin{teX}
 \def\stripbackslash#1#2*{\def\one{#2}}
-\end{teXXX}
+\end{teX}
 
 which only uses the second argument, throwing away the
 first argument, in this case stripping away a backslash
@@ -626,12 +703,12 @@ The heart of the counter commands are the \index{definecounter}
 The class starts with some definitions for |\setcounter|, |\addtocounter|, |\newcounter|, |\value|:
 
 
-\begin{teXXX}
+\begin{teX}
 2 \def\setcounter#1#2{%
 3   \@ifundefined{c@#1}%
 4      {\@nocounterr{#1}}%
 5      {\global\csname c@#1\endcsname#2\relax}}
-\end{teXXX}
+\end{teX}
 
 
 Testing for something here
@@ -647,17 +724,17 @@ reset when counter |oldctr|  is stepped. If |newctr| is  already defined produce
 |c@newctr already| defined  error.
 \end{docCommand}
 
-\begin{teXXX}
+\begin{teX}
 10 \def\newcounter#1{%
 11   \expandafter\@ifdefinable \csname c@#1\endcsname
 12   {\@definecounter{#1}}%
 13   \@ifnextchar[{\@newctr{#1}}{}}
-\end{teXXX}
+\end{teX}
 
 The code checks to see, if an optional value is provided, using \cs{@ifnextchar} and branches to either
 \cs{@definecounter} or to \cs{@newctr}. The two macros follow:
 
-\begin{teXXX}
+\begin{teX}
 25 \def\@definecounter#1{\expandafter\newcount\csname c@#1\endcsname
 26   \setcounter{#1}\z@
 27   \global\expandafter\let\csname cl@#1\endcsname\@empty
@@ -667,16 +744,16 @@ The code checks to see, if an optional value is provided, using \cs{@ifnextchar}
 31   \gdef\csname the#1\expandafter\endcsname\expandafter
 32       {\expandafter\@arabic\csname c@#1\endcsname}
 }
-\end{teXXX}
+\end{teX}
 
 \begin{docCommand}{@definecounter}{}
 The command does a lot of work. Firstly, it defines a new counter using the \tex primitive \cmd{newcount} in line [25]. It then sets the counter using \cmd{setcounter} to zero (|\z@|). Lastly line [31], defines the counter as |thefoo|. This is an internal kernel command that provides the routines and definition of the counters to the rest of the macros.
 \end{docCommand}
 
-\begin{teXXX}
+\begin{teX}
 15 \def\@newctr#1[#2]{%
 16   \@ifundefined{c@#2}{\@nocounterr{#2}}{\@addtoreset{#1}{#2}}}
-\end{teXXX}
+\end{teX}
 
 \endinput
 
@@ -685,9 +762,9 @@ Next follow a number of commands, for representing the values of counters in dif
 as arabic or roman numerals.
 \end{docCommand}
 
-\begin{teXXX}
+\begin{teX}
 34 \def\arabic#1{\expandafter\@arabic\csname c@#1\endcsname}
-\end{teXXX}
+\end{teX}
 
 \begin{docCommand}{roman} {}
 \end{docCommand}
@@ -701,27 +778,27 @@ The rest of the number definitions, follow in the same manner.  All of the comma
 \end{docCommand}
 \end{docCommand}
 
-\begin{teXXX}
+\begin{teX}
 35 \def\roman#1{\expandafter\@roman\csname c@#1\endcsname}
 36 \def\Roman#1{\expandafter\@Roman\csname c@#1\endcsname}
 37 \def\alph#1{\expandafter\@alph\csname c@#1\endcsname}
 38 \def\Alph#1{\expandafter\@Alph\csname c@#1\endcsname}
-\end{teXXX}
+\end{teX}
 
 The internal representation, is straightforward:
 
-\begin{teXXX}
+\begin{teX}
 \@arabic \@arabic\FOOcounter Representation of \FOOcounter as arabic numerals.
 40 \def\@arabic#1{\number #1} %% changed 29 Apr 86
 \@roman \@roman\FOOcounter Representation of \FOOcounter as lower-case Roman numerals.
 41 \def\@roman#1{\romannumeral #1}
 \@Roman \@Roman\FOOcounter Representation of \FOOcounter as upper-case Roman numerals.
 42 \def\@Roman#1{\expandafter\@slowromancap\romannumeral #1@}
-\end{teXXX}
+\end{teX}
 
 
 
-\begin{teXXX}
+\begin{teX}
 \@slowromancap Fully expandable macro to change a roman number to uppercase.
 43 \def\@slowromancap#1{\ifx @#1% then terminate
 44 \else
@@ -730,7 +807,7 @@ The internal representation, is straightforward:
 47 \expandafter\@slowromancap
 48 \fi
 49 }
-\end{teXXX}
+\end{teX}
 
 
 
@@ -802,15 +879,15 @@ All nice and wonderfully, imaginative stuff that brings the discussion of the |l
 
 This command takes one argument, a counter name and sets it to zero.
 
-\begin{teXXX}
+\begin{teX}
 \@stpelt
 23 \def\@stpelt#1{\global\csname c@#1\endcsname \z@}
-\end{teXXX}
+\end{teX}
 
 
 This can be used creatively in packages as for example the \docpkg{chappg}\footnote{numbers are from the chappg documentation} \footnote{see \url{http://www.tug.org/texlive/Contents/live/texmf-dist/doc/latex/chappg/chappg.pdf}}
 
-\begin{teXXX}
+\begin{teX}
 The next magic makes the page counter be reset to one rather than zero
 93 \renewcommand\@stpelt[1]{%
 94 \global\csname c@#1\endcsname
@@ -820,7 +897,7 @@ The next magic makes the page counter be reset to one rather than zero
 98 \z@
 99 \fi
 100 }
-\end{teXXX}
+\end{teX}
 
 
 

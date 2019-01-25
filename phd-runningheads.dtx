@@ -88,7 +88,7 @@ Improve on User markup
 \fi
 %</internal>
 %<*install>
-\input docstrip.tex
+\input phddocstrip.tex
 \keepsilent
 \askforoverwritefalse
 \preamble
@@ -137,15 +137,13 @@ See http://www.latex-project.org/lppl.txt
 %</internal>
 %<*driver>
 \NeedsTeXFormat{LaTeX2e}[2017/04/15]%
-\RequirePackage[2017/04/15]{latexrelease}
-
 \ProvidesFile{phd-runningheads.drv}%
   [2013/01/13 v1.0 ]%
-\documentclass[book,twoside,12pt,a4paper]{phddoc}
+\documentclass[book,oneside,12pt,a4paper,colorize]{phddoc}
 
-\usepackage[bottom=4cm,footskip=3cm,headheight=17.15pt,
-            headsep=1.5\baselineskip]{geometry}
-\savegeometry{std}
+%\usepackage[bottom=4cm,footskip=3cm,headheight=17.15pt,
+%            headsep=1.5\baselineskip]{geometry}
+%\savegeometry{std}
 \usepackage{microtype}
 \usepackage{phd}
 \usepackage{phd-pkgmanager}
@@ -180,6 +178,7 @@ See http://www.latex-project.org/lppl.txt
 \usemintedstyle[latex]{borland}  
 \let\citep\cite
 \tcbuselibrary{raster}
+\makeindex
 \begin{document}
 \DEBUGOFF
 
@@ -192,7 +191,7 @@ See http://www.latex-project.org/lppl.txt
  \newpage
  \tableofcontents
  \mainmatter
- \pagestyle{headings}
+ \pagestyle{empty}
  
   \makeatletter
   \@debugtrue
@@ -333,6 +332,7 @@ See http://www.latex-project.org/lppl.txt
 %  \appendix
 %  \input{./kernel/kernel-ltpage} 
   \DocInput{phd-runningheads.dtx}%
+  \printindex
 \end{document}
 %</driver>
 % \fi
@@ -363,7 +363,7 @@ See http://www.latex-project.org/lppl.txt
 % \providecommand*{\url}{\texttt}
 %  \def\fileversion{v1.0}          
 %  \def\filedate{2018/10/26}
-% \pagestyle{headings}
+% ^^A\pagestyle{centerheadings}
 % \title{The \textsf{\jobname} package.
 % \author{Dr. Yiannis Lazarides}
 % \thanks{This
@@ -377,7 +377,7 @@ See http://www.latex-project.org/lppl.txt
 % \maketitle
 % \hbadness=10000  ^^A CHECK THIS
 % \begin{summary}
-%   This package forms part of the \pkgname{phd} bundle and can be used to manage running heads
+%   This package forms part of the \pkg{phd} bundle and can be used to manage running heads
 %   with a key-value interface. It comes with a number of predefined styles, that cover most of the
 %  common use cases for books and journals. It is still in alpha stage. However it will not hopefully
 %  break anything if used and is compatible with the fancyhdr package.
@@ -508,6 +508,7 @@ See http://www.latex-project.org/lppl.txt
 % extraction of the \LaTeX{} macro source files~\footcite{goossens93}.
 %    \begin{macrocode}
 %<*RH>
+%<@@=phdh>
 \NeedsTeXFormat{LaTeX2e}[2017/04/15]%
 \ProvidesPackage{phd-runningheads}%
   [2017/04/15 v1.0 Running heads styling (YL)]%
@@ -624,10 +625,25 @@ See http://www.latex-project.org/lppl.txt
 %    \end{macrocode}  
 %    \begin{macrocode}  
 \ExplSyntaxOn
-\dim_new:N \phd_headerwidth_dim
-\dim_new:N \phd_footerwidth_dim
-\ExplSyntaxOff
+\dim_new:N \phdh_headerwidth_dim
+\dim_new:N \phdh_footerwidth_dim
+
 %    \end{macrocode}
+%  \begin{macro}{std (pagestyle)}
+%    \begin{macrocode}
+\tl_new:N \l_@@_pagestyle_foot_center_tl
+\tl_new:N \l_@@_pagestyle_foot_decls_tl
+\tl_new:N \l_@@_pagestyle_foot_left_tl
+\tl_new:N \l_@@_pagestyle_foot_right_tl
+\tl_new:N \l_@@_pagestyle_head_center_tl
+\tl_new:N \l_@@_pagestyle_head_decls_tl
+\tl_new:N \l_@@_pagestyle_head_left_tl
+\tl_new:N \l_@@_pagestyle_head_right_tl
+
+%    \end{macrocode}
+% \end{macro}
+%
+% \subsection{Key value interface}
 %  As we are having three basic elements for every heading, this results in
 %  12 sets of properties, i.e. if we target font weight, we need to allow for
 %  odd pages, even pages and top and bottom. But we have left, center and 
@@ -640,7 +656,7 @@ See http://www.latex-project.org/lppl.txt
 %  and verbose, but by the time a full template is provided the user will see styles
 %  rather than keys.
 %  
-% \begin{docCommand} {create_pagestyle_keys:n } { \marg{pagestyle name} }
+% \begin{docCommand} {l_@@_create_pagestyle_keys:n }{\Arg{<pagestyle name>}}
 %    Creates a standard set of keys for a |\pagestyle|. It takes the |\pagestyle|
 %    name as its argument, which is used a prefix for the keys and the functions.
 %    The same prefixing is later on used in the formatters and the |\pagestyle|
@@ -648,7 +664,7 @@ See http://www.latex-project.org/lppl.txt
 % \end{docCommand}
 %    \begin{macrocode}    
 \ExplSyntaxOn
-\cs_new:Npn \create_pagestyle_keys:n #1 
+\cs_new:Npn \l_@@_create_pagestyle_keys:n #1 
   {
     \cxset
       {
@@ -858,7 +874,7 @@ See http://www.latex-project.org/lppl.txt
 % We now set the defaults.    
 %    \begin{macrocode}
 \ExplSyntaxOn  
-\cs_new:Npn \set_pagestyle_key_defaults:n #1 
+\cs_new:Npn \l_@@_set_pagestyle_key_defaults:n #1 
  {  
   \cxset
   { 
@@ -982,9 +998,29 @@ See http://www.latex-project.org/lppl.txt
 %
 % \section{Formatters}
 %
+% Traditionally \latexe formats a header based on code provided in the definition
+% of control sequences defined using the |ps@|\meta{pagestyle name}. We provide
+% a different mechanism, where every style has an associated |formatter|. For
+% example the |\pagestyle{box}| is a generic pagestyle that can be changed
+% using a key value interface, which is associated with a formatter named,
+% |\phdh_format_running_head_box|. These formatters can be called by the
+% relevant \latexe or \latex3 equivalents one day, |@evenhead|, |\@oddhead|,
+% |\@evenfoot|, |\@oddfoot|. They are called through an auxiliary macro,
+% \cs{ps_aux_name} where the name is the name of the pagestyle.
+%
+% To summarize to define a new generic style the following steps take place:
+%
+% \begin{enumerate}
+% \item Give the style a name.
+% \item Define a formatter or formatters.
+% \item Define an auxiliary macro to set the |\@evenhead|\ldots|\@oddfoot| 
+% \item Define or redefine any of the marks locally in this auxiliary macro.
+% \end{enumerate}
+%   
 %  Formatters are functions responsible for typesetting the layout, given
-%  the key constrains.
+%  the key constraints.
 % 
+% \section{Lengths}
 %  First we define some lengths to use as offsets for drawing the running heads into
 %  the margins.
 %  \begin{docCommand}{even_offset_l}{\marg{length}}
@@ -1036,7 +1072,7 @@ See http://www.latex-project.org/lppl.txt
   { #1~not~a~valid~parbox~alignment~token. }
   { use~one~of~ [t,b,c]. I~have~changed~#1~to~`b'.~Press~enter~to~continue.}
   
-\cs_gset:Npn \phd_parbox_header_left:nnnnn #1 #2 #3 #4 #5 
+\cs_gset:Npn \phdh_parbox_header_left:nnnnn #1 #2 #3 #4 #5 
   {
     \str_case:nnTF {#1}
       {
@@ -1050,7 +1086,7 @@ See http://www.latex-project.org/lppl.txt
 	     \parbox[b]{#2}{#3 #4 #5}}  %false code
       }
       
-\cs_gset:Npn \phd_parbox_header_center:nnnnn #1 #2 #3 #4 #5 
+\cs_gset:Npn \phdh_parbox_header_center:nnnnn #1 #2 #3 #4 #5 
   {
     \str_case:nnTF {#1}
       {
@@ -1061,7 +1097,7 @@ See http://www.latex-project.org/lppl.txt
 	    {\parbox[#1]{#2}{#3 #4 #5}} %true code
 	    {\parbox[b]{#2}{#3 #4 #5}}  %false code
   }  
-\cs_gset:Npn \phd_parbox_header_right:nnnnn #1 #2 #3 #4 #5 
+\cs_gset:Npn \phdh_parbox_header_right:nnnnn #1 #2 #3 #4 #5 
   {
     \str_case:nnTF {#1}
       {
@@ -1073,7 +1109,7 @@ See http://www.latex-project.org/lppl.txt
 	    {\parbox[b]{#2}{#3 #4 #5}}  %false code
   }   
   
-\cs_gset:Npn \phd_parbox_footer_left:nnnnn #1 #2 #3 #4 #5 
+\cs_gset:Npn \phdh_parbox_footer_left:nnnnn #1 #2 #3 #4 #5 
   {
     \str_case:nnTF {#1}
       {
@@ -1084,7 +1120,7 @@ See http://www.latex-project.org/lppl.txt
 	    {\parbox[#1]{#2}{#3 #4 #5}} %true code
 	    {\parbox[b]{#2}{#3 #4 #5}}  %false code
   }
-\cs_gset:Npn \phd_parbox_footer_center:nnnnn #1 #2 #3 #4 #5 
+\cs_gset:Npn \phdh_parbox_footer_center:nnnnn #1 #2 #3 #4 #5 
   {
     \str_case:nnTF {#1}
       {
@@ -1095,7 +1131,7 @@ See http://www.latex-project.org/lppl.txt
 	    {\parbox[#1]{#2}{#3 #4 #5}} %true code
 	    {\parbox[b]{#2}{#3 #4 #5}}  %false code
   }  
-\cs_gset:Npn \phd_parbox_footer_right:nnnnn #1 #2 #3 #4 #5 
+\cs_gset:Npn \phdh_parbox_footer_right:nnnnn #1 #2 #3 #4 #5 
   {
     \str_case:nnTF {#1}
       {
@@ -1132,13 +1168,13 @@ See http://www.latex-project.org/lppl.txt
 \fboxsep=0pt
 \fbox
   {
-    \phd_parbox_header_left:nnnnn {d}{.45\textwidth}{
+    \phdh_parbox_header_left:nnnnn {d}{.45\textwidth}{
        \relax}{\raggedright}{\lorem}
   } 
 %  
 \fbox
   {
-    \phd_parbox_header_left:nnnnn {b}{.45\textwidth}{\relax}{
+    \phdh_parbox_header_left:nnnnn {b}{.45\textwidth}{\relax}{
        \raggedleft}{\lorem}
   } 
 \ExplSyntaxOff
@@ -1161,47 +1197,49 @@ See http://www.latex-project.org/lppl.txt
 % save some latex2e kernel macros
 \let\ltxoddhead\@oddhead
 \let\ltxbaselinestretch\baselinestretch
-\let\phd_baselinestretch\baselinestretch
+\let\phdh_baselinestretch\baselinestretch
 
 % latex2e interfaces to the package
-\let\phd_raggedleft\raggedleft
+\let\phdh_raggedleft\raggedleft
 \let\phdh_raggedright\raggedright
 \let\phdh_centering\centering
 \let\phdh_everypar\everypar
-\let\phd_head_height\headheight
+
+
+\let\phdh_head_height\headheight
 
 \dim_new:N \head_width
 \dim_set:Nn \head_width {\textwidth}
 %    \end{macrocode}
 %    \begin{macrocode}
-\dim_new:N \phd_dim_even_left_header
-\dim_new:N \phd_dim_even_right_header
-\dim_new:N \phd_dim_odd_left_header
-\dim_new:N \phd_dim_odd_right_header
+\dim_new:N \l_@@_even_left_header_dim
+\dim_new:N \phdh_dim_even_right_header
+\dim_new:N \phdh_dim_odd_left_header
+\dim_new:N \phdh_dim_odd_right_header
 %    \end{macrocode}
 %
 % 
 %    \begin{macrocode}
-\dim_new:N \phd_dim_even_left_footer
-\dim_new:N \phd_dim_even_right_footer
-\dim_new:N \phd_dim_odd_left_footer
-\dim_new:N \phd_dim_odd_right_footer
+\dim_new:N \phdh_dim_even_left_footer
+\dim_new:N \phdh_dim_even_right_footer
+\dim_new:N \phdh_dim_odd_left_footer
+\dim_new:N \phdh_dim_odd_right_footer
 %    \end{macrocode}
 %
 %    \begin{macrocode}
 \def\phdh@setoffs{%
   \phdh@global\let\headwidth\phdh_headwidth
-  \phdh@global\let\phd_dimolh\phd_offset_olh
+  \phdh@global\let\phdh_dimolh\phdh_offset_olh
   
-  \phdh@global\let\phd_dimelh\phd_offset_elh 
-  \phdh@global\let\phd_dimorh\hss
-  \phdh@global\let\phd_dimerh\hss 
-  \phdh@global\let\phd_dimolf\phd_offset_olf
+  \phdh@global\let\phdh_dimelh\phdh_offset_elh 
+  \phdh@global\let\phdh_dimorh\hss
+  \phdh@global\let\phdh_dimerh\hss 
+  \phdh@global\let\phdh_dimolf\phdh_offset_olf
   
-  \phdh@global\let\phd_dimelf\phd_offset_elf 
-  \phdh@global\let\phd_dimorf\hss
+  \phdh@global\let\phdh_dimelf\phdh_offset_elf 
+  \phdh@global\let\phdh_dimorf\hss
 
-  \phdh@global\let\phd_dimerf\hss
+  \phdh@global\let\phdh_dimerf\hss
 }
 
 %\addtolength{\head_width_dim}{\marginparsep}
@@ -1217,14 +1255,14 @@ See http://www.latex-project.org/lppl.txt
   \let\\\@normalcr 
 }
 
-\cs_gset:Npn \phd_redefines{  
-  \cs_set:Npn \phd_scratch {5}
+\cs_gset:Npn \phdh_redefines{  
+  \cs_set:Npn \phdh_scratch {5}
   \if_meaning:w
-    \phd_scratch \phd_baselinestretch
+    \phdh_scratch \phdh_baselinestretch
   \else:
-    \cs_gset:Npn \phd_baselinestretch {1}
+    \cs_gset:Npn \phdh_baselinestretch {1}
   \fi:  
-  \let\baselinestretch\phd_baselinestretch 
+  \let\baselinestretch\phdh_baselinestretch 
   
    
   \def\nouppercase##1
@@ -1273,10 +1311,10 @@ See http://www.latex-project.org/lppl.txt
   
   \phdh_reset
   \emergencystretch 3em%
-  \phd_redefines
+  \phdh_redefines
   \tex_hsize:D = \textwidth
-  \dim_add:Nn \phd_head_height{17pt}
-  \colorbox{yellow}{\phdh@vbox \phd_head_height
+  \dim_add:Nn \phdh_head_height{17pt}
+  \colorbox{yellow}{\phdh@vbox \phdh_head_height
     {%
       \tex_hrule:D width \dimexpr(\head_width_dim) height1.5pt \scan_stop:
       \vskip 2.5pt
@@ -1287,7 +1325,7 @@ See http://www.latex-project.org/lppl.txt
          \hbox_overlap_right:n 
             {
                %\parbox[t]{\head_width}{\raggedright#2}
-               \phd_parbox_header_left:nnnnn {t} {\head_width_dim}{\empty}{\RaggedRight}{#2}
+               \phdh_parbox_header_left:nnnnn {t} {\head_width_dim}{\empty}{\RaggedRight}{#2}
             } 
             \hfill
              \parbox[t]{\head_width_dim}{\centering#3}
@@ -1479,7 +1517,9 @@ See http://www.latex-project.org/lppl.txt
 \msg_new:nnnn {phd-runningheads}{font / font-size-property-undefined}
   {font-size~property~for~#1~is~not~defined.}
   {use \string\cxset toset it.}  
-  
+%    \end{macrocode}
+% \begin{macro}{\set_header_font_aux:n}
+%    \begin{macrocode}  
 \cs_new:Npn \set_header_font_aux:n #1
  {
    %\normalfont
@@ -1510,6 +1550,7 @@ See http://www.latex-project.org/lppl.txt
  }
 \ExplSyntaxOff 
 %    \end{macrocode} 
+% \end{macro}
 %
 % \begin{docCommand}{headerhookleft}{}
 % Adds a hook at the beginning of the top running head, to enable the addition of
@@ -1641,12 +1682,100 @@ See http://www.latex-project.org/lppl.txt
  }
 %    \end{macrocode}
 % 
+% \subsection{Simple three part hbox rendered in a tabular}
+%
+% This formatter is modelled after the l3 package, which in turn is modelled partially on what
+% fancyhdr does. It uses a tabular, which in my opinion might be a bit risky, as we will need
+% to ensure that tabulars other parameters need to be reset to suitable values for the running
+% heads.
+%
+% \begin{macroarguments}
+% \item head offset left
+% \item head width
+% \item alignment (b)
+% \item head decls
+% \item head decls left
+% \item head declarations center
+% \item head declarations right
+%
+% \end{macroarguments}
+%
+%    \begin{macrocode}
+\ExplSyntaxOn
+\cs_new_nopar:Npn \l_@@_generate_running_box:nnnnnnnn #1 #2 #3 #4 #5 #6 #7 #8
+  {
+    #1
+    \frame{
+    \hbox to #2 
+      {
+         % initialize fonts etc
+         \normalsize \normalfont \normalcolor #4
+         \rlap { \tabular [#3]{@{}l} #5 \endtabular }
+         \hfill
+         \tabular [#3]{@{}c} #6 \endtabular
+         \hfill
+         \llap { \tabular [#3]{r@{}} #7 \endtabular }
+      }
+  }
+  #8
+  }
+
+%    \end{macrocode}
+%  \begin{macro}{\xor_generate_running_head_std:}
+%  \begin{macro}{\xor_generate_running_foot_std:}
+%    Commands to build the running header / footer in the template |std|.
+%    \begin{macrocode}
+\cs_new_nopar:Npn \@@_generate_running_head_std: {
+   \@@_generate_running_box:nnnnnnnn
+      { \null\hskip -\l_@@_pagestyle_head_offset_left_dim }
+      \l_@@_pagestyle_head_width_dim
+      {b}
+      \l_@@_pagestyle_head_decls_tl
+      \l_@@_pagestyle_head_left_tl
+      \l_@@_pagestyle_head_center_tl
+      \l_@@_pagestyle_head_right_tl
+      {}
+}
+\cs_new_nopar:Npn \@@_generate_running_foot_std: {
+   \@@_generate_running_box:nnnnnnnn
+      { \null\hskip -\l_@@_pagestyle_foot_offset_left_dim }
+      \l_@@_pagestyle_foot_width_dim
+      {t}
+      \l_@@_pagestyle_foot_decls_tl
+      \l_@@_pagestyle_foot_left_tl
+      \l_@@_pagestyle_foot_center_tl
+      \l_@@_pagestyle_foot_right_tl
+      {}
+}
+%    \end{macrocode}
+%  \end{macro}
+%  \end{macro}
+%
+%
 % \section{Pagestyle}
 %
 % We are now almost ready to create the styles as used by \latex2e. By convention there are two commands that are used. 
 % |\pagestyle| and |\thispagestyle|. These are defined in the kernel. 
 %
-% \begin{docCommand} {phd_create_new_ps:nnn}{ \marg{style name} \marg{prefix}  \marg{format suffix name} }
+% \subsection{LaTeX3}
+% The \latex3 Team has not as yet released a package, but they have experimented with a totally new
+% interface in l3pagestyle.dtx under the xpackages. They consider the pagestyles as an |OR| interface.
+% The thinking goes as follows:
+%
+% When a page is ready to be typeset the OR will first check if a special pagestyle should be used
+% and then runs |\UseInstance{pagestylesetup}|\Arg{variabel} with the value from either |\pagestyle| or
+% |thispagestyle|. In this way a collecion instance fro (frontmater, mainmatter, bacakmatter) is automatically
+% be taken into account at this point.
+%
+% They file uses templates which is the way that the Team is approaching the problem.
+%
+% Templates are not much different from pgf keys and \enquote{styles}. Think of a style as an instance
+% of a Template in \latex3 parlance.
+%
+% I have decided that I will rather keep the current interface and provide also a mechanism to relate
+% the defined keys to templates.
+%
+% \begin{docCommand} {phd_create_new_ps:nnn}{\Arg{<style name>}\Arg{<prefix>}\Arg{<format suffix name>} }
 %  A generic function for creating new pagestyles. The function takes the pagestyle name as its
 %  argument and calls an auxiliary function to create the |ps@| command. The 
 %  second argument is a unique renderer name, in our case the most commonly used one is |box|  
@@ -1659,7 +1788,8 @@ See http://www.latex-project.org/lppl.txt
 % \#3 formatter model name (available box, parbox)
 %
 %    \begin{macrocode} 
-\cs_gset:Npn \phd_create_new_ps:nnn #1 #2 #3
+\ExplSyntaxOn
+\cs_gset:Npn \phdh_create_new_ps:nnn #1 #2 #3
   {
      \cs_gset:cpn {#1#2} 
        {  \SaveCurrentPalette
@@ -1683,14 +1813,14 @@ See http://www.latex-project.org/lppl.txt
 \ExplSyntaxOn
 \NewDocumentCommand\CreateNewPagestyle {o m m m} 
   {
-    \create_pagestyle_keys:n {#3} 
+    \l_@@_create_pagestyle_keys:n {#3} 
     % create standard defaults for the template
-    \set_pagestyle_key_defaults:n {#3}
+    \l_@@_set_pagestyle_key_defaults:n {#3}
 %   modify the defaults here and create a style
 %   set the palette and add other keys
     \SaveCurrentPalette
     \cxset{#3~style/.style = {palette~\previouspalette,}}
-    \phd_create_new_ps:nnn {#2}{#3} {#4}
+    \phdh_create_new_ps:nnn {#2}{#3} {#4}
    }
 %    \end{macrocode}
 % Once the keys are set, values can be changed by the user using |\cxset| at any point.
@@ -1821,7 +1951,7 @@ See http://www.latex-project.org/lppl.txt
 }
 %    \end{macrocode}
 %
-% \end{document}
+% 
 % \section{Flush headings}
 % 
 %  \begin{docCommand}{ps@flush} { \meta{void} }
@@ -2017,6 +2147,7 @@ See http://www.latex-project.org/lppl.txt
   \newpage
   \if@twocolumn\hbox{}\newpage\fi\fi\fi}
 %    \end{macrocode}
+% 
 %</RH>       
 \endinput
 % \bibliographystyle{alpha}

@@ -22,6 +22,7 @@ and resolves conflicts.
 This class which is a part of the `phd` budle can be used to typeset documentation 
 files using the `doc` and `docstrip` programs.
 
+
 This work consists of the file  `phddoc.dtx`,
 and the derived files   `phddoc.ins`,  `phddoc.pdf`, 
 and `phddoc.cls`.
@@ -70,7 +71,7 @@ interface in future releases. There is a large amount of
 work still to be carried out to improve the template styles
 provided, to test it more thoroughly and to add a number of
 improvements in the special designs. At present I estimate
-that I have completed about 80% of the work that needs
+that I have completed about 90% of the work that needs
 to be done.
 
 __The class as it stands is not production stable.__ 
@@ -98,7 +99,7 @@ __The class as it stands is not production stable.__
 \fi
 %</internal>
 %<*install>
-\input docstrip.tex
+\input phddocstrip.tex
 \keepsilent
 \askforoverwritefalse
 \preamble
@@ -130,12 +131,8 @@ See http://www.latex-project.org/lppl.txt
 	\file{README.txt}{\from{\jobname.dtx}{readme}}
   }
 
-\generate{
-  \file{\jobname.md}{\from{\jobname.dtx}{readmemd}}
-}
-\generate{
-  \file{TODO-PHDDOC.md}{\from{\jobname.dtx}{TODO}}
-}
+\generate{\file{\jobname.md}{\from{\jobname.dtx}{readmemd}}}
+\generate{\file{TODO-PHDDOC.md}{\from{\jobname.dtx}{TODO}}}
 
 \ifx\fmtname\nameofplainTeXdgit stat
   \expandafter\endbatchfile
@@ -146,11 +143,14 @@ See http://www.latex-project.org/lppl.txt
 %
 %
 %<class>\NeedsTeXFormat{LaTeX2e}
+%<class>\RequirePackage{expl3,xparse}
+%<class>\RequirePackage{l3keys2e}
 %<class>\ProvidesClass{phddoc}
-%<class>         [2007/11/11 v2.0u Standard LaTeX documentation class]
+%<class>         [2018/12/13 v1.0 LaTeX documentation class (YL)]
 %
 %<*driver>
-\documentclass[book]{phddoc}
+\documentclass[colorize,scrbook, oneside, onlydoc, lm-default]{phddoc}
+
 \GetFileInfo{phddoc.cls}
 \providecommand\dst{\expandafter{\normalfont\scshape docstrip}}
 
@@ -166,9 +166,10 @@ See http://www.latex-project.org/lppl.txt
 %\usepackage{phd-colorpalette}
 %\usepackage{phd-runningheads}
 \usepackage{phd-lowersections}
+%\usepackage{phd-counters}
 %\usepackage{phd-toc}
-\usepackage[cache=false]{minted} 
-\usemintedstyle[latex]{borland} 
+%\usepackage[cache=false]{minted} 
+%\usemintedstyle[latex]{borland} 
 
 
 \cxset{section format=hang}
@@ -181,8 +182,35 @@ See http://www.latex-project.org/lppl.txt
 \makeindex
 \CodelineIndex
 \EnableCrossrefs
+\MacroIndent=0pt
+\cxset{chapter format=fashion,
+       palette smithsonian}
+%\AtBeginDocument{\OnlyDescription}
+\usepackage{minted}
+\usepackage{fancyvrb}
 
-
+\def\AltMacroFont{\fontencoding\encodingdefault
+ \fontfamily\ttdefault
+ \fontseries\mddefault
+ \fontshape\updefault
+ \small
+ }
+\hbadness=20000
+\vbadness=10005
+\includeonly{
+%             ./kernel/kernel-intro,
+%             ./kernel/kernel-ltplain,
+%             ./kernel/kernel-ltdefns,
+%             ./kernel/kernel-ltspace,
+%              ./kernel/kernel-ltfiles,
+%              ./sections/indices,
+               ./sections/book-design, 
+             }
+\newcounter{steps}
+\newcounter{tempcounter}
+\newcounter{theorem}
+\let\ohyperpage\hyperpage
+\def\hyperpage#1{\ohyperpage{a#1}}
 \begin{document}
 \DEBUGOFF
 \frontmatter
@@ -191,18 +219,84 @@ See http://www.latex-project.org/lppl.txt
 \mainmatter
 \pagestyle{headings}
 \tableofcontents
-\input{./sections/classes}
+\def\footnotechanges#1#2#3{\footnote{#1 #2 #3}}
+
+%\input{./kernel/latexkernel}
+\include{./kernel/kernel-intro}
+\include{./kernel/kernel-ltplain}    % 2b
+\include{./kernel/kernel-ltvers}     % c
+
+\include{./kernel/kernel-ltdefns}    % d
+\include{./kernel/kernel-ltalloc}    % e
+\include{./kernel/kernel-ltcntrl}    % f
+\include{./kernel/kernel-lterror}    % g
+                                   % h para 
+\include{./kernel/kernel-ltspace}    % i  
+\include{./kernel/kernel-ltlogos}    % j                                   
+\include{./kernel/kernel-ltfiles}    % k
+
+\include{./kernel/kernel-ltoutenc}   % l
+\include{./kernel/kernel-ltcounts}   % m
+\include{./kernel/kernel-N-ltlength} % n
+\include{./kernel/kernel-ltfssbas}   % o
+\include{./kernel/kernel-ltfsstrc}   % p
+
+\include{./kernel/kernel-ltfssini}   % s
+\include{./kernel/kernel-fontdef}    % t
+\include{./kernel/kernel-preload}    % u
+\include{./kernel/kernel-ltfntcmd}   % v
+\include{./kernel/kernel-ltpageno}   % w
+\include{./kernel/kernel-ltref}      % x
+\include{./kernel/kernel-ltmiscen}   % y
+\include{./kernel/kernel-ltmath}     % z
+%%% Caps
+\include{./kernel/kernel-ltlists}    % A
+\include{./kernel/kernel-ltboxes}    % B
+\include{./kernel/kernel-lttab}      % C
+\include{./sections/pictureenvironment}    % Add how to use or join with next section
+\include{./kernel/kernel-ltpictur}   % D
+\include{./kernel/kernel-ltthm}      % E
+\include{./kernel/kernel-F-ltsec}    % F
+\include{./kernel/kernel-ltfloat}    % G
+\include{./sections/indices}
+\include{./kernel/kernel-ltidxglo}   % H 
+\include{./kernel/kernel-ltbibl}     % I
+\include{./kernel/kernel-ltpage}     % J
+\include{./sections/OTR}
+\include{./kernel/kernel-ltoutput}   % K
+\include{./sections/classes}
+\include{./kernel/kernel-ltclass}    % L
+\include{./kernel/kernel-lthyphen}   % M
+\include{./kernel/kernel-ltfinal}    % N
+\include{./kernel/kernel-ltluatex}   % O
+    %\input{./sections/floats}
+\let\HUGE\Huge    
+\cxset{part format=stewart,part afterindent=on}
+\part{Latex Classes}
+\include{./sections/book-class}
+\include{./kernel/kernel-classes}
+\part{Book Design}
+\include{./sections/book-design}
+\part{The Ecosystem}  
+\cxset{chapter format=fashion}
+%\include{./sections/graphics}  
+\include{./sections/keyvalues}
+\include{./sections/pgfmanual-en-pgfkeys}
+
+\part{expl3}
+\appendix
 \DocInput{phddoc.dtx}
-\printindex
+
+\PrintIndex
 \end{document}
 %</driver>
 %
 % \fi
-%
-% \CheckSum{402}
+% \begin{documentation}
+% \CheckSum{424}
 %
 %  \pagestyle{headings}
-% \cxset{chapter format=stewart}
+% 
 % \chapter{User Manual}
 %
 % \section{Documentation of the \LaTeX\ sources}
@@ -215,7 +309,7 @@ See http://www.latex-project.org/lppl.txt
 % the documentation of files  produced in `doc' format.
 %
 % The class is written as a \enquote{self-contained} docstrip file: executing
-% |latex phddoc.dtx| generates the \docFile{phddoc,cls} file and typesets
+% |latex phddoc.dtx| generates the \docFile{phddoc.cls} file and typesets
 % this documentation; execute |tex l3doc.dtx| to only generate \docFile{phddoc.cls}.
 %
 % Each documented file in the standard distribution comes with extension
@@ -256,7 +350,7 @@ See http://www.latex-project.org/lppl.txt
 % produced.
 %
 % The LaTeX3 Team has also more recently developed the |l3doc| class and
-% |l3docstrip| package for documenting the l3 sources. Othe Teams such as 
+% |l3docstrip| package for documenting the l3 sources. Other Teams such as 
 % the developers of \pkg{pgf} prefer not to use |docstrip| and document
 % the code and user manuals in a more traditional way, as normal documents
 % in conjuction with external scripts written in python.
@@ -266,11 +360,17 @@ See http://www.latex-project.org/lppl.txt
 % For longer books, such as a thesis, where the author might use their own
 % developed macros, it also enables one to use such a method. 
 %
+% This class can be considered as a framework, as it can be used to produce almost
+% any type of document.
+%
 % The objectives are as follows:
 %
 % \begin{description}
 % \item [Flexibilty]  Provide flexibility to use one of the standard \latex2e classes |article|, |book|  |report| or the |KOMA| classes |scrartcl|, |scrbook|, |scrreprt|
 % as the main class. 
+% In addition to classes normally used for documents, the class also can be used for
+% documenting \latexe or \latex3 packages and classes.
+%
 % \item [Style] Enable the use of a fully featured key value interface for documenting
 %   the code.
 % \item [Tools] Provide a series of tools to create new documents, formatting
@@ -310,9 +410,9 @@ See http://www.latex-project.org/lppl.txt
 % |\OnlyDescription| until after the |doc| package has been read. The
 % simplest way is to use |\AtBeginDocument|. Thus you could put the
 % following in your |phddoc.cfg|.
-%\begin{verbatim}
+%\begin{Verbatim}
 % \AtBeginDocument{\OnlyDescription}
-%\end{verbatim}
+%\end{Verbatim}
 %
 %
 % If the full source listing |sources2e.tex| is processed, then an index
@@ -327,10 +427,10 @@ See http://www.latex-project.org/lppl.txt
 % Conversely, if you really want to read the source listings in detail,
 % you will want to have an index. Again the index commands provided by
 % the doc package may be used, but their execution must be delayed.
-%\begin{verbatim}
+%\begin{Verbatim}
 % \AtBeginDocument{\CodelineIndex\EnableCrossrefs}
 % \AtEndDocument{\PrintIndex}
-%\end{verbatim}
+%\end{Verbatim}
 %
 % The |doc| package writes index files to be sorted using MakeIndex with
 % the |gind| style, so one would then use a command such as
@@ -355,96 +455,238 @@ See http://www.latex-project.org/lppl.txt
 % \includeonly{ltvers,ltboxes}
 %\end{verbatim}
 %
-% \StopEventually{}
+
 %
+% \end{documentation}
+% \StopEventually{}
+% \begin{implementation}
 % \chapter{Implementation Code}
 % \section{Options}                       
 %
+%    
 %    \begin{macrocode}
 %<*class>
+%    \end{macrocode}
+%    \begin{macrocode}
+
+%\RequirePackage{underscore}
+
+\ExplSyntaxOn
+\cs_gset:Npn \l_phd_version{1.00}
+\ExplSyntaxOff
+%    \end{macrocode}
+% \ExplSyntaxOn
+% \makeatletter
+% \l_phd_version
+% \makeatother
+%
+% \ExplSyntaxOff
+% \begin{macro}{\g_@@_macrocode_colorize_bool}
+%    Boolean to switch off the colorizing of code appearing within
+%    a macrocode environment.
+%
+% Define the prefix of the module
+%    \begin{macrocode}
+%<@@=phdcl>
+%    \end{macrocode}
+%    \begin{macrocode}
+\ExplSyntaxOn
+\bool_new:N \g_@@_macrocode_colorize_bool
+\bool_new:N \g_@@_book_bool
+\bool_new:N \g_@@_article_bool
+\bool_new:N \g_@@_report_bool
+\bool_new:N \g_@@_scrbook_bool
+\bool_new:N \g_@@_scrartcl_bool
+\bool_new:N \g_@@_scrreprt_bool
+\bool_new:N \g_@@_masterthesis_bool
+\bool_new:N \g_@@_ldoc_bool
+\bool_new:N \g_@@_ldociii_bool
+\ExplSyntaxOff
+%    \end{macrocode}
+
+%    \begin{macrocode}
+\ExplSyntaxOn
+\bool_if:NTF \g_@@_macrocode_colorize_bool 
+  {\bool_gset_true:N \phdd_code_colorize_bool}
+  {\bool_gset_false:N \phdd_code_colorize_bool}
+%    \end{macrocode}
+% \end{macro}
+%
+% \subsection{Geometry parameters}
+% 
+%    \begin{macrocode}
 \DeclareOption{a5paper}{\@latexerr{Option not supported}%
    {}}
-\newif\if@book
-\newif\if@article
-\newif\if@report
-\newif\if@scrbook
-\newif\if@scrartcl
-\newif\if@scrreprt
-\newif\if@masterthesis
+   
+\DeclareOption { full }
+  {
+    \bool_gset_true:N \g_phdd_typeset_documentation_bool
+    \bool_gset_true:N \g_phdd_typeset_implementation_bool
+  }
+\DeclareOption { onlydoc }
+  {
+    \bool_gset_true:N \g_phdd_typeset_documentation_bool
+    \bool_gset_false:N \g_phdd_typeset_implementation_bool
+  }   
+\DeclareOption{colorize}
+  {\bool_gset_true:N \phdd_code_colorize_bool}
+%    \end{macrocode}     
+%    \begin{macrocode}
+\DeclareOption { check }
+  { \bool_gset_true:N \g_@@_checkfunc_bool }
+\DeclareOption { nocheck }
+  { \bool_gset_false:N \g_@@_checkfunc_bool }
+%    \end{macrocode}
+%
+%    \begin{macrocode}
+\DeclareOption { checktest }
+  { \bool_gset_true:N \g_@@_checktest_bool }
+\DeclareOption { nochecktest }
+  { \bool_gset_false:N \g_@@_checktest_bool }
+%    \end{macrocode}
+%
+%    \begin{macrocode}
+\DeclareOption { kernel }
+  { \bool_gset_true:N \g_@@_kernel_bool }
+\DeclareOption { stdmodule }
+  { \bool_gset_false:N \g_@@_kernel_bool }
+%    \end{macrocode}
+%
+%    \begin{macrocode}
+\DeclareOption { cm-default }
+  { \bool_gset_false:N \g_@@_lmodern_bool }
+\DeclareOption { lm-default }
+  { \bool_gset_true:N \g_@@_lmodern_bool }
+%    \end{macrocode}
+%
+%    \begin{macrocode}
+\DeclareOption { cs-break-off }
+  { \bool_gset_false:N \g_@@_cs_break_bool }
+\DeclareOption { cs-break-nohyphen }
+  { \PassOptionsToPackage{nohyphen}{underscore} }
+%    \end{macrocode}  
 
-\DeclareOption{article}{\@articletrue} 
-\DeclareOption{book}{\@booktrue} 
-\DeclareOption{report}{\@reporttrue}
-\DeclareOption{scrbook}{\@scrbooktrue}
-\DeclareOption{scrartcl}{\@scrartcltrue}
-\DeclareOption{scrreprt}{\@scrreprttrue}
-\DeclareOption{masterthesis}{\@masterthesis}
+%    \begin{macrocode}
+\tl_new:N \g_@@_doctype_tl
+\DeclareOption {book}
+  {\tl_gput_right:Nn \g_@@_doctype_tl{book} }
+%    \end{macrocode}
+
+%    \begin{macrocode}
+\DeclareOption {scrbook}
+  {\tl_gput_right:Nn \g_@@_doctype_tl{book} }
+%    \end{macrocode}
+
+%    \begin{macrocode}
+\DeclareOption* { \PassOptionsToClass { \CurrentOption } { book } }
+\ExecuteOptions { full, kernel, nocheck, nochecktest, lm-default }
+\PassOptionsToClass { a4paper } { book }
 
 %    \end{macrocode}
 %
 %    \begin{macrocode}
-\DeclareOption*{%
-    \PassOptionsToClass  {\CurrentOption}{book}}
+
+
+  
 %    \end{macrocode}
 %
 % \section{Configuration}
-% Input a local configuration file, if it exists.
+%
+% Input a local configuration file, if it exists, with a message to the
+% console that this has happened. Since we distribute a \file{.cfg} file
+% with the class, this should usually always be true. Therefore, check
+% for \cs{ExplMakeTitle} (defined in \enquote{our} \file{.cfg} file) and
+% only output the informational message if it's not found.
+%
+% 
+%
 %    \begin{macrocode}
-\InputIfFileExists{phddoc.cfg}
-           {\typeout{*************************************^^J%
-                     * Local config file phddoc.cfg used^^J%
-                     *************************************}}
-           {}
+\ExplSyntaxOn
+\msg_new:nnn { !@@ } { input-cfg }
+  { Local~config~file~!@@.cfg~loaded. }
+\file_if_exist:nTF {!@@.cfg}
+  {
+    \file_input:n {!@@.cfg}
+  }
+  { \msg_info:nn { !@@ } { input-cfg }  }
+  {}
+\ExplSyntaxOff
+
+
 %    \end{macrocode}
 %    
 %
+%    \begin{macrocode}
+\ExplSyntaxOn  
+\str_case_e:nnTF { \g_@@_doctype_tl }  
+   { 
+     { book     }    { 
+                       %\LoadClass{book}          
+                       \bool_gset_true:N \g_@@_book_bool
+                       
+                     }           
+     { article  }    { 
+                       %\LoadClass{article}       
+                       \bool_gset_true:N \g_@@_article_bool
+                     }      
+     { report        } { 
+     								%\LoadClass{report}      
+     								\bool_gset_true:N \g_@@_report_bool
+     							 }
+     { scrbook       } { 
+                         %\LoadClass{scrbook} 
+                         \KOMAoptions{twoside = false}    
+                         \bool_gset_true:N \g_@@_scrbook_bool
+                       }
+     { scrartcl      } {                         
+                         %\LoadClass{scrartcl}
+                         \bool_gset_true:N \g_@@_scrartcl_bool
+                       } 
+     { l3doc         } { %\LoadClass{l3doc}       
+                       }
+     { masterthesis  } {                         }
+     { tufte         } {                         }
+     { ltxdoc        } {                         }
+     { l3doc         } {                         }
+     { memoir        } { %\LoadClass{memoir}      
+                                                }
+   }
+   {                                             }
+   { }   
+                        
+\ExplSyntaxOff   
+%    \end{macrocode}
 % \section{Option Processing}
 %
 %    \begin{macrocode}
+\ExplSyntaxOn
 \ProcessOptions
+%\ProcessKeysPackageOptions
+\LoadClass{\g_@@_doctype_tl}
+\ExplSyntaxOff
+
 %    \end{macrocode}
 %
 % \section{Loading book and doc}
 %
-% The original |phddoc| uses the article class. For longer documentation it is preferable to use
-% the book. This means we might get an error on the production of a title, which we will fix very soon.
-%    \begin{macrocode}
-\if@book
-  \LoadClass{book}
-    \else
-      \if@article
-        \LoadClass{article}
-        \cxset{section number prefix=,}
-        \else  
-          \if@report
-            \LoadClass{report}   
-          \else
-             \if@scrbook
-             \LoadClass{scrbook}
-             \else
-             \if@scrartcl
-                 %\cxset{section number prefix=,}
-                 \LoadClass{scrartcl}   
-                 \else
-                 \if@scrreprt
-                 \LoadClass{scrreprt}
-              \fi   
-           \fi  
-      \fi
-    \fi  
-  \fi
-\fi  
-%    \end{macrocode}
+% The original |ltxdoc| uses the article class. For longer documentation it is preferable to use
+% the book, so for the \docClass{phddoc} class I have opted to default it to book.  
+% 
+
+%
 %
 %    \begin{macrocode}
+% hypdoc is loaded with the phd-packagemanager so that
+% the right order for packages and patches can be provided
 \RequirePackage{doc}
-\RequirePackage{expl3}
 \RequirePackage{phd}
 \RequirePackage{phd-pkgmanager}
 \sethyperref
-\RequirePackage{phd-documentation}
+\RequirePackage{phd-documentation} %modifies doc as necessary
 \RequirePackage{phd-colorpalette}
 \RequirePackage{phd-runningheads}
+\RequirePackage{phd-toc}
+
 %    \end{macrocode}
 %
 % Make \verb+|+ be a `short verb' character, but not in the document
@@ -459,10 +701,10 @@ See http://www.latex-project.org/lppl.txt
 % \changes{v2.0p}{1995/11/02}{Add font substitutions}
 % \changes{v2.0t}{1999/04/17}{Replaced octal number, CAR}
 %    \begin{macrocode}
-\DeclareFontShape{OT1}{cmtt}{bx}{n}{<-> ssub * cmtt/m/n}{}
-\DeclareFontFamily{OMS}{cmtt}{\skewchar\font 48}  % '60
-\DeclareFontShape{OMS}{cmtt}{m}{n}{<-> ssub * cmsy/m/n}{}
-\DeclareFontShape{OMS}{cmtt}{bx}{n}{<-> ssub * cmsy/b/n}{}
+%\DeclareFontShape{OT1}{cmtt}{bx}{n}{<-> ssub * cmtt/m/n}{}
+%\DeclareFontFamily{OMS}{cmtt}{\skewchar\font 48}  % '60
+%\DeclareFontShape{OMS}{cmtt}{m}{n}{<-> ssub * cmsy/m/n}{}
+%\DeclareFontShape{OMS}{cmtt}{bx}{n}{<-> ssub * cmsy/b/n}{}
 %    \end{macrocode}
 % This substitution is in the standard fd file, but not silent.
 %    \begin{macrocode}
@@ -479,7 +721,7 @@ See http://www.latex-project.org/lppl.txt
 % 72 columns of code may appear in a |macrocode| environment.
 % \changes{v2.0c}{1994/03/15}{Set \cs{textwidth}.}
 %    \begin{macrocode}
-\setlength{\textwidth}{355pt}
+%\setlength{\textwidth}{375pt}
 %    \end{macrocode}
 %
 % Increase the marginpar width slightly, for long command names.
@@ -489,9 +731,9 @@ See http://www.latex-project.org/lppl.txt
 % \changes{v2.0q}{1995/11/28}
 %      {Increase \cs{marginparwidth} and page margin.}
 %    \begin{macrocode}
-\addtolength\marginparwidth{30pt}
-\addtolength\oddsidemargin{20pt}
-\addtolength\evensidemargin{20pt}
+%\addtolength\marginparwidth{40pt}
+%\addtolength\oddsidemargin{40pt}
+%\addtolength\evensidemargin{40pt}
 %    \end{macrocode}
 %
 %
@@ -514,12 +756,15 @@ See http://www.latex-project.org/lppl.txt
 %
 % \begin{macro}{\cmd}
 % \begin{macro}{\cs}
-% \changes{v2.0d}{1994/03/17}{Add \cs{cs}}
 %    \begin{macrocode}
 \def\cmd#1{\cs{\expandafter\cmd@to@cs\string#1}}
 \def\cmd@to@cs#1#2{\char\number`#2\relax}
+
+\DeclareRobustCommand\cls{\textcolor{thered}}
 %\newcommand\cs[1]{\color{blue}{\texttt{\char`\ #1}}}
+
 %    \end{macrocode}
+% \cls{phddoc}
 % \end{macro}
 % \end{macro}
 %
@@ -549,13 +794,11 @@ See http://www.latex-project.org/lppl.txt
 %    \end{macrocode}
 % \end{macro}
 %
-%
-
-%
 % \section{DocInclude}
 %
 %    \begin{macrocode}
-\@addtoreset{CodelineNo}{part}
+%\@addtoreset{CodelineNo}{part}
+\@addtoreset{CodelineNo}{chapter}
 %    \end{macrocode}
 %
 % \begin{macro}{\DocInclude}
@@ -567,8 +810,11 @@ See http://www.latex-project.org/lppl.txt
 %    \begin{macrocode}
 \def\partname{File}
 %    \end{macrocode}
-%
+% \end{macro}
 %    \begin{macrocode}
+\def\task#1#2{}
+\endinput
+
 \newcommand*{\DocInclude}[1]{%
   \relax
   \clearpage
@@ -609,7 +855,8 @@ See http://www.latex-project.org/lppl.txt
 \@writeckpt{#1}\if@filesw \immediate\closeout\@partaux \fi
 \else\@nameuse{cp@#1}\fi\let\@auxout\@mainaux}
 %    \end{macrocode}
-%
+
+% \begin{macro}{\codeline@wrindex}
 %    \begin{macrocode}
 \gdef\codeline@wrindex#1{\if@filesw
         \immediate\write\@indexfile
@@ -668,35 +915,15 @@ See http://www.latex-project.org/lppl.txt
  \let\@evenfoot\@oddfoot}%
 %    \end{macrocode}
 % \end{macro}
-% \begin{environment}{ddangernote}\end{environment}
-% \begin{ddanger}
-%   Use the double danger bend if there is something which could cause
-%   serious problems when used in a wrong way. Better the normal user
-%   does not know about such things.
-% \end{ddanger}
-%    \begin{macrocode}
-\ExplSyntaxOn
-\newenvironment {ddangernote}
-  {
-    \begin{trivlist}\item[]\noindent
-    \begingroup\hangindent=3.5pc\hangafter=-2
-    \cs_set:Npn \par{\endgraf\endgroup}
-    \hbox to0pt{\hskip-\hangindent\dbend\kern2pt\dbend\hfill}\ignorespaces
-  }{
-      \par\end{trivlist}
-  }
-\ExplSyntaxOff  
-%    \end{macrocode}
-% 
-% \begin{ddangernote}
-% This is a double bend danger sign from \pkg{manfnt}\footcite{manfnt}
-% \end{ddangernote}
-%
 %
 %    \begin{macrocode}
 \def\task#1#2{}
+
 %</class>
 %    \end{macrocode}
-% \Finale
+% \end{implementation}
 %
+% \PrintIndex
+% ^^A\Finale
+
 \endinput

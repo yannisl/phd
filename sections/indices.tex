@@ -1,4 +1,17 @@
 \let\bs\textbackslash
+\def\s{\thinspace}
+\newcommand{\sitem}{\hspace*{20pt}}
+\newcommand{\ssitem}{\hspace*{30pt}}
+\newenvironment{iexample}{\begin{center}
+   \begin{tabular}[t]{@{}ll|@{\hspace{.2em}}}}{\end{tabbing}\end{minipage}
+   \end{center}}
+\newcommand{\sindex}{\end{tabular}\hspace{.3em}\begin{minipage}[t]{\textwidth}
+   \begin{tabbing}}
+\newcommand{\tindex}{\end{tabular}\hspace{1em}\begin{minipage}[t]{\textwidth}
+   \begin{tabbing}}
+\newcommand{\hdx}[1]{\multicolumn{1}{c|}{\sl #1\/}}
+\newcommand{\hdxrx}[1]{\multicolumn{1}{c}{\sl #1\/}}
+
 \parskip1.5pt 
 
 
@@ -33,7 +46,7 @@ Of things to come at large. \par
         
 \parindent1em      \lettrine{T}{he} first English Language index, appeared in Christopher Marlowe's \textit{Hero and Leander} in 1593. At that period, as often as not, by an ``index to a book'' was meant what we should now call a table of contents. Among the first indexes---in the modern sense---to a book in the English language was one in Plutarch's Parallel Lives, in Sir Thomas North's 1595 translation\footnote{Borko, Harold \& Bernier, Charles L. (1978). \textit{Indexing Concepts and Methods}, ISBN 0-12-118660-1.}.  
 
-A section entitled ``An Alphabetical Table of the most material contents of the whole book'' may be found in Henry Scobell's Acts and Ordinances of Parliament of 1658. This section comes after ``An index of the general titles comprised in the ensuing Table''. Both of these indexes predate the index to Alexander Cruden's Concordance (1737) see Farrows\footcite{farrow96}, which is erroneously held to be the earliest index found in an English book.
+A section entitled \enquote{An Alphabetical Table of the most material contents of the whole book} may be found in Henry Scobell's Acts and Ordinances of Parliament of 1658. This section comes after ``An index of the general titles comprised in the ensuing Table''. Both of these indexes predate the index to Alexander Cruden's Concordance (1737) see Farrows\footcite{farrow96}, which is erroneously held to be the earliest index found in an English book.
 
       \end{multicols}
    \end{rightcolumn}
@@ -92,10 +105,9 @@ If the word is to be printed in bold, we use
 \end{document}
 \end{teX}
 
-When the input file is proceesed with one of the LaTeX engines the \docAuxCommand{index} command
+When the input file is proceesed with one of the \latex engines the \docAuxCommand{index} command
 writes an appropriate index with the current page number, to a special file. The file has the same
-name as the \latex input file, but with the extension (|.idx|). This file can them be processed with the |makeindex|
-program by typing in the command line:
+name as the \latex input file, but with the extension (|.idx|). This file can them be processed with the |makeindex| program by typing in the command line:
 
 \begin{minted}{bash}
 makeindex filename
@@ -150,9 +162,9 @@ page range in the index for the word "convex".
 Subindices can be produced using an exclamation mark. If we want the word `Zeus'
 to appear in the category of Greek which is in the category of Gods, we will write:
 
-\begin{sverbatim}
+\begin{teX}
 \index{Gods!Greek!Zeus}
-\end{sverbatim}
+\end{teX}
 
 The actual symbol used will depend on the |.ist| file used when the file is compiled. For example in the |ltxdoc| and \docClass{phddoc} classes this is redefined as |>| and the above should be written as:
 
@@ -235,8 +247,14 @@ This manual, was build using a large |ltxdoc| class and these problems appeared 
 
 
 
-
-
+\long\def\storyi{
+Earlier we described the makeidx package an the \cs{makeindex} command that are used
+to index LaTeX documents.
+In this chapter we describe in more detail the makeindex program developed by Pehong Chen.
+The program consists of various parts, including tuples for input and output formatting.
+Its relation to \latex is analyzed concluding with the development of a complicated
+.ist file for the generation of indices.
+}
 \chapter{The makeindex program}
 
 The makeindex program was developed by Pehong Chen and Michael Harrison\footcite{chen01} in the eighties and is still used by \latexe. It is a remarkable, flexible program, found on most distributions. It is also used in GNU EMACS. 
@@ -265,16 +283,247 @@ S/No & Specifier &Attribute &Default & Meaning\\
 
 \begin{description}
 
+\item[page range] The two range delimiters \verb|range_open| and \verb|range_close| are
+used with the \verb|encap| operator.
+When \verb|range_open| immediately follows \verb|encap|
+(i.e., \verb#\index{...|(...}#),
+it tells the index processor that an explicit range is starting.
+Conversely \verb|range_close| signals the closing of a range.
+In our design, three or more successive page numbers are abbreviated as
+a range implicitly.  This {\it implicit\/} range formation can be turned
+off if an indexed term represents logically distinct concepts in different
+pages.  When the implicit range is disabled, {\it explicit\/} page ranges
+can be enforced by using the two range delimiters
+\verb|range_open| and \verb|range_close|.
+Therefore, it is possible to index an entire section or a large piece
+of text related to a certain concept without having to insert an index
+command in every single page.
+
+\item [quote] The \verb|quote| operator is used to escape symbols.
+Thus \verb|\index{foo"@goo}| means a sort key of \verb|foo@goo| 
+rather than a sort key of \verb|foo"| and an actual key of \verb|goo|.
+As an exception, \verb|quote|, when preceded by \verb|escape| (i.e.
+\verb|\index{...\"...}|), does not escape its succeeding letter.
+This special case is included because \verb|\"| is the umlaut
+command in {\TeX}.  Requiring \verb|quote| itself to be quoted
+in this case (i.e. \verb|\""|) is feasible but somewhat awkward;
+\verb|quote| and \verb|escape| must be distinct.
+
 \item[composite page delimiter] A page number can be a composite of one or more fields separated by a certain delimiter bound to a \textit{page\_compositor}  e.g. II-13 for page 13 of Chapter II. This attribute allows the lexical analyzer of the makeindex program to seprate these fields, making the sorting of page numbers easier.
 \end{description}
 
 
 \section{Output format}
 
+Table~\ref{tbl:outputformat} summarizes the output style parameters.  Again, it is a list
+of \verb|<|{\it specifier\/}, {\it attribute\/}\verb|>| pairs.
+In the default column, `\verb|\n|' and `\verb|\t|' denote a new line
+and a tab, respectively.  These parameters can be further divided into
+the following groups:
+
+\begin{description}
+\item[Context].  Together, \verb|preamble| and \verb|postamble| 
+	define the context in which the index is to be formatted.
+
+\item[Starting Page].  The starting page number can either be supplied
+	by the user or retrieved automatically from the document transcript.
+	In either case, this number can be enclosed with \verb|setpage_prefix|
+	and \verb|setpage_suffix| to yield a page number initializing command.
+
+\item[New Group/Letter].  The string bound to \verb|group_skip|
+denotes the extra vertical space needed when a group is started.
+For a group beginning with a different letter,
+the parameters \verb|lethead_prefix| and \verb|lethead_suffix| (both with
+a default nil string) denote the group heading.
+The flag \verb|lethead_flag| has a default value of 0, which
+means other than \verb|group_skip| nothing else will be inserted before
+the group.
+On the other hand, if this flag is positive, the strings bound
+to \verb|lethead_prefix| and \verb|lethead_suffix| will be inserted with
+an instance of the new letter in uppercase in between.  Similarly,
+a lowercase letter will be inserted if the flag is negative.
+
+\item[Entry Separators].  This group includes everything with the
+\verb|item_| prefix.  First, \verb|item_|$i$
+denotes the command and indentation to be inserted when
+a key is started from a level greater than or equal to $i$.
+Second, \verb|item_|$ij$ has a similar meaning, but with
+$i = j-1$.  Finally, the two \verb|item_x|$j$'s
+are included to handle the situation where the parent level has no
+page numbers.  Some styles require cases like these to be
+different from those with page numbers.
+
+Table~\ref{tbl:outputformat} depicts a system that supports three levels of
+subindexing.  In general, suppose $n$ is the number of index
+levels supported, there will be $n$ \verb|item_|$i$'s 
+($0 \leq i \leq n-1$), $(n-1)$ \verb|item_|$ij$'s
+($1 \leq j \leq n-1,  i = j-1$), and
+$(n-1)$ \verb|item_x|$j$'s ($1 \leq j \leq n-1$).
+
+\item[Page Delimiters]  Each level has a key/page delimiter
+that defines what is to be inserted between a key and its first
+page number.  The inter-page delimiter is specified by \verb|delim_n|,
+while the range designator is given by \verb|delim_r|.
+
+\item[Page Encapsulator]  The attributes of
+\verb|encap_prefix|, \verb|encap_infix|, and \verb|encap_suffix|
+form what is to be placed into the output
+ when an encapsulator is specified
+for a certain entry.  Suppose \verb|foo| is the specified encapsulator
+and \verb|N| is the page number, the output sequence is
+\begin{verbatim}
+	     encap_prefix  foo  encap_infix  N  encap_suffix
+\end{verbatim}
+
+\item[Page Precedence]  Five different types of numerals are
+supported by most systems for page numbering.  These are
+lowercase roman (\verb|r|), numeric or arabic (\verb|n|),
+lowercase alphabetic (\verb|a|), uppercase roman (\verb|R|),
+and uppercase alphabetic (\verb|A|).  The string bound to
+\verb|page_precedence| (default \verb|"rnaRA"|)
+specifies their order.
+
+\item[Line Wrapping]  In the output index file, 
+the merged list of page numbers	can be wrapped in multiple lines,
+if it is longer than \verb|line_max|.  The newly wrapped
+line is indented by \verb|indent_space| whose length is
+\verb|indent_length|.  This artificial line wrapping does not
+make any difference in formatting, but does provide increased
+readability for the pre-formatted final index.
+This feature may seem somewhat trivial at first glance, but if no
+formatters are involved whatsoever, the readability of the
+verbatim output index is important.
+
+\end{description}
+
+\begin{table}
+\begin{center}
+{\small
+\begin{tabular}{l|c|l|l}
+\hline
+\hdx{specifier} & \hdx{attribute} & \hdx{default} & \hdxrx{meaning} \\
+\hline\hline
+\verb|preamble| &  {\it string\/} & \verb|"\\begin{theindex}\n"| &
+index preamble\\
+\hline
+\verb|postamble| &  {\it string\/} & \verb|"\n\n\\end{theindex}\n"| &
+index postamble\\
+\hline
+\verb|setpage_prefix| &  {\it string\/} & \verb|"\n  \\setcounter{page}{"| &
+page setting command prefix\\
+\hline
+\verb|setpage_suffix| &  {\it string\/} & \verb|"}\n"| &
+page setting command suffix\\
+\hline
+\verb|group_skip| &  {\it string\/} & \verb|"\n\n  \\indexspace\n"| &
+intergroup vertical space\\
+\hline
+\verb|lethead_prefix| &  {\it string\/} & \verb|""| &
+new letter heading prefix\\
+\hline
+\verb|lethead_suffix| &  {\it string\/} & \verb|""| &
+new letter heading suffix\\
+\hline
+\verb|lethead_flag| &  {\it number\/} & \verb|0| &
+flag designating new letter\\
+\hline
+\verb|item_0| &  {\it string\/} & \verb|"\n  \\item "| &
+level 0 item separator\\
+\hline
+\verb|item_1| &  {\it string\/} & \verb|"\n    \\subitem "| &
+level 1 item separator\\
+\hline
+\verb|item_2| &  {\it string\/} & \verb|"\n      \\subsubitem "| &
+level 2 item separator\\
+\hline
+\verb|item_01| &  {\it string\/} & \verb|"\n    \\subitem "| &
+levels 0/1 separator\\
+\hline
+\verb|item_x1| &  {\it string\/} & \verb|"\n    \\subitem "| &
+levels x/1 separator\\
+\hline
+\verb|item_12| &  {\it string\/} & \verb|"\n      \\subsubitem "| &
+levels 1/2 separator\\
+\hline
+\verb|item_x2| &  {\it string\/} & \verb|"\n      \\subsubitem "| &
+levels x/2 separator\\
+\hline
+\verb|delim_0| &  {\it string\/} & \verb|", "| &
+level 0 key/page delimiter\\
+\hline
+\verb|delim_1| &  {\it string\/} & \verb|", "| &
+level 1 key/page delimiter\\
+\hline
+\verb|delim_2| &  {\it string\/} & \verb|", "| &
+level 2 key/page delimiter\\
+\hline
+\verb|delim_n| &  {\it string\/} & \verb|", "| &
+inter page number delimiter\\
+\hline
+\verb|delim_r| &  {\it string\/} & \verb|"--"| &
+page range designator\\
+\hline
+\verb|encap_prefix| &  {\it string\/} & \verb|"\\"| &
+page encapsulator prefix\\
+\hline
+\verb|encap_infix| &  {\it string\/} & \verb|"{"| &
+page encapsulator infix\\
+\hline
+\verb|encap_suffix| &  {\it string\/} & \verb|"}".| &
+page encapsulator suffix\\
+\hline
+\verb|page_precedence| &  {\it string\/} & \verb|"rnaRA"| &
+page type precedence\\
+\hline
+\verb|line_max| &  {\it number\/} & \verb|72| &
+maximum line length\\
+\hline
+\verb|indent_space| &  {\it string\/} & \verb|"\t\t"| &
+indentation for wrapped lines\\
+\hline
+\verb|indent_length| &  {\it number\/} & \verb|16| &
+length of indentation\\
+\hline
+\end{tabular}
+}
+\end{center}
+\caption{Output style parameters.}
+\label{tbl:outputformat}
+\end{table}
+
+\begin{filecontents}{source2e.ist}
+actual '='
+quote '!'
+level '>'
+preamble
+"\n \\begin{theindex} \n \\makeatletter\\scan@allowedfalse\n"
+postamble
+"\n\n \\end{theindex}\n"
+item_x1   "\\efill \n \\subitem "
+item_x2   "\\efill \n \\subsubitem "
+delim_0   "\\pfill "
+delim_1   "\\pfill "
+delim_2   "\\pfill "
+% The next lines will produce some warnings when
+% running Makeindex as they try to cover two different
+% versions of the program:
+lethead_prefix   "{\\bfseries\\hfil "
+lethead_suffix   "\\hfil}\\nopagebreak\n"
+lethead_flag       1
+heading_prefix   "{\\bfseries\\hfil "
+heading_suffix   "\\hfil}\\nopagebreak\n"
+headings_flag       1
+
+% and just for source2e:
+% Remove R so I is treated in sequence I J K not I II III
+page_precedence "rnaA"
+\end{filecontents}
+
+\section{Processing}
 The output format is governed by an index style \docExtension{.ist}. Writing new ones is a black art.
 
 The file \docFile{gind.ist} is shown below
-\begin{teXXX}
+\begin{teX}
 actual '='
 encap '|'
 level '>'
@@ -297,24 +546,27 @@ delim_2   "\\pfill "
 heading_prefix   "{\\bfseries\\hfil "
 heading_suffix   "\\hfil}\\nopagebreak\n"
 headings_flag       1
+% Remove R so I is treated in sequence I J K not I II III
+page_precedence "rnaA"
 %%
 %%
 %% End of file `gind.ist'.
-\end{teXXX}
+
+\end{teX}
 
 
 \section{Customization}\index{Indexing>customizing}
 
 When creating an index with \pkg{makeindex} one can create a \docFile{sample.ist} file that can be used together with the |makeidx| program to customize the way the index will look.
 
-\begin{verbatim}
+\begin{teX}
 heading_prefix "{\\bfseries\\hfil "
 heading_suffix "\\hfil}\\nopagebreak\n"
 headings_flag 1
 delim_0 "\\dotfill"
 delim_1 "\\dotfill"
 delim_2 "\\dotfill"
-\end{verbatim}
+\end{teX}
 
 This will write the first alphabet symbol in bold font, and uses dots as delimiters. This file is generally  used jointly with \texttt{makeindex} using
 

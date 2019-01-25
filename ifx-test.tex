@@ -1,0 +1,341 @@
+\documentclass[book]{phddoc}
+\usepackage{expl3}
+\usepackage{fontspec}
+\newfontfamily\panunicode{code2000.ttf}
+\usepackage{fancyvrb,xfancyvrb,marginnote,xcolor}
+
+\begin{document}
+%\makeatletter
+%\color{green700}\fbox{aaaa}\current@color tt
+%\makeatother
+
+\meaning\normalcolor
+
+
+\ExplSyntaxOn
+\tl_new:N \g_store_tl
+
+\cs_new:Npn \make_at_letter:
+ {
+  \char_set_catcode_letter:N @
+ }
+  
+\cs_new:Npn \make_at_other:
+ {
+  \char_set_catcode_letter:N @
+ }  
+ 
+\cs_new:Npn \make_other:n #1 
+  {
+ 		\char_set_catcode_other:N #1 \relax
+  } 
+  
+\make_at_letter:
+\begingroup
+\char_set_catcode_escape:N | 
+\char_set_catcode_group_begin:N [
+\char_set_catcode_group_end:N ] 
+\char_set_catcode_other:N\{
+\char_set_catcode_other:N\}
+\char_set_catcode_other:N\\
+
+|cs_gset:Npn|phd_xverbatim:n#1\end{zverbatim}
+            [|process_argument[#1]|end[zverbatim]]
+|endgroup
+
+
+\cs_set:Npn \zverbatim_aux: 
+   {
+     \bfseries
+     \let\do\make_other:n\dospecials
+     \obeylines \verbatimfont \@noligs
+     \hyphenchar\font\m@ne
+   }
+
+% just set some preliminaries with
+% |\@zverbatim|
+\cs_gset:Npn \zverbatim
+   {
+     \zverbatim_aux: 
+     \phd_xverbatim:n
+   }
+
+% Cannot do anything more at this time
+\cs_gset:Npn \endzverbatim {}
+
+% Process the argument
+\regex_const:Nn \c_braces_regexs { (\{|\})+ }
+\regex_const:Nn \c_comments_regexs 
+  {  
+    (\%\ *\%*[ a-zA-Z\ \\\*\_\:\;\.\!\"\`\'\#\&\-\^\(\)\|\d\=\+\,\@\}\{\[\]\/ ]*) }
+  
+
+\def\colorbraces#1{\fbox{\colorbr{#1}}} 
+ \edef\colorbr{\noexpand\color{green800}}
+ 
+\gdef\process_argument #1 {
+     \makeatletter
+    \tl_set:Nn\g_store_tl{#1}
+     % replace braces and put them in a box
+
+	
+    \regex_replace_all:NnN \c_braces_regexs
+     { \c{colorbraces}\cB{\1\cE}\c{color}\cB{.\cE}  }\g_store_tl   
+    
+    \meaning\g_store_tl\\
+    
+    \def\colorgreen{\color{green800}}
+    
+    \regex_replace_all:NnN \c_comments_regexs 
+      {\c{colorgreen}\1\c{normalcolor}}
+   \g_store_tl
+   
+    \meaning\g_store_tl\\
+   
+  
+  
+       
+%     \meaning\Bg_store_tl\\  
+   
+  
+
+   
+      
+%   \meaning\g_store_tl
+%    
+%   \regex_replace_all:nnN {\c{color}\cB{blue\cE}} 
+%      {\c{fbox}\cB{\cE}}\g_store_tl
+%   
+
+   
+  
+   \tl_use:N \g_store_tl
+}  
+
+\make_at_other:
+
+\ExplSyntaxOff
+
+
+% Output to test that everything is # working
+\begin{zverbatim}
+% Comments only \def\test{test}%
+ \def{\our} 
+\end{zverbatim}
+
+\end{document}
+
+\makeatletter
+
+The |\dospecials| macro is conventionally used by verbatim macros to alter the catcodes of the currently active
+characters. This was originally defined by Knuth in plainTeX and carried over to LaTeX by Lamport in
+ltxplain.dtx in source2e.
+
+
+\begin{Verbatim}
+% 11 chars
+\def\dospecials{\do\ \do\\\do\{\do\}\do\$\do\&\do\#\do\^\do\_\do\%\do\~}
+\end{Verbatim}
+
+\MakeShortVerb{\*}
+
+\MakeShortVerb{\"}
+
+\meaning\dospecials\\
+
+\add@special{\;}
+
+\ExplSyntaxOn
+\seq_set_split:Nnn {\do}\dospecials
+\meaning\dospecials
+
+Two sequences for dealing with special characters. The first is characters which may be
+active, the second longer list is for “special” characters more generally. Both lists are
+escaped so that for example bulk code assignments can be carried out. In both cases, the
+order is by ascii character code (as is done in for example |\ExplSyntaxOn|).
+
+Used to track which tokens will require special handling when working with verbatimlike
+material at the document level as they are not of categories hletteri (catcode 11) or
+hotheri (catcode 12). Each entry in the sequence consists of a single escaped token, for
+example |\\| for the backslash or |\{| for an opening brace. Escaped tokens should be added
+to the sequence when they are defined for general document use.
+
+\begin{Verbatim}
+ \seq_new:N \l_char_special_seq
+ 
+ \seq_set_split:Nnn \l_char_special_seq { }
+   { \ \" \# \$ \% \& \\ \^ \_ \{ \} \~ }
+
+ \seq_new:N \l_char_active_seq
+   \seq_set_split:Nnn \l_char_active_seq { }
+   { \" \$ \& \^ \_ \~ }
+\end{Verbatim}
+
+\ExplSyntaxOn
+\seq_map_inline:Nn \l_char_special_seq{\string #1}\\
+
+\seq_pop_right:NN \l_char_special_seq\l_tempa_seq
+
+\seq_map_inline:Nn \l_char_special_seq{\string #1}
+
+
+\end{document}
+\def\exmpl{\hrule\vspace*{10pt}}
+\lorem
+
+\begin{Verbatim}[curlyquotes=false,highlightlines={1,3-4},numbers=left,mathescape=true,fontfamily=panunicode,formatcom={\exmpl}]
+   "quoted text"
+   first line
+   second line
+   $a=b^2+3$
+   third line
+   fourth line
+\end{Verbatim}
+
+\end{document}
+
+%\ExplSyntaxOn
+%\makeatletter
+%\ttfamily
+%
+%\the\fontdimen2\font
+%\advance\@tempdimb-\fv_verb_tab_size_tl~sp 
+%
+%\fv_verb_tab_size_tl\\
+%
+%
+%\FancyVerbSpace
+%
+%\ExplSyntaxOff
+
+\fboxsep=15pt
+
+\begin{Verbatim*}[frame=lines,gobble=1,fontseries=b,fontfamily=tt,label={[Start of code]End of code},labelposition=all,showspaces=true,firstline=3,lastline=3,tabsize=3,vspace=30pt]
+ Line 1 \test test
+ Line 2 \test
+ Line 3 \test	\test	test		test		test
+ Line 4 \test 	\test
+ Line 5 \test
+ Line 6	\test
+\end{Verbatim*}
+
+\begin{Verbatim*}
+\test \test
+\end{Verbatim*}
+
+
+\def\b{something}
+
+\ExplSyntaxOn
+
+\cs_set:Npn \testmacro #1{
+\cs_set:Npx \a{something}
+  \if_meaning:w \a\b
+    TRUE
+  \else:
+    FALSE
+  \fi:  
+  
+}
+
+\testmacro{something}
+
+
+\begin{minipage}{0.3\textwidth}
+\cs_set:Npn \marginverb#1
+  {
+    \SaveVerb{danger}=Real #1=
+    \footnote{\UseVerb*{danger}}
+  }
+\marginverb{test}
+\end{minipage}
+
+\ExplSyntaxOff
+
+%% Check baseline stretch for auto
+\newenvironment{myexample}
+{\VerbatimEnvironment\begin{VerbatimOut}{test.vrb}} 
+{\end{VerbatimOut}
+
+\VerbatimInput[numbers=left,firstnumber=2,firstline=2,baselinestretch=1,showspaces,frame=single,label=\fbox{Example},labelposition=all,numbersep=2pt]{test.vrb}
+\input{test.vrb}
+} 
+
+\begin{myexample}
+first line
+second line
+third line
+fourth line
+\end{myexample}
+
+\NewVerbatimEnvironment{ExVerbatim}{Verbatim}{numbers=none}
+
+\makeatletter
+\begin{myexample}
+foo\newline\mbox{%
+\put(7,2){%
+\circle*{\strip@pt\normalbaselineskip}}}%
+\newline
+bar
+\end{myexample}
+\makeatother
+
+\newcommand\Example{%
+\VerbatimEnvironment
+\begin{VerbatimOut}{\jobname.vrb}}
+
+\def\endExample{%
+\end{VerbatimOut}
+{\centering \input{\jobname.vrb}}
+\VerbatimInput{\jobname.vrb}
+\input{\jobname.vrb}
+}
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+   Define Active
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\begin{Verbatim}[frame=single,numbers=left,numbersep=3pt]
+! A small "hello" program
+
+program hello
+  print *, "Hello World"
+\end{Verbatim}
+
+\fvset{frame=single,numbers=left,numbersep=3pt,curlyquotes}
+\begin{Verbatim}
+! A small "hello" program
+
+program hello
+  print *, `Hello World'
+\end{Verbatim}
+
+%
+%\def\ExclamationPoint{\char33}
+% \catcode`!=\active
+% 
+%\begin{Verbatim}[defineactive=\def!{\color{cyan}\itshape\ExclamationPoint}]
+%! A small "hello" program
+%
+%program hello
+%  print *, "Hello World"
+%\end{Verbatim}
+
+\begin{BVerbatim}[baseline=b,boxwidth=100pt,fontfamily=courier]
+! A small "hello" program
+
+Α α, Β β, Γ γ, Δ δ, Ε ε, Ζ ζ,
+\end{BVerbatim}
+\hfill
+\begin{enumerate}
+\item test
+\begin{LVerbatim}[baseline=b,boxwidth=100pt,fontfamily=panunicode]
+Α α, Β β, Γ γ, Δ δ, Ε ε, Ζ ζ, Η η, Θ θ,Α α, Β β, 
+Γ γ, Δ δ, Ε ε, Ζ ζ, Η η, Θ θ, 
+\end{LVerbatim}
+\end{enumerate}
+\end{document}

@@ -1,0 +1,47 @@
+local strings = strings or {}
+
+strings.tamil = {
+  abstract          = "",
+  partname          = "",
+  chaptername       = "",
+  sectionname       = "",
+  subsectionname    = "",
+  subsubsectionname = "",
+  paragraphname     = "",
+  appendixname      = "", 
+  bibliographyname  = "",
+  indexname         = "",
+  glossaryname      = "",
+  tablename         = "",
+  figurename        = "", 
+  pagename          = "",
+  seename           = "",
+  equationname      = "",
+  contentsname      = "",
+  prefacename       = "",
+  listfigurename    = "",
+  listtablename     = "",
+  alsoname          = "",
+  proofname         = "",
+  refname           = "",
+  leftname          = "",
+  rightname         = "",
+  bindingcorrectionname = "",
+  name              = "tamil",
+  months              = { -- as per gregorian calendar
+    "ஜனவரி",
+    "பிப்ரவரி",
+    "மார்ச்",
+    "ஏப்ரல்",
+    "மே",
+    "ஜூன்",
+    "ஜூலை",
+    "ஆகஸ்ட்",
+    "செப்டம்பர்",
+    "அக்டோபர்",
+    "நவம்பர்",
+    "டிசம்பர்",
+    }
+  }
+  
+  return strings

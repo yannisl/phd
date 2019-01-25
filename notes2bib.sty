@@ -1,0 +1,534 @@
+%%
+%% This is file `notes2bib.sty',
+%% generated with the docstrip utility.
+%%
+%% The original source files were:
+%%
+%% notes2bib.dtx  (with options: `package')
+%% ---------------------------------------------------------------
+%% notes2bib --- Integrating notes into the bibliography
+%% Maintained by Joseph Wright
+%% E-mail: joseph.wright@morningstar2.co.uk
+%% Released under the LaTeX Project Public License v1.3c or later
+%% See http://www.latex-project.org/lppl.txt
+%% ---------------------------------------------------------------
+%% 
+\RequirePackage{xparse}
+\ProvidesExplPackage
+  {notes2bib} {2013/07/11} {2.0k}
+  {Integrating notes into the bibliography}
+\RequirePackage{l3keys2e}
+\tl_new:N \c__notestobib_file_message_tl
+\tl_set:Nn \c__notestobib_file_message_tl {
+  \iow_char:N \% ~
+  This~is~an~auxiliary~file~used~by~the~'notes2bib'~package.
+    \iow_newline:
+  \iow_char:N \% ~
+  This~file~may~safely~be~deleted.
+    \iow_newline:
+  \iow_char:N \% ~
+  It~will~be~recreated~as~required.
+    \iow_newline:
+}
+\clist_new:N \g__notestobib_after_clist
+\clist_new:N \g__notestobib_before_clist
+\clist_new:N \g__notestobib_all_after_clist
+\clist_new:N \g__notestobib_all_before_clist
+\int_new:N \g__notestobib_note_int
+\tl_new:N \l__notestobib_presort_tl
+\tl_new:N \l__notestobib_sortkey_tl
+\clist_new:N \g__notestobib_previous_after_clist
+\clist_new:N \g__notestobib_previous_before_clist
+\int_new:N \g__notestobib_previous_notes_int
+\tl_new:N \g__notestobib_notes_tl
+\tl_new:N \l__notestobib_sortkey_field_tl
+\int_new:N \g__notestobib_total_notes_int
+\cs_new_nopar:Npn \__notestobib_cite:w { }
+\keys_define:nn { notes2bib } {
+  cite-function     .code:n      =
+    { \AtBeginDocument { \cs_set_eq:NN \__notestobib_cite:w #1 } }     ,
+  file-name            .tl_gset_x:N = \g__notestobib_filename_tl         ,
+  convert-endnotes     .choice:                                   ,
+  convert-endnotes
+    / false .code:n =
+    { \AtBeginDocument { \__notestobib_from_bibnote:n { endnote } } }  ,
+  convert-endnotes
+    / true .code:n  =
+    { \AtBeginDocument { \__notestobib_to_bibnote:n { endnote } } }    ,
+  convert-footnotes    .choice:                                   ,
+  convert-footnotes
+    / false .code:n =
+    { \AtBeginDocument { \__notestobib_from_bibnote:n { footnote } } } ,
+  convert-footnotes
+    / true .code:n =
+    { \AtBeginDocument { \__notestobib_to_bibnote:n { footnote } } }   ,
+  keyword-entry        .tl_set:N    = \l__notestobib_keyword_tl          ,
+  note-field           .tl_set:N    = \l__notestobib_note_field_tl       ,
+  note-name            .tl_set:N    = \l__notestobib_note_name_tl        ,
+  placement            .choice:                                   ,
+  placement
+    / after    .code:n      =
+    {
+      \cs_set_eq:NN \__notestobib_mark_note:n \__notestobib_mark_note_after:n
+      \tl_set_eq:NN \l__notestobib_presort_tl \l__notestobib_presort_after_tl
+      \tl_set_eq:NN \l__notestobib_sortkey_tl \l__notestobib_sortkey_after_tl
+    },
+  placement
+    / before    .code:n     =
+    {
+      \cs_set_eq:NN \__notestobib_mark_note:n \__notestobib_mark_note_before:n
+      \tl_set_eq:NN \l__notestobib_presort_tl \l__notestobib_presort_before_tl
+      \tl_set_eq:NN \l__notestobib_sortkey_tl \l__notestobib_sortkey_before_tl
+    },
+  placement
+    / mixed    .code:n      =
+    {
+      \cs_set_eq:NN \__notestobib_mark_note:n \__notestobib_mark_note_mixed:n
+      \tl_set_eq:NN \l__notestobib_presort_tl \l__notestobib_presort_mixed_tl
+      \tl_set_eq:NN \l__notestobib_sortkey_tl \l__notestobib_sortkey_mixed_tl
+    },
+  presort-after        .tl_set:N    = \l__notestobib_presort_after_tl    ,
+  presort-before       .tl_set:N    = \l__notestobib_presort_before_tl   ,
+  presort-mixed        .tl_set:N    = \l__notestobib_presort_mixed_tl    ,
+  record-type          .tl_set:N    = \l__notestobib_record_type_tl      ,
+  refsection-name      .tl_set:N    = \l__notestobib_refsection_name_tl  ,
+  refsection-separator .tl_set:N    = \l__notestobib_refsection_sep_tl   ,
+  sort-key-after       .tl_set:N    = \l__notestobib_sortkey_before_tl   ,
+  sort-key-before      .tl_set:N    = \l__notestobib_sortkey_after_tl    ,
+  sort-key-mixed       .tl_set:N    = \l__notestobib_sortkey_mixed_tl    ,
+  use-sort-key         .bool_set:N  = \l__notestobib_write_sortkey_bool  ,
+}
+\keys_set:nn { notes2bib } {
+  cite-function        = \cite              ,
+  file-name            = notes2bib-\jobname ,
+  keyword-entry        = note               ,
+  note-field           = note               ,
+  note-name            = Note               ,
+  presort-after        = mn                 ,
+  presort-before       = ml                 ,
+  presort-mixed        = mm                 ,
+  record-type          = misc               ,
+  refsection-name      = Refsection         ,
+  refsection-separator = -                  ,
+  sort-key-after       = zzz                ,
+  sort-key-before      = aaa                ,
+  use-sort-key         = true
+}
+\AtBeginDocument {
+  \@ifpackageloaded { biblatex }
+    {
+      \@ifpackagelater { biblatex } { 2011/01/08 }
+        {
+          \keys_set:nn { notes2bib }
+            { record-type = bibnote }
+          \DeclareBibliographyDriver { bibnote }
+            {
+              \usebibmacro { begentry }
+              \printfield  { note }
+              \setunit { \bibpagerefpunct }
+              \newblock
+              \usebibmacro { pageref }
+              \usebibmacro { finentry }
+            }
+        }
+        { }
+    }
+    { }
+  \keys_define:nn { notes2bib }
+    {
+      cite-function     .code:n      =
+        { \cs_set_eq:NN \__notestobib_cite:w #1 }                              ,
+      file-name .code:n =
+        { \msg_info:nnn { notes2bib } { preamble-only } { file-name } },
+      convert-endnotes / false .code:n =
+        { \__notestobib_from_bibnote:n { endnote } }                           ,
+      convert-endnotes / true .code:n  =
+        { \__notestobib_to_bibnote:n { endnote } }                             ,
+      convert-footnotes / false .code:n =
+        { \__notestobib_from_bibnote:n { footnote } }                          ,
+      convert-footnotes / true .code:n =
+        { \__notestobib_to_bibnote:n { footnote } }                            ,
+    }
+}
+\msg_new:nnn { notes2bib } { preamble-only }
+  { The~option~'#1'~can~only~be~used~in~the~preamble. }
+\cs_new_nopar:Npn \__notestobib_insert_refsection: { }
+\AtBeginDocument {
+  \@ifpackageloaded { biblatex }
+    {
+      \cs_set_nopar:Npn \__notestobib_insert_refsection:
+        {
+          \int_compare:nNnT { \value { refsection } } > { 0 }
+            {
+              \tl_use:N \l__notestobib_refsection_name_tl
+              \arabic { refsection }
+              \tl_use:N \l__notestobib_refsection_sep_tl
+            }
+        }
+    }
+    { }
+}
+\keys_define:nn { notes2bib } {
+  cite        .code:n =
+    {
+      \use:x
+        { \keys_set:nn { notes2bib } { cite-function = \exp_not:c {#1} } }
+    } ,
+  debug       .code:n = { }                                     ,
+  endnotes    .meta:n = { convert-footnotes = #1 }              ,
+  etex        .code:n = { }                                     ,
+  field       .meta:n = { note-field        = #1 }              ,
+  footnotes   .meta:n = { convert-footnotes = #1 }              ,
+  head        .meta:n = { placement         = before }          ,
+  keyhead     .meta:n = { sort-key-before   = #1 }              ,
+  keytail     .meta:n = { sort-key-after    = #1 }              ,
+  keynone     .meta:n = { sort-key-mixed    = #1 }              ,
+  keyword     .meta:n = { keyword-entry     = #1 }              ,
+  log         .meta:n = { }                                     ,
+  name        .meta:n = { note-name         = #1 }              ,
+  prefix      .meta:n = { file-name         = #1 \jobname }     ,
+  presorthead .meta:n = { presort-before    = #1 }              ,
+  presorttail .meta:n = { presort-after     = #1 }              ,
+  presortnone .meta:n = { presort-mixed     = #1 }              ,
+  record      .meta:n = { record-type       = #1 }              ,
+  sort        .choice:                                          ,
+  sort / head .meta:n = { placement         = before }          ,
+  sort / none .meta:n = { placement         = after }           ,
+  sort / tail .meta:n = { placement         = mixed }           ,
+  tail        .meta:n = { placement         = after }           ,
+  writekey    .meta:n = { use-sort-key      = #1 }
+}
+\cs_new_nopar:Npn \__notestobib_note_name: {
+  \__notestobib_insert_refsection:
+  \tl_use:N \l__notestobib_note_name_tl
+  \int_compare:nNnT \g__notestobib_previous_notes_int > \c_nine
+    { \int_compare:nNnT \g__notestobib_note_int < \c_ten { 0 } }
+  \int_to_arabic:n { \g__notestobib_note_int }
+}
+\cs_new_nopar:Npn \__notestobib_filesw: { }
+\cs_new:Npn \__notestobib_mark_note:n #1 { }
+\cs_generate_variant:Nn \__notestobib_mark_note:n { x }
+\cs_new_protected:Npn \__notestobib_mark_note_after:n #1 {
+  \int_gincr:N \g__notestobib_total_notes_int
+  \clist_gput_right:Nx \g__notestobib_after_clist {#1}
+  \__notestobib_mark_note_after_aux:n {#1}
+}
+\cs_new:Npn \__notestobib_mark_note_after_aux:n #1 { }
+\cs_new_protected:Npn \__notestobib_mark_note_before:n #1 {
+  \int_gincr:N \g__notestobib_total_notes_int
+  \clist_gput_right:Nx \g__notestobib_before_clist {#1}
+  \__notestobib_cite:w {#1}
+}
+\cs_new_protected:Npn \__notestobib_mark_note_mixed:n #1 {
+  \int_gincr:N \g__notestobib_total_notes_int
+  \__notestobib_cite:w {#1}
+}
+\cs_new:Npn \__notestobib_write_field:nn #1#2 {
+  \c_space_tl \c_space_tl #1 \c_space_tl = \c_space_tl {#2} ,
+  \iow_newline:
+}
+\cs_generate_variant:Nn \__notestobib_write_field:nn { V }
+\cs_new_protected_nopar:Npn \__notestobib_write_note:nn {
+  \if@filesw
+    \exp_after:wN \__notestobib_write_note_aux:nn
+  \else:
+    \exp_after:wN \use_none:nn
+  \fi:
+}
+\cs_new_protected:Npn \__notestobib_write_note_aux:nn #1#2 {
+  \tl_gput_right:Nx \g__notestobib_notes_tl
+    {
+      @ \l__notestobib_record_type_tl
+        {
+          #1 , \iow_newline:
+          \__notestobib_write_field:Vn \l__notestobib_note_field_tl { \exp_not:n {#2} }
+          \bool_if:NT \l__notestobib_write_sortkey_bool
+            {
+              \__notestobib_write_field:Vn \l__notestobib_sortkey_field_tl
+                { \l__notestobib_sortkey_tl #1 }
+            }
+          \__notestobib_write_field:nn { keywords } { \l__notestobib_keyword_tl }
+          \__notestobib_write_field:nn { presort } { \l__notestobib_presort_tl }
+        }
+      \iow_newline:
+      \iow_newline:
+    }
+}
+\cs_generate_variant:Nn \__notestobib_write_note:nn { x }
+\cs_new_protected_nopar:Npn \__notestobib_record_notes: {
+  \if@filesw
+    \exp_after:wN \__notestobib_flush_notes_aux:
+  \fi
+}
+\cs_new_protected_nopar:Npn \__notestobib_flush_notes_aux: {
+  \clist_if_empty:NF \g__notestobib_before_clist
+    {
+      \iow_now:Nx \@auxout
+        { \NotesBeforeCitations { \exp_not:V \g__notestobib_before_clist } }
+      \clist_gput_right:NV \g__notestobib_all_before_clist \g__notestobib_before_clist
+      \clist_gclear:N \g__notestobib_before_clist
+    }
+  \clist_if_empty:NF \g__notestobib_after_clist
+    {
+      \iow_now:Nx \@auxout
+        { \NotesAfterCitations { \exp_not:V \g__notestobib_after_clist } }
+      \exp_args:NV \nocite \g__notestobib_after_clist
+      \clist_gput_right:NV \g__notestobib_all_after_clist \g__notestobib_after_clist
+      \clist_gclear:N \g__notestobib_after_clist
+    }
+}
+\cs_new_protected_nopar:Npn \__notestobib_to_bibnote:n #1 {
+  \cs_set_eq:cN {#1}        \bibnote
+  \cs_set_eq:cN { #1 mark } \bibnotemark
+  \cs_set_eq:cN { #1 text } \bibnotetext
+}
+\cs_new_protected_nopar:Npn \__notestobib_from_bibnote:n #1 {
+  \cs_set_eq:cc {#1}        { __notestobib_ #1 :w }
+  \cs_set_eq:cc { #1 mark } { __notestobib_ #1 mark:w }
+  \cs_set_eq:cc { #1 text } { __notestobib_ #1 text:w }
+}
+\AtBeginDocument {
+  \cs_set_eq:NN \__notestobib_endnote:w     \endnote
+  \cs_set_eq:NN \__notestobib_endnotemark:w \endnotemark
+  \cs_set_eq:NN \__notestobib_endnotetext:w \endnotetext
+  \cs_set_eq:NN \__notestobib_footnote:w     \footnote
+  \cs_set_eq:NN \__notestobib_footnotemark:w \footnotemark
+  \cs_set_eq:NN \__notestobib_footnotetext:w \footnotetext
+}
+\AtBeginDocument {
+  \@ifpackageloaded { biblatex }
+    {
+      \cs_new_protected_nopar:Npn \__notestobib_print_notes:
+        {
+          \cs_set_nopar:Npx \__notestobib_create_print_notes:
+            {
+              \printbibliography
+                [ keyword = \exp_not:V \l__notestobib_keyword_tl ]
+            }
+            \__notestobib_create_print_notes:
+        }
+    }
+    {
+      \cs_new_protected_nopar:Npn \__notestobib_print_notes:
+        { \exp_args:NV \__notestobib_bibliography:n \g__notestobib_filename_tl }
+    }
+}
+\cs_new_nopar:Npn \__notestobib_create_print_notes: { }
+\cs_new_nopar:Npn \__notestobib_attach_bibliography: {
+  \@ifpackageloaded { biblatex }
+    {
+      \@ifpackagelater { biblatex } { 2011/01/08 }
+        {
+          \@ifpackagelater { biblatex } { 2011/02/12 }
+            {
+
+              \exp_args:No \addglobalbib
+                { \g__notestobib_filename_tl .bib }
+            }
+            { \exp_args:NNV \bibliography * \g__notestobib_filename_tl }
+        }
+        { \exp_args:NV \bibliography \g__notestobib_filename_tl }
+    }
+    {
+      \cs_new_eq:NN \__notestobib_bibliography:n \bibliography
+      \RenewDocumentCommand \bibliography { m }
+        {
+          \int_compare:nNnTF \g__notestobib_total_notes_int = \c_zero
+            { \__notestobib_bibliography:n {##1} }
+            {
+              \cs_set_nopar:Npx \__notestobib_attach_bibliography:
+                {
+                  \exp_not:N \__notestobib_bibliography:n
+                    {
+                      \exp_not:n {##1} , \exp_not:V \g__notestobib_filename_tl
+                    }
+                }
+              \__notestobib_attach_bibliography:
+            }
+        }
+    }
+}
+\@ifpackageloaded { biblatex }
+  {
+    \@ifpackagelater { biblatex } { 2011/01/08 }
+      {
+        \@ifpackagelater { biblatex } { 2011/02/12 }
+          {
+
+            \exp_args:No \addglobalbib
+              { \g__notestobib_filename_tl .bib }
+          }
+          { \exp_args:NNV \bibliography * \g__notestobib_filename_tl }
+      }
+      { \exp_args:NV \bibliography \g__notestobib_filename_tl }
+  }
+  { \AtBeginDocument { \__notestobib_attach_bibliography: } }
+\AtBeginDocument {
+  \@ifpackageloaded { biblatex }
+    { \tl_set:Nn \l__notestobib_sortkey_field_tl { sortkey } }
+    { \tl_set:Nn \l__notestobib_sortkey_field_tl { key } }
+}
+\AtBeginDocument {
+  \@ifpackageloaded { biblatex }
+    {
+      \cs_set:Npn \__notestobib_mark_note_after_aux:n #1
+        {
+          \AtNextCite { \@fileswfalse }
+          \__notestobib_cite:w {#1}
+        }
+    }
+    {
+      \cs_set:Npn \__notestobib_mark_note_after_aux:n #1
+        {
+          \cs_set_eq:NN \__notestobib_filesw: \if@filesw
+          \@fileswfalse
+          \__notestobib_cite:w {#1}
+          \cs_set_eq:NN \if@filesw \__notestobib_filesw:
+        }
+    }
+}
+\AtBeginDocument {
+  \@ifpackageloaded { cite }
+    {
+      \cs_set:Npn \__notestobib_mark_note_after_aux:n #1
+        {
+          \cs_set_eq:NN \__notestobib_filesw: \if@filesw
+          \@fileswfalse
+          \cs_set_nopar:Npn \__notestobib_aux_hook:
+            {
+              \cs_set_eq:NN \if@filesw \__notestobib_filesw:
+              \cs_set_nopar:Npn \__notestobib_aux_hook: { }
+            }
+          \__notestobib_cite:w {#1}
+        }
+      \cs_new_nopar:Npn \__notestobib_aux_hook: { }
+      \tl_gput_right:Nn \g__notestobib_document_hook_tl
+        {
+          \cs_if_exist:NF \@restore@auxhandle
+            { \tl_new:N \@restore@auxhandle }
+          \tl_put_right:Nn \@restore@auxhandle { \__notestobib_aux_hook: }
+        }
+    }
+    { }
+}
+\NewDocumentCommand \bibnote { o +m } {
+  \IfNoValueTF {#1}
+    {
+      \int_gincr:N \g__notestobib_note_int
+      \__notestobib_bibnote:xn { \__notestobib_note_name: } {#2}
+    }
+    { \__notestobib_bibnote:xn { \__notestobib_insert_refsection: #1 } {#2} }
+}
+\cs_new_protected:Npn \__notestobib_bibnote:nn #1#2 {
+  \__notestobib_write_note:nn {#1} {#2}
+  \__notestobib_mark_note:n {#1}
+}
+\cs_generate_variant:Nn \__notestobib_bibnote:nn { x }
+\NewDocumentCommand \bibnotemark { o } {
+  \IfNoValueTF {#1}
+    {
+      \int_gincr:N \g__notestobib_note_int
+      \__notestobib_mark_note:x { \__notestobib_note_name: }
+    }
+    { \__notestobib_mark_note:x { \__notestobib_insert_refsection: #1 } }
+}
+\NewDocumentCommand \bibnotetext { o +m } {
+  \IfNoValueTF {#1}
+    { \__notestobib_write_note:xn { \__notestobib_note_name: } {#2} }
+    { \__notestobib_write_note:xn { \__notestobib_insert_refsection: #1 } {#2} }
+}
+\NewDocumentCommand \recordnotes { } {
+  \__notestobib_record_notes:
+}
+\NewDocumentCommand \bibnotesetup { m } {
+  \keys_set:nn { notes2bib } {#1}
+}
+\NewDocumentCommand \printbibnotes { } {
+  \__notestobib_print_notes:
+}
+\NewDocumentCommand \citenote { m } {
+  \__notestobib_mark_note:n {#1}
+}
+\cs_new_eq:NN \flushnotestack \recordnotes
+\cs_new_eq:NN \niibsetup      \bibnotesetup
+\cs_new_protected_nopar:Npn \NotesAfterCitations #1 {
+  \clist_gput_right:Nn \g__notestobib_previous_after_clist {#1}
+}
+\cs_new_protected_nopar:Npn \NotesBeforeCitations #1 {
+  \clist_gput_right:Nn \g__notestobib_previous_after_clist {#1}
+  \tl_gput_right:Nn \g__notestobib_document_hook_tl { \nocite {#1} }
+}
+\cs_new_protected_nopar:Npn \TotalNotes #1 {
+  \int_gset:Nn \g__notestobib_previous_notes_int {#1}
+}
+\tl_gput_right:Nn \document { \g__notestobib_document_hook_tl }
+\tl_new:N \g__notestobib_document_hook_tl
+\AtEndDocument { \__notestobib_record_notes: }
+\AtEndDocument {
+  \tl_if_eq:NNTF \g__notestobib_all_before_clist \g__notestobib_previous_before_clist
+    {
+      \tl_if_eq:NNF \g__notestobib_all_after_clist \g__notestobib_previous_after_clist
+        { \msg_info:nn { notes2bib } { rerun } }
+    }
+    { \msg_info:nn { notes2bib } { rerun } }
+}
+\msg_new:nnn { notes2bib } { rerun } {
+  To~get~notes~in~the~correct~order,~please~run: \\%
+  \c_space_tl 1)~LaTeX  \\
+  \c_space_tl 2)~BibTeX \\
+  \c_space_tl 3)~LaTeX
+}
+\AtEndDocument {
+  \if@filesw
+    \exp_after:wN \__notestobib_write_note_file:
+  \fi:
+}
+\cs_new_protected_nopar:Npn \__notestobib_write_note_file: {
+  \tl_if_empty:NF \g__notestobib_notes_tl {
+    \iow_open:Nn \g__notestobib_file_iow { \g__notestobib_filename_tl .bib }
+    \iow_now:Nx \g__notestobib_file_iow { \c__notestobib_file_message_tl }
+    \iow_now:Nx \g__notestobib_file_iow
+      { \exp_not:V \g__notestobib_notes_tl }
+    \iow_close:N \g__notestobib_file_iow
+  }
+}
+\iow_new:N \g__notestobib_file_iow
+\AtEndDocument {
+  \int_compare:nNnT \g__notestobib_note_int > \c_zero
+    {
+      \iow_now:Nx \@auxout
+        { \TotalNotes { \int_to_arabic:n { \g__notestobib_note_int } } }
+    }
+}
+\cs_set:Npn \thanks #1 {
+  \__notestobib_footnotemark:w
+  \protected@xdef \@thanks
+    {
+      \@thanks
+      \protect \__notestobib_footnotetext:w [ \the \c@footnote ] {#1}
+    }
+}
+\keys_set:nn { notes2bib } { placement = mixed }
+\ProcessKeysOptions { notes2bib }
+%% 
+%% Copyright (C) 2007-2011,2013 by
+%% Copyright (C) 2007-2013 by
+%%   Joseph Wright <joseph.wright@morningstar2.co.uk>
+%% 
+%% It may be distributed and/or modified under the conditions of
+%% the LaTeX Project Public License (LPPL), either version 1.3c of
+%% this license or (at your option) any later version.  The latest
+%% version of this license is in the file:
+%% 
+%%    http://www.latex-project.org/lppl.txt
+%% 
+%% This work is "maintained" (as per LPPL maintenance status) by
+%%   Joseph Wright.
+%% 
+%% This work consists of the file  notes2bib.dtx
+%%           and the derived files notes2bib.ins,
+%%                                 notes2bib.pdf and
+%%                                 notes2bib.sty.
+%% 
+%%
+%% End of file `notes2bib.sty'.

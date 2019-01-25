@@ -1,0 +1,400 @@
+\chapter{The LaTeX3 l3token package}
+\label{ch:l3token}
+
+The \tex concept of tokens is central to its operation. In earlier chapters we discussed extensively the use of category codes and other important aspects of \tex’s tokens. Rememeber a \tex token is either a single character or a control sequence such as a the control sequence |\test|.
+
+A review of all possible tokens is appropriate at this stage, before we examine the module in more detail. We distinguish the meaning of a token which controls the expansion of the token and its effect on \tex’s state,
+and its shape, which is used when comparing token lists such as for delimited arguments.
+Two tokens of the same shape must have the same meaning, but the converse does not
+hold.
+
+A token has one of the following shapes:
+
+\begin{enumerate}
+\item A control sequence, characterized by the sequence of characters that constitute its
+name: for instance, |\use:n| is a five-letter control sequence.
+\end{enumerate}
+
+Now is perhaps a good time to mention some subtleties relating to tokens with
+category code 10 (space). Any input character with this category code (normally, space
+and tab characters) becomes a normal space, with character code 32 and category code 10.
+
+When a macro takes an undelimited argument, explicit space characters (with character
+code 32 and category code 10) are ignored. If the following token is an explicit
+character token with category code 1 (begin-group) and an arbitrary character code,
+then TEX scans ahead to obtain an equal number of explicit character tokens with category
+code 1 (begin-group) and 2 (end-group), and the resulting list of tokens (with outer
+braces removed) becomes the argument. Otherwise, a single token is taken as the argument
+for the macro: we call such single tokens \enquote{N-type}, as they are suitable to be used
+as an argument for a function with the signature :N.
+
+
+
+\begin{texexample}{Space tokens}{ex:sptoken}
+\ExplSyntaxOn  
+ \cs_set:Npn \my_space_token { }
+ \token_to_meaning:N \my_space_token\\
+ \token_to_meaning:N \c_space_token
+ 
+ % Note that the ~ active character in an ExplSyntaxOn
+ % environment has a more complicated definition.
+ \token_to_meaning:N ~
+\ExplSyntaxOff  
+\end{texexample}
+
+The actual definition from the kernel code for the \cs{c_space_token}
+\begin{teX}
+\use:n { \tex_global:D \tex_let:D \c_space_token = ~ } ~
+\end{teX}
+
+\begin{texexample}{makeatletter}{}
+\ExplSyntaxOn
+\group_begin:
+\char_set_catcode_letter:N @
+\char_set_catcode_letter:N 1
+\def\@store1a{AAAA}
+\@store1a\\
+\token_to_meaning:N @\\
+\token_to_meaning:N 1\\
+\char_set_catcode_other:N @
+\char_set_catcode_other:N 1
+\token_to_meaning:N @\\
+\token_to_meaning:N 1\\
+\group_end:
+\ExplSyntaxOff
+\end{texexample}
+
+There are sixteen different commands to set the catcode to any of the predefined groups used by \tex. If you cannot remember the catcode number for a character, try and remember its normal name!
+
+\begin{verbatim}
+ \char_set_catcode_escape:N 
+ \char_set_catcode_group_begin:N
+ \char_set_catcode_group_end:N
+ \char_set_catcode_math_toggle:N
+ \char_set_catcode_alignment:N
+ \char_set_catcode_end_line:N
+ \char_set_catcode_parameter:N
+ \char_set_catcode_math_superscript:N
+ \char_set_catcode_math_subscript:N
+ \char_set_catcode_ignore:N
+ \char_set_catcode_space:N
+ \char_set_catcode_letter:N
+ \char_set_catcode_other:N
+ \char_set_catcode_active:N
+ \char_set_catcode_comment:N
+\char_set_catcode_invalid:N
+\end{verbatim}
+
+\section{Token predicate functions}
+
+\begin{docCommand}{token_if_macro:NTF} { \meta{token} \marg{true code} \marg{false code}}
+tests if the \meta{token} is a \tex macro.
+\end{docCommand}
+
+\begin{texexample}{Test if is a macro}{ex:assertt}
+\ExplSyntaxOn
+
+% This is a common problem in LaTeXe. 
+% \sometest is let tto |\relax| in a csname
+ \csname my_sometest\endcsname
+ 
+ % traditional definition using a csname and 
+ % \expandafter
+ \expandafter\def\csname my_sometesti\endcsname{}
+ 
+ % All tests must pass
+ \token_if_macro:NTF \par           { \FAIL } { \PASS } 
+ \token_if_macro:NTF \minipage      { \PASS } { \FAIL } 
+ \token_if_macro:NTF \my_sometest   { \FAIL } { \PASS }
+
+ \token_if_macro:NTF \my_sometesti  { \PASS } { \FAIL }
+ \token_if_macro:NTF Z              { \FAIL } { \PASS } 
+
+ % True was set to relax
+ \token_if_eq_meaning:NNTF \my_sometest\relax { \PASS } { \FAIL }
+ 
+ \ExplSyntaxOff
+\end{texexample}
+
+Notice the unusual syntax for \cs{ifx} which is named \cs{token_if_eq_meaning:NN}. Also note that Example~\ref{ex:assertt}, uses an assertion style where all tests must return true (\mbox{\PASS}). If you have a lot
+of tests in a test file, it is easier to spot what is failing. See below where I redefined the token \enquote{Z} as an active
+character and then defined a macro with it. Our test file will then clearly show the test failing. Just a small reminder to turn a character into a macro, you need to set it first to |\active| and then define it. Here is the test file again. 
+
+\begin{texexample}{Test if is a macro}{ex:assertt1}
+\ExplSyntaxOn
+
+% \define Z
+\group_begin:
+\catcode `\Z = \active
+\cs_set:Npn  Z {hello~}
+% This is a common problem in LaTeXe. 
+% \sometest is let tto |\relax| in a csname
+ \csname my_sometest\endcsname
+ 
+ % traditional definition using a csname and 
+ % \expandafter
+ \expandafter\def\csname my_sometesti\endcsname{}
+ 
+ % All tests must pass
+ \token_if_macro:NTF \par           { \FAIL } { \PASS } 
+ \token_if_macro:NTF \minipage      { \PASS } { \FAIL } 
+ \token_if_macro:NTF \my_sometest   { \FAIL } { \PASS }
+
+ \token_if_macro:NTF \my_sometesti  { \PASS } { \FAIL }
+ \token_if_macro:NTF Z              { \FAIL } { \PASS } 
+
+ % True was set to relax
+ \token_if_eq_meaning:NNTF \my_sometest\relax { \PASS } { \FAIL }
+ \group_end:
+ \ExplSyntaxOff
+\end{texexample}
+
+
+\bigskip
+
+\begin{question}
+It is recommended that you code these exercises as MWEs and try and not refer to the source3 manual,
+during your first attempt. Namespace any macros you have to develop as part of the tasks below
+with the prefix |yourname|.
+\begin{tasks}
+\task Define four macros and using \cs{token_if_macro:NTF} typeset a word.
+\task Test the meaning of the four macros.
+\end{tasks}
+\end{question}
+
+\subsection{Test if a control sequence is primitive}
+
+One of the advantages of \latex3 is that it provides new names for all the primitives. This enables
+one to check if a primitive has been redefined and to provide suitable tests and replacements.
+
+ If it is a primitive we can find out, using yet another boolean construction \docAuxCommand*{token_if_primitive:NTF}  We can also check its meaning. It is interesting to note that \docAuxCommand*{par} is not a macro. Interestingly we can view what \tex does when we say |\csname somecs\endcsname|. It justs sets it equal to |\relax|. 
+ 
+ Again this is important in parsing and in automating the generation of commands. For example  in the |phd| package, we allow for a key value to be entered either as a control sequence for example, |\Large| or simply as a |large|. A test could be provided before further processing such type of input.
+
+\begin{texexample}{Test if is a macro}{ex:ifprimitive1}
+\ExplSyntaxOn
+\makeatletter
+\token_to_meaning:N \par\\
+\token_to_meaning:N \toks
+\token_if_primitive:NTF \par       { \PASS } { \FAIL }\\
+\token_if_primitive:NTF \@@par     { \PASS } { \FAIL }\\
+\token_if_primitive:NTF \tex_par:D { \PASS } { \FAIL }
+\makeatother
+\ExplSyntaxOff
+
+\end{texexample}
+
+Example~\ref{ex:ifprimitive1} can be used to test if a primitive has been redefined (this can be important for your code and to restore its meaning if necessary or issue an error message.  Another test which is available is to check if a token is a macro. 
+
+
+\begin{texexample}{Test if a cs is primitive}{ex:primitive}
+\ExplSyntaxOn
+\group_begin:
+\makeatletter
+% LaTeX2e normally defines this as @par. 
+% Use \par in a group to test.
+\def\par{\let\par\@@par\par}
+\token_if_primitive:NTF \@par { \PASS } { \FAIL }
+\makeatother
+\group_end:
+\ExplSyntaxOff
+\end{texexample}
+
+\subsection{Test for category codes}
+
+The next set of available commands are helper functions equivalent to the output of |\ifcat| 
+
+\begin{docCommand} {token_if_group_begin:NTF} {\meta{token} \marg{true code} \marg{false code}}
+Tests if \meta{token} has the category code of a begin group token (\{) when normal TEX
+category codes are in force). Note that an explicit begin group token cannot be tested in
+this way, as it is not a valid N-type argument. To test it you have to use |\c_group_begin_token|. This is mostly
+used in conjuction with |futurelet| type constructions and or parsing.
+\end{docCommand}
+
+
+\begin{texexample} {Test if group begin} {ex:ifgroubbegin}
+\ExplSyntaxOn
+ \token_if_group_begin:NTF \c_group_begin_token { \PASS } { \FAIL }
+ \token_if_group_end:NTF   \c_group_end_token   { \PASS } { \FAIL }\par
+ \the\catcode`{
+\ExplSyntaxOff
+\end{texexample}
+
+Behind the scenes |expl3| uses the |\ifcat| primitive to test the token against the catcode values. Constructions for all categories are available and summarized in the test below rather than described.
+\begin{texexample} {Test if group begin} {ex:ifgroubbegin}
+\ExplSyntaxOn
+ \token_if_group_begin:NTF \c_group_begin_token { \PASS } { \FAIL }
+ \token_if_group_end:NTF   \c_group_end_token   { \PASS } { \FAIL }\par
+ \token_if_alignment:NTF   \c_alignment_token   { \PASS } { \FAIL }\par
+ \token_if_parameter:NTF   \c_parameter_token   { \PASS } { \FAIL }\par
+\ExplSyntaxOff
+\end{texexample}
+
+Use the constant form of these tokens to avoid errors and to make the code more readable.
+
+The module is feature rich, with too many functions to remember easily. If your code needs to deal
+with too many changes of catcodes, lccodes and the like, you will have to study it carefully.
+
+
+
+\section{LaTeX3 Futurelet type functions}
+
+In Chapter Futurelet, we spend considerable effort to understand how \tex’s futurelet macro works. There is often a need to look ahead at the next token in the input stream while leaving
+it in place. This is handled using the “peek” functions. The generic \docAuxCommand*{peek_after:Nw} is
+provided along with a family of predefined tests for common cases. As peeking ahead does
+not skip spaces the predefined tests include both a space-respecting and space-skipping
+version.
+
+\begin{texexample}{Peek ahead ignoring spaces} {}
+\ExplSyntaxOn
+\peek_catcode_remove_ignore_spaces:NTF =  
+    { 
+      \PASS  
+      \token_if_letter:NTF
+          {l_peek_token ~= ~\token_to_meaning:N \l_peek_token \\  } 
+          {   }
+    } 
+    { \FAIL }  
+ = abcde \\
+\ExplSyntaxOff
+\end{texexample}
+
+Most applications would require to recursively pick up tokens from the input stream and only terminated once a special token is found. This is the most powerful method to parse input strings and create really powerful functions. 
+
+You will understand better if we hide the code in a function.
+
+\begin{texexample}{Peek ahead ignoring spaces} {ex}
+\ExplSyntaxOn
+\cs_new:Npn \checkletter #1 {
+\peek_catcode_remove_ignore_spaces:NTF #1  
+    { 
+      \PASS  
+      \token_if_letter:NTF
+          {l_peek_token ~= ~\token_to_meaning:N \l_peek_token \\  } 
+          {   }
+    } 
+    { \FAIL } }
+
+\checkletter {=} =abcde \par
+\checkletter {A} Abcde \par
+\ExplSyntaxOff
+\end{texexample}
+
+\begin{texexample}{Peek ahead ignoring spaces} {}
+\ExplSyntaxOn
+\cs_set:Npn \check_letter_and_removeall #1 {
+\peek_catcode_remove_ignore_spaces:NTF #1  
+    { 
+      \PASS  
+      \removeallaux:w  
+    } 
+   { \FAIL } 
+ }
+
+\cs_set:Npn \removeallaux:w #1; { removed~#1~ }
+
+\check_letter_and_removeall {W}  W 12pt; \par
+\ExplSyntaxOff
+\end{texexample}
+
+In the next example we will try and remove from the input stream recursively any |;|.
+Tests if the next non-space token in the input stream has the same character code as
+the test token (as defined by the test \cs{token_if_eq_charcode:NNTF}). Explicit and
+implicit space tokens (with character code 32 and category code 10) are ignored and
+removed by the test and thehtokeni is removed from the input stream if the test is true.
+The function then places either the htrue codei or hfalse codei in the input stream (as
+appropriate to the result of the test).
+\begin{texexample}{ex:recursivefl}  { }                            
+\ExplSyntaxOn
+
+\cs_set:Npn \remove_colon: #1 {
+   \peek_charcode_remove_ignore_spaces:NTF#1 
+   {
+    \TRUE
+    \meaning #1 \par
+    \peek_charcode_remove_ignore_spaces:NTF#1
+   } 
+   {
+    \meaning#1
+    \FALSE
+     
+   }
+}
+
+\remove_colon:;;;;;;;!
+\ExplSyntaxOff
+\end{texexample}
+
+\subsection{Using higher functions}
+
+\cs{peek_catcode_collect_inline:Nn}\Arg{test token}\Arg{inline code}. Collects and removes tokens from the input stream until finding a token that does not match the \meta{test token}. The colected tokens are passed to the \meta{inline code} as |#1|.   
+
+In the example we collect tokens until we reach the comma (\ExplSyntaxOn\char_value_catcode:n{`\,}\ExplSyntaxOff) character which does not have the same category code as Z ({\ExplSyntaxOn\char_value_catcode:n{`\Z}\ExplSyntaxOff)}. We store the results in the |\grubber|.
+
+
+
+\begin{texexample}{Collect tokens}{}
+\ExplSyntaxOn
+
+\cs_set:Npn \decorate_and_remove {
+    {\space\bfseries \tl_use:N \g_tmpa_tl}
+   }
+
+\cs_set:Npn \collect_letters {
+  \peek_catcode_collect_inline:Nn Z {\tl_put_right:Nn \g_tmpa_tl {##1}}
+}
+
+\cs_set:Npn \collect_others  {
+  \peek_catcode_collect_inline:Nn ; {\tl_put_right:Nn \g_tmpb_tl {##1}}
+}
+
+\cs_set:Npn \maybe_first_is_surname:w #1   
+  {  
+    % Clear any contents from the token list 
+    \tl_clear:N \g_tmpa_tl
+    
+    % Collect any letters until catcode is other
+    \cs_set:Npn \result {\peek_catcode_collect_inline:Nn Z {\tl_put_right:Nn \g_tmpa_tl {####1}}#1}
+    
+    \def\removecomma##1##2;;{
+      #2
+    }
+    \removecomma\result;;
+    \tl_if_empty:NTF \g_tmpa_tl {\TRUE}
+        {}
+  }
+  
+\maybe_first_is_surname:w {Lazarides, Yiannis} 
+{\bfseries \tl_use:N \g_tmpa_tl}
+    
+{\color{red}\tl_use:N \g_tmpb_tl}
+
+%\maybe_first_is_surname:w {Lazarides Yiannis} ;
+
+%\maybe_first_is_surname:n { Lazarides, Yiannis\par }
+%
+%\maybe_first_is_surname:n { Yiannis;Lazarides   }\par
+
+\ExplSyntaxOff
+\end{texexample}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
