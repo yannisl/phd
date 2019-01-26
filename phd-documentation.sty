@@ -25,11 +25,8 @@
   {{\color{thecodelinecolor}\ttfamily\scriptsize\arabic{CodelineNo}}}
 \ExplSyntaxOff
 \newcommand*{\verbatimfont}{\ttfamily}%
-
 \let\displayverbfont\ttfamily
-
-\renewcommand*{\verbatim@font}{\verbatimfamily}
-
+\renewcommand*{\verbatim@font}{\verbatimfont}
 \let\oldherm\Hermaphrodite
 \let\Hermaphrodite\undefined
 
@@ -45,9 +42,20 @@
         index command= \index,
                    }
 \tcbset{halostyle/.style={fuzzy halo=2mm with magenta!5}}
-
 \ExplSyntaxOn
-\def\phdlabelprefix{com-}
+\def\l_phdd_label_prefix_tl {com:}
+\renewenvironment{docCommand}[3][]{\tcbset{#1}%
+  \begin{tcb@manual@entry}%
+  \begin{tcb@doc@head}{doc@head@command}%
+  % Print the command using the current style
+  \tcb@Print@Com{#2}
+  %{\verbatimfamily\bfseries\textbackslash\color{themacrocolor}\tl_to_str:n{#2}}
+  \SpecialMainIndex{#2}%
+  \protected@edef\@currentlabel{\noexpand\tcb@cs{#2}}\label{com:#2}{\ttfamily #3}%
+  \tcb@doc@do@description%
+  \end{tcb@doc@head}\nobreak\tcbset{before~upper=}\kvtcb@doc@body@command@before\ignorespaces}%
+  {\ifvmode\else\unskip\fi\kvtcb@doc@body@command@after\end{tcb@manual@entry}}
+
 \ExplSyntaxOff
 
 \ExplSyntaxOn
@@ -55,13 +63,13 @@
     color~command/.store~in        = \phdd_key_color_command_tl,
     color~environment/.store~in    = \phdd_key_color_environment_tl,
     color~key/.store~in            = \phdd_key_color_tl,
-    color~value/.store~in          = \phdkv@col@value,
+    color~value/.store~in          = \phdd_key_color_value_tl,
     color~color/.store~in          = \phdd_key_color_color_tl,
-    color~definition/.style={color~command={#1},
-                             color~environment={#1},
-                             color~key={#1},
-                             color~value={#1},
-                             color~color={#1}},
+    color~definition/.style        = {color~command={#1},
+                                      color~environment={#1},
+                                      color~key={#1},
+                                      color~value={#1},
+                                      color~color={#1}},
     color~option/.store~in         = \phdkv@col@opt,
     color~hyperlink/.store~in      = \phdkv@colhyper,
     color~frame/.store~in          = \phdkv@colhyper,
@@ -1155,17 +1163,17 @@ belowskip=\medskipamount,
 
 \newrobustcmd {\phdindexprintvalca}[1]
   {
-    \phdindexprintca{#1}{\phdkv@col@value}{\phdkv@text@value}
+    \phdindexprintca{#1}{\phdd_key_color_value_tl}{\phdkv@text@value}
   }
 
 \newrobustcmd {\phdIndexPrintValC}[1]
   {
-    \phd_index_print_c{#1}{\phdkv@col@value}
+    \phd_index_print_c{#1}{\phdd_key_color_value_tl}
   }
 
 \cs_set:Npn \phd@Print@Val #1
   {
-    \textcolor {\phdkv@col@value} {\ttfamily\bfseries#1}
+    \textcolor {\phdd_key_color_value_tl} {\ttfamily\bfseries#1}
   }
 
 \newrobustcmd{\phdindexprintcolca}[1]

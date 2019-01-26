@@ -377,7 +377,7 @@ See http://www.latex-project.org/lppl.txt
 % \long\def\storyi{
 %The package provides macros for documenting and indexing
 %primarily \latexe or \latex3 code. It combines the styles
-%originitating with \textt{doc} with those found in the \texttt{pgf}
+%originitating with \texttt{doc} with those found in the \texttt{pgf}
 %series of packages. It removes some of the difficulties of
 %using hyperlinks in the index and elsewhere in the document.
 %}
@@ -567,14 +567,21 @@ See http://www.latex-project.org/lppl.txt
 % The indexing keys are still to be sorted out with other sections of the
 % documentation, but they seem to be working for the moment.
 % 
+% \section{Verbatim fonts}
 % 
+% There are different requirements for verbatim fonts. The module \pkg{phd-fontmanager}
+% is our main module for defining fonts.
+% The main mono font is set using the key \docAuxKey[phd]{main mono font-face}. This is
+% stored in \docAuxCommand{main_mono_fontface_tl}. In this document it is set as:
+% \ExplSyntaxOn
+% \meaning \main_mono_fontface_tl
+% \ExplSyntaxOff
+%
 %    \begin{macrocode}
 \newcommand*{\verbatimfont}{\ttfamily}%
-
 \let\displayverbfont\ttfamily
-
-\renewcommand*{\verbatim@font}{\verbatimfamily}
-
+% defined in verbatim package
+\renewcommand*{\verbatim@font}{\verbatimfont}
 %    \end{macrocode}
 %
 % The \pkg{tcolorbox} loads the packages \pkg{pgf}, \pkg{verbatim}, \pkg{environ}, \pkg{etoolbox} when the package is loaded. It also loads more when other
@@ -597,46 +604,58 @@ See http://www.latex-project.org/lppl.txt
         index command= \index,
                    }
 \tcbset{halostyle/.style={fuzzy halo=2mm with magenta!5}}                   
-
-% We use the |docCommand| as DescribeMacro when in doc, hence we better mark it
-% as a SpecialMainIndex
 %    \end{macrocode}
+% We use the |docCommand| as \refCmd{DescribeMacro} when in doc, hence we better mark it
+% as a \refCmd{SpecialMainIndex}.
+%
+%    
+% \begin{macro}{\l_phdd_label_prefix_tl}
 %    \begin{macrocode}
 \ExplSyntaxOn
-\def\phdlabelprefix{com-}
-%\renewenvironment{docCommand}[3][]{\tcbset{#1}%
-%  \begin{tcb@manual@entry}%
-%  \begin{tcb@doc@head}{doc@head@command}%
-%  %\tcb@Print@Com{#2}%
-%  {\verbatimfamily\bfseries\textbackslash\color{thedoccommandcolor}\tl_to_str:n{#2}}%\tcb@cs{#2}
-%  %\tcb@index@Com{#2}% remove
-%  \SpecialMainIndex{#2}% will need to add backslash?
-%  \protected@edef\@currentlabel{\noexpand\tcb@cs{#2}}
-% %\expandafter\label\expandafter{\phdlabelprefix#2}
-% {\ttfamily #3}%
-%  \tcb@doc@do@description%
-%  \end{tcb@doc@head}\nobreak\tcbset{before~upper=}\kvtcb@doc@body@command@before\ignorespaces}%
-%  {\ifvmode\else\unskip\fi\kvtcb@doc@body@command@after\end{tcb@manual@entry}}
-%
+\def\l_phdd_label_prefix_tl {com:}
+%    \end{macrocode}
+% \end{macro}
+%    \begin{macrocode}
+\renewenvironment{docCommand}[3][]{\tcbset{#1}%
+  \begin{tcb@manual@entry}%
+  \begin{tcb@doc@head}{doc@head@command}%
+  % Print the command using the current style
+  \tcb@Print@Com{#2}
+  %{\verbatimfamily\bfseries\textbackslash\color{themacrocolor}\tl_to_str:n{#2}}
+  \SpecialMainIndex{#2}% 
+  \protected@edef\@currentlabel{\noexpand\tcb@cs{#2}}\label{com:#2}{\ttfamily #3}%
+  \tcb@doc@do@description%
+  \end{tcb@doc@head}\nobreak\tcbset{before~upper=}\kvtcb@doc@body@command@before\ignorespaces}%
+  {\ifvmode\else\unskip\fi\kvtcb@doc@body@command@after\end{tcb@manual@entry}}
+
+
 %\renewenvironment{docCommand*}{\bgroup\tcb@doc@toindexfalse\begin{docCommand}}{\end{docCommand}\egroup}    
 \ExplSyntaxOff
 %\def\tcb@Print@Com#1{\textcolor{\kvtcb@col@command}{\ttbf\char`\\ \detokenize{#1}}}
 
 %    \end{macrocode}
-% Define keys for all related color commands used in documentation commands. 
+%
+% \section{Keys dealing with colors}
+%
+% The actual color definitions should come from a palette, using \pkg{phd-colorpalette}.
+% They have names such as \docColor{themacrocolor}.
+%
+% The color names are stored in token lists. The module colorizer, colors code
+% in a macrocode environment and has similar keys.
+%  
 %    \begin{macrocode}  
 \ExplSyntaxOn
 \cxset{ 
     color~command/.store~in        = \phdd_key_color_command_tl,
     color~environment/.store~in    = \phdd_key_color_environment_tl,
     color~key/.store~in            = \phdd_key_color_tl,
-    color~value/.store~in          = \phdkv@col@value,
+    color~value/.store~in          = \phdd_key_color_value_tl,
     color~color/.store~in          = \phdd_key_color_color_tl,
-    color~definition/.style={color~command={#1},
-                             color~environment={#1},
-                             color~key={#1},
-                             color~value={#1},
-                             color~color={#1}},
+    color~definition/.style        = {color~command={#1},
+                                      color~environment={#1},
+                                      color~key={#1},
+                                      color~value={#1},
+                                      color~color={#1}},
     color~option/.store~in         = \phdkv@col@opt,
     color~hyperlink/.store~in      = \phdkv@colhyper,
     color~frame/.store~in          = \phdkv@colhyper,
@@ -1531,7 +1550,7 @@ boxrule=0pt,toprule=0pt,colframe=white}
 %	output at the bottom section.
 % \end{docEnvironment}
 %	
-%	First we define a new counter which resets at every chapter. If |c@chapter|
+%	First we define a new counter which resets at every chapter. If \docCounter{c@chapter}
 %	is not defined we reset it based on sections.
 %
 % \begin{enumerate}
@@ -2171,17 +2190,17 @@ boxrule=0pt,toprule=0pt,colframe=white}
 
 \newrobustcmd {\phdindexprintvalca}[1]
   {
-    \phdindexprintca{#1}{\phdkv@col@value}{\phdkv@text@value}
+    \phdindexprintca{#1}{\phdd_key_color_value_tl}{\phdkv@text@value}
   }
 
 \newrobustcmd {\phdIndexPrintValC}[1]
   {
-    \phd_index_print_c{#1}{\phdkv@col@value}
+    \phd_index_print_c{#1}{\phdd_key_color_value_tl}
   }
 
 \cs_set:Npn \phd@Print@Val #1 
   {
-    \textcolor {\phdkv@col@value} {\ttfamily\bfseries#1}
+    \textcolor {\phdd_key_color_value_tl} {\ttfamily\bfseries#1}
   }
 
 \newrobustcmd{\phdindexprintcolca}[1]
@@ -8426,10 +8445,15 @@ boxrule=0pt,toprule=0pt,colframe=white}
 %
 % The constant regex in l3regex is defined using |tl_const:Nx|, hence we build a new one from its definition
 % to allow us to hook into the keywords list. We first handle modules. Our life is easier as all modules
-% in l3 are prefixes with an underscore.   
+% in l3 have prefixes with an underscore and can be captured fairly easily.   
+%
+% \begin{macro}{\phd_more_keywords_tl}
+% Token lists holding regex prefixes.
 %    \begin{macrocode}
 \cs_set:Npn \phd_more_keywords_tl {|phd}
-
+%    \end{macrocode}
+% \end{macro}
+%    \begin{macrocode}
 \def\AAA#1{
  %  \regex_const:Nn \c_cs_regex 
    \__regex_compile:n{(\\(cs|regex|seq|tl|clist|dim|char|int|%
