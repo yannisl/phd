@@ -194,14 +194,14 @@ is given in the manual as:
 
 The Greek language is represented both in modern Greek as well as its ancient variants.
 
-\begin{phdverbatim}
+\begin{teX}
 \begin{greek}
 \textbf{Η ελληνική γλώσσα} είναι μία από τις ινδοευρωπαϊκές γλώσσες, για την
 οποία έχουμε γραπτά κείμενα από τον 15ο αιώνα π.Χ. μέχρι σήμερα. Αποτελεί το
 μοναδικό μέλος ενός κλάδου της ινδοευρωπαϊκής οικογένειας γλωσσών. Ανήκει
 επίσης στον βαλκανικό γλωσσικό δεσμό.\\	
 \end{greek}
-\end{phdverbatim}
+\end{teX}
 
 \topline
 
@@ -671,7 +671,7 @@ These are not very useful for \tex as most of this type of work can be simply be
 \end{texexample}
 
 
-\paragraph{Typographical considerations and Convenience Commands} Some commands,  provided by babel-french are intended to make typesetting according to French typographical conventions easier. Some twenty three conditionals, which more or less affect typographical rules or conventions are mentioned in Babel (see p.43, frencgb.pdf).
+\paragraph{Typographical considerations and Convenience Commands} Some commands provided by babel-french are intended to make typesetting according to French typographical conventions easier. Some twenty three conditionals, which more or less affect typographical rules or conventions are mentioned in Babel (see p.43, frencgb.pdf).
 
     \begin{enumerate}
        \item Hyphenation parameters such as lefthyphenmin and righthyphenmin are defined for many of the languages.
@@ -731,7 +731,7 @@ On Windows systems |Arial Unicode MS| contains glyphs for all code points within
 
 The code2000 font provides 63546 glyphs and is the nearest font to a universal font to handle Unicode. Unfortunately development stopped in 2008. As a comparison Linux Libertine O, provides 2674 glyphs. \label{code2000}
 
-CJK fonts naturally will have the most glyphs, \idxfont{MingLiU} 34046 glyphs and is a very good font for CJK typesetting. Google in conjunction with Adobe also provides a fee CJK font.
+CJK fonts naturally will have the most glyphs, \docFont{MingLiU} 34046 glyphs and is a very good font for CJK typesetting. Google in conjunction with Adobe also provides a fee CJK font.
 
 The \href{http://ftp.gnu.org/gnu/freefont/}{FreeFont Project} currently supports most of the useful set of free outline (i.e. OpenType) fonts covering as much as possible of the Unicode character set. The set consists of three typefaces: one monospaced and two proportional (one with uniform and one with modulated stroke). 
 
@@ -850,15 +850,40 @@ lead.
 }
 
 
+\section{Languages and hyphenation using Lua}
+
+\begin{texexample}{Hyphenation and Lua}{ex:luahyphen}
+\begin{luacode*}
+langobject = lang.new()
+pattfile = io.open(kpse.find_file('hyph-el-polyton.pat.txt'), 'r')
+lang.patterns(langobject, pattfile:read('*all'))
+tex.print('\\language' .. lang.id(langobject))
+\end{luacode*}
+\end{texexample}
 
 
+Javier Bezos gave a simple solution to enforcing hyphenation\footnote{\protect\url{https://tex.stackexchange.com/questions/240316/hyphenation-with-languages-in-transliteration-forced-hyphenation}}. 
+Using Lua we insert a |\-| between a vowel and some consonants.
+ 
+\begin{texexample}{Forced hyphenation}{ex:luahyphen}
+\begin{luacode*}
+function insdisc (s)
+    -- add more letters if necessary
+  s = s:gsub( [[([aeiou])([bcfgklmnpqtxz])]], '%1\\-%2' )
+    -- but don't leave a single char alone:
+  s = s:gsub( '^(.)\\%-', '%1')
+  s = s:gsub( '\\%-(.)$', '%1')
+  return s
+end
+\end{luacode*}
 
+\def\insdisc#1{\directlua{tex.print(insdisc(\luastring{#1}))}}
 
-
-
-
-
-
+\fbox{\parbox{1mm}{%
+Text \insdisc{umiq'utzexopab} umiq'utzexopab text text text text text
+text text text text text text text text text text text text.
+}}
+\end{texexample}
 
 
 

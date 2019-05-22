@@ -252,13 +252,32 @@ strings and then also not to allow any strings that need escaping in Lua. This i
 
 
 Lua can handle subtraction, negative numbers, numbers with decimal points, multiplication (using *),
-division (using /), exponentiation (using \texttt{\^} ), and combinations of these. Here are some examples:
+division (using /), exponentiation (using |^|), and combinations of these. Here are some examples:
 \emphasis{directlua, tex,print}
+
+
+\section{Numbers}
+
+The number type represents real (double-precision floating-point) numbers. Lua has no integer type, as it does not need it. There is a widespread misconception about floating-point arithmetic errors and some people fear that even a simple increment can go weird with floating-point numbers. The fact is that, when you use a double to represent an integer, there is no rounding error at all (unless the number is greater than 100,000,000,000,000). Specifically, a Lua number can represent any long integer without rounding problems.
+We can write numeric constants with an optional decimal part, plus an optional decimal exponent. 
+
+Examples of valid numeric constants are:
+\begin{verbatim}
+    4     0.4     4.57e-3     0.8e12     5e+20
+\end{verbatim}
+
+\begin{texexample}{Formatting numbers}{ex:fmtn}
+\begin{luacode}
+local str = string.format("%.2f",0.8e12)
+print(str)
+\end{luacode}
+\end{texexample}
+
 
 
 \subsection{Scientific notation}
 
-You can also write numbers using the \textit{scientific notation}, where the aprt before the upper multiplied by 10 to the power after $\textup{e}$
+You can also write numbers using the \textit{scientific notation}, where the prt before the upper multiplied by 10 to the power after $\textup{e}$
 
 \begin{texexample}{Numbers scientific notation}{ex:scientific}
 
@@ -277,7 +296,12 @@ a-f (or A-F) to represent 10 through 15. Hexadecimal numbers should start with \
 
 
 \section{Lua variables}
+
 Lua variables are similar to those used by other computer languages, such as Python, Javascript and similar modern languages. They are untyped, which means they can easily produce subtle errors.
+
+Programmers generally choose names for their variables that are meaningful—they document what the variable is used for.
+
+Variable names can be as long as you like. They can contain almost any characters  but they can’t begin with a number. It is legal to use uppercase letters, but it is conventional to use only lower case for variable names.
 
 \begin{texexample}{Lua Variables}{}
 \luadirect{
@@ -317,7 +341,6 @@ Variables unless they are preceded with a |local| are in the document global spa
 \end{texexample}
 
 
-
 Lua is case sensitive, which means |NUM|, |Num| and |num| are different variables.
 
 \begin{texexample}{Lua Variables case sensitivity}{}
@@ -328,6 +351,22 @@ Lua is case sensitive, which means |NUM|, |Num| and |num| are different variable
    tex.print(NUM+Num+num)
 }
 \end{texexample}
+
+
+\chapter{Statements}
+
+Lua supports an almost conventional set of statements, similar to those in C,
+Pascal or Go. Conventional statements include assignment, control structures,
+and procedure calls. Lua also supports some not so conventional statements,
+such as multiple assignments and local variable declarations
+
+\section{Assignment}
+
+Assignment is the basic means of changing the value of a variable or a table field.
+\begin{verbatim}
+a = "hello".."Lua"
+b = 100.231
+\end{verbatim}
 
 
 \subsection{Multiple Assignment}
@@ -349,20 +388,84 @@ at the same time. The comma is used for both. Here's how you use the comma for m
 \end{texexample}
 
 
+\begin{texexample}{Multiple assignments}{ex:massign}
+\begin{luacode}
+local x1, x2, x3 = 16, 50, 33
+local sum = x1^3 + x2^3 + x3^3
+tex.print("sum = " .. sum)
+\end{luacode}
+\end{texexample}
 
+Lua can be very useful in calculating and presenting the results in a nice way. In (\ref{ex:massign2}) we add additional \luacmd{tex.print} lines to calculate the sum.
+Remember that we need to escape all backslasheses using (|\\|).
+
+\begin{texexample}{Multiple assignments}{ex:massign2}
+\begin{luacode}
+local x1, x2, x3 = 16, 50, 33
+local sum = x1^3 + x2^3 + x3^3
+tex.print("\\[")
+tex.print("16^3 + 50^3 + 33^3 = "..sum)
+tex.print("\\]")
+\end{luacode}
+\end{texexample}
+If you notice that the sum digits are made up of the digits of the numbers we have cubed.
+
+Let us practice a bit more and get the next number in the series.
+
+\begin{texexample}{Multiple assignments}{ex:massign2}
+\begin{luacode}
+local x1, x2, x3 = 16, 50, 33
+local sum = x1^3 + x2^3 + x3^3
+local sum1 = 166^3 + 500^3 + 333^3 
+local sum2 = 1666^3 + 5000^3 + 3333^3
+local sum3 = 16666^3 + 50000^3 + 33333^3
+tex.print("\\begin{align}")
+tex.print("16^3 + 50^3 + 33^3 &= "..sum.."\\\\")
+tex.print("166^3 + 500^3 + 333^3 &= "..sum1.."\\\\")
+tex.print("1666^3 + 5000^3 + 3333^3 &= "..sum2.."\\\\")
+tex.print("16666^3 + 50000^3 + 33333^3 &= "..string.format("%.0f",sum3))
+tex.print("\\end{align}")
+\end{luacode}
+\end{texexample}
+
+The above pattern can be extended forever and the proof is available in 34. Writing it this way is not very efficient. In the next chapter we will write a function to make it easier to typeset and calculate these numbers. If you notice the last answer is in scientific notation. 
+
+Multiple assignments are not faster than the equivalent single assignments. Sometimes they can be useful for swapping values such as |x, y = y, x|. A more frequent use is to collect multiple returns from function calls. For instance, in the assignmen |x,y = f()| the call to |f| returns two results: |a| gets the first and |b| is assigned the second.
+
+\section{Local Variables and Blocks}
+
+Lua provides a small and conventional set of control structures, with if for conditional
+execution and while, repeat, and for for iteration. All control structures
+have an explicit terminator: |end| terminates |if|, |for| and |while| structures; |until|
+terminates |repeat| structures.
+
+The condition expression of a control structure can result in any value. Remember
+that Lua treats as true all values different from false and nil. (In
+particular, Lua treats both zero and the empty string as true.)
 
 
 \section{Conditionals}
+
+
+
+\subsection*{if then else}
+
+The \textit{if–then} construct (sometimes called \textit{if–then–else}) is common across many programming languages.
+ 
 \begin{texexample}{Conditionals}{ex:conditionals}
 \directlua{
- a=3
- b=12^2
+ local a=3
+ local b=12^2
  if a<b then 
    tex.sprint("$a<b^2$ "..a..", "..b) 
  else
  end
 }
 \end{texexample}
+
+To write nested \textbf{if}s you can use \textbf{elseif}. It is similar to \luacmd{else} followed by \luacmd{if}, but it avoids the need for multiple \luacmd{end}s.
+
+Lua does not have a switch statement and is common to find \luacmd{elseif} in expressions.
 
 To test whether a variable is not |nil| in a conditional, it is terser to just write the variable name rather than explicitly compare against |nil|. Lua treats |nil| and |false| as |false| (and all other values as |true|) in a conditional:
 
@@ -394,42 +497,101 @@ end
 \end{texexample}
 
 
-\subsection{while loop}
+\subsection*{while}
+
+As the name implies, a \luacmd{while} loop repeats its body while a condition is true. As
+usual, Lua first tests the while condition; if the condition is false, then the loop
+ends; otherwise, Lua executes the body of the loop and repeats the process.
 
 \begin{texexample}{while loop}{ex:loop}
-\directlua{
+\begin{luacode}
    counter = 1
    while counter <= 100 do
       tex.print(counter)
-   counter = counter + 1
+      counter = counter + 1
    end
-}
+\end{luacode}
 \end{texexample}
 
+
 \let\exec\directlua
-\subsection{for loop}
+
+
+\section{for}
+
+The |for| statements has two variants: the \emph{numeric} |for| and the \emph{generic} |for|. The 
+numeric |for| has the following syntax:
+\begin{verbatim}
+for var = exp1, exp2, exp3 do
+  code...
+end  
+\end{verbatim}
+
+This loop will execute the code for each value of |var| from from |exp1| to |exp2|, using
+|exp3| as the step to increment |var|. This third expression is optional; when
+absent, Lua assumes 1 as the step value. A typical example is shown in Example~\ref{ex:forloop}
+
 \begin{texexample}{for loop}{ex:forloop}
-\exec{
-for N = 1, 10 do
- tex.print(N)
- end
-}
+\begin{luacode}
+for n = 1, 59 do
+   tex.print("\\(\\overline{"..n.."}\\), ")
+end
+\end{luacode}
 \end{texexample}
+
+The example is interesting, as it shows a notation used sometimes in Mathematical texts to denote numbers in sexagesimal systems. A sexagesimal system is an numeral system based on a base of 60, originally used by the Sumerians and then became known as Babylonian numbers. We still use it today to tell time and measure angles. The |\overline|, is just a notation to show it is not a decimal number but something else. In this case it represents one of the digits of a base 60 numeral system. More modern texts do not use the overline but simply the number. 
+
+Let us print the example, this time grouping the numbers in units of 12. We will use the mod|%| operator and simply print a linebreak.
+
+\begin{texexample}{for loop}{ex:forloop}
+\begin{luacode}
+for n = 1, 59 do
+   tex.print("\\(\\overline{"..n.."}\\), ")
+   if n%12==0 then 
+      tex.print("\\\\")
+   end 
+end
+\end{luacode}
+\end{texexample}
+
 
 \subsection{repeat until}
+
+As the name implies, a repeat–until statement repeats its body until its condition
+is true. This statement does the test after the body, so that it always
+executes the body at least once.
+
 \let\exec\directlua
-\begin{texexample}{repeat until}{ex:repeat}
-\exec{
-  N,Z=1,21
-  F=1
+
+\begin{texexample}{repeat until}{ex:repeat0}
+\begin{luacode}
+local  n, z = 1, 21
+local  f = 1
   repeat
-    tex.print(N+Z)
-    N=N+1
-    F=F+10
-  until F>=99
-  tex.print(Z)
-}
+    tex.print(n + z)
+    n = n + 1
+    f = f + 10
+  until f>=99
+\end{luacode}
 \end{texexample}
+
+Unlike in most other languages, in Lua the scope of a local variable declared
+inside the loop includes the condition:
+
+\begin{texexample}{repeat-until}{ex:repeat1}
+\begin{luacode}
+local x = 19.7899
+local sqr = x/2
+local count = 0
+repeat
+   sqr = (sqr + x/sqr)/2
+   local error = math.abs(sqr^2 - x)
+   count = count + 1
+   print("count = "..count.." square root = "..sqr.." error = "..error)
+until error < x/10000 or count > 100-- local 'error' still visible here
+\end{luacode}
+\end{texexample}
+
 
 \subsection{The break and do Statements}
 \begin{texexample}{Break and do}{ex:breakanddo}
@@ -449,9 +611,25 @@ for N = 1, 10 do
        epigraph text align=left}
 \epigraph{“A computer is like a violin. You can imagine a novice trying fist a phonograph and then a violin. The latter, he says, sounds terrible. That is the argument we have heard from our humanists and most of our computer scientists. Computer programs are good, they say, for particular purposes, but they aren't flexible. Neither is a violin, or a typewriter, until you learn how to use it.” }{Marvin Minsky}
 
+
 \section{What are functions}
 
-The main mechanism for abstraction of statements and expressions in Lua are \textit{functions}. Function carry out specific tasks. In other languages sometimes they are called a \textit{procedure} or a \textit{subroutine}. Functions are first class citizens in Lua. They can be used both as statements or as expressions.
+The main mechanism for abstraction of statements and expressions in Lua are \textit{functions}. Function carry out specific tasks. In other languages sometimes they are called a \textit{procedure} or a \textit{subroutine}. Functions are first class citizens in Lua. They can be used both as statements or as expressions. All functions in Lua are anonymous. This is not immediately clear in the standard syntax for defining a function
+\begin{verbatim}
+function add (x,y)
+  return x + y
+end  
+\end{verbatim}
+Nevertheless, this syntax is just syntactic sugar for an assignment of an anonymous function to a variable\footnote{Since Lua version 3.1}
+\begin{verbatim}
+add = function (c, y)
+  return x + y
+end  
+\end{verbatim}
+That is, the code creates an anonymous function and assigns it to the global
+variable add. Therefore, all functions in Lua are anonymous, like in Scheme.
+A \enquote{name} for a function is actually the name for a variable that holds that
+function.
 
 \begin{texexample}{Functions used in expressions}{ex:expressions}
 \begin{luacode}
@@ -461,6 +639,27 @@ The main mechanism for abstraction of statements and expressions in Lua are \tex
 \end{texexample}
 
 The arguments are enclosed in parentheses denoting a call. If the function does not have any arguments, we must still call it with an empty list () to denote the call.
+
+Let us return to our example with the numbers. Using a function we will try and generalize the problem.
+
+Given three integer values typeset a curious number.
+
+\begin{texexample}{Curious Numbers}{ex:curfunction}
+\begin{luacode}
+function curious(x1, x2, x3)
+   local sum = x1^3 + x2^3 + x3^3
+   local str = tostring(x1).."^3 + "..tostring(x2).. "^3 + ".. 
+               tostring(x3) .."^3& =".. 
+               string.format("%.0f",sum) 
+   return str
+end
+
+print("\\begin{align}")
+print(curious(1666,5000,3333))
+print("\\end{align}")
+\end{luacode}
+\end{texexample}
+
 
 \section{Fixed Parameters}
 
@@ -527,7 +726,7 @@ function ack(M,N)
     if N == 0 then return ack(M-1,1) end
     return ack(M-1,ack(M, N-1))
 end
-tex.sprint(ack(3,8))
+tex.sprint(ack(3,11))
 }
 \end{texexample}
 
@@ -579,6 +778,289 @@ Anonymous functions do not have a function name and can be assigned to a variabl
  end)(2, 3)
 }
 \end{texexample}
+
+\section{Using Library Functions and Methods}
+
+\begin{texexample}{Big Numbers}{ex:bignum}
+\begin{luacode}
+require("BigNum")
+ret = BigNum.new("1")
+for i=1, 60 do
+  ret = ret*i
+end
+local res = BigNum.mt.tostring(ret)
+
+local str,token = "",""
+for token in string.gmatch(res, (".")) do
+   str = str..token.."\\hskip1sp "
+end
+
+print("63! = "..str)
+\end{luacode}
+\end{texexample}
+
+Palindromic numbers that read the same both ways (left-to-right and right-to-left), 
+e.g., 12321 or 9210129 are number theory curiosities.
+
+All numbers in any base with one digit are palindromic. The number of palindromic numbers with two digits is nine.
+
+\begin{gather}
+\{11,22,33,44,55,66,77,88,99\}
+\end{gather}
+
+Let us find some of them.
+
+\begin{texexample}{Palindromic Numbers}{ex:pal}
+\begin{luacode}
+require("BigNum")
+
+function pallindrome(n,topower)
+  local n1 = BigNum.new(n)
+  n2 = n1^topower
+  return n2
+end
+
+
+tpallindrome3 = {101,111,10101,11011,110011,1001001,2201}
+tpallindrome2 = {26,264,307,836} 
+
+print("\\begin{align}")
+for _,v in pairs(tpallindrome2) do
+  pl = pallindrome(v,2)
+   print(v.."^".."2".." &= "..BigNum.mt.tostring(pl).."\\\\")
+end 
+for k,v in pairs(tpallindrome3) do
+  pl = pallindrome(v,3)
+  if next(tpallindrome3,k)==nil then
+    str=""
+  else
+    str="\\\\"
+  end  
+  print(v.."^".."3".." &= "..BigNum.mt.tostring(pl)..str)
+end 
+print("\\end{align}")
+
+-- largest non-palindromic number whose square is a palindrome
+local lp = pallindrome("831775153121251039203514",2)
+print(lp)
+
+\end{luacode}
+\end{texexample}
+
+The construction
+\begin{verbatim}
+if next(tpallindrome3,k)==nil then
+    str=""
+  else
+    str="\\\\"
+  end 
+\end{verbatim}
+is to ensure that we do not have a carriage return |\\| at the last equation of align. 
+
+The number 2,201 is truly amazing as it is the only non-palindromic number that its cube is palindromic and is shown in our example as having the value \num{10662526601}. This number appeared in a number of Martin Gardner's books.
+
+
+
+
+
+\section{First Class Functions}
+
+A language has first-class functions if it can do for each of the following without recursively invoking a compiler or interpreter. In languages with first-class functions, the names of functions do not have any special status; they are treated like ordinary variables with a function type.[3] The term was coined by Christopher Strachey in the context of \enquote{functions as first-class citizens} in the mid-1960s.
+
+\begin{enumerate}
+\item Create new functions from pre-existing functions at run-time.
+\item Store functions in collections.
+\item Use functions as arguments to other functions.
+\item Use functions as return values of other functions.
+\end{enumerate}
+
+\section*{Primes}
+
+Continuing our exploration of Lua and number theory we will use a longer example using \textit{prime numbers}. My basic reference for this is Stewart's \textit{Theory of Numbers}\footcite{stewart1964}.
+
+In 1876 Lucas was able to show that the number $M_{127}$ is a prime and for a very long time it remained the largest number to be a prime. For more extended numerical investigations in pre-computer era two books by D.N.Lehmer provded
+tables of primes to around 10,000,000.00.\footnote{\textit{Factor table for the first ten millions containing the smaller factor of every number not divisible by 2,3,5 and 7 between the limits 0 and 10,017,000.} Carnegie Institution of Washington Publication 105, 1909.\par \textit{List of prime numbers from 1 to 10,006,721.} Carnegie Institution of Washington Publication 165, 1914.} Useful  as they were, such tables are, of course, inadequate to handle problems like the one proposed by Lucas 1867.
+
+In Example~\ref{ex:primesmore} we will first write a function that formats a number with commas and then calculate 
+M127.
+
+\begin{texexample}{Lucas M127}{ex:primesmore}
+\begin{luacode}
+function formatnum(n) -- credit http://richard.warburton.it
+	local left,num,right = string.match(n,'^([^%d]*%d)(%d*)(.-)$')
+	return left..(num:reverse():gsub('(%d%d%d)','%1,'):reverse())..right
+end
+
+local n1 = BigNum.new(2)
+local bnum = BigNum.mt.tostring
+n2 = n1^127-1
+print(formatnum(bnum(n2)).."\\\\")
+
+str = string.format("%.0f", tostring(2^127))
+print(formatnum(str))
+\end{luacode}
+\end{texexample}
+
+The most widely used method for preparing alist of prime numbers less than a given limit is a device ascribed to Eratosthenes (276-194 B.C.). One starts  by writing down a list of the integes from 2 to that limit and then in a sytematic way eliminating all the composite integers. The method as described by Stewart is as follows:
+
+\begin{quotation}
+For example, with a limit of n = 100, we first set down a list of the 
+integers from 2 to 100. Recognizing that 2 is a prime, but that all proper 
+multiples of 2 are composite, we cross out 4,6,8,..., 100. The next number 
+not crossed out is 3, which must be a prime for the only possible proper 
+factor is 2, and 3 is not a multiple of 2 else it would have been crossed out. 
+Recognizing that all proper multiples of 3 are composite, we cross out 
+6, 9, 12,..., 99—although it is not actually necessary to cross out 6, 12, 
+18,..., 96 again, since they are already crossed out, being multiples of 2. 
+The next number not crossed out is 5; this number must be a prime, for if 
+it were composite, it would have to have as a proper factor a prime less 
+than 5, namely, either 2 or 3; but since 5 is not crossed out, it is not a 
+multiple of 2 or 3. Crossing out all multiples of 5, not previously crossed 
+out, namely: 25, 35, 55, 65, 85, 95, we find, by the same reasoning as 
+before, that the next number not crossed out must be a prime; it is 7. 
+The only multiples of 7, not previously crossed out, are 49, 77, 91, and 
+these we now cancel. Now, unless we have been analyzing the sieve process 
+carefully, we are due for a surprise—all the remaining numbers which 
+have survived the sieve are primes! The sieve appears as follows: 
+\end{quotation}
+
+Our first concern is to first develop functions to typeset such tables and once the
+typesetting is out of the way to then implement the sieve. In current computer terminology
+a sieve is a filter.
+
+We will represent a single number in this table as a tuple (n, f) where $f$ is a boolean indicating if the
+number is to be crossed out or not.
+
+\begin{texexample}{Eratosthenes Sieve I}{ex:eratosthenes}
+\begin{luacode}
+local T = {}
+local num = {}
+function eratosthenes (n)
+   for i=1,n do
+     num[i]=false
+     table.insert(T,num)
+   end
+end
+
+eratosthenes(100)
+
+function print_eratosthenes()
+  for k,v in pairs(T) do
+    if k>1 then print("\\mbox{"..k.."} ") 
+    else
+      print("\\mbox{~~~} ")
+    end
+    if k%20==0 then print("\\\\") end
+  end
+end  
+print_eratosthenes()
+\end{luacode}
+\end{texexample}
+
+Our first skeleton program is shown above and consists of two functions, |eratosthenes| and |print_eratosthenes|. The first at this stage just initializes the table with all the elements having a false value, and to the second function we delegate the printing. The result did not come out very well due to using |mbox|. It will be preferable to use a fixed width box or we could use a LaTeX tabular environment or even draw the cells using \tikzname or use a packae such as tcolorbox. At this stage we also need to decide if we need to use a strike to indicate the numbers eliminated or simply use color. It would be better to rather write anothe function to decorate the cell and provide an option.
+
+In the next example we add the function |mbox| and also we use the \pkg{cancel}\footcite{cancel} to strike through the
+numbers. This will produce identical results to the previous example with all the numbers cancelled. In the final
+example we will implement the sieve.
+
+\begin{texexample}{Sieve}{ex:sieve2}
+\begin{luacode}
+local T = {}
+local num = {}
+function eratosthenes (n)
+   for i=1,n do
+     num[i]=true
+     table.insert(T,num)
+   end
+end
+
+eratosthenes(100)
+
+function mbox(n,tf)
+  local nstr = "$"..tostring(n).."$"
+  if tf then nstr="$\\cancel{"..n.."}$" end
+  return "\\mbox{"..nstr.."}"
+end
+
+function print_eratosthenes(f)
+  for k,v in pairs(T) do
+    if k>1 then print(f(k,v[1])) 
+    else
+      print("\\mbox{~~~} ")
+    end
+    if k%20==0 then print("\\\\") end
+  end
+end  
+
+
+print_eratosthenes(mbox)
+\end{luacode}
+\end{texexample}
+
+Note than |print_eratosthenes| now takes one argument |f| which is a function.
+
+
+\begin{texexample}{Sieve}{ex:sieve2}
+\begin{luacode}
+local T = {}
+local num = {}
+function eratosthenes (n)
+   for i=1,n do
+     num[i]=true
+     table.insert(T,num)
+   end
+end
+
+eratosthenes(100)
+
+function mbox(n,tf)
+  local nstr = "$"..tostring(n).."$"
+  if tf then nstr="$\\cancel{"..n.."}$" end
+  return "\\mbox{"..nstr.."}"
+end
+
+function tcbox(n,tf)
+  local nstr = "$"..tostring(n).."$"
+  if tf then nstr="$\\cancel{"..n.."}$" end
+  return "\\tcbox[nobeforeafter,boxsep=0.5pt,boxsep=0.5pt,right=1pt,left=1pt,width=3em,]{\\hbox to 1.5em{"..nstr.."}}"
+end
+
+function print_eratosthenes(f)
+  for k,v in pairs(T) do
+    if k>1 then print(f(k,v[1])) 
+    else
+      print(f(1,v[1]))
+    end
+    if k%20==0 then print("\\\\") end
+  end
+end  
+
+
+print_eratosthenes(mbox)
+
+print_eratosthenes(tcbox)
+\end{luacode}
+\end{texexample}
+
+
+On my computer in takes about 3s to compute the primes up to 10 million and 55s to compute to 100 million.
+
+\section*{Mersenne Numbers}
+
+A number is called a Mersenne number if it is in the form:
+
+\begin{gather}
+ M_p = 2^p-1
+\end{gather}
+where $p$ is a prime . If a Mersenne number $M_p = 2^p-1$ is a prime. then it is
+called a \textit{Mersenne prime}.
+
+
+
+\section{Summary}
+
+
+
 
 \chapter{Working with Lua Tables}
 
