@@ -22,10 +22,23 @@
 \chapter{Lua LPeg}
 
 \section{Pattern Matching}
+\parskip6pt
 
 LPeg is a powerful notation for matching text data, which is more capable than Lua string patterns and standard regular expressions. However, like any language you need to know the basic words and how to combine them. These patterns like their  cousins the regular expressions in languages like Perl or Javascript have a steep learning curve. The Lpeg name derives from the acronym PEG which stands for Parsing Expression Grammars. 
+See also \href{http://www.inf.puc-rio.br/~roberto/lpeg/}{Parsing Expression Grammars For Lua}. 
 
-A reference to this is \href{http://www.inf.puc-rio.br/~roberto/lpeg/}{Parsing Expression Grammars For Lua}. 
+The |lpeg| library provides functions whose names start with the prefix |lpeg|. such as |lpeg.P|, |lpeg.R|, |lpeg.S|. We can avoid having to write these prefixes by using local variables. In Lua it is better to use local variables wherever possible. RiscLua has the extra facility that we can make statements like
+
+|   local P,R,S = lpeg.P, lpeg.R, lpeg.S|
+
+so that P,R,S become local variables standing for lpeg.P,lpeg.R,lpeg.S. Such statements help to make code less verbose and more efficient. All our examples of code will presume that these and similar abbreviations have occurred previously.
+
+The whole tangle of magic characters and unreadable syntax, which bedevils RegExp notation, arises from the elementary error of not distinguishing between different datatypes. For lpeg, patterns are objects in their own right, and are not strings. 
+
+One of the recurring themes in the development of programming has been that trouble usually comes from conflating things that are not the same. Booleans are not really integers. Floating point numbers and whole numbers are different beasts. We are used to distinguishing between the number 123 and the string "123". So now we have to smarten up and recognize the difference between these and the patterns P(123) and P("123"). The former is a pattern that matches any string that is at least 123 characters long, and the latter is a pattern that matches any string that starts with the prefix "123". The function lpeg.P is an all-purpose converter of things into patterns. For example, P(true)is a pattern that matches anything, whereas P(false) matches nothing. P can convert functions and tables, too, if they are of an appropriate kind. It converts patterns to themselves. But what are patterns? That they are an abstract datatype is an answer that will probably not satisfy your curiosity. The best way to understand them is to see examples, understand how they can be combined, and see them in action the self running examples here.
+
+Given a string $s$ and a pattern $p$ we say that p \textit{succeeds} on s if s begins with a substring that matches p. Otherwise we say that p fails on s. The expression |p:match(s)| returns a non-nil value if p succeeds on s and nil if it fails. The non-nil value depends on what sort of pattern is being used, in particular on what the pattern captures. The default situation is that the non-nil value is one plus the index of the last character matched. In the case of literal string patterns like |P"Poly"|, the value returned will be the index of the character following the matching prefix.
+
 
 \subsection{String Equality}
 
@@ -79,12 +92,16 @@ To capture a range of characters, for example the lower case letters of the Engl
 \begin{luacode}
    local match = lpeg.match 
    local R = lpeg.R 
+   local P = lpeg.P
    tex.print(match(R'az'^1 * -1, 'abcdefgi'))
    if match(R'ac', 'abcdefgh') then 
       tex.print(match(R'ac', 'abcdefgh')) 
    else 
       tex.print('nil') 
    end
+   
+local str =  (P'Poly'):match("Polymath")  
+tex.print(str)  --> 5   
 \end{luacode}
 \end{texexample}
 
@@ -116,6 +133,24 @@ Operator	          &Description\\
 \end{longtable}
 \egroup
 
+\begin{longtable}{ll}
+P & literal\\
+S & set \\
+R & Range \\
+* & And\\
++ & Or\\
+\^& At least\\
+1 & Any single\\
+- & Except\\
+\end{longtable}
+
+Composition of patterns
+
+Lua identifier
+
+\begin{teX}
+local identifier = (lpeg.R('az', 'AZ') + '_') * (lpeg.R('az','AZ','09') + '_')^0
+\end{teX}
 
 \section{Functions}
 
@@ -204,14 +239,51 @@ Getting the index after a match is all very well, and you can then use \luacmd{s
 \end{phdverbatim}
 
 
-\begin{texexample}{Matching Patterns lpeg.P}{}
+\begin{texexample}{Matching Patterns lpeg.P}{ex:peg0}
 \begin{luacode}
  local C = lpeg.C
  Ct = lpeg.Ct
- digit = lpeg.R'09'  --  anything from '0' to '9'
- digits = digit^1    --  a sequence of at least one digit
- cdigits= C(digits)  --  capture digits
+ digit = lpeg.R'09'   --  anything from '0' to '9'
+ digits = digit^1     --  a sequence of at least one digit
+ cdigits= C(digits)   --  capture digits
+ letters = lpeg.R'az'^1 --  captures letters
+ cletters= C(letters)  --  captures letters
  tex.print(cdigits:match '123A9AAAA')
+ tex.print(cletters:match 'onlylowercaseAAAA')
+\end{luacode}
+\end{texexample}
+
+In Example~\ref{ex:peg} we define two functions $tobold(n)$ and $toitalic(char)$, which will be
+mapped to the capture. 
+
+\begin{texexample}{Matching Patterns lpeg.P}{ex:peg}
+\begin{luacode}
+local tobold = function(n)
+         return "\\textbf{"..tostring(n).."}%\n" 
+      end
+      
+local toitalic = function(a)      
+        return "\\textit{"..a.."}%\n"
+      end  
+      
+local C  = lpeg.C
+local Cf = lpeg.Cf
+local Ct = lpeg.Ct
+ 
+digit = lpeg.R'09'/tobold   --  anything from '0' to '9'
+digits = digit              --  a sequence of at least one digit
+letters = lpeg.R'AZ'/toitalic
+cdigits= (Cf(digits, tobold) + Cf(letters, toitalic))^1  --  capture digits
+ 
+ local function test(str)
+    if (cdigits:match(str)) then
+      print(cdigits:match(str))
+    else
+      print("No capture")
+    end
+  end
+  
+test("123456HAMBURGERVIS")
 \end{luacode}
 \end{texexample}
 

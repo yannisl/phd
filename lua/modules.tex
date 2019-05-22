@@ -14,11 +14,26 @@ Modularity is a fundamental requirement for any computer language, as it enables
 
 For the ecosystem to survive it requires an easy method to load the packages, a place where everything is stored and easily found by loaders and some form of standardization in defining the modules. 
 
+Modules in Lua are just tables (associative arrays) populated with functions.
+When we write |math.log(x)|, Lua sees the code as |math["log"](x)|, that is, a
+call to the function at index "|log|" from the table at variable |math|.
+Because both modules themselves and their functions are first-class values in
+the language, several facilities come for free. For instance, it is trivial to rename
+modules and functions, by assigning them to local variables:
+\begin{verbatim}
+local m = require "math"
+local s = m.sin
+print(s(0), m.cos(0)) --> 0.0 1.0
+\end{verbatim}
+
 \section{The require Function}
+\label{sec:require}
+
+We have already used the \luacmd{require} function in earlier examples. In this section we will explore it in more details.
 
 In Lua the \luacmd{require} function treats a module as any code that defines some values, such as table or functions. 
 
-To load  a module, we simply call \textbf{require"modulename"}. The first step of the \textbf{require} function is to check in table \textbf{package.loaded} whether the module is already loaded.
+To load  a module, we simply call \textbf{require\enquote{modulename}}. The first step of the \textbf{require} function is to check in table \textbf{package.loaded} whether the module is already loaded.
 
 If the module is not loaded Lua will then search for a file name with the module name. If it finds it, it loads it with |loadfile|. 
 
@@ -191,15 +206,24 @@ tex.print(z)
 \end{texexample}
 
 
-LuaTeX uses the |kpse| library to search for files and naturally it is at home, when the files are located somewhere wher kpse can find them. In the example below, I have downloaded the penlight library into the scripts folder. The Map file can be found in:
+LuaTeX uses the |kpse| library to search for files and naturally it is at home, when the files are located somewhere wher kpse can find them. In the example below, I have downloaded the penlight library into the |scripts| folder. The Map file can be found in:
+
+
 
 \begin{texexample}{lookup for files}{}
 \begin{luacode}
-local f = kpse.lookup("pl/Map", {format = "lua"})
+package.path = package.path .. ";" 
+    .. [[C:/Program Files/MiKTeX 2.9.6850/scripts/Penlight/lua/?.lua]]
 
-local f1 = kpse.lookup("Map", {format = "lua"})
-tex.print("\\par",f)
-tex.print("\\par",f1)
+tex.print(-2,"path = ", package.path)
+local Map = require("pl.Map")
+local inspect=require("inspect")
+
+local m = Map{one=1, two=2}
+m:update {three=3,four=4,two=20}
+
+tex.print("")
+tex.print(inspect(m))
 \end{luacode}
 \end{texexample}
 
@@ -283,7 +307,7 @@ The |scripts| folder is used for normal packages, whereas a similar path exists 
 
 \begin{texexample}{Using the penlight library}{ex:penlight}
 \begin{luacode}
-local Map = require("pl.Map")
+local Map = require("C:/Program Files/MiKTeX 2.9.6850/scripts/Penlight/lua/pl/Map.lua")
        m = Map{document="article", 
                      page = 2}
        m:update {font = "Calibri", fontsize = "12pt"}               
@@ -357,15 +381,14 @@ local tmp = [[ { "a" : true, "b" : [ 123 , 456E-10, { "a" : true, "b" : [ 123 , 
  
  -- use our own table prettifier
  
- local utils = require("phd-utils")
+ local inspect = require("phd-utils")
  
- utils.inspect(tmp)
+tex.print(inspect(tmp))
  
  for k,v in pairs (tmp) do
     tex.print(k, " \\par ")
  end
  
-inspect(tmp)
 tex.print(inspect(temp))
 
 tmp = utilities.json.tostring(tmp)
@@ -386,8 +409,8 @@ local dim =   require("lualibs-util-dim")
 local dimstr = string.todimen("10.0mm")
 
 local txprint =function (v)
-     				tex.print (v, '\\par')
-                  end
+     				  tex.print (v, '\\par')
+               end
 
 dimstr = dimen "10pt" + dimen "20pt" + dimen "200pt" - dimen "100sp" / 10 + "20pt" + "0pt"
 
@@ -412,7 +435,39 @@ txprint(str)
 \end{texexample}
 
 
-\section{Libraries from ConTeXt}
+\section{Modules Style Guide}
+
+We covered a lot of information on modules as they are central to Lua programming. The following
+guidelines summarize what I think is good style.
+
+\begin{enumerate}
+\item The module should return a table or function.
+
+\item The module should not use the global namespace for anything ever. The module should be a closure.
+
+\item The file should be named like the module.
+\end{enumerate}
+
+\begin{teX}
+-- thing.lua
+local thing = { }
+
+local meta = {
+  __call = function(self, key, vars)
+    print key
+  end
+}
+
+
+return setmetatable(thing, meta)
+\end{teX}
+
+
+Note that modules are loaded as singletons and therefore should usually be factories (a function returning a new instance of a table) unless static (like utility libraries.)
+
+
+
+\chapter{Libraries from ConTeXt}
 
 
 \subsection*{Dir}
@@ -431,10 +486,17 @@ write(2, dir.current())
 \end{luacode}
 \end{texexample}
 
+{\parskip=1pt
+\directlua{
+local inspect = require("inspect")
+  print(inspect(dir))
+}
+}
 
-\begin{docLua}{dir.current()}
-Returns the current directory.
-\end{docLua}
+
+%\begin{docLua}{dir.current()}
+%Returns the current directory.
+%\end{docLua}
 
 %\directlua{Stop = os.runtime()
 %           diff = Start - Stop 
@@ -452,43 +514,29 @@ Returns the current directory.
 This function returns the path of a file and emulates the kpse library function, with similar results. However, the function looks up the local environment path, so if a file is on the path in can find it.
 \end{docLua}
 
+\chapter{The Operating System (os) Library}
+
+\parskip=1pt
+\begin{luacode}
+local inspect = require("inspect",{Level=1})
+  local tmp= inspect(os)
+  local str = tmp:gsub("\\\\","/")
+  tex.print(str)
+  
+  for k, v in pairs (os) do
+    tex.print ("$"..tostring(k).." =$ " .. v .. "\\par")
+  end -- for
+  
+  tex.print(os.env.HOME)
+\end{luacode}
 
 
-\begin{docLua}{os.where()} 
-This is an alias for \textbf{os.which()}
-\end{docLua}
+\parskip10pt
 
+%\begin{docLua}{os.where()} 
+%This is an alias for \textbf{os.which()}
+%\end{docLua}
 
-
-\begin{teXXX}
-
--- presents nicely a table 
-
-local M = M or {}
-
-local rep, write = string.rep, tex.print
-
-function M.inspect (tab, offset)
-   local openbracket, closebracket, par = "\\{", "\\mbox{..}\\}", "\\par"
-   
-    offset = offset or ""
-    for k, v in pairs (tab) do
-        local newoffset = offset .. "\\mbox{~~}"
-        if type(v) == "table" then
-           write(offset .. k .. " = " .. openbracket .. par)
-           M.inspect(v, newoffset)
-           write(offset .. closebracket .. par)
-        else
-         if k~="data" then write(offset..k.." =  ".. tostring(v), "\\par") 
-           else
-                 write(offset.."k = char data ")
-           end
-       end
-    end
-end
-
-return M
-\end{teXXX}
 
 \begin{docLua}{os.which(file)}
 Locates a file.
@@ -496,10 +544,10 @@ Locates a file.
 
 \begin{texexample}{Test}{ex:which}
 \begin{luacode}
-local sprint=tex.sprint
-sprint(-2,os.which("tex.exe"))
-tex.print("\\par")
-sprint(-2,os.where("texlua.exe"))
+  local sprint = tex.sprint
+  sprint(-2,os.which("tex.exe"))
+  tex.print("\\par")
+  sprint(-2,os.where("texlua.exe"))
 \end{luacode}
 \end{texexample}
 

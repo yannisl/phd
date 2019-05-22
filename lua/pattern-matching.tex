@@ -1,10 +1,13 @@
-
-
 \chapter{Pattern Matching}
+\label{ch:patternmatching}
+
+\section{Pattern Matching}
+
+In Lua there are two libraries bundled with Lua that can be used for pattern matching. The ones supplied with the |string| library and the |Lpeg| library which we will describe in more detail in its own chapter later on.
 
 The |string| library of Lua, offers a number of pattern matching functions. Unlike many other languages it does not offer a full regular expression library. One can take this at first to be a disantvantage, but the reasons are explained in \textit{Programming in Lua} by Roberto Ierusalimschy, clearly:
 
-\begin{latexquotation}
+\begin{quotation}
 Unlike several other scripting languages, Lua uses neither \texttt{POSIX} regex nor
 Perl regular expressions for pattern matching. The main reason for this decision
 is size: a typical implementation of \texttt{POSIX} regular expressions takes more than
@@ -14,13 +17,11 @@ In comparison, the implementation of pattern matching in Lua has less than
 implementation does. Nevertheless, pattern matching in Lua is a powerful tool,
 and includes some features that are difficult to match with standard POSIX
 implementations.
-\end{latexquotation}
+\end{quotation}
 
-The most powerful functions in the string library are find, match, \luacmd{gsub} (Global
-Substitution), and \luacmd{gmatch} (Global Match). They all are based on patterns.
-
-
-\luacmd{string.find()}
+The  most powerful functions in the string library are \luacmd{find}, \luacmd{match}, \luacmd{gsub} (Global
+Substitution), and \luacmd{gmatch} (Global Match). They all are based on patterns offering there own mini language.\\
+\luacmd{string.find}()
 searches for a pattern inside a given subject string. The simplest form of a \textit{pattern} is a word, which matches only a copy of itself.
 
 For instance, the pattern ‘Lua’ will search for the substring “Lua” inside the
@@ -30,45 +31,29 @@ subject string. When |find| finds its pattern, it returns two values: the \texti
 \begin{luacode*}
 s = "hello Lua world"
 i, j = string.find(s,"Lua")
-tex.print("indices $i="..i..",".."j="..j.."$")
-
-tex.print(number.formatted(1234.56,"!","?"))
-
-local print=tex.print
-
-print(string.unquoted("test"))
-
-print(string.unquoted([["t\"est"]]))
-
-print(string.unquoted([["t\"est"x]]))
-
-print(string.unquoted("\'test\'"))
-
-print(string.unquoted('"test"'))
-
-print(string.unquoted('"test"'))
-
-
-print(number.decimaltobyte(12345.67))
+tex.print("indices $i="..i..",".."j="..j.."$\\par")
+tex.print(string.sub(s,i,j))
 \end{luacode*}
 \end{texexample}
 
-\luacmd{string.sub}
+\noindent\luacmd{string.sub}
 When a match succeeds, we can call string.sub with the values returned by
 string.find to get the part of the subject string that matched the pattern. For
 simple patterns, this is the pattern itself.
 
-The string.find function has an optional third parameter: an index that
+The |string.find| function has an optional third parameter: an index that
 tells where in the subject string to start the search. This parameter is useful
 when we want to process all the indices where a given pattern appears: we
 search for a new match repeatedly, each time starting after the position where
 we found the previous one. As an example, the following code makes a table
 with the positions of all newlines in a string:
 
-We will see later a simpler way to write such loops, using the \luacmd{string.gmatch}
-iterator.
+We will see later a simpler way to write such loops, using the \luacmd{string.gmatch}()
+iterator. In the next example \ref{ex:iteratepatterns}. We search for all the indices
+of |\par|. The |\par| token is escaped using |\| provided on the TeX side by |\string|.
 
-\begin{texexample}{Iterating over all matches}{}
+\begin{texexample}{Iterating over all matches}{ex:iteratepatterns} 
+
 \edef\tempstring{\string\\par..is this is a is test \string\\par and is this another?}
 \begin{luacode}
 local s = "\tempstring".."This is is a string and this is another"
@@ -83,7 +68,7 @@ end
    
 \end{luacode}
 \end{texexample}
-
+The result |1, 28| indicates that we found the pattern at the beginning of the string and the next occurence we found it at position |28|.
 
 \section{The string.match function}
 
@@ -92,24 +77,71 @@ The string.match function is similar to string.find, in the sense that it also
 searches for a pattern in a string. However, instead of returning the positions
 where it found the pattern, it returns the part of the subject string that matched
 the pattern:
+\begin{verbatim}
 print(string.match("hello world", "hello")) --> hello
-For fixed patterns like ‘hello’, this function is pointless. It shows its power when
+\end{verbatim}
+For fixed patterns like \enquote{hello}, this function is pointless. It shows its power when
 used with variable patterns, as in the next example:
 
 \begin{texexample}{string.match}{}
 \begin{luacode}
-date = "Today is 18/11/2014 is about time to get serious with LuaTeX."
-d = string.match(date, "%d+/%d+/%d+")
+local date = "Today is 18/11/2014 is about time to get serious with LuaTeX."
+local d = string.match(date, "%d+/%d+/%d+")
 tex.print(d) 
 \end{luacode}
 \end{texexample}
+The string |%d+/%d+/%d+| is named the pattern and is very similar to patterns used in regular expressions. the only difference is we need to prefix the patterns with a percent character (|%|). The |d+| is a character class meaning any digit 1 or more repititions. 
 
-\section{Patterns}
+\section{The string.gsub function}
+
+The \luacmd{string.gsub} function---which is an abbreviation for global substitution) takes three mandatory parameters and one optional parameter: the string to be searched, a pattern, and the replacement string. It can be used when we need to replace a string for all occurences of the pattern inside the subject string. The optional parameter is a number that limits the number of substitutions to be made.
+
+\begin{texexample}{The string.gsub function}{ex:stringgsub}
+\begin{luacode}
+   local s = string.gsub("Y Lazarides & George Lazarides", "&", "\\textbf{and}") 
+   tex.print(s)
+\end{luacode}
+\end{texexample}
+In the example we substituted the symbol |&| with |and| and the LaTeX function |\textbf| to print it in bold.
+
+
+\section{The string.gmatch function}
+The string.gmatch function returns a function that iterates over all occurrences
+of a pattern in a string. For instance, the following example collects all words in
+a given string s:
+
+\begin{texexample}{The string.gmatch function}{ex:gmatch}
+\begin{luacode}
+   local s = "For all we know this is a success"
+   words = {}
+   for w in string.gmatch(s, "%a+") do
+      words[#words + 1] = w
+   end
+   tex.print(words[2])   
+\end{luacode}
+\end{texexample}
+
+\section{More on Patterns}
 
 Patterns can be more useful with \textit{character classes}. 
+At the foundation of patterns are Character Classes that represent sets of characters. Each character class matches just one character that conforms to that class. For example, the character class |%d| 
+matches any one digit |0-9|, whereas the character class |A| matches the single letter |A|.
 
-\begin{longtable}{>{\color{blue}}ll}
-. & all characters\\
+More complex structures are \emph{pattern items} that represent combinations of characters. For example, the pattern item |%d+| matches a sequence of one or more digits, and |A+| matches a sequence of |A|'s.
+
+Finally a pattern is a sequence of pattern items that may contain Captures of internal components whose purpose is explained later.
+
+Remember the magic characters
+\begin{verbatim}
+ % . [ ] ^ $ ( ) * + - ? 
+\end{verbatim}
+ have special contextual meanings, so usually don't match themselves.
+ 
+A summary of the classes are shown below.  
+ 
+\begin{longtable}{>{\color{blue800}}ll}
+Y & represents the character |Y| as long as it is not a \emph{magic} character\\
+. & represents any character\\
 \%a & letters\\
 \%c &control characters\\
 \%d &digits\\ 
@@ -133,9 +165,232 @@ You can make patterns still more useful with modifiers for repetitions and optio
 \end{tabular}
 \end{center}
 
+Anchors can be used to force the pattern to match the begining or end of the string. (\^{}, \$). For example 
+|^A%d+Z$| will match a string with A, ending with Z, with only digits in between.
+
+\begin{texexample}{Anchoring}{ex:anchoring}
+\begin{luacode}
+   local str = "test.lua"
+   local pattern = ".+%.lua$" -- anything until a dot and "lua" at the end of the string
+   local match = string.match(str, pattern)
+   tex.print("String end with "..( (match) and ".lua" or "something different") )
+\end{luacode}
+\end{texexample}
 
 
+%https://tug.org/pipermail/luatex/2018-July/006844.html traverse an hbox
+\begin{texexample}{Traversing node in an hbox}{}
+\setbox0=\hbox{abc}
+\begin{luacode}
+  local head = tex.box[0].list
+ for n in node.traverse_id(node.id("glyph"),head) do
+     tex.print(string.char(n.char))
+ end
+\end{luacode}
+\end{texexample}
 
+\section{Performance}
 
+%http://www.wellho.net/mouth/2727_Making-a-Lua-program-run-more-than-10-times-faster.html
+For performance try and use specific targets rather than fuzzy expressions. 
+
+Lua's native functions such as |string.find()| are extremely fast, so long as it is being used with exact matches (case sensitive, no globing, no wildcards). Once you start with wildcards it slows down considerably.
+
+While much of the search capabilities looks somewhat like regex in spirit and format, there are significant deficiencies in the string.find() engine that separate it from regex.
+
+\section{alternation}
+
+Unlike regexes Lua does not have an alternation operator. Pipes ($\vert$) cannot be used to separate alternative matches. In regex you can do something like \verb+|cat|dog|horse|+ and the pattern will match a string that contains any of those 3 words. This is not possible in Lua’s |string.find()| engine. Instead, to mimic the capability you have to repeatedly search for the various strings. Something similar to the following:
+
+\begin{texexample}{OR}{ex:or}
+\begin{luacode}
+   local haystack = "I have a dog and a cat."
+   local search = { 'cat', 'dog', 'horse' }
+   for _,v in pairs( search ) do
+      if haystack:find( v ) then
+         tex.print(v)
+      end
+   end
+-- Setup locals
+local str = "Hello World!"
+local attempts = 1000000
+local reuses = 10 -- For the second part of benchmark: Table values are reused 10 times. Change this according to your needs.
+local x, c, elapsed, tbl
+local print = tex.print
+
+-- "Localize" funcs to minimize lookup overhead
+local stringbyte, stringchar, stringsub, stringgsub, stringgmatch = string.byte, string.char, string.sub, string.gsub, string.gmatch
+
+print("-----------------------\\par")
+print("Raw speed:")
+print("-----------------------\\par")
+
+-- Version 1 - string.sub in loop
+x = os.clock()
+for j = 1, attempts do
+    for i = 1, #str do
+        c = stringsub(str, i)
+    end
+end
+elapsed = os.clock() - x
+print(string.format("V1: elapsed time: %.3f\\par", elapsed))
+
+-- Version 2 - string.gmatch loop
+x = os.clock()
+for j = 1, attempts do
+    for c in stringgmatch(str, ".") do end
+end
+elapsed = os.clock() - x
+print(string.format("V2: elapsed time: %.3f\\par", elapsed))
+
+-- Version 3 - string.gsub callback
+x = os.clock()
+for j = 1, attempts do
+    stringgsub(str, ".", function(c) end)
+end
+elapsed = os.clock() - x
+print(string.format("V3: elapsed time: %.3f\\par", elapsed))
+
+-- For version 4
+local str2table = function(str)
+    local ret = {}
+    for i = 1, #str do
+        ret[i] = stringsub(str, i) -- Note: This is a lot faster than using table.insert
+    end
+    return ret
+end
+
+-- Version 4 - function str2table
+x = os.clock()
+for j = 1, attempts do
+    tbl = str2table(str)
+    for i = 1, #tbl do -- Note: This type of loop is a lot faster than "pairs" loop.
+        c = tbl[i]
+    end
+end
+elapsed = os.clock() - x
+print(string.format("V4: elapsed time: %.3f\\par", elapsed))
+
+-- Version 5 - string.byte
+x = os.clock()
+for j = 1, attempts do
+    tbl = {stringbyte(str, 1, #str)} -- Note: This is about 15% faster than calling string.byte for every character.
+    for i = 1, #tbl do
+        c = tbl[i] -- Note: produces char codes instead of chars.
+    end
+end
+elapsed = os.clock() - x
+print(string.format("V5: elapsed time: %.3f\\par", elapsed))
+
+-- Version 5b - string.byte + conversion back to chars
+x = os.clock()
+for j = 1, attempts do
+    tbl = {stringbyte(str, 1, #str)} -- Note: This is about 15% faster than calling string.byte for every character.
+    for i = 1, #tbl do
+        c = stringchar(tbl[i])
+    end
+end
+elapsed = os.clock() - x
+print(string.format("V5b: elapsed time: %.3f\\par", elapsed))
+
+print("-----------------------\\par")
+print("Creating cache table ("..reuses.." reuses):\\par")
+print("-----------------------\\par")
+
+-- Version 1 - string.sub in loop
+x = os.clock()
+for k = 1, attempts do
+    tbl = {}
+    for i = 1, #str do
+        tbl[i] = stringsub(str, i) -- Note: This is a lot faster than using table.insert
+    end
+    for j = 1, reuses do
+        for i = 1, #tbl do
+            c = tbl[i]
+        end
+    end
+end
+elapsed = os.clock() - x
+print(string.format("V1: elapsed time: %.3f\\par", elapsed))
+
+-- Version 2 - string.gmatch loop
+x = os.clock()
+for k = 1, attempts do
+    tbl = {}
+    local tblc = 1 -- Note: This is faster than table.insert
+    for c in stringgmatch(str, ".") do
+        tbl[tblc] = c
+        tblc = tblc + 1
+    end
+    for j = 1, reuses do
+        for i = 1, #tbl do
+            c = tbl[i]
+        end
+    end
+end
+elapsed = os.clock() - x
+print(string.format("V2: elapsed time: %.3f\\par", elapsed))
+
+-- Version 3 - string.gsub callback
+x = os.clock()
+for k = 1, attempts do
+    tbl = {}
+    local tblc = 1 -- Note: This is faster than table.insert
+    stringgsub(str, ".", function(c)
+        tbl[tblc] = c
+        tblc = tblc + 1
+    end)
+    for j = 1, reuses do
+        for i = 1, #tbl do
+            c = tbl[i]
+        end
+    end
+end
+elapsed = os.clock() - x
+print(string.format("V3: elapsed time: %.3f\\par", elapsed))
+
+-- Version 4 - str2table func before loop
+x = os.clock()
+for k = 1, attempts do
+    tbl = str2table(str)
+    for j = 1, reuses do
+        for i = 1, #tbl do -- Note: This type of loop is a lot faster than "pairs" loop.
+            c = tbl[i]
+        end
+    end
+end
+elapsed = os.clock() - x
+print(string.format("V4: elapsed time: %.3f\\par", elapsed))
+
+-- Version 5 - string.byte to create table
+x = os.clock()
+for k = 1, attempts do
+    tbl = {stringbyte(str,1,#str)}
+    for j = 1, reuses do
+        for i = 1, #tbl do
+            c = tbl[i]
+        end
+    end
+end
+elapsed = os.clock() - x
+print(string.format("V5: elapsed time: %.3f\\par", elapsed))
+
+-- Version 5b - string.byte to create table + string.char loop to convert bytes to chars
+x = os.clock()
+for k = 1, attempts do
+    tbl = {stringbyte(str, 1, #str)}
+    for i = 1, #tbl do
+        tbl[i] = stringchar(tbl[i])
+    end
+    for j = 1, reuses do
+        for i = 1, #tbl do
+            c = tbl[i]
+        end
+    end
+end
+elapsed = os.clock() - x
+print(string.format("V5b: elapsed time: %.3f\\par", elapsed))   
+\end{luacode}
+\end{texexample}
 
 

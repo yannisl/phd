@@ -2,9 +2,167 @@
 
 \def\textdblunderscore#1{{\bfseries \textunderscore\hskip1pt\textunderscore#1}}
 
-Every language has its own peculiarities and Lua is no exception with its metatables and metamethods. Lua’s metatables allow us to change the behaviour of a value when confronted with an undefined operation. For example when using metatables, we can define how lua computes the expression a+b, where a and b are tables. Whenever Lua tries to add two tables, it checks whether either of them has a \emph{metatable} and whether ths metatable has an \textdblunderscore{add} field. If Lua finds this field, it calls the corresponding value---the so-called \emph{metamethod}, which should be a function---to compute the sum.
+Every language has its own peculiarities and Lua is no exception with its metatables and metamethods. Lua’s metatables allow us to change the behaviour of a value when confronted with an undefined operation. For example when using metatables, we can define how lua computes the expression a+b, where a and b are tables. Whenever Lua tries to add two tables, it checks whether either of them has a \emph{metatable} and whether this metatable has an \textdblunderscore{add} field. If Lua finds this field, it calls the corresponding value---the so-called \emph{metamethod}, which should be a function---to compute the sum.
 
 Lua by default always creates new tables without metatables. We can use \luacmd{setmetatable} to set or change the metatable of any table.
+
+\section{Metatables}
+Metatables allow tables to become more powerful than before. They are attached to data and contain values called metamethods. Metamethods are fired when a certain action is used with the datum that it is attached to.
+
+You may think that if you have code like this:
+\begin{verbatim}
+local list = {1, 2}
+print(list[3])
+\end{verbatim}
+
+The code will search through the list for the third index in list, realize it’s not there, and return nil. That’s totally wrong. What really happens is the code will search through the list for the third index, realize it’s not there, and then try to see if there’s a metatable attached to the table, returning nil if there isn’t one
+
+\section{Manipulating Metatables}
+
+The two primary functions for giving and finding a table’s metatable, are setmetatable and getmetatable
+
+\begin{texexample}{Metatables}{ex:mt0}
+\begin{luacode}
+local x = {}
+local metaTable = {}       -- metaTables are tables, too!
+setmetatable(x, metaTable) -- Give x a metatable called metaTable!
+tex.print(getmetatable(x)) --> table: [hexadecimal memory address]
+\end{luacode}
+\end{texexample}
+
+\section{Metamethods}
+
+Metamethods are the functions that are stored inside a metatable. They can go from
+calling a table, to adding a table, to even dividing tables as well. Here’s a list
+of metamethods that can be used:
+
+
+
+\begin{texexample}{Metatables for Vector library}{ex:mt0}
+\begin{luacode}
+local inspect = require"inspect"
+local vector2 = {__type = "vector2"}
+local mt = {__index = vector2}
+ 
+function mt.__div(a, b)
+	if (type(a) == "number") then
+		-- a is a scalar, b is a vector
+		local scalar, vector = a, b
+		return vector2.new(scalar / vector.x, scalar / vector.y)
+	elseif (type(b) == "number") then
+		-- a is a vector, b is a scalar
+		local vector, scalar = a, b
+		return vector2.new(vector.x / scalar, vector.y / scalar)
+	elseif (a.__type and a.__type == "vector2" and b.__type and b.__type == "vector2") then
+		-- both a and b are vectors
+		return vector2.new(a.x / b.x, a.y / b.y)
+	end
+end
+ 
+function mt.__tostring(t)
+	return t.x .. ", " .. t.y;
+end;
+ 
+function vector2.new(x, y)
+	local self = setmetatable({}, mt)
+	self.x = x or 0
+	self.y = y or 0
+	return self
+end
+ 
+local a = vector2.new(10, 5)
+local b = vector2.new(-3, 4)
+ 
+local res = a/b
+
+tex.print(tostring(res).."\\par")   -- -3.3333333333333, 1.25
+tex.print(tostring(b / a).."\\par") -- -0.3, 0.8
+tex.print(tostring(2 / a).."\\par") -- 0.2, 0.4
+tex.print(tostring(a / 2)) -- 5, 2.5
+tex.print("")
+print(inspect(a))
+\end{luacode}
+\end{texexample}
+
+It should be noted that when writing functions for either arithmetic or relational metamethods the two function parameters are interchangeable between the table that fired the metamethod and the other value. For example, when doing vector operations with scalars division is not commutative. Therefore if you were writing metamethods for your own vector2 class, you’d want to be careful to account for either scenario.\footnote{See \protect\url{https://developer.roblox.com/articles/Metatables}.}
+
+Another trap to watch is that when you pass the results to TeX for printing, you will need to use type coersion
+using |tostring|. 
+
+\section{Arithmetic Metamethods}
+
+In this section, we will introduce a simple example to explain how to use metatables.
+Suppose we are using tables to represent sets, with functions to compute
+set union, intersection, and the like, as shown in Listing 13.1. To keep our
+namespace clean, we store these functions inside a table called Set.
+
+Now, we want to use the addition operator (‘+’) to compute the union of
+two sets. For that, we will arrange for all tables representing sets to share a
+metatable. This metatable will define how they react to the addition operator.
+Our first step is to create a regular table, which we will use as the metatable for
+sets:
+
+\begin{verbatim}
+ local mt = {} -- metatable for sets
+\end{verbatim}
+
+\begin{texexample}{Metamethods}{ex:metamethods}
+\begin{luacode}
+local mt = {}
+Set = {}
+function Set.new (l)
+   local set = {}
+   setmetatable(set, mt)
+   for _,v in ipairs(l) do set[v] = true end
+   return set
+end
+
+function Set.union (a, b)
+  local res = Set.new{}
+  for k in pairs(a) do res[k] = true end
+  for k in pairs(b) do res[k] = true end
+  return res
+end
+
+function Set.intersection (a, b)
+  local res = Set.new{}
+  for k in pairs(a) do
+  res[k] = b[k]
+  end
+  return res
+end
+
+-- presents a set as a string
+function Set.tostring (set)
+local l = {} -- list to put all elements from the set
+for e in pairs(set) do
+l[#l + 1] = e
+end
+return "{" .. table.concat(l, ", ") .. "}"
+end
+
+-- print a set
+function Set.print (s)
+  print(Set.tostring(s))
+end
+-- meta methods 
+mt.__add = Set.union
+s1 = Set.new{10,30,60,90}
+s2 = Set.new{30,1}
+
+-- can add the two sets
+s3 = s1 + s2
+
+Set.print(s3) --> {1, 90, 10, 30, 60}
+\end{luacode}
+\end{texexample}
+
+For each arithmetic operator there is a corresponding field name in a metatable.
+Besides |__add| and |__mul|, there are |__sub| (for subtraction), |__div| (for division),
+|__unm| (for negation), |__mod| (for modulo), and |__pow| (for exponentiation).
+We may define also the field |__concat|, to describe a behavior for the concatenation
+operator.
+
 
 \begin{texexample}{Metatable}{}
 \begin{luacode}
@@ -39,5 +197,12 @@ tex.print((halfimage.width/65000)..'pt')
 \end{luacode}
 \end{texexample}
 \includegraphics[width=0.3\textwidth,decodearray={0.2 0.2 1 0 1 0.8 1 0}]{./images/korea-01.jpg}
+
+
+
+
+
+
+
 
 From Lua we can access the metatables only of tables; for any other values we must use C code. 

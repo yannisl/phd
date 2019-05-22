@@ -59,9 +59,40 @@ One useful construct is to detect if we are running in LuaTeX or another Lua bin
 
 To test we have used the Lua function |type()|, which returns the type of the variable, in this case a 'table'. Other types are |number|, |string|, |userdata| and |nil|. 
 
-\section{Accessing keys and values}
+\section{Table Traversal Functions}
 
-You can access any key using the dot notation, as we have used in the above example or using square brackets. The former is considered better programming style than the latter.
+Lua provides functions to help you traverse a table. The following functions let you visit each key-value pair in a table.
+
+\begin{description}
+\item [ipairs] (array) Can be used in a generic |for| loop to visit all array fields in the specified table. These are values whose keys are contiguous integers beginning with 1.
+\item [next] (table, optional seed key): Returns the next key-value pair from the table’s internally ordered
+sequence. The first key and value from this sequence are returned when the key argument is
+omitted. The value nil is returned when the last key in the sequence is specified
+\item [pairs] (table) Can be used in a generic |for| loop to iterate over all key-value pairs in the table.
+\end{description}
+
+\begin{texexample}{Defining tables}{}
+\begin{luacode}
+if type(tex) == 'table' then print = tex.print end
+local k=1
+
+local paper = {'a4', 'a3', 'a2', 'a1', 'a5', 'a0' }
+
+print("-------- using ipairs --------\\par")
+for k,v in ipairs(paper) do
+   print(k,v)
+end
+
+print("\\par-------- using pairs --------\\par")
+for k,v in pairs(paper) do
+   print(k,v)
+end
+\end{luacode}
+\end{texexample}
+
+
+
+
 
 \emphasis{type}
 \begin{texexample}{Defining tables}{}
@@ -77,18 +108,36 @@ local t = {
 \end{luacode}
 \end{texexample}
 
-\section{Iterate over the keys of a table}
 
-\begin{texexample}{Defining tables}{}
-\begin{luacode}
-if type(tex) == 'table' then print = tex.print end
-local paper = {'a4', 'a3', 'a2', 'a1', 'a5', 'a0' }
-for k,v in pairs(paper) do
-   print(v)
-end
-\end{luacode}
-\end{texexample}
 
+
+
+\chapter{Table Library}
+
+The table functions enable you to work with tables as arrays (that is, tables with contiguous integer indexes beginning with 1). The table library contains the following functionss:
+
+table.concat(array, optional separator string, optional start position, optional end position):
+Returns a single string made up of the elements in the specified table, which must be strings or
+numbers. If a separator is specified, it will be used to delimit the elements. A range of elements
+can be specified using the start and end positions.
+
+\begin{description}
+\item[table.insert] (array, optional position, value): Inserts a value into the specified table. If the position is missing, the value is added to the end of the array, otherwise it’s added to the indicated
+position. In either case, the number of values in the array is increased by one. If the insertion is
+into before the last position, elements are moved up to make room.
+
+\item[table.maxn] (array): Effectively performs a pairs loop to determine the largest positive
+numeric key in the specified table. The returned number may be larger than the value an
+ipairs loop would reach, and the number may be a noninteger. If there are no positive keys,
+0 is returned.
+
+\item[table.remove] (array, optional position): Removes the table element associated with the specified position and returns its value. If the position is missing, the last element in the array is
+removed. Elements are moved down to fill the vacated position.
+
+\item[table.sort] (array, optional comparison function): Sorts the elements in the specified array. If a
+comparison function is specified, it will be called as needed with two table elements as arguments. It should return true if the first element is less than the second and false otherwise.
+If this function is not specified, < will be used to compare elements.
+\end{description}
 
 \section{The Table Library}
 The Lua |table| library comprises auxiliary functions to manipulate tables as arrays.

@@ -41,7 +41,7 @@
 \definehighlight     [fileent][\ttfamily\restoreunderscore]         %% files, dirs
 \definehighlight     [texmacro][\sffamily\itshape\textbackslash]     %% cs
 \definehighlight     [luafunction][\sffamily\itshape\restoreunderscore] %% lua identifiers
-\definehighlight     [identifier][\sffamily]                           %% names
+\definehighlight     [identifier][\ttfamily]                           %% names
 \definehighlight     [abbrev][\rmfamily\scshape]                   %% acronyms
 \definehighlight     [emphasis][\rmfamily\slshape]                   %% level 1 emph
 
@@ -56,6 +56,7 @@
 
 
 \section{Introduction}
+
 Font management and installation has always been painful with \tex.  A
 lot of files are needed for one font ({tfm},{pfb},
 {map}, {fd}, {vf}), and due to the 8-Bit encoding
@@ -68,10 +69,9 @@ typographic systems have appeared, most notably the so called
 These fonts can contain many more characters than \tex fonts, as well
 as additional functionality like ligatures, old-style numbers, small
 capitals, etc., and support more complex writing systems like Arabic
-and Indic
-  Unfortunately, \pkgname{luaotfload} doesn‘t support many Indic
+and Indic. Unfortunately, \pkg{luaotfload} doesn‘t support many Indic
   scripts right now.
-scripts.
+.
 
 With \LuaTeX/\LuaLaTeX a completely different mechanism to that of \XeLaTeX or \pdfLaTeX is used to load fonts.
 
@@ -215,7 +215,7 @@ Instead, it provides hooks for executing LUA code during the TEX run
 that allow implementing extensions for loading fonts and manipulating
 how input text is processed without modifying the underlying engine.
 
-This is where \pkgname{luaotfload} comes into play:
+This is where \pkg{luaotfload} comes into play:
 Based on code from \CONTEXT, it extends \LUATEX with functionality necessary
 for handling \OpenType fonts.
 
@@ -223,7 +223,7 @@ Additionally, it provides means for accessing fonts known to the operating syste
 
 \section{Loading Fonts}
 
-\refCom{luaotfload} supports an extended syntax for font loading, similar to that used by \xetex.
+\docAuxCommand{luaotfload} supports an extended syntax for font loading, similar to that used by \xetex.
 
 
 
@@ -237,24 +237,25 @@ font name. Alternatively, double quotes serve the same purpose.\footnote{A surpr
 Most \tex users like to have full control and are curious to understand how things work. Using |luaotfload| we can have a look at the |otf| tables, and although a bit error prone can 
 see how the fonts store information. The first example we will examine is a short programme to print 50 of the glyph names. In Example \ref{ex:symbola}, we use the built-in  \luacmd{fontloader} function. Many font symbolic names have underscores or other problematic characters. We change the underscore using \luacmd{string.gsub} from the |strings| module, which is loaded automatically with LuaTeX.
 
-\newfontfamily{\symbola}{Symbola.ttf}
+%\newfontfamily{\symbola}{Symbola.ttf}
 
 \begin{texexample}{Getting the name of Glyphs}{ex:symbola}
 \bgroup
 \begin{luacode}
 tex.print("\\footnotesize")
 f=fontloader.open("c:/windows/fonts/Symbola.ttf")
-tex.print (f.fontname,'\\par\\symbola')
-local i = 65
-while (i < 100) do  
+tex.print("\\begin{multicols}{4}")
+local i = 175
+while (i < 200) do  
 local g = f.glyphs[i]
 if g then
   local s = string.gsub(g.name, '%_', '\\textunderscore  ')
-  tex.print(s .. "(\\symbola\\char" .. g.unicode ..")" )
+  tex.print(i,"\\ttfamily "..s .. "  (\\symbola\\char" .. g.unicode ..")\\par" )
 end
   i = i + 1
 end
 fontloader.close(f)
+tex.print("\\end{multicols}")
 \end{luacode}
 \egroup
 \end{texexample}
