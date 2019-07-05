@@ -178,6 +178,7 @@ See http://www.latex-project.org/lppl.txt
 \newfontfamily\aegean{Aegean}
 \urlstyle{rm}
 \usepackage{fancyvrb}
+\cxset{main font-size=11pt}
 \begin{document}
 \DEBUGOFF
 \cxset{subsection afterindent=false}
@@ -256,7 +257,7 @@ See http://www.latex-project.org/lppl.txt
 %%\input{./sections/io}
 %\input{./sections/book-design}
 %%\input{./sections/pictureenvironment}
-%%\input{./sections/tables}
+\input{./sections/tables}
 %%\input{./sections/maths-01}
 %\input{./kernel/kernel-ltclass}
 \appendix
@@ -344,12 +345,14 @@ See http://www.latex-project.org/lppl.txt
 % 
 % ^^A\part{IMPLEMENTATION AND FRIENDS}
 % 
-%
+% \cxset{fashion image=temple-of-music.jpg}
 % \chapter{Font Manager Package Objectives and Strategy}
 % 
 % \epigraph{
 % I was reflecting on the convoluted Java frameworks widely adopted at work. Those hefty frameworks brought coding structures and conventions to large engineering teams; meanwhile, they also sucked the fun of programming like a Pastafarian monster slurping all the tomato sauce on a plate of spaghetti.
 %}{\href{http://blog.zmxv.com/2015/07/code-golf-at-google.html}{Zhen Wang}}
+%
+%
 %
 % \section{Specification}
 % In order to keep up with the central specification of the \pkg{phd} budle of packages
@@ -468,6 +471,58 @@ See http://www.latex-project.org/lppl.txt
 %    \end{macrocode}
 % \section{Font Manager}
 %
+% Our first concern is to define a function, that can scale headings in a visually
+% pleasant way.
+%
+% \subsection{Typographic Scale}
+%
+%For an account on the philosopher and mathematician 
+%Pythagoras and his school see [114]. Pythagoras
+%was born on the island of Samos. After having traveled
+%to Egypt and probably India, he moved to Croton in
+%Magna Graecia around 530 BC and founded his school.
+%The school was also a kind of sect, and it is reported
+%that they were vegetarians, but this is not a historically
+%firm fact as it is also reported that the members of his
+%school were allowed to eat every kind of meat, except
+%from oxen.
+%
+%He heavily influenced Plato with the idea that
+%mathematics in its abstraction was a secure basis of all
+%philosophy and science. The Greek root {\greek μαθησις} (mathesis), meaning knowledge, testifies to this understanding. According to Bertrand
+%Russell [99], he should be considered the most influential Western philosopher.
+%He was also far ahead of his time, being the first to believe that the Earth is a
+%sphere and it orbits a central fixed spot!
+%
+%
+% The typographic scale was established by typographers in the 16th century. The
+% idea behind it was to create harmony and balance between headings and body copy.
+% For all scales the starting point is the paragraph which dominates the printed area
+% larger or smaller sizes are then proportioned according to the typographic scale.
+% This is the classic typographic scale, as recorded by Mr. Bringhust in 
+% \textit{The Elements of Typographic Style}:
+%
+% \noindent\includegraphics[width=\linewidth]{typographic-scale}
+% 
+% An interesting point. Originally the sizes in the scale were referred to by name instead of by 
+% point size. Here's a few examples of some of the older names, the wikiepdia has a more full list.
+% \medskip
+%
+% {\smaller \noindent
+% 6pt: nonpareil\\
+% 7pt: minion\\
+% 8pt: brevier or small text\\
+% 9pt: bourgeois or galliard\\
+% 10pt: long primer or garamond\\
+% 11pt: small pica or philosophy\\
+% 12pt: pica\\
+% 14pt: english or augustin\\
+% 18pt: great primer\\
+% 21pt: double small pica or double pica\\
+% 24pt: double pica or two-line pica\\
+% 36pt: double great primer or 2-line great primer
+%}
+%
 % \subsection{Font Sizing}
 % 
 % The standard classes manage font-sizes through class options and a series
@@ -546,6 +601,7 @@ See http://www.latex-project.org/lppl.txt
 \tl_set:Nn \c_thirtysix_pt_tl     { 36    }
 \tl_set:Nn \c_fortyeight_pt_tl    { 48    }
 \tl_set:Nn \c_sixty_pt_tl         { 60    }
+\tl_set:Nn \c_seventytwo_pt_tl    { 72    }
 \ExplSyntaxOff
 %    \end{macrocode}
 %
@@ -830,9 +886,9 @@ See http://www.latex-project.org/lppl.txt
          }
      }
    
-   \cs_set:Npn\tiny       { \set_fontsize:Nnn \tiny       \c_six \c_seven     }   
-   \cs_set:Npn\scriptsize { \set_fontsize:Nnn \scriptsize \c_eight      {9.5} }
-   \cs_set:Npn\large      { \set_fontsize:Nnn \large      \c_nine       {18}  }
+   \cs_set:Npn\tiny       { \set_fontsize:Nnn \tiny       \c_six \c_seven           }   
+   \cs_set:Npn\scriptsize { \set_fontsize:Nnn \scriptsize \c_eight      {9.5}       }
+   \cs_set:Npn\large      { \set_fontsize:Nnn \large      {14}   {18} }
    \cs_set:Npn\Large      { \set_fontsize:Nnn \Large      \c_seventeen_pt_tl  {22}  }
    \cs_set:Npn\LARGE      { \set_fontsize:Nnn \LARGE      \c_twenty_pt_tl     {25}  }
    \cs_set:Npn\huge       { \set_fontsize:Nnn \huge       \c_twentyfour_pt_tl {30}  }
@@ -842,6 +898,7 @@ See http://www.latex-project.org/lppl.txt
    \setlength\parindent{1.5em}
  }
 %    \end{macrocode}
+%   \fontsizetest\textfontten{12/14.5}
 %
 %  \begin{docCmd} {textfontthirteen} { \meta{void}}
 %     Sets main font-size to 13/15.5 
@@ -1281,6 +1338,14 @@ See http://www.latex-project.org/lppl.txt
 % Next define the key value system.
 %
 %    \begin{macrocode} 
+% will load all the definitions
+\luadirect{
+  m=require"fontsize"
+  m.Init()
+}
+\def\printfontsizes#1{%
+\luadirect{tex.print(m.String(#1))}%
+}
 \cxset
  {
    main~font-size/.is~choice,
@@ -1330,7 +1395,7 @@ See http://www.latex-project.org/lppl.txt
 
 % \cxset{main font-size = 9.5pt}
 % \normalsize (9.5pt) \Alphabet\\
-% \alphabet
+% 
 % \fox
 % \cxset{main font-size = 10pt}
 % \normalsize \lorem
@@ -1345,7 +1410,7 @@ See http://www.latex-project.org/lppl.txt
 % \cxset{main font-size = 12pt} \normalsize
 %\lorem (12pt)
 %
-% {\Huge HUGE}
+% \par\leavevmode\noindent\printfontsizes{13}\par
 %
 % \egroup
 %
@@ -1435,8 +1500,8 @@ See http://www.latex-project.org/lppl.txt
 
 %    \begin{macrocode}
 \ExplSyntaxOn
-\cs_set:Npn \HHUGE  { \set_fontsize:Nnn \HHUGE {58}{67}  }
-\cs_set:Npn \HHHUGE { \set_fontsize:Nnn \HHHUGE{94}{105} }
+%\cs_set:Npn \HHUGE  { \set_fontsize:Nnn \HHUGE {58}{67}  }
+%\cs_set:Npn \HHHUGE { \set_fontsize:Nnn \HHHUGE{94}{105} }
 
 \newcommand\verbatimsize
   {
@@ -1484,7 +1549,7 @@ See http://www.latex-project.org/lppl.txt
     \newfontfamily\arial{Arial}
     \let\pan\arial
     \let\unicodenumberfam\arial
-   \newfontfamily\smallcps[Scale=0.8]{Arial}
+    \newfontfamily\smallcps[Scale=0.8]{Arial}
   } 
 \ExplSyntaxOff 
 %    \end{macrocode}
@@ -1659,7 +1724,7 @@ See http://www.latex-project.org/lppl.txt
     main font-size                 = 10pt,     
     main font-face                 = Georgia,
     main sans font-face            = Georgia, %Arial, 
-    main mono font-face            = Source Code Pro, %Consolas, %Apl385, %Consolas,%Source Code Pro,B-612,%
+    main mono font-face            = Roboto,%Source Code Pro, %Consolas, %Apl385, %Consolas,%Source Code Pro,B-612,%
     chapter label font-face        = Georgia,
     chapter number font-face       = Arial,
     chapter title font-face        = Times New Roman,
@@ -1688,6 +1753,40 @@ See http://www.latex-project.org/lppl.txt
 %<*FMAN>
   }
 %    \end{macrocode}   
+%
+%    \begin{macrocode} 
+\cxset
+  {font linguistics/.style         = {%
+    main font-size                 = 10pt,     
+    main font-face                 = TimesLTStd-Roman,
+    main sans font-face            = phvr, %Arial, 
+    main mono font-face            = Roboto,%Source Code Pro, %Consolas, %Apl385, %Consolas,%Source Code Pro,B-612,%
+    chapter label font-face        = Georgia,
+    chapter number font-face       = ptmr,
+    chapter title font-face        = Times New Roman,
+% Helvetica   
+    section label font-face        = phvb,
+    section number font-face       = phvb,
+    section title font-face        = phvb,    
+%
+    subsection label font-face     = Arial,
+    subsection number font-face    = Arial,
+    subsection title font-face     = Arial,    
+%
+    subsubsection label font-face  = Arial,
+    subsubsection number font-face = Arial,
+    subsubsection title font-face  = Arial,     
+%
+    paragraph label font-face      = Arial,
+    paragraph number font-face     = Arial,
+    paragraph title font-face      = Arial, 
+%
+    subparagraph label font-face   = Arial,
+    subparagraph number font-face  = Arial,
+    subparagraph title font-face   = Arial,
+}}%    
+%    \end{macrocode}
+%
 % \ExplSyntaxOn
 % \meaning\main_fontface_tl\\
 % \meaning\main_sans_fontface_tl\\

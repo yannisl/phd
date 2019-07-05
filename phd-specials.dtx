@@ -3,9 +3,11 @@
 % \fi
 % \cxset{chapter beforeskip   = 0pt,
 %        chapter afterskip=0pt,  
-%        chapter format = fashion}
+%       }
+%
 % \chapter{Custom Formatters}
 %
+% \normalsize
 % Now what happens, if none of the formats can adequately describe a heading? 
 % How can we define a mark-up language for more complex layoutS.
 % The way proposed here is to use the formatter methods coded earlier.
@@ -27,15 +29,16 @@
 % I have kept to the convention that values for all keys should be in lower case and hence
 % function names must follow suit.
 %
-%  \cxset{section format    = hang,
-%         subsection format = hang}
+%  \cxset{chapter format=stewart,
+%         section format = hang}
 %
-% \section{The stewart template}
+% \chapter{The stewart template}
 %
 % The stewart template has been named after \emph{Stewart's Calculus}, where a similar design
 % gave me the inspiration. It uses an image as well as banded notes and comments. It is
-% ideal for textbooks, when used to render chapter heads. We first start by declaring 
-% some additional keys,
+% ideal for textbooks, when used to render chapter heads. 
+%
+% Start by defining some additional keys:
 %
 %    \begin{macrocode}
 \ExplSyntaxOn
@@ -65,7 +68,7 @@
 \ExplSyntaxOff
 %    \end{macrocode}
 % 
-
+\cxset{stewart, image=hine02}
 % \begin{docCommand} {stewart} { \marg{element name} \marg{title} }
 %   Special formatter to style headings on a full page. 
 % \end{docCommand}
@@ -136,6 +139,10 @@
 %    \begin{macrocode}
 \par
 \clearpage
+\ExplSyntaxOn
+
+\phd_after_heading:
+\ExplSyntaxOff
 }
 %    \end{macrocode}
 %
@@ -211,7 +218,7 @@
 % to issue a \cs{clearpage} explicitly.
 %    \begin{macrocode}
 \par
-\clearpage
+\newpage
 }
 %    \end{macrocode}
 
@@ -396,8 +403,18 @@
 %
 % \cxset{chapter format=fashion,}
 % \definecolor{thechaptercolor}{HTML}{140F15}
-% \chapter{The Fashion Template}
+% \long\def\storyi{A formatter that can be used both for sections or chapters. It is a more modern
+%  design with a photo. It has a similarity to the \textit{andrea} template. The template interacts 
+% with the colorpalette in a minimal way to provide a touch of color to
+% the number box and the title. It uses additional positional keys and subtitle keys. One limitation is that the subtitle text needs to be about right in relation to the photo on the right. By default it does not typeset the chapter or section label. It has exactly the same design both for verso and recto pages.}
 %
+% \chapter*{The Fashion Template}
+%
+% \section*{Introduction}
+%
+% \section{Introduction no star no value}
+%
+% \tcbdocmarginnote{R 2019/01/29}
 % \noindent The inspiration for this was from a fashion magazine. I ended up with the gridlines that were 
 % used  for testing, but I liked them and left in permanently.
 %
@@ -407,7 +424,7 @@
 %
 % The width of the block is 16cm and the height takes almost the full textblock $\pm$~18cm. 
 % 
-% \begin{docCommand} {fashion} { \Arg{element name} \Arg{title text} }
+% \begin{docCommand} {fashion} {\meta{*} \Arg{element name} \Arg{title text} \hfill\hfill \Arg{a,b,c,d} }
 % \end{docCommand}
 %
 %
@@ -415,6 +432,7 @@
 %<@@=fashion>
 %    \end{macrocode}
 % \paragraph{Additional keys for the template}
+% Add some additional keys for the template. These handle image dimensions and the bylines.
 %    \begin{macrocode}
 \ExplSyntaxOn
 \cxset{
@@ -459,39 +477,76 @@
   extent can they be subjects?
 }
 \ExplSyntaxOn
-\DeclareDocumentCommand \fashion {m m} {%
+\dim_new:N \fashionwidth_dim
+\dim_new:N \fashionwidth_height
+\newif\if@hasstar
+
+\DeclareDocumentCommand\fashion {s m m}
+  { 
+    \IfBooleanTF {#1}
+      {\fashion_aux:nn {#2} {#3} {\global\@hasstartrue}  }
+      {\fashion_aux:nn {#2} {#3} {\global\@hasstarfalse} }
+  }
+  
+\cs_set:Npn \fashion_aux:nn #1 #2 #3{%
+%    \end{macrocode}
+% Since this is a template recommended for full page display, we do not use
+% absolute positioning with |remember, picture overlay| but rather measure and 
+% shift as necessary.
+%
+%    \begin{macrocode}
+  \dim_set:Nn \fashionwidth_dim {16cm}
+ 
+  
    \dim_set:Nn \l_tmpa_dim {0pt}
-   \ifdim\linewidth<16cm
-    \dim_set:Nn \l_tmpa_dim {-2cm}
+   
+   % need to shift to the left
+   \ifdim\linewidth < \fashionwidth_dim
+    \dim_set:Nn \l_tmpa_dim {(\fashionwidth_dim-\pagewidth)/2}
+   \else
+    \dim_set:Nn \l_tmpa_dim {0pt} 
    \fi
-  \hspace*{\dim_use:N \l_tmpa_dim}
-     \begin{tikzpicture}[yshift=-5cm,xshift=-2cm]
+%    \end{macrocode}
+% Use \docAuxEnvironment{adjustwidth} from the \pkg{changepage} to adjust the margins. 
+% Note that the environment uses a |\list|.
+%    \begin{macrocode}   
+ \begin{adjustwidth}{-2.1cm}{2.00002cm}
+ \parindent0pt
+   \begin{tikzpicture}[yshift=-5cm]
   \if@debug 
-    \draw [help~lines,color=black!10] (0,-1) grid (16,-18);
-    %\draw[fill=red]  (0,0) circle (1.5pt) ;
-    %\draw[fill=red]  (0,-3) circle (1.5pt) ;
+    % helplines grid(x,y)
+    \draw [help~lines,color=black!10] (0,0) grid (\fashionwidth_dim+1cm,-18);
+    \foreach \y in {0,...,18}{%
+    
+    \draw[fill=black]  (\linewidth+\rightmargin-\leftmargin+4.5pt,-\y) circle (.5pt) ++(7pt,0) node {{\tiny-\y}};} ;
   \else
   \fi
   % draw debug rectangles
   \node[fashion, right, baseline] (x) at (0,1) {\LARGE\color{black!30}{}\relax};
   %\draw[fill=red]  (0,1) circle (1.5pt) ;
-  \node[fashion, right=1sp] at (0,0) 
+  \node[fashion, right=1sp] at (0,-1) 
     {
-      %\LARGE\color{black!20} \so\chaptername\relax
+      {\LARGE\color{the#1color} \cs:w chaptername\cs_end:\relax} 
     };
 %    \end{macrocode}
 %
+% Check if we need to print the number or not and act accordingly.
 %    \begin{macrocode}
-\node[rectangle,draw, 
+#3
+\if@hasstar
+\else
+ 
+  \node[rectangle,draw, 
       color = thechaptercolor, 
-      below~left, drop~shadow,
+      below~left, 
+      drop~shadow,
       fill= thechaptercolor, 
       text=white,
       ] at +(15,-0.5) {\HHUGE\sffamily\bfseries\color{white}\thechapter};
+\fi      
 %    \end{macrocode}
 %
-% Next add the rectangle containing the chapter or section number as well as the story lines.
-% The textwidth is 
+% Next add the section title and byline
 %    \begin{macrocode}
 \node[fashion, text~width=9cm,below~right, yshift=-1pt] at (0,-3) 
   {%
@@ -505,8 +560,21 @@
            \centering
            \color{\@@_subtitlefontcolor 
          }%
-         %\RaggedRight
-        \storyi\par
+%    \end{macrocode}
+%
+% Add the story lines. These are entered separately bey defining a macro |\storyi|
+%    \begin{macrocode}
+        \storyi
+        
+        %\dim_use:N \fashionwidth_dim
+        {\small
+        \dim_to_decimal_in_unit:nn  {\the\pagewidth  }{1cm }\par
+        \dim_to_decimal_in_unit:nn  {\dim_use:N \fashionwidth_dim}{1cm}\par
+        \dim_to_decimal_in_unit:nn  {\dim_use:N \l_tmpa_dim}{1cm}\par
+        \dim_to_decimal_in_unit:nn  {\dim_use:N \leftmargin}{1cm}\par
+         \dim_to_decimal_in_unit:nn  {\dim_use:N \leftmargini}{1cm}\par
+        }
+        \par
   }; 
 % Add the image        
         \IfFileExists{./images/\l_@@_image}   
@@ -523,6 +591,7 @@
                   ] at (14.5,-10.5) {\includegraphics[width=\@@_image_width]{\l_@@_image}};}%
            {\node at (12.5,-10.5) {\includegraphics[width=5cm]{./images/venus}};}%
 \end{tikzpicture}
+\end{adjustwidth}
 \thispagestyle{plain}
 \vfill
 \newpage
@@ -530,14 +599,14 @@
 \ExplSyntaxOff
 %    \end{macrocode}
 
-% This template was developed before the xcoffins package had the current stability. It can benefit
+% This template was developed before the \pkg{xcoffins} package had the current stability. It can benefit
 % to using coffins to position the image relative to the text.
 %
 % - Some cropping of the image maybe necessary.
 %
 % - Should have a draft function for speed?
 %
-% - Change tikz keys to fashion style, as a progtammer API.
+% - Change tikz keys to fashion style, as a programmer API.
 %
 % Star version of the command?
 %

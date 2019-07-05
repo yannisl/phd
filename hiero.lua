@@ -2,6 +2,8 @@
 -- with a font command to print 
 -- hieroglyphics
 
+ if tex then tex.print = print	end
+
  local hiero 				= hiero or {}
  local inlinemath 		    = "$"
 
@@ -18,7 +20,7 @@ function getglyphRL(cmd, codepoint)
 end
 
 function printglyphRL(cmd, codepoint)
-  tex.print(getglyphRL(cmd,codepoint))
+  print(getglyphRL(cmd,codepoint))
 end
 
 local printhierochar = function (cmd, unicode, options)
@@ -53,11 +55,11 @@ local printhierochar = function (cmd, unicode, options)
    else
 		tx = "{\\scalebox{"..1*scale.."}["..scale.."]{"..texcmds.." "..tx.."}}"
    end
-   return tex.print(tx)
+   return print(tx)
 end
 
 
-
+-- returns a tex command to stack two symbols.
 function stackrelf(a,b,c)
   return ""..inlinemath.."\\stackrel{\\mbox{"..a.."}}{\\mbox{"..b.."}}"..inlinemath..""
 end
@@ -70,13 +72,11 @@ We define a local table to hold data for glyphs
  t = t or {}
 
 
-
-
 --- returns a number of transformations and data
 -- to the table holding codepoints for Gardiner lists
 ---
 local function f(codepoint, gardiner, mnemonic,
-                 description, determinant)
+                 description, determinant,other1,other2)
 
     	local theglyph=""  -- typeset glyph
     	local glyphslot
@@ -96,7 +96,7 @@ local function f(codepoint, gardiner, mnemonic,
 
 
 return {  fullblock     = "\\scalebox{1}[1]{"..stackrel.."}", 
-          unicode       = codepoint, --
+          unicode       = codepoint, 
           gardiner      = gardiner,
           mnemonic      = mnemonic,
           description   = description,
@@ -111,11 +111,11 @@ end
 t = {
    ["A1"    ]       =  f(13000,"A1","",
                          "kneeling man",
-                          "Det.I (Masculine) (paeu)"),
-   ["A2"    ] 		=  f(13001,"A2"),
-   ["A3"    ] 		=  f(13002,"A3"),
-   ["A4"    ] 		=  f(13003,"A4"),
-   ["A5"    ]		=  f(13004,"A5"), 
+                         "Det.I (Masculine) (paeu)"),
+   ["A2"    ] 		=  f(13001,"A2","","man with hand to mouth"),
+   ["A3"    ] 		=  f(13002,"A3","", "man sitting on heel"),
+   ["A4"    ] 		=  f(13003,"A4","","man with hands raised"),
+   ["A5"    ]		=  f(13004,"A5","","man hiding behind wall"), 
    ["A5a"   ] 		=  f(13005,"A5a"),
    ["A6"    ]		=  f(13006,"A6"),
    ["A6a"   ]		=  f(13007,"A6a"),
@@ -123,7 +123,7 @@ t = {
    ["A7"    ] 		=  f(13009,"A7"),
    ["A8"    ] 		=  f("1300A","A8"),
    ["A9"    ] 		=  f("1300B","A9"),
-   ["A10"   ] 		=  f("1300C","A10"),
+   ["A10"   ] 		=  f("1300C","A10","","man with oar"),
    ["A11"   ] 		=  f("1300D","A11"),
    ["A12"   ] 		=  f("1300E","A12","mSa"),
    ["A13"   ] 		=  f("1300F","A13"),
@@ -153,7 +153,7 @@ t = {
    ["A34"   ] 		=  f("13027","A34"),
    ["A35"   ] 		=  f("13028","A35"),
    ["A36"   ] 		=  f("13029","A36"),
-   ["A37"   ] 		=  f("1302A","A37"),
+   ["A37"   ] 		=  f("1302A","A37","","man in vat"),
    ["A38"   ] 		=  f("1302B","A38","qiz"),
    ["A39"   ] 		=  f("1302C","A39"),
    ["A40"   ] 		=  f("1302D","A40"),
@@ -1274,7 +1274,7 @@ t = {
 
 -- Gardiner categories
 -- we store in a table for convenience
-
+-- 
 local cat = {}
 
 cat["A"]   =   {[[A1-A2-A3-A4-A5-A5a-A6-A6a-A6b-A7-A8-
@@ -1453,14 +1453,14 @@ function cleanstring (s)
 end
 
 -- enable hyphenation of the input string
--- 
+-- introduces a zero skip
 local function printstring (s)
   --s = string.gsub(s,"-", " ")
 			  return string.gsub(s, "-", "\\hskip1sp-\\hskip1sp")
 end
 
 local function flushbuffer(a)
-   if a~=nil then tex.print(a) end
+   if a~=nil then print(a) end
    return ""
 end
 
@@ -1492,7 +1492,7 @@ The parsing occurs in two modes. Under normal mode
 it parses strings and collects them in a buffer. If an
 end of symbol is found, it flushes the buffer.
 
-In the second mode it stacks the symbols.
+In the second mode it stacks the symbols. Incomplete.
 --]]
 
 local numberglyphs=0
@@ -1505,11 +1505,11 @@ local function parseMdC (str, opt)
                     strings=true,
                     heading="Man"}
   --if options.echo == true then 
-        -- tex.print("{\\ttfamily "..printstring(str).." --}") end
+        -- print("{\\ttfamily "..printstring(str).." --}") end
 
   if options.heading == nil then options.heading="" end
   if options.style=="block" then  
-     tex.print("\\par "..options.heading.."\\par ") 
+     print("\\par "..options.heading.."\\par ") 
   end
 
   local buff = ""
@@ -1528,11 +1528,11 @@ local function parseMdC (str, opt)
     i = i + 1	
     if c=="-" then 
        if type(t[buff].theglyph~=nil) then
-         tex.print(t[buff].fullblock)
+         print(t[buff].fullblock)
        end
        buff =""
      elseif c == "!" then
-       tex.print(t[buff].fullblock,"\\par")
+       print(t[buff].fullblock,"\\par")
      elseif c=="*" then -- just signs next to each other
        staron = true
        -- if star is completed in means previous symbol
@@ -1555,7 +1555,7 @@ local function parseMdC (str, opt)
 
 end
 
--- tex.print(" ","Number of Glyphs",numberglyphs)
+-- print(" ","Number of Glyphs",numberglyphs)
 
 
 
@@ -1575,21 +1575,24 @@ local printgardiner = function (t,options)
       tmp = cat[ts[k]]
       if (options.headings and tmp.heading) then
           hcmd = "\\"..options.headings --TODO improve the interface 
-          tex.print(hcmd.." {"..tmp.heading.."}")
+          print(hcmd.." {"..tmp.heading.."}")
       end 
-      if tmp.label then tex.print("\\label{"..tmp.label.."}") end
-      tex.print("\\par\\noindent",parseMdC(tmp[1],options))
+      if tmp.label then print("\\label{"..tmp.label.."}") end
+      print("\\par\\noindent",parseMdC(tmp[1],options))
    end
 end
 
 -- prints a single list from gardiner's series
 local printgardinercat = function (series)
       local tmp = cat[series]
-      return tex.print(parseMdC(tmp[1], options))
+      return print(parseMdC(tmp[1], options))
 end
 
-return {printhierochar = printhierochar,
-        printgardiner  = printgardiner,
-        printgardinercat   = printgardinercat,
-        parseMdC = parseMdC}
+
+printgardiner("A15",{})
+
+-- return {printhierochar = printhierochar,
+--         printgardiner  = printgardiner,
+--         printgardinercat   = printgardinercat,
+--         parseMdC = parseMdC}
 
