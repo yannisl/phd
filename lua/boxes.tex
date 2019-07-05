@@ -1,0 +1,348 @@
+\chapter{Working with TeX's Registers}
+
+%sp = 65536
+
+The tex table contains a large list of virtual internal TEX parameters that are partially writable.
+The designation ‘virtual’ means that these items are not properly defined in Lua, but are only
+frontends that are handled by a metatable that operates on the actual TEX values. As a result,
+most of the Lua table operators (like \luacmd{pairs} and \#) do not work on such items.
+At the moment, it is possible to access almost every parameter that has these characteristics:
+
+\begin{enumerate}
+\item You can use it after \cs{the}
+
+\item It is a single token.
+
+\item Some special others, see the list below
+\end{enumerate}
+
+This excludes parameters that need extra arguments, like |\the\scriptfont|.
+
+The subset comprising simple integer and dimension registers are writable as well as readable
+(stuff like |\tracingcommands| and |\parindent|)
+
+\section{Dimension Registers}
+
+The dimension parameters accept Lua numbers (signifying scaled points) or strings (with included dimension). The result is always a number in scaled points.
+
+The LuaTeX manual is very terse and examples are scarce. It assumes that the reader is both an expert in TeX programming as well as Lua. I will carefully go over the tex table which exposes the TeX engine to Lua. In TeX to set a dimension register to a value we use |\parindent=10pt| or |\parindent0pt|. In the following example, we will change the parindent to 20pt via a TeX command and access its value via the tex table.
+
+\begin{texexample}{Accessing Dimension Registers}{}
+\begingroup
+\parindent20pt
+\begin{luacode}
+local parindent = tex.parindent
+tex.print("parindent = "..parindent.."\\\\")  
+tex.print("\\lorem")  
+\end{luacode}
+\endgroup
+\end{texexample}
+
+We notice that the value is returned as \textit{sp} units. To convert we have to divide by 65536 but as LuaTeX has a build-in function \luacmd{tex.sp} we will use this. The \luacmd{tex.sp} can use a string such as |"1pt"| to convert \textit{sp} units to \textit{pt}s.
+
+\begin{texexample}{Accessing Dimension Registers}{}
+\parindent20pt
+\begin{luacode}
+local parindentx = tex.parindent
+tex.print("parindent = "..tostring(parindentx/(tex.sp("1pt"))).."pt \\\\")  
+tex.print("\\lorem\\par")  
+
+tex.parindent=tex.sp("50pt")
+tex.print("\\par\\leavevmode\\alicei".."\\par")
+tex.print("parindent = "..tostring(tex.parindent/(tex.sp("1pt"))).."pt \\\\")
+ 
+tex.setglue('parskip', 0, 65536, 0, 0, 0)
+tex.print("\\lorem\\par\\lorem\\par")
+\end{luacode}
+\lorem
+\lorem
+\end{texexample}
+
+The dimension registers accept Lua numbers (in scaled points) or strings (with an included
+absolute dimension; \textit{em} and \textit{ex} and \textit{px} are not allowed). 
+The result is always a number in scaled points (\textit{sp}).
+
+\begin{texexample}{Dimensions}{ex:dim3}
+\begin{luacode}
+local maxdimen = tex.dimen['maxdimen']
+maxdimen = string.format("%.2f", maxdimen/tex.sp('1cm'))
+print(maxdimen.."cm")
+\end{luacode}
+\end{texexample}
+
+
+\section{Using an Inspector}
+
+The Lua manual is terse and sometimes one needs to see the values of a table for a module. The |inspect| library bundled with this manual is based on Enrique García Cota's library \url{https://github.com/kikito/inspect.lua}. I have modified it to change the appearance of tabs and to ensure underscores and other reserved characters are properly escaped. The objective of the library is human understanding.
+
+\luacmd{inspect} has the declaration: |local str = inspect(value, <options>)|, |value| can be any Lua value.
+
+\luacmd{inspect} it transforms simple types (like strings or numbers) into string.
+
+\begin{texexample}{The inspect library}{ex:inspect0}
+\begin{luacode}
+local inspect = require("inspect.lua")
+print(inspect("I am a string."))
+\end{luacode}
+\end{texexample}
+
+Tables, on the otehr hand are rendered in a way a human can read easily. If a table is\enquote{array-like} it is rendered horizontally.
+
+\begin{texexample}{The inspect library}{ex:inspect1}
+\begin{luacode}
+local inspect = require("inspect.lua")
+local t = {1,2,3,4,5,6}
+print(inspect(t))
+\end{luacode}
+\end{texexample}
+
+If a table is \enquote{dictionary-like} it will be rendered with one element per line:
+
+\begin{texexample}{The inspect library}{ex:inspect2}
+\begin{luacode}
+local inspect = require("inspect.lua")
+local t = {a=1,b=2,c=3,d=4,e=5,f=6}
+print(inspect(t))
+\end{luacode}
+\end{texexample}
+
+Where possible the keys are sorted alphanumerically. Hybrid tables will have the array part on the first line, and the dictionarypart just below them:
+
+\begin{texexample}{The inspect library}{ex:inspect2}
+\begin{luacode}
+inspect = require("inspect.lua")
+local t = {1,2,a=1,b=2,c=3,d=4,e=5,f=6,3,4,10}
+print(inspect(t))
+\end{luacode}
+\end{texexample}
+
+\subsection*{options}
+
+The \luacmd{inspect} has a second parameter, called |options|. This is an optional parameter, but when it is 
+provided it must be a table.
+
+\begin{description}
+\item[options.depth] sets the maximum depth that will be printed out. When the max depth is reached, inspect will stop parsing tables and just return {...}:
+\end{description}
+
+\begin{texexample}{The inspect library}{ex:inspect5}
+\begin{luacode}
+local inspect = require'inspect'
+local t5 = {a = {b = {c = {d = {e = 5}}}}}
+
+print(inspect(t5, {depth=4}))
+\end{luacode}
+\end{texexample}
+
+\luacmd{options.depth} defaults to infinite (\luacmd{math.huge}).
+
+\begin{texexample}{The inspect library}{ex:inspect6}
+\begin{luacode}
+local inspect = require('inspect')
+local t6 = {a={b=1}}
+print(inspect(t6,{newline='\\linebreak',indent='++'})..'\\par')
+\end{luacode}
+\end{texexample}
+
+\subsubsection*{options.process}
+
+This is a function which allows  altering the passed object before transforming it into a string. A typical way to use it would be to remove certain values so that they don't appear at all.
+
+\luacmd{options.process} has the following signature:
+
+|local processed_item = function(item, path)|
+
+\begin{description}
+\item[item] is either a key or a value on the table, or any of its subtables
+\item[path] is an array-like table built with all the keys that have been used to reach item, from the root.
+
+For values, it is just a regular list of keys. For example, to reach the 1 in |{a = {b = 1}}|, the path will be |{'a', 'b'}|
+
+For keys, the special value inspect.KEY is inserted. For example, to reach the c in |{a = {b = {c = 1}}}|, the path will be |{'a', 'b', 'c', inspect.KEY }|
+
+For metatables, the special value inspect.METATABLE is inserted. For |{a = {b = 1}}}|, the path |{'a', {b = 1}, inspect.METATABLE}| means "the metatable of the table |{b = 1}|".
+
+\item[processed\_item] is the value returned by options.process. If it is equal to item, then the inspected table will look unchanged. If it is different, then the table will look different; most notably, if it's nil, the item will dissapear on the inspected table.
+\end{description}
+
+In the next example we will remove a metatable.
+\begin{texexample}{The inspect library}{ex:inspect6}
+\begin{luacode}
+local inspect = require('inspect')
+local t = {1,2,3}
+local mt = {b = 2}
+setmetatable(t, mt)
+print(inspect(t))
+print("")
+
+-- remove metatable
+print("metatable filtered out".."\\par")
+local remove_mt = function(item)
+  if item ~= mt then return item end
+end
+
+print(inspect(t,{process = remove_mt}))
+print("")
+\end{luacode}
+\end{texexample}
+
+\chapter{The LuaTeX token Library}
+
+The token library provides means to intercept the input and deal with it at the Lua level. The
+library provides a basic scanner infrastructure that can be used to write macros that accept
+a wide range of arguments. This interface is on purpose kept general and as performance is
+quite ok one can build additional parsers without too much overhead. It’s up to macro package
+writers to see how they can benefit from this as the main principle behind LuaTEX is to provide a
+minimal set of tools and no solutions. The functions provided in the token namespace are given
+in the next table:
+
+\begin{texexample}{The inspect library}{ex:inspect9}
+\begin{luacode}
+local inspect = require('inspect')
+local t = token
+print(inspect(t))
+\end{luacode}
+\end{texexample}
+
+
+
+\begin{texexample}{The inspect library}{ex:inspect9}
+\gdef\bar{bar}
+\gdef\foo{foo-\bar}
+\begin{luacode}
+local inspect = require('inspect')
+local t = token
+print(t.is_token('bar'))
+\end{luacode}
+\end{texexample}
+
+
+\begin{texexample}{The inspect library}{ex:inspect9}
+\def\bar{bar}
+\def\foo{foo-\bar}
+
+we get:
+\directlua{token.scan_string()}{foo} foo full expansion\\
+\directlua{token.scan_string()}foo foo letters and others\\
+\directlua{z=token.scan_string()}\foo foo-bar meaning\\
+\directlua{print(z)}
+\end{texexample}
+
+We can see the scanner has absorbed the arguments.
+
+
+\begin{texexample}{Create a command}{ex:token2}
+\edef\relaxing{relaxing}
+\def\foo#1{#1}
+\begin{luacode}
+local t=token.create("relaxing")
+local tbl = {cmdname=t.cmdname, command= t.command, id=t.id}
+print(inspect(tbl))
+print("")
+local t=token.create("foo")
+local tbl = {cmdname=t.cmdname, command= t.command, id=t.id}
+print(inspect(tbl))
+
+print("")
+local t=token.create("A")
+local s,s1 = "nil","nil"
+if t.active then s="active" else s="inactive" end
+if t.expandable then s1="expandable" else s1="not expandable" end
+local tbl = {cmdname=t.cmdname, command= t.command, id=t.id, active=s, expandable=s1}
+print(inspect(tbl))
+
+print("")
+local t=token.create("!")
+local s,s1 = "nil","nil"
+if t.active then s="active" else s="inactive" end
+if t.expandable then s1="expandable" else s1="not expandable" end
+local tbl = {cmdname=t.cmdname, command= t.command, id=t.id, active=s, expandable=s1}
+print(inspect(tbl))
+\end{luacode}
+\end{texexample}
+
+The numbers that represent a catcode are the same as in TEX itself, so using this information
+assumes that you know a bit about TEX’s internals. The other numbers and names are used
+consistently but are not frozen. So, when you use them for comparing you can best query a
+known primitive or character first to see the values.
+
+\section*{Macros}
+
+The \luacmd{set\_macro} can get up to four arguments. It has the signature:
+
+|setmacro(catcodetable,"csname","content","global")|
+
+
+\begin{texexample}{Create a command with Lua}{ex:token3}
+\begin{luacode}
+local MyVal = 123
+token.set_macro("MyVal", MyVal, "global")
+\end{luacode}
+\MyVal
+\end{texexample}
+
+I have been using the |luacode| environment for consistency. Like any of LaTeX's environemnts it
+creates a group and hence the reason we need to use the \luacmd{global} argument, which will create a
+|gdef|. For local definitions \luacmd{directlua} can be used.
+
+\begin{texexample}{Create a command with Lua}{ex:token3}
+\luadirect{local test = 123;token.set_macro("foo", test)}
+\foo
+\end{texexample}
+
+Of course the best application is when we combine it with \tex macros.
+\begin{texexample}{Create a command with Lua}{ex:token3}
+\def\bar#1{%
+\luadirect{local test = #1+8^2;token.set_macro("foo", test)}
+\foo
+}
+\bar{2^16}
+\end{texexample}
+
+
+\subsubsection*{get\_meaning and get\_macro}
+
+The token library has functions starting from |get_| defining getters for macro related
+properties.
+
+
+
+\begin{texexample}{Get the meaning programmatically}{ex:mean}
+
+\def\alpha#1#2{beta#1 gamma#2 delta}
+
+\begin{luacode}
+print(token.get_macro("alpha"))
+
+print(token.get_meaning("alpha").."\\par")
+
+
+print(token.set_macro("alpha","whatever"))
+
+print(token.get_macro("alpha"))
+
+print(token.get_meaning("alpha").."\\par")
+\end{luacode}
+
+\end{texexample}
+
+%https://tex.stackexchange.com/questions/129046/use-lualatex-to-create-macros
+%%%%%%%%%%%%%%%%% TOKEN %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\begin{luacode}
+print("\\parskip1pt")
+local inspect = require 'inspect'
+local t5 = {a_content = {b_tex = {c_2 = {d = {e = 5}}}}}
+
+print(inspect({1,2,3,4})..'\\par')
+print(inspect({a=1,b=2}).."\\par")
+print(inspect(t5)..'\\par') 
+print(inspect(tex)..'\\par')
+
+local t = tex.primitives()
+print(inspect(t)..'\\par')
+
+print(inspect(texconfig)..'\\par')
+\end{luacode}
+
